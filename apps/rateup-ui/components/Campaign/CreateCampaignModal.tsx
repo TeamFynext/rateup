@@ -3,43 +3,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
-  ActionIcon,
-  Alert,
-  Avatar,
-  Badge,
-  Box,
-  Button,
-  Card,
-  Container,
-  Group,
-  Paper,
-  ScrollArea,
-  SimpleGrid,
-  Stack,
-  Switch,
-  Tabs,
-  Text,
-  ThemeIcon,
-  Title,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { getHotkeyHandler } from "@mantine/hooks";
-import {
-  IconArrowRight,
   IconCheck,
   IconClock,
   IconInfoCircle,
   IconPlus,
   IconRocket,
-  IconSettings,
-  IconTemplate,
   IconTrash,
-  IconUsers,
   IconWand,
 } from "@tabler/icons-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { z } from "zod/v4";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { CampaignType } from "@/types/enums";
 import useTemplatesAvailableForTeam from "@/hooks/team";
@@ -47,73 +22,92 @@ import {
   useCreateCampaignMutation,
   useUpdateCampaignMutation,
 } from "@/backend/campaign/campaign.query";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { SAVE_HOTKEY } from "@/utils/constants";
 
-import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { AccountSelector } from "../input/AccountSelector";
-import {
-  ContainedNumberInput,
-  ContainedSelection,
-  ContainedTextField,
-  ContainedTimeInput,
-} from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
 
 interface CreateCampaignProps {
   close: () => void;
   isEdit?: boolean;
-  campaign?;
+  campaign?: any;
   dynamicVariables?: string[];
   campaignType: CampaignType;
 }
+
+interface DripStage {
+  id?: string;
+  templateId: string;
+  delay: number;
+  delayUnit: string;
+  sendAtTime: string;
+}
+
+const formSchema = z.object({
+  teamId: z.string().min(1, { message: "Must select a team" }),
+  name: z.string().trim().min(1, { message: "Name cannot be empty" }),
+  waTemplateId: z.string().optional(),
+  type: z.nativeEnum(CampaignType),
+  surveyTeamMapId: z.string().optional(),
+  flowId: z.string().optional(),
+  dynamicTags: z.array(z.string().nullable()),
+  useUserConsent: z.boolean(),
+  whatsappSettingsPhoneId: z
+    .string()
+    .min(1, { message: "Must select a phone number" }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 const CreateCampaignModal = ({
   close,
   isEdit,
   campaign,
-  dynamicVariables,
+  dynamicVariables = [],
   campaignType = CampaignType.WHATSAPP,
 }: CreateCampaignProps) => {
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = useState<"basic" | "templates">("basic");
   const translations = useTranslations();
   const { customFields } = useCustomFieldsContext();
-  const schema = z
-    .object({
-      teamId: z.string().min(1, { message: "Must select a team" }),
-      name: z.string().trim().min(1, { message: "Name cannot be empty" }),
-      waTemplateId: z.string().optional(),
-      type: z.enum(CampaignType),
-      surveyTeamMapId: z.string().optional(),
-      flowId: z.string().optional(),
-      dynamicTags: z.array(z.string().trim().nullable()),
-      useUserConsent: z.boolean(),
-      whatsappSettingsPhoneId: z.string().min(1),
-    })
-    .check((ctx) => {
-      if (ctx.value.type !== CampaignType.DRIP && !ctx.value.waTemplateId) {
-        ctx.issues.push({
-          path: ["waTemplateId"],
-          code: "custom",
-          message: "Must select a template",
-          input: "",
-        });
-      }
 
-      dynamicVariables?.map((_, i) => {
-        if (!ctx.value.dynamicTags?.[i]) {
-          ctx.issues.push({
-            path: [`dynamicTags.${i}`],
-            code: "custom",
-            message: "Select a tag",
-            input: "",
-          });
-        }
-      });
-    });
-
-  const form = useForm<z.infer<typeof schema>>({
-    initialValues: {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
       name: campaign?.name || "",
       type: campaignType,
       teamId: campaign?.teamId || "",
@@ -124,10 +118,9 @@ const CreateCampaignModal = ({
       useUserConsent: campaign?.useUserConsent ?? true,
       whatsappSettingsPhoneId: campaign?.whatsappSettingsPhoneId || "",
     },
-    validate: zod4Resolver(schema),
   });
 
-  const [dripStages, setDripStages] = useState([
+  const [dripStages, setDripStages] = useState<DripStage[]>([
     {
       id: undefined,
       templateId: "",
@@ -136,10 +129,15 @@ const CreateCampaignModal = ({
       sendAtTime: "09:00",
     },
   ]);
+  const BASIC_FIELDS: (keyof FormValues)[] = [
+    "teamId",
+    "name",
+    "whatsappSettingsPhoneId",
+  ];
 
   useEffect(() => {
     if (campaign) {
-      form.setValues({
+      form.reset({
         name: campaign?.name || "",
         type: campaignType,
         teamId: campaign?.teamId || "",
@@ -153,7 +151,7 @@ const CreateCampaignModal = ({
 
       if (campaign?.dripStages && campaign.dripStages.length > 0) {
         setDripStages(
-          campaign.dripStages.map((stage) => ({
+          campaign.dripStages.map((stage: any) => ({
             id: stage.id,
             templateId: stage.waTemplateId || "",
             delay: stage.delay || 1,
@@ -163,10 +161,10 @@ const CreateCampaignModal = ({
         );
       }
     }
-  }, [campaign]);
+  }, [campaign, campaignType, form]);
 
   useEffect(() => {
-    if (form.values.type !== CampaignType.DRIP) {
+    if (form.watch("type") !== CampaignType.DRIP) {
       setDripStages([
         {
           id: undefined,
@@ -177,9 +175,8 @@ const CreateCampaignModal = ({
         },
       ]);
     }
-  }, [form.values.type]);
+  }, [form.watch("type")]);
 
-  // Memoize handlers to prevent re-renders
   const addDripStage = useCallback(() => {
     setDripStages((prev) => [
       ...prev,
@@ -212,7 +209,7 @@ const CreateCampaignModal = ({
     [],
   );
 
-  const templates = useTemplatesAvailableForTeam(form.values.teamId);
+  const templates = useTemplatesAvailableForTeam(form.watch("teamId"));
   const templatesData = useMemo(
     () =>
       templates?.map((t) => ({
@@ -223,7 +220,7 @@ const CreateCampaignModal = ({
   );
 
   const createCampaignMutation = useCreateCampaignMutation(
-    form.values.teamId,
+    form.watch("teamId"),
     campaignType,
   );
   const updateCampaignMutation = useUpdateCampaignMutation(
@@ -233,70 +230,28 @@ const CreateCampaignModal = ({
     campaignType,
   );
 
-  // Memoize form validation to prevent infinite loops
   const isFormValid = useMemo(() => {
-    const hasFormErrors = Object.keys(form.errors).length > 0;
-    if (form.values.type === CampaignType.DRIP) {
+    const hasFormErrors = Object.keys(form.formState.errors).length > 0;
+    if (form.watch("type") === CampaignType.DRIP) {
       const hasInvalidStages = dripStages.some((stage) => !stage.templateId);
       return !hasFormErrors && !hasInvalidStages;
     }
     return !hasFormErrors;
-  }, [form.errors, form.values.type, dripStages]);
+  }, [form.formState.errors, form.watch("type"), dripStages]);
+  const handleNext = async () => {
+    const fieldsToValidate = isEdit
+      ? ["name", "whatsappSettingsPhoneId"]
+      : ["teamId", "name", "whatsappSettingsPhoneId"];
 
-  // Add tab validation functions
-  const validateBasicTab = useCallback(() => {
-    const basicErrors = [];
-    if (!form.values.teamId) basicErrors.push("teamId");
-    if (!form.values.name.trim()) basicErrors.push("name");
-    if (!form.values.whatsappSettingsPhoneId)
-      basicErrors.push("whatsappSettingsPhoneId");
-    return basicErrors.length === 0;
-  }, [
-    form.values.teamId,
-    form.values.name,
-    form.values.whatsappSettingsPhoneId,
-  ]);
+    const isValid = await form.trigger(fieldsToValidate as any);
 
-  const validateTemplatesTab = useCallback(() => {
-    if (form.values.type === CampaignType.DRIP) {
-      return dripStages.every((stage) => stage.templateId);
-    } else {
-      return !!form.values.waTemplateId;
+    if (isValid) {
+      setActiveTab("templates");
     }
-  }, [form.values.type, form.values.waTemplateId, dripStages]);
-
-  const validateSettingsTab = useCallback(() => {
-    // Settings tab is always valid as it only has optional configurations
-    return true;
-  }, []);
-
-  // Check if tab is completed
-  const isTabCompleted = useCallback(
-    (tab: string) => {
-      switch (tab) {
-        case "basic":
-          return validateBasicTab();
-        case "templates":
-          return validateTemplatesTab();
-        case "settings":
-          return validateSettingsTab();
-        case "review":
-          return (
-            validateBasicTab() &&
-            validateTemplatesTab() &&
-            validateSettingsTab()
-          );
-        default:
-          return false;
-      }
-    },
-    [validateBasicTab, validateTemplatesTab, validateSettingsTab],
-  );
+  };
 
   const handleSubmit = useCallback(
-    (values) => {
-      const validation = form.validate();
-
+    (values: FormValues) => {
       if (values.type === CampaignType.DRIP) {
         const hasInvalidStages = dripStages.some((stage) => !stage.templateId);
         if (hasInvalidStages) {
@@ -304,32 +259,31 @@ const CreateCampaignModal = ({
         }
       }
 
-      if (validation.hasErrors) return;
-
       if (values.type !== CampaignType.DRIP) {
         const flowId =
           templates
             ?.find((t) => t?.id === values?.waTemplateId)
-            ?.data?.components?.find((c) => c?.buttons)
-            ?.buttons?.find((b) => b?.type === "FLOW")?.flow_id ?? null;
+            ?.data?.components?.find((c: any) => c?.buttons)
+            ?.buttons?.find((b: any) => b?.type === "FLOW")?.flow_id ?? null;
         values.flowId = flowId;
       }
 
+      const submitData: any = { ...values };
+
       if (values.type === CampaignType.DRIP) {
-        // Process drip stages and remove sendAtTime for minute-based delays
-        values.dripStages = dripStages.map((stage) => {
-          const processedStage = { ...stage };
+        submitData.dripStages = dripStages.map((stage) => {
+          const processedStage: any = { ...stage };
           if (stage.delayUnit === "minutes") {
             delete processedStage.sendAtTime;
           }
           return processedStage;
         });
-        delete values.waTemplateId;
+        delete submitData.waTemplateId;
       }
 
       if (isEdit) {
         updateCampaignMutation.mutate(
-          { data: values, campaignId: campaign?.id },
+          { data: submitData, campaignId: campaign?.id },
           {
             onSuccess: () => {
               form.reset();
@@ -338,7 +292,7 @@ const CreateCampaignModal = ({
           },
         );
       } else {
-        createCampaignMutation.mutate(values, {
+        createCampaignMutation.mutate(submitData, {
           onSuccess: () => {
             form.reset();
             close();
@@ -358,543 +312,461 @@ const CreateCampaignModal = ({
     ],
   );
 
-  // Memoize navigation handler
-  const handleNextTab = useCallback(() => {
-    const tabs = ["basic", "templates", "settings", "review"];
-    const currentIndex = tabs.indexOf(activeTab);
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key === SAVE_HOTKEY.toLowerCase()
+      ) {
+        event.preventDefault();
+        form.handleSubmit(handleSubmit)();
+      }
+    };
 
-    // Validate current tab before allowing navigation
-    if (!isTabCompleted(activeTab)) {
-      // Trigger form validation to show errors
-      form.validate();
-      return;
-    }
-
-    if (currentIndex < tabs.length - 1) {
-      setActiveTab(tabs[currentIndex + 1]);
-    }
-  }, [activeTab, isTabCompleted, form]);
-
-  const renderHeader = () => (
-    <Box mb="xl">
-      <Group justify="space-between" align="flex-start">
-        <Box>
-          <Title order={1} size="h2" mb="xs">
-            {isEdit
-              ? translations("Edit Campaign")
-              : translations("Create New Campaign")}
-          </Title>
-          <Text c="dimmed" size="sm">
-            {isEdit
-              ? "Update your campaign settings and configuration"
-              : "Set up your WhatsApp campaign with templates and automation"}
-          </Text>
-        </Box>
-        <Badge
-          size="lg"
-          variant="light"
-          color={form.values.type === CampaignType.DRIP ? "violet" : "blue"}
-          leftSection={
-            <ThemeIcon size="xs" variant="transparent">
-              {form.values.type === CampaignType.DRIP ? (
-                <IconWand size={12} />
-              ) : (
-                <IconRocket size={12} />
-              )}
-            </ThemeIcon>
-          }
-        >
-          {form.values.type === CampaignType.DRIP
-            ? "Drip Campaign"
-            : "WhatsApp Campaign"}
-        </Badge>
-      </Group>
-    </Box>
-  );
-
-  const renderBasicInfo = () => (
-    <Card withBorder radius="md" p="xl" mb="md">
-      <Group mb="lg">
-        <ThemeIcon size="lg" variant="light" color="blue">
-          <IconUsers size={20} />
-        </ThemeIcon>
-        <Box>
-          <Title order={3}>Campaign Information</Title>
-          <Text size="sm" c="dimmed">
-            Basic details about your campaign
-          </Text>
-        </Box>
-      </Group>
-
-      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-        {!isEdit && (
-          <TeamSelector
-            label={translations("Select Team")}
-            placeholder={translations("Select Team")}
-            withAsterisk
-            allowDeselect={false}
-            {...form.getInputProps("teamId")}
-            searchable
-          />
-        )}
-
-        <ContainedTextField
-          label={translations("Campaign Name")}
-          placeholder={translations("Enter campaign name")}
-          withAsterisk
-          {...form.getInputProps("name")}
-        />
-
-        <AccountSelector {...form.getInputProps("whatsappSettingsPhoneId")} />
-      </SimpleGrid>
-
-      {form.values.type === CampaignType.DRIP && (
-        <Alert icon={<IconInfoCircle size={16} />} mt="lg">
-          <Text size="sm">
-            <strong>Drip campaigns</strong> allow you to send a series of
-            messages to contacts over time. Configure your message stages in the
-            Templates tab.
-          </Text>
-        </Alert>
-      )}
-    </Card>
-  );
-  const renderTemplateSelection = () => (
-    <Card withBorder radius="md" p="xl" mb="md">
-      <Group mb="lg">
-        <ThemeIcon size="lg" variant="light" color="green">
-          <IconTemplate size={20} />
-        </ThemeIcon>
-        <Box>
-          <Title order={3}>
-            {form.values.type === CampaignType.DRIP
-              ? "Message Stages"
-              : "Template Selection"}
-          </Title>
-          <Text size="sm" c="dimmed">
-            {form.values.type === CampaignType.DRIP
-              ? "Configure your drip campaign stages"
-              : "Choose your WhatsApp message template"}
-          </Text>
-        </Box>
-      </Group>
-
-      {form.values.type === CampaignType.DRIP ? (
-        <Box>
-          <Group justify="space-between" mb="lg">
-            <Text fw={500}>Campaign Stages ({dripStages.length})</Text>
-            <Button
-              leftSection={<IconPlus size={16} />}
-              variant="light"
-              onClick={addDripStage}
-              size="sm"
-            >
-              Add Stage
-            </Button>
-          </Group>
-
-          <ScrollArea.Autosize mah={400} type="scroll">
-            <Stack gap="md">
-              {dripStages.map((stage, idx) => (
-                <Paper key={idx} withBorder p="lg" bg="gray.0" radius="md">
-                  <Group justify="space-between" mb="sm">
-                    <Group>
-                      <Avatar size="sm" color="violet" variant="light">
-                        {idx + 1}
-                      </Avatar>
-                      <Text fw={500}>Stage {idx + 1}</Text>
-                    </Group>
-                    <ActionIcon
-                      variant="light"
-                      color="red"
-                      onClick={() => removeDripStage(idx)}
-                      disabled={dripStages.length === 1}
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Group>
-
-                  <SimpleGrid
-                    cols={{
-                      base: 1,
-                      sm:
-                        stage.delayUnit === "minutes" ||
-                        stage.delayUnit === "hours"
-                          ? 3
-                          : 4,
-                    }}
-                    spacing="md"
-                  >
-                    <ContainedSelection
-                      label="Template"
-                      placeholder="Select template"
-                      data={templatesData}
-                      value={stage.templateId}
-                      onChange={(val) =>
-                        updateDripStage(idx, "templateId", val)
-                      }
-                      withAsterisk
-                      error={!stage.templateId ? "Template is required" : null}
-                    />
-                    <ContainedNumberInput
-                      label="Delay"
-                      min={1}
-                      step={1}
-                      allowDecimal={false}
-                      value={stage.delay}
-                      onChange={(val) => updateDripStage(idx, "delay", val)}
-                      leftSection={<IconClock size={16} />}
-                    />
-                    <ContainedSelection
-                      label="Unit"
-                      data={[
-                        { value: "minutes", label: "Minutes" },
-                        { value: "hours", label: "Hours" },
-                        { value: "days", label: "Days" },
-                        { value: "weeks", label: "Weeks" },
-                        { value: "months", label: "Months" },
-                      ]}
-                      value={stage.delayUnit}
-                      onChange={(val) => updateDripStage(idx, "delayUnit", val)}
-                      allowDeselect={false}
-                    />
-                    {(stage.delayUnit === "days" ||
-                      stage.delayUnit === "weeks" ||
-                      stage.delayUnit === "months") && (
-                      <ContainedTimeInput
-                        label="Send at time"
-                        value={stage.sendAtTime}
-                        onChange={(event) =>
-                          updateDripStage(
-                            idx,
-                            "sendAtTime",
-                            event.currentTarget.value,
-                          )
-                        }
-                        leftSection={<IconClock size={16} />}
-                        // description="24-hour format"
-                      />
-                    )}
-                  </SimpleGrid>
-                </Paper>
-              ))}
-            </Stack>
-          </ScrollArea.Autosize>
-        </Box>
-      ) : (
-        <SimpleGrid cols={1} spacing="lg">
-          <ContainedSelection
-            label={translations("Choose Template")}
-            withAsterisk
-            placeholder={translations("Select Template")}
-            {...form.getInputProps("waTemplateId")}
-            data={templatesData}
-            searchable
-          />
-
-          {dynamicVariables && dynamicVariables.length > 0 && (
-            <Box>
-              <Title order={4} mb="md" c="blue">
-                Dynamic Variables
-              </Title>
-              <Text size="sm" c="dimmed" mb="md">
-                Map dynamic content to your message variables
-              </Text>
-              <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-                {dynamicVariables.map((_, i) => (
-                  <ContainedSelection
-                    key={i}
-                    label={`Variable {{${i + 1}}}`}
-                    data={[
-                      { value: "name", label: "Name" },
-                      ...(customFields?.map((field) => ({
-                        value: field.slug,
-                        label: field.name,
-                      })) || []),
-                    ]}
-                    withAsterisk
-                    placeholder="Select dynamic tag"
-                    {...form.getInputProps(`dynamicTags.${i}`)}
-                  />
-                ))}
-              </SimpleGrid>
-            </Box>
-          )}
-        </SimpleGrid>
-      )}
-    </Card>
-  );
-
-  const renderConfiguration = () => (
-    <Card withBorder radius="md" p="xl" mb="md">
-      <Group mb="lg">
-        <ThemeIcon size="lg" variant="light" color="orange">
-          <IconSettings size={20} />
-        </ThemeIcon>
-        <Box>
-          <Title order={3}>Campaign Settings</Title>
-          <Text size="sm" c="dimmed">
-            Configure privacy and consent options
-          </Text>
-        </Box>
-      </Group>
-
-      <Card withBorder p="lg" bg="blue.0" radius="md">
-        <Group justify="space-between" align="flex-start">
-          <Box flex={1}>
-            <Group mb="xs">
-              <ThemeIcon size="sm" variant="transparent" color="blue">
-                <IconCheck size={16} />
-              </ThemeIcon>
-              <Text fw={500}>User Consent</Text>
-            </Group>
-            <Text size="sm" c="dimmed" mb="xs">
-              {form.values.useUserConsent
-                ? "Only send messages to contacts who have given consent"
-                : "Send messages to all contacts regardless of consent status"}
-            </Text>
-            <Text size="xs" c="blue">
-              Recommended: Keep enabled for compliance
-            </Text>
-          </Box>
-          <Switch
-            size="lg"
-            {...form.getInputProps("useUserConsent", { type: "checkbox" })}
-          />
-        </Group>
-      </Card>
-    </Card>
-  );
-
-  const renderSummary = () => (
-    <Card withBorder radius="md" p="xl" mb="md">
-      <Group mb="lg">
-        <ThemeIcon size="lg" variant="light" color="teal">
-          <IconCheck size={20} />
-        </ThemeIcon>
-        <Box>
-          <Title order={3}>Campaign Summary</Title>
-          <Text size="sm" c="dimmed">
-            Review your campaign configuration
-          </Text>
-        </Box>
-      </Group>
-
-      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-        <Paper withBorder p="md" radius="md">
-          <Text fw={500} mb="sm">
-            Campaign Details
-          </Text>
-          <Stack gap="xs">
-            <Group justify="space-between">
-              <Text size="sm" c="dimmed">
-                Name:
-              </Text>
-              <Text size="sm" fw={500}>
-                {form.values.name}
-              </Text>
-            </Group>
-            <Group justify="space-between">
-              <Text size="sm" c="dimmed">
-                Type:
-              </Text>
-              <Badge size="sm" variant="light">
-                {form.values.type === CampaignType.DRIP
-                  ? "Drip Campaign"
-                  : "WhatsApp Campaign"}
-              </Badge>
-            </Group>
-            <Group justify="space-between">
-              <Text size="sm" c="dimmed">
-                Template:
-              </Text>
-              <Text size="sm" fw={500} ta="right">
-                {form.values.type === CampaignType.DRIP
-                  ? `${dripStages.length} stages`
-                  : templatesData?.find(
-                      (t) => t.value === form.values.waTemplateId,
-                    )?.label}
-              </Text>
-            </Group>
-          </Stack>
-        </Paper>
-
-        <Paper withBorder p="md" radius="md">
-          <Text fw={500} mb="sm">
-            Settings
-          </Text>
-          <Stack gap="xs">
-            <Group justify="space-between">
-              <Text size="sm" c="dimmed">
-                User Consent:
-              </Text>
-              <Badge
-                size="sm"
-                color={form.values.useUserConsent ? "teal" : "gray"}
-                variant="light"
-              >
-                {form.values.useUserConsent ? "Enabled" : "Disabled"}
-              </Badge>
-            </Group>
-            {form.values.type === CampaignType.DRIP && (
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  Total Stages:
-                </Text>
-                <Text size="sm" fw={500}>
-                  {dripStages.length}
-                </Text>
-              </Group>
-            )}
-          </Stack>
-        </Paper>
-      </SimpleGrid>
-
-      {form.values.type === CampaignType.DRIP && (
-        <Box mt="lg">
-          <Text fw={500} mb="sm">
-            Stage Timeline
-          </Text>
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="sm">
-            {dripStages.map((stage, idx) => (
-              <Paper key={idx} withBorder p="sm" radius="sm" bg="violet.0">
-                <Group gap="xs" mb="xs">
-                  <Avatar size="xs" color="violet">
-                    {idx + 1}
-                  </Avatar>
-                  <Text size="xs" fw={500}>
-                    Stage {idx + 1}
-                  </Text>
-                </Group>
-                <Text size="xs" c="dimmed" lineClamp={1}>
-                  {templatesData?.find((t) => t.value === stage.templateId)
-                    ?.label || "No template"}
-                </Text>
-                <Text size="xs" c="violet">
-                  {`${stage.delay} ${stage.delayUnit} delay`}
-                  {(stage.delayUnit === "days" ||
-                    stage.delayUnit === "weeks" ||
-                    stage.delayUnit === "months") &&
-                    ` at ${stage.sendAtTime}`}
-                </Text>
-              </Paper>
-            ))}
-          </SimpleGrid>
-        </Box>
-      )}
-    </Card>
-  );
-
-  if (isEdit) {
-    return (
-      <Container size="lg" px="lg" pb={"lg"}>
-        <form onSubmit={form.onSubmit(handleSubmit)}>
-          {renderHeader()}
-          <Stack gap="lg">
-            {renderBasicInfo()}
-            {renderTemplateSelection()}
-            {renderConfiguration()}
-          </Stack>
-
-          <Group
-            justify="flex-end"
-            mt="xl"
-            pt="lg"
-            style={{ borderTop: "1px solid var(--mantine-color-gray-3)" }}
-          >
-            <RateupButtonPrimary
-              title={translations("Cancel")}
-              variant="outline"
-              onClick={close}
-            />
-            <RateupButtonPrimary
-              loading={updateCampaignMutation.isPending}
-              title={translations("Update Campaign") ?? "Update Campaign"}
-              type="submit"
-            />
-          </Group>
-        </form>
-      </Container>
-    );
-  }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [form, handleSubmit]);
 
   return (
-    <Container size="lg" px="lg" pb={"lg"}>
-      {renderHeader()}
-
-      <Tabs
-        value={activeTab}
-        onChange={setActiveTab}
-        variant="pills"
-        radius="md"
-      >
-        <Tabs.List justify="center" mb="xl">
-          <Tabs.Tab value="basic" leftSection={<IconUsers size={16} />}>
-            Basic Info
-          </Tabs.Tab>
-          <Tabs.Tab value="templates" leftSection={<IconTemplate size={16} />}>
-            Templates
-          </Tabs.Tab>
-          <Tabs.Tab value="settings" leftSection={<IconSettings size={16} />}>
-            Settings
-          </Tabs.Tab>
-          <Tabs.Tab value="review" leftSection={<IconCheck size={16} />}>
-            Review
-          </Tabs.Tab>
-        </Tabs.List>
-
-        <form
-          onSubmit={form.onSubmit(handleSubmit)}
-          onKeyDown={getHotkeyHandler([
-            [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
-          ])}
-        >
-          <Box>
-            <Tabs.Panel value="basic">{renderBasicInfo()}</Tabs.Panel>
-            <Tabs.Panel value="templates">
-              {renderTemplateSelection()}
-            </Tabs.Panel>
-            <Tabs.Panel value="settings">{renderConfiguration()}</Tabs.Panel>
-            <Tabs.Panel value="review">{renderSummary()}</Tabs.Panel>
-          </Box>
-
-          <Group
-            justify="space-between"
-            mt="xl"
-            pt="lg"
-            style={{ borderTop: "1px solid var(--mantine-color-gray-3)" }}
-          >
-            <Group></Group>
-
-            <Group>
-              <RateupButtonPrimary
-                title={translations("Cancel")}
-                variant="outline"
-                onClick={close}
-              />
-
-              {activeTab === "review" ? (
-                <RateupButtonPrimary
-                  title={translations("Create Campaign")}
-                  loading={createCampaignMutation.isPending}
-                  type="submit"
-                  disabled={!isFormValid}
-                  rightIcon={<IconRocket size={16} />}
-                />
+    <Dialog open onOpenChange={(open) => !open && close()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {isEdit ? "Edit Campaign" : "Create New Campaign"}
+            <Badge variant="secondary" className="gap-1">
+              {form.watch("type") === CampaignType.DRIP ? (
+                <IconWand className="h-3 w-3" />
               ) : (
+                <IconRocket className="h-3 w-3" />
+              )}
+              {form.watch("type") === CampaignType.DRIP
+                ? "Drip Campaign"
+                : "WhatsApp Campaign"}
+            </Badge>
+          </DialogTitle>
+          <DialogDescription>
+            {isEdit
+              ? "Update your campaign details"
+              : "Set up your campaign details and message"}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as typeof activeTab)}
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="basic">Basic Info</TabsTrigger>
+            <TabsTrigger value="templates" disabled={!form.formState.isValid}>
+              Templates
+            </TabsTrigger>
+          </TabsList>
+
+          <Form {...form}>
+            <form
+              id="create-campaign-form"
+              onSubmit={form.handleSubmit(handleSubmit)}
+            >
+              <TabsContent value="basic" className="space-y-4 mt-4">
+                <div className="space-y-4">
+                  {!isEdit && (
+                    <FormField
+                      control={form.control}
+                      name="teamId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Team *</FormLabel>
+                          <FormControl>
+                            <TeamSelector {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Campaign Name *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g., Summer Sale 2025"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="whatsappSettingsPhoneId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number *</FormLabel>
+                        <FormControl>
+                          <AccountSelector {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+                    <CardContent className="pt-4">
+                      <FormField
+                        control={form.control}
+                        name="useUserConsent"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start justify-between space-y-0">
+                            <div className="space-y-1 flex-1">
+                              <div className="flex items-center gap-2">
+                                <IconCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                <FormLabel className="font-medium">
+                                  User Consent
+                                </FormLabel>
+                              </div>
+                              <FormDescription className="text-xs">
+                                {field.value
+                                  ? "Only send messages to contacts who have given consent"
+                                  : "Send messages to all contacts regardless of consent status"}
+                              </FormDescription>
+                              <p className="text-xs text-blue-600 dark:text-blue-400">
+                                Recommended: Keep enabled for compliance
+                              </p>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {form.watch("type") === CampaignType.DRIP && (
+                    <Alert>
+                      <IconInfoCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        <strong>Drip campaigns</strong> allow you to send a
+                        series of messages to contacts over time. Configure your
+                        message stages in the Templates tab.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="templates" className="mt-4">
+                {form.watch("type") === CampaignType.DRIP ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Configure your drip campaign stages ({dripStages.length}{" "}
+                        stages)
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addDripStage}
+                      >
+                        <IconPlus className="mr-2 h-4 w-4" />
+                        Add Stage
+                      </Button>
+                    </div>
+
+                    <ScrollArea className="h-[400px] pr-4">
+                      <div className="space-y-3">
+                        {dripStages.map((stage, idx) => (
+                          <Card key={idx} className="bg-muted/50">
+                            <CardContent className="p-4">
+                              <div className="mb-3 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-7 w-7 bg-violet-100 dark:bg-violet-900">
+                                    <AvatarFallback className="text-xs text-violet-600 dark:text-violet-400">
+                                      {idx + 1}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-sm font-medium">
+                                    Stage {idx + 1}
+                                  </span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={() => removeDripStage(idx)}
+                                  disabled={dripStages.length === 1}
+                                >
+                                  <IconTrash className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+
+                              <div
+                                className={`grid gap-3 ${
+                                  stage.delayUnit === "minutes" ||
+                                  stage.delayUnit === "hours"
+                                    ? "grid-cols-3"
+                                    : "grid-cols-2"
+                                }`}
+                              >
+                                <div className="space-y-2 col-span-full">
+                                  <Label className="text-xs">
+                                    Template{" "}
+                                    <span className="text-destructive">*</span>
+                                  </Label>
+                                  <Select
+                                    value={stage.templateId}
+                                    onValueChange={(val) =>
+                                      updateDripStage(idx, "templateId", val)
+                                    }
+                                  >
+                                    <SelectTrigger
+                                      className={`h-9 ${!stage.templateId ? "border-destructive" : ""}`}
+                                    >
+                                      <SelectValue placeholder="Select template" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {templatesData.map((template) => (
+                                        <SelectItem
+                                          key={template.value}
+                                          value={template.value}
+                                        >
+                                          {template.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  {!stage.templateId && (
+                                    <p className="text-xs text-destructive">
+                                      Template is required
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Delay</Label>
+                                  <div className="relative">
+                                    <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
+                                    <Input
+                                      type="number"
+                                      min={1}
+                                      step={1}
+                                      value={stage.delay}
+                                      onChange={(e) =>
+                                        updateDripStage(
+                                          idx,
+                                          "delay",
+                                          parseInt(e.target.value) || 1,
+                                        )
+                                      }
+                                      className="h-9 pl-8"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label className="text-xs">Unit</Label>
+                                  <Select
+                                    value={stage.delayUnit}
+                                    onValueChange={(val) =>
+                                      updateDripStage(idx, "delayUnit", val)
+                                    }
+                                  >
+                                    <SelectTrigger className="h-9">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="minutes">
+                                        Minutes
+                                      </SelectItem>
+                                      <SelectItem value="hours">
+                                        Hours
+                                      </SelectItem>
+                                      <SelectItem value="days">Days</SelectItem>
+                                      <SelectItem value="weeks">
+                                        Weeks
+                                      </SelectItem>
+                                      <SelectItem value="months">
+                                        Months
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                {(stage.delayUnit === "days" ||
+                                  stage.delayUnit === "weeks" ||
+                                  stage.delayUnit === "months") && (
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">
+                                      Send at time
+                                    </Label>
+                                    <div className="relative">
+                                      <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
+                                      <Input
+                                        type="time"
+                                        value={stage.sendAtTime}
+                                        onChange={(e) =>
+                                          updateDripStage(
+                                            idx,
+                                            "sendAtTime",
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="h-9 pl-8"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Choose a template for your campaign
+                    </p>
+
+                    <FormField
+                      control={form.control}
+                      name="waTemplateId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Choose Template{" "}
+                            <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select template" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {templatesData.map((template) => (
+                                <SelectItem
+                                  key={template.value}
+                                  value={template.value}
+                                >
+                                  {template.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {dynamicVariables && dynamicVariables.length > 0 && (
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="text-sm font-medium">
+                            Dynamic Variables
+                          </h4>
+                          <p className="text-xs text-muted-foreground">
+                            Map dynamic content to your message variables
+                          </p>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {dynamicVariables.map((_, i) => (
+                            <FormField
+                              key={i}
+                              control={form.control}
+                              name={`dynamicTags.${i}`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">
+                                    Variable {`{{${i + 1}}}`}{" "}
+                                    <span className="text-destructive">*</span>
+                                  </FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    value={field.value || undefined}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger className="h-9">
+                                        <SelectValue placeholder="Select dynamic tag" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="name">Name</SelectItem>
+                                      {customFields?.map((customField) => (
+                                        <SelectItem
+                                          key={customField.slug}
+                                          value={customField.slug}
+                                        >
+                                          {customField.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+            </form>
+            <DialogFooter className="mt-6">
+              <Button type="button" variant="outline" onClick={close}>
+                Cancel
+              </Button>
+
+              {activeTab === "basic" ? (
                 <Button
-                  onClick={handleNextTab}
-                  rightSection={<IconArrowRight size={16} />}
-                  disabled={!isTabCompleted(activeTab)}
+                  type="button" // ✅ MUST be button
+                  onClick={handleNext} // ✅ NO submit
+                  className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
                 >
                   Next
                 </Button>
+              ) : (
+                <Button
+                  type="submit" // ✅ ONLY submit button
+                  form="create-campaign-form"
+                  disabled={
+                    isEdit
+                      ? updateCampaignMutation.isPending
+                      : !isFormValid || createCampaignMutation.isPending
+                  }
+                  className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
+                >
+                  {isEdit
+                    ? updateCampaignMutation.isPending
+                      ? "Updating..."
+                      : "Update Campaign"
+                    : createCampaignMutation.isPending
+                      ? "Creating..."
+                      : "Create Campaign"}
+                </Button>
               )}
-            </Group>
-          </Group>
-        </form>
-      </Tabs>
-    </Container>
+            </DialogFooter>
+          </Form>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
   );
 };
 
