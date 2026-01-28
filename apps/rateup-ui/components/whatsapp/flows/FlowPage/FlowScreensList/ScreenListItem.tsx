@@ -397,8 +397,8 @@ function ScreenListItem({
                   label={
                     dbFlow.pendingSave
                       ? translations(
-                          "Save your flow to WhatsApp, so that you can test or share draft version before publishing",
-                        )
+                        "Save your flow to WhatsApp, so that you can test or share draft version before publishing",
+                      )
                       : translations("No changes to save")
                   }
                 >

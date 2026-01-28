@@ -7,14 +7,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border-radius: 1rem;
   box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.1);
 }
 
 .responses-table-container {
   flex: 1 1 0;
   overflow: hidden;
-  border-radius: 1rem;
   box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -88,4 +86,48 @@
   .responses-table-container :global(.pagination-total-rows-text) {
     display: none;
   }
+}
+
+.compactTable :global(table) {
+  width: 100% !important;
+  table-layout: auto !important;
+}
+
+.compactTable :global(table thead tr th) {
+  padding: 4px 8px !important;
+  font-size: 0.75rem !important;
+  height: 32px !important;
+  white-space: nowrap !important;
+  width: auto !important;
+}
+
+.compactTable :global(table tbody tr td) {
+  padding: 4px 8px !important;
+  font-size: 0.75rem !important;
+  height: 32px !important;
+  white-space: nowrap !important;
+  max-width: 200px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.compactTable :global(.mantine-Pagination-root) {
+  font-size: 0.75rem !important;
+  transform: scale(0.95);
+  transform-origin: right center;
+}
+
+/* Left align the filter buttons in the table header */
+.compactTable :global(.filter-and-other-btns-container) {
+  justify-content: flex-start !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.compactTable
+  :global(.filter-and-other-btns-container .mantine-Group-root:first-child) {
+  margin-right: 0 !important;
+  display: none !important;
+  /* Hide empty space filler if present */
 }

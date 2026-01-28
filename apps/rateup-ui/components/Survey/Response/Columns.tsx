@@ -1,20 +1,21 @@
 "use client";
 
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Anchor,
-  Badge,
-  Button,
-  Center,
-  Group,
-  Menu,
-  rem,
-  Stack,
-  Text,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Tooltip,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   IconChevronDown,
   IconEye,
@@ -53,176 +54,178 @@ export const useSurveyResponseColumns = ({
   enableTicket,
   surveyId,
   typeWa = false,
-}) => {
+}: any) => {
   const translations = useTranslations();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const column: ColumnDef<any>[] = useMemo(
     () => [
       {
         header: () => (
-          <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
+          <span className="truncate font-semibold text-lg min-w-[200px] max-w-[200px] block">
             {translations("Created At")}
-          </Text>
+          </span>
         ),
         filterFn: fuzzyFilter,
         accessorKey: "createdAt",
         cell: (info) => (
-          <Text p={10} miw={200}>
+          <div className="p-2.5 min-w-[200px]">
             {dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A")}
-          </Text>
+          </div>
         ),
       },
       ...(questions?.length > 0
-        ? questions?.map((q) => {
-            const content =
-              getReplacedTitleFromVariable({
-                title:
-                  q?.title[
-                    selectedLanguage ? selectedLanguage : defaultLanguage
-                  ],
-                surveyId,
-              }) ||
-              q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
-              q?.description[
+        ? questions?.map((q: any) => {
+          const content =
+            getReplacedTitleFromVariable({
+              title:
+                q?.title[
                 selectedLanguage ? selectedLanguage : defaultLanguage
-              ] ||
-              q?.label?.[
-                selectedLanguage ? selectedLanguage : defaultLanguage
-              ] ||
-              "";
-            return {
-              ...(![
-                QuestionType.Rating,
-                QuestionType.Opinion,
-                QuestionType.Number,
-              ].includes(q?.type) && {
-                filterFn: fuzzyFilter,
-              }),
-              accessorFn: (row) => {
-                const response = row.responses
-                  ?.filter((item) => item?.questionId === q.id)
-                  ?.find((item) => item?.type === q.type)?.response[q.type];
-                if (
-                  [
-                    QuestionType.Rating,
-                    QuestionType.Opinion,
-                    QuestionType.Number,
-                  ].includes(q.type)
-                ) {
-                  return Number(response);
-                }
+                ],
+              surveyId,
+            }) ||
+            q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
+            q?.description[
+            selectedLanguage ? selectedLanguage : defaultLanguage
+            ] ||
+            q?.label?.[
+            selectedLanguage ? selectedLanguage : defaultLanguage
+            ] ||
+            "";
+          return {
+            ...(![
+              QuestionType.Rating,
+              QuestionType.Opinion,
+              QuestionType.Number,
+            ].includes(q?.type) && {
+              filterFn: fuzzyFilter,
+            }),
+            accessorFn: (row: any) => {
+              const response = row.responses
+                ?.filter((item: any) => item?.questionId === q.id)
+                ?.find((item: any) => item?.type === q.type)?.response[q.type];
+              if (
+                [
+                  QuestionType.Rating,
+                  QuestionType.Opinion,
+                  QuestionType.Number,
+                ].includes(q.type)
+              ) {
+                return Number(response);
+              }
 
-                return response;
-              },
-              id: content + "_,_" + q.type + "_,_" + q.id,
-              header: () => (
-                <HoverCardComponent content={content} fw={600} fz={"lg"} />
-              ),
-              enableColumnFilter: ![
-                QuestionType.DocumentPicker,
-                QuestionType.PhotoPicker,
-                QuestionType.Photo,
-                QuestionType.PCQ,
-              ].includes(q.type),
-              enableSorting: ![
-                QuestionType.Photo,
-                QuestionType.PCQ,
-                QuestionType.DocumentPicker,
-                QuestionType.PhotoPicker,
-              ].includes(q.type),
-              cell: (info) => {
-                return (
-                  <BadgeorTextorPreview
-                    questionType={q?.type}
-                    response={getResponse(q, info.getValue())}
-                  />
-                );
-              },
-            };
-          })
+              return response;
+            },
+            id: content + "_,_" + q.type + "_,_" + q.id,
+            header: () => (
+              <HoverCardComponent content={content} fw={600} fz={"lg"} />
+            ),
+            enableColumnFilter: ![
+              QuestionType.DocumentPicker,
+              QuestionType.PhotoPicker,
+              QuestionType.Photo,
+              QuestionType.PCQ,
+            ].includes(q.type),
+            enableSorting: ![
+              QuestionType.Photo,
+              QuestionType.PCQ,
+              QuestionType.DocumentPicker,
+              QuestionType.PhotoPicker,
+            ].includes(q.type),
+            cell: (info) => {
+              return (
+                <BadgeorTextorPreview
+                  questionType={q?.type}
+                  response={getResponse(q, info.getValue())}
+                />
+              );
+            },
+          };
+        })
         : []),
       {
         header: () => (
-          <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
+          <span className="truncate font-semibold text-lg min-w-[200px] max-w-[200px] block">
             {translations("Tags")}
-          </Text>
+          </span>
         ),
         accessorKey: "tag",
         cell: (info) => (
-          <Text p={10} miw={200}>
+          <div className="p-2.5 min-w-[200px]">
             {info.getValue() as string}
-          </Text>
+          </div>
         ),
       },
       ...(typeWa
         ? [
-            {
-              header: () => (
-                <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
-                  Respondent&apos;s Mobile Number
-                </Text>
-              ),
-              filterFn: fuzzyFilter,
-              accessorFn: (row) => row?.phone,
-              id: "respondentsMobileNumber",
-              cell: (info) => (
-                <Text p={10} miw={200}>
-                  {info.getValue()?.toString()}
-                </Text>
-              ),
-            },
-          ]
+          {
+            header: () => (
+              <span className="truncate font-semibold text-lg min-w-[200px] max-w-[200px] block">
+                Respondent&apos;s Mobile Number
+              </span>
+            ),
+            filterFn: fuzzyFilter,
+            accessorFn: (row: any) => row?.phone,
+            id: "respondentsMobileNumber",
+            cell: (info) => (
+              <div className="p-2.5 min-w-[200px]">
+                {info.getValue()?.toString()}
+              </div>
+            ),
+          },
+        ]
         : []),
       ...(enableTicket
         ? [
-            {
-              header: () => (
-                <Text truncate="end" miw={70} maw={70} fw={600} fz={"lg"}>
-                  {translations("Ticket")}
-                </Text>
-              ),
-              enableColumnFilter: false,
-              enableSorting: false,
-              accessorKey: "ticket",
-              cell: (info) => {
-                let ticketData = info.row.original.Ticket;
-                let ticketExist = ticketData?.length > 0;
-                return (
-                  <Center
-                    pr="80px"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      if (ticketExist) {
-                        let url = `/dashboard/tickets/${ticketData[0]?.id}`;
-                        window.open(url, "_blank");
-                      }
-                    }}
-                  >
-                    {ticketExist && (
-                      <Tooltip
-                        withArrow
-                        label={translations("View Ticket")}
-                        position="right-start"
-                      >
-                        <Stack>
-                          <IconTicket
-                            color="orange"
-                            style={{ width: rem(35), height: rem(35) }}
-                          />
-                        </Stack>
+          {
+            header: () => (
+              <span className="truncate font-semibold text-lg min-w-[70px] max-w-[70px] block">
+                {translations("Ticket")}
+              </span>
+            ),
+            enableColumnFilter: false,
+            enableSorting: false,
+            accessorKey: "ticket",
+            cell: (info) => {
+              let ticketData = info.row.original.Ticket;
+              let ticketExist = ticketData?.length > 0;
+              return (
+                <div
+                  className="flex items-center justify-center pr-20 cursor-pointer"
+                  onClick={() => {
+                    if (ticketExist) {
+                      let url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                      window.open(url, "_blank");
+                    }
+                  }}
+                >
+                  {ticketExist && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            <IconTicket
+                              color="orange"
+                              className="w-9 h-9"
+                            />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          {translations("View Ticket")}
+                        </TooltipContent>
                       </Tooltip>
-                    )}
-                  </Center>
-                );
-              },
+                    </TooltipProvider>
+                  )}
+                </div>
+              );
             },
-          ]
+          },
+        ]
         : []),
       {
         header: () => (
-          <Text truncate="end" fw={600} miw={200} maw={200} fz={"lg"}>
+          <span className="truncate font-semibold text-lg min-w-[200px] max-w-[200px] block">
             Action
-          </Text>
+          </span>
         ),
         enableColumnFilter: false,
         enableSorting: false,
@@ -243,7 +246,7 @@ export const useSurveyResponseColumns = ({
         accessorKey: "action",
       },
     ],
-    [questions, translations],
+    [questions, translations, enableTicket, selectedLanguage, surveyId, defaultLanguage, typeWa, open, setSelectedResponseId, setResponseTeamId, setSelectedRowId],
   );
   return column;
 };
@@ -264,7 +267,10 @@ function BadgeorTextorPreview({
   response: any;
 }>) {
   const translations = useTranslations();
-  const [previewModalopened, { open, close }] = useDisclosure(false);
+  const [previewModalOpened, setPreviewModalOpened] = useState(false);
+  const open = () => setPreviewModalOpened(true);
+  const close = () => setPreviewModalOpened(false);
+
   if (previewRequired.includes(questionType)) {
     return (
       <>
@@ -279,64 +285,63 @@ function BadgeorTextorPreview({
           headerTitle={translations("Preview")}
           onClose={close}
           imgObject={response}
-          opened={previewModalopened}
+          opened={previewModalOpened}
         />
       </>
     );
   } else if (questionType === QuestionType.DocumentPicker) {
     return (
-      <Text p={10} miw={200}>
+      <div className="p-2.5 min-w-[200px]">
         {response && (
-          <Anchor
+          <a
             href={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${response}`}
             download
+            className="text-primary hover:underline"
           >
             Download
-          </Anchor>
+          </a>
         )}
-      </Text>
+      </div>
     );
   } else if (badgeRequired.includes(questionType)) {
     return (
       <Badge
-        size="lg"
-        fw={600}
-        radius={10}
-        color={
-          getResponseArrayByQuestionType(questionType)?.find(
-            (res) => res.value === response,
-          )?.color
-        }
-        miw={100}
-        variant="light"
+        className="text-lg font-semibold rounded-[10px] min-w-[100px]"
+        variant="secondary"
+        style={{
+          backgroundColor:
+            getResponseArrayByQuestionType(questionType)?.find(
+              (res) => res.value === response,
+            )?.color,
+        }}
       >
         {response}
       </Badge>
     );
   } else if (questionType == QuestionType.Testimonial) {
     return (
-      <Stack>
+      <div className="flex flex-col gap-2">
         {response?.photo ? (
           <>
-            <Group>
-              <Text fw={300} fz="md" c="dark.3">
+            <div className="flex items-center gap-2">
+              <span className="font-light text-md text-gray-700 dark:text-gray-300">
                 {translations("Profile Picture:")}{" "}
-              </Text>
+              </span>
               <Button
-                leftSection={<IconEye />}
-                w={"fit-content"}
+                className="w-fit"
                 onClick={open}
-                radius={"lg"}
-                size="compact-xs"
+                size="sm"
+                variant="outline"
               >
+                <IconEye className="mr-2 h-4 w-4" />
                 {translations("Preview")}
               </Button>
-            </Group>
+            </div>
             <PreviewModal
               headerTitle={translations("Preview")}
               onClose={close}
               imgObject={response?.photo}
-              opened={previewModalopened}
+              opened={previewModalOpened}
             />
           </>
         ) : null}
@@ -344,20 +349,16 @@ function BadgeorTextorPreview({
           content={response?.content}
           questionType={questionType}
         />
-      </Stack>
+      </div>
     );
   } else if (questionType == QuestionType.File) {
     return response ? (
-      <Group gap={"xs"}>
-        <Text
-          fw={300}
-          fz="md"
-          c="dark.3"
-          w={150}
-          style={{ overflowWrap: "break-word" }}
+      <div className="flex gap-2 items-center">
+        <span
+          className="font-light text-md text-gray-700 dark:text-gray-300 w-[150px] break-words"
         >
           {getFileNameFromKey(response)}
-        </Text>
+        </span>
         <RateupButtonBlue
           onClick={() => {
             window.open(getFileUrlFromKey(response), "_blank");
@@ -366,7 +367,7 @@ function BadgeorTextorPreview({
           leftIcon={<IconEye size={"1rem"} />}
           size="compact-xs"
         />
-      </Group>
+      </div>
     ) : null;
   } else {
     return (
@@ -384,36 +385,27 @@ export function ActionMenu({
   setSelectedRowId,
   ticketData,
   enableTicket,
-}) {
+}: any) {
   const ticketExist = ticketData?.length > 0;
   const translations = useTranslations();
   return (
-    <Stack px="sm">
-      <Menu
-        position="bottom-end"
-        offset={4}
-        withArrow
-        arrowPosition="side"
-        transitionProps={{ transition: "rotate-right", duration: 150 }}
-      >
-        <Menu.Target>
+    <div className="px-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            radius="lg"
-            size="xs"
-            rightSection={<IconChevronDown size="1rem" />}
-            style={{ maxWidth: "fit-content", marginLeft: "-14px" }}
+            className="rounded-lg text-xs text-gray-500 max-w-fit -ml-3.5"
+            size="sm"
           >
-            <Text size="xs" c="dark.5">
-              {translations("Select Action")}
-            </Text>
+            {translations("Select Action")}
+            <IconChevronDown className="ml-2 h-4 w-4" />
           </Button>
-        </Menu.Target>
+        </DropdownMenuTrigger>
 
-        <Menu.Dropdown>
+        <DropdownMenuContent align="end">
           {enableTicket && (
-            <Menu.Item
-              color={ticketExist ? "orange" : "blue.7"}
+            <DropdownMenuItem
+              className={ticketExist ? "text-orange-500" : "text-blue-700"}
               onClick={() => {
                 if (ticketExist) {
                   let url = `/dashboard/tickets/${ticketData[0]?.id}`;
@@ -423,29 +415,25 @@ export function ActionMenu({
                   setResponseTeamId(resTeamId);
                 }
               }}
-              leftSection={
-                <IconTicket style={{ width: rem(14), height: rem(14) }} />
-              }
             >
+              <IconTicket className="mr-2 h-3.5 w-3.5" />
               {ticketExist
                 ? translations("View Ticket")
                 : translations("Create Ticket")}
-            </Menu.Item>
+            </DropdownMenuItem>
           )}
-          <Menu.Item
-            color="red"
+          <DropdownMenuItem
+            className="text-red-500"
             onClick={() => {
               setSelectedRowId(resId);
               open();
             }}
-            leftSection={
-              <IconTrashXFilled style={{ width: rem(14), height: rem(14) }} />
-            }
           >
+            <IconTrashXFilled className="mr-2 h-3.5 w-3.5" />
             {translations("Delete Response")}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
-    </Stack>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

@@ -1,89 +1,83 @@
-.edit-flow-root-div {
+.edit-flow-container {
+  display: grid;
+  grid-template-columns: 280px 1fr 400px;
   height: 100%;
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.625rem;
   overflow: hidden;
+  gap: 0;
+  background-color: var(--mantine-color-gray-0);
 }
 
-.edit-flow-root-div > div {
-  min-width: 200px;
-  height: 100%;
-  border-radius: 1rem;
-  box-shadow:
-    rgba(0, 0, 0, 0.05) 0px 1px 0px,
-    rgba(0, 0, 0, 0.11) 0px 0px 8px;
-  padding: 1rem;
-  background-color: light-dark(
-    var(--mantine-color-body),
-    var(--mantine-color-dark-6)
-  );
+.no-preview {
+  grid-template-columns: 280px 1fr;
 }
 
-.edit-flow-tabs-root {
-  height: 100%;
+.column-1 {
+  border-right: 1px solid var(--mantine-color-gray-3);
+  overflow-y: auto;
+  background-color: white;
 }
 
-.edit-flow-tabs-root :global(.mantine-Tabs-panel) {
-  height: 100%;
+.column-2 {
+  border-right: 1px solid var(--mantine-color-gray-3);
+  overflow-y: auto;
+  background-color: var(--mantine-color-gray-0);
 }
 
-.preview-container {
-  flex: 7 1 0;
+.column-3 {
+  overflow-y: auto;
+  background-color: #ECE5DD;
 }
 
-.questionTypeButton:hover {
-  border: 1px solid var(--tertiary-color);
-  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .edit-flow-container {
+    grid-template-columns: 240px 1fr 360px;
+  }
+  .no-preview {
+    grid-template-columns: 240px 1fr;
+  }
 }
 
-.editor-scroll-area-div > div > div {
-  display: block !important;
+@media (max-width: 1200px) {
+  .edit-flow-container {
+    grid-template-columns: 200px 1fr 320px;
+  }
+  .no-preview {
+    grid-template-columns: 200px 1fr;
+  }
 }
 
-.html-editor-div :global(.mantine-RichTextEditor-root),
-.rich-text-editor {
-  width: 100%;
+@media (max-width: 1024px) {
+  .edit-flow-container {
+    grid-template-columns: 180px 1fr 280px;
+  }
+  .no-preview {
+    grid-template-columns: 180px 1fr;
+  }
 }
 
-.text-input input {
-  cursor: pointer;
-  border-radius: 0.5rem;
+/* Scrollbar styling */
+.column-1::-webkit-scrollbar,
+.column-2::-webkit-scrollbar,
+.column-3::-webkit-scrollbar {
+  width: 6px;
 }
 
-.text-input input:focus {
-  cursor: initial;
+.column-1::-webkit-scrollbar-track,
+.column-2::-webkit-scrollbar-track,
+.column-3::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.text-input input:focus + :global(.mantine-TextInput-section) {
-  display: none;
+.column-1::-webkit-scrollbar-thumb,
+.column-2::-webkit-scrollbar-thumb,
+.column-3::-webkit-scrollbar-thumb {
+  background: var(--mantine-color-gray-4);
+  border-radius: 3px;
 }
 
-/* Length Tracker Styles BEGIN */
-/* Displays a char count at right side of input */
-.lengthTrackerParent :global(.mantine-TextInput-section) {
-  min-width: 70px;
-}
-
-.lengthTrackerParent :global(.mantine-Textarea-section) {
-  min-width: 70px;
-}
-
-.lengthTrackerParent :global(.mantine-TextInput-input) {
-  padding-right: 70px;
-}
-
-.lengthTrackerParent :global(.mantine-Textarea-input) {
-  padding-right: 70px;
-}
-
-/* Length Tracker Styles END */
-
-.editableTextDisplay {
-  padding: 4px;
-  border: 0.5px solid transparent;
-}
-.editableTextDisplay:hover {
-  border-radius: 8px;
-  border-color: rgba(0, 0, 0, 0.2);
+.column-1::-webkit-scrollbar-thumb:hover,
+.column-2::-webkit-scrollbar-thumb:hover,
+.column-3::-webkit-scrollbar-thumb:hover {
+  background: var(--mantine-color-gray-5);
 }

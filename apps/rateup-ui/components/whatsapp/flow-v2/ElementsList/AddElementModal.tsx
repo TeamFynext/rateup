@@ -1,0 +1,291 @@
+"use client";
+
+import {
+  IconAlignBoxLeftMiddleFilled,
+  IconCalendarTime,
+  IconCameraFilled,
+  IconCaretDownFilled,
+  IconClick,
+  IconFileFilled,
+  IconImageInPicture,
+  IconLink,
+  IconListCheck,
+  IconListDetails,
+  IconMoodSmileFilled,
+  IconPhoto,
+  IconPokerChip,
+  IconScaleOutline,
+  IconStarsFilled,
+  IconTextSize,
+  IconThumbUpFilled,
+} from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
+
+import { QuestionType2, LDResponse2, YNResponse, SmileyResponse2, RatingScale } from "@/types/enums";
+import { FlowQuestionTypes2 } from "@/utils/constants";
+import { showErrorToast } from "@/utils/notifications";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+
+import useFlowStoreV3 from "../utils/store";
+import styles from "./AddElementModal.module.css";
+
+// Icon mapping for question types
+const questionIcons = {
+  [QuestionType2.TextInput]: IconTextSize,
+  [QuestionType2.TextArea]: IconAlignBoxLeftMiddleFilled,
+  [QuestionType2.CheckboxGroup]: IconListCheck,
+  [QuestionType2.RadioButtonsGroup]: IconClick,
+  [QuestionType2.Dropdown]: IconCaretDownFilled,
+  [QuestionType2.Rating]: IconStarsFilled,
+  [QuestionType2.Smiley]: IconMoodSmileFilled,
+  [QuestionType2.LD]: IconThumbUpFilled,
+  [QuestionType2.YN]: IconPokerChip,
+  [QuestionType2.Opinion]: IconScaleOutline,
+  [QuestionType2.DatePicker]: IconCalendarTime,
+  [QuestionType2.Image]: IconPhoto,
+  [QuestionType2.PhotoPicker]: IconCameraFilled,
+  [QuestionType2.DocumentPicker]: IconFileFilled,
+  [QuestionType2.EmbeddedLink]: IconLink,
+  [QuestionType2.ChipsSelector]: IconListDetails,
+  [QuestionType2.ImageCarousel]: IconImageInPicture,
+  [QuestionType2.TextHeading]: IconTextSize,
+  [QuestionType2.TextSubheading]: IconTextSize,
+  [QuestionType2.TextBody]: IconTextSize,
+  [QuestionType2.TextCaption]: IconTextSize,
+  [QuestionType2.OptIn]: IconListCheck,
+};
+
+interface AddElementModalProps {
+  opened: boolean;
+  close: () => void;
+}
+
+// Modal for adding new elements to the flow
+function AddElementModal({ opened, close }: AddElementModalProps) {
+  const translations = useTranslations();
+  const { getCurrentScreen, getScreens, addComponentToScreen } = useFlowStoreV3();
+
+  const getLabel = (type: QuestionType2) => {
+    switch (type) {
+      case QuestionType2.LD:
+        return "Like or Dislike";
+      case QuestionType2.YN:
+        return "Yes or No";
+      default:
+        return type;
+    }
+  };
+
+  const getDefaultDataSource = (type: QuestionType2) => {
+    const mapEnumToDataSource = (enumObj: object) =>
+      Object.values(enumObj).map((value, index) => ({
+        id: (index + 1).toString(),
+        title: value,
+      }));
+
+    switch (type) {
+      case QuestionType2.Rating:
+        return Object.entries(RatingScale).map(([description, title], index) => ({
+          id: (index + 1).toString(),
+          title,
+          description,
+        }));
+      case QuestionType2.Smiley:
+        return mapEnumToDataSource(SmileyResponse2);
+      case QuestionType2.LD:
+        return mapEnumToDataSource(LDResponse2);
+      case QuestionType2.YN:
+        return mapEnumToDataSource(YNResponse);
+      case QuestionType2.Opinion:
+        return Array.from({ length: 10 }).map((_, index) => ({
+          id: (index + 1).toString(),
+          title: (index + 1).toString(),
+        }));
+      default:
+        return [];
+    }
+  };
+
+  const handleTypeSelection = (type: QuestionType2) => {
+    const screen = getCurrentScreen();
+    if (!screen) {
+      showErrorToast(translations("Please select a screen first"));
+      return;
+    }
+
+    const formElementChildren = screen.layout.children;
+
+    // Validation checks
+    if (formElementChildren.length > 50) {
+      showErrorToast(
+        translations("Only 50 components allowed in a screen"),
+        "error-max-screen-elements",
+      );
+      return;
+    }
+
+    if (
+      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(type) &&
+      formElementChildren.find((c) => c.type === type)
+    ) {
+      showErrorToast(
+        `Only one ${type} allowed per screen`,
+        "error-max-screen-elements",
+      );
+      return;
+    }
+
+    if (
+      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(type) &&
+      formElementChildren.some((child) =>
+        ["DocumentPicker", "PhotoPicker"].includes(child.type),
+      )
+    ) {
+      showErrorToast(
+        translations(
+          "Using both PhotoPicker and DocumentPicker components on a single screen is not allowed",
+        ),
+        "error-max-screen-elements",
+      );
+      return;
+    }
+
+    if (
+      type === QuestionType2.ImageCarousel &&
+      formElementChildren.filter((c) => c.type === ("ImageCarousel" as any))
+        .length >= 2
+    ) {
+      showErrorToast(
+        translations("Maximum of 2 ImageCarousel components allowed per screen"),
+        "error-max-screen-elements",
+      );
+      return;
+    }
+
+    if (
+      type === QuestionType2.ImageCarousel &&
+      getScreens()
+        .flatMap((screen) => screen.layout.children)
+        .filter((child) => child.type === ("ImageCarousel" as any)).length >= 3
+    ) {
+      showErrorToast(
+        translations("Maximum of 3 ImageCarousel components allowed per flow"),
+        "error-max-screen-elements",
+      );
+      return;
+    }
+
+    // Create new element with a unique ID
+    const newElement: any = {
+      id: crypto.randomUUID().replace(/-/g, "_"),
+      type,
+      metaType: type,
+      required: false,
+      visible: true,
+    };
+
+    // Add default values based on type
+    switch (type) {
+      case QuestionType2.TextInput:
+        newElement.label = "";
+        newElement.name = `text_input_${Date.now()}`;
+        newElement["input-type"] = "text";
+        break;
+      case QuestionType2.CheckboxGroup:
+      case QuestionType2.RadioButtonsGroup:
+        newElement.label = "";
+        newElement.name = `choice_${Date.now()}`;
+        newElement["data-source"] = [];
+        break;
+      case QuestionType2.LD:
+      case QuestionType2.YN:
+        newElement.type = "RadioButtonsGroup";
+        newElement.label = "";
+        newElement.name = `choice_${Date.now()}`;
+        newElement["data-source"] = getDefaultDataSource(type);
+        newElement.required = true;
+        break;
+      case QuestionType2.Rating:
+      case QuestionType2.Smiley:
+      case QuestionType2.Opinion:
+      case QuestionType2.Dropdown:
+        newElement.type = "Dropdown";
+        newElement.label = "";
+        newElement["data-source"] = getDefaultDataSource(type);
+        newElement.required = true;
+        break;
+      case QuestionType2.TextArea:
+        newElement.label = "";
+        newElement.name = `textarea_${Date.now()}`;
+        newElement["max-length"] = 600;
+        break;
+      case QuestionType2.Footer:
+        newElement.label = "Continue";
+        newElement["on-click-action"] = {
+          name: "complete",
+          payload: {},
+        };
+        break;
+      default:
+        if (type.toString().includes("Text")) {
+          newElement.text = "";
+        }
+    }
+
+    addComponentToScreen(newElement);
+    close();
+  };
+
+  return (
+    <Dialog open={opened} onOpenChange={(open) => !open && close()}>
+      <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogHeader>
+          <DialogTitle>{translations("Add Element")}</DialogTitle>
+          <DialogDescription>
+            {translations("Select an element to add to your flow")}
+          </DialogDescription>
+        </DialogHeader>
+
+        <ScrollArea className="h-full max-h-[60vh] pr-4">
+          <div className="space-y-6">
+            {FlowQuestionTypes2.map((group, index) => (
+              <div key={index}>
+                <h5 className="text-sm font-medium text-muted-foreground mb-3">
+                  {group.title}
+                </h5>
+                <div className="grid grid-cols-3 gap-3">
+                  {group.questionTypes.map((type) => {
+                    const Icon = questionIcons[type];
+                    return (
+                      <Button
+                        key={type}
+                        variant="outline"
+                        className={styles["element-type-button"] + " h-auto py-4 flex flex-col items-center gap-2"}
+                        onClick={() => handleTypeSelection(type as QuestionType2)}
+                      >
+                        {Icon && <Icon size={20} />}
+                        <span className="text-sm font-medium">
+                          {getLabel(type as QuestionType2)}
+                        </span>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default AddElementModal;

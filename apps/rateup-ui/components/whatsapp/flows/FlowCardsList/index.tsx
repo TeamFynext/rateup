@@ -1,5 +1,3 @@
-import { Box } from "@mantine/core";
-
 import FlowCard from "../FlowCard";
 
 function FlowCardsList({
@@ -7,8 +5,14 @@ function FlowCardsList({
   teamsData,
 }: Readonly<{ flows: DbFlow[]; teamsData }>) {
   return (
-    <Box className="cards-grid-global-class">
-      {flows?.map(({ dbFlowId, name, status, createdAt, version }) => {
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {flows?.map(({ dbFlowId, name, status, createdAt, version, survey }) => {
+        const responseCount =
+          survey?.teams?.reduce(
+            (acc: number, team: any) =>
+              acc + (team.surveyStats?.completed || 0),
+            0,
+          ) || 0;
         return (
           <FlowCard
             dbFlowId={dbFlowId}
@@ -18,10 +22,11 @@ function FlowCardsList({
             key={dbFlowId}
             teamsData={teamsData}
             version={version}
+            responseCount={responseCount}
           />
         );
       })}
-    </Box>
+    </div>
   );
 }
 

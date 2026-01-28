@@ -1,182 +1,139 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useParams } from "next/navigation";
 
-import { ActionIcon, Box, Tooltip } from "@mantine/core";
-import { IconEye, IconEyeClosed } from "@tabler/icons-react";
 import _ from "lodash";
 
-import { QuestionType2 } from "@/types/enums";
 import {
   useUpdateFlowMutation,
   useWaFlowFromDb,
 } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import { FlowQuestionTypes2 } from "@/utils/constants";
-import { showErrorToast } from "@/utils/notifications";
 
-import { PreviewPanel } from "../flows/Preview/PreviewPanel";
+import ElementsList from "./ElementsList";
+import WhatsAppPreview from "./Preview/WhatsAppPreview";
+import ScreensList from "./ScreensList";
+import useFlowStoreV3 from "./utils/store";
 import styles from "./EditFlow.module.css";
-import FlowScreensList from "./FlowScreensList";
-import { QuestionTypeSelection } from "./QuestionTypeSelection";
-import { FlowQuestionDetailedView } from "./RightSide/FlowQuestionDetailedView";
-import useFlowStore, { EditFlowRightPanel } from "./utils/store";
 
-function EditFlow() {
-  const [previewOpened, setPreviewOpened] = useState(false);
+interface EditFlowV3Props {
+  previewOpened?: boolean;
+  setPreviewOpened?: (opened: boolean) => void;
+}
+
+function EditFlowV3({ previewOpened = true, setPreviewOpened }: EditFlowV3Props = {}) {
   const params = useParams();
   const dbFlowId = params.dbFlowId as string;
 
   const { data: dbFlow, isPending } = useWaFlowFromDb(dbFlowId);
   const {
-    getCurrentScreen,
     getScreens,
     screens,
-    activeEditor,
-    setActiveEditor,
-    setCurrentElement,
+    addScreens,
+    setCurrentScreenId,
+    currentScreenId,
     setTicketIssued,
     ticketIssued,
-  } = useFlowStore();
+    logicJumps,
+    setAllLogicJumps,
+  } = useFlowStoreV3();
   const updateFlow = useUpdateFlowMutation();
 
+  // Initialize screens from DB
   useEffect(() => {
-    if (!isPending && !_.isEqual(dbFlow.json.screens, getScreens())) {
-      updateFlow.mutate({
-        dbFlowId,
-        data: {
-          json: {
-            screens: getScreens() as any,
-            version: "7.2",
-          },
-          ticketIssued:
-            ticketIssued && !_.isEqual(dbFlow.ticketIssued, ticketIssued)
-              ? ticketIssued
-              : undefined,
+    if (dbFlow) {
+      // Normalize elements to ensure they have metaType
+      const normalizedScreens = (dbFlow.json.screens || []).map((screen: any) => ({
+        ...screen,
+        layout: {
+          ...screen.layout,
+          children: (screen.layout.children || []).map((element: any) => ({
+            ...element,
+            // Ensure metaType is set, fallback to type if missing
+            metaType: element.metaType || element.type,
+          })),
         },
-      });
-    }
-  }, [dbFlowId, screens, isPending, ticketIssued]);
+      }));
 
-  const handleTypeSelection = (type: QuestionType2) => {
-    const screenToBeEdited = getCurrentScreen();
-    let formElementChildren = screenToBeEdited.layout.children;
-    if (formElementChildren.length > 50)
-      return showErrorToast(
-        "Only 50 components in a screen",
-        "error-max-screen-elements",
-      );
-    if (
-      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(
-        type as QuestionType2,
-      ) &&
-      formElementChildren.find((c) => c.type === type)
-    ) {
-      return showErrorToast(
-        `Only one ${type} allowed per screen`,
-        "error-max-screen-elements",
-      );
-    } else if (
-      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(
-        type as QuestionType2,
-      ) &&
-      formElementChildren.some((child) =>
-        ["DocumentPicker", "PhotoPicker"].includes(child.type),
-      )
-    ) {
-      return showErrorToast(
-        "Using both PhotoPicker and DocumentPicker components on a single screen is not allowed per screen",
-        "error-max-screen-elements",
-      );
-    } else if (
-      type === QuestionType2.ImageCarousel &&
-      formElementChildren.filter((c) => c.type === ("ImageCarousel" as any))
-        .length >= 2
-    ) {
-      return showErrorToast(
-        "Maximum of 2 ImageCarousel components allowed per screen",
-        "error-max-screen-elements",
-      );
-    } else if (
-      type === QuestionType2.ImageCarousel &&
-      getScreens()
-        .flatMap((screen) => screen.layout.children)
-        .filter((child) => child.type === ("ImageCarousel" as any)).length >= 3
-    ) {
-      return showErrorToast(
-        "Maximum of 3 ImageCarousel components allowed per flow",
-        "error-max-screen-elements",
-      );
+      addScreens(normalizedScreens as any);
+      if (currentScreenId) {
+        const screenExists = getScreens().some(
+          (screen) => screen.id === currentScreenId,
+        );
+        if (!screenExists) {
+          setCurrentScreenId(normalizedScreens?.[0]?.id);
+        }
+      } else {
+        setCurrentScreenId(normalizedScreens?.[0]?.id);
+      }
     }
-    setCurrentElement(null, type);
-    setActiveEditor(EditFlowRightPanel.ElementEditor);
-  };
+  }, [dbFlow?.dbFlowId]);
+
+  // Initialize ticket data
   useEffect(() => {
-    setTicketIssued(dbFlow?.ticketIssued);
-  }, [dbFlow]);
+    if (dbFlow?.ticketIssued) {
+      setTicketIssued(dbFlow.ticketIssued);
+    }
+  }, [dbFlow?.ticketIssued]);
+
+  // Initialize logic jumps
+  useEffect(() => {
+    if (dbFlow?.logicJumps) {
+      setAllLogicJumps(dbFlow.logicJumps);
+    }
+  }, [dbFlow?.logicJumps]);
+
+  // Auto-save when screens or logic jumps change
+  useEffect(() => {
+    if (!isPending && dbFlow && screens.length > 0) {
+      // Deep comparison to avoid unnecessary saves
+      const screensChanged = !_.isEqual(dbFlow.json.screens, getScreens());
+      const logicJumpsChanged = !_.isEqual(dbFlow.logicJumps, logicJumps);
+      const ticketsChanged = ticketIssued && !_.isEqual(dbFlow.ticketIssued, ticketIssued);
+
+      if (screensChanged || logicJumpsChanged || ticketsChanged) {
+        const timeoutId = setTimeout(() => {
+          updateFlow.mutate({
+            dbFlowId,
+            data: {
+              json: {
+                screens: getScreens() as any,
+                version: "7.2",
+              },
+              logicJumps: logicJumpsChanged ? logicJumps : undefined,
+              ticketIssued: ticketsChanged ? ticketIssued : undefined,
+            },
+          });
+        }, 1000); // Debounce for 1 second
+
+        return () => clearTimeout(timeoutId);
+      }
+    }
+  }, [dbFlowId, screens, logicJumps, isPending, ticketIssued]);
 
   if (isPending) return <RateupLoader />;
 
   return (
-    <Box
-      className={styles["edit-flow-root-div"]}
-      style={{
-        position: "relative",
-      }}
-    >
-      {/* Left sidebar containing list of screens */}
-      <Box
-        style={{
-          flex: 3,
-          minWidth: "300px",
-        }}
-        p="0"
-      >
-        <FlowScreensList />
-      </Box>
-      {/* Center panel containing type-selection & questionEditor */}
-      <Box
-        style={{
-          flex: 6,
-          minWidth: "300px",
-          overflow: "auto",
-        }}
-      >
-        {activeEditor === EditFlowRightPanel.TypeSelection && (
-          <QuestionTypeSelection
-            questionTypeGroups={FlowQuestionTypes2}
-            handleTypeSelection={handleTypeSelection}
-          />
-        )}
-        {activeEditor === EditFlowRightPanel.ElementEditor && (
-          <FlowQuestionDetailedView />
-        )}
-      </Box>
-      {/* Right sidebar containing preview */}
-      <PreviewPanel previewOpened={previewOpened} version={2} />
-      <Tooltip label={"Open Preview"}>
-        <ActionIcon
-          style={{
-            position: "absolute",
-            right: "10px",
-            top: "0",
-            borderRadius: "100px",
-            height: "50px",
-            width: "50px",
-            zIndex: 2,
-          }}
-          onClick={() => setPreviewOpened((prev) => !prev)}
-        >
-          {!previewOpened ? (
-            <IconEyeClosed style={{ width: "60%", height: "60%" }} stroke={2} />
-          ) : (
-            <IconEye style={{ width: "70%", height: "70%" }} stroke={2} />
-          )}
-        </ActionIcon>
-      </Tooltip>
-    </Box>
+    <div className={`${styles["edit-flow-container"]} ${!previewOpened ? styles["no-preview"] : ""}`}>
+      {/* Column 1: Screens List */}
+      <div className={styles["column-1"]}>
+        <ScreensList />
+      </div>
+
+      {/* Column 2: Elements List with inline editing */}
+      <div className={styles["column-2"]}>
+        <ElementsList />
+      </div>
+
+      {/* Column 3: WhatsApp Preview */}
+      {previewOpened && (
+        <div className={styles["column-3"]}>
+          <WhatsAppPreview />
+        </div>
+      )}
+    </div>
   );
 }
 
-export default EditFlow;
+export default EditFlowV3;

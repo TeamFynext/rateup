@@ -2,29 +2,19 @@
 
 import { useRef } from "react";
 
-import { ImageIcon, Palette } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SliderCompatible from "@/components/ui/sliderCompatible";
-import { Switch } from "@/components/ui/switch";
-
-import { getLogoFileValueForFileInput } from "../utils";
-import ChipGroup from "./ChipGroup";
-import { logoFillTypes } from "./constants";
 
 function LogoTabpanel({ state, dispatch }) {
   const {
     qrBgColor,
     qrColor,
     logoSize,
-    logoFillType,
     logoBorderRadius,
-    logoFile,
-    isLogoEnabled = true,
   } = state;
 
   const translations = useTranslations();
@@ -44,139 +34,96 @@ function LogoTabpanel({ state, dispatch }) {
   const displayLogoRadius = normalizedLogoRadius[0];
 
   return (
-    <div className="rounded-lg p-2 flex flex-col gap-4 w-full max-w-xl">
-      <div className="border flex flex-col p-2.5 rounded-lg gap-2">
-        <div className="flex items-center gap-1.5">
-          <ImageIcon className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-semibold">
-            {translations("Logo Options")}
-          </h3>
-        </div>
-        <div className="space-y-2">
-          {/* Logo Toggle */}
-          <div className="flex items-center justify-between rounded-lg px-2.5 py-1.5 border">
-            <Label className="text-xs font-medium">
-              {translations("Enable Logo")}
-            </Label>
-            <Switch
-              checked={isLogoEnabled}
-              onCheckedChange={(checked) =>
-                dispatch({ type: "logo-image-switch", payload: checked })
-              }
-              className="data-[state=checked]:bg-primary scale-75"
-            />
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <div>
-              <Input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/svg+xml"
-                className="sr-only disabled:opacity-50"
-                onChange={(ev) => {
-                  const file = ev.target.files?.[0] ?? null;
-                  dispatch({ type: "file-input", payload: file });
-                  if (fileInputRef.current) fileInputRef.current.value = "";
-                }}
-                disabled={!isLogoEnabled}
-              />
-
-              <Button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full flex items-center justify-center bg-primary h-7 rounded-lg text-[11px] shadow-md diabled:opacity-50"
-                disabled={!isLogoEnabled}
-              >
-                <ImageIcon className="w-3 h-3 mr-1" />
-                <span className="text-xs">
-                  {logoFile instanceof File
-                    ? logoFile.name
-                    : getLogoFileValueForFileInput(logoFile) ||
-                      translations("Upload Logo")}
-                </span>
-              </Button>
-            </div>
-
-            <div
-              className={`grid grid-cols-2 gap-2 ${isLogoEnabled ? "opacity-100" : "opacity-50"}`}
+    <div className="flex flex-col gap-4">
+      {/* Logo Upload Section */}
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-medium dark:text-gray-200">Logo (Optional)</Label>
+        <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors bg-gray-50 dark:bg-[#1a1a1a] dark:border-gray-600 dark:hover:border-primary">
+          <Input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/svg+xml"
+            className="sr-only"
+            onChange={(ev) => {
+              const file = ev.target.files?.[0] ?? null;
+              dispatch({ type: "file-input", payload: file });
+              if (fileInputRef.current) fileInputRef.current.value = "";
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex flex-col items-center gap-2"
+          >
+            <svg
+              className="w-10 h-10 text-gray-400 dark:text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              {/* Size Slider */}
-              <div className="rounded-lg p-1.5 border flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label className="text-[11px] font-semibold">
-                    {translations("Size")}
-                  </Label>
-                  <span className="text-[11px] font-medium text-primary">
-                    {displayLogoSize}%
-                  </span>
-                </div>
-
-                <SliderCompatible
-                  value={logoSize}
-                  onChange={(v) => {
-                    const newVal = Array.isArray(v) ? v[0] : v;
-                    dispatch({ type: "logo-size", payload: Number(newVal) });
-                  }}
-                  min={50}
-                  max={100}
-                  step={1}
-                />
-              </div>
-
-              {/* Border Radius Slider */}
-              <div className="rounded-lg p-1.5 border flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label className="text-[11px] font-semibold">
-                    {translations("Radius")}
-                  </Label>
-                  <span className="text-[11px] font-medium text-primary">
-                    {displayLogoRadius}%
-                  </span>
-                </div>
-
-                <SliderCompatible
-                  value={logoBorderRadius}
-                  onChange={(v) => {
-                    const newVal = Array.isArray(v) ? v[0] : v;
-                    dispatch({
-                      type: "logo-border-radius",
-                      payload: Number(newVal),
-                    });
-                  }}
-                  min={0}
-                  max={50}
-                  step={1}
-                />
-              </div>
-            </div>
-
-            <div
-              className={`flex items-center justify-center ${isLogoEnabled ? "opacity-100" : "opacity-50"}`}
-            >
-              <ChipGroup
-                multiple={false}
-                chipsData={logoFillTypes}
-                value={logoFillType}
-                handleChange={(value) => {
-                  dispatch({
-                    type: "logo-fill-type",
-                    payload: value,
-                  });
-                }}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
+            </svg>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Drop or upload logo</div>
+            <div className="text-xs text-gray-500 dark:text-gray-500">
+              SVG, PNG (max 300×300px)
             </div>
-          </div>
+          </button>
         </div>
       </div>
-      <div className="rounded-lg p-2.5 border flex flex-col gap-2">
-        <div className="flex items-center gap-1.5">
-          <Palette className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-semibold">
-            {translations("Background Color")}
-          </h3>
-        </div>
 
+      {/* Logo Size Slider */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium dark:text-gray-200">Logo Size</Label>
+          <span className="text-sm font-medium text-primary dark:text-blue-400">
+            {displayLogoSize}px
+          </span>
+        </div>
+        <SliderCompatible
+          value={logoSize}
+          onChange={(v) => {
+            const newVal = Array.isArray(v) ? v[0] : v;
+            dispatch({ type: "logo-size", payload: Number(newVal) });
+          }}
+          min={50}
+          max={100}
+          step={1}
+          className="[&_.slider-track]:bg-red-500 [&_.slider-range]:bg-red-500 [&_.slider-thumb]:bg-red-500 [&_.slider-thumb]:border-red-500"
+        />
+      </div>
+
+      {/* Logo Border Radius Slider */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium dark:text-gray-200">Logo Border Radius</Label>
+          <span className="text-sm font-medium text-primary dark:text-blue-400">
+            {displayLogoRadius}px
+          </span>
+        </div>
+        <SliderCompatible
+          value={logoBorderRadius}
+          onChange={(v) => {
+            const newVal = Array.isArray(v) ? v[0] : v;
+            dispatch({
+              type: "logo-border-radius",
+              payload: Number(newVal),
+            });
+          }}
+          min={0}
+          max={50}
+          step={1}
+          className="[&_.slider-track]:bg-red-500 [&_.slider-range]:bg-red-500 [&_.slider-thumb]:bg-red-500 [&_.slider-thumb]:border-red-500"
+        />
+      </div>
+
+      {/* Background Section */}
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-medium dark:text-gray-200">Background</Label>
         <RadioGroup
           value={qrBgColor.startsWith("#") ? "color" : "transparent"}
           onValueChange={(value) => {
@@ -193,38 +140,38 @@ function LogoTabpanel({ state, dispatch }) {
             }
           }}
         >
-          <div className="flex gap-4">
-            <div className="flex-1 flex gap-1 items-center rounded-lg px-2 py-1.5 border cursor-pointer hover:border-primary transition-colors">
+          <div className="flex gap-2">
+            <div className="flex-1 flex gap-2 items-center rounded-lg px-3 py-2 border dark:border-gray-700 cursor-pointer hover:border-primary dark:hover:border-primary transition-colors">
               <RadioGroupItem
                 value="transparent"
                 id="transparent"
-                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary scale-75"
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <Label
                 htmlFor="transparent"
-                className="text-xs cursor-pointer font-medium"
+                className="text-sm cursor-pointer font-normal dark:text-gray-300"
               >
                 {translations("Transparent")}
               </Label>
             </div>
-            <div className="flex-1 flex gap-1 items-center rounded-lg px-2 py-1.5 border cursor-pointer hover:border-primary transition-colors">
+            <div className="flex-1 flex gap-2 items-center rounded-lg px-3 py-2 border dark:border-gray-700 cursor-pointer hover:border-primary dark:hover:border-primary transition-colors">
               <RadioGroupItem
                 value="color"
                 id="color"
-                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary scale-75"
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <Label
                 htmlFor="color"
-                className="text-xs cursor-pointer font-medium"
+                className="text-sm cursor-pointer font-normal dark:text-gray-300"
               >
-                {translations("Color")}
+                {translations("Custom Color")}
               </Label>
             </div>
           </div>
         </RadioGroup>
 
-        <div className="flex gap-1.5">
-          <div className="w-8 h-8 overflow-hidden">
+        <div className="flex gap-2">
+          <div className="w-10 h-10 rounded border dark:border-gray-700 overflow-hidden">
             <Input
               type="color"
               disabled={qrBgColor === "transparent"}
@@ -235,7 +182,7 @@ function LogoTabpanel({ state, dispatch }) {
                   payload: e.target.value,
                 });
               }}
-              className="w-full h-full border-0 p-0 cursor-pointer disabled:opacity-50"
+              className="w-full h-full border-0 p-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
           <Input
@@ -247,23 +194,17 @@ function LogoTabpanel({ state, dispatch }) {
                 payload: e.target.value,
               });
             }}
-            className="flex-1 h-8 border text-center text-[10px] uppercase disabled:opacity-50"
+            className="flex-1 h-10 text-sm uppercase disabled:opacity-50 disabled:cursor-not-allowed dark:bg-[#1a1a1a] dark:border-gray-700 dark:text-white"
             placeholder="#FFFFFF"
           />
         </div>
       </div>
 
-      {/* Foreground Color */}
-      <div className="rounded-lg p-2.5 border flex flex-col gap-4">
-        <div className="flex items-center gap-1.5">
-          <Palette className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-semibold">
-            {translations("QR Code Color")}
-          </h3>
-        </div>
-
-        <div className="flex gap-1.5">
-          <div className="w-8 h-8 overflow-hidden">
+      {/* QR Code Color Section */}
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-medium dark:text-gray-200">QR Code Color</Label>
+        <div className="flex gap-2">
+          <div className="w-10 h-10 rounded border dark:border-gray-700 overflow-hidden">
             <Input
               type="color"
               value={qrColor}
@@ -273,7 +214,7 @@ function LogoTabpanel({ state, dispatch }) {
                   payload: e.target.value,
                 });
               }}
-              className="w-full h-full border-0 p-0 cursor-pointer rounded-lg"
+              className="w-full h-full border-0 p-0 cursor-pointer"
             />
           </div>
           <Input
@@ -284,7 +225,7 @@ function LogoTabpanel({ state, dispatch }) {
                 payload: e.target.value,
               });
             }}
-            className="flex-1 h-8 border text-center text-[10px] uppercase"
+            className="flex-1 h-10 text-sm uppercase dark:bg-[#1a1a1a] dark:border-gray-700 dark:text-white"
             placeholder="#000000"
           />
         </div>

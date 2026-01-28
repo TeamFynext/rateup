@@ -10,26 +10,12 @@ import React, {
 } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import {
-  Anchor,
-  Box,
-  Button,
-  Center,
-  Flex,
-  Group,
-  Popover,
-  rem,
-  Skeleton,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import { useDebouncedState, useDisclosure } from "@mantine/hooks";
+import { useDebouncedState } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
-  IconDatabaseImport,
   IconFileDownload,
+  IconFilter,
   IconRefresh,
   IconTableExport,
   IconTicket,
@@ -46,6 +32,21 @@ import { useIntegrationByType } from "@/backend/appsIntegration/integration.quer
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
 import { hasFeature } from "@/utils/subscription/subscription";
 import {
@@ -80,24 +81,18 @@ import {
   showSuccessToast,
 } from "../../../utils/notifications";
 import InfoButton from "../../Button/InfoButton";
-import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import RefreshButton from "../../Button/RefreshButton";
 import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
 import {
   ContainedMultiSelect,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
-import RateupLoader from "../../Loaders/RateupLoader";
-import ConfirmationModal from "../../Modal/ConfirmationModal";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import NothingFound from "../../NothingFound/NothingFound";
-import Heading from "../../styled/Heading/Heading";
-import TanstackTable from "../../Table/TanstackTable";
+import { DataTable } from "../../Table/data-table";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { WaHoverCardComponent } from "../HoverCard/WaHoverCard";
 import { ActionMenu } from "./Columns";
-import { fuzzyFilter } from "./Filter";
-import styles from "./Responses.module.css";
+import { ResponseTableToolbar } from "./ResponseTableToolbar";
 import { useResponseFilterStore } from "./store";
 
 dayjs.extend(utc);
@@ -121,10 +116,10 @@ const WaResponses = ({
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [
-    createTicketOpened,
-    { open: openTicketModal, close: closeTicketModal },
-  ] = useDisclosure(false);
+  const [createTicketOpened, setCreateTicketOpened] = useState(false);
+  const openTicketModal = () => setCreateTicketOpened(true);
+  const closeTicketModal = () => setCreateTicketOpened(false);
+
   const [selectedResponseId, setSelectedResponseId] = useState("");
   const [responseTeamId, setResponseTeamId] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
@@ -132,14 +127,21 @@ const WaResponses = ({
   const { data: googleAccessToken } = useIntegrationByType(
     IntegratedApps.googlesheet,
   );
-  const [alertModalOpened, { open: alertModalOpen, close: alertModalClose }] =
-    useDisclosure(false);
-  const [
-    redirectModalOpened,
-    { open: redirectModalOpen, close: redirectModalClose },
-  ] = useDisclosure(false);
-  const [opened, { open, close }] = useDisclosure(false);
-  const [openedExport, { toggle }] = useDisclosure(false);
+
+  const [alertModalOpened, setAlertModalOpened] = useState(false);
+  const alertModalOpen = () => setAlertModalOpened(true);
+  const alertModalClose = () => setAlertModalOpened(false);
+
+  const [redirectModalOpened, setRedirectModalOpened] = useState(false);
+  const redirectModalOpen = () => setRedirectModalOpened(true);
+  const redirectModalClose = () => setRedirectModalOpened(false);
+
+  const [opened, setOpened] = useState(false);
+  const open = () => setOpened(true);
+  const close = () => setOpened(false);
+
+  const [openedExport, setOpenedExport] = useState(false);
+  const toggle = () => setOpenedExport(!openedExport);
   const [alertMsg, setAlertMsg] = useState("");
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
   const router = useRouter();
@@ -326,9 +328,9 @@ const WaResponses = ({
         ? [
             {
               header: () => (
-                <Text truncate="end" miw={70} maw={70} fw={600} fz={"lg"}>
+                <span className="text-lg font-semibold min-w-[70px] max-w-[70px] truncate block">
                   {translations("Ticket")}
-                </Text>
+                </span>
               ),
               enableColumnFilter: false,
               enableSorting: false,
@@ -337,9 +339,8 @@ const WaResponses = ({
                 let ticketData = info.row.original.Ticket;
                 let ticketExist = ticketData?.length > 0;
                 return (
-                  <Center
-                    pr="80px"
-                    style={{ cursor: "pointer" }}
+                  <div
+                    className="flex items-center justify-center pr-20 cursor-pointer"
                     onClick={() => {
                       if (ticketExist) {
                         let url = `/dashboard/tickets/${ticketData[0]?.id}`;
@@ -348,20 +349,20 @@ const WaResponses = ({
                     }}
                   >
                     {ticketExist && (
-                      <Tooltip
-                        withArrow
-                        label={translations("View Ticket")}
-                        position="right-start"
-                      >
-                        <Stack>
-                          <IconTicket
-                            color="orange"
-                            style={{ width: rem(35), height: rem(35) }}
-                          />
-                        </Stack>
-                      </Tooltip>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <IconTicket color="orange" className="w-9 h-9" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            {translations("View Ticket")}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
-                  </Center>
+                  </div>
                 );
               },
             },
@@ -476,8 +477,41 @@ const WaResponses = ({
     );
 
   const responseCount = responseData?.totalCount;
+
+  const Toolbar = useCallback(
+    (props) => (
+      <ResponseTableToolbar
+        {...props}
+        CFData={CFData}
+        campaignIds={campaignIds}
+        setCampaignIds={setSelectedCampaignIds}
+        ranges={ranges}
+        setRange={setRange}
+        survey={survey}
+        isSyncing={isSyncing}
+        refetchResponse={refetchResponse}
+        handleSyncGoogleSheet={handleSyncGoogleSheet}
+        handleExcelDownload={handleExcelDownload}
+        alertModalOpen={alertModalOpen}
+        responseCount={responseCount}
+      />
+    ),
+    [
+      CFData,
+      campaignIds,
+      ranges,
+      survey,
+      isSyncing,
+      refetchResponse,
+      handleSyncGoogleSheet,
+      handleExcelDownload,
+      alertModalOpen,
+      responseCount,
+    ],
+  );
+
   return (
-    <Stack className={styles["responses-root-div"]}>
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
         closeTicketModal={closeTicketModal}
@@ -485,136 +519,34 @@ const WaResponses = ({
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
       />
-      <Skeleton
-        visible={isPending}
-        h={isPending && 70}
-        className={isPending && styles["total-responses-export-btn-container"]}
-      >
-        <Group className={styles["total-responses-export-btn-container"]}>
-          <Flex align={"center"}>
-            <Heading
-              subtitle={`${translations("Total Responses :")} ${responseCount}`}
-            />
-            <RefreshButton onClick={() => refetchResponse()} />
-          </Flex>
 
-          <Group>
-            <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
-            {CFData && CFData.length > 0 && (
-              <ContainedMultiSelect
-                placeholder={translations("Filter By Campaign")}
-                value={campaignIds}
-                onChange={setSelectedCampaignIds}
-                data={CFData.map(({ id, name }) => ({
-                  value: id,
-                  label: name,
-                }))}
-              />
-            )}
-            {!survey?.isEncrypted && (
-              <Popover
-                position="bottom-end"
-                withArrow
-                shadow="md"
-                classNames={{
-                  dropdown: styles["filters-popover-dropdown-div"],
-                }}
-                opened={openedExport}
-              >
-                <Popover.Target>
-                  <Button
-                    className={styles["export-btn"]}
-                    leftSection={<IconTableExport />}
-                    radius={"lg"}
-                    fw={400}
-                    onClick={toggle}
-                  >
-                    {translations("Export")}
-                  </Button>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <Stack>
-                    <RateupButtonSecondary
-                      title={
-                        survey.spreadSheetId
-                          ? translations("Resync with Google Sheet")
-                          : translations("Sync with Google Sheet")
-                      }
-                      onClick={() => {
-                        if (survey.spreadSheetId) alertModalOpen();
-                        else handleSyncGoogleSheet();
-                      }}
-                      leftIcon={
-                        <IconRefresh
-                          className={
-                            isSyncing ? styles.rotateInfinitely : undefined
-                          }
-                          style={{ width: "90%", height: "90%" }}
-                          stroke={1.5}
-                        />
-                      }
-                    />
-                    <RateupButtonSecondary
-                      onClick={() => {
-                        handleExcelDownload();
-                        toggle();
-                      }}
-                      title={translations("Download Excel")}
-                      radius={"lg"}
-                      leftIcon={<IconFileDownload stroke={1.5} />}
-                    />
-                    <ConfirmationModal
-                      opened={alertModalOpened}
-                      onClose={alertModalClose}
-                      headerTitle={translations("Resync Google Sheet")}
-                      headerLabel={translations(
-                        "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost",
-                      )}
-                      confirmLabel={translations("Yes")}
-                      onConfirm={handleSyncGoogleSheet}
-                    />
-                    <ConfirmationModal
-                      opened={redirectModalOpened}
-                      onClose={redirectModalClose}
-                      headerTitle={translations("Sync Google Sheet")}
-                      headerLabel={alertMsg}
-                      confirmLabel={translations("Continue")}
-                      onConfirm={() => {
-                        router.push("/dashboard/apps&services/googlesheet");
-                      }}
-                    />
-                  </Stack>
-                </Popover.Dropdown>
-              </Popover>
-            )}
-            <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
-          </Group>
-        </Group>
-      </Skeleton>
-      <Box className={styles["responses-table-container"]}>
-        <TanstackTable
+      <div className="flex-1 overflow-hidden px-6 pb-2">
+        <DataTable
           data={data ?? []}
           columns={
             disableTags.current
               ? columns?.filter((col) => col.accessorKey !== "tag")
               : columns
           }
-          pagination={pagination}
-          setPagination={setPagination}
-          totalCount={responseCount}
+          manualPagination={{
+            pagination,
+            onPaginationChange: setPagination,
+            rowCount: responseCount,
+            columnFilters,
+            onColumnFiltersChange: setColumnFilters,
+          }}
           isPending={isPending}
-          columnFiltersE={columnFilters}
-          setColumnFiltersE={setColumnFilters}
-          enableServerFilter={enableServerFilter}
+          DataTableToolbar={Toolbar}
         />
-        <DeleteModal
-          confirmDelete={confirmDelete}
-          translations={translations}
-          opened={opened}
-          close={close}
-        />
-      </Box>
-    </Stack>
+      </div>
+
+      <DeleteModal
+        confirmDelete={confirmDelete}
+        translations={translations}
+        opened={opened}
+        close={close}
+      />
+    </div>
   );
 };
 
@@ -635,8 +567,10 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
         setVerifyEmail("");
       }}
     >
-      <Stack py={"sm"}>
-        <Text>{translations("To proceed further, verify your email id")}</Text>
+      <div className="flex flex-col gap-4 py-2">
+        <p className="text-sm text-gray-700 dark:text-gray-300">
+          {translations("To proceed further, verify your email id")}
+        </p>
         <ContainedTextField
           withAsterisk
           label={translations("Verify email")}
@@ -645,10 +579,10 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
           value={verifyEmail}
           onChange={(e) => setVerifyEmail(e.target.value)}
         />
-        <Text c="red">
+        <p className="text-sm text-red-600 dark:text-red-400">
           {translations("Once deleted, response entry data will be lost")}
-        </Text>
-      </Stack>
+        </p>
+      </div>
     </FormModalLayout>
   );
 };
@@ -681,12 +615,13 @@ export const getCellData = (info, question) => {
     case WaQuestions.DocumentPicker:
       return (
         info && (
-          <Anchor
+          <a
             href={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${info}`}
             download
+            className="text-primary hover:underline"
           >
             Download
-          </Anchor>
+          </a>
         )
       );
     case WaQuestions.DatePicker:
