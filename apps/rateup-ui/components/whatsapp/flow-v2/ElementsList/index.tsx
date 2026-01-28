@@ -14,18 +14,19 @@ import classNames from "classnames/bind";
 import { useTranslations } from "next-intl";
 
 import { QuestionType2 } from "@/types/enums";
+import { RateupButtonBlue } from "@/components/Button/RateupButtons";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { reorder } from "@/utils/questions";
 
 import useFlowStore, { EditorType } from "../utils/store";
 import AddElementModal from "./AddElementModal"; // Modal for element type selection
+
+import styles from "./ElementsList.module.css";
 import InlineElementEditor from "./InlineElementEditor"; // Inline element editor
 import { ScreenLogicEditor } from "./ScreenLogicEditor";
-import styles from "./ElementsList.module.css";
-
 
 const cx = classNames.bind(styles);
 
@@ -72,19 +73,19 @@ function ElementsList() {
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
-    
+
     const items = screen.layout.children;
     const reorderedItems = reorder(
       items,
       result.source.index,
       result.destination.index,
     );
-    
+
     updateComponentsInScreen(currentScreenId, reorderedItems);
   };
 
   const elements = screen.layout.children.filter(
-    (el) => el.type !== QuestionType2.Footer
+    (el) => el.type !== QuestionType2.Footer,
   );
 
   // Render different editors based on active editor type
@@ -118,9 +119,7 @@ function ElementsList() {
 
       {/* Elements Count */}
       <div className="flex items-center justify-between px-4 mb-3">
-        <span className="text-sm font-medium">
-          {translations("Questions")}
-        </span>
+        <span className="text-sm font-medium">{translations("Questions")}</span>
         <span className="text-sm text-muted-foreground">
           {elements.length} {translations("questions")}
         </span>
@@ -143,7 +142,7 @@ function ElementsList() {
                   isExpanded={expandedElementId === element.id}
                   onToggle={() =>
                     setExpandedElementId(
-                      expandedElementId === element.id ? null : element.id
+                      expandedElementId === element.id ? null : element.id,
                     )
                   }
                   onDelete={() => deleteComponentFromScreen(element.id)}
@@ -155,28 +154,15 @@ function ElementsList() {
         </Droppable>
       </DragDropContext>
 
-      {/* Logic Jump Button */}
-      <div className="px-4 mt-4">
-        <Button
-          onClick={() => setDetailActiveEditor(EditorType.LogicEditor)}
-          className="w-full"
-          variant="outline"
-        >
-          <IconPlus size={16} className="mr-2" />
-          {translations("Screen Logic Jumps")}
-        </Button>
-      </div>
-
       {/* Add Element Button */}
-      <div className="px-4 mt-2">
-        <Button
+      <div className="px-4 mt-2 mb-6">
+        <RateupButtonBlue
           onClick={() => setAddModalOpened(true)}
-          className="w-full"
-          variant="outline"
-        >
-          <IconPlus size={16} className="mr-2" />
-          {translations("Add Element")}
-        </Button>
+          title={translations("Add Element")}
+          radius="md"
+          fullWidth
+          rightIcon={<IconPlus size={16} />}
+        />
       </div>
 
       <AddElementModal
@@ -234,13 +220,24 @@ function ElementCard({
           >
             {/* Element Header */}
             <div
-              className={styles["element-header"] + " flex items-center gap-3 p-3 cursor-pointer"}
+              className={
+                styles["element-header"] +
+                " flex items-center gap-3 p-3 cursor-pointer"
+              }
               onClick={onToggle}
             >
               <div {...provided.dragHandleProps}>
-                <IconGripVertical size={16} className={styles["drag-handle"] + " text-muted-foreground"} />
+                <IconGripVertical
+                  size={16}
+                  className={styles["drag-handle"] + " text-muted-foreground"}
+                />
               </div>
-              <div className={styles["element-number"] + " flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium"}>
+              <div
+                className={
+                  styles["element-number"] +
+                  " flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium"
+                }
+              >
                 {index + 1}
               </div>
               <div className="flex flex-col gap-0.5 flex-1 min-w-0">
@@ -250,9 +247,7 @@ function ElementCard({
                 <p className="text-xs text-muted-foreground">
                   {element.metaType || element.type}
                   {element.required && (
-                    <span className="text-red-500 ml-1">
-                      *
-                    </span>
+                    <span className="text-red-500 ml-1">*</span>
                   )}
                 </p>
               </div>

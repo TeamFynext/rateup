@@ -33,11 +33,11 @@ import {
 import RateupLoader from "../../../Loaders/RateupLoader";
 import StyledTabs from "../../../styled/StyledTabs/StyledTabs";
 import Result from "../../../Survey/Result/Result";
+import ResultComparison from "../../../Survey/Result/ResultComparison";
 import SurveySettings from "../../../Survey/Settings";
 import { ShareFlow } from "../../../Survey/ShareSurvey/ShareFlow";
 import EditFlow from "./EditFlow/EditFlow";
 import { EditFlowContext } from "./EditFlow/EditFlowContext";
-import ResultComparison from "../../../Survey/Result/ResultComparison";
 import FlowPageHeader, { FlowTabEnum } from "./FlowPageHeader";
 
 function FlowPage() {
@@ -59,7 +59,7 @@ function FlowPage() {
     useState<string>(undefined); // if no question is selected, then show question types list in the right side
   const [selectedScreenId, setSelectedScreenId] = useState<string>(undefined); // if no screen is selected, then show screens list in the left side
   const [selectedLang, setSelectedLang] = useState("en");
-  const [tab, setTab] = useState(FlowTabEnum.Questions);
+  const [tab, setTab] = useState(FlowTabEnum.Edit);
   const [previewOpened, setPreviewOpened] = useState(true);
   const { update } = useRouteParams();
   const translations = useTranslations();
@@ -269,7 +269,7 @@ function FlowPage() {
                 value={tab}
                 h={"100%"}
               >
-                <Tabs.Panel value={FlowTabEnum.Questions} h={"100%"}>
+                <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
                   <EditFlow
                     previewOpened={previewOpened}
                     setPreviewOpened={setPreviewOpened}
@@ -288,7 +288,7 @@ function FlowPage() {
                 <Tabs.Panel value={FlowTabEnum.Responses}>
                   <Result
                     encryptionpassword={""}
-                    setEncryptionPassword={() => { }}
+                    setEncryptionPassword={() => {}}
                     survey={survey}
                     flowId={flow.flowId}
                     translations={translations}

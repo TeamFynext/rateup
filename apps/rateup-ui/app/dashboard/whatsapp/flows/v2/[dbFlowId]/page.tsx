@@ -5,8 +5,6 @@ import { useParams, useSearchParams } from "next/navigation";
 
 import { useTranslations } from "next-intl";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import { SubscriptionFeaturePathName } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
@@ -15,13 +13,14 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import Result from "@/components/Survey/Result/Result";
 import ResultComparison from "@/components/Survey/Result/ResultComparison";
 import ResultsOverviewWebForm from "@/components/Survey/Result/ResultsOverviewWebForm";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EditFlow from "@/components/whatsapp/flow-v2/EditFlow";
-import FlowSettings from "@/components/whatsapp/flows/FlowSettings";
-import FlowShare from "@/components/whatsapp/flows/FlowShare";
 import { EditFlowContext } from "@/components/whatsapp/flows/FlowPage/EditFlow/EditFlowContext";
 import FlowPageHeader, {
   FlowTabEnum,
 } from "@/components/whatsapp/flows/FlowPage/FlowPageHeader";
+import FlowSettings from "@/components/whatsapp/flows/FlowSettings";
+import FlowShare from "@/components/whatsapp/flows/FlowShare";
 import { useRouteParams } from "@/context/RouteParamsContext";
 import SurveyContext from "@/context/SurveyContext";
 import { hasFeature } from "@/utils/subscription/subscription";
@@ -29,7 +28,7 @@ import { hasFeature } from "@/utils/subscription/subscription";
 import styles from "../FlowPage.module.css";
 
 const Flow = () => {
-  const [tab, setTab] = useState(FlowTabEnum.Questions);
+  const [tab, setTab] = useState(FlowTabEnum.Edit);
   const [previewOpened, setPreviewOpened] = useState(false);
 
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -159,10 +158,16 @@ const Flow = () => {
               onValueChange={(value) => setTab(value as FlowTabEnum)}
               className={styles["flow-page-panels-container"]}
             >
-              <TabsContent value={FlowTabEnum.Questions} className="h-full mt-0">
-                <EditFlow previewOpened={previewOpened} setPreviewOpened={setPreviewOpened} />
+              <TabsContent value={FlowTabEnum.Edit} className="h-full mt-0">
+                <EditFlow
+                  previewOpened={previewOpened}
+                  setPreviewOpened={setPreviewOpened}
+                />
               </TabsContent>
-              <TabsContent value={FlowTabEnum.Settings} className="h-full overflow-y-auto mt-0">
+              <TabsContent
+                value={FlowTabEnum.Settings}
+                className="h-full overflow-y-auto mt-0"
+              >
                 <FlowSettings
                   flowName={flow.name}
                   flowDbId={flow.dbFlowId}
@@ -174,7 +179,7 @@ const Flow = () => {
               <TabsContent value={FlowTabEnum.Responses} className="mt-0">
                 <Result
                   encryptionpassword={""}
-                  setEncryptionPassword={() => { }}
+                  setEncryptionPassword={() => {}}
                   survey={survey}
                   flowId={flow.flowId}
                   translations={translations}
@@ -182,7 +187,10 @@ const Flow = () => {
                   flow={flow}
                 />
               </TabsContent>
-              <TabsContent value={FlowTabEnum.Share} className="h-full overflow-y-auto mt-0">
+              <TabsContent
+                value={FlowTabEnum.Share}
+                className="h-full overflow-y-auto mt-0"
+              >
                 <FlowShare
                   flowName={flow.name}
                   flowDbId={flow.dbFlowId}
@@ -190,7 +198,10 @@ const Flow = () => {
                   surveyId={survey.id}
                 />
               </TabsContent>
-              <TabsContent value={FlowTabEnum.Analytics} className="h-full overflow-y-auto mt-0">
+              <TabsContent
+                value={FlowTabEnum.Analytics}
+                className="h-full overflow-y-auto mt-0"
+              >
                 <ResultsOverviewWebForm
                   surveyId={survey?.id}
                   aiResponseSummary={(survey as any)?.aiResponseSummary}
