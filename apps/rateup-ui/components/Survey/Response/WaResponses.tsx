@@ -477,6 +477,39 @@ const WaResponses = ({
     );
 
   const responseCount = responseData?.totalCount;
+
+  const Toolbar = useCallback(
+    (props) => (
+      <ResponseTableToolbar
+        {...props}
+        CFData={CFData}
+        campaignIds={campaignIds}
+        setCampaignIds={setSelectedCampaignIds}
+        ranges={ranges}
+        setRange={setRange}
+        survey={survey}
+        isSyncing={isSyncing}
+        refetchResponse={refetchResponse}
+        handleSyncGoogleSheet={handleSyncGoogleSheet}
+        handleExcelDownload={handleExcelDownload}
+        alertModalOpen={alertModalOpen}
+        responseCount={responseCount}
+      />
+    ),
+    [
+      CFData,
+      campaignIds,
+      ranges,
+      survey,
+      isSyncing,
+      refetchResponse,
+      handleSyncGoogleSheet,
+      handleExcelDownload,
+      alertModalOpen,
+      responseCount,
+    ],
+  );
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
       <CreateTicketModal
@@ -503,23 +536,7 @@ const WaResponses = ({
             onColumnFiltersChange: setColumnFilters,
           }}
           isPending={isPending}
-          DataTableToolbar={(props) => (
-            <ResponseTableToolbar
-              {...props}
-              CFData={CFData}
-              campaignIds={campaignIds}
-              setCampaignIds={setSelectedCampaignIds}
-              ranges={ranges}
-              setRange={setRange}
-              survey={survey}
-              isSyncing={isSyncing}
-              refetchResponse={refetchResponse}
-              handleSyncGoogleSheet={handleSyncGoogleSheet}
-              handleExcelDownload={handleExcelDownload}
-              alertModalOpen={alertModalOpen}
-              responseCount={responseCount}
-            />
-          )}
+          DataTableToolbar={Toolbar}
         />
       </div>
 

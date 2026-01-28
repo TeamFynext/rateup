@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { useDebouncedState } from "@mantine/hooks";
 import {
   IconFileDownload,
   IconRefresh,
@@ -11,7 +10,6 @@ import { Table } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
 
-import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +24,6 @@ import { docsPath } from "@/utils/constants";
 import InfoButton from "../../Button/InfoButton";
 import RefreshButton from "../../Button/RefreshButton";
 import { ContainedMultiSelect } from "../../input/ContainedInput/ContainedInput";
-import ConfirmationModal from "../../Modal/ConfirmationModal";
 import { useResponseFilterStore } from "./store";
 
 interface ResponseTableToolbarProps<TData> {
@@ -67,9 +64,19 @@ export function ResponseTableToolbar<TData>({
   const filters = serverFilters as Record<string, any>; // Cast locally to avoid store change
   const [searchTerm, setSearchTerm] = useState(filters?.search || "");
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      const currentSearch = filters?.search || "";
+      if (currentSearch !== searchTerm) {
+        setServerFilters({ ...serverFilters, search: searchTerm });
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, serverFilters, setServerFilters, filters?.search]);
+
   const handleSearch = (value: string) => {
     setSearchTerm(value);
-    setServerFilters({ ...serverFilters, search: value });
   };
 
   return (
