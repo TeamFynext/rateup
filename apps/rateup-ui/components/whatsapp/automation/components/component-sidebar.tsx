@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import {
   IconAd,
   IconBuildingStore,
+  IconClockPause,
   IconExternalLink,
   IconFile,
   IconGitMerge,
@@ -90,6 +91,7 @@ const categories = [
       //   icon: <IconGitBranch size={16} />,
       // },
       // { id: "delayNode", label: "Delay", icon: <IconClock size={16} /> },
+      { id: "pauseNode", label: "Pause", icon: <IconClockPause size={16} /> },
       { id: "startNode", label: "Start", icon: <IconPlayCard size={16} /> },
     ],
   },

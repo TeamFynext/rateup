@@ -14,6 +14,7 @@ import InputNode from "./input-node";
 import LeadgenNode from "./leadgen-node";
 import ListNode from "./list-node";
 import LocationNode from "./location-node";
+import PauseNode from "./pause-node";
 import StartNode from "./start-node";
 import TemplateNode from "./template-node";
 import TextNode from "./text-node";
@@ -33,7 +34,9 @@ export const nodeTypes = {
   phoneInputNode: InputNode,
   dateInputNode: InputNode,
   delayNode: DelayNode,
+  pauseNode: PauseNode,
   startNode: StartNode,
+
   endNode: EndNode,
   buttonNode: ButtonNode,
   listNode: ListNode,
