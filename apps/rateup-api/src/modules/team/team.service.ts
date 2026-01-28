@@ -447,7 +447,7 @@ export async function completeInvite(token: string) {
 
       //Create Team member
       if (orgMember && updatedInvitation.teamId) {
-        await createTeamMemberIfNotExists(
+        createTeamMemberIfNotExists(
           updatedInvitation.teamId,
           signUpResult.user.id,
         );
@@ -491,7 +491,7 @@ export async function completeInvite(token: string) {
     }
 
     let orgMember = await prisma.orgMember.findFirst({
-      where: { userId: user.id, orgId: updatedInvitation.orgId },
+      where: { userId: user.id },
       select: {
         orgId: true,
         role: true,
@@ -516,7 +516,7 @@ export async function completeInvite(token: string) {
       }
     } else {
       if (orgMember && updatedInvitation.teamId) {
-        await createTeamMemberIfNotExists(updatedInvitation.teamId, user.id);
+        createTeamMemberIfNotExists(updatedInvitation.teamId, user.id);
       }
     }
 
