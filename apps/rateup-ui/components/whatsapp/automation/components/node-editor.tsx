@@ -521,7 +521,6 @@ const PauseNodeEditor: React.FC<NodeComponentProps<"pauseNode">> = ({
         data={[
           { value: "seconds", label: "Seconds" },
           { value: "minutes", label: "Minutes" },
-          { value: "hours", label: "Hours" },
         ]}
         onChange={(val) => handleInputChange("unit", val)}
         allowDeselect={false}
