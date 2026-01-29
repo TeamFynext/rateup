@@ -79,7 +79,7 @@ function ButtonNode(props: NodeProps & { data: ButtonNodeData }) {
     >
       <div className={styles.buttonContent}>
         {renderHeaderMedia()}
-        {data.caption && <Text fz="xs">{data.caption}</Text>}
+        {data.caption && <Text fz="xs">{parseJsonToReact(data.caption)}</Text>}
 
         <div className={styles.question}>{parseJsonToReact(data.body)}</div>
 
