@@ -16,7 +16,6 @@ import {
 import { subscriptionExpiryAlert } from "../utils/email/payments/subscriptionExpiryAlert.js";
 import {
   processDripCampaigns,
-  processPausedAutomations,
   sendSchedulesWaMessages,
 } from "../modules/whatsapp/wa_message_scheduler.js";
 
@@ -39,7 +38,6 @@ export async function registerCronJobs(
             sendCampaignCronAction(),
             sendShopifySurveyCronAction(),
             sendSchedulesWaMessages(),
-            processPausedAutomations(),
           ]);
         },
         start: true,
