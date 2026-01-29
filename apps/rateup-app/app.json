@@ -13,9 +13,7 @@
     },
     "android": {
        "permissions": [
-          "RECORD_AUDIO",
-          "READ_MEDIA_AUDIO"
-        ],
+          "RECORD_AUDIO"        ],
       "statusBar": {
         "translucent": true,
         "backgroundColor": "transparent"

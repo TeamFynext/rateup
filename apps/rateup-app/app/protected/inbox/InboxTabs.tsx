@@ -161,7 +161,7 @@ export default function InboxLayout() {
             tabBarItemStyle: {
               backgroundColor: tabBg,
               width: "auto",
-              maxWidth:115
+              maxWidth:120
             },
             tabBarShowLabel: false,
             tabBarIndicatorStyle: { backgroundColor: "transparent" },
