@@ -1576,7 +1576,7 @@ model WaAutomatedReplyMessage {
   currentNode        String?
   response           Json?
   status             WaAutomationProgressStatus @default(inProgress)
-  pauseJobId         String?
+
   createdAt          DateTime                   @default(now())
 
   waAutomatedReplyId String?                    @db.Uuid

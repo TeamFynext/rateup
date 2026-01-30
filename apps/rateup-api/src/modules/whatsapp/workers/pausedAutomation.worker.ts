@@ -51,8 +51,7 @@ export const pausedAutomationWorker = new Worker(
       await prisma.waAutomatedReplyMessage.update({
         where: { id: automationMessageId },
         data: {
-          status: "inProgress" as any,
-          pauseJobId: null, // Clear job ID
+          status: "inProgress",
         },
       });
 
@@ -101,8 +100,8 @@ export const pausedAutomationWorker = new Worker(
   },
   {
     connection: baseRedis,
-    concurrency: 5,
-    removeOnComplete: { count: 100 },
+    concurrency: 2,
+    removeOnComplete: { count: 0 },
     removeOnFail: { count: 1000 },
   },
 );

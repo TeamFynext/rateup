@@ -1096,9 +1096,7 @@ export async function processNextNode(
           orgId,
         });
         break;
-      case "delayNode":
-        await wait((node?.data as NodeTypeMap["delayNode"])?.delayTime * 1000);
-        break;
+
       case "pauseNode": {
         const pauseData = node.data as NodeTypeMap["pauseNode"];
         let ms = 0;
@@ -1134,7 +1132,6 @@ export async function processNextNode(
           where: { id: automationMessageId },
           data: {
             status: "paused" as any,
-            pauseJobId: job.id,
           },
         });
 

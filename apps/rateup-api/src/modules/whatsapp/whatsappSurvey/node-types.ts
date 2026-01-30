@@ -33,11 +33,6 @@ export interface InputNodeData extends BaseNodeData {
   validation?: string;
 }
 
-// Delay Node
-export interface DelayNodeData extends BaseNodeData {
-  delayTime: number;
-}
-
 // Pause Node
 export interface PauseNodeData extends BaseNodeData {
   duration: number;
@@ -285,7 +280,7 @@ export type NodeTypeMap = {
   emailInputNode: InputNodeData;
   phoneInputNode: InputNodeData;
   dateInputNode: InputNodeData;
-  delayNode: DelayNodeData;
+
   pauseNode: PauseNodeData;
   videoNode: MediaNodeData;
 
@@ -321,7 +316,6 @@ export type NodeData =
   | ImageNodeData
   | ConditionalNodeData
   | InputNodeData
-  | DelayNodeData
   | PauseNodeData
   | MediaNodeData
   | DocumentNodeData
