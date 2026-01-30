@@ -8,6 +8,7 @@ import {
   getLoyaltyProgram,
   LoyaltyProgramInput,
   LoyaltyProgramUpdateInput,
+  resetLoyaltyProgramPoints,
   updateLoyaltyProgram,
 } from "./program.api";
 
@@ -83,7 +84,13 @@ export const useDeleteLoyaltyProgramMutation = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (programId: string) => deleteLoyaltyProgram(programId),
+    mutationFn: ({
+      programId,
+      force = false,
+    }: {
+      programId: string;
+      force?: boolean;
+    }) => deleteLoyaltyProgram(programId, force),
     onSuccess: () => {
       showSuccessToast(
         "Loyalty program deleted successfully",
@@ -98,6 +105,39 @@ export const useDeleteLoyaltyProgramMutation = (
       showErrorToast(
         getErrorMessage(error?.response, "Error deleting loyalty program!"),
         "loyalty-program-delete",
+        null,
+        true,
+      );
+      onError?.();
+    },
+  });
+};
+
+/**
+ * Hook to reset loyalty program points
+ */
+export const useResetLoyaltyProgramPointsMutation = (
+  onSuccess?: () => void,
+  onError?: () => void,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (programId: string) => resetLoyaltyProgramPoints(programId),
+    onSuccess: () => {
+      showSuccessToast(
+        "Loyalty points reset successfully",
+        "loyalty-points-reset",
+        null,
+        true,
+      );
+      queryClient.invalidateQueries({ queryKey: ["loyalty-program"] });
+      onSuccess?.();
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        getErrorMessage(error?.response, "Error resetting loyalty points!"),
+        "loyalty-points-reset",
         null,
         true,
       );

@@ -2577,13 +2577,12 @@
   "Inviting": "Inviting",
   "Channel Permissions": "Channel Permissions",
   "Assigned Teams": "Assigned Teams",
-  "Saving...": "Saving...",
-  "Select teams that can access this channel...": "Select teams that can access this channel...",
+  "Select teams that can access this channel": "Select teams that can access this channel...",
   "No teams found": "No teams found",
   "Permissions Logic": "Permissions Logic",
-  "Assigning a team to a channel gives all members of that team visibility of that channel in the Inbox. Super admins always have access to all channels.": "Assigning a team to a channel gives all members of that team visibility of that channel in the Inbox. Super admins always have access to all channels.",
+  "Assigning a team to a channel gives all members of that team visibility of that channel in the Inbox, Super admins always have access to all channels": "Assigning a team to a channel gives all members of that team visibility of that channel in the Inbox. Super admins always have access to all channels.",
   "No channels configured": "No channels configured",
-  "Connect a WhatsApp character to see it here.": "Connect a WhatsApp character to see it here.",
+  "Connect a WhatsApp character to see it here": "Connect a WhatsApp character to see it here.",
   "Order status": "Order status",
   "Payment Method": "Payment Method",
   "Payment Status": "Payment Status",
@@ -2592,7 +2591,13 @@
   "Checkout Link": "Checkout Link",
   "Items Ordered": "Items Ordered",
   "Grand Total": "Grand Total",
-  "Configure which teams have access to specific communication channels. By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it).": "Configure which teams have access to specific communication channels. By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it).",
+  "Configure which teams have access to specific communication channels, By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it)": "Configure which teams have access to specific communication channels. By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it).",
+  "Click on any team to view detailed statistics": "Click on any team to view detailed statistics",
+  "Avg Response": "Avg Response",
+  "online": "online",
+  "Back to Teams": "Back to Teams",
+  "Currently handling": "Currently handling",
+  "Performance of individual team members": "Performance of individual team members",
   "loyaltyOnboarding": {
     "header": {
       "subtitle": "Loyalty Program Setup",
@@ -2852,7 +2857,8 @@
       "loadError": "Error loading earning rules",
       "start": "Start",
       "end": "End",
-      "threshold": "Threshold"
+      "threshold": "Threshold",
+      "Team Activity": "Team Activity"
     }
   }
 }

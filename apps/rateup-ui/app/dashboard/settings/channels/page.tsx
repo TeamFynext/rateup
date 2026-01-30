@@ -55,7 +55,7 @@ const ChannelRow = ({ channel, teamOptions, translations: t }: any) => {
               </label>
               {updateMutation.isPending && (
                 <span className="text-[10px] text-primary animate-pulse font-medium">
-                  {t("Saving...")}
+                  {t("Saving")}
                 </span>
               )}
             </div>
@@ -117,7 +117,7 @@ const ChannelPermissionsPage = () => {
         </div>
         <p className="text-muted-foreground text-sm max-w-2xl">
           {t(
-            "Configure which teams have access to specific communication channels. By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it).",
+            "Configure which teams have access to specific communication channels, By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it)",
           )}
         </p>
       </div>
@@ -129,7 +129,7 @@ const ChannelPermissionsPage = () => {
         </AlertTitle>
         <AlertDescription className="text-blue-700 text-xs">
           {t(
-            "Assigning a team to a channel gives all members of that team visibility of that channel in the Inbox. Super admins always have access to all channels.",
+            "Assigning a team to a channel gives all members of that team visibility of that channel in the Inbox, Super admins always have access to all channels",
           )}
         </AlertDescription>
       </Alert>
@@ -151,7 +151,7 @@ const ChannelPermissionsPage = () => {
               {t("No channels configured")}
             </h3>
             <p className="text-gray-500 text-sm">
-              {t("Connect a WhatsApp character to see it here.")}
+              {t("Connect a WhatsApp character to see it here")}
             </p>
           </div>
         )}

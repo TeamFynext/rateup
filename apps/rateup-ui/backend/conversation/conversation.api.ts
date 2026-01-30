@@ -179,7 +179,12 @@ export const getTeamOverview = async (filter) => {
   return response.data;
 };
 
-export const getTeamDetailedMetrics = async (teamId) => {
-  const response = await axiosClient.get(`${baseUrl}/team-metrics/${teamId}`);
+export const getTeamDetailedMetrics = async (teamId, filter) => {
+  const query = Object.entries(filter || {})
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
+  const response = await axiosClient.get(
+    `${baseUrl}/team-metrics/${teamId}?${query}`,
+  );
   return response.data;
 };

@@ -8,6 +8,7 @@ interface CashierHeaderProps {
   setPhoneNumber: (val: string) => void;
   handleSearch: () => void;
   isLoading: boolean;
+  countryCode: string;
 }
 
 export function CashierHeader({
@@ -15,7 +16,8 @@ export function CashierHeader({
   setPhoneNumber,
   handleSearch,
   isLoading,
-}: CashierHeaderProps) {
+  countryCode,
+}: Readonly<CashierHeaderProps>) {
   return (
     <div className="bg-background border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
@@ -30,7 +32,7 @@ export function CashierHeader({
           <div className="flex-1">
             <PhoneInput
               international
-              defaultCountry="IN"
+              defaultCountry={(countryCode as any) || "us"}
               placeholder="Search customer phone..."
               value={phoneNumber}
               onChange={(value) => setPhoneNumber(value || "")}

@@ -29,16 +29,27 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
+  useAssignRewardMutation,
   useAwardPointsMutation,
   useExportCustomersMutation,
   useGetLoyaltyCustomerById,
   useLoyaltyCustomers,
   useUpdateLoyaltyCustomerMutation,
 } from "@/backend/loyalty/customer/customer.query";
+import { useRedeemReward } from "@/backend/loyalty/redeems/redeems.query";
+import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
 import { DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,35 +57,91 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { PremiumAvatar } from "@/components/ui/premium-avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/context/UserContext";
+import { formatDate } from "@/utils/dateTime";
 
-interface Customer {
+type CustomerDetails = {
   id: string;
-  tier: string;
-  tierColor: string;
-  points: number;
+  programId: string;
+  contactId: string;
+  currentPoints: number;
   lifetimePoints: number;
-  lastActive: string;
-  joinDate: string;
-  location: string;
+  currentTierId: string;
   referralCode: string;
+  referredById: string | null;
+  status: string;
+  createdAt: string;
+  lastActivityAt: string;
+  updatedAt: string;
+  currentTier: {
+    id: string;
+    programId: string;
+    name: string;
+    threshold: number;
+    pointsMultiplier: string;
+    color: string;
+    benefitsDescription: string;
+    priority: number;
+    createdAt: string;
+  };
   contact: {
+    id: string;
+    createdAt: string;
     name: string;
     phone: string;
+    source: string;
+    orgId: string;
+    tags: any;
+    consent: boolean;
     email: string;
+    dob: string | null;
+    external_id: string | null;
+    aiWaChat: boolean;
+    isAiBotActive: boolean;
+    chatbotId: string;
+    waMessageAssignStatus: string;
+    lastReceivedMessageTimeStamp: string;
+    whatsappUserName: string;
+    blockedOnWhatsApp: boolean;
+    igsId: string | null;
+    profilePic: string | null;
+    followerCount: number | null;
+    isIgVerifiedUser: boolean | null;
+    other: any | null;
+    lifecycleId: string;
+    closedAt: string | null;
+    closedBy: string | null;
+    lastMessageBody: any;
+    lastMessageWaCreatedAt: string;
+    lastMessagePlatform: string;
+    lastReceivedMetadata: any | null;
+    lastMessageSourceIdentifier: string;
+    lastSentMessageTimeStamp: string;
+    notes: string | null;
   };
-  currentTier?: {
-    name: string;
-    color: string;
+  assignedRewards: {
     id: string;
-  };
-}
-
+    rewardId: string;
+    accountId: string;
+    assignedAt: string;
+  }[];
+};
 const CustomerPage = () => {
   const t = useTranslations();
   const [viewMode, setViewMode] = useState<"list" | "details">("list");
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<CustomerDetails | null>(null);
+
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
     null,
   );
@@ -87,6 +154,13 @@ const CustomerPage = () => {
     id: "name",
     desc: false,
   });
+  const [rewardForm, setRewardForm] = useState({
+    reward: "",
+    notes: "",
+  });
+  const [isRedeemOpen, setIsRedeemOpen] = useState(false);
+  const [isAwardPointsOpen, setIsAwardPointsOpen] = useState(false);
+  const [awardAmount, setAwardAmount] = useState("");
 
   // API Hooks
   const { data: customersData, isLoading } = useLoyaltyCustomers(
@@ -95,12 +169,19 @@ const CustomerPage = () => {
     sorting,
     [],
   );
-  // const { data: customerDetails, isLoading: isLoadingDetails } =
-  //   useGetLoyaltyCustomerById(selectedCustomerId);
+  const { data: customerDetails } =
+    useGetLoyaltyCustomerById(selectedCustomerId);
+  const { data: allRewards } = useGetLoyaltyRewards();
   const awardPointsMutation = useAwardPointsMutation();
   const updateCustomerMutation = useUpdateLoyaltyCustomerMutation();
   const exportMutation = useExportCustomersMutation();
   const user = useUser();
+
+  const redeemRewardMutation = useRedeemReward();
+  const assignRewardMutation = useAssignRewardMutation(() => {
+    setIsRedeemOpen(false);
+    setRewardForm({ reward: "", notes: "" });
+  });
 
   const getTierBadgeClassName = (tierColor: string) => {
     if (tierColor === "purple") {
@@ -154,7 +235,7 @@ const CustomerPage = () => {
     return "text-3xl font-bold text-gray-600";
   };
 
-  const columns: ColumnDef<Customer>[] = [
+  const columns: ColumnDef<CustomerDetails>[] = [
     {
       accessorKey: "contact.name",
       id: "customerName",
@@ -280,92 +361,58 @@ const CustomerPage = () => {
       ),
     },
   ];
-  // Mock transaction history
-  const getTransactionHistory = (customerId: string) => {
-    const transactions: any = {
-      "1": [
-        {
-          id: "t1",
-          date: "2025-12-22",
-          type: "Earned",
-          description: "Purchase at Store A",
-          points: "+250",
-          status: "completed",
-        },
-        {
-          id: "t2",
-          date: "2025-12-20",
-          type: "Redeemed",
-          description: "10% Discount Voucher",
-          points: "-500",
-          status: "completed",
-        },
-        {
-          id: "t3",
-          date: "2025-12-15",
-          type: "Earned",
-          description: "Birthday Bonus",
-          points: "+500",
-          status: "completed",
-        },
-        {
-          id: "t4",
-          date: "2025-12-10",
-          type: "Earned",
-          description: "Purchase at Store B",
-          points: "+150",
-          status: "completed",
-        },
-      ],
-      "2": [
-        {
-          id: "t5",
-          date: "2025-12-23",
-          type: "Earned",
-          description: "Purchase at Store C",
-          points: "+800",
-          status: "completed",
-        },
-        {
-          id: "t6",
-          date: "2025-12-21",
-          type: "Redeemed",
-          description: "Free Delivery",
-          points: "-150",
-          status: "completed",
-        },
-        {
-          id: "t7",
-          date: "2025-12-18",
-          type: "Earned",
-          description: "Referral Bonus",
-          points: "+200",
-          status: "completed",
-        },
-        {
-          id: "t8",
-          date: "2025-12-12",
-          type: "Earned",
-          description: "Purchase at Store A",
-          points: "+350",
-          status: "completed",
-        },
-      ],
-    };
 
-    return (
-      transactions[customerId] || [
-        {
-          id: "t_default",
-          date: "2025-12-20",
-          type: "Earned",
-          description: "Purchase at Store",
-          points: "+100",
-          status: "completed",
-        },
-      ]
-    );
-  };
+  const transactionColumns: ColumnDef<any>[] = [
+    {
+      accessorKey: "createdAt",
+      header: t("Date"),
+      cell: ({ row }) => (
+        <p className="text-sm">{formatDate(row.getValue("createdAt"))}</p>
+      ),
+    },
+    {
+      accessorKey: "transactionType",
+      header: t("Type"),
+      cell: ({ row }) => (
+        <Badge
+          className={
+            row.getValue("transactionType") === "earn"
+              ? "bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/10 border border-green-500/20"
+              : "bg-red-500/10 text-red-700 dark:text-red-400 hover:bg-red-500/10 border border-red-500/20"
+          }
+        >
+          {row.getValue("transactionType")}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "description",
+      header: t("Description"),
+      cell: ({ row }) => (
+        <p className="text-sm">{row.getValue("description")}</p>
+      ),
+    },
+    {
+      accessorKey: "points",
+      header: () => <div className="text-right">{t("Points")}</div>,
+      cell: ({ row }) => {
+        const points = row.getValue<number>("points");
+        return (
+          <div className="text-right">
+            <span
+              className={`text-sm font-semibold ${
+                points >= 0
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-600 dark:text-red-400"
+              }`}
+            >
+              {points}
+            </span>
+          </div>
+        );
+      },
+    },
+  ];
 
   const handleViewCustomer = (customer: any) => {
     setSelectedCustomer(customer);
@@ -408,6 +455,45 @@ const CustomerPage = () => {
       console.error("Error updating customer:", error);
     }
   };
+
+  const handleRedeemReward = async () => {
+    if (!selectedCustomerId || !rewardForm.reward) return;
+
+    const reward = allRewards?.find((r) => r.id === rewardForm.reward);
+    const isAssigned = reward?.rewardType === "assigned";
+
+    try {
+      if (isAssigned) {
+        await assignRewardMutation.mutateAsync({
+          rewardId: rewardForm.reward,
+          notes: rewardForm.notes,
+          customerId: selectedCustomerId,
+        });
+      } else {
+        await redeemRewardMutation.mutateAsync({
+          customerId: selectedCustomerId,
+          rewardId: rewardForm.reward,
+          notes: rewardForm.notes,
+        });
+        setIsRedeemOpen(false);
+        setRewardForm({ reward: "", notes: "" });
+      }
+      toast.success(
+        t(
+          isAssigned
+            ? "Reward assigned successfully!"
+            : "Reward redeemed successfully!",
+        ),
+      );
+    } catch (error) {
+      console.error("Error redeeming/assigning reward:", error);
+    }
+  };
+
+  // Filter available rewards (simplified logic: all active rewards)
+  const availableRewards =
+    allRewards?.filter((r) => r.status === "active") || [];
+
   if (isLoading)
     return <div className="flex items-center justify-center py-8">loading</div>;
   return (
@@ -501,7 +587,7 @@ const CustomerPage = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <Mail className="w-4 h-4" />
-                        <span>{selectedCustomer?.email}</span>
+                        <span>{selectedCustomer?.contact?.email}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
@@ -516,7 +602,11 @@ const CustomerPage = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
-                        <span>{selectedCustomer?.location}</span>
+                        <span>
+                          {
+                            // selectedCustomer?.contact?.other?.location ||
+                          }
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -565,7 +655,7 @@ const CustomerPage = () => {
               {/* Tier Card */}
               <Card
                 className={getTierCardClassName(
-                  selectedCustomer?.tierColor || "",
+                  selectedCustomer?.currentTier?.color || "",
                 )}
               >
                 <CardContent className="p-6">
@@ -573,16 +663,16 @@ const CustomerPage = () => {
                     <p className="text-xs text-muted-foreground">{t("Tier")}</p>
                     <UserCircle
                       className={getTierIconClassName(
-                        selectedCustomer?.tierColor || "",
+                        selectedCustomer?.currentTier?.color || "",
                       )}
                     />
                   </div>
                   <p
                     className={getTierTextClassName(
-                      selectedCustomer?.tierColor || "",
+                      selectedCustomer?.currentTier?.color || "",
                     )}
                   >
-                    {t(selectedCustomer?.tier || "")}
+                    {t(selectedCustomer?.currentTier?.name || "")}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {t("Member status")}
@@ -596,11 +686,8 @@ const CustomerPage = () => {
               <Button
                 className="flex-1"
                 onClick={() => {
-                  // You can add a modal or prompt here to get the purchase amount
-                  const amount = prompt(t("Enter purchase amount:"));
-                  if (amount && !Number.isNaN(Number(amount))) {
-                    handleAwardPoints(Number(amount));
-                  }
+                  setAwardAmount("");
+                  setIsAwardPointsOpen(true);
                 }}
                 disabled={awardPointsMutation.isPending}
               >
@@ -609,82 +696,166 @@ const CustomerPage = () => {
                   ? t("Awarding...")
                   : t("Add Points")}
               </Button>
-              <Button className="flex-1 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600">
+              <Button
+                className="flex-1 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600"
+                onClick={() => setIsRedeemOpen(true)}
+              >
                 <Gift className="w-4 h-4 mr-2" />
-                {t("Redeem Reward")}
+                {t("Redeem / Assign Reward")}
               </Button>
             </div>
 
             {/* Transaction History */}
-            <div className="space-y-3">
+            <div className="space-y-3 relative">
               <h3 className="font-semibold flex items-center gap-2">
                 <Clock className="w-5 h-5" />
                 {t("Transaction History")}
               </h3>
-              <Card>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b bg-muted/30">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          {t("Date")}
-                        </th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          {t("Type")}
-                        </th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          {t("Description")}
-                        </th>
-                        <th className="text-right py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          {t("Points")}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getTransactionHistory(selectedCustomer?.id || "").map(
-                        (transaction, index) => (
-                          <tr
-                            key={transaction.id}
-                            className={`${index < getTransactionHistory(selectedCustomer?.id || "").length - 1 ? "border-b" : ""} hover:bg-muted/30 transition-colors`}
-                          >
-                            <td className="py-3 px-4">
-                              <p className="text-sm">{transaction.date}</p>
-                            </td>
-                            <td className="py-3 px-4">
-                              <Badge
-                                className={
-                                  transaction.type === "Earned"
-                                    ? "bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/10 border border-green-500/20"
-                                    : "bg-red-500/10 text-red-700 dark:text-red-400 hover:bg-red-500/10 border border-red-500/20"
-                                }
-                              >
-                                {t(transaction.type)}
-                              </Badge>
-                            </td>
-                            <td className="py-3 px-4">
-                              <p className="text-sm">
-                                {transaction.description}
-                              </p>
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              <span
-                                className={`text-sm font-semibold ${
-                                  transaction.points.startsWith("+")
-                                    ? "text-green-600 dark:text-green-400"
-                                    : "text-red-600 dark:text-red-400"
-                                }`}
-                              >
-                                {transaction.points}
-                              </span>
-                            </td>
-                          </tr>
-                        ),
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
+              <DataTable
+                columns={transactionColumns}
+                data={customerDetails?.transactions || []}
+              />
             </div>
+
+            {/* Award Points Dialog */}
+            <Dialog
+              open={isAwardPointsOpen}
+              onOpenChange={setIsAwardPointsOpen}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t("Award Points")}</DialogTitle>
+                  <DialogDescription>
+                    {t("Enter the purchase amount to calculate points.")}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="amount">{t("Purchase Amount")}</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="0.00"
+                      value={awardAmount}
+                      onChange={(e) => setAwardAmount(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && awardAmount) {
+                          handleAwardPoints(Number(awardAmount));
+                          setIsAwardPointsOpen(false);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsAwardPointsOpen(false)}
+                  >
+                    {t("Cancel")}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (awardAmount) {
+                        handleAwardPoints(Number(awardAmount));
+                        setIsAwardPointsOpen(false);
+                      }
+                    }}
+                    disabled={!awardAmount || awardPointsMutation.isPending}
+                  >
+                    {awardPointsMutation.isPending && (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    )}
+                    {t("Confirm")}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Redeem Reward Dialog */}
+            <Dialog open={isRedeemOpen} onOpenChange={setIsRedeemOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t("Redeem or Assign Reward")}</DialogTitle>
+                  <DialogDescription>
+                    {t("Select a reward to give to this customer")}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reward-select">{t("Select Reward")}</Label>
+                    <Select
+                      value={rewardForm.reward}
+                      onValueChange={(value) =>
+                        setRewardForm({ ...rewardForm, reward: value })
+                      }
+                    >
+                      <SelectTrigger id="reward-select">
+                        <SelectValue placeholder={t("Choose a reward")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableRewards.map((reward) => (
+                          <SelectItem key={reward.id} value={reward.id}>
+                            <div className="flex items-center justify-between w-full gap-2">
+                              <span>{reward.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {reward.rewardType === "assigned"
+                                  ? t("(Assigned)")
+                                  : t("({points} pts)", {
+                                      points: reward.pointsCost,
+                                    })}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="redeem-notes">
+                      {t("Notes (Optional)")}
+                    </Label>
+                    <Textarea
+                      id="redeem-notes"
+                      placeholder={t("Add any notes...")}
+                      value={rewardForm.notes}
+                      onChange={(e) =>
+                        setRewardForm({ ...rewardForm, notes: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsRedeemOpen(false)}
+                  >
+                    {t("Cancel")}
+                  </Button>
+                  <Button
+                    onClick={handleRedeemReward}
+                    disabled={
+                      !rewardForm.reward ||
+                      redeemRewardMutation.isPending ||
+                      assignRewardMutation.isPending
+                    }
+                  >
+                    {redeemRewardMutation.isPending ||
+                    assignRewardMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {t("Processing...")}
+                      </>
+                    ) : (
+                      t("Confirm")
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         )
       )}

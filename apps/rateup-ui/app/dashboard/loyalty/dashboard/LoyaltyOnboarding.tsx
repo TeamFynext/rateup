@@ -31,22 +31,19 @@ import { useCreateLoyaltyRewardMutation } from "@/backend/loyalty/reward.query";
 import { useCreateLoyaltyTierMutation } from "@/backend/loyalty/tier.query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CountryDropdown } from "@/components/ui/country-dropdown";
+import { CurrencySelect } from "@/components/ui/currency-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 interface LoyaltyOnboardingProps {
   onComplete: () => void;
 }
 
-export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
+export function LoyaltyOnboarding({
+  onComplete,
+}: Readonly<LoyaltyOnboardingProps>) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -58,7 +55,8 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
   // Step 1: Basic Info
   const [programName, setProgramName] = useState("");
   const [pointsCurrency, setPointsCurrency] = useState("Points");
-  const [moneyCurrency, setMoneyCurrency] = useState("INR - Indian Rupee");
+  const [moneyCurrency, setMoneyCurrency] = useState("INR");
+  const [defaultCountryCode, setDefaultCountryCode] = useState("IN");
 
   // Step 2: Earning Rules - Updated to individual states
   const [standardEarningRate, setStandardEarningRate] = useState("10");
@@ -68,21 +66,18 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
   const [newCustomerBonus, setNewCustomerBonus] = useState("50");
 
   // Flexible reward types for bonuses
-  const [newCustomerRewardType, setNewCustomerRewardType] = useState("points");
   const [newCustomerReward, setNewCustomerReward] = useState({
     type: "points",
     value: "50",
     name: "50 Points",
   });
 
-  const [referralRewardType, setReferralRewardType] = useState("points");
   const [referralReward, setReferralReward] = useState({
     type: "points",
     value: "200",
     name: "200 Points",
   });
 
-  const [welcomeRewardType, setWelcomeRewardType] = useState("points");
   const [welcomeReward, setWelcomeReward] = useState({
     type: "points",
     value: "100",
@@ -124,22 +119,40 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
   ]);
 
   // Step 4: Rewards
-  const [rewards, setRewards] = useState([
+  const [rewards, setRewards] = useState<
+    Array<{
+      name: string;
+      points: string;
+      description: string;
+      type: "coupon" | "assigned" | "point";
+      value: string;
+    }>
+  >([
     {
-      name: "Free Delivery",
-      points: "500",
-      description: "Free delivery on your next order",
+      name: "50 Points",
+      points: "50",
+      description: "Get 50 loyalty points",
+      type: "point",
+      value: "50",
     },
     {
-      name: "10% Discount",
-      points: "1000",
-      description: "10% off your next purchase",
+      name: "10% Off",
+      points: "0",
+      description: "10% discount on next purchase #54345",
+      type: "coupon",
+      value: "0",
+    },
+    {
+      name: "Free Shipping",
+      points: "150",
+      description: "Free shipping on next order",
+      type: "assigned",
+      value: "0",
     },
   ]);
 
-  // Predefined reward templates
+  // Predefined reward templates - Updated to only show point, coupon, assigned
   const rewardTemplates = [
-    // Points
     {
       id: "p1",
       type: "points",
@@ -333,15 +346,17 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
       await createProgram.mutateAsync({
         name: programName,
         currencyName: pointsCurrency,
-        signupBonus: parseFloat(signupBonus) || 0,
-        referralBonus: parseFloat(referralBonus) || 0,
+        currencyCode: moneyCurrency.split(" ")[0], // Extract just the code
+        defaultCountryCode,
+        signupBonus: Number.parseFloat(signupBonus) || 0,
+        referralBonus: Number.parseFloat(referralBonus) || 0,
         tiersEnabled: tiers.length > 0,
         status: "active",
       });
 
       // 2. Create Standard Earning Rule
-      const standardRate = parseFloat(standardEarningRate) || 0;
-      const currencyVal = parseFloat(currencyValue) || 1;
+      const standardRate = Number.parseFloat(standardEarningRate) || 0;
+      const currencyVal = Number.parseFloat(currencyValue) || 1;
       if (standardRate > 0) {
         await createEarningRule.mutateAsync({
           name: "Standard Earning",
@@ -352,7 +367,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
       }
 
       // 3. Create First Purchase Rule (New Customer Bonus)
-      const firstPurchaseBonus = parseFloat(newCustomerBonus) || 0;
+      const firstPurchaseBonus = Number.parseFloat(newCustomerBonus) || 0;
       if (firstPurchaseBonus > 0) {
         await createEarningRule.mutateAsync({
           name: "First Purchase Bonus",
@@ -370,7 +385,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
           tiers.map((tier, index) =>
             createTier.mutateAsync({
               name: tier.name,
-              threshold: parseFloat(tier.minPoints) || 0,
+              threshold: Number.parseFloat(tier.minPoints) || 0,
               pointsMultiplier: 1, // Default multiplier
               color: tier.color,
               benefitsDescription: tier.benefits,
@@ -388,8 +403,8 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
               name: reward.name,
               description: reward.description,
               pointsCost: parseFloat(reward.points) || 0,
-              rewardType: "free_item", // Defaulting to free item for generic rewards
-              rewardValue: { itemName: reward.name },
+              rewardType: reward.type,
+              rewardValue: { itemName: reward.value || reward.name },
               status: "active",
             }),
           ),
@@ -431,7 +446,16 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
   };
 
   const addReward = () => {
-    setRewards([...rewards, { name: "", points: "", description: "" }]);
+    setRewards([
+      ...rewards,
+      {
+        name: "",
+        points: "",
+        description: "",
+        type: "point",
+        value: "",
+      },
+    ]);
   };
 
   const removeReward = (index: number) => {
@@ -454,15 +478,12 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
   const handleSelectReward = (reward: any) => {
     if (currentBonusType === "new") {
       setNewCustomerReward(reward);
-      setNewCustomerRewardType(reward.type);
       setNewCustomerBonus(reward.value);
     } else if (currentBonusType === "referral") {
       setReferralReward(reward);
-      setReferralRewardType(reward.type);
       setReferralBonus(reward.value);
     } else if (currentBonusType === "welcome") {
       setWelcomeReward(reward);
-      setWelcomeRewardType(reward.type);
       setSignupBonus(reward.value);
     }
     setShowRewardSelector(false);
@@ -489,12 +510,12 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
   };
 
   return (
-    <div className="min-h-screen h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
+    <div className="min-h-screen h-screen bg-linear-to-b from-gray-50 to-white flex flex-col">
       {/* Header */}
-      <div className="border-b bg-white flex-shrink-0">
+      <div className="border-b bg-white shrink-0">
         <div className="max-w-5xl mx-auto px-6 py-6">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded bg-gradient-to-br from-[#1873E8] to-[#FF9500] flex items-center justify-center">
+            <div className="w-6 h-6 rounded bg-linear-to-br from-[#1873E8] to-[#FF9500] flex items-center justify-center">
               <Settings className="w-4 h-4 text-white" />
             </div>
             <span className="text-sm text-muted-foreground">
@@ -528,7 +549,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
               {/* Progress Bar */}
               <div className="relative h-2 bg-gray-200 rounded-full mb-8">
                 <div
-                  className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#1873E8] to-[#1873E8] rounded-full transition-all duration-500"
+                  className="absolute left-0 top-0 h-full bg-linear-to-r from-[#1873E8] to-[#1873E8] rounded-full transition-all duration-500"
                   style={{ width: `${progressPercentage}%` }}
                 />
               </div>
@@ -616,42 +637,36 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                         <Label htmlFor="moneyCurrency">
                           Money Currency <span className="text-red-500">*</span>
                         </Label>
-                        <Select
+                        <CurrencySelect
+                          name="moneyCurrency"
                           value={moneyCurrency}
                           onValueChange={setMoneyCurrency}
-                        >
-                          <SelectTrigger className="border-gray-300">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="INR - Indian Rupee">
-                              INR - Indian Rupee
-                            </SelectItem>
-                            <SelectItem value="AED - UAE Dirham">
-                              AED - UAE Dirham
-                            </SelectItem>
-                            <SelectItem value="USD - US Dollar">
-                              USD - US Dollar
-                            </SelectItem>
-                            <SelectItem value="EUR - Euro">
-                              EUR - Euro
-                            </SelectItem>
-                            <SelectItem value="GBP - British Pound">
-                              GBP - British Pound
-                            </SelectItem>
-                            <SelectItem value="SAR - Saudi Riyal">
-                              SAR - Saudi Riyal
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
+                          placeholder="Select Currency"
+                          currencies="all"
+                          variant="default"
+                        />
                         <p className="text-sm text-muted-foreground">
                           Your business currency
                         </p>
                       </div>
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="defaultCountry">Default Country</Label>
+                      <CountryDropdown
+                        placeholder="Select Country"
+                        defaultValue={defaultCountryCode}
+                        onChange={(country) => {
+                          setDefaultCountryCode(country.alpha2);
+                        }}
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Default country for customer phone numbers
+                      </p>
+                    </div>
+
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-                      <Info className="w-5 h-5 text-[#1873E8] flex-shrink-0 mt-0.5" />
+                      <Info className="w-5 h-5 text-[#1873E8] shrink-0 mt-0.5" />
                       <div className="text-sm text-gray-700">
                         <span className="font-semibold">Example:</span>{" "}
                         Customers earn "{pointsCurrency}" when they spend{" "}
@@ -678,7 +693,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                     <Card className="border border-[#1873E8]/20 bg-white">
                       <CardContent className="p-5">
                         <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-[#1873E8]/10 flex items-center justify-center flex-shrink-0">
+                          <div className="w-12 h-12 rounded-lg bg-[#1873E8]/10 flex items-center justify-center shrink-0">
                             <ShoppingBag className="w-6 h-6 text-[#1873E8]" />
                           </div>
                           <div className="flex-1">
@@ -742,7 +757,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                             </div>
 
                             <div className="mt-3 flex items-start gap-2 max-w-2xl">
-                              <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                              <Info className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
                               <p className="text-xs text-muted-foreground">
                                 Enter either points or currency to calculate the
                                 conversion rate. Example: 10 {pointsCurrency} =
@@ -758,7 +773,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                     <Card className="border border-green-200 bg-white">
                       <CardContent className="p-5">
                         <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                          <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
                             <Gift className="w-6 h-6 text-green-600" />
                           </div>
                           <div className="flex-1">
@@ -806,7 +821,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                     <Card className="border border-orange-200 bg-white">
                       <CardContent className="p-5">
                         <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                          <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
                             <Users className="w-6 h-6 text-orange-600" />
                           </div>
                           <div className="flex-1">
@@ -854,7 +869,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                     <Card className="border border-purple-200 bg-white">
                       <CardContent className="p-5">
                         <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                          <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
                             <UserPlus className="w-6 h-6 text-purple-600" />
                           </div>
                           <div className="flex-1">
@@ -942,7 +957,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                     </Card>
 
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-                      <Info className="w-5 h-5 text-[#1873E8] flex-shrink-0 mt-0.5" />
+                      <Info className="w-5 h-5 text-[#1873E8] shrink-0 mt-0.5" />
                       <div className="text-sm text-gray-700">
                         <span className="font-semibold">Tip:</span> A
                         well-balanced earning structure keeps customers engaged.
@@ -971,7 +986,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-3">
                               <div
-                                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                                className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
                                 style={{ backgroundColor: tier.color }}
                               >
                                 <Award className="w-5 h-5 text-white" />
@@ -1084,7 +1099,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                     </Button>
 
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-                      <Info className="w-5 h-5 text-[#1873E8] flex-shrink-0 mt-0.5" />
+                      <Info className="w-5 h-5 text-[#1873E8] shrink-0 mt-0.5" />
                       <div className="text-sm text-gray-700">
                         <span className="font-semibold">Tip:</span> Create
                         meaningful tier names and colors that resonate with your
@@ -1144,6 +1159,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                                   type="number"
                                   placeholder="500"
                                   value={reward.points}
+                                  disabled={reward.type !== "point"}
                                   onChange={(e) =>
                                     updateReward(
                                       index,
@@ -1187,7 +1203,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                     </Button>
 
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-                      <Info className="w-5 h-5 text-[#1873E8] flex-shrink-0 mt-0.5" />
+                      <Info className="w-5 h-5 text-[#1873E8] shrink-0 mt-0.5" />
                       <div className="text-sm text-gray-700">
                         <span className="font-semibold">Tip:</span> Offer a
                         variety of rewards at different point levels to keep
@@ -1341,7 +1357,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                     </Card>
 
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
                       <div className="text-sm text-gray-700">
                         <span className="font-semibold">Ready to launch!</span>{" "}
                         Your loyalty program is configured and ready to go. You
@@ -1370,7 +1386,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
             <Button
               onClick={handleNext}
               disabled={(currentStep === 1 && !programName) || isSubmitting}
-              className="bg-[#1873E8] hover:bg-[#1873E8]/90 text-white min-w-[140px]"
+              className="bg-[#1873E8] hover:bg-[#1873E8]/90 text-white min-w-35"
             >
               {isSubmitting ? (
                 <>
@@ -1431,7 +1447,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
                           <div
-                            className={`w-12 h-12 rounded-lg ${template.color} flex items-center justify-center flex-shrink-0`}
+                            className={`w-12 h-12 rounded-lg ${template.color} flex items-center justify-center shrink-0`}
                           >
                             <Icon className={`w-6 h-6 ${template.iconColor}`} />
                           </div>

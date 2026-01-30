@@ -66,7 +66,7 @@ export const campaignResponseDownloadById = async ({
   selectedDripStage,
 }) => {
   const response = await axiosClient.post(
-    selectedDripStage
+    selectedDripStage && selectedDripStage !== "all"
       ? `/campaign/${campaignId}/download?selectedDripStage=${selectedDripStage}`
       : `/campaign/${campaignId}/download`,
     {},

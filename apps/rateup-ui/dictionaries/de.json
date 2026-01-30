@@ -2576,5 +2576,11 @@
   "Last 30 Days": "Letzte 30 Tage",
   "Last 60 Days": "Letzte 60 Tage",
   "Invite User": "Benutzer einladen",
-  "Inviting": "Einladung wird gesendet"
+  "Inviting": "Einladung wird gesendet",
+  "Click on any team to view detailed statistics": "Klicken Sie auf ein Team, um detaillierte Statistiken anzuzeigen",
+  "Avg Response": "Durchschnittliche Antwortzeit",
+  "online": "online",
+  "Back to Teams": "Zurück zu den Teams",
+  "Currently handling": "Derzeit in Bearbeitung",
+  "Performance of individual team members": "Leistung der einzelnen Teammitglieder"
 }
