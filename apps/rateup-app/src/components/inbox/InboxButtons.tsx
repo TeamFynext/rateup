@@ -7,7 +7,7 @@ import {
   Pressable,
   useColorScheme,
 } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -55,6 +55,14 @@ const InboxButtons = ({
     outputRange: ["0deg", "360deg"],
   });
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleRefresh();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <View className="relative ml-2">
       <TouchableOpacity onPress={() => setOpen((v) => !v)}>
@@ -98,7 +106,7 @@ const InboxButtons = ({
             }}
           >
             <View className="relative">
-              <Filter color={textColor} size={18}  />
+              <Filter color={textColor} size={18} />
               {activeFilterCount > 0 && (
                 <View className="absolute -top-1 -right-1 bg-primaryBlue rounded-full min-w-[16px] h-[16px] px-1 items-center justify-center">
                   <Text className="text-white text-[10px] font-bold">
@@ -119,7 +127,7 @@ const InboxButtons = ({
             }}
           >
             <Animated.View style={{ transform: [{ rotate }] }}>
-              <RefreshCcw color={textColor} size={18}  />
+              <RefreshCcw color={textColor} size={18} />
             </Animated.View>
             <Text className="dark:text-white text-sm">Refresh</Text>
           </Pressable>

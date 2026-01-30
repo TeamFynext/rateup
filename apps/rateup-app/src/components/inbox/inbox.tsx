@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator } from "react-native";
-import { ContactsWithLastMessage } from "@/src/api/inbox/types";
+import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/src/api/inbox/types";
 import { useFilteredContacts } from "@/src/api/inbox/contacts/contacts.query";
 import { useRouter } from "expo-router";
 import dayjs from "dayjs";
@@ -18,13 +18,7 @@ import ChatBox from "../chatBox/ChatBox";
 type InboxProps = {
   messageType: string;
   searchTerm?: string;
-  waMessageAssignStatus?:
-    | "New"
-    | "Assigned"
-    | "UnAssigned"
-    | "Addressed"
-    | "mine"
-    | undefined;
+  waMessageAssignStatus?: string;
 };
 
 export default function Inbox({
@@ -101,7 +95,7 @@ export default function Inbox({
   const finalContacts =
     waMessageAssignStatus === "Addressed"
       ? displayedContacts.filter((c) =>
-          WaMessageClosedStatus.includes(c.waMessageAssignStatus)
+          WaMessageClosedStatus.includes(c.waMessageAssignStatus as WaMessageAssignStatus)
         )
       : displayedContacts;
 

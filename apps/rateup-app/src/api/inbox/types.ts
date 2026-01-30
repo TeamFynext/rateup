@@ -11,7 +11,7 @@ export type ContactsWithLastMessage = {
   lastReceivedMessageTimeStamp: any;
   lastMessage: any;
   lastMessageTimeStamp: any;
-  waMessageAssignStatus: WaMessageAssignStatus;
+  waMessageAssignStatus: string;
   assignedUsers: any;
   isSessionActive: boolean;
   whatsappUserName?: string,
