@@ -8,6 +8,9 @@ import {
   getCustomerAccountByPhoneHandler,
   getCustomerAccountsHandler,
   updateCustomerAccountHandler,
+  assignRewardToCustomerHandler,
+  getRewardByShortCodeHandler,
+  redeemRewardByShortCodeHandler,
 } from "./account.controller.js";
 import { $customerAccountRef } from "./account.schema.js";
 
@@ -73,6 +76,37 @@ export async function customerAccountRoutes(server: FastifyInstance) {
       },
     },
     awardPointsHandler,
+  );
+
+  server.post(
+    "/:customerId/assign-reward",
+    {
+      schema: {
+        params: $customerAccountRef("customerIdParamSchema"),
+        body: $customerAccountRef("assignRewardSchema"),
+      },
+    },
+    assignRewardToCustomerHandler,
+  );
+
+  server.get(
+    "/rewards/:shortCode",
+    {
+      schema: {
+        params: $customerAccountRef("shortCodeParamSchema"),
+      },
+    },
+    getRewardByShortCodeHandler,
+  );
+
+  server.post(
+    "/rewards/:shortCode/redeem",
+    {
+      schema: {
+        params: $customerAccountRef("shortCodeParamSchema"),
+      },
+    },
+    redeemRewardByShortCodeHandler,
   );
 
   server.get("/export", exportCustomerAccountsHandler);

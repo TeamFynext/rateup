@@ -25,11 +25,18 @@ export async function createLoyaltyProgram(
       currencyName: data.currencyName,
       currencyCode: data.currencyCode,
       currencySymbol: data.currencySymbol,
+      defaultCountryCode: data.defaultCountryCode,
       signupBonus: data.signupBonus,
       referralBonus: data.referralBonus,
       refereeBonus: data.refereeBonus,
       tiersEnabled: data.tiersEnabled,
       tierResetPeriod: data.tierResetPeriod,
+      pointsActivityAlerts: data.pointsActivityAlerts,
+      autoApproveAdjustments: data.autoApproveAdjustments,
+      emailNotifications: data.emailNotifications,
+      whatsappNotifications: data.whatsappNotifications,
+      enablePointsExpiration: data.enablePointsExpiration,
+      pointsExpirationMonths: data.pointsExpirationMonths,
     },
     include: {
       tiers: true,
@@ -68,13 +75,16 @@ export async function updateLoyaltyProgram(
   });
 }
 
-export async function deleteLoyaltyProgram(programId: string) {
+export async function deleteLoyaltyProgram(
+  programId: string,
+  force: boolean = false,
+) {
   // Check if there are any customers
   const customerCount = await prisma.customerLoyaltyAccount.count({
     where: { programId },
   });
 
-  if (customerCount > 0) {
+  if (customerCount > 0 && !force) {
     throw new Error(
       "Cannot delete program with existing customers. Archive it instead.",
     );
@@ -82,5 +92,16 @@ export async function deleteLoyaltyProgram(programId: string) {
 
   return await prisma.loyaltyProgram.delete({
     where: { id: programId },
+  });
+}
+
+export async function resetProgramPoints(programId: string) {
+  // 1. Reset all customer points
+  await prisma.customerLoyaltyAccount.updateMany({
+    where: { programId },
+    data: {
+      currentPoints: 0,
+      lifetimePoints: 0,
+    },
   });
 }

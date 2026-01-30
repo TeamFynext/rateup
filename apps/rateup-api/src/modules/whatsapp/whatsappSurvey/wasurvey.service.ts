@@ -11,6 +11,7 @@ import {
   QuestionType2,
   SubscriptionFeaturePathName,
   WaQuestions,
+  WaTemplateCategory,
 } from "../../../types/enums.js";
 import {
   LeadGenBody,
@@ -113,13 +114,20 @@ export async function sendMessage(
     accessToken = waSettings.accessToken;
     sourceIdentifier = waSettings.phone;
   }
+  let messageUrl = "messages";
+  if (
+    (messageData as WaSendMessageBody)?.template?.category ===
+    WaTemplateCategory.MARKETING
+  ) {
+    messageUrl = "marketing_messages";
+  }
 
   log.trace(`sending message to %s \n%o`, to, messageData);
   try {
     let res;
     if (platform !== PlatformType.WEBCHAT) {
       res = await callWhatsappApi(
-        `/${configId}/messages`,
+        `/${configId}/${messageUrl}`,
         "POST",
         platform === PlatformType.INSTAGRAM ? null : accessToken,
         messageData,

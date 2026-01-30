@@ -62,6 +62,16 @@ export const applyRedemptionSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const assignRewardSchema = z.object({
+  customerId: z.string().min(1),
+  rewardId: z.string().min(1),
+  notes: z.string().optional(),
+});
+
+export const shortCodeParamSchema = z.object({
+  shortCode: z.string().min(1),
+});
+
 export const {
   schemas: customerLoyaltyAccountSchemas,
   $ref: $customerAccountRef,
@@ -76,6 +86,8 @@ export const {
     redeemRewardSchema,
     verifyRedemptionSchema,
     applyRedemptionSchema,
+    assignRewardSchema,
+    shortCodeParamSchema,
   },
   {
     $id: "customerLoyaltyAccountSchema",
@@ -95,3 +107,4 @@ export type AwardPointsInput = z.infer<typeof awardPointsSchema>;
 export type RedeemRewardInput = z.infer<typeof redeemRewardSchema>;
 export type VerifyRedemptionInput = z.infer<typeof verifyRedemptionSchema>;
 export type ApplyRedemptionInput = z.infer<typeof applyRedemptionSchema>;
+export type AssignRewardInput = z.infer<typeof assignRewardSchema>;
