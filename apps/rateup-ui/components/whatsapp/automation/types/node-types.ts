@@ -39,11 +39,6 @@ export interface InputNodeData extends BaseNodeData {
   validation?: string;
 }
 
-// Delay Node
-export interface DelayNodeData extends BaseNodeData {
-  delayTime: number;
-}
-
 export interface PauseNodeData extends BaseNodeData {
   duration: number;
   unit: "seconds" | "minutes" | "hours";
@@ -293,7 +288,7 @@ export type NodeTypeMap = {
   emailInputNode: InputNodeData;
   phoneInputNode: InputNodeData;
   dateInputNode: InputNodeData;
-  delayNode: DelayNodeData;
+
   pauseNode: PauseNodeData;
   videoNode: MediaNodeData;
 
@@ -329,7 +324,6 @@ export type NodeData =
   | ImageNodeData
   | ConditionalNodeData
   | InputNodeData
-  | DelayNodeData
   | PauseNodeData
   | MediaNodeData
   | StartNodeData
@@ -391,8 +385,7 @@ export function getDefaultNodeData(nodeType: string): NodeData {
       return { ...baseData, link: "", caption: "" } as ImageNodeData;
     case "conditionalNode":
       return { ...baseData, condition: "" } as ConditionalNodeData;
-    case "delayNode":
-      return { ...baseData, delayTime: 0 } as DelayNodeData;
+
     case "pauseNode":
       return { ...baseData, duration: 1, unit: "seconds" } as PauseNodeData;
     default:
@@ -489,17 +482,6 @@ export function validateNodeData(node: TypedNode): {
         return {
           valid: false,
           message: `${node.data.label}: Variable name is required.`,
-        };
-      }
-      break;
-    }
-
-    case "delayNode": {
-      const data = node.data as NodeTypeMap[typeof nodeType];
-      if (!data.delayTime || data.delayTime <= 0) {
-        return {
-          valid: false,
-          message: `${node.data.label}: Delay time must be greater than 0.`,
         };
       }
       break;

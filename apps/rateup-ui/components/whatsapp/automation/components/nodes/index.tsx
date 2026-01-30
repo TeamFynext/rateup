@@ -5,7 +5,6 @@ import ButtonNode from "./button-node";
 import CatalogNode from "./catalog-node";
 import ContactsNode from "./contacts-node";
 import CtaUrlNode from "./cta-url-node";
-import DelayNode from "./delay-node";
 import DocumentNode from "./document-node";
 import EndNode from "./end-node";
 import FlowNode from "./flow-node";
@@ -33,7 +32,7 @@ export const nodeTypes = {
   emailInputNode: InputNode,
   phoneInputNode: InputNode,
   dateInputNode: InputNode,
-  delayNode: DelayNode,
+
   pauseNode: PauseNode,
   startNode: StartNode,
 

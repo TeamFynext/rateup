@@ -90,7 +90,7 @@ const categories = [
       //   label: "Condition",
       //   icon: <IconGitBranch size={16} />,
       // },
-      // { id: "delayNode", label: "Delay", icon: <IconClock size={16} /> },
+
       { id: "pauseNode", label: "Pause", icon: <IconClockPause size={16} /> },
       { id: "startNode", label: "Start", icon: <IconPlayCard size={16} /> },
     ],

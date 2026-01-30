@@ -209,13 +209,7 @@ export default function NodeEditor({
             handleInputChange={handleInputChange}
           />
         );
-      case "delayNode":
-        return (
-          <DelayNodeEditor
-            nodeData={nodeData as NodeTypeMap["delayNode"]}
-            handleInputChange={handleInputChange}
-          />
-        );
+
       case "pauseNode":
         return (
           <PauseNodeEditor
@@ -478,24 +472,6 @@ const InputNodeEditor: React.FC<
         placeholder="Regex pattern or validation rule"
       /> */}
     </div>
-  );
-};
-
-// DelayNode Component
-const DelayNodeEditor: React.FC<NodeComponentProps<"delayNode">> = ({
-  nodeData,
-  handleInputChange,
-}) => {
-  const typedData = nodeData;
-  return (
-    <ContainedNumberInput
-      label="Delay Time (seconds)"
-      min={1}
-      max={10}
-      value={typedData.delayTime?.toString()}
-      onChange={(e) => handleInputChange("delayTime", e)}
-      description="Time to wait before proceeding to the next node"
-    />
   );
 };
 
