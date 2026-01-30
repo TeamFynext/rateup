@@ -515,7 +515,7 @@ const EditTicket = ({
                 size="sm"
                 aria-live="polite"
               >
-                {saveStatus === "saved" ? "Changes saved" : "Saving..."}
+                {saveStatus === "saved" ? "Changes saved" : "Saving"}
               </Badge>
             )}
             <ShareLink />

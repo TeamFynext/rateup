@@ -5,6 +5,10 @@ import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
+  AssignRewardRequest,
+  assignRewardToCustomer,
+} from "./assignReward.api";
+import {
   awardPoints,
   createLCAction,
   createLoyaltyCustomer,
@@ -190,6 +194,29 @@ export const useAwardPointsMutation = () => {
       showErrorToast(
         `Error awarding points: ${error?.response?.data?.error || error.message}`,
       );
+    },
+  });
+};
+
+export const useAssignRewardMutation = (onSuccess?: () => void) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: AssignRewardRequest) =>
+      assignRewardToCustomer(payload),
+    onSuccess: (payload) => {
+      queryClient.invalidateQueries({
+        queryKey: ["loyalty-customer", payload?.data?.customerId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["loyalty-customers"],
+      });
+      onSuccess?.();
+      toast.success("Reward assigned successfully!");
+    },
+    onError: (error: any) => {
+      console.error("Error assigning reward:", error);
+      toast.error(error?.response?.data?.message || "Failed to assign reward");
     },
   });
 };

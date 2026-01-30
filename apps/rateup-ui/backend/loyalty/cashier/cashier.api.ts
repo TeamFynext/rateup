@@ -46,7 +46,7 @@ export interface CustomerRewardsResponse {
     description: string;
     status: "active" | "inactive" | "out_of_stock";
     pointsCost: number;
-    rewardType: "discount_fixed" | "discount_percentage" | "free_item";
+    rewardType: "assigned" | "coupon" | "point";
     rewardValue: {
       maxAmount: number | null;
       percentage?: number;

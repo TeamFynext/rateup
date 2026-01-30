@@ -11,8 +11,17 @@ export interface LoyaltyProgram {
   signupBonus: number;
   referralBonus: number;
   refereeBonus: number;
+  newCustomerBonus?: number;
   tiersEnabled: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;
+  defaultCountryCode?: string;
+  referralMessageTemplate?: string;
+  enablePointsExpiration?: boolean;
+  pointsExpirationMonths?: number;
+  customerNotifications?: boolean;
+  autoApproveAdjustments?: boolean;
+  emailNotifications?: boolean;
+  whatsappNotifications?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,8 +35,19 @@ export interface LoyaltyProgramInput {
   signupBonus?: number;
   referralBonus?: number;
   refereeBonus?: number;
+  newCustomerBonus?: number;
   tiersEnabled?: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;
+  defaultCountryCode?: string;
+  referralMessageTemplate?: string;
+  pointsExpirationMonths?: number;
+  customerNotifications?: boolean;
+  autoApproveAdjustments?: boolean;
+  emailNotifications?: boolean;
+  whatsappNotifications?: boolean;
+  programActive?: boolean;
+  pointsActivityAlerts?: boolean;
+  enablePointsExpiration?: boolean;
 }
 
 export interface LoyaltyProgramUpdateInput extends Partial<LoyaltyProgramInput> {}
@@ -65,10 +85,20 @@ export const updateLoyaltyProgram = async (
 };
 
 /**
+ * Reset all points in a loyalty program
+ */
+export const resetLoyaltyProgramPoints = async (
+  programId: string,
+): Promise<void> => {
+  await axiosClient.post(`/loyalty/program/${programId}/reset-points`);
+};
+
+/**
  * Delete a loyalty program
  */
 export const deleteLoyaltyProgram = async (
   programId: string,
+  force: boolean = false,
 ): Promise<void> => {
-  await axiosClient.delete(`/loyalty/program/${programId}`);
+  await axiosClient.delete(`/loyalty/program/${programId}?force=${force}`);
 };
