@@ -30,13 +30,18 @@ import {
 
 import { useCustomerRewardsByPhone } from "@/backend/loyalty/cashier/cashier.query";
 import {
+  useAssignRewardMutation,
   useAwardPointsMutation,
   useGetLoyaltyCustomerByContactId,
 } from "@/backend/loyalty/customer/customer.query";
 import { useLoyaltyDashboardData } from "@/backend/loyalty/dashboard/dashboard.api";
 import { useLoyaltyEarningRules } from "@/backend/loyalty/earningRules.query";
 import { useLoyaltyProgram } from "@/backend/loyalty/program.query";
-import { useRedeemReward } from "@/backend/loyalty/redeems/redeems.query";
+import {
+  useGetRewardByShortCode,
+  useRedeemReward,
+  useRedeemRewardByShortCode,
+} from "@/backend/loyalty/redeems/redeems.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,17 +64,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 import { LoyaltyOnboarding } from "./LoyaltyOnboarding";
 
 export default function LoyaltyPrograms() {
-  const t = useTranslations();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [lookupPhone, setLookupPhone] = useState("");
 
   // Mutations
   const awardPointsMutation = useAwardPointsMutation();
   const redeemRewardMutation = useRedeemReward();
+  const assignRewardMutation = useAssignRewardMutation(() => {
+    setAssignRewardOpen(false);
+    setAssignRewardForm({
+      phoneNumber: "",
+      reward: "",
+      notes: "",
+    });
+    setLookupPhone("");
+  });
 
   // Queries
   const { data: allRewards } = useGetLoyaltyRewards();
@@ -77,11 +91,11 @@ export default function LoyaltyPrograms() {
     useLoyaltyDashboardData();
   const { data: earningRules } = useLoyaltyEarningRules();
 
-  const {
-    data: customerData,
-    isLoading: isLoadingCustomer,
-    error,
-  } = useCustomerRewardsByPhone(lookupPhone);
+  const getRewardByCode = useGetRewardByShortCode();
+  const redeemByCode = useRedeemRewardByShortCode();
+
+  const { data: customerData, isLoading: isLoadingCustomer } =
+    useCustomerRewardsByPhone(lookupPhone);
 
   const isFirstTimeUser = !isLoadingDashboard && !dashboardData?.programExists;
 
@@ -91,24 +105,36 @@ export default function LoyaltyPrograms() {
   // Dialog states
   const [issuePointsOpen, setIssuePointsOpen] = useState(false);
   const [issueRewardsOpen, setIssueRewardsOpen] = useState(false);
+  const [assignRewardOpen, setAssignRewardOpen] = useState(false);
+  const [redeemCodeOpen, setRedeemCodeOpen] = useState(false);
+  const [redeemAssignedOpen, setRedeemAssignedOpen] = useState(false);
   const [approvalsOpen, setApprovalsOpen] = useState(false);
+
+  // Short Code Redemption State
+  const [shortCode, setShortCode] = useState("");
+  const [codeReward, setCodeReward] = useState<any>(null);
 
   // Confirmation dialog states
   const [confirmPointsOpen, setConfirmPointsOpen] = useState(false);
   const [confirmRewardsOpen, setConfirmRewardsOpen] = useState(false);
 
   // Form data
-  const [pointsForm, setPointsForm] = useState({
-    phoneNumber: "",
-    pointRule: "1",
-    purchaseAmount: "",
-    isDefault: false,
-  });
 
   const [rewardsForm, setRewardsForm] = useState({
     phoneNumber: "",
     reward: "",
     notes: "",
+  });
+
+  const [assignRewardForm, setAssignRewardForm] = useState({
+    phoneNumber: "",
+    reward: "",
+    notes: "",
+  });
+
+  const [redeemAssignedForm, setRedeemAssignedForm] = useState({
+    phoneNumber: "",
+    reward: "",
   });
 
   // Mock data for confirmation
@@ -130,7 +156,7 @@ export default function LoyaltyPrograms() {
     : [
         {
           id: "1",
-          name: "Purchase Points (1 AED = 10 Points)",
+          name: "Purchase Points (1 INR = 10 Points)",
           multiplier: 10,
           isDefault: true,
         },
@@ -148,17 +174,51 @@ export default function LoyaltyPrograms() {
         },
       ];
 
+  const handleCheckCode = () => {
+    if (!shortCode) return;
+    getRewardByCode.mutate(shortCode, {
+      onSuccess: (data) => setCodeReward(data),
+      onError: () => {
+        setCodeReward(null);
+        // Toast is handled in query hook if setup, else add here
+      },
+    });
+  };
+
+  const handleRedeemCode = () => {
+    if (!shortCode) return;
+    redeemByCode.mutate(shortCode, {
+      onSuccess: () => {
+        setRedeemCodeOpen(false);
+        setShortCode("");
+        setCodeReward(null);
+      },
+    });
+  };
+
+  const [pointsForm, setPointsForm] = useState({
+    phoneNumber: "",
+    pointRule: pointRules?.find((r) => r.isDefault)?.id || "1",
+    purchaseAmount: "",
+    isDefault: false,
+  });
   // All transactions for the transactions page
 
   // Pending approvals
   const pendingApprovals = [];
 
+  // Filter available rewards based on type
   const availableRewards =
     allRewards?.map((r) => ({
       id: r.id,
       name: r.name,
       points: r.pointsCost,
+      type: r.rewardType,
     })) || [];
+
+  const assignableRewards = availableRewards.filter(
+    (r) => r.type === "assigned",
+  );
 
   // Analytics data - Points Activity
   const pointsActivityData =
@@ -246,6 +306,42 @@ export default function LoyaltyPrograms() {
     }
   };
 
+  const handleAssignReward = async () => {
+    if (!customerData?.customer?.id || !assignRewardForm.reward) return;
+
+    try {
+      await assignRewardMutation.mutateAsync({
+        rewardId: assignRewardForm.reward,
+        notes: assignRewardForm.notes || undefined,
+        customerId: customerData?.customer?.id,
+      });
+    } catch (error) {
+      console.error("Error assigning reward:", error);
+    }
+  };
+
+  const handleRedeemAssigned = async () => {
+    if (!customerData?.customer?.contactId || !redeemAssignedForm.reward)
+      return;
+
+    try {
+      await redeemRewardMutation.mutateAsync({
+        customerId: customerData?.customer?.id,
+        rewardId: redeemAssignedForm.reward,
+      });
+
+      // Close dialog and reset form
+      setRedeemAssignedOpen(false);
+      setRedeemAssignedForm({
+        phoneNumber: "",
+        reward: "",
+      });
+      setLookupPhone("");
+    } catch (error) {
+      console.error("Error redeeming assigned reward:", error);
+    }
+  };
+
   const handlePhoneLookup = () => {
     if (rewardsForm.phoneNumber) {
       setLookupPhone(rewardsForm.phoneNumber?.replaceAll("+", ""));
@@ -255,6 +351,18 @@ export default function LoyaltyPrograms() {
   const handlePointsPhoneLookup = () => {
     if (pointsForm.phoneNumber) {
       setLookupPhone(pointsForm.phoneNumber?.replaceAll("+", ""));
+    }
+  };
+
+  const handleAssignPhoneLookup = () => {
+    if (assignRewardForm.phoneNumber) {
+      setLookupPhone(assignRewardForm.phoneNumber?.replaceAll("+", ""));
+    }
+  };
+
+  const handleRedeemAssignedPhoneLookup = () => {
+    if (redeemAssignedForm.phoneNumber) {
+      setLookupPhone(redeemAssignedForm.phoneNumber?.replaceAll("+", ""));
     }
   };
 
@@ -286,6 +394,7 @@ export default function LoyaltyPrograms() {
     }
     return <LoyaltyOnboarding onComplete={handleOnboardingComplete} />;
   }
+  const countryCode: any = dashboardData?.defaultCountryCode || "IN";
 
   return (
     <div className="flex h-full">
@@ -387,7 +496,7 @@ export default function LoyaltyPrograms() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {/* Issue Points */}
                   <Button
                     className="h-auto py-3 px-4 bg-[#1873E8] hover:bg-[#1873E8]/90 text-white justify-start"
@@ -406,19 +515,63 @@ export default function LoyaltyPrograms() {
                     </div>
                   </Button>
 
-                  {/* Issue Rewards */}
+                  {/* Redeem by Code */}
                   <Button
-                    className="h-auto py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white justify-start"
-                    onClick={() => setIssueRewardsOpen(true)}
+                    className="h-auto py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white justify-start"
+                    onClick={() => {
+                      setRedeemCodeOpen(true);
+                      setShortCode("");
+                      setCodeReward(null);
+                    }}
                   >
                     <div className="flex items-center gap-3 w-full">
                       <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
                         <Gift className="w-4 h-4 text-white" />
                       </div>
                       <div className="text-left">
-                        <p className="text-sm font-medium">Issue Rewards</p>
+                        <p className="text-sm font-medium">Redeem Code</p>
                         <p className="text-xs text-white/80">
-                          Grant reward to customer
+                          Use 6-digit short code
+                        </p>
+                      </div>
+                    </div>
+                  </Button>
+
+                  {/* tton>
+
+                  {/* Redeem Reward (Unified) */}
+                  <Button
+                    className="h-auto py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white justify-start"
+                    onClick={() => {
+                      setIssueRewardsOpen(true);
+                    }}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+                        <Gift className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-medium">Redeem Reward</p>
+                        <p className="text-xs text-white/80">
+                          Redeem points or assigned
+                        </p>
+                      </div>
+                    </div>
+                  </Button>
+
+                  {/* Assign Reward */}
+                  <Button
+                    className="h-auto py-3 px-4 bg-orange-600 hover:bg-orange-700 text-white justify-start"
+                    onClick={() => setAssignRewardOpen(true)}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
+                        <Gift className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-medium">Assign Reward</p>
+                        <p className="text-xs text-white/80">
+                          Assign VIP/Special reward
                         </p>
                       </div>
                     </div>
@@ -696,7 +849,7 @@ export default function LoyaltyPrograms() {
                               <span className="text-muted-foreground">
                                 {tier.value} members
                               </span>
-                              <span className="font-semibold min-w-[3rem] text-right">
+                              <span className="font-semibold min-w-12 text-right">
                                 {tier.percentage}%
                               </span>
                             </div>
@@ -781,7 +934,7 @@ export default function LoyaltyPrograms() {
                 <div className="relative flex-1">
                   <PhoneInput
                     international
-                    defaultCountry="IN"
+                    defaultCountry={countryCode}
                     placeholder="Search customer phone..."
                     value={pointsForm.phoneNumber}
                     onChange={(e) => {
@@ -936,16 +1089,16 @@ export default function LoyaltyPrograms() {
         </DialogContent>
       </Dialog>
 
-      {/* Issue Rewards Dialog */}
+      {/* Issue Rewards Dialog (Unified) */}
       <Dialog open={issueRewardsOpen} onOpenChange={setIssueRewardsOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Gift className="w-5 h-5 text-purple-600" />
-              Issue Reward
+              Redeem Reward
             </DialogTitle>
             <DialogDescription>
-              Grant a reward to a customer from available rewards
+              Redeem points or assigned rewards for a customer
             </DialogDescription>
           </DialogHeader>
 
@@ -956,7 +1109,7 @@ export default function LoyaltyPrograms() {
                 <div className="relative flex-1">
                   <PhoneInput
                     international
-                    defaultCountry="IN"
+                    defaultCountry={countryCode}
                     placeholder="Search customer phone..."
                     value={rewardsForm.phoneNumber}
                     onChange={(e) => {
@@ -1019,37 +1172,39 @@ export default function LoyaltyPrograms() {
             )}
 
             {lookupPhone && customerData && (
-              <div className="space-y-2">
-                <Label htmlFor="reward-select">Select Reward</Label>
-                <Select
-                  value={rewardsForm.reward}
-                  onValueChange={(value) =>
-                    setRewardsForm({ ...rewardsForm, reward: value })
-                  }
-                >
-                  <SelectTrigger id="reward-select">
-                    <SelectValue placeholder="Choose a reward" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customerData.availableRewards?.map((reward: any) => (
-                      <SelectItem key={reward.id} value={reward.id}>
-                        <div className="flex items-center justify-between w-full">
-                          <span>{reward.name}</span>
-                          <span className="ml-4 text-xs text-muted-foreground">
-                            ({reward.pointsCost} pts)
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                    {(!customerData.availableRewards ||
-                      customerData.availableRewards.length === 0) && (
-                      <SelectItem value="none" disabled>
-                        No redeemable rewards available
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="reward-select">Select Reward</Label>
+                  <Select
+                    value={rewardsForm.reward}
+                    onValueChange={(value) =>
+                      setRewardsForm({ ...rewardsForm, reward: value })
+                    }
+                  >
+                    <SelectTrigger id="reward-select">
+                      <SelectValue placeholder="Choose a reward" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customerData.availableRewards?.map((reward: any) => (
+                        <SelectItem key={reward.id} value={reward.id}>
+                          <div className="flex items-center justify-between w-full">
+                            <span>{reward.name}</span>
+                            <span className="ml-4 text-xs text-muted-foreground">
+                              ({reward.pointsCost} pts)
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                      {(!customerData.availableRewards ||
+                        customerData.availableRewards.length === 0) && (
+                        <SelectItem value="none" disabled>
+                          No redeemable rewards available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
 
             {lookupPhone && !customerData && !isLoadingCustomer && (
@@ -1077,6 +1232,327 @@ export default function LoyaltyPrograms() {
                 redeemRewardMutation.isPending ||
                 !rewardsForm.phoneNumber ||
                 !rewardsForm.reward ||
+                !customerData
+              }
+            >
+              {redeemRewardMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Redeeming...
+                </>
+              ) : (
+                "Redeem Reward"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Reward Dialog */}
+      <Dialog open={assignRewardOpen} onOpenChange={setAssignRewardOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="w-5 h-5 text-orange-600" />
+              Assign Reward to Customer
+            </DialogTitle>
+            <DialogDescription>
+              Assign a special/VIP reward to a customer without points cost
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone-assign">Phone Number</Label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <PhoneInput
+                    international
+                    defaultCountry={countryCode}
+                    placeholder="Search customer phone..."
+                    value={assignRewardForm.phoneNumber}
+                    onChange={(e) => {
+                      setAssignRewardForm({
+                        ...assignRewardForm,
+                        phoneNumber: e,
+                        reward: "",
+                      });
+                      setLookupPhone("");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleAssignPhoneLookup();
+                      }
+                    }}
+                    className="bg-background border-input"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleAssignPhoneLookup}
+                  disabled={!assignRewardForm.phoneNumber || isLoadingCustomer}
+                >
+                  {isLoadingCustomer ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    "Lookup"
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {lookupPhone && customerData && (
+              <Card className="border-orange-200 bg-orange-50/50">
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Customer:</span>
+                      <span className="text-sm">
+                        {customerData.customer?.name || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Tier:</span>
+                      <Badge className="bg-orange-100 text-orange-700">
+                        {customerData.customer?.currentTier?.name || "N/A"}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {lookupPhone && !customerData && !isLoadingCustomer && (
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                Customer not found. Please check the phone number.
+              </div>
+            )}
+
+            {lookupPhone && customerData && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="reward-assign">Select Assigned Reward</Label>
+
+                  <Select
+                    value={assignRewardForm.reward}
+                    onValueChange={(value) =>
+                      setAssignRewardForm({
+                        ...assignRewardForm,
+                        reward: value,
+                      })
+                    }
+                  >
+                    <SelectTrigger id="reward-assign">
+                      <SelectValue placeholder="Choose a reward to assign" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {assignableRewards.map((reward) => (
+                        <SelectItem key={reward.id} value={reward.id}>
+                          {reward.name}
+                        </SelectItem>
+                      ))}
+                      {assignableRewards.length === 0 && (
+                        <SelectItem value="none" disabled>
+                          No assigned rewards available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="assign-notes">Notes (Optional)</Label>
+                  <Textarea
+                    id="assign-notes"
+                    placeholder="Add any notes about this assignment..."
+                    value={assignRewardForm.notes}
+                    onChange={(e) =>
+                      setAssignRewardForm({
+                        ...assignRewardForm,
+                        notes: e.target.value,
+                      })
+                    }
+                    rows={3}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAssignRewardOpen(false);
+                setAssignRewardForm({
+                  phoneNumber: "",
+                  reward: "",
+                  notes: "",
+                });
+                setLookupPhone("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={handleAssignReward}
+              disabled={
+                assignRewardMutation.isPending ||
+                !assignRewardForm.phoneNumber ||
+                !assignRewardForm.reward ||
+                !customerData
+              }
+            >
+              {assignRewardMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Assigning...
+                </>
+              ) : (
+                "Assign Reward"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Redeem Assigned Reward Dialog */}
+      <Dialog open={redeemAssignedOpen} onOpenChange={setRedeemAssignedOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-purple-600" />
+              Redeem Assigned Reward
+            </DialogTitle>
+            <DialogDescription>
+              Redeem a reward that has been assigned to a customer
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone-redeem-assigned">Phone Number</Label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <PhoneInput
+                    international
+                    defaultCountry={countryCode}
+                    placeholder="Search customer phone..."
+                    value={redeemAssignedForm.phoneNumber}
+                    onChange={(e) => {
+                      setRedeemAssignedForm({
+                        ...redeemAssignedForm,
+                        phoneNumber: e,
+                        reward: "",
+                      });
+                      setLookupPhone("");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleRedeemAssignedPhoneLookup();
+                      }
+                    }}
+                    className="bg-background border-input"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleRedeemAssignedPhoneLookup}
+                  disabled={
+                    !redeemAssignedForm.phoneNumber || isLoadingCustomer
+                  }
+                >
+                  {isLoadingCustomer ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    "Lookup"
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {lookupPhone && customerData && (
+              <Card className="border-purple-200 bg-purple-50/50">
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Customer:</span>
+                      <span className="text-sm">
+                        {customerData.customer?.name || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">
+                        Assigned Rewards:
+                      </span>
+                      <Badge className="bg-purple-100 text-purple-700">
+                        {assignableRewards?.length || 0} available
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {lookupPhone && !customerData && !isLoadingCustomer && (
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                Customer not found. Please check the phone number.
+              </div>
+            )}
+
+            {lookupPhone && customerData && (
+              <div className="space-y-2">
+                <Label htmlFor="reward-redeem-assigned">
+                  Select Assigned Reward
+                </Label>
+                <Select
+                  value={redeemAssignedForm.reward}
+                  onValueChange={(value) =>
+                    setRedeemAssignedForm({
+                      ...redeemAssignedForm,
+                      reward: value,
+                    })
+                  }
+                >
+                  <SelectTrigger id="reward-redeem-assigned">
+                    <SelectValue placeholder="Choose a reward to redeem" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {assignableRewards?.map((reward: any) => (
+                      <SelectItem key={reward.id} value={reward.id}>
+                        {reward.name}
+                      </SelectItem>
+                    ))}
+                    {(!assignableRewards || assignableRewards.length === 0) && (
+                      <SelectItem value="none" disabled>
+                        No assigned rewards to redeem
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRedeemAssignedOpen(false);
+                setRedeemAssignedForm({ phoneNumber: "", reward: "" });
+                setLookupPhone("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-purple-600 hover:bg-purple-700"
+              onClick={handleRedeemAssigned}
+              disabled={
+                redeemRewardMutation.isPending ||
+                !redeemAssignedForm.phoneNumber ||
+                !redeemAssignedForm.reward ||
                 !customerData
               }
             >
@@ -1138,7 +1614,7 @@ export default function LoyaltyPrograms() {
                       <Button
                         size="sm"
                         className="bg-green-600 hover:bg-green-700"
-                        onClick={() => handleApprove(approval.id)}
+                        onClick={() => handleApprove(approval?.id)}
                       >
                         <CheckCircle2 className="w-4 h-4 mr-1" />
                         Approve
@@ -1147,7 +1623,7 @@ export default function LoyaltyPrograms() {
                         size="sm"
                         variant="outline"
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleReject(approval.id)}
+                        onClick={() => handleReject(approval?.id)}
                       >
                         Reject
                       </Button>
@@ -1288,6 +1764,82 @@ export default function LoyaltyPrograms() {
               Confirm & Issue
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Short Code Redemption Dialog */}
+      <Dialog open={redeemCodeOpen} onOpenChange={setRedeemCodeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="w-5 h-5 text-indigo-600" />
+              Redeem by Short Code
+            </DialogTitle>
+            <DialogDescription>
+              Enter the 6-character code from the customer&apos;s reward card.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter Code (e.g., A1B2C3)"
+                value={shortCode}
+                onChange={(e) => setShortCode(e.target.value.toUpperCase())}
+                maxLength={6}
+                className="text-center text-lg tracking-widest uppercase font-mono"
+              />
+              <Button
+                onClick={handleCheckCode}
+                disabled={getRewardByCode.isPending || shortCode.length < 6}
+              >
+                {getRewardByCode.isPending ? "Checking..." : "Check"}
+              </Button>
+            </div>
+
+            {codeReward && (
+              <div className="bg-slate-50 p-4 rounded-lg border space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-semibold text-slate-900">
+                      {codeReward.rewardName}
+                    </h4>
+                    <p className="text-sm text-slate-500">
+                      Customer: {codeReward.customerName}
+                    </p>
+                    <p className="text-sm text-slate-500">
+                      {codeReward.customerPhone}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={
+                      codeReward.status === "issued" ? "secondary" : "outline"
+                    }
+                  >
+                    {codeReward.status?.toUpperCase()}
+                  </Badge>
+                </div>
+
+                {codeReward.status === "issued" ? (
+                  <div className="pt-2">
+                    <Button
+                      className="w-full bg-indigo-600 hover:bg-indigo-700"
+                      onClick={handleRedeemCode}
+                      disabled={redeemByCode.isPending}
+                    >
+                      {redeemByCode.isPending
+                        ? "Processing..."
+                        : "Redeem Reward"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="pt-2 text-center text-sm text-red-500 font-medium">
+                    This code cannot be redeemed (Status: {codeReward.status})
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

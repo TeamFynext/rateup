@@ -159,7 +159,7 @@ export function AutomatedReplyForm({
         >
           {createMutation.isPending || updateMutation.isPending ? (
             <>
-              <span className="mr-2">Saving...</span>
+              <span className="mr-2">Saving</span>
               <span className="animate-spin">⏳</span>
             </>
           ) : (

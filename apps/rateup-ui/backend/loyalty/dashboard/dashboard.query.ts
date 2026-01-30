@@ -6,6 +6,7 @@ interface LoyaltyDashboardStats {
   programExists: boolean;
   programId: string;
   currencySymbol: string;
+  defaultCountryCode: string;
   summary: {
     totalCustomers: number;
     pointsIssued: number;

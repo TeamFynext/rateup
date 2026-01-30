@@ -51,8 +51,8 @@ export function CashierTabsContent({
           </Badge>
         </TabsTrigger>
         <TabsTrigger
-          value="active_mobile"
-          className="lg:hidden rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 py-3"
+          value="active"
+          className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 py-3"
         >
           <Ticket className="h-4 w-4 mr-2" />
           Active ({activeRedemptions.length})
@@ -191,7 +191,7 @@ export function CashierTabsContent({
         </Card>
       </TabsContent>
 
-      <TabsContent value="active_mobile" className="lg:hidden">
+      <TabsContent value="active">
         <div className="space-y-3">
           {activeRedemptions.map((redemption) => (
             <Card
@@ -199,9 +199,15 @@ export function CashierTabsContent({
               className="border-l-4 border-l-green-500 shadow-sm"
             >
               <CardContent className="p-4">
-                <div className="flex justify-between items-center gap-2">
+                <div className="flex justify-between items-start gap-2 mb-3">
                   <div>
-                    <p className="font-medium text-slate-900">
+                    <Badge
+                      variant="outline"
+                      className="mb-1 bg-green-50 text-green-700 border-green-200"
+                    >
+                      ISSUED
+                    </Badge>
+                    <p className="font-medium text-slate-900 text-lg">
                       {redemption.reward.name}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">
@@ -211,14 +217,23 @@ export function CashierTabsContent({
                       )}
                     </p>
                   </div>
-                  <Button
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => onUseRedemption(redemption.id)}
-                  >
-                    Use Now
-                  </Button>
+                  {/* Short Code Display */}
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mb-1">
+                      Code
+                    </span>
+                    <span className="font-mono text-xl font-bold tracking-widest bg-slate-100 text-slate-800 px-2 py-1 rounded border border-slate-200 select-all">
+                      {redemption.shortCode || "---"}
+                    </span>
+                  </div>
                 </div>
+                <Button
+                  size="sm"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => onUseRedemption(redemption.id)}
+                >
+                  Mark as Used
+                </Button>
               </CardContent>
             </Card>
           ))}

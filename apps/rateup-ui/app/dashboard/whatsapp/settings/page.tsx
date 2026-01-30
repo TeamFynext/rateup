@@ -336,7 +336,7 @@ function WhatsAppManualConfiguration({ waSettings }) {
               </ShadButton>
               <ShadButton type="submit" disabled={upsertMutation.isPending}>
                 {upsertMutation.isPending
-                  ? "Saving..."
+                  ? "Saving"
                   : translations("Save Changes")}
               </ShadButton>
             </div>
