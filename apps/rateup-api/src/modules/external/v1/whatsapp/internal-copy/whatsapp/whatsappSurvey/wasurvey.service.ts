@@ -19,6 +19,7 @@ import {
   QuestionType,
   CampaignParticipantStatus,
   QuestionType as Q,
+  WaTemplateCategory,
 } from "../../../../../../../types/enums.js";
 import {
   WaSendMessageBody,
@@ -69,9 +70,13 @@ export async function sendMessage(
   const waSettings = await getWaSettings(orgId);
   const { to } = messageData;
   log.trace(`sending message to %s \n%o`, messageData.to, messageData);
+  let messageUrl = "messages";
+  if (messageData?.template?.category === WaTemplateCategory.MARKETING) {
+    messageUrl = "marketing_messages";
+  }
   try {
     const res = await callWhatsappApi(
-      `/${waSettings.phoneId}/messages`,
+      `/${waSettings.phoneId}/${messageUrl}`,
       "POST",
       waSettings.accessToken,
       messageData,

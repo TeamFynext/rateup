@@ -7,7 +7,10 @@ import {
   ApplyRedemptionInput,
   RedeemRewardInput,
 } from "../accounts/account.schema.js";
-import { handleSendTemplate } from "../../contact/contact.utils.js";
+import {
+  dispatchLoyaltyNotification,
+  LOYALTY_WA_COMMANDS,
+} from "../loyaltyWaDispatcher.js";
 
 export async function redeemReward(programId: string, data: RedeemRewardInput) {
   // Get customer
@@ -50,6 +53,70 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
     throw new Error(
       `Redemption validation failed: ${validation.violations.join(", ")}`,
     );
+  }
+
+  // Check if reward type is 'point' and handle point addition
+  if (reward.rewardType === "point") {
+    const pointsToAdd = (reward.rewardValue as any)?.points || 0;
+
+    // Credit points transaction
+    await prisma.loyaltyTransaction.create({
+      data: {
+        accountId: customer.id,
+        programId,
+        transactionType: "earn",
+        source: "reward_redemption",
+        points: pointsToAdd,
+        balanceAfter: customer.currentPoints + pointsToAdd,
+        description: `Redeemed point reward: ${reward.name}`,
+        metadata: {
+          rewardId: reward.id,
+          rewardName: reward.name,
+          redemptionCode: "INSTANT",
+        },
+      },
+    });
+
+    // Update customer balance
+    await prisma.customerLoyaltyAccount.update({
+      where: { id: customer.id },
+      data: {
+        currentPoints: { increment: pointsToAdd },
+        // Lifetime points usually track EARNED points, so we should increment it too
+        lifetimePoints: { increment: pointsToAdd },
+      },
+    });
+
+    // For point rewards, we technically don't need a "Redemption" record that sits in "APPROVED" state
+    // because it's instantly consumed. But we might want to record it as USED immediately.
+    const redemption = await prisma.loyaltyRedemption.create({
+      data: {
+        accountId: customer.id,
+        rewardId: reward.id,
+        redemptionCode: "INSTANT_" + Date.now(),
+        status: "USED",
+        rulesValidatedAt: new Date(),
+        rulesValidationPassed: true,
+        usedAt: new Date(),
+        // transactionId: transaction.id // Ideally link relevant transaction
+      },
+    });
+
+    if (customer.contact?.phone && customer.contact?.orgId) {
+      await dispatchLoyaltyNotification(
+        customer.contact.orgId,
+        LOYALTY_WA_COMMANDS.POINTS_ISSUED,
+        {
+          customerPhone: customer.contact.phone,
+          customerName: customer.contact.name || "Customer",
+          points: pointsToAdd,
+          balanceAfter: customer.currentPoints + pointsToAdd,
+          reason: `Redeemed point reward: ${reward.name}`,
+        },
+      );
+    }
+
+    return redemption;
   }
 
   // Generate redemption code
@@ -123,12 +190,20 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
       },
     });
 
-    if (reward.waTemplateId && customer.contact?.phone) {
-      await handleSendTemplate(
-        reward.waTemplateId,
-        "orgId" in reward ? (reward as any).orgId : customer.contact.orgId,
-        customer.contact.phone,
-        [customer.contact.name || "Customer", reward.pointsCost?.toString()],
+    if (customer.contact?.phone && customer.contact?.orgId) {
+      await dispatchLoyaltyNotification(
+        customer.contact.orgId,
+        LOYALTY_WA_COMMANDS.REWARD_REDEEMED,
+        {
+          customerPhone: customer.contact.phone,
+          customerName: customer.contact.name || "Customer",
+          rewardName: reward.name,
+          redemptionCode: redemptionCode,
+          points: -reward.pointsCost,
+          balanceAfter: customer.currentPoints - reward.pointsCost,
+          rewardId: reward.id,
+          rewardWaTemplateId: reward.waTemplateId,
+        },
       );
     }
   }

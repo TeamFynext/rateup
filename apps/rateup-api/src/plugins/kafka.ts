@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { Kafka, Partitioners, Producer } from "kafkajs";
 import fp from "fastify-plugin";
+import { log } from "../utils/logger.js";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -16,7 +17,11 @@ export const producer: Producer = kafka.producer({
 });
 
 async function kafkaPlugin(server: FastifyInstance) {
-  await producer.connect();
+  try {
+    await producer.connect();
+  } catch (error) {
+    log.error("Failed to connect Kafka producer: %o", error);
+  }
 
   server.decorate("kafka", { producer });
 

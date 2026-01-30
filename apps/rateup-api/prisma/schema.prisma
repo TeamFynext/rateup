@@ -76,6 +76,11 @@ enum UserPresenceMode {
   manual
 }
 
+enum CustomerRewardStatus {
+  ISSUED
+  REDEEMED
+}
+
 model User {
   id             String           @id @default(uuid()) @db.Uuid
   createdAt      DateTime         @default(now())
@@ -1718,8 +1723,9 @@ model LoyaltyProgram {
 
   // Currency Configuration
   currencyName   String @default("Points") // Points, Stars, Beans, etc.
-  currencyCode   String @default("AED") // AED, USD, EUR, GBP, SAR, INR
-  currencySymbol String @default("د.إ") // د.إ, $, €, £, ﷼, ₹
+  currencyCode   String @default("INR") // AED, USD, EUR, GBP, SAR, INR
+  currencySymbol String @default("₹") // د.إ, $, €, £, ﷼, ₹
+  defaultCountryCode String @default("IN")
 
   // Fixed Bonuses
   signupBonus   Int @default(0)
@@ -1729,6 +1735,14 @@ model LoyaltyProgram {
   // Tier Configuration
   tiersEnabled    Boolean @default(true)
   tierResetPeriod String? // 'never', 'yearly', 'monthly'
+
+  // Settings
+  pointsActivityAlerts   Boolean @default(true)
+  autoApproveAdjustments Boolean @default(false)
+  emailNotifications     Boolean @default(true)
+  whatsappNotifications  Boolean @default(true)
+  enablePointsExpiration Boolean @default(false)
+  pointsExpirationMonths Int     @default(12)
 
   // Metadata
   createdAt DateTime @default(now())
@@ -1867,6 +1881,7 @@ model LoyaltyReward {
   // Relations
   redemptions         LoyaltyRedemption[]
   loyaltyTransactions LoyaltyTransaction[]
+  assignedRewards     CustomerReward[]
 
   @@index([programId])
   @@index([status])
@@ -1908,6 +1923,7 @@ model CustomerLoyaltyAccount {
   // Relations
   transactions        LoyaltyTransaction[]
   redemptions         LoyaltyRedemption[]
+  assignedRewards     CustomerReward[]
   referralsAsReferrer LoyaltyReferral[]    @relation("ReferrerAccount")
   referralsAsReferee  LoyaltyReferral[]    @relation("RefereeAccount")
   approvalRequests    ApprovalRequest[]
@@ -1919,6 +1935,20 @@ model CustomerLoyaltyAccount {
   @@index([referralCode])
   @@index([currentTierId])
   @@index([referredById])
+}
+
+model CustomerReward {
+  id         String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  shortCode  String                 @unique
+  status     CustomerRewardStatus   @default(ISSUED)
+  rewardId   String                 @db.Uuid
+  reward     LoyaltyReward          @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  accountId  String                 @db.Uuid
+  account    CustomerLoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  assignedAt DateTime               @default(now())
+
+  @@unique([rewardId, accountId])
+  @@index([accountId])
 }
 
 // Complete ledger of all point movements

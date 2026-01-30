@@ -93,7 +93,7 @@ const redemptionRulesSchema = z.object({
 export const loyaltyRewardSchema = z.object({
   name: z.string().min(1, "Reward name is required"),
   description: z.string().optional().nullable(),
-  rewardType: z.enum(["discount_fixed", "discount_percentage", "free_item"]),
+  rewardType: z.enum(["point", "coupon", "assigned"]),
   pointsCost: z.number().min(0),
   rewardValue: z.union([
     discountFixedValueSchema,

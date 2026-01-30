@@ -7,17 +7,28 @@ export const loyaltyProgramSchema = z.object({
   currencyName: z.string().default("Points"),
   currencyCode: z.string().default("AED"),
   currencySymbol: z.string().default("د.إ"),
+  defaultCountryCode: z.string().default("AE"),
   signupBonus: z.number().default(0),
   referralBonus: z.number().default(0),
   refereeBonus: z.number().default(0),
   tiersEnabled: z.boolean().default(true),
   tierResetPeriod: z.enum(["never", "yearly", "monthly"]).optional().nullable(),
+  pointsActivityAlerts: z.boolean().default(true),
+  autoApproveAdjustments: z.boolean().default(false),
+  emailNotifications: z.boolean().default(true),
+  whatsappNotifications: z.boolean().default(true),
+  enablePointsExpiration: z.boolean().default(false),
+  pointsExpirationMonths: z.number().default(12),
 });
 
 export const loyaltyProgramUpdateSchema = loyaltyProgramSchema.partial();
 
 export const programIdParamSchema = z.object({
   programId: z.string(),
+});
+
+export const deleteProgramQuerySchema = z.object({
+  force: z.coerce.boolean().optional(),
 });
 
 // Response schemas
@@ -34,6 +45,7 @@ export const { schemas: loyaltyProgramSchemas, $ref: $programRef } =
       loyaltyProgramSchema,
       loyaltyProgramUpdateSchema,
       programIdParamSchema,
+      deleteProgramQuerySchema,
       loyaltyProgramResponseSchema,
     },
     {

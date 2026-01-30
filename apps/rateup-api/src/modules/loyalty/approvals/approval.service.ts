@@ -7,6 +7,10 @@ import {
 } from "./approval.schema.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import {
+  dispatchLoyaltyNotification,
+  LOYALTY_WA_COMMANDS,
+} from "../loyaltyWaDispatcher.js";
 
 /**
  * Create a new approval request
@@ -427,6 +431,24 @@ async function approveRedemption(approval: any, data: ApproveRequestInput) {
     });
 
     log.info(`Approved redemption ${redemption.id}`);
+
+    if (approval.account?.contact?.phone && approval.account?.contact?.orgId) {
+      await dispatchLoyaltyNotification(
+        approval.account.contact.orgId,
+        LOYALTY_WA_COMMANDS.REWARD_REDEEMED,
+        {
+          customerPhone: approval.account.contact.phone,
+          customerName: approval.account.contact.name || "Customer",
+          rewardName: redemption.reward.name,
+          redemptionCode: redemption.redemptionCode,
+          points: -redemption.reward.pointsCost,
+          balanceAfter: customer.currentPoints - redemption.reward.pointsCost,
+          rewardId: redemption.reward.id,
+          rewardWaTemplateId: redemption.reward.waTemplateId,
+        },
+      );
+    }
+
     return updatedApproval;
   });
 }
@@ -524,6 +546,21 @@ async function approvePointsAdjustment(
     log.info(
       `Approved points adjustment for account ${approval.accountId}: ${points} points`,
     );
+
+    if (approval.account?.contact?.phone && approval.account?.contact?.orgId) {
+      await dispatchLoyaltyNotification(
+        approval.account.contact.orgId,
+        LOYALTY_WA_COMMANDS.POINTS_ADJUSTED,
+        {
+          customerPhone: approval.account.contact.phone,
+          customerName: approval.account.contact.name || "Customer",
+          points: points,
+          balanceAfter: customer.currentPoints + points,
+          reason: approval.reason,
+        },
+      );
+    }
+
     return updatedApproval;
   });
 }
@@ -536,10 +573,18 @@ async function approveTierOverride(approval: any, data: ApproveRequestInput) {
     const requestData = approval.requestData as any;
 
     // Update customer tier
-    await tx.customerLoyaltyAccount.update({
+    const customer = await tx.customerLoyaltyAccount.update({
       where: { id: approval.accountId },
       data: {
         currentTierId: requestData.newTierId,
+      },
+      include: {
+        currentTier: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
@@ -566,6 +611,21 @@ async function approveTierOverride(approval: any, data: ApproveRequestInput) {
     log.info(
       `Approved tier override for account ${approval.accountId} to tier ${requestData.newTierId}`,
     );
+
+    if (approval.account?.contact?.phone && approval.account?.contact?.orgId) {
+      await dispatchLoyaltyNotification(
+        approval.account.contact.orgId,
+        LOYALTY_WA_COMMANDS.TIER_UPGRADED,
+        {
+          customerPhone: approval.account.contact.phone,
+          customerName: approval.account.contact.name || "Customer",
+          newTier: requestData.newTierId,
+          oldTier: customer.currentTier?.name || undefined,
+          lifetimePoints: customer.lifetimePoints,
+        },
+      );
+    }
+
     return updatedApproval;
   });
 }

@@ -8,9 +8,14 @@ import {
   checkAndUpgradeTier,
   generateReferralCode,
 } from "../earningRulesEngine.js";
+import { generateRewardShortCode } from "../../../utils/misc/random.utils.js";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
-import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { parsePhoneforWa } from "../util.js";
+import {
+  dispatchLoyaltyNotification,
+  LOYALTY_WA_COMMANDS,
+} from "../loyaltyWaDispatcher.js";
+import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 
 export async function createCustomerAccount(
   data: CustomerLoyaltyAccountInput,
@@ -160,17 +165,16 @@ export async function createCustomerAccount(
         balanceAfter: signupBonus,
       },
     });
-  }
-  if (account && sourceIdentifier) {
-    const joinLink = generateWhatsAppJoinLink({
-      waNumber: sourceIdentifier,
-      referralCode: account.referralCode,
-      source: data.source,
-    });
-    await sendTextMessage(
-      { phone, orgId },
-      null,
-      `🎉 Welcome ${account.contact?.name || ""}!
+    if (account && sourceIdentifier) {
+      const joinLink = generateWhatsAppJoinLink({
+        waNumber: sourceIdentifier,
+        referralCode: account.referralCode,
+        source: data.source,
+      });
+      await sendTextMessage(
+        { phone, orgId },
+        null,
+        `🎉 Welcome ${account.contact?.name || ""}!
 
 You are now registered in our Loyalty Program.
 
@@ -178,6 +182,21 @@ You are now registered in our Loyalty Program.
 
  Share & earn rewards: ${joinLink}
         `,
+      );
+    }
+
+    // Dispatch Points Issued
+    await dispatchLoyaltyNotification(
+      orgId,
+      LOYALTY_WA_COMMANDS.POINTS_ISSUED,
+      {
+        customerPhone: phone,
+        customerName: contact?.name || "Customer",
+        points: signupBonus,
+        balanceAfter: signupBonus,
+        reason: "Signup Bonus",
+        referralCode, // passing just in case
+      },
     );
   }
 
@@ -190,6 +209,7 @@ export async function getCustomerAccounts(programId: string) {
     include: {
       currentTier: true,
       contact: true,
+      assignedRewards: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -296,6 +316,11 @@ export async function getCustomerAccountByPhone(
           email: true,
         },
       },
+      assignedRewards: {
+        include: {
+          reward: true,
+        },
+      },
       currentTier: true,
       transactions: {
         take: 20,
@@ -339,6 +364,16 @@ export async function awardPoints(
       programId_contactId: {
         programId,
         contactId,
+      },
+    },
+    include: {
+      contact: true, // Need contact for phone number
+      program: true, // Need orgId? OrgId is usually checking program ownership.
+      currentTier: {
+        select: {
+          id: true,
+          name: true,
+        },
       },
     },
   });
@@ -388,7 +423,41 @@ export async function awardPoints(
   });
 
   // Check for tier upgrade
-  await checkAndUpgradeTier(customer.id, updatedCustomer.lifetimePoints);
+  const upgradeResult = await checkAndUpgradeTier(
+    customer.id,
+    updatedCustomer.lifetimePoints,
+  );
+
+  // Dispatch Notifications
+  if (customer.contact?.phone && customer.contact?.orgId) {
+    // Points Issued
+    await dispatchLoyaltyNotification(
+      customer.contact.orgId,
+      LOYALTY_WA_COMMANDS.POINTS_ISSUED,
+      {
+        customerPhone: customer.contact.phone,
+        customerName: customer.contact.name || "Customer",
+        points,
+        balanceAfter: updatedCustomer.currentPoints,
+        reason: "Purchase",
+      },
+    );
+
+    // Tier Upgraded
+    if (upgradeResult?.upgraded) {
+      await dispatchLoyaltyNotification(
+        customer.contact.orgId,
+        LOYALTY_WA_COMMANDS.TIER_UPGRADED,
+        {
+          customerPhone: customer.contact.phone,
+          customerName: customer.contact.name || "Customer",
+          newTier: upgradeResult.newTier?.name || "New Tier",
+          oldTier: customer.currentTier?.name || undefined, // We only have ID here, ideal would be name
+          lifetimePoints: updatedCustomer.lifetimePoints,
+        },
+      );
+    }
+  }
 
   return {
     customer: updatedCustomer,
@@ -416,4 +485,126 @@ export async function getLCustomerByPhone(phone, orgId) {
       },
     },
   });
+}
+
+export async function assignRewardToCustomer(
+  customerId: string,
+  rewardId: string,
+  notes?: string,
+) {
+  // Check if customer exists
+  const customer = await prisma.customerLoyaltyAccount.findUnique({
+    where: { id: customerId },
+    include: { contact: true },
+  });
+
+  if (!customer) {
+    throw new Error("Customer account not found");
+  }
+
+  // Check if reward exists
+  const reward = await prisma.loyaltyReward.findUnique({
+    where: { id: rewardId },
+  });
+
+  if (!reward) {
+    throw new Error("Reward not found");
+  }
+
+  // Check if reward is already assigned
+  const existing = await (prisma as any).customerReward.findUnique({
+    where: {
+      rewardId_accountId: {
+        rewardId,
+        accountId: customerId,
+      },
+    },
+  });
+
+  if (existing) {
+    throw new Error("Reward is already assigned to this customer");
+  }
+
+  let shortCode = generateRewardShortCode();
+  let unique = false;
+  while (!unique) {
+    const exists = await (prisma as any).customerReward.findUnique({
+      where: { shortCode },
+    });
+    if (!exists) unique = true;
+    else shortCode = generateRewardShortCode();
+  }
+
+  // Assign reward
+  const assignment = await (prisma as any).customerReward.create({
+    data: {
+      rewardId,
+      accountId: customerId,
+      shortCode,
+      status: "ISSUED",
+    },
+    include: {
+      reward: true,
+    },
+  });
+
+  // Dispatch Notification
+  if (customer.contact?.phone && customer.contact?.orgId) {
+    await dispatchLoyaltyNotification(
+      customer.contact.orgId,
+      LOYALTY_WA_COMMANDS.REWARD_ISSUED,
+      {
+        customerPhone: customer.contact.phone,
+        customerName: customer.contact.name || "Customer",
+        rewardName: reward.name,
+        redemptionCode: shortCode,
+        rewardId: reward.id,
+        rewardWaTemplateId: reward.waTemplateId,
+      },
+    );
+  }
+
+  return assignment;
+}
+
+export async function getRewardByShortCode(shortCode: string, orgId?: string) {
+  const reward = await (prisma as any).customerReward.findUnique({
+    where: { shortCode },
+    include: {
+      account: {
+        include: {
+          program: true,
+          contact: true,
+        },
+      },
+      reward: true,
+    },
+  });
+
+  if (!reward) {
+    throw new Error("Reward not found");
+  }
+
+  if (orgId && reward.account.program.orgId !== orgId) {
+    throw new Error("Reward not found");
+  }
+
+  return reward;
+}
+
+export async function markRewardAsRedeemed(shortCode: string, orgId?: string) {
+  const reward = await getRewardByShortCode(shortCode, orgId);
+
+  if (reward.status === "REDEEMED") {
+    throw new Error("Reward is already redeemed");
+  }
+
+  const updated = await (prisma as any).customerReward.update({
+    where: { id: reward.id },
+    data: {
+      status: "REDEEMED",
+    },
+  });
+
+  return updated;
 }

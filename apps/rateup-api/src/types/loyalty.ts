@@ -27,9 +27,9 @@ export enum LoyaltyRewardStatus {
 }
 
 export enum LoyaltyRewardType {
-  DISCOUNT_FIXED = "discount_fixed",
-  DISCOUNT_PERCENTAGE = "discount_percentage",
-  FREE_ITEM = "free_item",
+  POINT = "point",
+  COUPON = "coupon",
+  ASSIGNED = "assigned",
 }
 
 export enum LoyaltyTransactionType {

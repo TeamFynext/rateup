@@ -276,7 +276,7 @@ export class EarningRulesEngine {
   async checkAndUpgradeTier(
     customerId: string,
     lifetimePoints: number,
-  ): Promise<boolean> {
+  ): Promise<{ upgraded: boolean; newTier?: any }> {
     const customer = await prisma.customerLoyaltyAccount.findUnique({
       where: { id: customerId },
       include: {
@@ -294,7 +294,7 @@ export class EarningRulesEngine {
     });
 
     if (!customer || !customer.program.tiersEnabled) {
-      return false;
+      return { upgraded: false };
     }
 
     // Find the highest tier that the customer qualifies for
@@ -303,12 +303,12 @@ export class EarningRulesEngine {
     );
 
     if (!qualifiedTier) {
-      return false;
+      return { upgraded: false };
     }
 
     // Check if it's a different tier
     if (customer.currentTierId === qualifiedTier.id) {
-      return false;
+      return { upgraded: false };
     }
 
     // Upgrade the customer
@@ -319,7 +319,7 @@ export class EarningRulesEngine {
       },
     });
 
-    return true;
+    return { upgraded: true, newTier: qualifiedTier };
   }
 
   /**

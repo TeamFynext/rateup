@@ -410,6 +410,11 @@ export enum LoyaltyTemplateTypes {
   Referral = "Referral",
   CustomerRemoval = "CustomerRemoval",
   RewardsIssued = "RewardsIssued",
+  PointsIssued = "PointsIssued",
+  PointsAdjusted = "PointsAdjusted",
+  RewardIssued = "RewardIssued",
+  RewardRedeemed = "RewardRedeemed",
+  TierUpgraded = "TierUpgraded",
 }
 
 export enum WaMessageAssignStatus {

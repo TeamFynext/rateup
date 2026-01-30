@@ -23,6 +23,7 @@ export class RedemptionValidator {
     const reward = await prisma.loyaltyReward.findUnique({
       where: { id: rewardId },
     });
+    const violations: string[] = [];
 
     if (!reward) {
       return {
@@ -49,8 +50,23 @@ export class RedemptionValidator {
       };
     }
 
+    // Check if reward type is 'assigned' and if it is assigned to the customer
+    if (reward.rewardType === "assigned") {
+      const assignment = await (prisma as any).customerReward.findUnique({
+        where: {
+          rewardId_accountId: {
+            rewardId: reward.id,
+            accountId: customer.id,
+          },
+        },
+      });
+
+      if (!assignment) {
+        violations.push("Reward is not assigned to the customer");
+      }
+    }
+
     const rules = reward.redemptionRules as LoyaltyRedemptionRules;
-    const violations: string[] = [];
 
     // 1. Check points balance
     if (customer.currentPoints < reward.pointsCost) {
