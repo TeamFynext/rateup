@@ -45,6 +45,9 @@ export async function registerPlugins(server: FastifyInstance) {
   // Kafka producer
   await registerKafka(server);
 
+  // Initialize BullMQ workers
+  await import("../modules/whatsapp/workers/pausedAutomation.worker.js");
+
   // Cron jobs
   await registerCronJobs(server);
 

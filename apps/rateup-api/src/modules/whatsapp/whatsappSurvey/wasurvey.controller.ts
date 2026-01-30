@@ -143,6 +143,7 @@ import {
   getCustomerAccountByPhone,
 } from "../../loyalty/accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
+import { pausedAutomationQueue } from "../../../utils/redisConnection.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -1095,9 +1096,51 @@ export async function processNextNode(
           orgId,
         });
         break;
-      case "delayNode":
-        await wait((node?.data as NodeTypeMap["delayNode"])?.delayTime * 1000);
-        break;
+
+      case "pauseNode": {
+        const pauseData = node.data as NodeTypeMap["pauseNode"];
+        let ms = 0;
+        const duration = pauseData.duration || 0;
+        const unit = pauseData.unit || "seconds";
+
+        if (unit === "seconds") ms = duration * 1000;
+        else if (unit === "minutes") ms = duration * 60 * 1000;
+        else if (unit === "hours") ms = duration * 60 * 60 * 1000;
+
+        // Add delayed job to BullMQ
+        const job = await pausedAutomationQueue.add(
+          "resume-automation",
+          {
+            automationMessageId,
+            phone: userPhone,
+            orgId,
+            currentNode: nodeId,
+            automationId: automation.id,
+          },
+          {
+            delay: ms,
+            attempts: 3,
+            backoff: {
+              type: "exponential",
+              delay: 2000,
+            },
+          },
+        );
+
+        // Update database with paused status and job ID
+        await prisma.waAutomatedReplyMessage.update({
+          where: { id: automationMessageId },
+          data: {
+            status: "paused" as any,
+          },
+        });
+
+        log.info(
+          `Paused automation ${automationMessageId} for ${duration} ${unit}, job ID: ${job.id}`,
+        );
+        return;
+      }
+
       case "assignNode": {
         const assignData = node?.data as NodeTypeMap["assignNode"];
         const { contact } = await getOrCreateContactByPhone(

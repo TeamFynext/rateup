@@ -21,6 +21,7 @@ import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { createMessageTemplate } from "../../utils/email/emailWeeklyStatsReport.js";
 import { FRONTEND_URL } from "../../utils/constants/constants.js";
 import { enqueueCampaignMessage } from "../campaign/campaign.service.js";
+import { processNextNode } from "./whatsappSurvey/wasurvey.controller.js";
 
 interface waMessageScheduleProps {
   phone: string;
