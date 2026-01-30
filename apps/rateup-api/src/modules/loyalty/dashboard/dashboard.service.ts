@@ -18,6 +18,7 @@ export const getLoyaltyDashboardStats = async (orgId: string) => {
         pointsEarnedVsRedeemed: [],
         customerGrowthOverTime: [],
       },
+      defaultCountryCode: "IN",
       tierBreakdown: [],
       popularRewards: [],
     };
@@ -148,5 +149,6 @@ export const getLoyaltyDashboardStats = async (orgId: string) => {
     },
     tierBreakdown: tierStats,
     popularRewards: popularRewardsWithDetails,
+    defaultCountryCode: program.defaultCountryCode,
   };
 };

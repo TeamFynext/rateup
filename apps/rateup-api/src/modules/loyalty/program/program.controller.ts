@@ -4,6 +4,7 @@ import {
   deleteLoyaltyProgram,
   getLoyaltyProgramByOrg,
   updateLoyaltyProgram,
+  resetProgramPoints,
 } from "./program.service.js";
 import { log } from "../../../utils/logger.js";
 import {
@@ -61,12 +62,29 @@ export async function updateLoyaltyProgramHandler(
 }
 
 export async function deleteLoyaltyProgramHandler(
+  request: FastifyRequest<{
+    Params: ProgramIdParam;
+    Querystring: { force?: boolean };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { force } = request.query;
+    await deleteLoyaltyProgram(request.params.programId, force);
+    reply.code(204).send();
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: e.message });
+  }
+}
+
+export async function resetProgramPointsHandler(
   request: FastifyRequest<{ Params: ProgramIdParam }>,
   reply: FastifyReply,
 ) {
   try {
-    await deleteLoyaltyProgram(request.params.programId);
-    reply.code(204).send();
+    await resetProgramPoints(request.params.programId);
+    reply.code(200).send({ message: "Points reset successfully" });
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: e.message });

@@ -8,9 +8,15 @@ import {
   getCustomerAccounts,
   getCustomerAccountsForExport,
   updateCustomerAccount,
+  assignRewardToCustomer,
+  getRewardByShortCode,
+  markRewardAsRedeemed,
 } from "./account.service.js";
 import { log } from "../../../utils/logger.js";
-import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
+import {
+  getActiveLoyaltyRewards,
+  getLoyaltyRewardById,
+} from "../rewards/reward.service.js";
 import {
   AwardPointsInput,
   CustomerIdParam,
@@ -18,6 +24,7 @@ import {
   CustomerLoyaltyAccountUpdateInput,
   ContactIdParam,
   PhoneNumberParam,
+  AssignRewardInput,
 } from "./account.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 
@@ -117,10 +124,22 @@ export async function getCustomerAccountByPhoneHandler(
     }
 
     // Get available rewards
-    const availableRewards = await getActiveLoyaltyRewards(program.id);
+    const allRewards = await getActiveLoyaltyRewards(program.id);
+    const assignedRewardIds = (account as any).assignedRewards
+      ? (account as any).assignedRewards.map((ar: any) => ar.rewardId)
+      : [];
+
+    const availableRewards = allRewards.filter((reward) => {
+      // If reward requires assignment, check if assigned
+      if (reward.rewardType === "assigned") {
+        return assignedRewardIds.includes(reward.id);
+      }
+      // Otherwise (POINT, COUPON, etc.), it's available to all (subject to tier checks below)
+      return true;
+    });
 
     // Filter rewards by tier eligibility and customer points
-    const eligibleRewards = availableRewards.filter((reward) => {
+    const eligibleRewards = availableRewards.filter((reward: any) => {
       // Check tier eligibility
       if (reward.availableForTiers && reward.availableForTiers.length > 0) {
         if (
@@ -298,5 +317,52 @@ export async function exportCustomerAccountsHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: e.message });
+  }
+}
+
+export async function assignRewardToCustomerHandler(
+  request: FastifyRequest<{ Body: AssignRewardInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const result = await assignRewardToCustomer(
+      request.body.customerId,
+      request.body.rewardId,
+      request.body.notes,
+    );
+    reply.code(201).send({
+      message: "Reward assigned successfully",
+      assignment: result,
+    });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: e.message });
+  }
+}
+
+export async function getRewardByShortCodeHandler(
+  request: FastifyRequest<{ Params: { shortCode: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.user?.orgId;
+    const result = await getRewardByShortCode(request.params.shortCode, orgId);
+    reply.send(result);
+  } catch (e) {
+    reply.code(400).send({ error: e.message });
+  }
+}
+
+export async function redeemRewardByShortCodeHandler(
+  request: FastifyRequest<{ Params: { shortCode: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.user?.orgId;
+    const result = await markRewardAsRedeemed(request.params.shortCode, orgId);
+    reply.send(result);
+  } catch (e) {
+    log.error(e);
+    reply.code(400).send({ error: e.message });
   }
 }
