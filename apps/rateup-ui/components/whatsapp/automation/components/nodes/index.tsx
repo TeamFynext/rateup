@@ -5,7 +5,6 @@ import ButtonNode from "./button-node";
 import CatalogNode from "./catalog-node";
 import ContactsNode from "./contacts-node";
 import CtaUrlNode from "./cta-url-node";
-import DelayNode from "./delay-node";
 import DocumentNode from "./document-node";
 import EndNode from "./end-node";
 import FlowNode from "./flow-node";
@@ -14,6 +13,7 @@ import InputNode from "./input-node";
 import LeadgenNode from "./leadgen-node";
 import ListNode from "./list-node";
 import LocationNode from "./location-node";
+import PauseNode from "./pause-node";
 import StartNode from "./start-node";
 import TemplateNode from "./template-node";
 import TextNode from "./text-node";
@@ -32,8 +32,10 @@ export const nodeTypes = {
   emailInputNode: InputNode,
   phoneInputNode: InputNode,
   dateInputNode: InputNode,
-  delayNode: DelayNode,
+
+  pauseNode: PauseNode,
   startNode: StartNode,
+
   endNode: EndNode,
   buttonNode: ButtonNode,
   listNode: ListNode,
