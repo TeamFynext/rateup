@@ -394,7 +394,7 @@ export default function LoyaltyPrograms() {
     }
     return <LoyaltyOnboarding onComplete={handleOnboardingComplete} />;
   }
-  const countryCode: any = dashboardData.defaultCountryCode || "IN";
+  const countryCode: any = dashboardData?.defaultCountryCode || "IN";
 
   return (
     <div className="flex h-full">

@@ -2591,7 +2591,7 @@
   "Checkout Link": "Checkout Link",
   "Items Ordered": "Items Ordered",
   "Grand Total": "Grand Total",
-  "Configure which teams have access to specific communication channels. By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it).": "Configure which teams have access to specific communication channels. By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it).",
+  "Configure which teams have access to specific communication channels, By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it)": "Configure which teams have access to specific communication channels. By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it).",
   "Click on any team to view detailed statistics": "Click on any team to view detailed statistics",
   "Avg Response": "Avg Response",
   "online": "online",
