@@ -1183,6 +1183,8 @@ export async function sendTemplateToUserCore(
       null,
       userId,
       whatsappSettingsPhoneId,
+      undefined,
+      dbTemplate.data?.category,
     );
     await updateMonthlyStat(
       SubscriptionFeaturePathName.WhatsAppTemplate,

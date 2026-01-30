@@ -95,6 +95,7 @@ export async function sendMessage(
   userId?: string,
   whatsappSettingsPhoneId?: string,
   platform: PlatformType = PlatformType.WHATSAPP,
+  category?: WaTemplateCategory,
 ) {
   let waSettings: Omit<WhatsappSettings, "accessToken_iv">;
   let to: string;
@@ -115,10 +116,7 @@ export async function sendMessage(
     sourceIdentifier = waSettings.phone;
   }
   let messageUrl = "messages";
-  if (
-    (messageData as WaSendMessageBody)?.template?.category ===
-    WaTemplateCategory.MARKETING
-  ) {
+  if (category === WaTemplateCategory.MARKETING) {
     messageUrl = "marketing_messages";
   }
 
