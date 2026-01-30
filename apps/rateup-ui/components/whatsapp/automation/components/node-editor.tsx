@@ -209,13 +209,15 @@ export default function NodeEditor({
             handleInputChange={handleInputChange}
           />
         );
-      case "delayNode":
+
+      case "pauseNode":
         return (
-          <DelayNodeEditor
-            nodeData={nodeData as NodeTypeMap["delayNode"]}
+          <PauseNodeEditor
+            nodeData={nodeData as NodeTypeMap["pauseNode"]}
             handleInputChange={handleInputChange}
           />
         );
+
       case "documentNode":
       case "imageNode":
       case "videoNode":
@@ -473,21 +475,33 @@ const InputNodeEditor: React.FC<
   );
 };
 
-// DelayNode Component
-const DelayNodeEditor: React.FC<NodeComponentProps<"delayNode">> = ({
+// PauseNode Component
+const PauseNodeEditor: React.FC<NodeComponentProps<"pauseNode">> = ({
   nodeData,
   handleInputChange,
 }) => {
   const typedData = nodeData;
   return (
-    <ContainedNumberInput
-      label="Delay Time (seconds)"
-      min={1}
-      max={10}
-      value={typedData.delayTime?.toString()}
-      onChange={(e) => handleInputChange("delayTime", e)}
-      description="Time to wait before proceeding to the next node"
-    />
+    <Stack gap="md">
+      <ContainedNumberInput
+        label="Pause Duration"
+        min={1}
+        value={typedData.duration?.toString()}
+        onChange={(val) => handleInputChange("duration", val)}
+        description="Duration to pause the automation flow"
+      />
+      <ContainedSelection
+        label="Unit"
+        placeholder="Select unit"
+        value={typedData.unit}
+        data={[
+          { value: "seconds", label: "Seconds" },
+          { value: "minutes", label: "Minutes" },
+        ]}
+        onChange={(val) => handleInputChange("unit", val)}
+        allowDeselect={false}
+      />
+    </Stack>
   );
 };
 
