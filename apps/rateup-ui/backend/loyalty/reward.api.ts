@@ -1,22 +1,5 @@
 import { axiosClient } from "../apiClient";
 
-// Value schemas
-export interface DiscountFixedValue {
-  amount: number;
-  currency?: string;
-}
-
-export interface DiscountPercentageValue {
-  percentage: number;
-  maxAmount?: number | null;
-}
-
-export interface FreeItemValue {
-  itemName: string;
-  itemSku?: string | null;
-  quantity?: number;
-}
-
 export interface PointValue {
   points: number;
 }
@@ -31,13 +14,7 @@ export interface AssignedValue {
   sku?: string | null;
 }
 
-export type RewardValue =
-  | DiscountFixedValue
-  | DiscountPercentageValue
-  | FreeItemValue
-  | PointValue
-  | CouponValue
-  | AssignedValue;
+export type RewardValue = PointValue | CouponValue | AssignedValue;
 
 // Redemption rules schemas
 export interface TimeRestrictions {

@@ -250,8 +250,6 @@ export default function LoyaltyPrograms() {
       redemptions: r.count,
     })) || [];
 
-  // Mock earning rules
-
   const handleIssuePoints = async () => {
     if (!pointsForm.phoneNumber) return;
 
@@ -1001,7 +999,7 @@ export default function LoyaltyPrograms() {
               </div>
             )}
 
-            {lookupPhone && customerData && (
+            {lookupPhone && customerData && pointRules?.length > 0 && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="point-rule">Point Rule</Label>

@@ -17,7 +17,7 @@ export const useCustomerRewardsByPhone = (phone: string) => {
   return useQuery({
     queryKey: ["loyalty-cashier-customer", phone],
     queryFn: () => getCustomerRewardsByPhone(phone),
-    enabled: !phone,
+    enabled: phone.length >= 10,
     retry: false,
   });
 };

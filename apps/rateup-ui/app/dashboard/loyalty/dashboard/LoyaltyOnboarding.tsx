@@ -404,7 +404,12 @@ export function LoyaltyOnboarding({
               description: reward.description,
               pointsCost: parseFloat(reward.points) || 0,
               rewardType: reward.type,
-              rewardValue: { itemName: reward.value || reward.name },
+              rewardValue: {
+                ...(reward.value &&
+                  reward.type === "point" && {
+                    points: parseFloat(reward.value),
+                  }),
+              },
               status: "active",
             }),
           ),
