@@ -88,12 +88,14 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
     });
 
     // For point rewards, we technically don't need a "Redemption" record that sits in "APPROVED" state
-    // because it's instantly consumed. But we might want to record it as USED immediately.
+    const instantRedemptionCode =
+      "INSTANT_" + Date.now().toString(36).toUpperCase();
+
     const redemption = await prisma.loyaltyRedemption.create({
       data: {
         accountId: customer.id,
         rewardId: reward.id,
-        redemptionCode: "INSTANT_" + Date.now(),
+        redemptionCode: instantRedemptionCode,
         status: "USED",
         rulesValidatedAt: new Date(),
         rulesValidationPassed: true,

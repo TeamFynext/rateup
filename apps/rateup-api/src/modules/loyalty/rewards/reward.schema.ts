@@ -96,9 +96,15 @@ export const loyaltyRewardSchema = z.object({
   rewardType: z.enum(["point", "coupon", "assigned"]),
   pointsCost: z.number().min(0),
   rewardValue: z.union([
-    discountFixedValueSchema,
-    discountPercentageValueSchema,
-    freeItemValueSchema,
+    z.object({ points: z.number() }),
+    z.object({
+      code: z.string().optional(),
+      description: z.string().optional(),
+    }),
+    z.object({
+      description: z.string().optional(),
+      sku: z.string().optional(),
+    }),
   ]),
   status: z.enum(["active", "inactive", "out_of_stock"]).default("active"),
   redemptionRules: redemptionRulesSchema.optional(),
