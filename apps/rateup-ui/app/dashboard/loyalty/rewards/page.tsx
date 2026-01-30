@@ -76,22 +76,6 @@ export enum LoyaltyRewardType {
   ASSIGNED = "ASSIGNED",
 }
 
-const discountFixedValueSchema = z.object({
-  amount: z.coerce.number().min(0),
-  currency: z.string().default("USD"),
-});
-
-const discountPercentageValueSchema = z.object({
-  percentage: z.coerce.number().min(0).max(100),
-  maxAmount: z.coerce.number().optional().nullable(),
-});
-
-const freeItemValueSchema = z.object({
-  itemName: z.string(),
-  itemSku: z.string().optional().nullable(),
-  quantity: z.coerce.number().default(1),
-});
-
 const pointValueSchema = z.object({
   points: z.coerce.number().min(1),
 });
@@ -166,9 +150,6 @@ export const loyaltyRewardSchema = z.object({
   rewardType: z.string(), // simplified enum handling for form
   pointsCost: z.coerce.number().min(0),
   rewardValue: z.union([
-    discountFixedValueSchema,
-    discountPercentageValueSchema,
-    freeItemValueSchema,
     pointValueSchema,
     couponValueSchema,
     assignedValueSchema,
@@ -210,7 +191,12 @@ function RewardForm({
       description: "",
       rewardType: defaultRewardType,
       pointsCost: 0,
-      rewardValue: { amount: 0 },
+      rewardValue:
+        defaultRewardType === "point"
+          ? { points: 0 }
+          : defaultRewardType === "coupon"
+            ? { code: "", description: "" }
+            : { description: "", sku: "" },
       status: "active",
       waTemplateId: null,
       stockQuantity: null,
