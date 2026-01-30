@@ -2571,5 +2571,11 @@
   "Last 30 Days": "آخر 30 يومًا",
   "Last 60 Days": "آخر 60 يومًا",
   "Invite User": "دعوة مستخدم",
-  "Inviting": "جارٍ إرسال الدعوة"
+  "Inviting": "جارٍ إرسال الدعوة",
+  "Click on any team to view detailed statistics": "انقر على أي فريق لعرض الإحصائيات التفصيلية",
+  "Avg Response": "متوسط وقت الاستجابة",
+  "online": "متصل",
+  "Back to Teams": "العودة إلى الفرق",
+  "Currently handling": "قيد المعالجة حالياً",
+  "Performance of individual team members": "أداء أعضاء الفريق بشكل فردي"
 }

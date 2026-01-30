@@ -12,6 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Types
 interface ParsedRoute {
@@ -116,10 +122,28 @@ const UserCell = ({ user }: { user?: { name?: string } }) => (
 
 const RequestBodyCell = ({ body }: { body: any }) => (
   <div className="flex items-center gap-2">
+    <Popover>
+      <PopoverTrigger asChild>
+        <div className="flex items-center gap-2 cursor-pointer">
+          <Code className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <span className="text-xs text-muted-foreground max-w-[100px] truncate">
+            {body ? JSON.stringify(body) : "Empty"}
+          </span>
+        </div>
+      </PopoverTrigger>
+
+      <PopoverContent className="w-[500px] p-3">
+        <ScrollArea className="max-h-[400px]">
+          <pre className="text-xs whitespace-pre-wrap break-words">
+            {body ? JSON.stringify(body) : "Empty"}
+          </pre>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
     <Code className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-    <span className="text-xs text-muted-foreground max-w-[100px] truncate">
+    {/* <span className="text-xs text-muted-foreground max-w-[100px] truncate">
       {body ? JSON.stringify(body) : "Empty"}
-    </span>
+    </span> */}
   </div>
 );
 
