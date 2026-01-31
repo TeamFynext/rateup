@@ -189,7 +189,7 @@ export async function dispatchLoyaltyNotification(
         dbTemplate: template as any,
         teamId: null,
         userId: null,
-        header: components as any, // escaping strict type check for now if needed, but looks standard
+        header: components?.[0] as any, // escaping strict type check for now if needed, but looks standard
       });
     } else if (responseType === WaAutomatedReplyResponseType.Text) {
       const message = replacedContentByDynamicVariable(content, params);
