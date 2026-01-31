@@ -1,26 +1,20 @@
 import { axiosClient } from "../apiClient";
 
-// Value schemas
-export interface DiscountFixedValue {
-  amount: number;
-  currency?: string;
+export interface PointValue {
+  points: number;
 }
 
-export interface DiscountPercentageValue {
-  percentage: number;
-  maxAmount?: number | null;
+export interface CouponValue {
+  code?: string | null;
+  description?: string | null;
 }
 
-export interface FreeItemValue {
-  itemName: string;
-  itemSku?: string | null;
-  quantity?: number;
+export interface AssignedValue {
+  description: string;
+  sku?: string | null;
 }
 
-export type RewardValue =
-  | DiscountFixedValue
-  | DiscountPercentageValue
-  | FreeItemValue;
+export type RewardValue = PointValue | CouponValue | AssignedValue;
 
 // Redemption rules schemas
 export interface TimeRestrictions {
@@ -83,7 +77,13 @@ export interface LoyaltyReward {
   programId: string;
   name: string;
   description?: string | null;
-  rewardType: "discount_fixed" | "discount_percentage" | "free_item";
+  rewardType:
+    | "discount_fixed"
+    | "discount_percentage"
+    | "free_item"
+    | "point"
+    | "coupon"
+    | "assigned";
   pointsCost: number;
   rewardValue: RewardValue;
   status: "active" | "inactive" | "out_of_stock";
@@ -98,7 +98,7 @@ export interface LoyaltyReward {
 export interface LoyaltyRewardInput {
   name: string;
   description?: string | null;
-  rewardType: "discount_fixed" | "discount_percentage" | "free_item";
+  rewardType: "point" | "coupon" | "assigned";
   pointsCost: number;
   rewardValue: RewardValue;
   status?: "active" | "inactive" | "out_of_stock";

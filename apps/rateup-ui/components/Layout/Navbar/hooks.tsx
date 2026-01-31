@@ -43,6 +43,7 @@ import {
   Clock,
   Code,
   FileSpreadsheet,
+  FileText,
   Folder,
   Inbox,
   Settings,
@@ -206,11 +207,16 @@ export function useNavMain({
             url: "/dashboard/analytics?tab=agent-performance",
             icon: Award,
           },
-          // {
-          //   title: t("Team Performance"),
-          //   url: "/dashboard/analytics?tab=team-performance",
-          //   icon: Activity,
-          // },
+          {
+            title: t("Team Performance"),
+            url: "/dashboard/analytics?tab=team-performance",
+            icon: Activity,
+          },
+          {
+            title: t("Team Activity"),
+            url: "/dashboard/analytics?tab=team-activity",
+            icon: FileText,
+          },
         ],
       },
       ...(hasFeature(subscription, sfpn.WhatsAppCampaign)

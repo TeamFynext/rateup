@@ -3,6 +3,8 @@ import { memo } from "react";
 import { IconVideo } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
+import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
+
 import { MediaNodeData } from "../../types/node-types";
 import BaseNode from "./base-node";
 import styles from "./node-styles.module.css";
@@ -17,7 +19,9 @@ function VideoNode(props: NodeProps & { data: MediaNodeData }) {
               <IconVideo size={24} />
             </div>
             {props.data.caption && (
-              <div className={styles.caption}>{props.data.caption}</div>
+              <div className={styles.caption}>
+                {parseJsonToReact(props.data.caption)}
+              </div>
             )}
           </div>
         ) : (

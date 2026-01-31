@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
+import { usePushToWaMutation } from "@/backend/whatsapp/flow/flow.query";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ export default function FlowShare({
   surveyId,
 }: FlowShareProps) {
   // Share Survey state
+  const pushToWaMutation = usePushToWaMutation();
   const [selectedTeam, setSelectedTeam] = useState(
     survey?.teams?.[0]?.code || "",
   );
@@ -110,6 +112,10 @@ export default function FlowShare({
     toast.success("URL copied to clipboard!");
   };
 
+  const handleSaveToWhatsapp = () => {
+    pushToWaMutation.mutate(flowDbId);
+  };
+
   return (
     <div className="p-2 max-w-[1400px] mx-auto">
       <div className="flex flex-col gap-2">
@@ -117,59 +123,91 @@ export default function FlowShare({
         <ShareSection
           title="Share Survey"
           leftContent={
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-col gap-1">
-                <Label className="text-xs">Select Team</Label>
-                <Select
-                  value={selectedTeam}
-                  onValueChange={(value) => setSelectedTeam(value)}
-                >
-                  <SelectTrigger className="h-8 text-sm">
-                    <SelectValue placeholder="Select Team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teamOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-1 gap-4">
+                <div className="flex-1">
+                  <Label className="text-xs text-gray-500 dark:text-gray-400">
+                    Select Team
+                  </Label>
+                  <Select
+                    value={selectedTeam}
+                    onValueChange={(value) => setSelectedTeam(value)}
+                  >
+                    <SelectTrigger className="h-9 text-sm w-full">
+                      <SelectValue placeholder="Team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teamOptions.map(
+                        (option: { value: string; label: string }) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ),
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs text-gray-500 dark:text-gray-400">
+                    Select Tag
+                  </Label>
+                  <Select
+                    value={selectedTag}
+                    onValueChange={(value) => setSelectedTag(value)}
+                  >
+                    <SelectTrigger className="h-9 text-sm w-full">
+                      <SelectValue placeholder="Optional" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tagOptions.length > 0 ? (
+                        tagOptions.map(
+                          (option: { value: string; label: string }) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ),
+                        )
+                      ) : (
+                        <div className="py-3 text-center text-xs text-gray-500">
+                          No tags available
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <Label className="text-xs">Select Tag</Label>
-                <Select
-                  value={selectedTag}
-                  onValueChange={(value) => setSelectedTag(value)}
-                >
-                  <SelectTrigger className="h-8 text-sm">
-                    <SelectValue placeholder="Select a single Tag" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tagOptions.length > 0 ? (
-                      tagOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <div className="px-2 py-6 text-center text-sm text-gray-500">
-                        No tags available
-                      </div>
-                    )}
-                  </SelectContent>
-                </Select>
+
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs text-gray-500 dark:text-gray-400">
+                  Share Link
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={shareUrl}
+                    readOnly
+                    className="flex-1 h-9 text-xs font-mono bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-300"
+                  />
+                  <Button
+                    onClick={handleCopyUrl}
+                    size="sm"
+                    variant="outline"
+                    className="h-9 px-3"
+                  >
+                    <IconCopy size={14} className="mr-2" />
+                    Copy
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Input
-                  value={shareUrl}
-                  onChange={(e) => setShareUrl(e.currentTarget.value)}
-                  className="flex-1 h-8 text-sm"
-                  readOnly
-                />
-                <Button onClick={handleCopyUrl} size="sm" className="h-8">
-                  <IconCopy size={14} className="mr-2" />
-                  Copy url
+              <div className="pt-1">
+                <Button
+                  className="w-full h-9 text-xs bg-[#25D366] hover:bg-[#128C7E] text-white shadow-sm"
+                  onClick={handleSaveToWhatsapp}
+                  disabled={pushToWaMutation.isPending}
+                >
+                  <IconBrandWhatsapp size={16} className="mr-2" />
+                  {pushToWaMutation.isPending
+                    ? "Syncing..."
+                    : "Push Flow to WhatsApp"}
                 </Button>
               </div>
             </div>

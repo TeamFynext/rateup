@@ -60,8 +60,57 @@ export const exportCustomers = async (format: "csv" | "excel" = "excel") => {
   ).data;
 };
 
-export async function getLoyaltyCustomerById(customerId) {
-  return (await axiosClient.get(`${base}/${customerId}`)).data;
+export interface LoyaltyCustomerDetail extends LoyaltyCustomer {
+  currentTier?: {
+    id: string;
+    programId: string;
+    name: string;
+    threshold: number;
+    pointsMultiplier: string;
+    color: string;
+    benefitsDescription: string;
+    priority: number;
+    createdAt: string;
+  };
+  transactions: {
+    id: string;
+    accountId: string;
+    transactionType: "earn" | "redeem" | string;
+    points: number;
+    balanceAfter: number;
+    source: string;
+    referenceId?: string | null;
+    description?: string | null;
+    metadata?: Record<string, any>;
+    earningRuleId?: string | null;
+    earningRuleMultiplier?: number | null;
+    basePoints?: number | null;
+    rewardId?: string | null;
+    programId: string;
+    createdAt: string;
+    createdBy?: string | null;
+  }[];
+  redemptions: {
+    id: string;
+    accountId: string;
+    rewardId: string;
+    transactionId: string;
+    redemptionCode: string;
+    status: "APPROVED" | "PENDING" | "REJECTED" | string;
+    expiresAt?: string | null;
+    usedAt?: string | null;
+    usedContext?: Record<string, any>;
+    rulesValidatedAt?: string;
+    rulesValidationPassed?: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }[];
+  referrals: any[];
+}
+
+export async function getLoyaltyCustomerById(customerId: string) {
+  return (await axiosClient.get(`${base}/${customerId}`))
+    .data as LoyaltyCustomerDetail;
 }
 
 export async function getLoyaltyCustomerByContactId(contactId: string) {

@@ -39,9 +39,9 @@ export interface InputNodeData extends BaseNodeData {
   validation?: string;
 }
 
-// Delay Node
-export interface DelayNodeData extends BaseNodeData {
-  delayTime: number;
+export interface PauseNodeData extends BaseNodeData {
+  duration: number;
+  unit: "seconds" | "minutes" | "hours";
 }
 
 // Media Nodes
@@ -288,8 +288,10 @@ export type NodeTypeMap = {
   emailInputNode: InputNodeData;
   phoneInputNode: InputNodeData;
   dateInputNode: InputNodeData;
-  delayNode: DelayNodeData;
+
+  pauseNode: PauseNodeData;
   videoNode: MediaNodeData;
+
   audioNode: MediaNodeData;
   startNode: StartNodeData;
   endNode: EndNodeData;
@@ -322,7 +324,7 @@ export type NodeData =
   | ImageNodeData
   | ConditionalNodeData
   | InputNodeData
-  | DelayNodeData
+  | PauseNodeData
   | MediaNodeData
   | StartNodeData
   | EndNodeData
@@ -383,8 +385,9 @@ export function getDefaultNodeData(nodeType: string): NodeData {
       return { ...baseData, link: "", caption: "" } as ImageNodeData;
     case "conditionalNode":
       return { ...baseData, condition: "" } as ConditionalNodeData;
-    // Add cases for other node types...
 
+    case "pauseNode":
+      return { ...baseData, duration: 1, unit: "seconds" } as PauseNodeData;
     default:
       return baseData as BaseNodeData;
   }
@@ -484,12 +487,12 @@ export function validateNodeData(node: TypedNode): {
       break;
     }
 
-    case "delayNode": {
-      const data = node.data as NodeTypeMap[typeof nodeType];
-      if (!data.delayTime || data.delayTime <= 0) {
+    case "pauseNode": {
+      const data = node.data as NodeTypeMap["pauseNode"];
+      if (data.duration === undefined || data.duration < 0) {
         return {
           valid: false,
-          message: `${node.data.label}: Delay time must be greater than 0.`,
+          message: `${node.data.label}: Pause duration must be 0 or greater.`,
         };
       }
       break;

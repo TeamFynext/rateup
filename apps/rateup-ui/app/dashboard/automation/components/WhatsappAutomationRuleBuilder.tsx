@@ -128,7 +128,7 @@ const WhatsappAutomationRuleBuilder: React.FC<
 
   let buttonText = "Create Automation";
   if (isPending) {
-    buttonText = "Saving...";
+    buttonText = "Saving";
   } else if (isEditMode) {
     buttonText = "Update Automation";
   }

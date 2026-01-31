@@ -3,6 +3,8 @@ import { memo } from "react";
 import { IconDeviceAudioTape } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
+import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
+
 import { MediaNodeData } from "../../types/node-types";
 import BaseNode from "./base-node";
 import styles from "./node-styles.module.css";
@@ -23,7 +25,9 @@ function AudioNode(props: NodeProps & { data: MediaNodeData }) {
               <IconDeviceAudioTape size={24} />
             </div>
             {data.caption && (
-              <div className={styles.caption}>{data.caption}</div>
+              <div className={styles.caption}>
+                {parseJsonToReact(data.caption)}
+              </div>
             )}
           </div>
         ) : (

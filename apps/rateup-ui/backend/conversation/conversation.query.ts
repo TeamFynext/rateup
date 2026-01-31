@@ -73,9 +73,10 @@ export const useGetTeamOverview = (filter = null) => {
   });
 };
 
-export const useGetTeamDetailedMetrics = (teamId) => {
+export const useGetTeamDetailedMetrics = (teamId, filter = null) => {
   return useQuery({
-    queryFn: () => getTeamDetailedMetrics(teamId),
-    queryKey: ["teamdetailedmetrics"],
+    queryFn: () => getTeamDetailedMetrics(teamId, filter),
+    queryKey: ["teamdetailedmetrics", teamId, filter],
+    enabled: !!teamId,
   });
 };

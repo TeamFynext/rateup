@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
@@ -253,7 +254,7 @@ export const usePushToWaMutation = () => {
   return useMutation({
     mutationFn: pushFlowJsonToWa,
     onSuccess: (_, dbFlowId) => {
-      showSuccessToast("Flow saved to WhatsApp successfully");
+      toast.success("Flow saved to WhatsApp successfully");
       qc.invalidateQueries({ queryKey: ["flow", "db", dbFlowId] });
     },
   });
