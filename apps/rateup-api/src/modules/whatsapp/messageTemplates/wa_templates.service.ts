@@ -612,7 +612,7 @@ export async function sendTemplateToPhone({
     dbTemplate.data.components.find(
       (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
     )?.format === `IMAGE`;
-  const containsImageOverrideInRequest = header?.parameters.some(
+  const containsImageOverrideInRequest = header?.parameters?.some(
     (p) => p.type === "image",
   );
   if (
