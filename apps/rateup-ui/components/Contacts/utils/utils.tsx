@@ -139,7 +139,7 @@ export const getSourceBadge = (source: string) => {
       label: "Imported",
       className: "bg-gray-100 text-gray-700",
     },
-    LOYALTY: {
+    loyalty_program: {
       icon: Gift,
       label: "Loyalty Customer",
       className: "bg-orange-100 text-orange-700",
