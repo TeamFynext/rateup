@@ -2,7 +2,13 @@ export default {
   index: {
     title:"Introduction"
   },
-  profile: "Getting Started",
+  gettingStarted: "Getting Started",
+  inbox:"Inbox",
+  analytics:"Analytics",
+  contacts:"Contacts",
+  whatsapp:"Whatsapp",
+  automation:"Automation",
+  profilesettings: "Profile",
   teams: "Teams and User Roles",
   websurvey: "Web Survey",
   whatsappsurvey: "WhatsApp Features",
