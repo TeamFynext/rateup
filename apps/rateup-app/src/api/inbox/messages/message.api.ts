@@ -24,13 +24,6 @@ export async function getWaChatMediaFile(mediaId: string) {
   return response.data;
 }
 
-const ORG_WS_BASE_PATH = "/api/org/ws";
-export async function orgWsAuthCheck() {
-  return (await axios.get(`${ORG_WS_BASE_PATH}/auth`)).data as {
-    afterAuthId: string;
-  };
-}
-
 export async function assignInboxToUser(data: {
   contactId: string;
   assignees: { userId: string; teamId: string }[];

@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "42123891439-qde2d9icd7pb8t21n3spdiblp6k5j8he.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rateupapp.rateup",
+            "certificate_hash": "9de25cc8a17a015f68c066ceb70e835239741198"
+          }
+        },
+        {
           "client_id": "42123891439-qhrh9iq970rd0729a2d380br7kgc1i8j.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

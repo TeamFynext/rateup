@@ -10,6 +10,8 @@ import {
 import { MessagePlatform } from "./constants/enums";
 import { WaMessageAssignStatus } from "./api/inbox/types";
 import { colors } from "./constants/constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { randomUUID } from "expo-crypto";
 
 interface StarRowProps {
   count: number;
@@ -336,3 +338,22 @@ export const useVoiceRecordStore = create<VoiceRecordState>((set) => ({
       fileKey: null,
     })),
 }));
+
+
+const BROWSER_ID_KEY = "browserId";
+
+export const getMobileId = async (): Promise<string> => {
+  try {
+    let id = await AsyncStorage.getItem(BROWSER_ID_KEY);
+
+    if (!id) {
+      id = randomUUID();
+      await AsyncStorage.setItem(BROWSER_ID_KEY, id);
+    }
+
+    return id;
+  } catch (error) {
+    console.error("Failed to get or set mobile ID", error);
+    return "";
+  }
+};

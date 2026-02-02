@@ -10,12 +10,8 @@ import {
   getAssignedUserForContact,
   getMessagesByContactId,
   getWaChatMediaFile,
-  orgWsAuthCheck,
   sendNewWaMessage,
 } from "./message.api";
-import { useLiveMessages } from "@/src/utils/store";
-import { useEffect } from "react";
-import { useAuth } from "@/src/context/AuthContext";
 
 export const useGetMessagesByContactId = (contactId: string) => {
   return useInfiniteQuery({
@@ -50,13 +46,6 @@ export const useGetMediaFile = () => {
   });
 };
 
-export const useOrgWsAuthCheck = (enabled: boolean) => {
-  return useQuery({
-    queryKey: ["org_auth_check_for_ws"],
-    queryFn: orgWsAuthCheck,
-    enabled,
-  });
-};
 
 export const useAssignInboxToUser = (contactId: any) => {
   const qc = useQueryClient();
