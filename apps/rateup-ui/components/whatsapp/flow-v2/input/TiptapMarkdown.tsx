@@ -49,6 +49,9 @@ function TiptapMarkdown({ value, onChange, label, max, disabled }) {
         limit: max,
       }),
     ],
+    onUpdate: ({ editor }) => {
+      onChange((editor.storage as any).markdown.getMarkdown());
+    },
     onBlur: ({ editor }) => {
       onChange((editor.storage as any).markdown.getMarkdown());
     },
@@ -60,9 +63,15 @@ function TiptapMarkdown({ value, onChange, label, max, disabled }) {
   });
   useEffect(() => {
     if (editor) {
-      const selection = editor.state.selection;
-      editor.commands.setContent(content);
-      editor.commands.setTextSelection(selection);
+      const currentMarkdown = (editor.storage as any).markdown.getMarkdown();
+      // Only update content from props if it differs from editor content
+      // and either the editor is NOT focused (external update)
+      // or the content is completely different (reset/change)
+      if (content !== currentMarkdown && !editor.isFocused) {
+        const selection = editor.state.selection;
+        editor.commands.setContent(content);
+        editor.commands.setTextSelection(selection);
+      }
     }
   }, [content, editor]);
   const percentage = editor
