@@ -570,10 +570,10 @@ const MediaNodeEditor: React.FC<
       if (!file) return;
       if (file.size > getFileSizeLimit()) {
         showErrorToast(
-          `Max file size is ${getFileSizeLimitText()}`,
+          `size warning: Max file size is ${getFileSizeLimitText()}`,
           "file-size",
         );
-        return setMediaError(`Max ${getFileSizeLimitText()}`);
+        return setMediaError(`size warning: Max ${getFileSizeLimitText()}`);
       }
       setMediaError("");
       const base64String = await FileConverter.fileToBase64(file, true);
@@ -627,6 +627,11 @@ const MediaNodeEditor: React.FC<
 
   return (
     <Stack>
+      <Group justify="flex-end">
+        <Badge variant="light" color="blue" size="xs">
+          Size Limit: {getFileSizeLimitText()}
+        </Badge>
+      </Group>
       {nodeType === "imageNode" && (media || typedData?.link) && (
         <Image
           src={media || getFileUrlFromKey(typedData?.link)}
