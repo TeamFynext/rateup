@@ -6,6 +6,7 @@ import {
   QuestionType2,
   RatingScale,
   SmileyResponse2,
+  WaQuestions,
   YNResponse,
 } from "@/types/enums";
 
@@ -105,7 +106,7 @@ export const getValidationSchema = (type: QuestionType2) => {
       break;
     case QuestionType2.OptIn:
       schema = {
-        type: z.literal("OptIn"),
+        type: z.literal(WaQuestions.OptIn),
         label: z.string().trim().min(1).max(35),
         required: z.boolean(),
         name: z.string(),
@@ -276,14 +277,15 @@ export const getValidationSchema = (type: QuestionType2) => {
       break;
     case QuestionType2.EmbeddedLink:
       schema = {
-        type: z.literal("EmbeddedLink"),
+        type: z.literal(WaQuestions.EmbeddedLink),
+        text: z.string().trim().min(1).max(25),
         url: z.url(),
         visible: z.boolean(),
       };
       break;
     case QuestionType2.ChipsSelector:
       schema = {
-        type: z.string(),
+        type: z.literal(WaQuestions.ChipsSelector),
         "data-source": z
           .array(
             z.object({
@@ -636,7 +638,7 @@ export const getInitialValues = (type: QuestionType2) => {
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        type: { type: "hidden", value: "OptIn" },
+        type: { type: "hidden", value: WaQuestions.OptIn },
         label: {
           type: "text",
           value: "",
@@ -1089,13 +1091,14 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.EmbeddedLink:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "EmbeddedLink" },
+        type: { type: "hidden", value: WaQuestions.EmbeddedLink },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
+        name: { type: "hidden", value: generateId },
         text: { type: "text", value: "", extra: { required: true, max: 25 } },
         url: {
           type: "text",
@@ -1116,7 +1119,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.ChipsSelector:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "ChipsSelector" },
+        type: { type: "hidden", value: WaQuestions.ChipsSelector },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -1197,6 +1200,8 @@ const getDataSource = (type: QuestionType2) => {
         id: (index + 1).toString(),
         title: (index + 1).toString(),
       }));
+    case QuestionType2.ChipsSelector:
+      return [];
     default:
       return [];
   }
