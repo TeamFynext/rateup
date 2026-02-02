@@ -9,11 +9,16 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rateupapp.rateup",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-       "permissions": [
-          "RECORD_AUDIO"        ],
+      "permissions": [
+        "RECORD_AUDIO"
+      ],
       "statusBar": {
         "translucent": true,
         "backgroundColor": "transparent"
@@ -39,11 +44,11 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/logo.png",
-          "backgroudColor":"#FFFFFF",
-          "resizeMode":"cover",
-          "splashScreenStyle":"single-screen",
-          "light":{
-            "backgroudColor":"#FFFFFF"
+          "backgroudColor": "#FFFFFF",
+          "resizeMode": "cover",
+          "splashScreenStyle": "single-screen",
+          "light": {
+            "backgroudColor": "#FFFFFF"
           }
         }
       ]
