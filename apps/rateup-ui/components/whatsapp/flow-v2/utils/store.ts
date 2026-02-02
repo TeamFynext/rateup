@@ -78,7 +78,10 @@ interface StoreState {
   getCurrentScreen: () => Screen | undefined;
   getCurrentElement: () => FormElement | undefined;
   updateScreen: (screenId: string, updatedScreen: Partial<Screen>) => void;
-  updateComponentsInScreen: (screenId: string, updatedComponents: FormElement[]) => void;
+  updateComponentsInScreen: (
+    screenId: string,
+    updatedComponents: FormElement[],
+  ) => void;
   addComponentToScreen: (component: FormElement) => void;
   deleteComponentFromScreen: (feId: string) => void;
   ticketIssued: any[];
@@ -99,7 +102,63 @@ const useFlowStoreV3 = create<StoreState>()(
     googleReview: null,
     logicJumps: {},
     getScreens: () => {
-      return get().screens;
+      // Type mapping from UI display names to WhatsApp API format
+      const typeMapping: Record<string, string> = {
+        "Text Heading": "TextHeading",
+        "Text Subheading": "TextSubheading",
+        "Text Body": "TextBody",
+        "Text Caption": "TextCaption",
+        "Text Input": "TextInput",
+        "Text Area": "TextArea",
+        "Opt In": "OptIn",
+        "Embedded Link": "EmbeddedLink",
+        "Chips Selector": "ChipsSelector",
+        "Photo Picker": "PhotoPicker",
+        "Document Picker": "DocumentPicker",
+        "Multiple Select": "CheckboxGroup",
+        "Single Select": "RadioButtonsGroup",
+        "Dropdown Single Select": "Dropdown",
+      };
+
+      // Elements that require a 'name' field for WhatsApp API
+      const requiresName = [
+        "EmbeddedLink",
+        "OptIn",
+        "ChipsSelector",
+        "TextInput",
+        "TextArea",
+        "DatePicker",
+        "Dropdown",
+        "CheckboxGroup",
+        "RadioButtonsGroup",
+        "PhotoPicker",
+        "DocumentPicker",
+      ];
+
+      return get().screens.map((screen) => ({
+        ...screen,
+        layout: {
+          ...screen.layout,
+          children: screen.layout.children.map((child) => {
+            const mappedType =
+              child.type && typeMapping[child.type as string]
+                ? typeMapping[child.type as string]
+                : child.type;
+
+            // Auto-generate name if required and missing
+            const name =
+              requiresName.includes(mappedType as string) && !child.name
+                ? `field_${Math.random().toString(36).substring(2, 10)}`
+                : child.name;
+
+            return {
+              ...child,
+              type: mappedType as QuestionType2,
+              ...(name && { name }),
+            } as FormElement;
+          }),
+        },
+      })) as Screen[];
     },
     addScreens: (screens) =>
       set((state) => {
@@ -238,9 +297,7 @@ const useFlowStoreV3 = create<StoreState>()(
       }),
     updateScreen: (screenId, updatedScreen) =>
       set((state) => {
-        const screen = state.screens.find(
-          (screen) => screen.id === screenId,
-        );
+        const screen = state.screens.find((screen) => screen.id === screenId);
         if (screen) {
           Object.assign(screen, updatedScreen);
         }
@@ -250,9 +307,7 @@ const useFlowStoreV3 = create<StoreState>()(
       }),
     updateComponentsInScreen: (screenId, updatedComponents) =>
       set((state) => {
-        const screen = state.screens.find(
-          (screen) => screen.id === screenId,
-        );
+        const screen = state.screens.find((screen) => screen.id === screenId);
         if (screen) {
           screen.layout.children = updatedComponents;
         }
@@ -270,7 +325,7 @@ const useFlowStoreV3 = create<StoreState>()(
         if (screen) {
           // Insert before footer
           const footerIndex = screen.layout.children.findIndex(
-            (el) => el.type === QuestionType2.Footer
+            (el) => el.type === QuestionType2.Footer,
           );
           if (footerIndex !== -1) {
             screen.layout.children.splice(footerIndex, 0, component);
