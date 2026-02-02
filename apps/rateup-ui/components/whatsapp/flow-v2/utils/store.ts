@@ -118,6 +118,10 @@ const useFlowStoreV3 = create<StoreState>()(
         "Multiple Select": "CheckboxGroup",
         "Single Select": "RadioButtonsGroup",
         "Dropdown Single Select": "Dropdown",
+        "Like or Dislike": "RadioButtonsGroup",
+        "Yes or No": "RadioButtonsGroup",
+        "Opinion Scale": "RadioButtonsGroup",
+        "Image Carousel": "ImageCarousel",
       };
 
       // Elements that require a 'name' field for WhatsApp API
