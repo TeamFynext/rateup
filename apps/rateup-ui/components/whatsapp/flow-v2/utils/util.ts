@@ -24,7 +24,9 @@ export const getValidationSchema = (type: QuestionType2) => {
         "max-chars": z.number().optional(),
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
+
         visible: z.boolean(),
+        header: z.string().max(4090).optional(),
       };
       break;
     case QuestionType2.TextArea:
@@ -36,7 +38,9 @@ export const getValidationSchema = (type: QuestionType2) => {
         name: z.string(),
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
+
         visible: z.boolean(),
+        header: z.string().max(4090).optional(),
       };
       break;
     case QuestionType2.CheckboxGroup:
@@ -64,7 +68,9 @@ export const getValidationSchema = (type: QuestionType2) => {
         description: z.string().max(300).optional(),
         "init-value": z.array(z.string()).optional(),
         "media-size": z.enum(["regular", "large"]).optional(),
+
         visible: z.boolean(),
+        header: z.string().max(4090).optional(),
       };
       break;
     case QuestionType2.RadioButtonsGroup:
@@ -92,7 +98,9 @@ export const getValidationSchema = (type: QuestionType2) => {
         description: z.string().max(300).optional(),
         "init-value": z.string().optional(),
         "media-size": z.enum(["regular", "large"]).optional(),
+
         visible: z.boolean(),
+        header: z.string().max(4090).optional(),
       };
       break;
     case QuestionType2.Footer:
@@ -137,7 +145,9 @@ export const getValidationSchema = (type: QuestionType2) => {
           .max(200, { message: "Maximum 200 options allowed" }),
         required: z.boolean(),
         "init-value": z.string().optional(),
+
         visible: z.boolean(),
+        header: z.string().max(4090).optional(),
       };
       break;
     case QuestionType2.DatePicker:
@@ -150,7 +160,9 @@ export const getValidationSchema = (type: QuestionType2) => {
         "unavailable-dates": z.array(z.date().optional().nullable()),
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
+
         visible: z.boolean(),
+        header: z.string().max(4090).optional(),
       };
       break;
 
