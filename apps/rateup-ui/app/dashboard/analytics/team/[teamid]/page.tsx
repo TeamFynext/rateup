@@ -229,7 +229,13 @@ function page() {
                   agent.averageResponseTime,
                 );
                 return (
-                  <div key={agent.userId} className="p-5 rounded-xl border">
+                  <div
+                    key={agent.userId}
+                    className="p-5 rounded-xl border hover:scale-[1.02] cursor-pointer transition-all duration-300"
+                    onClick={() =>
+                      router.push(`/dashboard/analytics/${agent.userId}`)
+                    }
+                  >
                     <div className="flex items-center gap-3 mb-4">
                       <CreativeAvatar
                         name={agent.name}

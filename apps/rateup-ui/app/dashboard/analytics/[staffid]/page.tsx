@@ -104,7 +104,9 @@ function page() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => router.back()}
+                  onClick={() =>
+                    router.push("/dashboard/analytics?tab=agent-performance")
+                  }
                   className="shrink-0"
                 >
                   <ArrowLeft className="w-4 h-4 md:mr-2" />
