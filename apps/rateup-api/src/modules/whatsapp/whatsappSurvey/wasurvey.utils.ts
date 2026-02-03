@@ -8,6 +8,7 @@ import {
 } from "../../../types/enums.js";
 import {
   WaMessageBody,
+  WaMessageEchoBody,
   WaMessageTypes,
   WaReceiveMessageBody,
   WaSendMessageBody,
@@ -64,6 +65,12 @@ export function getEventType(data: WaMessageBody) {
         ?.length > 0
     ) {
       return WaEvent.Message;
+    } else if (
+      data.entry[0].changes[0].field === WaEvent.SMBMessageEchoes &&
+      (data as unknown as WaMessageEchoBody).entry[0].changes[0].value
+        .message_echoes?.length > 0
+    ) {
+      return WaEvent.SMBMessageEchoes;
     } else if (
       (data.entry[0].changes[0].value as WaReceiveMessageBody).statuses?.[0]
         ?.status === "captured" &&

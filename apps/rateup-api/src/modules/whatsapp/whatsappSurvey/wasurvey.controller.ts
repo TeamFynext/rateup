@@ -214,6 +214,10 @@ export async function whatsappEventHandler(
         await handleLeadGen(body);
         break;
 
+      case WaEvent.SMBMessageEchoes:
+        await handleSMBMessageEchoes(body);
+        break;
+
       default:
         log.warn("Unhandled event type: %s", eventType);
     }
@@ -284,6 +288,49 @@ async function handleMessageEvent(body: WaMessageBody) {
           );
         },
       );
+    }
+  }
+}
+
+// Handler: Manage SMB Message Echoes
+async function handleSMBMessageEchoes(body: WaMessageBody) {
+  log.trace("handleSMBMessageEchoes => %o", body);
+
+  for (const entry of body.entry || []) {
+    for (const change of entry.changes || []) {
+      const value = change.value as WaReceiveMessageBody;
+      const phoneId = value?.metadata?.phone_number_id;
+
+      if (!phoneId) continue;
+
+      const waSettings = await getWaSettingsByPhoneId(phoneId);
+      if (!waSettings) {
+        log.error("WaSettings not found for phone_id: %s", phoneId);
+        continue;
+      }
+
+      if (value.message_echoes) {
+        for (const message of value.message_echoes) {
+          try {
+            await handleWaMessages(
+              "send",
+              message,
+              message.to,
+              waSettings.orgId,
+              PlatformType.WHATSAPP,
+              message.to,
+              undefined,
+              message.id,
+            );
+          } catch (error) {
+            log.error(
+              "Error processing SMB Message Echo for message_id %s: %o",
+              message.id,
+              error,
+            );
+          }
+        }
+      }
     }
   }
 }
