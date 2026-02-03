@@ -92,6 +92,16 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
     if (element) {
       const updatedValues = { ...element };
 
+      // Merge with default values from initialValues if fields are missing in element
+      Object.keys(initialValues).forEach((key) => {
+        if (
+          updatedValues[key] === undefined &&
+          initialValues[key]?.value !== undefined
+        ) {
+          updatedValues[key] = initialValues[key].value;
+        }
+      });
+
       // Convert date strings to Date objects for date picker
       ["min-date", "max-date"].forEach((key) => {
         if (updatedValues[key])
@@ -183,7 +193,18 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
               value={value}
               checked={fieldType === "checkbox" ? value : undefined}
               onChange={(e) => {
-                const newValue = e.target ? e.target.checked : e;
+                // Handle different input types correctly
+                let newValue;
+                if (fieldType === "checkbox") {
+                  // For checkboxes, use checked property
+                  newValue = e?.target?.checked ?? e;
+                } else if (e?.target?.value !== undefined) {
+                  // For text inputs (which have e.target.value), use value property
+                  newValue = e.target.value;
+                } else {
+                  // For other components (select, date, multiselect, etc.), use the value directly
+                  newValue = e;
+                }
                 onChange(newValue);
               }}
               error={error?.message}

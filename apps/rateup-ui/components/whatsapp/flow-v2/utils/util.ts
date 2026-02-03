@@ -6,8 +6,29 @@ import {
   QuestionType2,
   RatingScale,
   SmileyResponse2,
+  WaQuestions,
   YNResponse,
 } from "@/types/enums";
+
+/**
+ * Generate a mapping from QuestionType2 display names to WaQuestions type names
+ * This dynamically creates the mapping from the existing enums to avoid hardcoding
+ * @returns Record mapping display names (e.g., "Text Heading") to type names (e.g., "TextHeading")
+ */
+export function getQuestionTypeMapping(): Record<string, string> {
+  const mapping: Record<string, string> = {};
+
+  // Generate mapping from QuestionType2 display names to WaQuestions type names
+  Object.keys(QuestionType2).forEach((key) => {
+    const displayName = QuestionType2[key as keyof typeof QuestionType2];
+    const typeName = WaQuestions[key as keyof typeof WaQuestions];
+    if (displayName && typeName) {
+      mapping[displayName] = typeName;
+    }
+  });
+
+  return mapping;
+}
 
 export const getValidationSchema = (type: QuestionType2) => {
   let schema = {};
@@ -24,6 +45,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
         visible: z.boolean(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
     case QuestionType2.TextArea:
@@ -36,6 +58,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
         visible: z.boolean(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
     case QuestionType2.CheckboxGroup:
@@ -64,6 +87,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         "init-value": z.array(z.string()).optional(),
         "media-size": z.enum(["regular", "large"]).optional(),
         visible: z.boolean(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
     case QuestionType2.RadioButtonsGroup:
@@ -92,6 +116,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         "init-value": z.string().optional(),
         "media-size": z.enum(["regular", "large"]).optional(),
         visible: z.boolean(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
     case QuestionType2.Footer:
@@ -105,7 +130,7 @@ export const getValidationSchema = (type: QuestionType2) => {
       break;
     case QuestionType2.OptIn:
       schema = {
-        type: z.literal("OptIn"),
+        type: z.literal(WaQuestions.OptIn),
         label: z.string().trim().min(1).max(35),
         required: z.boolean(),
         name: z.string(),
@@ -137,6 +162,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         required: z.boolean(),
         "init-value": z.string().optional(),
         visible: z.boolean(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
     case QuestionType2.DatePicker:
@@ -150,6 +176,7 @@ export const getValidationSchema = (type: QuestionType2) => {
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
         visible: z.boolean(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
 
@@ -276,14 +303,15 @@ export const getValidationSchema = (type: QuestionType2) => {
       break;
     case QuestionType2.EmbeddedLink:
       schema = {
-        type: z.literal("EmbeddedLink"),
+        type: z.literal(WaQuestions.EmbeddedLink),
+        text: z.string().trim().min(1).max(25),
         url: z.url(),
         visible: z.boolean(),
       };
       break;
     case QuestionType2.ChipsSelector:
       schema = {
-        type: z.string(),
+        type: z.literal(WaQuestions.ChipsSelector),
         "data-source": z
           .array(
             z.object({
@@ -636,7 +664,7 @@ export const getInitialValues = (type: QuestionType2) => {
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        type: { type: "hidden", value: "OptIn" },
+        type: { type: "hidden", value: WaQuestions.OptIn },
         label: {
           type: "text",
           value: "",
@@ -1089,13 +1117,14 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.EmbeddedLink:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "EmbeddedLink" },
+        type: { type: "hidden", value: WaQuestions.EmbeddedLink },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
+        name: { type: "hidden", value: generateId },
         text: { type: "text", value: "", extra: { required: true, max: 25 } },
         url: {
           type: "text",
@@ -1116,7 +1145,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.ChipsSelector:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "ChipsSelector" },
+        type: { type: "hidden", value: WaQuestions.ChipsSelector },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -1197,6 +1226,8 @@ const getDataSource = (type: QuestionType2) => {
         id: (index + 1).toString(),
         title: (index + 1).toString(),
       }));
+    case QuestionType2.ChipsSelector:
+      return [];
     default:
       return [];
   }

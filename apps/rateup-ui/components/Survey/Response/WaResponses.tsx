@@ -250,32 +250,18 @@ const WaResponses = ({
     if (!createTicketOpened) setSelectedResponseId("");
   }, [createTicketOpened]);
 
-  const confirmDelete = useCallback(
-    (verifyEmail: string) => {
-      if (user?.email === verifyEmail) {
-        notifications.show({
-          id: "load-data",
-          loading: true,
-          title: translations("Deleting Response"),
-          message: translations("Hold on, response is getting deleted"),
-          autoClose: false,
-          withCloseButton: false,
-        });
-        setIsDeleting(true);
-        deleteResponse.mutate(selectedRowId);
-      } else {
-        notifications.show({
-          id: "load-data",
-          color: "red",
-          title: translations("Error"),
-          message: translations("Incorrect email"),
-          icon: <IconX size="1rem" />,
-          autoClose: 3000,
-        });
-      }
-    },
-    [deleteResponse, selectedRowId, translations, user?.email],
-  );
+  const confirmDelete = useCallback(() => {
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: translations("Deleting Response"),
+      message: translations("Hold on, response is getting deleted"),
+      autoClose: false,
+      withCloseButton: false,
+    });
+    setIsDeleting(true);
+    deleteResponse.mutate(selectedRowId);
+  }, [deleteResponse, selectedRowId, translations]);
 
   const columns = useMemo(
     () => [
@@ -553,32 +539,22 @@ const WaResponses = ({
 export default React.memo(WaResponses);
 
 const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
-  const [verifyEmail, setVerifyEmail] = useState("");
   return (
     <FormModalLayout
       opened={opened}
       onClose={close}
       title={translations("Delete Response")}
       centered
-      buttonTitle={translations("Delete")}
+      buttonTitle={translations("Yes, Delete")}
       includeCancelButton
       onSubmit={() => {
-        confirmDelete(verifyEmail);
-        setVerifyEmail("");
+        confirmDelete();
       }}
     >
       <div className="flex flex-col gap-4 py-2">
         <p className="text-sm text-gray-700 dark:text-gray-300">
-          {translations("To proceed further, verify your email id")}
+          {translations("Are you sure you want to delete this response?")}
         </p>
-        <ContainedTextField
-          withAsterisk
-          label={translations("Verify email")}
-          placeholder={translations("Enter your login email")}
-          required
-          value={verifyEmail}
-          onChange={(e) => setVerifyEmail(e.target.value)}
-        />
         <p className="text-sm text-red-600 dark:text-red-400">
           {translations("Once deleted, response entry data will be lost")}
         </p>
