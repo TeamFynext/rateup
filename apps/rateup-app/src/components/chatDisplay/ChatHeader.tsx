@@ -246,7 +246,7 @@ const ChatHeader = ({
         </View>
 
         <View>
-          <Text className="text-xl dark:text-white font-medium">{name}</Text>
+          <Text className="text-xl dark:text-white font-medium">{formatName(name)}</Text>
           <Text className="text-gray-500">{phone}</Text>
           {isSessionActive ? (
             <View className="mt-1 w-fit px-2 py-0.5 rounded-md">
@@ -287,3 +287,8 @@ const ChatHeader = ({
 };
 
 export default ChatHeader;
+
+function formatName(name:string) {
+  return name.length > 20 ? name.slice(0, 20) + "..." : name;
+}
+
