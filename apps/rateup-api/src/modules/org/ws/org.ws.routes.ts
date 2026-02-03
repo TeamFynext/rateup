@@ -32,7 +32,7 @@ export async function orgWsRoutes(server: FastifyInstance) {
   );
 
   server.get(
-    "/:afterAuthId/ws",
+    "/:afterAuthId/mobilews",
     {
       preHandler: checkMobileId,
       websocket: true,
