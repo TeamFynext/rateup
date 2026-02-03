@@ -444,8 +444,11 @@ function ElementEditor({
     questionCreateMutation.isPending || questionUpdateMutation.isPending;
 
   const labelInputProps = form.getInputProps(`label.${selectedLanguage}`);
+  // Ensure value is always a string (handle undefined, null, or non-string values)
+  const labelValue =
+    typeof labelInputProps.value === "string" ? labelInputProps.value : "";
   // TODO: defer error checking until user has entered some text
-  labelInputProps.error = validateLabel(labelInputProps.value);
+  labelInputProps.error = validateLabel(labelValue);
 
   useEffect(() => {
     if (formInitialValues.required !== form.values.required && form.isValid())
@@ -536,7 +539,11 @@ function ElementEditor({
               </>
             )}
             <LabelTextInput
-              {...labelInputProps}
+              value={labelValue}
+              onChange={(e) =>
+                form.setFieldValue(`label.${selectedLanguage}`, e.target.value)
+              }
+              error={labelInputProps.error}
               maxLength={labelMaxLength}
               onBlur={() => {
                 if (
@@ -635,11 +642,14 @@ function ElementEditor({
 }
 
 function LabelTextInput(props: TextInputProps & { maxLength: number }) {
+  // Ensure value is a string for the length tracker
+  const safeValue = typeof props.value === "string" ? props.value : "";
   return (
     <TextInput
       variant="unstyled"
       placeholder="Enter question label here *"
       {...props}
+      value={safeValue}
       styles={{
         input: {
           fontSize: "1.1rem",
@@ -647,10 +657,7 @@ function LabelTextInput(props: TextInputProps & { maxLength: number }) {
         },
       }}
       rightSection={
-        <LengthTracker
-          length={(props.value as string).length}
-          maxValue={props.maxLength}
-        />
+        <LengthTracker length={safeValue.length} maxValue={props.maxLength} />
       }
       rightSectionProps={{
         style: {
