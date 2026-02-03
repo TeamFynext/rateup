@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { Group } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
@@ -24,6 +24,8 @@ import styles from "./TiptapMarkdown.module.css";
 
 function TiptapMarkdown({ value, onChange, label, max, disabled }) {
   let content = value || "";
+  const isUpdatingFromEditor = useRef(false);
+
   const editor = useEditor({
     editable: !disabled,
     content: content,
@@ -50,7 +52,11 @@ function TiptapMarkdown({ value, onChange, label, max, disabled }) {
       }),
     ],
     onUpdate: ({ editor }) => {
+      isUpdatingFromEditor.current = true;
       onChange((editor.storage as any).markdown.getMarkdown());
+      setTimeout(() => {
+        isUpdatingFromEditor.current = false;
+      }, 0);
     },
     onBlur: ({ editor }) => {
       onChange((editor.storage as any).markdown.getMarkdown());
@@ -62,7 +68,7 @@ function TiptapMarkdown({ value, onChange, label, max, disabled }) {
     },
   });
   useEffect(() => {
-    if (editor) {
+    if (editor && !isUpdatingFromEditor.current) {
       const currentMarkdown = (editor.storage as any).markdown.getMarkdown();
       // Only update content from props if it differs from editor content
       // and either the editor is NOT focused (external update)

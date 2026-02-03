@@ -10,6 +10,26 @@ import {
   YNResponse,
 } from "@/types/enums";
 
+/**
+ * Generate a mapping from QuestionType2 display names to WaQuestions type names
+ * This dynamically creates the mapping from the existing enums to avoid hardcoding
+ * @returns Record mapping display names (e.g., "Text Heading") to type names (e.g., "TextHeading")
+ */
+export function getQuestionTypeMapping(): Record<string, string> {
+  const mapping: Record<string, string> = {};
+
+  // Generate mapping from QuestionType2 display names to WaQuestions type names
+  Object.keys(QuestionType2).forEach((key) => {
+    const displayName = QuestionType2[key as keyof typeof QuestionType2];
+    const typeName = WaQuestions[key as keyof typeof WaQuestions];
+    if (displayName && typeName) {
+      mapping[displayName] = typeName;
+    }
+  });
+
+  return mapping;
+}
+
 export const getValidationSchema = (type: QuestionType2) => {
   let schema = {};
   switch (type) {
@@ -24,9 +44,8 @@ export const getValidationSchema = (type: QuestionType2) => {
         "max-chars": z.number().optional(),
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
-
         visible: z.boolean(),
-        header: z.string().max(4090).optional(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
     case QuestionType2.TextArea:
@@ -38,9 +57,8 @@ export const getValidationSchema = (type: QuestionType2) => {
         name: z.string(),
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
-
         visible: z.boolean(),
-        header: z.string().max(4090).optional(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
     case QuestionType2.CheckboxGroup:
@@ -68,9 +86,8 @@ export const getValidationSchema = (type: QuestionType2) => {
         description: z.string().max(300).optional(),
         "init-value": z.array(z.string()).optional(),
         "media-size": z.enum(["regular", "large"]).optional(),
-
         visible: z.boolean(),
-        header: z.string().max(4090).optional(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
     case QuestionType2.RadioButtonsGroup:
@@ -98,9 +115,8 @@ export const getValidationSchema = (type: QuestionType2) => {
         description: z.string().max(300).optional(),
         "init-value": z.string().optional(),
         "media-size": z.enum(["regular", "large"]).optional(),
-
         visible: z.boolean(),
-        header: z.string().max(4090).optional(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
     case QuestionType2.Footer:
@@ -145,9 +161,8 @@ export const getValidationSchema = (type: QuestionType2) => {
           .max(200, { message: "Maximum 200 options allowed" }),
         required: z.boolean(),
         "init-value": z.string().optional(),
-
         visible: z.boolean(),
-        header: z.string().max(4090).optional(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
     case QuestionType2.DatePicker:
@@ -160,9 +175,8 @@ export const getValidationSchema = (type: QuestionType2) => {
         "unavailable-dates": z.array(z.date().optional().nullable()),
         "helper-text": z.string().max(80).optional(),
         "init-value": z.string().optional(),
-
         visible: z.boolean(),
-        header: z.string().max(4090).optional(),
+        header: z.string().max(4090).optional(), // UI metadata, converted to TextBody by backend
       };
       break;
 

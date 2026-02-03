@@ -4,6 +4,8 @@ import { immer } from "zustand/middleware/immer";
 import { QuestionType2, WaQuestions } from "@/types/enums";
 import { FlowLogicJump } from "@/types/global";
 
+import { getQuestionTypeMapping } from "./util";
+
 export interface Screen {
   id: string;
   title: string;
@@ -103,26 +105,7 @@ const useFlowStoreV3 = create<StoreState>()(
     logicJumps: {},
     getScreens: () => {
       // Type mapping from UI display names to WhatsApp API format
-      const typeMapping: Record<string, string> = {
-        "Text Heading": "TextHeading",
-        "Text Subheading": "TextSubheading",
-        "Text Body": "TextBody",
-        "Text Caption": "TextCaption",
-        "Text Input": "TextInput",
-        "Text Area": "TextArea",
-        "Opt In": "OptIn",
-        "Embedded Link": "EmbeddedLink",
-        "Chips Selector": "ChipsSelector",
-        "Photo Picker": "PhotoPicker",
-        "Document Picker": "DocumentPicker",
-        "Multiple Select": "CheckboxGroup",
-        "Single Select": "RadioButtonsGroup",
-        "Dropdown Single Select": "Dropdown",
-        "Like or Dislike": "RadioButtonsGroup",
-        "Yes or No": "RadioButtonsGroup",
-        "Opinion Scale": "RadioButtonsGroup",
-        "Image Carousel": "ImageCarousel",
-      };
+      const typeMapping = getQuestionTypeMapping();
 
       // Elements that require a 'name' field for WhatsApp API
       const requiresName = [
