@@ -81,6 +81,42 @@ export interface WaReceiveMessageBody {
       };
     },
   ];
+  message_echoes?: [
+    {
+      from: string;
+      to: string;
+      id: string;
+      timestamp: string;
+      type: WaMessageTypes;
+      text: {
+        body: string;
+      };
+      image?: {
+        id: string;
+        mime_type: string;
+        sha256: string;
+        link?: string;
+        caption?: string;
+      };
+      location?: {
+        latitude: number;
+        longitude: number;
+        name?: string;
+        address?: string;
+      };
+      contacts?: {
+        name: {
+          first_name: string;
+          formatted_name: string;
+        };
+        phones: {
+          phone: string;
+          wai_id: string;
+          type: string;
+        }[];
+      }[];
+    },
+  ];
   statuses: [
     {
       id: string;
@@ -98,6 +134,39 @@ export interface WaReceiveMessageBody {
         };
       };
       errors?: any;
+    },
+  ];
+}
+
+export interface WaMessageEchoBody {
+  object: string;
+  entry: [
+    {
+      id: string;
+      changes: [
+        {
+          value: {
+            messaging_product: "whatsapp";
+            metadata: {
+              display_phone_number: string;
+              phone_number_id: string;
+            };
+            message_echoes: [
+              {
+                from: string;
+                to: string;
+                id: string;
+                timestamp: string;
+                type: WaMessageTypes;
+                text: {
+                  body: string;
+                };
+              },
+            ];
+          };
+          field: "smb_message_echoes";
+        },
+      ];
     },
   ];
 }

@@ -9,7 +9,7 @@ import { UserAvailabilityStatus } from "../../user/user.schema.js";
 import { Job, Worker } from "bullmq";
 import prisma from "../../../utils/prisma.js";
 import { UserPresenceMode } from "../../../../generated/prisma/enums.js";
-
+import { getSessionWithoutRequestResponse } from "supertokens-node/recipe/session/index.js";
 // Constants for delays
 const ONLINE_DEBOUNCE_MS = 2000;
 const OFFLINE_DELAY_MS = 15000;
@@ -125,12 +125,12 @@ subscriber.subscribe(WS_CHANNEL);
 export async function handleWebSocketConnection(
   connection: WebSocket,
   request: FastifyRequest<{
-    Params: { afterAuthId: string; orgId?: string };
-    Querystring: { role?: string };
+    Params: { afterAuthId: string };
+    Querystring: { role?: string; accessToken?: string };
   }>,
 ) {
   const browserId = request.params.afterAuthId;
-  const orgId = request.user?.orgId || request.params.orgId;
+  const orgId = request.user?.orgId;
   const role = request.query.role || "main";
   const userId = request.userId;
 
@@ -188,3 +188,21 @@ export async function orgWsAuthCheckHandler(
   const afterAuthId = connectionManager.generateAfterAuthIdforOrgId(orgId);
   reply.send({ afterAuthId });
 }
+
+export const checkMobileId = async (
+  request: FastifyRequest<{ Querystring: { accessToken?: string } }>,
+  reply: FastifyReply,
+) => {
+  const session = await getSessionWithoutRequestResponse(
+    request.query.accessToken,
+  );
+  const userId = session.getUserId();
+  if (!userId) {
+    log.error("No userId found in session\n%o", request.headers);
+    reply.code(401).send({ message: "Not authorized" });
+  }
+  (request as any).userId = userId;
+  const { role, orgId, email } = session.getAccessTokenPayload();
+  const user = { userId, role, orgId, email };
+  (request as any).user = user;
+};

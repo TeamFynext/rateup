@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import {
+  checkMobileId,
   handleWebSocketConnection,
   orgWsAuthCheckHandler,
 } from "./org.ws.controller.js";
@@ -31,8 +32,9 @@ export async function orgWsRoutes(server: FastifyInstance) {
   );
 
   server.get(
-    "/:afterAuthId/ws/:orgId",
+    "/:afterAuthId/mobilews",
     {
+      preHandler: checkMobileId,
       websocket: true,
     },
     handleWebSocketConnection,

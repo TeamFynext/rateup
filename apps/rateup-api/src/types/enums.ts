@@ -193,6 +193,7 @@ export enum WaEvent {
   FAILED = "failed",
   READ = "read",
   LEADGEN = "leadgen",
+  SMBMessageEchoes = "smb_message_echoes",
 }
 
 // Changes to these enums should be reflected in schema.prisma defaultValues
