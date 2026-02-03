@@ -62,7 +62,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const socket = new WebSocket(
-      `${WS_URL}/${mobileId}/ws?accessToken=${encodeURIComponent(token)}`,
+      `${WS_URL}/${mobileId}/mobilews?accessToken=${encodeURIComponent(token)}`,
     );
 
     connectionRef.current = socket;
