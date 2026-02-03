@@ -42,8 +42,9 @@ export const useUpdateRuleMutation = () => {
   return useMutation({
     mutationFn: ({ id, ...data }: Partial<CreateRule> & { id: string }) =>
       updateRule(id, data),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       qc.invalidateQueries({ queryKey: ["rules"] });
+      qc.invalidateQueries({ queryKey: ["rule", { id: variables.id }] });
       toast.success("Rule Updated Successfully");
     },
     onError: (error: any) => {
