@@ -38,6 +38,7 @@ interface CommonAccountSelectorProps {
   hideLabel?: boolean;
   optional?: boolean;
   className?: string;
+  filterIds?: string[];
 }
 
 type AccountSelectorProps =
@@ -56,6 +57,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     hideLabel = false,
     optional = false,
     className,
+    filterIds,
     ...restProps
   } = props;
   const { data, isPending, isError } = useWaSettings();
@@ -63,19 +65,26 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   const translations = useTranslations();
   let accountOptions = [];
   for (const account of data ?? []) {
-    if (platform === "all" || platform === MessagePlatform.WHATSAPP)
-      accountOptions.push({
-        value: usePhoneNumber
-          ? account?.phone?.replace("+", "")
-          : account.phoneId,
-        label: account?.phoneDisplayName || account.phone,
-      });
+    if (platform === "all" || platform === MessagePlatform.WHATSAPP) {
+      const val = usePhoneNumber
+        ? account?.phone?.replace("+", "")
+        : account.phoneId;
+
+      if (!filterIds || filterIds.includes(val)) {
+        accountOptions.push({
+          value: val,
+          label: account?.phoneDisplayName || account.phone,
+        });
+      }
+    }
     if (platform === "all" || platform === MessagePlatform.INSTAGRAM)
       if (account.ibaId) {
-        accountOptions.push({
-          value: account.ibaId,
-          label: account.igUserName ?? account.ibaId,
-        });
+        if (!filterIds || filterIds.includes(account.ibaId)) {
+          accountOptions.push({
+            value: account.ibaId,
+            label: account.igUserName ?? account.ibaId,
+          });
+        }
       }
   }
 
