@@ -5,8 +5,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useEffect, useRef, useState } from "react";
-import { Search } from "lucide-react-native";
-import { IconArrowLeft } from "@tabler/icons-react-native";
+import { Search, X } from "lucide-react-native";
 import { colors } from "@/src/constants/constants";
 
 type SearchBarProps = {
@@ -36,6 +35,7 @@ export default function SearchBar({
   }, [open]);
 
   const closeSearch = () => {
+    setSearchTerm("")
     setOpen(false);
   };
 
@@ -63,15 +63,11 @@ export default function SearchBar({
 
       {/* FLOATING SEARCH MODAL */}
       {open && (
-        <View className="absolute top-10 right-0 z-50 w-72">
+        <View className="absolute -top-5 right-8 z-50 w-72">
           <View
             className="flex-row items-center gap-2 rounded-xl px-3 py-2 shadow-lg"
             style={{ backgroundColor: bgColor }}
           >
-            <Pressable onPress={closeSearch} hitSlop={10}>
-              <IconArrowLeft size={20} color={textColor} />
-            </Pressable>
-
             <TextInput
               ref={inputRef}
               value={searchTerm}
@@ -83,6 +79,9 @@ export default function SearchBar({
               returnKeyType="search"
               clearButtonMode="while-editing"
             />
+            <Pressable onPress={()=>setSearchTerm("")} hitSlop={10}>
+              <X size={20} color={textColor} />
+            </Pressable>
           </View>
         </View>
       )}

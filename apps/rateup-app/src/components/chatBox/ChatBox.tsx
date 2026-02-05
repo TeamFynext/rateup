@@ -82,7 +82,7 @@ const ChatBox: React.FC<
               className="text-sm text-black dark:text-white min-w-[40vw] max-w-[60vw]"
               numberOfLines={1}
             >
-              {lastMessage}
+              {formatMessage(lastMessage)}
             </Text>
             <View className="flex flex-row items-center gap-1.5">
               <View>
@@ -110,3 +110,7 @@ const ChatBox: React.FC<
 };
 
 export default memo(ChatBox);
+
+function formatMessage(msg:string) {
+  return msg.length > 12 ? msg.slice(0, 12) + "..." : msg;
+}
