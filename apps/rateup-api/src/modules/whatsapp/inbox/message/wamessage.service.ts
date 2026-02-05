@@ -310,16 +310,8 @@ export async function filterChats(
 
     if (!isSearchMode) {
       // Message type filters
-      if (bodyFilterProps?.messageType) {
-        if (bodyFilterProps?.messageType === "usermessages") {
-          filters.push(`c."lastReceivedMessageTimeStamp" IS NOT NULL`);
-        } else if (bodyFilterProps?.messageType === "all") {
-          if (bodyFilterProps.waMessageAssignStatus !== "Sent") {
-            filters.push(
-              `(c."lastReceivedMessageTimeStamp" IS NOT NULL OR c."lastSentMessageTimeStamp" IS NOT NULL)`,
-            );
-          }
-        }
+      if (bodyFilterProps?.waMessageAssignStatus === "UnAssigned") {
+        filters.push(`(c."lastReceivedMessageTimeStamp" IS NOT NULL)`);
       }
 
       // Contact groups filter
