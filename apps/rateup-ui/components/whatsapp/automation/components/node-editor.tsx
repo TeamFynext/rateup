@@ -3000,8 +3000,6 @@ const InstagramQuickReplyNodeEditor: React.FC<
         required
         value={typedData.text || ""}
         onChange={(e) => handleInputChange("text", e.target.value)}
-        multiline
-        rows={3}
       />
 
       <Text size="sm" fw={500} mt="md">
@@ -3094,8 +3092,6 @@ const InstagramStoryReplyNodeEditor: React.FC<
         required
         value={typedData.text || ""}
         onChange={(e) => handleInputChange("text", e.target.value)}
-        multiline
-        rows={4}
       />
 
       <Text size="xs" c="dimmed">
