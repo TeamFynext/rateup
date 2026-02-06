@@ -4,8 +4,10 @@ import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { useForm } from "@mantine/form";
+import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { AutomationPlatform } from "@/types/platform";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +17,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { showSuccessToast } from "@/utils/notifications";
 
 import {
@@ -42,6 +51,7 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
   if (initialValues) return initialValues;
   return {
     name: "",
+    platform: AutomationPlatform.WHATSAPP,
     matchData: {
       json: {
         nodes: [
@@ -141,6 +151,51 @@ export function AutomatedReplyForm({
             required
             {...rootForm.getInputProps("name")}
           />
+
+          {/* Platform Selector */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Platform</label>
+            <Select
+              value={rootForm.values.platform}
+              onValueChange={(value) =>
+                rootForm.setFieldValue("platform", value)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    {rootForm.values.platform ===
+                    AutomationPlatform.WHATSAPP ? (
+                      <>
+                        <IconBrandWhatsapp size={16} />
+                        <span>WhatsApp</span>
+                      </>
+                    ) : (
+                      <>
+                        <IconBrandInstagram size={16} />
+                        <span>Instagram</span>
+                      </>
+                    )}
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={AutomationPlatform.WHATSAPP}>
+                  <div className="flex items-center gap-2">
+                    <IconBrandWhatsapp size={16} />
+                    <span>WhatsApp</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value={AutomationPlatform.INSTAGRAM}>
+                  <div className="flex items-center gap-2">
+                    <IconBrandInstagram size={16} />
+                    <span>Instagram</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <AccountSelector
             optional={true}
             label="WhatsApp Account (only needed if there is a lead automation)"
