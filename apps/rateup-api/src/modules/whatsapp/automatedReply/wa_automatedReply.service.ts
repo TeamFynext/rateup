@@ -120,6 +120,7 @@ export async function createAutomatedReply(
       matchType: "",
       matchData: data?.matchData,
       whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
+      platform: data.platform || "whatsapp",
     },
   });
   if (automatedReply)
@@ -144,6 +145,7 @@ export async function updateAutomatedReply(
       name: data.name,
       matchData: data?.matchData,
       whatsappSettingsPhoneId: data?.whatsappSettingsPhoneId,
+      platform: data.platform,
     },
   });
   return updatedAutomatedReply;
