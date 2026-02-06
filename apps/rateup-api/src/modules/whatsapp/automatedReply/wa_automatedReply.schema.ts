@@ -9,6 +9,7 @@ const createAutomatedReplySchema = z.object({
   name: z.string().min(1),
   matchData: matchDataSchema,
   whatsappSettingsPhoneId: z.string().optional(),
+  platform: z.string().optional(),
 });
 
 const byWaAutomatedReplyIdParams = z.object({
