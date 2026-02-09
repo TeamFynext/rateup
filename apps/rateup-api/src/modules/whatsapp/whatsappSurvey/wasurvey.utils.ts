@@ -15,7 +15,11 @@ import {
 import { log } from "../../../utils/logger.js";
 import { QuestionType as Q } from "../../../types/enums.js";
 import { callWhatsappApi } from "../wa_axios.js";
-import { getWaSettings } from "../settings/wa_settings.service.js";
+import {
+  getWaSettings,
+  getWaSettingsByPhone,
+  getWaSettingsByPhoneId,
+} from "../settings/wa_settings.service.js";
 import {
   getFileUrlFromKey,
   uploadFile,

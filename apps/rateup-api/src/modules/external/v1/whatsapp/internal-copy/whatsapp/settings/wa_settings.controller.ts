@@ -27,6 +27,7 @@ export async function createWaSettingsHandler(
     phoneId: req.body.phoneId,
     appId: req.body.appId,
     type: WaConfigType.Manual,
+    paymentMethod: "NATIVE",
   });
   return res.status(200).send(waSettings);
 }
