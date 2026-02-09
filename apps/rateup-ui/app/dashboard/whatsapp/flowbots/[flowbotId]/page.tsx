@@ -63,11 +63,13 @@ const FlowbotId = () => {
   const {
     data: waData,
     isPending: waPending,
+    isError: waError,
     refetch: waRefetch,
   } = useWaAutomatedReplyById(flowbotId);
   const {
     data: igData,
     isPending: igPending,
+    isError: igError,
     refetch: igRefetch,
   } = useInstagramAutomationById(flowbotId);
 
@@ -78,12 +80,29 @@ const FlowbotId = () => {
   // Use whichever data is available (WhatsApp or Instagram)
   const data = waData || igData;
   const isPending = (waPending && igPending) || isLoading || waPendingSettings;
-  const refetch = () => {
-    waRefetch();
-    igRefetch();
+
+  // Only show error if BOTH queries failed and both have no data
+  const hasError = waError && igError && !data;
+
+  const refetch = async () => {
+    await Promise.all([waRefetch(), igRefetch()]);
   };
 
   if (isPending) return <RateupLoader />;
+  if (hasError)
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Failed to load automation</p>
+          <button
+            onClick={refetch}
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
 
   return (
     <Tabs

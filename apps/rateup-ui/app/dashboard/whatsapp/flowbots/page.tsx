@@ -66,9 +66,8 @@ const WaAutomationCardsList = () => {
   const isPending = waPending || igPending;
   const isError = waError || igError;
 
-  const handleRefetch = () => {
-    waRefetch();
-    igRefetch();
+  const handleRefetch = async () => {
+    await Promise.all([waRefetch(), igRefetch()]);
   };
 
   if (isPending) return <AutomatedReplyCardListSkeleton />;
