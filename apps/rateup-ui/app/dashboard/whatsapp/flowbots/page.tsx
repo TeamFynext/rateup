@@ -6,6 +6,7 @@ import { IconPlus } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { useAllInstagramAutomations } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { AutomatedReplyCardListSkeleton } from "@/components/animation/skeleton/wa/AutomatedReplyCardList.skeleton";
 import NothingFound from "@/components/NothingFound/NothingFound";
@@ -48,12 +49,35 @@ export default function FlowbotsPage() {
 }
 
 const WaAutomationCardsList = () => {
-  const { data, isPending, isError, refetch } = useAllWaAutomatedReplies();
+  const {
+    data: waData,
+    isPending: waPending,
+    isError: waError,
+    refetch: waRefetch,
+  } = useAllWaAutomatedReplies();
+  const {
+    data: igData,
+    isPending: igPending,
+    isError: igError,
+    refetch: igRefetch,
+  } = useAllInstagramAutomations();
   const translations = useTranslations();
-  if (isPending) return <AutomatedReplyCardListSkeleton />;
-  if (isError) return <ErrorComponent refetch={refetch} />;
 
-  if (data?.length === 0)
+  const isPending = waPending || igPending;
+  const isError = waError || igError;
+
+  const handleRefetch = () => {
+    waRefetch();
+    igRefetch();
+  };
+
+  if (isPending) return <AutomatedReplyCardListSkeleton />;
+  if (isError) return <ErrorComponent refetch={handleRefetch} />;
+
+  // Combine both WhatsApp and Instagram automations
+  const combinedData = [...(waData || []), ...(igData || [])];
+
+  if (combinedData.length === 0)
     return <NothingFound text={translations("No Automated Replies Found")} />;
-  return <WaAutomationCards data={data} />;
+  return <WaAutomationCards data={combinedData} />;
 };

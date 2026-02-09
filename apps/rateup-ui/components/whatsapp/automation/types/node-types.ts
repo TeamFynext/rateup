@@ -304,6 +304,13 @@ export interface InstagramProductTemplateNodeData extends BaseNodeData {
   }>;
 }
 
+export interface InstagramIceBreakerNodeData extends BaseNodeData {
+  iceBreakers: Array<{
+    question: string;
+    payload?: string;
+  }>;
+}
+
 export interface WhatsappProductSet {
   productSetId: string;
   catalogId: string;
@@ -353,6 +360,7 @@ export type NodeTypeMap = {
   instagramQuickReplyNode: InstagramQuickReplyNodeData;
   instagramStoryReplyNode: InstagramStoryReplyNodeData;
   instagramProductTemplateNode: InstagramProductTemplateNodeData;
+  instagramIceBreakerNode: InstagramIceBreakerNodeData;
 };
 
 // Node type strings as a union type
@@ -389,7 +397,8 @@ export type NodeData =
   | InstagramGenericTemplateNodeData
   | InstagramQuickReplyNodeData
   | InstagramStoryReplyNodeData
-  | InstagramProductTemplateNodeData;
+  | InstagramProductTemplateNodeData
+  | InstagramIceBreakerNodeData;
 
 // Extended Node type with typed data
 export type TypedNode<T extends NodeType = NodeType> = Omit<
@@ -1041,6 +1050,28 @@ export function validateNodeData(node: TypedNode): {
         };
       }
 
+      break;
+    }
+
+    case "instagramIceBreakerNode": {
+      const data = node.data as NodeTypeMap["instagramIceBreakerNode"];
+      if (!data.iceBreakers || data.iceBreakers.length === 0) {
+        return {
+          valid: false,
+          message: `${node.data.label}: At least one ice breaker is required.`,
+        };
+      }
+      // Check if any ice breaker has an empty question
+      const emptyQuestion = data.iceBreakers.some(
+        (iceBreaker) =>
+          !iceBreaker.question || iceBreaker.question.trim() === "",
+      );
+      if (emptyQuestion) {
+        return {
+          valid: false,
+          message: `${node.data.label}: All ice breakers must have a question.`,
+        };
+      }
       break;
     }
   }

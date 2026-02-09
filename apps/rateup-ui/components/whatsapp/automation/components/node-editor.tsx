@@ -360,6 +360,13 @@ export default function NodeEditor({
             handleInputChange={handleInputChange}
           />
         );
+      case "instagramIceBreakerNode":
+        return (
+          <InstagramIceBreakerNodeEditor
+            nodeData={nodeData as NodeTypeMap["instagramIceBreakerNode"]}
+            handleInputChange={handleInputChange}
+          />
+        );
 
       default:
         return (
@@ -3173,6 +3180,89 @@ const InstagramProductTemplateNodeEditor: React.FC<
       >
         + Add Product
       </Button>
+    </Stack>
+  );
+};
+
+// Instagram Ice Breaker Node Editor
+const InstagramIceBreakerNodeEditor: React.FC<
+  NodeComponentProps<"instagramIceBreakerNode">
+> = ({ nodeData, handleInputChange }) => {
+  const typedData = nodeData;
+
+  return (
+    <Stack gap={"xs"}>
+      <Text size="sm" fw={500}>
+        Ice Breakers
+      </Text>
+      <Text size="xs" c="dimmed">
+        Add conversation starters that appear in the Instagram chat. Users can
+        tap these to start a conversation.
+      </Text>
+
+      {(typedData.iceBreakers || []).map((iceBreaker, index: number) => (
+        <Group key={index} gap="xs" align="flex-start">
+          <Stack flex={1} gap="xs">
+            <ContainedTextField
+              label="Question"
+              placeholder="e.g., What are your hours?"
+              value={iceBreaker.question || ""}
+              onChange={(e) => {
+                const newIceBreakers = [...(typedData.iceBreakers || [])];
+                newIceBreakers[index] = {
+                  ...newIceBreakers[index],
+                  question: e.target.value,
+                };
+                handleInputChange("iceBreakers", newIceBreakers);
+              }}
+            />
+            <ContainedTextField
+              label="Payload (optional)"
+              placeholder="Custom data for tracking"
+              value={iceBreaker.payload || ""}
+              onChange={(e) => {
+                const newIceBreakers = [...(typedData.iceBreakers || [])];
+                newIceBreakers[index] = {
+                  ...newIceBreakers[index],
+                  payload: e.target.value,
+                };
+                handleInputChange("iceBreakers", newIceBreakers);
+              }}
+            />
+          </Stack>
+          <ActionIcon
+            style={{ marginTop: "20px" }}
+            color="red"
+            variant="subtle"
+            onClick={() => {
+              const newIceBreakers = [...(typedData.iceBreakers || [])];
+              newIceBreakers.splice(index, 1);
+              handleInputChange("iceBreakers", newIceBreakers);
+            }}
+          >
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Group>
+      ))}
+
+      <Button
+        variant="outline"
+        leftSection={<IconPlus size={16} />}
+        onClick={() => {
+          const newIceBreakers = [
+            ...(typedData.iceBreakers || []),
+            { question: "", payload: "" },
+          ];
+          handleInputChange("iceBreakers", newIceBreakers);
+        }}
+      >
+        Add Ice Breaker
+      </Button>
+
+      <Text size="xs" c="dimmed" mt="xs">
+        Note: Ice breakers are displayed to users when they first open a
+        conversation with your Instagram account.
+      </Text>
     </Stack>
   );
 };

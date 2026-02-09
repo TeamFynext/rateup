@@ -188,8 +188,7 @@ export default function ComponentSidebar({ platform }: { platform: string }) {
       case "instagramIceBreakerNode":
         return {
           ...baseData,
-          call_to_actions: [],
-          greeting: "",
+          iceBreakers: [],
         };
       default:
         return baseData;

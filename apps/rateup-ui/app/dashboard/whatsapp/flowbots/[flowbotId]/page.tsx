@@ -13,6 +13,7 @@ import {
   useWaAutomatedRepliesMessageById,
   useWaAutomatedReplyById,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { useInstagramAutomationById } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
@@ -58,12 +59,31 @@ const FlowbotId = () => {
   const searchParams = useSearchParams();
   const selectedTab = searchParams.get("tab") || "flow";
 
-  const { data, isPending, refetch } = useWaAutomatedReplyById(flowbotId);
+  // Try to fetch from both APIs - one will succeed based on platform
+  const {
+    data: waData,
+    isPending: waPending,
+    refetch: waRefetch,
+  } = useWaAutomatedReplyById(flowbotId);
+  const {
+    data: igData,
+    isPending: igPending,
+    refetch: igRefetch,
+  } = useInstagramAutomationById(flowbotId);
+
   const { data: waAutomtedReplyMessage, isLoading } =
     useWaAutomatedRepliesMessageById(flowbotId);
-  const { data: waSettings, isPending: waPending } = useWaSettings();
+  const { data: waSettings, isPending: waPendingSettings } = useWaSettings();
 
-  if (isPending || isLoading || waPending) return <RateupLoader />;
+  // Use whichever data is available (WhatsApp or Instagram)
+  const data = waData || igData;
+  const isPending = (waPending && igPending) || isLoading || waPendingSettings;
+  const refetch = () => {
+    waRefetch();
+    igRefetch();
+  };
+
+  if (isPending) return <RateupLoader />;
 
   return (
     <Tabs

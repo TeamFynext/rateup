@@ -30,6 +30,10 @@ import {
   useCreateWaAutomatedReplyMutation,
   useUpdateWaAutomatedReplyMutation,
 } from "../../../../backend/whatsapp/automated-reply/automatedReply.query";
+import {
+  useCreateInstagramAutomationMutation,
+  useUpdateInstagramAutomationMutation,
+} from "../../../../backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { ContainedTextField } from "../../../../components/input/ContainedInput/ContainedInput";
 import { WaAutomatedReply } from "../../../../types/global";
 
@@ -106,8 +110,15 @@ export function AutomatedReplyForm({
   const searchParams = useSearchParams();
   const waAutomatedReplyId = searchParams.get("waAutomatedReplyId");
 
+  // WhatsApp mutations
   const createMutation = useCreateWaAutomatedReplyMutation();
   const updateMutation = useUpdateWaAutomatedReplyMutation();
+
+  // Instagram mutations
+  const createInstagramMutation = useCreateInstagramAutomationMutation();
+  const updateInstagramMutation = useUpdateInstagramAutomationMutation();
+
+  const isInstagram = rootForm.values.platform === AutomationPlatform.INSTAGRAM;
 
   function handleCancelClick() {
     rootForm.reset();
@@ -118,20 +129,44 @@ export function AutomatedReplyForm({
     const data = rootForm.values;
 
     if (editMode) {
-      updateMutation.mutate(data, {
-        onSuccess: () => {
-          qc.invalidateQueries({
-            queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
-          });
-          showSuccessToast("Automated Reply Updated Successfully");
-        },
-      });
+      // Update based on platform
+      if (isInstagram) {
+        updateInstagramMutation.mutate(data, {
+          onSuccess: () => {
+            qc.invalidateQueries({
+              queryKey: [
+                "instagramAutomation",
+                { automationId: waAutomatedReplyId },
+              ],
+            });
+            showSuccessToast("Instagram Automation Updated Successfully");
+          },
+        });
+      } else {
+        updateMutation.mutate(data, {
+          onSuccess: () => {
+            qc.invalidateQueries({
+              queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
+            });
+            showSuccessToast("Automated Reply Updated Successfully");
+          },
+        });
+      }
     } else {
-      createMutation.mutate(data, {
-        onSettled: () => {
-          handleCancelClick();
-        },
-      });
+      // Create based on platform
+      if (isInstagram) {
+        createInstagramMutation.mutate(data, {
+          onSettled: () => {
+            handleCancelClick();
+          },
+        });
+      } else {
+        createMutation.mutate(data, {
+          onSettled: () => {
+            handleCancelClick();
+          },
+        });
+      }
     }
   }
 
@@ -210,9 +245,17 @@ export function AutomatedReplyForm({
         </Button>
         <Button
           type="submit"
-          disabled={createMutation.isPending || updateMutation.isPending}
+          disabled={
+            createMutation.isPending ||
+            updateMutation.isPending ||
+            createInstagramMutation.isPending ||
+            updateInstagramMutation.isPending
+          }
         >
-          {createMutation.isPending || updateMutation.isPending ? (
+          {createMutation.isPending ||
+          updateMutation.isPending ||
+          createInstagramMutation.isPending ||
+          updateInstagramMutation.isPending ? (
             <>
               <span className="mr-2">Saving</span>
               <span className="animate-spin">⏳</span>

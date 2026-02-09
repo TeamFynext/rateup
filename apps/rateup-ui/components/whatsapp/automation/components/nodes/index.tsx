@@ -11,6 +11,7 @@ import FlowNode from "./flow-node";
 import ImageNode from "./image-node";
 import InputNode from "./input-node";
 import InstagramGenericTemplateNode from "./instagram-generic-template-node";
+import InstagramIceBreakerNode from "./instagram-ice-breaker-node";
 import InstagramProductTemplateNode from "./instagram-product-template-node";
 import InstagramQuickReplyNode from "./instagram-quick-reply-node";
 import InstagramStoryReplyNode from "./instagram-story-reply-node";
@@ -59,4 +60,5 @@ export const nodeTypes = {
   instagramQuickReplyNode: InstagramQuickReplyNode,
   instagramStoryReplyNode: InstagramStoryReplyNode,
   instagramProductTemplateNode: InstagramProductTemplateNode,
+  instagramIceBreakerNode: InstagramIceBreakerNode,
 };

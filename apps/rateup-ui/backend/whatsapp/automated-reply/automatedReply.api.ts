@@ -4,23 +4,34 @@ import { axiosClient } from "../../apiClient";
 
 const base = `${WHATSAPP_URL}/automated-reply`;
 
+// Transform platform from backend enum (uppercase) to frontend format (lowercase)
+function transformAutomation(automation: WaAutomatedReply): WaAutomatedReply {
+  return {
+    ...automation,
+    platform: automation.platform?.toLowerCase() as any,
+  };
+}
+
 export async function createWaAutomatedReply(data: any) {
   const res = await axiosClient.post(base, data);
-  return res.data as WaAutomatedReply;
+  return transformAutomation(res.data as WaAutomatedReply);
 }
 
 export async function getAllWaAutomatedReplies() {
   const res = await axiosClient.get(`${base}`);
-  return res.data as WaAutomatedReply[];
+  const automations = res.data as WaAutomatedReply[];
+  return automations.map(transformAutomation);
 }
 
 export async function getWaAutomatedRepliesByTeamId(teamId: string) {
   const res = await axiosClient.get(`${base}/team/${teamId}`);
-  return res.data as WaAutomatedReply[];
+  const automations = res.data as WaAutomatedReply[];
+  return automations.map(transformAutomation);
 }
+
 export async function getWaAutomatedRepliesById(waAutomatedReplyId: string) {
   const res = await axiosClient.get(`${base}/${waAutomatedReplyId}`);
-  return res.data as WaAutomatedReply;
+  return transformAutomation(res.data as WaAutomatedReply);
 }
 
 export async function updateWaAutomatedReply(
@@ -28,12 +39,12 @@ export async function updateWaAutomatedReply(
   data: any,
 ) {
   const res = await axiosClient.put(`${base}/${waAutomatedReplyId}`, data);
-  return res.data as WaAutomatedReply;
+  return transformAutomation(res.data as WaAutomatedReply);
 }
 
 export async function deleteWaAutomatedReply(waAutomatedReplyId: string) {
   const res = await axiosClient.delete(`${base}/${waAutomatedReplyId}`);
-  return res.data as WaAutomatedReply;
+  return transformAutomation(res.data as WaAutomatedReply);
 }
 
 export async function getAutomatedRepliesMessageById(id: string) {
