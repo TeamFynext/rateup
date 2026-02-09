@@ -284,6 +284,7 @@ model WhatsappSettings {
   metaAssets       MetaAssets[]
   catalog          CatalogPhoneIdMap?
   assets           String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
+  paymentMethod    String             @default("NATIVE") // NATIVE, SHOPIFY_LINK
 }
 
 model Rule {

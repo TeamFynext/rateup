@@ -245,6 +245,51 @@ export async function handleWaOrderfromCatalog(
   });
   log.info("Order placed => %o", newOrder);
 
+  log.info("Order placed => %o", newOrder);
+
+  if (waSettings?.paymentMethod === "SHOPIFY_LINK") {
+    try {
+      const integration = await prisma.integration.findFirst({
+        where: {
+          orgId: catalog.orgId,
+          slug: "shopify",
+        },
+      });
+
+      if (integration && integration.credential) {
+        const shop = (integration.credential as any).session?.shop;
+        if (shop) {
+          // Construct checkout URL: https://<shop>/cart/<variant_id>:<quantity>,...
+          const cartItems = newOrder.products
+            .map((p: any) => `${p.retailerId}:${p.quantity}`)
+            .join(",");
+
+          // Shopify handles guest checkout based on store settings.
+          // Permalinks redirect to checkout.
+          const checkoutUrl = `https://${shop}/cart/${cartItems}`;
+
+          await sendMessage(catalog.orgId, {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: (messageObj as any).from || messageObj.contact.phone, // Ensure we have the phone
+            type: "text",
+            text: {
+              body: `Please complete your purchase securely using the link below:\n\n${checkoutUrl}`,
+              preview_url: true,
+            },
+          });
+          return;
+        }
+      }
+      log.warn(
+        "Shopify integration or shop domain not found for org %s",
+        catalog.orgId,
+      );
+    } catch (e) {
+      log.error("Error generating Shopify checkout link => %o", e);
+    }
+  }
+
   // Trigger Native Payment if configured
   try {
     const contact = await prisma.contact.findUnique({
