@@ -79,10 +79,13 @@ const FlowbotId = () => {
 
   // Use whichever data is available (WhatsApp or Instagram)
   const data = waData || igData;
-  const isPending = (waPending && igPending) || isLoading || waPendingSettings;
 
-  // Only show error if BOTH queries failed and both have no data
-  const hasError = waError && igError && !data;
+  // Wait for both queries to finish before showing loading state
+  const isQueryPending = waPending || igPending;
+  const isPending = isQueryPending || isLoading || waPendingSettings;
+
+  // Only show error if BOTH queries have completed and both failed with no data
+  const hasError = !isQueryPending && waError && igError && !data;
 
   const refetch = async () => {
     await Promise.all([waRefetch(), igRefetch()]);
