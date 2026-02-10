@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import CampaignCard from "./CampaignCard";
 
 interface CampaignCardListProps {
@@ -15,11 +17,12 @@ export default function CampaignCardList({
   onEdit,
   isLoading = false,
 }: CampaignCardListProps) {
+  const t = useTranslations("campaign.list");
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6">
         <div className="text-slate-600 dark:text-slate-400">
-          Loading campaigns...
+          {t("loading.list")}
         </div>
       </div>
     );

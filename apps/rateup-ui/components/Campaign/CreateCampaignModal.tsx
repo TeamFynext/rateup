@@ -103,7 +103,7 @@ const CreateCampaignModal = ({
   campaignType = CampaignType.WHATSAPP,
 }: CreateCampaignProps) => {
   const [activeTab, setActiveTab] = useState<"basic" | "templates">("basic");
-  const translations = useTranslations();
+  const t = useTranslations("campaign.create");
   const { customFields } = useCustomFieldsContext();
   const submitRef = useRef<() => void>(() => {});
 
@@ -328,7 +328,7 @@ const CreateCampaignModal = ({
 
         if (invalidStageIndex !== -1) {
           toast.error(
-            `Please select a template for Drip Stage ${invalidStageIndex + 1}`,
+            t("validation.dripStageRequired", { stage: invalidStageIndex + 1 }),
           );
           return;
         }
@@ -415,7 +415,7 @@ const CreateCampaignModal = ({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {isEdit ? "Edit Campaign" : "Create New Campaign"}
+            {isEdit ? t("header.edit") : t("header.create")}
             <Badge variant="secondary" className="gap-1">
               {form.watch("type") === CampaignType.DRIP ? (
                 <IconWand className="h-3 w-3" />
@@ -423,14 +423,12 @@ const CreateCampaignModal = ({
                 <IconRocket className="h-3 w-3" />
               )}
               {form.watch("type") === CampaignType.DRIP
-                ? "Drip Campaign"
-                : "WhatsApp Campaign"}
+                ? t("badge.drip")
+                : t("badge.whatsapp")}
             </Badge>
           </DialogTitle>
           <DialogDescription>
-            {isEdit
-              ? "Update your campaign details"
-              : "Set up your campaign details and message"}
+            {isEdit ? t("description.edit") : t("description.create")}
           </DialogDescription>
         </DialogHeader>
 
@@ -439,8 +437,8 @@ const CreateCampaignModal = ({
           onValueChange={(v) => setActiveTab(v as typeof activeTab)}
         >
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="basic">Basic Info</TabsTrigger>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="basic">{t("tabs.basic")}</TabsTrigger>
+            <TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger>
           </TabsList>
 
           <Form {...form}>
@@ -456,7 +454,7 @@ const CreateCampaignModal = ({
                       name="teamId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Team *</FormLabel>
+                          <FormLabel>{t("fields.team")}</FormLabel>
                           <FormControl>
                             <TeamSelector {...field} />
                           </FormControl>
@@ -471,10 +469,10 @@ const CreateCampaignModal = ({
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Campaign Name *</FormLabel>
+                        <FormLabel>{t("fields.name")}</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="e.g., Summer Sale 2025"
+                            placeholder={t("placeholders.name")}
                             {...field}
                           />
                         </FormControl>
@@ -488,7 +486,7 @@ const CreateCampaignModal = ({
                     name="whatsappSettingsPhoneId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number *</FormLabel>
+                        <FormLabel>{t("fields.phone")}</FormLabel>
                         <FormControl>
                           <AccountSelector {...field} />
                         </FormControl>
@@ -508,16 +506,16 @@ const CreateCampaignModal = ({
                               <div className="flex items-center gap-2">
                                 <IconCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                 <FormLabel className="font-medium">
-                                  User Consent
+                                  {t("consent.label")}
                                 </FormLabel>
                               </div>
                               <FormDescription className="text-xs">
                                 {field.value
-                                  ? "Only send messages to contacts who have given consent"
-                                  : "Send messages to all contacts regardless of consent status"}
+                                  ? t("consent.descriptionEnabled")
+                                  : t("consent.descriptionDisabled")}
                               </FormDescription>
                               <p className="text-xs text-blue-600 dark:text-blue-400">
-                                Recommended: Keep enabled for compliance
+                                {t("consent.recommended")}
                               </p>
                             </div>
                             <FormControl>
@@ -535,11 +533,7 @@ const CreateCampaignModal = ({
                   {campaignType === CampaignType.DRIP && (
                     <Alert>
                       <IconInfoCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>Drip campaigns</strong> allow you to send a
-                        series of messages to contacts over time. Configure your
-                        message stages in the Templates tab.
-                      </AlertDescription>
+                      <AlertDescription>{t("alert.dripInfo")}</AlertDescription>
                     </Alert>
                   )}
                 </div>
@@ -550,8 +544,7 @@ const CreateCampaignModal = ({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-muted-foreground">
-                        Configure your drip campaign stages ({dripStages.length}{" "}
-                        stages)
+                        {t("drip.header", { count: dripStages.length })}
                       </p>
                       <Button
                         type="button"
@@ -560,7 +553,7 @@ const CreateCampaignModal = ({
                         onClick={addDripStage}
                       >
                         <IconPlus className="mr-2 h-4 w-4" />
-                        Add Stage
+                        {t("drip.addStage")}
                       </Button>
                     </div>
 
@@ -577,7 +570,7 @@ const CreateCampaignModal = ({
                                     </AvatarFallback>
                                   </Avatar>
                                   <span className="text-sm font-medium">
-                                    Stage {idx + 1}
+                                    {t("drip.stage", { number: idx + 1 })}
                                   </span>
                                 </div>
                                 <Button
@@ -602,8 +595,7 @@ const CreateCampaignModal = ({
                               >
                                 <div className="space-y-2 col-span-full">
                                   <Label className="text-xs">
-                                    Template{" "}
-                                    <span className="text-destructive">*</span>
+                                    {t("fields.template")}
                                   </Label>
                                   <Select
                                     value={stage.templateId}
@@ -618,8 +610,8 @@ const CreateCampaignModal = ({
                                       <SelectValue
                                         placeholder={
                                           templatesData.length === 0
-                                            ? "No templates available"
-                                            : "Select template"
+                                            ? t("placeholders.noTemplates")
+                                            : t("placeholders.selectTemplate")
                                         }
                                       />
                                     </SelectTrigger>
@@ -637,13 +629,15 @@ const CreateCampaignModal = ({
                                   </Select>
                                   {!stage.templateId && (
                                     <p className="text-xs text-destructive">
-                                      Template is required
+                                      {t("validation.templateRequired")}
                                     </p>
                                   )}
                                 </div>
 
                                 <div className="space-y-2">
-                                  <Label className="text-xs">Delay</Label>
+                                  <Label className="text-xs">
+                                    {t("fields.delay")}
+                                  </Label>
                                   <div className="relative">
                                     <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                                     <Input
@@ -664,7 +658,9 @@ const CreateCampaignModal = ({
                                 </div>
 
                                 <div className="space-y-2">
-                                  <Label className="text-xs">Unit</Label>
+                                  <Label className="text-xs">
+                                    {t("fields.unit")}
+                                  </Label>
                                   <Select
                                     value={stage.delayUnit}
                                     onValueChange={(val) =>
@@ -676,17 +672,19 @@ const CreateCampaignModal = ({
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="minutes">
-                                        Minutes
+                                        {t("units.minutes")}
                                       </SelectItem>
                                       <SelectItem value="hours">
-                                        Hours
+                                        {t("units.hours")}
                                       </SelectItem>
-                                      <SelectItem value="days">Days</SelectItem>
+                                      <SelectItem value="days">
+                                        {t("units.days")}
+                                      </SelectItem>
                                       <SelectItem value="weeks">
-                                        Weeks
+                                        {t("units.weeks")}
                                       </SelectItem>
                                       <SelectItem value="months">
-                                        Months
+                                        {t("units.months")}
                                       </SelectItem>
                                     </SelectContent>
                                   </Select>
@@ -697,7 +695,7 @@ const CreateCampaignModal = ({
                                   stage.delayUnit === "months") && (
                                   <div className="space-y-2">
                                     <Label className="text-xs">
-                                      Send at time
+                                      {t("fields.sendAtTime")}
                                     </Label>
                                     <div className="relative">
                                       <IconClock className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
@@ -726,7 +724,7 @@ const CreateCampaignModal = ({
                 ) : (
                   <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">
-                      Choose a template for your campaign
+                      {t("broadcast.description")}
                     </p>
 
                     <FormField
@@ -734,10 +732,7 @@ const CreateCampaignModal = ({
                       name="waTemplateId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>
-                            Choose Template{" "}
-                            <span className="text-destructive">*</span>
-                          </FormLabel>
+                          <FormLabel>{t("fields.template")}</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
@@ -748,8 +743,8 @@ const CreateCampaignModal = ({
                                 <SelectValue
                                   placeholder={
                                     templatesData.length === 0
-                                      ? "No templates available"
-                                      : "Select template"
+                                      ? t("placeholders.noTemplates")
+                                      : t("placeholders.selectTemplate")
                                   }
                                 />
                               </SelectTrigger>
@@ -774,10 +769,10 @@ const CreateCampaignModal = ({
                       <div className="space-y-3">
                         <div>
                           <h4 className="text-sm font-medium">
-                            Dynamic Variables
+                            {t("dynamicVariables.title")}
                           </h4>
                           <p className="text-xs text-muted-foreground">
-                            Map dynamic content to your message variables
+                            {t("dynamicVariables.description")}
                           </p>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">
@@ -789,8 +784,9 @@ const CreateCampaignModal = ({
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel className="text-xs">
-                                    Variable {`{{${i + 1}}}`}{" "}
-                                    <span className="text-destructive">*</span>
+                                    {t("dynamicVariables.variable", {
+                                      num: i + 1,
+                                    })}
                                   </FormLabel>
                                   <Select
                                     onValueChange={(val) => {
@@ -804,11 +800,17 @@ const CreateCampaignModal = ({
                                   >
                                     <FormControl>
                                       <SelectTrigger className="h-9">
-                                        <SelectValue placeholder="Select dynamic tag" />
+                                        <SelectValue
+                                          placeholder={t(
+                                            "placeholders.selectTag",
+                                          )}
+                                        />
                                       </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                      <SelectItem value="name">Name</SelectItem>
+                                      <SelectItem value="name">
+                                        {t("dynamicVariables.name")}
+                                      </SelectItem>
                                       {customFields?.map((customField) => (
                                         <SelectItem
                                           key={customField.slug}
@@ -833,7 +835,7 @@ const CreateCampaignModal = ({
             </form>
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={close}>
-                Cancel
+                {t("actions.cancel")}
               </Button>
 
               {activeTab === "basic" ? (
@@ -842,7 +844,7 @@ const CreateCampaignModal = ({
                   onClick={handleNext} // ✅ NO submit
                   className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
                 >
-                  Next
+                  {t("actions.next")}
                 </Button>
               ) : (
                 <Button
@@ -857,11 +859,11 @@ const CreateCampaignModal = ({
                 >
                   {isEdit
                     ? updateCampaignMutation.isPending
-                      ? "Updating..."
-                      : "Update Campaign"
+                      ? t("actions.updating")
+                      : t("actions.update")
                     : createCampaignMutation.isPending
-                      ? "Creating..."
-                      : "Create Campaign"}
+                      ? t("actions.creating")
+                      : t("actions.create")}
                 </Button>
               )}
             </DialogFooter>

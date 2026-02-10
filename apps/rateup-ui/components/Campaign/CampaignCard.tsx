@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { Copy, Edit2, Eye, MoreVertical, Trash2, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useDeleteCampaignMutation } from "@/backend/campaign/campaign.query";
@@ -54,6 +55,7 @@ export default function CampaignCard({
   onView,
   onEdit,
 }: CampaignCardProps) {
+  const t = useTranslations("campaign.card");
   const router = useRouter();
   const deleteCampaignMutation = useDeleteCampaignMutation(
     campaign.teamId,
@@ -65,10 +67,10 @@ export default function CampaignCard({
 
     try {
       await deleteCampaignMutation.mutateAsync(campaign.id);
-      toast.success("Campaign deleted successfully");
+      toast.success(t("toast.deleteSuccess"));
       router.refresh();
     } catch {
-      toast.error("Failed to delete campaign");
+      toast.error(t("toast.deleteError"));
     }
   };
 
@@ -104,7 +106,7 @@ export default function CampaignCard({
                 }}
               >
                 <Eye className="w-4 h-4 mr-2" />
-                View Details
+                {t("actions.view")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={(e) => {
@@ -113,7 +115,7 @@ export default function CampaignCard({
                 }}
               >
                 <Edit2 className="w-4 h-4 mr-2" />
-                Edit
+                {t("actions.edit")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -121,7 +123,7 @@ export default function CampaignCard({
                 className="text-destructive dark:text-red-400 focus:text-destructive dark:focus:text-red-400"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Delete
+                {t("actions.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -147,7 +149,7 @@ export default function CampaignCard({
         {/* Participants */}
         <div className="flex items-center justify-between py-2 border-t border-slate-100 dark:border-slate-700">
           <span className="text-xs text-slate-600 dark:text-slate-400">
-            Participants
+            {t("labels.participants")}
           </span>
           <span className="text-sm dark:text-slate-200">
             {campaign.campaignParticipantsCount?.toLocaleString() ?? "0"}
@@ -157,7 +159,7 @@ export default function CampaignCard({
         {/* Created */}
         <div className="flex items-center justify-between py-2 border-t border-slate-100 dark:border-slate-700">
           <span className="text-xs text-slate-600 dark:text-slate-400">
-            Created
+            {t("labels.created")}
           </span>
           <span className="text-xs text-slate-900 dark:text-slate-200">
             {new Date(campaign.createdAt)

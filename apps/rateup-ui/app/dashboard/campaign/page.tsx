@@ -11,6 +11,7 @@ import {
   Search,
   Send,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { CampaignType } from "@/types/enums";
 import { useCampaignData } from "@/backend/campaign/campaign.query";
@@ -38,6 +39,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function CampaignsPage() {
+  const t = useTranslations("campaign.list");
   const router = useRouter();
 
   /* -------------------- UI STATE -------------------- */
@@ -116,9 +118,9 @@ export default function CampaignsPage() {
         {/* Header */}
         <div className=" border-b">
           <div className="px-6 py-4">
-            <h1 className="text-2xl">Campaigns</h1>
+            <h1 className="text-2xl">{t("header.title")}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Create and manage your marketing campaigns
+              {t("header.description")}
             </p>
           </div>
 
@@ -130,7 +132,7 @@ export default function CampaignsPage() {
                 onClick={openCreateCampaign}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Create Campaign
+                {t("header.create")}
               </Button>
 
               <Tabs
@@ -140,7 +142,7 @@ export default function CampaignsPage() {
                 <TabsList className="">
                   <TabsTrigger value={CampaignType.WHATSAPP}>
                     <MessageSquare className="w-4 h-4 mr-2" />
-                    Broadcast
+                    {t("tabs.broadcast")}
                     <Badge className="ml-2">
                       {whatsappQuery.data?.data?.length ?? 0}
                     </Badge>
@@ -148,7 +150,7 @@ export default function CampaignsPage() {
 
                   <TabsTrigger value={CampaignType.DRIP}>
                     <Send className="w-4 h-4 mr-2" />
-                    Drip
+                    {t("tabs.drip")}
                     <Badge className="ml-2">
                       {" "}
                       {dripQuery.data?.data?.length ?? 0}
@@ -165,7 +167,7 @@ export default function CampaignsPage() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search campaigns..."
+                  placeholder={t("search.placeholder")}
                   className="pl-9 h-9"
                 />
               </div>
@@ -174,14 +176,14 @@ export default function CampaignsPage() {
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm">
                     <Filter className="w-4 h-4 mr-2" />
-                    Filters
+                    {t("filters.title")}
                   </Button>
                 </PopoverTrigger>
 
                 <PopoverContent align="end" className="w-72">
                   <div className="space-y-4">
                     <div>
-                      <label className="text-xs">Team</label>
+                      <label className="text-xs">{t("filters.team")}</label>
                       <TeamSelector
                         value={selectedTeam}
                         onChange={setSelectedTeam}
@@ -190,7 +192,7 @@ export default function CampaignsPage() {
                     </div>
 
                     <div>
-                      <label className="text-xs">Status</label>
+                      <label className="text-xs">{t("filters.status")}</label>
                       <Select
                         value={selectedStatus}
                         onValueChange={setSelectedStatus}
@@ -199,12 +201,24 @@ export default function CampaignsPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Statuses</SelectItem>
-                          <SelectItem value="ACTIVE">Active</SelectItem>
-                          <SelectItem value="INACTIVE">Inactive</SelectItem>
-                          <SelectItem value="DRAFT">Draft</SelectItem>
-                          <SelectItem value="SCHEDULED">Scheduled</SelectItem>
-                          <SelectItem value="COMPLETED">Completed</SelectItem>
+                          <SelectItem value="all">
+                            {t("filters.statuses.all")}
+                          </SelectItem>
+                          <SelectItem value="ACTIVE">
+                            {t("filters.statuses.ACTIVE")}
+                          </SelectItem>
+                          <SelectItem value="INACTIVE">
+                            {t("filters.statuses.INACTIVE")}
+                          </SelectItem>
+                          <SelectItem value="DRAFT">
+                            {t("filters.statuses.DRAFT")}
+                          </SelectItem>
+                          <SelectItem value="SCHEDULED">
+                            {t("filters.statuses.SCHEDULED")}
+                          </SelectItem>
+                          <SelectItem value="COMPLETED">
+                            {t("filters.statuses.COMPLETED")}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -217,14 +231,14 @@ export default function CampaignsPage() {
                         onClick={resetFilters}
                       >
                         <RotateCcw className="w-3 h-3 mr-2" />
-                        Reset
+                        {t("filters.actions.reset")}
                       </Button>
                       <Button
                         size="sm"
                         className="flex-1 bg-[#2E5BFF]"
                         onClick={() => setShowFilters(false)}
                       >
-                        Apply
+                        {t("filters.actions.apply")}
                       </Button>
                     </div>
                   </div>

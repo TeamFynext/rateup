@@ -61,6 +61,7 @@ const AddParticipantModal = ({
   campaign,
   campaignType,
 }: AddParticipantModalProps) => {
+  const t = useTranslations("campaign.addParticipants");
   const [selectedTab, setSelectedTab] = useState<CampaignParticipantSource>(
     CampaignParticipantSource.INDIVIDUAL,
   );
@@ -135,7 +136,7 @@ const AddParticipantModal = ({
       selectedGroups.length === 0 &&
       selectedCampaigns?.length === 0
     ) {
-      showWarnToast(translations("You have not selected any participant"));
+      showWarnToast(t("warnings.noSelection"));
       return;
     }
     // ✅ OLD UI LOGIC: Campaign requires message status
@@ -144,7 +145,7 @@ const AddParticipantModal = ({
       selectedCampaigns.length > 0 &&
       selectedStatus.length === 0
     ) {
-      showWarnToast(translations("Please select message status"));
+      showWarnToast(t("messageStatus.required"));
       return;
     }
 
@@ -222,11 +223,9 @@ const AddParticipantModal = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <IconUsers className="h-5 w-5 text-[#2E5BFF]" />
-            Add Participants
+            {t("title")}
           </DialogTitle>
-          <DialogDescription>
-            Select contacts, groups, or campaigns to add as participants
-          </DialogDescription>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-hidden flex flex-col gap-4">
           {/* Search and Tab Selection */}
@@ -234,7 +233,9 @@ const AddParticipantModal = ({
             <div className="relative">
               <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder={`Search ${selectedTab?.toLowerCase()}...`}
+                placeholder={t("search.placeholder", {
+                  type: selectedTab?.toLowerCase(),
+                })}
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 className="pl-9"
@@ -261,21 +262,23 @@ const AddParticipantModal = ({
                   className="gap-2 h-9 px-3"
                 >
                   <IconUsers className="h-4 w-4" />
-                  <span className="hidden sm:inline">Individual</span>
+                  <span className="hidden sm:inline">
+                    {t("tabs.individual")}
+                  </span>
                 </TabsTrigger>
                 <TabsTrigger
                   value={CampaignParticipantSource.GROUP}
                   className="gap-2"
                 >
                   <IconFolderOpen className="h-4 w-4" />
-                  <span className="hidden sm:inline">Group</span>
+                  <span className="hidden sm:inline">{t("tabs.group")}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value={CampaignParticipantSource.CAMPAIGN}
                   className="gap-2"
                 >
                   <IconSend className="h-4 w-4" />
-                  <span className="hidden sm:inline">Campaign</span>
+                  <span className="hidden sm:inline">{t("tabs.campaign")}</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -288,7 +291,7 @@ const AddParticipantModal = ({
               <CardContent className="p-3 flex-1 overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-medium">
-                    Select {selectedTab?.toLowerCase()}
+                    {t("select.title", { type: selectedTab?.toLowerCase() })}
                   </h3>
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -305,7 +308,7 @@ const AddParticipantModal = ({
                       htmlFor="select-all"
                       className="text-sm font-normal cursor-pointer"
                     >
-                      Select All
+                      {t("select.selectAll")}
                     </Label>
                   </div>
                 </div>
@@ -321,7 +324,8 @@ const AddParticipantModal = ({
                     {selectedTab === CampaignParticipantSource.CAMPAIGN && (
                       <div className="mb-4">
                         <Label className="text-xs mb-2">
-                          Message Status <span className="text-red-500">*</span>
+                          {t("messageStatus.label")}{" "}
+                          <span className="text-red-500">*</span>
                         </Label>
 
                         <Select
@@ -329,7 +333,9 @@ const AddParticipantModal = ({
                           onValueChange={(value) => setSelectedStatus([value])}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Pick status" />
+                            <SelectValue
+                              placeholder={t("messageStatus.placeholder")}
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             {Object.values(CampaignParticipantAddStatus).map(
@@ -367,7 +373,7 @@ const AddParticipantModal = ({
                               })
                             ) : (
                               <p className="text-sm text-slate-500 text-center py-8">
-                                {translations("No contacts found")}
+                                {t("empty.contacts")}
                               </p>
                             )}
                           </>
@@ -386,7 +392,7 @@ const AddParticipantModal = ({
                               ))
                             ) : (
                               <p className="text-sm text-slate-500 text-center py-8">
-                                {translations("No group found")}
+                                {t("empty.groups")}
                               </p>
                             )}
                           </>
@@ -405,7 +411,7 @@ const AddParticipantModal = ({
                               ))
                             ) : (
                               <p className="text-sm text-slate-500 text-center py-8">
-                                {translations("No campaigns found")}
+                                {t("empty.campaigns")}
                               </p>
                             )}
                           </>
@@ -432,12 +438,14 @@ const AddParticipantModal = ({
             <Card className="border-slate-200 bg-slate-50 dark:bg-transparent flex flex-col overflow-hidden">
               <CardContent className="p-4 flex-1 overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium">Selected</h3>
+                  <h3 className="text-sm font-medium">
+                    {t("select.selected")}
+                  </h3>
                   <Badge
                     variant="secondary"
                     className="bg-[#2E5BFF]/10 text-[#2E5BFF]"
                   >
-                    {getSelectedCount()} items
+                    {t("select.items", { count: getSelectedCount() })}
                   </Badge>
                 </div>
 
@@ -448,9 +456,11 @@ const AddParticipantModal = ({
                     <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center mb-3">
                       <IconUsers className="w-8 h-8 text-slate-400" />
                     </div>
-                    <p className="text-sm text-slate-500">No items selected</p>
+                    <p className="text-sm text-slate-500">
+                      {t("empty.selectedTitle")}
+                    </p>
                     <p className="text-xs text-slate-400 mt-1">
-                      Select contacts, groups, or campaigns to add
+                      {t("empty.selectedHint")}
                     </p>
                   </div>
                 ) : (
@@ -497,7 +507,7 @@ const AddParticipantModal = ({
 
         <DialogFooter className="mt-auto">
           <Button variant="outline" onClick={close}>
-            {translations("Cancel")}
+            {t("actions.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -513,12 +523,12 @@ const AddParticipantModal = ({
             {addCampaignParticipants.isPending ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Adding...
+                {t("actions.submitting")}
               </>
             ) : (
               <>
                 <IconPlus className="h-4 w-4" />
-                {translations("Add Participants")}
+                {t("actions.submit")}
               </>
             )}
           </Button>
@@ -541,8 +551,8 @@ export const Individual = ({
   setSelectedContacts,
   isAlreadySelected = false,
 }: IndividualProps) => {
+  const t = useTranslations("campaign.addParticipants");
   const isSelected = selectedContacts.some((c) => c?.id === customer?.id);
-  const translations = useTranslations();
 
   return (
     <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-background hover:border-[#2E5BFF] hover:bg-[#2E5BFF]/5 transition-all">
@@ -561,7 +571,7 @@ export const Individual = ({
           }}
           className="ml-2 shrink-0"
         >
-          {translations("Remove")}
+          {t("actions.remove")}
         </Button>
       ) : (
         <Button
@@ -572,7 +582,7 @@ export const Individual = ({
           disabled={isAlreadySelected}
           className="ml-2 shrink-0 bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
         >
-          {isAlreadySelected ? translations("Added") : translations("Add")}
+          {isAlreadySelected ? t("actions.added") : t("actions.add")}
         </Button>
       )}
     </div>
@@ -592,8 +602,8 @@ export const CustomerGroup = ({
   setSelectedGroups,
   isAlreadySelected = false,
 }: CustomerGroupProps) => {
+  const t = useTranslations("campaign.addParticipants");
   const isSelected = selectedGroups.some((c) => c?.id === group?.id);
-  const translations = useTranslations();
   const memberCount =
     group.type === ContactGroupType.NORMAL
       ? group?._count.contacts
@@ -603,7 +613,9 @@ export const CustomerGroup = ({
     <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-white hover:border-[#2E5BFF] hover:bg-[#2E5BFF]/5 transition-all">
       <div className="flex-1 min-w-0">
         <h4 className="text-sm font-medium truncate">{group?.name}</h4>
-        <p className="text-xs text-slate-500">{memberCount} members</p>
+        <p className="text-xs text-slate-500">
+          {t("labels.members", { count: memberCount })}
+        </p>
       </div>
       {isSelected ? (
         <Button
@@ -616,7 +628,7 @@ export const CustomerGroup = ({
           }}
           className="ml-2 shrink-0"
         >
-          {translations("Remove")}
+          {t("actions.remove")}
         </Button>
       ) : (
         <Button
@@ -627,7 +639,7 @@ export const CustomerGroup = ({
           disabled={isAlreadySelected || !memberCount}
           className="ml-2 shrink-0 bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
         >
-          {isAlreadySelected ? translations("Added") : translations("Add")}
+          {isAlreadySelected ? t("actions.added") : t("actions.add")}
         </Button>
       )}
     </div>
@@ -645,15 +657,17 @@ const CustomerCampaign = ({
   selectedCampaigns,
   setSelectedCampaigns,
 }: CustomerCampaignProps) => {
+  const t = useTranslations("campaign.addParticipants");
   const isSelected = selectedCampaigns.some((c) => c?.id === campaign?.id);
-  const translations = useTranslations();
 
   return (
     <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-white hover:border-[#2E5BFF] hover:bg-[#2E5BFF]/5 transition-all">
       <div className="flex-1 min-w-0">
         <h4 className="text-sm font-medium truncate">{campaign?.name}</h4>
         <p className="text-xs text-slate-500">
-          {campaign?.campaignParticipantsCount || 0} participants
+          {t("labels.participants", {
+            count: campaign?.campaignParticipantsCount || 0,
+          })}
         </p>
       </div>
       {isSelected ? (
@@ -667,7 +681,7 @@ const CustomerCampaign = ({
           }}
           className="ml-2 shrink-0"
         >
-          {translations("Remove")}
+          {t("actions.remove")}
         </Button>
       ) : (
         <Button
@@ -678,7 +692,7 @@ const CustomerCampaign = ({
           disabled={!campaign?.campaignParticipantsCount}
           className="ml-2 shrink-0 bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
         >
-          {translations("Add")}
+          {t("actions.add")}
         </Button>
       )}
     </div>

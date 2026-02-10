@@ -99,7 +99,7 @@ export default function CampaignDetails() {
   const [searchInput, setSearchInput] = useState("");
   const [sorting, setSorting] = useState([CONTACT_SORT]);
   const [columnFilters, setColumnFilters] = useDebouncedState([], 200);
-  const [isResendOpen, setIsResendOpen] = useState(false);
+  const [isResendModalOpen, setIsResendModalOpen] = useState(false);
 
   const [pagination, setPagination] = useState({
     pageIndex: 0,
@@ -108,6 +108,7 @@ export default function CampaignDetails() {
   const [selectedDripStage, setSelectedDripStage] = useState("all");
   const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
 
+  const t = useTranslations("campaign.details");
   const translations = useTranslations();
   const router = useRouter();
   const params = useParams();
@@ -205,7 +206,7 @@ export default function CampaignDetails() {
   ) {
     return (
       <div className="h-screen flex items-center justify-center text-slate-600">
-        We couldn’t load this campaign.
+        {t("loading.error")}
       </div>
     );
   }
@@ -282,9 +283,9 @@ export default function CampaignDetails() {
         statsQuery.refetch(),
         participantsQuery.refetch(),
       ]);
-      toast.success("Campaign data refreshed");
+      toast.success(t("actions.refreshSuccess"));
     } catch {
-      toast.error("Failed to refresh campaign data");
+      toast.error(t("actions.refreshError"));
     }
   };
 
@@ -344,11 +345,11 @@ export default function CampaignDetails() {
 
       toast.success(
         campaign.status === CampaignStatus.INACTIVE
-          ? "Drip campaign started"
-          : "Drip campaign paused",
+          ? t("messages.dripStarted")
+          : t("messages.dripPaused"),
       );
     } catch (err) {
-      toast.error("Failed to update drip campaign status");
+      toast.error(t("messages.dripError"));
     }
   };
 
@@ -391,7 +392,7 @@ export default function CampaignDetails() {
                   className="hover:bg-slate-100 dark:hover:bg-slate-800 gap-2 text-slate-600 dark:text-slate-400"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Back to Campaigns
+                  {t("header.back")}
                 </Button>
                 <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
                 <div>
@@ -399,7 +400,7 @@ export default function CampaignDetails() {
                     {campaign.name}
                   </h1>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Campaign ID: #{campaign.id}
+                    {t("header.campaignId", { id: campaign.id })}
                   </p>
                 </div>
               </div>
@@ -412,7 +413,7 @@ export default function CampaignDetails() {
                   className="gap-2 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <Edit2 className="w-4 h-4" />
-                  Edit
+                  {t("header.edit")}
                 </Button>
 
                 <DropdownMenu>
@@ -427,7 +428,7 @@ export default function CampaignDetails() {
                       className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
+                      {t("header.delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -447,14 +448,14 @@ export default function CampaignDetails() {
                     className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-lg px-4 py-2 transition-all border-0 data-[state=inactive]:shadow-none"
                   >
                     <TrendingUp className="w-4 h-4 mr-2" />
-                    Overview
+                    {t("tabs.overview")}
                   </TabsTrigger>
                   <TabsTrigger
                     value="participants"
                     className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-lg px-4 py-2 transition-all border-0 data-[state=inactive]:shadow-none"
                   >
                     <Users className="w-4 h-4 mr-2" />
-                    Participants
+                    {t("tabs.participants")}
                     <Badge
                       variant="secondary"
                       className="ml-2 data-[state=active]:bg-white/20 data-[state=active]:text-white"
@@ -484,11 +485,11 @@ export default function CampaignDetails() {
                         if (canSend) {
                           handleSend();
                         } else {
-                          setIsResendOpen(true); // 👈 open modal
+                          setIsResendModalOpen(true); // 👈 open modal
                         }
                       }}
                     >
-                      {canSend ? "Send" : "Resend"}
+                      {canSend ? t("actions.send") : t("actions.resend")}
                       <Send className="w-4 h-4" />
                     </Button>
                   )}
@@ -504,8 +505,8 @@ export default function CampaignDetails() {
                       className="rounded-full gap-2"
                     >
                       {campaign.status === CampaignStatus.INACTIVE
-                        ? "Start Drip"
-                        : "Pause Drip"}
+                        ? t("actions.startDrip")
+                        : t("actions.pauseDrip")}
                       <Send className="w-4 h-4" />
                     </Button>
                   )}
@@ -518,8 +519,8 @@ export default function CampaignDetails() {
                   >
                     <FileDown className="w-3.5 h-3.5" />
                     {deliveryReportMutation.isPending
-                      ? "Generating..."
-                      : "Delivery Report"}
+                      ? t("actions.generating")
+                      : t("actions.deliveryReport")}
                   </Button>
                 </div>
               </div>
@@ -561,7 +562,7 @@ export default function CampaignDetails() {
                               </div>
                               <div>
                                 <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">
-                                  Total Participants
+                                  {t("overview.totalParticipants")}
                                 </div>
                                 <div className="text-2xl text-slate-900 dark:text-slate-50">
                                   {participantsQuery.data?.totalCount}
@@ -573,7 +574,9 @@ export default function CampaignDetails() {
                         <div className="flex items-center gap-4 text-sm">
                           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                            <span className="font-medium">Template:</span>
+                            <span className="font-medium">
+                              {t("overview.template")}
+                            </span>
                             <span>{campaignInfo?.template}</span>
                           </div>
                         </div>
@@ -616,7 +619,7 @@ export default function CampaignDetails() {
                           className="gap-2"
                         >
                           <Plus className="w-4 h-4" />
-                          Add Participant
+                          {t("participants.add")}
                         </Button>
 
                         <Button
@@ -624,7 +627,9 @@ export default function CampaignDetails() {
                           disabled={selectedIds.length === 0}
                           onClick={() => setOpenDeleteModal(true)}
                         >
-                          Delete Contacts ({selectedIds.length})
+                          {t("participants.deleteSelected", {
+                            count: selectedIds.length,
+                          })}
                         </Button>
                       </div>
 
@@ -633,7 +638,7 @@ export default function CampaignDetails() {
                         <div className="relative w-80">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-600" />
                           <Input
-                            placeholder="Search by name or phone..."
+                            placeholder={t("participants.searchPlaceholder")}
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
                             className="pl-9 h-9 border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50"
@@ -647,7 +652,7 @@ export default function CampaignDetails() {
                           onClick={() => setSearchInput("")}
                         >
                           <RotateCcw className="w-4 h-4 mr-2" />
-                          Reset
+                          {t("participants.reset")}
                         </Button>
                       </div>
                     </div>
@@ -669,16 +674,16 @@ export default function CampaignDetails() {
                         </TableHead>
 
                         <TableHead className="font-medium dark:text-slate-200">
-                          Name
+                          {t("participants.table.name")}
                         </TableHead>
                         <TableHead className="font-medium dark:text-slate-200">
-                          Phone
+                          {t("participants.table.phone")}
                         </TableHead>
                         <TableHead className="font-medium dark:text-slate-200">
-                          Status
+                          {t("participants.table.status")}
                         </TableHead>
                         <TableHead className="text-center font-medium dark:text-slate-200">
-                          Consent
+                          {t("participants.table.consent")}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -753,8 +758,10 @@ export default function CampaignDetails() {
                       </Button>
 
                       <span className="px-3 text-sm dark:text-slate-400">
-                        Page <strong>{pagination.pageIndex + 1}</strong> of{" "}
-                        <strong>{totalPages || 1}</strong>
+                        {t("participants.pagination.page", {
+                          pageIndex: pagination.pageIndex + 1,
+                          totalPages: totalPages || 1,
+                        })}
                       </span>
 
                       <Button
@@ -790,7 +797,7 @@ export default function CampaignDetails() {
                     <div className="flex items-center gap-6 text-sm">
                       <div className="flex items-center gap-2">
                         <span className="text-slate-600 dark:text-slate-400">
-                          Rows per page:
+                          {t("participants.pagination.rowsPerPage")}
                         </span>
                         <select
                           value={pagination.pageSize}
@@ -813,7 +820,7 @@ export default function CampaignDetails() {
                       <div className="text-slate-700 dark:text-slate-300">
                         <strong>{totalCount.toLocaleString()}</strong>
                         <span className="text-slate-500 dark:text-slate-400 ml-1">
-                          total rows
+                          {t("participants.pagination.totalRows")}
                         </span>
                       </div>
                     </div>
@@ -831,19 +838,22 @@ export default function CampaignDetails() {
         >
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
+              <AlertDialogTitle>
+                {t("dialogs.deleteCampaign.title")}
+              </AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this campaign? This action
-                cannot be undone.
+                {t("dialogs.deleteCampaign.description")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>
+                {t("dialogs.deleteCampaign.cancel")}
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDelete}
                 className="bg-destructive hover:bg-destructive/90"
               >
-                Delete
+                {t("dialogs.deleteCampaign.confirm")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -853,16 +863,20 @@ export default function CampaignDetails() {
       <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Participants</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("dialogs.deleteParticipants.title")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <strong>{selectedIds.length}</strong> selected participants? This
-              action cannot be undone.
+              {t("dialogs.deleteParticipants.description", {
+                count: selectedIds.length,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>
+              {t("dialogs.deleteParticipants.cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90"
               onClick={() =>
@@ -872,7 +886,7 @@ export default function CampaignDetails() {
                 })
               }
             >
-              Delete
+              {t("dialogs.deleteParticipants.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -894,8 +908,8 @@ export default function CampaignDetails() {
         />
       )}
       <ResendCampaignModal
-        isOpen={isResendOpen}
-        onClose={() => setIsResendOpen(false)}
+        isOpen={isResendModalOpen}
+        onClose={() => setIsResendModalOpen(false)}
         onSubmit={handleResendSubmit}
         isLoading={sendCampaignMutation.isPending}
         stats={{
