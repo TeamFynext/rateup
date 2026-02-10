@@ -112,18 +112,6 @@ function MetricCard({
   badgeColor,
   iconColor,
 }: MetricCardProps) {
-  // const colorMap = {
-  //   primary:
-  //     "text-primary border-[#2E5BFF]/20 bg-gradient-to-br from-blue-50 to-white hover:shadow-md transition-all group",
-  //   green:
-  //     "text-green-600 border-green-200 bg-gradient-to-br from-green-50 to-white hover:shadow-md transition-all group",
-  //   emerald:
-  //     "text-emerald-600 border-emerald-200 bg-gradient-to-br from-emerald-50 to-white hover:shadow-md transition-all group",
-  //   amber:
-  //     "text-amber-600 border-amber-200 bg-gradient-to-br from-amber-50 to-white hover:shadow-md transition-all group",
-  //   red: "text-red-600 border-red-200 bg-gradient-to-br from-red-50 to-white hover:shadow-md transition-all group",
-  // };
-
   const colorMap = {
     primary:
       "text-primary border-[#2E5BFF]/20 " +

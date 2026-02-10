@@ -101,10 +101,33 @@ const AddParticipantModal = ({
   }, [searchText]);
 
   const contacts = data?.users;
-  const isSelectedAll =
-    selectedTab === CampaignParticipantSource.INDIVIDUAL
-      ? selectedContacts.length === contacts?.length
-      : selectedGroups.length === contactGroup?.data.length;
+  const isSelectedAll = (() => {
+    if (selectedTab === CampaignParticipantSource.INDIVIDUAL) {
+      return (
+        contacts?.length > 0 && selectedContacts.length === contacts.length
+      );
+    }
+
+    if (selectedTab === CampaignParticipantSource.GROUP) {
+      const selectableGroups =
+        contactGroup?.data?.filter((g) => g?._count.contacts) || [];
+      return (
+        selectableGroups.length > 0 &&
+        selectedGroups.length === selectableGroups.length
+      );
+    }
+
+    if (selectedTab === CampaignParticipantSource.CAMPAIGN) {
+      const selectableCampaigns =
+        campaignData?.data?.filter((c) => c?.campaignParticipantsCount) || [];
+      return (
+        selectableCampaigns.length > 0 &&
+        selectedCampaigns.length === selectableCampaigns.length
+      );
+    }
+
+    return false;
+  })();
 
   const handleSubmit = () => {
     if (
@@ -113,6 +136,15 @@ const AddParticipantModal = ({
       selectedCampaigns?.length === 0
     ) {
       showWarnToast(translations("You have not selected any participant"));
+      return;
+    }
+    // ✅ OLD UI LOGIC: Campaign requires message status
+    if (
+      selectedTab === CampaignParticipantSource.CAMPAIGN &&
+      selectedCampaigns.length > 0 &&
+      selectedStatus.length === 0
+    ) {
+      showWarnToast(translations("Please select message status"));
       return;
     }
 
@@ -130,30 +162,38 @@ const AddParticipantModal = ({
       campaignId: campaign?.id,
     });
   };
+  const selectableContacts =
+    contacts?.filter(
+      (c) =>
+        c.phone &&
+        !c?.campaignParticipants?.some((cp) => cp?.campaignId === campaign?.id),
+    ) || [];
 
+  const disableSelectAllIndividual =
+    selectedTab === CampaignParticipantSource.INDIVIDUAL &&
+    selectableContacts.length === 0;
   function handleSelectAll(checked: boolean) {
-    switch (selectedTab) {
-      case CampaignParticipantSource.INDIVIDUAL:
-        setSelectedContacts(checked ? contacts || [] : []);
-        break;
-      case CampaignParticipantSource.GROUP:
-        setSelectedGroups(
-          checked
-            ? contactGroup?.data?.filter((data) => data?._count.contacts) || []
-            : [],
-        );
-        break;
-      case CampaignParticipantSource.CAMPAIGN:
-        setSelectedCampaigns(
-          checked
-            ? campaignData?.data?.filter(
-                (data) => data?.campaignParticipantsCount,
-              ) || []
-            : [],
-        );
-        break;
-      default:
-        break;
+    if (selectedTab === CampaignParticipantSource.INDIVIDUAL) {
+      setSelectedContacts(checked ? contacts || [] : []);
+      return;
+    }
+
+    if (selectedTab === CampaignParticipantSource.GROUP) {
+      setSelectedGroups(
+        checked
+          ? contactGroup?.data?.filter((g) => g?._count.contacts) || []
+          : [],
+      );
+      return;
+    }
+
+    if (selectedTab === CampaignParticipantSource.CAMPAIGN) {
+      setSelectedCampaigns(
+        checked
+          ? campaignData?.data?.filter((c) => c?.campaignParticipantsCount) ||
+              []
+          : [],
+      );
     }
   }
 
@@ -178,7 +218,7 @@ const AddParticipantModal = ({
 
   return (
     <Dialog open onOpenChange={(open) => !open && close()}>
-      <DialogContent className=" max-w-6xl min-w-3/6 flex flex-col">
+      <DialogContent className="max-w-5xl h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <IconUsers className="h-5 w-5 text-[#2E5BFF]" />
@@ -188,7 +228,7 @@ const AddParticipantModal = ({
             Select contacts, groups, or campaigns to add as participants
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 overflow-hidden space-y-4">
+        <div className="flex-1 overflow-hidden flex flex-col gap-4">
           {/* Search and Tab Selection */}
           <div className="grid grid-cols-[1fr_auto] gap-4 items-center">
             <div className="relative">
@@ -242,10 +282,10 @@ const AddParticipantModal = ({
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-2 gap-3 h-full">
+          <div className="grid grid-cols-2 gap-3 flex-1 overflow-hidden">
             {/* Left Panel - Available Items */}
-            <Card className="border-slate-200  bg-slate-50 dark:bg-transparent  h-full flex flex-col">
-              <CardContent className="p-3 flex-1 overflow-hidden">
+            <Card className="border-slate-200 bg-slate-50 dark:bg-transparent flex flex-col overflow-hidden py-1">
+              <CardContent className="p-3 flex-1 overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-medium">
                     Select {selectedTab?.toLowerCase()}
@@ -254,8 +294,13 @@ const AddParticipantModal = ({
                     <Checkbox
                       id="select-all"
                       checked={isSelectedAll}
-                      onCheckedChange={handleSelectAll}
+                      disabled={disableSelectAllIndividual}
+                      onCheckedChange={(checked) => {
+                        if (checked === "indeterminate") return;
+                        handleSelectAll(checked);
+                      }}
                     />
+
                     <Label
                       htmlFor="select-all"
                       className="text-sm font-normal cursor-pointer"
@@ -268,14 +313,17 @@ const AddParticipantModal = ({
                 <Separator className="mb-4" />
 
                 {isPending || isAllCampaignLoading || groupIsLoading ? (
-                  <div className="flex items-center justify-center h-[350px]">
+                  <div className="flex items-center justify-center flex-1">
                     <div className="w-8 h-8 border-4 border-[#2E5BFF] border-t-transparent rounded-full animate-spin" />
                   </div>
                 ) : (
                   <>
                     {selectedTab === CampaignParticipantSource.CAMPAIGN && (
                       <div className="mb-4">
-                        <Label className="text-xs mb-2">Message Status</Label>
+                        <Label className="text-xs mb-2">
+                          Message Status <span className="text-red-500">*</span>
+                        </Label>
+
                         <Select
                           value={selectedStatus[0] || ""}
                           onValueChange={(value) => setSelectedStatus([value])}
@@ -296,8 +344,8 @@ const AddParticipantModal = ({
                       </div>
                     )}
 
-                    <ScrollArea className="flex-1 pr-4">
-                      <div className="space-y-2">
+                    <ScrollArea className="flex-1 overflow-hidden">
+                      <div className="space-y-2 pr-4">
                         {selectedTab ===
                           CampaignParticipantSource.INDIVIDUAL && (
                           <>
@@ -367,7 +415,7 @@ const AddParticipantModal = ({
 
                     {selectedTab === CampaignParticipantSource.INDIVIDUAL &&
                       filteredContacts?.length > 0 && (
-                        <div className="mt-4">
+                        <div className="mt-0">
                           <ContactPagination
                             pagination={pagination}
                             setPagination={setPagination}
@@ -381,8 +429,8 @@ const AddParticipantModal = ({
             </Card>
 
             {/* Right Panel - Selected Items */}
-            <Card className="border-slate-200  bg-slate-50 dark:bg-transparent h-full flex flex-col">
-              <CardContent className="p-4 flex-1 overflow-hidden">
+            <Card className="border-slate-200 bg-slate-50 dark:bg-transparent flex flex-col overflow-hidden">
+              <CardContent className="p-4 flex-1 overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-medium">Selected</h3>
                   <Badge
@@ -396,7 +444,7 @@ const AddParticipantModal = ({
                 <Separator className="mb-4" />
 
                 {getSelectedCount() === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-[390px] text-center">
+                  <div className="flex flex-col items-center justify-center flex-1 text-center">
                     <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center mb-3">
                       <IconUsers className="w-8 h-8 text-slate-400" />
                     </div>
@@ -406,8 +454,8 @@ const AddParticipantModal = ({
                     </p>
                   </div>
                 ) : (
-                  <ScrollArea className="h-full pr-4">
-                    <div className="space-y-2">
+                  <ScrollArea className="flex-1 overflow-hidden">
+                    <div className="space-y-2 pr-4">
                       {selectedContacts?.map((customer) => {
                         const isAlreadySelected =
                           customer.campaignParticipants?.some(
@@ -447,14 +495,18 @@ const AddParticipantModal = ({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="mt-auto">
           <Button variant="outline" onClick={close}>
             {translations("Cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={
-              addCampaignParticipants.isPending || getSelectedCount() === 0
+              addCampaignParticipants.isPending ||
+              getSelectedCount() === 0 ||
+              (selectedTab === CampaignParticipantSource.CAMPAIGN &&
+                selectedCampaigns.length > 0 &&
+                selectedStatus.length === 0)
             }
             className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90 gap-2"
           >

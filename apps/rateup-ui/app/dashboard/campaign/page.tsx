@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -19,6 +19,7 @@ import UnauthorizedPage from "@/components/404/UnAuthorizedError";
 import CampaignCardList from "@/components/Campaign/CampaignListCard";
 import CreateCampaignModal from "@/components/Campaign/CreateCampaignModal";
 import { TeamSelector } from "@/components/input/TeamSelector";
+import useDebounce from "@/components/menu/hook/useDebounce";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,6 @@ export default function CampaignsPage() {
   );
 
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<any>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -54,8 +54,6 @@ export default function CampaignsPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   /* -------------------- DATA -------------------- */
-  // const { data, isPending, isError, error, refetch } =
-  //   useCampaignData(activeTab);
   const whatsappQuery = useCampaignData(CampaignType.WHATSAPP);
   const dripQuery = useCampaignData(CampaignType.DRIP);
 
@@ -78,25 +76,18 @@ export default function CampaignsPage() {
     return <ErrorComponent refetch={refetch} />;
   }
 
-  useEffect(() => {
-    const id = setTimeout(() => setDebouncedSearch(search.trim()), 200);
-    return () => clearTimeout(id);
-  }, [search]);
+  const debouncedSearch = useDebounce(search.trim(), 200);
+
   /* -------------------- FILTERED DATA -------------------- */
-  // const campaigns = data?.data ?? [];
   const campaigns = data?.data ?? [];
   const filteredCampaigns = useMemo(() => {
-    return (
-      campaigns
-        .filter((c) => selectedTeam === "all" || c.teamId === selectedTeam)
-        .filter((c) => selectedStatus === "all" || c.status === selectedStatus)
-        .filter((c) =>
-          c.name?.toLowerCase().includes(debouncedSearch.toLowerCase()),
-        )
-
-        // .filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
-        .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
-    );
+    return campaigns
+      .filter((c) => selectedTeam === "all" || c.teamId === selectedTeam)
+      .filter((c) => selectedStatus === "all" || c.status === selectedStatus)
+      .filter((c) =>
+        c.name?.toLowerCase().includes(debouncedSearch.toLowerCase()),
+      )
+      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
   }, [campaigns, debouncedSearch, selectedTeam, selectedStatus]);
 
   const openCreateCampaign = () => {

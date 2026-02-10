@@ -261,18 +261,6 @@ export function useNavMain({
               title: t("Campaign"),
               url: "/dashboard/campaign",
               icon: IconSpeakerphone,
-              // items: [
-              //   {
-              //     title: t("Campaigns"),
-              //     url: "/dashboard/campaign",
-              //     icon: IconSpeakerphone,
-              //   },
-              //   {
-              //     title: "Drip Campaigns",
-              //     url: "/dashboard/drip-campaigns",
-              //     icon: IconMessageBolt,
-              //   },
-              // ],
             },
           ]
         : []),

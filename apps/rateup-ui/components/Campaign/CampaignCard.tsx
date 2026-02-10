@@ -33,10 +33,20 @@ function getStatusColor(status: string) {
   }
 }
 
+interface Campaign {
+  id: string;
+  teamId: string;
+  teamName?: string;
+  type: string;
+  status?: string;
+  name?: string;
+  campaignParticipantsCount?: number;
+  createdAt?: string;
+}
 interface CampaignCardProps {
-  campaign: any;
-  onView: (campaign: any) => void;
-  onEdit: (campaign: any) => void;
+  campaign: Campaign;
+  onView: (campaign: Campaign) => void;
+  onEdit: (campaign: Campaign) => void;
 }
 
 export default function CampaignCard({
@@ -65,7 +75,7 @@ export default function CampaignCard({
   return (
     <Card
       key={campaign.id}
-      className="p-0.7 group hover:shadow-lg transition-all duration-300 cursor-pointer  border border-border hover:border-primary/30 dark:hover:border-primary/10 overflow-hidden relative hover:-translate-y-0.5"
+      className="p-[0.7rem] group hover:shadow-lg transition-all duration-300 cursor-pointer  border border-border hover:border-primary/30 dark:hover:border-primary/10 overflow-hidden relative hover:-translate-y-0.5"
       onClick={() => onView(campaign)}
     >
       {/* Card Content */}

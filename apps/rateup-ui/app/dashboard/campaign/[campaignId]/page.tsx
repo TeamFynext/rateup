@@ -43,6 +43,7 @@ import AddParticipantModal from "@/components/Campaign/AddParticipantModal";
 import { CampaignPerformance } from "@/components/Campaign/CampaignPerformanceCard";
 import CreateCampaignModal from "@/components/Campaign/CreateCampaignModal";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
+import useDebounce from "@/components/menu/hook/useDebounce";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,6 +77,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouteParams } from "@/context/RouteParamsContext";
 import { PAGE_SIZE } from "@/utils/constants";
 
+import { StatusBadge } from "../../../../components/Campaign/statusBadge";
+
 interface Participant {
   id: string;
   name: string;
@@ -90,7 +93,6 @@ export default function CampaignDetails() {
   const [editingCampaign, setEditingCampaign] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sorting, setSorting] = useState([CONTACT_SORT]);
   const [columnFilters, setColumnFilters] = useDebouncedState([], 200);
 
@@ -122,7 +124,7 @@ export default function CampaignDetails() {
     campaignQuery.data?.teamId,
     campaignQuery.data?.type,
   );
-
+  const debouncedSearch = useDebounce(searchInput, 200);
   const participantsQuery = useCampaignParticipants(
     campaignId,
     pagination,
@@ -159,23 +161,11 @@ export default function CampaignDetails() {
   const canNext = pagination.pageIndex < totalPages - 1;
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
-
-  useEffect(() => {
-    if (campaignQuery.isError) console.error("Campaign fetch error");
-    if (participantsQuery.isError) console.error("Participants fetch error");
-    if (statsQuery.isError) console.error("Stats fetch error");
-  }, [campaignQuery.isError, participantsQuery.isError, statsQuery.isError]);
-
-  useEffect(() => {
     if (campaignQuery.data) {
       update({ campaignId: campaignQuery.data.name });
     }
   }, [campaignQuery.data, update]);
+
   const toggleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(participants.map((p) => p.id));
@@ -220,20 +210,33 @@ export default function CampaignDetails() {
     team: campaignQuery.data?.teamName,
   };
 
+  const teamName =
+    campaignQuery.data.team?.name ??
+    campaignQuery.data.teamName ??
+    campaignQuery.data.teamId ??
+    "";
+  const stats = campaignQuery.data.stats ?? {
+    participants: 0,
+    pending: 0,
+    sent: 0,
+    delivered: 0,
+    read: 0,
+    failed: 0,
+  };
   const campaign = {
     id: campaignQuery.data.id,
     name: campaignQuery.data.name,
     type: campaignQuery.data.type,
-    team: campaignQuery.data.team?.name ?? campaignQuery.data.teamId,
+    team: teamName,
     status: campaignQuery.data.status,
     template:
       campaignQuery.data.template?.name ?? campaignQuery.data.waTemplateId,
-    participants: campaignQuery.data.stats?.participants ?? 0,
-    pending: campaignQuery.data.stats?.pending ?? 0,
-    sent: campaignQuery.data.stats?.sent ?? 0,
-    delivered: campaignQuery.data.stats?.delivered ?? 0,
-    read: campaignQuery.data.stats?.read ?? 0,
-    failed: campaignQuery.data.stats?.failed ?? 0,
+    participants: stats.participants,
+    pending: stats.pending,
+    sent: stats.sent,
+    delivered: stats.delivered,
+    read: stats.read,
+    failed: stats.failed,
   };
 
   const openEditCampaign = (campaign: any) => {
@@ -282,10 +285,14 @@ export default function CampaignDetails() {
     [CampaignStatus.DRAFT, CampaignStatus.INACTIVE].includes(campaign.status);
 
   const hasFailures = campaign.failed > 0;
-
   const canResend =
     campaign.type !== CampaignType.DRIP &&
-    [CampaignStatus.COMPLETED, CampaignStatus.FAILED].includes(campaign.status);
+    campaign.failed > 0 &&
+    [
+      CampaignStatus.ACTIVE,
+      CampaignStatus.COMPLETED,
+      CampaignStatus.FAILED,
+    ].includes(campaign.status);
 
   const handleSend = async () => {
     try {
@@ -294,12 +301,34 @@ export default function CampaignDetails() {
           CampaignParticipantStatus.PENDING,
           CampaignParticipantStatus.FAILED,
         ],
-        sentCampaignChoice: "SEND_ALL",
+        sentCampaignChoice: "NOW",
         status: CampaignStatus.ACTIVE,
         type: campaign.type,
       });
     } catch {
       // error toast already handled inside hook
+    }
+  };
+
+  const handleToggleDrip = async () => {
+    try {
+      await sendCampaignMutation.mutateAsync({
+        sentCampaignChoice: "NOW", // ✅ REQUIRED by type
+        status:
+          campaign.status === CampaignStatus.INACTIVE
+            ? CampaignStatus.ACTIVE
+            : CampaignStatus.INACTIVE,
+        statuses: [], // ✅ DRIP does not resend by status
+        type: CampaignType.DRIP,
+      });
+
+      toast.success(
+        campaign.status === CampaignStatus.INACTIVE
+          ? "Drip campaign started"
+          : "Drip campaign paused",
+      );
+    } catch (err) {
+      toast.error("Failed to update drip campaign status");
     }
   };
 
@@ -324,23 +353,6 @@ export default function CampaignDetails() {
       router.push("/dashboard/campaign");
     } catch {
       toast.error("Failed to delete campaign");
-    }
-  };
-
-  const getStatusBadgeStyle = (status: Participant["status"]) => {
-    switch (status) {
-      case "READ":
-        return "bg-green-100 text-green-700 border-green-200";
-      case "DELIVERED":
-        return "bg-blue-100 text-blue-700 border-blue-200";
-      case "SENT":
-        return "bg-purple-100 text-purple-700 border-purple-200";
-      case "FAILED":
-        return "bg-red-100 text-red-700 border-red-200";
-      case "PENDING":
-        return "bg-gray-100 text-gray-700 border-gray-200";
-      default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
@@ -458,6 +470,22 @@ export default function CampaignDetails() {
                       }
                     >
                       {canSend ? translations("Send") : translations("Resend")}
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {campaign.type === CampaignType.DRIP && (
+                    <Button
+                      variant={
+                        campaign.status === CampaignStatus.ACTIVE
+                          ? "destructive"
+                          : "outline"
+                      }
+                      onClick={handleToggleDrip}
+                      className="rounded-full gap-2"
+                    >
+                      {campaign.status === CampaignStatus.INACTIVE
+                        ? "Start Drip"
+                        : "Pause Drip"}
                       <Send className="w-4 h-4" />
                     </Button>
                   )}
@@ -591,14 +619,7 @@ export default function CampaignDetails() {
                             className="pl-9 h-9 border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50"
                           />
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-9 gap-2"
-                        >
-                          <Filter className="w-4 h-4" />
-                          Filters
-                        </Button>
+
                         <Button
                           size="sm"
                           variant="ghost"
@@ -664,12 +685,7 @@ export default function CampaignDetails() {
                               {participant.contact?.phone}
                             </TableCell>
                             <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={`text-xs font-medium ${getStatusBadgeStyle(participant.status)}`}
-                              >
-                                {participant.status}
-                              </Badge>
+                              <StatusBadge status={participant.status} />
                             </TableCell>
                             <TableCell className="text-center">
                               {participant.contact.consent && (
@@ -847,7 +863,6 @@ export default function CampaignDetails() {
           isEdit
           campaign={editingCampaign}
           close={closeEditModal}
-          dynamicVariables={editingCampaign.dynamicVariables || []}
           campaignType={editingCampaign.type}
         />
       )}

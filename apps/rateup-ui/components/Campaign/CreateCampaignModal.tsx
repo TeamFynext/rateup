@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   IconCheck,
@@ -14,6 +14,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { CampaignType } from "@/types/enums";
@@ -85,7 +86,9 @@ const formSchema = z.object({
   type: z.nativeEnum(CampaignType),
   surveyTeamMapId: z.string().optional(),
   flowId: z.string().optional(),
-  dynamicTags: z.array(z.string().nullable()),
+  dynamicTags: z.array(
+    z.string().min(1, { message: "Please select a variable" }),
+  ),
   useUserConsent: z.boolean(),
   whatsappSettingsPhoneId: z
     .string()
@@ -104,6 +107,7 @@ const CreateCampaignModal = ({
   const [activeTab, setActiveTab] = useState<"basic" | "templates">("basic");
   const translations = useTranslations();
   const { customFields } = useCustomFieldsContext();
+  const submitRef = useRef<() => void>(() => {});
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -119,7 +123,6 @@ const CreateCampaignModal = ({
       whatsappSettingsPhoneId: campaign?.whatsappSettingsPhoneId || "",
     },
   });
-
   const [dripStages, setDripStages] = useState<DripStage[]>([
     {
       id: undefined,
@@ -210,14 +213,44 @@ const CreateCampaignModal = ({
   );
 
   const templates = useTemplatesAvailableForTeam(form.watch("teamId"));
-  const templatesData = useMemo(
-    () =>
-      templates?.map((t) => ({
-        value: t?.id,
-        label: t?.data?.name,
-      })) || [],
-    [templates],
-  );
+  const templatesData = useMemo(() => {
+    return (
+      templates
+        ?.filter(
+          (t) => t?.data?.status === "APPROVED", // ✅ Meta approved only
+        )
+        .map((t) => ({
+          value: t.id,
+          label: t.data?.name,
+        })) || []
+    );
+  }, [templates]);
+  const selectedTemplate = useMemo(() => {
+    if (!form.watch("waTemplateId")) return null;
+    return templates?.find((t) => t.id === form.watch("waTemplateId"));
+  }, [templates, form.watch("waTemplateId")]);
+  const extractedDynamicVariables = useMemo(() => {
+    if (!selectedTemplate) return [];
+
+    const bodyText =
+      selectedTemplate.data?.components?.find((c: any) => c.type === "BODY")
+        ?.text ?? "";
+
+    const matches = bodyText.match(/{{\d+}}/g) || [];
+
+    return Array.from(new Set(matches)); // ["{{1}}", "{{2}}"]
+  }, [selectedTemplate]);
+  useEffect(() => {
+    if (extractedDynamicVariables.length > 0) {
+      form.setValue(
+        "dynamicTags",
+        Array(extractedDynamicVariables.length).fill(null),
+        { shouldDirty: true },
+      );
+    } else {
+      form.setValue("dynamicTags", []);
+    }
+  }, [extractedDynamicVariables.length]);
 
   const createCampaignMutation = useCreateCampaignMutation(
     form.watch("teamId"),
@@ -253,8 +286,14 @@ const CreateCampaignModal = ({
   const handleSubmit = useCallback(
     (values: FormValues) => {
       if (values.type === CampaignType.DRIP) {
-        const hasInvalidStages = dripStages.some((stage) => !stage.templateId);
-        if (hasInvalidStages) {
+        const invalidStageIndex = dripStages.findIndex(
+          (stage) => !stage.templateId,
+        );
+
+        if (invalidStageIndex !== -1) {
+          toast.error(
+            `Please select a template for Drip Stage ${invalidStageIndex + 1}`,
+          );
           return;
         }
       }
@@ -313,19 +352,23 @@ const CreateCampaignModal = ({
   );
 
   useEffect(() => {
+    submitRef.current = form.handleSubmit(handleSubmit);
+  }, [form, handleSubmit]);
+
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         (event.ctrlKey || event.metaKey) &&
-        event.key === SAVE_HOTKEY.toLowerCase()
+        event.key.toLowerCase() === SAVE_HOTKEY.toLowerCase()
       ) {
         event.preventDefault();
-        form.handleSubmit(handleSubmit)();
+        submitRef.current();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [form, handleSubmit]);
+  }, []);
 
   return (
     <Dialog open onOpenChange={(open) => !open && close()}>
@@ -451,7 +494,7 @@ const CreateCampaignModal = ({
                     </CardContent>
                   </Card>
 
-                  {form.watch("type") === CampaignType.DRIP && (
+                  {campaignType === CampaignType.DRIP && (
                     <Alert>
                       <IconInfoCircle className="h-4 w-4" />
                       <AlertDescription>
@@ -529,12 +572,20 @@ const CreateCampaignModal = ({
                                     onValueChange={(val) =>
                                       updateDripStage(idx, "templateId", val)
                                     }
+                                    disabled={templatesData.length === 0}
                                   >
                                     <SelectTrigger
                                       className={`h-9 ${!stage.templateId ? "border-destructive" : ""}`}
                                     >
-                                      <SelectValue placeholder="Select template" />
+                                      <SelectValue
+                                        placeholder={
+                                          templatesData.length === 0
+                                            ? "No templates available"
+                                            : "Select template"
+                                        }
+                                      />
                                     </SelectTrigger>
+
                                     <SelectContent>
                                       {templatesData.map((template) => (
                                         <SelectItem
@@ -652,10 +703,17 @@ const CreateCampaignModal = ({
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
+                            disabled={templatesData.length === 0}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select template" />
+                                <SelectValue
+                                  placeholder={
+                                    templatesData.length === 0
+                                      ? "No templates available"
+                                      : "Select template"
+                                  }
+                                />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -674,7 +732,7 @@ const CreateCampaignModal = ({
                       )}
                     />
 
-                    {dynamicVariables && dynamicVariables.length > 0 && (
+                    {extractedDynamicVariables.length > 0 && (
                       <div className="space-y-3">
                         <div>
                           <h4 className="text-sm font-medium">
@@ -685,7 +743,7 @@ const CreateCampaignModal = ({
                           </p>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">
-                          {dynamicVariables.map((_, i) => (
+                          {extractedDynamicVariables.map((_, i) => (
                             <FormField
                               key={i}
                               control={form.control}
