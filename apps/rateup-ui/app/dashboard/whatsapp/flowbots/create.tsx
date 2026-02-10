@@ -231,11 +231,14 @@ export function AutomatedReplyForm({
             </Select>
           </div>
 
-          <AccountSelector
-            optional={true}
-            label="WhatsApp Account (only needed if there is a lead automation)"
-            {...rootForm.getInputProps("whatsappSettingsPhoneId")}
-          />
+          {/* WhatsApp Account - Only show for WhatsApp platform */}
+          {!isInstagram && (
+            <AccountSelector
+              optional={true}
+              label="WhatsApp Account (only needed if there is a lead automation)"
+              {...rootForm.getInputProps("whatsappSettingsPhoneId")}
+            />
+          )}
         </CardContent>
       </Card>
 
