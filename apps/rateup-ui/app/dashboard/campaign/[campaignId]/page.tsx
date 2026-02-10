@@ -42,6 +42,10 @@ import {
 import AddParticipantModal from "@/components/Campaign/AddParticipantModal";
 import { CampaignPerformance } from "@/components/Campaign/CampaignPerformanceCard";
 import CreateCampaignModal from "@/components/Campaign/CreateCampaignModal";
+import {
+  ResendCampaignModal,
+  ResendOptions,
+} from "@/components/Campaign/ResendCampaignModal";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
 import useDebounce from "@/components/menu/hook/useDebounce";
 import {
@@ -95,6 +99,7 @@ export default function CampaignDetails() {
   const [searchInput, setSearchInput] = useState("");
   const [sorting, setSorting] = useState([CONTACT_SORT]);
   const [columnFilters, setColumnFilters] = useDebouncedState([], 200);
+  const [isResendOpen, setIsResendOpen] = useState(false);
 
   const [pagination, setPagination] = useState({
     pageIndex: 0,
@@ -253,6 +258,9 @@ export default function CampaignDetails() {
       selectedDripStage,
     });
   };
+  const isQueuing =
+    campaign.status === CampaignStatus.QUEUING ||
+    campaign.status === CampaignStatus.DEQUEUING;
 
   const closeEditModal = () => {
     setEditingCampaign(null);
@@ -308,6 +316,18 @@ export default function CampaignDetails() {
     } catch {
       // error toast already handled inside hook
     }
+  };
+  const handleResendSubmit = async (options: ResendOptions) => {
+    await sendCampaignMutation.mutateAsync({
+      statuses: options.statuses,
+      sentCampaignChoice: options.sendMode === "NOW" ? "NOW" : "LATER",
+      campaignSentAt:
+        options.sendMode === "SCHEDULED"
+          ? new Date(`${options.scheduleDate}T${options.scheduleTime}`)
+          : undefined,
+      type: campaign.type,
+      status: campaign.status,
+    });
   };
 
   const handleToggleDrip = async () => {
@@ -456,23 +476,23 @@ export default function CampaignDetails() {
                     {campaign.status}
                   </Badge>
                   <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
-
-                  {(canSend || canResend) && (
+                  {campaign.type !== CampaignType.DRIP && !isQueuing && (
                     <Button
                       variant="outline"
-                      onClick={canSend ? handleSend : handleResend}
-                      disabled={canResend && !hasFailures}
                       className="rounded-full gap-2"
-                      title={
-                        canResend && !hasFailures
-                          ? "No failed messages to resend"
-                          : undefined
-                      }
+                      onClick={() => {
+                        if (canSend) {
+                          handleSend();
+                        } else {
+                          setIsResendOpen(true); // 👈 open modal
+                        }
+                      }}
                     >
-                      {canSend ? translations("Send") : translations("Resend")}
+                      {canSend ? "Send" : "Resend"}
                       <Send className="w-4 h-4" />
                     </Button>
                   )}
+
                   {campaign.type === CampaignType.DRIP && (
                     <Button
                       variant={
@@ -873,6 +893,20 @@ export default function CampaignDetails() {
           campaignType={campaignQuery.data.type}
         />
       )}
+      <ResendCampaignModal
+        isOpen={isResendOpen}
+        onClose={() => setIsResendOpen(false)}
+        onSubmit={handleResendSubmit}
+        isLoading={sendCampaignMutation.isPending}
+        stats={{
+          failed: statsQuery.data?.countFailed,
+          pending: statsQuery.data?.countPending,
+          sent: statsQuery.data?.countSent,
+          delivered: statsQuery.data?.countDelivered,
+          read: statsQuery.data?.countRead,
+          completed: statsQuery.data?.countCompleted,
+        }}
+      />
     </>
   );
 }

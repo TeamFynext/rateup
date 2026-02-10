@@ -86,9 +86,7 @@ const formSchema = z.object({
   type: z.nativeEnum(CampaignType),
   surveyTeamMapId: z.string().optional(),
   flowId: z.string().optional(),
-  dynamicTags: z.array(
-    z.string().min(1, { message: "Please select a variable" }),
-  ),
+  dynamicTags: z.array(z.string()).optional(),
   useUserConsent: z.boolean(),
   whatsappSettingsPhoneId: z
     .string()
@@ -111,6 +109,8 @@ const CreateCampaignModal = ({
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onChange", // ✅ ADD THIS
+    reValidateMode: "onChange", // ✅ (important)
     defaultValues: {
       name: campaign?.name || "",
       type: campaignType,
@@ -240,17 +240,28 @@ const CreateCampaignModal = ({
 
     return Array.from(new Set(matches)); // ["{{1}}", "{{2}}"]
   }, [selectedTemplate]);
+  const lastTemplateRef = useRef<string | null>(null);
+
   useEffect(() => {
+    const templateId = form.getValues("waTemplateId");
+
+    if (!templateId || templateId === lastTemplateRef.current) return;
+
+    lastTemplateRef.current = templateId;
+
     if (extractedDynamicVariables.length > 0) {
       form.setValue(
         "dynamicTags",
-        Array(extractedDynamicVariables.length).fill(null),
-        { shouldDirty: true },
+        Array(extractedDynamicVariables.length).fill(""),
+        {
+          shouldDirty: false,
+          shouldValidate: false,
+        },
       );
     } else {
       form.setValue("dynamicTags", []);
     }
-  }, [extractedDynamicVariables.length]);
+  }, [form.watch("waTemplateId")]);
 
   const createCampaignMutation = useCreateCampaignMutation(
     form.watch("teamId"),
@@ -264,13 +275,38 @@ const CreateCampaignModal = ({
   );
 
   const isFormValid = useMemo(() => {
-    const hasFormErrors = Object.keys(form.formState.errors).length > 0;
+    const { errors } = form.formState;
+
     if (form.watch("type") === CampaignType.DRIP) {
       const hasInvalidStages = dripStages.some((stage) => !stage.templateId);
-      return !hasFormErrors && !hasInvalidStages;
+      const hasOtherErrors = Object.keys(errors).some(
+        (key) => key !== "waTemplateId" && key !== "dynamicTags",
+      );
+      return !hasInvalidStages && !hasOtherErrors;
     }
-    return !hasFormErrors;
-  }, [form.formState.errors, form.watch("type"), dripStages]);
+
+    const hasNonTemplateErrors = Object.keys(errors).some(
+      (key) => key !== "waTemplateId" && key !== "dynamicTags",
+    );
+    const hasTemplate = !!form.watch("waTemplateId");
+    const dynamicTags = form.watch("dynamicTags") || [];
+
+    // Check if all required dynamic tags are filled
+    const allDynamicTagsFilled =
+      extractedDynamicVariables.length === 0 ||
+      (dynamicTags.length === extractedDynamicVariables.length &&
+        dynamicTags.every((tag) => tag && tag.trim() !== ""));
+
+    return !hasNonTemplateErrors && hasTemplate && allDynamicTagsFilled;
+  }, [
+    form.formState.errors,
+    form.watch("type"),
+    form.watch("waTemplateId"),
+    form.watch("dynamicTags"),
+    dripStages,
+    extractedDynamicVariables,
+  ]);
+
   const handleNext = async () => {
     const fieldsToValidate = isEdit
       ? ["name", "whatsappSettingsPhoneId"]
@@ -303,8 +339,12 @@ const CreateCampaignModal = ({
           templates
             ?.find((t) => t?.id === values?.waTemplateId)
             ?.data?.components?.find((c: any) => c?.buttons)
-            ?.buttons?.find((b: any) => b?.type === "FLOW")?.flow_id ?? null;
-        values.flowId = flowId;
+            ?.buttons?.find((b: any) => b?.type === "FLOW")?.flow_id ??
+          undefined;
+
+        if (flowId) {
+          values.flowId = flowId; // only set if it actually has a value
+        }
       }
 
       const submitData: any = { ...values };
@@ -400,9 +440,7 @@ const CreateCampaignModal = ({
         >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
-            <TabsTrigger value="templates" disabled={!form.formState.isValid}>
-              Templates
-            </TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
           </TabsList>
 
           <Form {...form}>
@@ -755,8 +793,14 @@ const CreateCampaignModal = ({
                                     <span className="text-destructive">*</span>
                                   </FormLabel>
                                   <Select
-                                    onValueChange={field.onChange}
-                                    value={field.value || undefined}
+                                    onValueChange={(val) => {
+                                      field.onChange(val);
+                                      // Trigger validation on all fields to update isFormValid
+                                      setTimeout(() => {
+                                        form.trigger();
+                                      }, 0);
+                                    }}
+                                    value={field.value || ""}
                                   >
                                     <FormControl>
                                       <SelectTrigger className="h-9">
