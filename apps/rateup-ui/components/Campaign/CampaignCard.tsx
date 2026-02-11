@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-import { Copy, Edit2, Eye, MoreVertical, Trash2, Users } from "lucide-react";
+import { Edit2, Eye, MoreVertical, Trash2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
