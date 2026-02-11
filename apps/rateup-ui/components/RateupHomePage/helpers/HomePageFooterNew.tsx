@@ -275,7 +275,7 @@ export default function HomePageFooter() {
       </div>
       <div className="bg-rateup-darkblue flex flex-col sm:flex-row items-center justify-between px-4 sm:px-8 lg:px-40 py-4 gap-4">
         <span className="bg-gradient-to-r from-rateup-blue-3 to-rateup-blue-2 bg-clip-text text-transparent text-xs text-center sm:text-left">
-          ©2025 RateUp. All rights reserved.
+          ©2026 RateUp. All rights reserved.
         </span>
         <span className="w-full sm:w-auto">
           <ul className="flex items-center justify-center flex-wrap gap-2 sm:gap-4 text-light-blue-5 text-xs">

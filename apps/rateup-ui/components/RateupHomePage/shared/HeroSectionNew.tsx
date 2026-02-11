@@ -45,7 +45,7 @@ export default function HeroSection() {
       {/* Heading */}
       <div className="flex flex-col items-center justify-center gap-2 max-w-4xl text-center">
         <span className="text-light-blue-5 font-semibold text-xl sm:text-4xl md:text-5xl leading-tight">
-          Reimagine Customer Engagement -
+          Reimagine Customer Engagement
         </span>
 
         {/* Gradient text + underline container */}

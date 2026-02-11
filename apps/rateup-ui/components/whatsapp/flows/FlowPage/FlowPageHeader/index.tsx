@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import {
   IconArrowLeft,
+  IconBrandWhatsapp,
   IconChartBar,
   IconEdit,
   IconEye,
@@ -16,6 +17,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 
+import { usePushToWaMutation } from "@/backend/whatsapp/flow/flow.query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +41,7 @@ interface FlowPageHeaderProps {
   setTabState: (tab: FlowTabEnum) => void;
   previewOpened?: boolean;
   setPreviewOpened?: (opened: boolean) => void;
+  flowDbId?: string;
 }
 
 const tabIcons = {
@@ -56,9 +59,17 @@ function FlowPageHeader({
   setTabState,
   previewOpened = false,
   setPreviewOpened,
+  flowDbId,
 }: FlowPageHeaderProps) {
   const { survey } = useContext(EditFlowContext);
   const router = useRouter();
+  const pushToWaMutation = usePushToWaMutation();
+
+  const handleSaveToWhatsapp = () => {
+    if (flowDbId) {
+      pushToWaMutation.mutate(flowDbId);
+    }
+  };
 
   const subtitle = survey?.description || "Customer Engagement";
   const isActive = true; // You can make this dynamic based on flow state
@@ -86,26 +97,41 @@ function FlowPageHeader({
           <p className={styles["flow-subtitle"]}>{subtitle}</p>
         </div>
 
-        {/* Preview Button - Only show in Edit tab */}
-        {tab === FlowTabEnum.Edit && setPreviewOpened && (
-          <Button
-            variant="outline"
-            onClick={() => setPreviewOpened(!previewOpened)}
-            className={styles["preview-button"]}
-          >
-            {previewOpened ? (
-              <>
-                <IconEyeOff size={16} className="mr-2" />
-                Hide Preview
-              </>
-            ) : (
-              <>
-                <IconEye size={16} className="mr-2" />
-                Show Preview
-              </>
-            )}
-          </Button>
-        )}
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          {/* Save to WhatsApp Button - Visible in all tabs */}
+          {flowDbId && (
+            <Button
+              variant="outline"
+              onClick={handleSaveToWhatsapp}
+              disabled={pushToWaMutation.isPending}
+              className="h-9 text-xs bg-[#25D366] hover:bg-[#128C7E] text-white border-[#25D366]"
+            >
+              <IconBrandWhatsapp size={16} className="mr-2" />
+              {pushToWaMutation.isPending ? "Syncing..." : "Save to WhatsApp"}
+            </Button>
+          )}
+          {/* Preview Button - Only show in Edit tab */}
+          {tab === FlowTabEnum.Edit && setPreviewOpened && (
+            <Button
+              variant="outline"
+              onClick={() => setPreviewOpened(!previewOpened)}
+              className={styles["preview-button"]}
+            >
+              {previewOpened ? (
+                <>
+                  <IconEyeOff size={16} className="mr-2" />
+                  Hide Preview
+                </>
+              ) : (
+                <>
+                  <IconEye size={16} className="mr-2" />
+                  Show Preview
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Row 2: Tabs Navigation */}

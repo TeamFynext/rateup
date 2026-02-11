@@ -152,7 +152,7 @@ const Footer = () => {
 
       {/* Copyright */}
       <div className="mt-12 text-center text-xs text-gray-500">
-        &copy; 2025 RateUp. All rights reserved.
+        &copy; 2026 RateUp. All rights reserved.
       </div>
     </footer>
   );
