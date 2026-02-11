@@ -152,6 +152,7 @@ const Flow = () => {
               setTabState={setTab}
               previewOpened={previewOpened}
               setPreviewOpened={setPreviewOpened}
+              flowDbId={flow.dbFlowId}
             />
             <Tabs
               value={tab}

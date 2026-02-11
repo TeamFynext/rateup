@@ -198,18 +198,6 @@ export default function FlowShare({
                   </Button>
                 </div>
               </div>
-              <div className="pt-1">
-                <Button
-                  className="w-full h-9 text-xs bg-[#25D366] hover:bg-[#128C7E] text-white shadow-sm"
-                  onClick={handleSaveToWhatsapp}
-                  disabled={pushToWaMutation.isPending}
-                >
-                  <IconBrandWhatsapp size={16} className="mr-2" />
-                  {pushToWaMutation.isPending
-                    ? "Syncing..."
-                    : "Push Flow to WhatsApp"}
-                </Button>
-              </div>
             </div>
           }
           rightTitle="How would you like to survey people?"
