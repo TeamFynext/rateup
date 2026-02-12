@@ -87,7 +87,8 @@ const getParticipantColumns = (
   t: any,
   participants: any[] = [],
   onSelectAll?: (checked: boolean) => void,
-  onResendParticipant?: (participantId: string) => void,
+  onSendIndividual?: (participantId: string) => void,
+  sendingParticipantId?: string | null,
 ): ColumnDef<any>[] => [
   {
     id: "select",
@@ -164,17 +165,24 @@ const getParticipantColumns = (
   },
   {
     id: "actions",
-    header: () => <div className="text-center">Action</div>,
+    size: 80,
+    header: () => <div className="font-medium text-center">Actions</div>,
     cell: ({ row }: { row: any }) => (
       <div className="flex justify-center">
         <Button
-          variant="ghost"
           size="sm"
-          onClick={() => onResendParticipant?.(row.original.id)}
-          className="gap-1 text-slate-600 dark:text-slate-400 hover:text-primary"
-          title="Resend to this participant"
+          variant="ghost"
+          onClick={() => onSendIndividual?.(row.original.id)}
+          disabled={!!sendingParticipantId}
+          className="hover:bg-blue-50 dark:hover:bg-blue-900/20 gap-2"
         >
-          <Send className="w-4 h-4" />
+          {sendingParticipantId === row.original.id ? (
+            <>
+              <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </>
+          ) : (
+            <Send className="w-4 h-4" />
+          )}
         </Button>
       </div>
     ),
@@ -190,8 +198,6 @@ export default function CampaignDetails() {
   const [sorting, setSorting] = useState([CONTACT_SORT]);
   const [columnFilters, setColumnFilters] = useDebouncedState([], 200);
   const [isResendModalOpen, setIsResendModalOpen] = useState(false);
-  const [selectedParticipantForResend, setSelectedParticipantForResend] =
-    useState<string | null>(null);
 
   const [pagination, setPagination] = useState({
     pageIndex: 0,
@@ -199,6 +205,9 @@ export default function CampaignDetails() {
   });
   const [selectedDripStage, setSelectedDripStage] = useState("all");
   const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
+  const [sendingParticipantId, setSendingParticipantId] = useState<
+    string | null
+  >(null);
 
   const t = useTranslations("campaign.details");
   const translations = useTranslations();
@@ -361,35 +370,10 @@ export default function CampaignDetails() {
     setIsResendModalOpen(true);
   };
 
-  const handleResendIndividualParticipant = (participantId: string) => {
-    setSelectedParticipantForResend(participantId);
-    setIsResendModalOpen(true);
-  };
-
   const handleResendSubmit = (options: ResendOptions) => {
-    let finalStatuses = options.statuses;
-
-    if (selectedParticipantForResend) {
-      const selectedParticipant = participants.find(
-        (p) => p.id === selectedParticipantForResend,
-      );
-
-      if (!selectedParticipant) {
-        toast.error("Participant not found");
-        return;
-      }
-
-      if (!selectedParticipant.status) {
-        toast.error("Invalid participant status");
-        return;
-      }
-
-      finalStatuses = [selectedParticipant.status];
-    }
-
     sendCampaignMutation.mutate(
       {
-        statuses: finalStatuses,
+        statuses: options.statuses,
         sentCampaignChoice:
           options.sendMode === SendMode.NOW
             ? SentCampaignChoice.NOW
@@ -403,12 +387,10 @@ export default function CampaignDetails() {
             : undefined,
         type: campaign.type,
         status: canSend ? CampaignStatus.ACTIVE : campaign.status,
-        participantId: selectedParticipantForResend ?? undefined,
       },
       {
         onSuccess: () => {
           setIsResendModalOpen(false);
-          setSelectedParticipantForResend(null);
         },
       },
     );
@@ -435,6 +417,31 @@ export default function CampaignDetails() {
         },
         onError: () => {
           toast.error(t("messages.dripError"));
+        },
+      },
+    );
+  };
+
+  const handleSendIndividual = (participantId: string) => {
+    setSendingParticipantId(participantId);
+    sendCampaignMutation.mutate(
+      {
+        statuses: [
+          CampaignParticipantStatus.PENDING,
+          CampaignParticipantStatus.FAILED,
+        ],
+        sentCampaignChoice: SentCampaignChoice.NOW,
+        participantId,
+        type: campaign.type,
+        status: campaign.status,
+      },
+      {
+        onSuccess: () => {
+          setSendingParticipantId(null);
+          toast.success("Message sent successfully");
+        },
+        onError: () => {
+          setSendingParticipantId(null);
         },
       },
     );
@@ -777,7 +784,8 @@ export default function CampaignDetails() {
                   t,
                   participantsQuery.data?.participants || [],
                   toggleSelectAll,
-                  handleResendIndividualParticipant,
+                  handleSendIndividual,
+                  sendingParticipantId,
                 )}
                 data={participantsQuery.data?.participants || []}
                 isPending={participantsQuery.isPending}
@@ -870,14 +878,10 @@ export default function CampaignDetails() {
 
       <ResendCampaignModal
         isOpen={isResendModalOpen}
-        onClose={() => {
-          setIsResendModalOpen(false);
-          setSelectedParticipantForResend(null);
-        }}
+        onClose={() => setIsResendModalOpen(false)}
         onSubmit={handleResendSubmit}
         isLoading={sendCampaignMutation.isPending}
-        isFirstSend={canSend && !selectedParticipantForResend}
-        isIndividualResend={!!selectedParticipantForResend}
+        isFirstSend={canSend}
         stats={{
           failed: statsQuery.data?.countFailed,
           pending: statsQuery.data?.countPending,

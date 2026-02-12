@@ -48,7 +48,6 @@ interface ResendCampaignModalProps {
   isLoading?: boolean;
   stats?: Record<string, number | undefined>;
   isFirstSend?: boolean;
-  isIndividualResend?: boolean;
 }
 
 const STATUS_OPTIONS = [
@@ -91,9 +90,11 @@ export const ResendCampaignModal = ({
   isLoading = false,
   stats = {},
   isFirstSend = false,
-  isIndividualResend = false,
 }: ResendCampaignModalProps) => {
   const t = useTranslations("campaign.resend");
+  const getToday = () => new Date().toISOString().split("T")[0];
+  const [scheduleDate, setScheduleDate] = useState(getToday());
+  const [scheduleTime, setScheduleTime] = useState("09:00");
 
   // ✅ For first send: default PENDING, for resend: default FAILED
   const [selectedStatuses, setSelectedStatuses] = useState<
@@ -105,11 +106,6 @@ export const ResendCampaignModal = ({
   );
 
   const [sendMode, setSendMode] = useState<"NOW" | "SCHEDULED">("NOW");
-
-  const getToday = () => new Date().toISOString().split("T")[0];
-  const [scheduleDate, setScheduleDate] = useState(getToday());
-
-  const [scheduleTime, setScheduleTime] = useState("09:00");
 
   const toggleStatus = (status: CampaignParticipantStatus) => {
     setSelectedStatuses((prev) =>
@@ -143,18 +139,12 @@ export const ResendCampaignModal = ({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isFirstSend
-              ? "Send Campaign"
-              : isIndividualResend
-                ? "Resend to Participant"
-                : t("title")}
+            {isFirstSend ? "Send Campaign" : t("title")}
           </DialogTitle>
           <DialogDescription>
             {isFirstSend
               ? "Choose when to send to participants"
-              : isIndividualResend
-                ? "Resend message to this participant"
-                : t("description")}
+              : t("description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -237,8 +227,8 @@ export const ResendCampaignModal = ({
             )}
           </div>
 
-          {/* STATUS SELECTION - Only for resends of multiple participants */}
-          {!isFirstSend && !isIndividualResend && (
+          {/* STATUS SELECTION - Only for resends */}
+          {!isFirstSend && (
             <div className="space-y-2">
               <Label className="font-semibold">
                 {t("participantStatus.label")}
@@ -285,9 +275,7 @@ export const ResendCampaignModal = ({
               ? t("actions.sending")
               : isFirstSend
                 ? "Send Campaign"
-                : isIndividualResend
-                  ? "Resend to Participant"
-                  : t("actions.resend")}
+                : t("actions.resend")}
           </Button>
         </DialogFooter>
       </DialogContent>
