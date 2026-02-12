@@ -839,3 +839,17 @@ export const updateCampaignMessageQueueRetryCount = (campaignId) => {
     },
   });
 };
+
+export const getCampaignParticipantCountByStatuses = (
+  campaignId: string,
+  status: Array<CampaignParticipantStatus>,
+): Promise<number> => {
+  return prisma.campaignParticipant.count({
+    where: {
+      campaignId,
+      status: {
+        in: status,
+      },
+    },
+  });
+};
