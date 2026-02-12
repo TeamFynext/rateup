@@ -1,8 +1,8 @@
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   addCampaignParticipants,
   addContactParticipants,
@@ -24,10 +24,10 @@ export const useAddContactParticipantMutation = (campaignId) => {
       queryClient.invalidateQueries({
         queryKey: ["campaigns"],
       });
-      showSuccessToast(translations("Added participants successfully"));
+      toast.success(translations("Added participants successfully"));
     },
     onError: (error: any) => {
-      showErrorToast(
+      toast.error(
         `Error adding participants: 
         ${error?.response?.data?.error}`,
       );
@@ -47,10 +47,10 @@ export const useAddGroupParticipantMutation = (campaignId) => {
       queryClient.invalidateQueries({
         queryKey: ["campaigns"],
       });
-      showSuccessToast(translations("Added group participants successfully"));
+      toast.success(translations("Added group participants successfully"));
     },
     onError: (error: any) => {
-      showErrorToast(
+      toast.error(
         `Error adding group participants: 
         ${error?.response?.data?.error}`,
       );
@@ -104,11 +104,11 @@ export const useAddCampaignParticipants = (
       queryClient.invalidateQueries({
         queryKey: ["campaigns"],
       });
-      showSuccessToast(translations("Campaign particiants added successfully"));
+      toast.success(translations("Campaign particiants added successfully"));
       onSuccess();
     },
     onError: (error: any) => {
-      showErrorToast(
+      toast.error(
         `Error on adding participants: 
         ${error?.response?.data.error}`,
       );
@@ -123,10 +123,9 @@ export const useRemoveCampaignParticipant = (campaignId: string) => {
   return useMutation({
     mutationFn: deleteCampaignParticipant,
     onSuccess() {
-      showSuccessToast(
+      toast.success(
         translations("Participants removed from campaign successfully"),
-        "campaign-participants-remove",
-        <IconCheck />,
+        { id: "campaign-participants-remove" },
       );
       queryClient.invalidateQueries({
         queryKey: ["campaignParticipants", campaignId],
@@ -136,10 +135,9 @@ export const useRemoveCampaignParticipant = (campaignId: string) => {
       });
     },
     onError(error: any) {
-      showErrorToast(
+      toast.error(
         `Error removing participants from campaign: ${error?.response?.data?.error}`,
-        "campaign-participants-remove",
-        <IconX />,
+        { id: "campaign-participants-remove" },
       );
     },
   });
@@ -154,11 +152,8 @@ export const useRemoveMulitpleGroupParticipants = (
   return useMutation({
     mutationFn: deleteMulitpleGroupParticipants,
     onSuccess() {
-      showSuccessToast(
+      toast.success(
         translations("Participants removed from campaign successfully"),
-        "campaign-mulitiple-participants-remove",
-        <IconCheck />,
-        true,
       );
       queryClient.invalidateQueries({
         queryKey: ["campaignParticipants", campaignId],
@@ -169,11 +164,9 @@ export const useRemoveMulitpleGroupParticipants = (
       onSucess();
     },
     onError(error: any) {
-      showErrorToast(
+      toast.error(
         `Error removing participants from campaign: ${error?.response?.data?.error}`,
-        "campaign-mulitiple-participants-remove",
-        <IconX />,
-        true,
+        { id: "campaign-mulitiple-participants-remove" },
       );
     },
   });

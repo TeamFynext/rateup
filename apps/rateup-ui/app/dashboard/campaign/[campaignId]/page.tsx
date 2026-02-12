@@ -50,7 +50,10 @@ import {
   ResendCampaignModal,
   ResendOptions,
 } from "@/components/Campaign/ResendCampaignModal";
-import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
+import {
+  CONTACT_SORT,
+  selectCheckBox,
+} from "@/components/Contacts/utils/utils";
 import useDebounce from "@/components/menu/hook/useDebounce";
 import { DataTable } from "@/components/Table/data-table";
 import {
@@ -175,6 +178,7 @@ const getParticipantColumns = (
           onClick={() => onSendIndividual?.(row.original.id)}
           disabled={!!sendingParticipantId}
           className="hover:bg-blue-50 dark:hover:bg-blue-900/20 gap-2"
+          title="resend message"
         >
           {sendingParticipantId === row.original.id ? (
             <>
@@ -210,7 +214,6 @@ export default function CampaignDetails() {
   >(null);
 
   const t = useTranslations("campaign.details");
-  const translations = useTranslations();
   const router = useRouter();
   const params = useParams();
   const { update } = useRouteParams();
@@ -480,7 +483,7 @@ export default function CampaignDetails() {
 
   return (
     <>
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-col relative h-full">
         {/* ── Header (fixed height) ─────────────────────────────────── */}
         <div className="shrink-0 border-b">
           <div className="px-6 py-4">
@@ -654,8 +657,8 @@ export default function CampaignDetails() {
           >
             <div className="mx-auto space-y-6">
               {/* Campaign Header Card */}
-              <Card className="shadow-sm py-2">
-                <CardContent className="p-6">
+              <Card>
+                <CardContent>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-4">
@@ -729,7 +732,7 @@ export default function CampaignDetails() {
             className="flex-1 min-h-0 flex flex-col mt-0 p-0"
           >
             {/* Toolbar (fixed height, never scrolls) */}
-            <div className="shrink-0 px-6 pt-6 pb-4 border-b border-slate-200 dark:border-slate-700">
+            <div className="shrink-0 px-6 pt-6 pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Button
@@ -740,16 +743,17 @@ export default function CampaignDetails() {
                     <Plus className="w-4 h-4" />
                     {t("participants.add")}
                   </Button>
-
-                  <Button
-                    variant="destructive"
-                    disabled={selectedIds.length === 0}
-                    onClick={() => setOpenDeleteModal(true)}
-                  >
-                    {t("participants.deleteSelected", {
-                      count: selectedIds.length,
-                    })}
-                  </Button>
+                  {selectedIds?.length > 0 && (
+                    <Button
+                      variant="destructive"
+                      disabled={selectedIds.length === 0}
+                      onClick={() => setOpenDeleteModal(true)}
+                    >
+                      {t("participants.deleteSelected", {
+                        count: selectedIds.length,
+                      })}
+                    </Button>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">

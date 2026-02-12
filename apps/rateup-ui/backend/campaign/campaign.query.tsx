@@ -1,9 +1,7 @@
-import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   campaignResponseDownloadById,
   createCampaign,
@@ -39,18 +37,15 @@ export const useCreateCampaignMutation = (teamId, type) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaigns", type] });
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
-      showSuccessToast(
-        "Campaign created successfully",
-        "campaign-create",
-        <IconCheck />,
-      );
+      toast.success("Campaign created successfully", {
+        id: "campaign-create",
+      });
     },
     onError: (error: any) => {
       if (!(error?.response?.data?.displayMessageInClient ?? false))
-        showErrorToast(
+        toast.error(
           `Error creating campaign: ${error?.response?.data?.error}`,
-          "campaign-create",
-          <IconX />,
+          { id: "campaign-create" },
         );
     },
   });
@@ -85,19 +80,15 @@ export const useUpdateCampaignMutation = (
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns", type] });
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
-      showSuccessToast(
-        "Campaign updated successfully",
-        "campaign-update",
-        <IconCheck />,
-      );
+      toast.success("Campaign updated successfully", {
+        id: "campaign-update",
+      });
       complete();
     },
     onError: (error: any) => {
-      showErrorToast(
-        `Error updating campaign: ${error?.response?.data?.error}`,
-        "campaign-delete",
-        <IconX />,
-      );
+      toast.error(`Error updating campaign: ${error?.response?.data?.error}`, {
+        id: "campaign-update",
+      });
       complete();
     },
   });
@@ -110,18 +101,14 @@ export const useDeleteCampaignMutation = (teamId, type) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
       queryClient.invalidateQueries({ queryKey: ["campaigns", type] });
-      showSuccessToast(
-        "Campaign deleted successfully.",
-        "campaign-delete",
-        <IconCheck />,
-      );
+      toast.success("Campaign deleted successfully.", {
+        id: "campaign-delete",
+      });
     },
     onError: (error: any) => {
-      showErrorToast(
-        `Error deleting campaign: ${error?.response?.data.error}`,
-        "campaign-delete",
-        <IconX />,
-      );
+      toast.error(`Error deleting campaign: ${error?.response?.data.error}`, {
+        id: "campaign-delete",
+      });
     },
   });
 };
@@ -160,27 +147,18 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
       queryClient.invalidateQueries({
         queryKey: ["campaignStats", campaignId],
       });
-      notifications.show({
-        color: "teal",
-        title:
-          res?.data?.code === "MSG_SCHEDULED"
-            ? "Sucess"
-            : "Campaign started successfully",
-        message:
-          res?.data?.code === "MSG_SCHEDULED"
-            ? (res?.data?.message ?? "Campaign scheduled successfully")
-            : "It may take a few minutes to send to all participants.",
-        autoClose: 5000,
-        loading: false,
-        icon: <IconCheck />,
-      });
+      toast.success(
+        res?.data?.code === "MSG_SCHEDULED"
+          ? (res?.data?.message ?? "Campaign scheduled successfully")
+          : "Campaign started successfully. It may take a few minutes to send to all participants.",
+        { id: "campaign-start" },
+      );
     },
     onError: (error: any) => {
       if (!(error?.response?.data?.displayMessageInClient ?? false))
-        showErrorToast(
+        toast.error(
           `${error?.response?.data?.message ?? "Error sending campaign"}`,
-          "campaign-start",
-          <IconX />,
+          { id: "campaign-start" },
         );
     },
   });
@@ -200,20 +178,14 @@ export const useCampaignResponseDownloadById = () => {
     onSuccess: () => {
       // queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
       // queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      showSuccessToast(
-        "Delivery report generated successfully.",
-        "delivery-report",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Delivery report generated successfully.", {
+        id: "delivery-report",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error generating delivery report: ${error?.response?.data.error}`,
-        "delivery-report",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error.message || "Error generating delivery report.", {
+        id: "delivery-report",
+      });
     },
   });
 };

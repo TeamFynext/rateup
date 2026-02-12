@@ -127,10 +127,7 @@ export default function CampaignsPage() {
           {/* Tabs + Actions */}
           <div className="px-6 pb-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1">
-              <Button
-                className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
-                onClick={openCreateCampaign}
-              >
+              <Button onClick={openCreateCampaign}>
                 <Plus className="w-4 h-4 mr-2" />
                 {t("header.create")}
               </Button>
@@ -235,7 +232,7 @@ export default function CampaignsPage() {
                       </Button>
                       <Button
                         size="sm"
-                        className="flex-1 bg-[#2E5BFF]"
+                        className="flex-1"
                         onClick={() => setShowFilters(false)}
                       >
                         {t("filters.actions.apply")}

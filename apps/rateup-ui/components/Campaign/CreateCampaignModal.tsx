@@ -853,7 +853,6 @@ const CreateCampaignModal = ({
                       e.preventDefault();
                       handleNext();
                     }}
-                    className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
                   >
                     {t("actions.next")}
                   </Button>
@@ -866,7 +865,6 @@ const CreateCampaignModal = ({
                         ? !isFormValid || updateCampaignMutation.isPending
                         : !isFormValid || createCampaignMutation.isPending
                     }
-                    className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
                   >
                     {isEdit
                       ? updateCampaignMutation.isPending
