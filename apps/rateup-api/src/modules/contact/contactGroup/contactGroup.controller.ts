@@ -149,7 +149,7 @@ export async function addNewContactsToGroupHandler(
     log.error(error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
-        reply.code(500).send({ error: "Contact already exist" });
+        reply.code(400).send({ error: "Contact already exist" });
       }
     } else {
       reply.code(500).send({ error: "Something went wrong" });
