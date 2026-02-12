@@ -604,3 +604,12 @@ export enum ZapierTriggers {
   NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
   CONTACT_ADDED_TO_GROUP = "contact_added_to_group",
 }
+export enum SendMode {
+  NOW = "NOW",
+  SCHEDULED = "SCHEDULED",
+}
+
+export enum SentCampaignChoice {
+  NOW = "NOW",
+  LATER = "LATER",
+}

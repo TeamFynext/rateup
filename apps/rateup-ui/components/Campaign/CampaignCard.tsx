@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
+import dayjs from "dayjs";
 import { Edit2, Eye, MoreVertical, Trash2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -162,9 +163,9 @@ export default function CampaignCard({
             {t("labels.created")}
           </span>
           <span className="text-xs text-slate-900 dark:text-slate-200">
-            {new Date(campaign.createdAt)
-              .toLocaleDateString("en-GB")
-              .replace(/\//g, "-")}
+            {campaign.createdAt
+              ? dayjs(campaign.createdAt).format("DD-MM-YYYY")
+              : "-"}
           </span>
         </div>
       </div>

@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { useDebouncedState } from "@mantine/hooks";
+import { ColumnDef } from "@tanstack/react-table";
+import dayjs from "dayjs";
 import {
   ArrowLeft,
   CheckCircle,
   Edit2,
   FileDown,
-  Filter,
   MoreVertical,
   Plus,
   RefreshCw,
@@ -27,6 +28,8 @@ import {
   CampaignParticipantStatus,
   CampaignStatus,
   CampaignType,
+  SendMode,
+  SentCampaignChoice,
 } from "@/types/enums";
 import {
   useCampaignById,
@@ -48,6 +51,7 @@ import {
 } from "@/components/Campaign/ResendCampaignModal";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
 import useDebounce from "@/components/menu/hook/useDebounce";
+import { DataTable } from "@/components/Table/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,6 +65,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,27 +74,93 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouteParams } from "@/context/RouteParamsContext";
 import { PAGE_SIZE } from "@/utils/constants";
 
 import { StatusBadge } from "../../../../components/Campaign/statusBadge";
 
-interface Participant {
-  id: string;
-  name: string;
-  phone: string;
-  status: "SENT" | "DELIVERED" | "READ" | "FAILED" | "PENDING";
-  consent: boolean;
-}
+const getParticipantColumns = (
+  selectedIds: string[],
+  toggleSelectOne: (id: string) => void,
+  t: any,
+  participants: any[] = [],
+  onSelectAll?: (checked: boolean) => void,
+): ColumnDef<any>[] => [
+  {
+    id: "select",
+    size: 50,
+    header: ({ table }: { table: any }) => {
+      const allSelected =
+        participants.length > 0 && selectedIds.length === participants.length;
+      return (
+        <Checkbox
+          checked={allSelected}
+          onCheckedChange={(checked) => {
+            if (onSelectAll) {
+              onSelectAll(checked === true);
+            }
+          }}
+          className="rounded border-slate-300 dark:border-slate-600"
+        />
+      );
+    },
+    cell: ({ row }: { row: any }) => (
+      <Checkbox
+        checked={selectedIds.includes(row.original.id)}
+        onCheckedChange={() => toggleSelectOne(row.original.id)}
+        className="rounded border-slate-300 dark:border-slate-600"
+      />
+    ),
+  },
+  {
+    accessorKey: "contact.name",
+    header: () => (
+      <div className="font-medium">{t("participants.table.name")}</div>
+    ),
+    cell: ({ row }: { row: any }) => (
+      <div className="font-medium dark:text-slate-200">
+        {row.original.contact?.name}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "contact.phone",
+    header: () => (
+      <div className="font-medium">{t("participants.table.phone")}</div>
+    ),
+    cell: ({ row }: { row: any }) => (
+      <div className="text-slate-600 dark:text-slate-400 font-mono text-sm">
+        {row.original.contact?.phone}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: () => (
+      <div className="font-medium">{t("participants.table.status")}</div>
+    ),
+    cell: ({ row }: { row: any }) => (
+      <StatusBadge status={row.original.status} />
+    ),
+  },
+  {
+    accessorKey: "contact.consent",
+    header: () => (
+      <div className="text-center font-medium">
+        {t("participants.table.consent")}
+      </div>
+    ),
+    cell: ({ row }: { row: any }) =>
+      row.original.contact?.consent ? (
+        <div className="flex justify-center">
+          <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30">
+            <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+          </div>
+        </div>
+      ) : null,
+  },
+];
 
 export default function CampaignDetails() {
   const [activeTab, setActiveTab] = useState("info");
@@ -123,9 +194,7 @@ export default function CampaignDetails() {
   }, [rawCampaignId]);
 
   const campaignQuery = useCampaignById(campaignId);
-
   const deliveryReportMutation = useCampaignResponseDownloadById();
-
   const deleteCampaignMutation = useDeleteCampaignMutation(
     campaignQuery.data?.teamId,
     campaignQuery.data?.type,
@@ -156,16 +225,6 @@ export default function CampaignDetails() {
     },
   );
 
-  const totalCount = participantsQuery.data?.totalCount ?? 0;
-
-  const totalPages = useMemo(() => {
-    if (!pagination.pageSize) return 1;
-    return Math.max(1, Math.ceil(totalCount / pagination.pageSize));
-  }, [totalCount, pagination.pageSize]);
-
-  const canPrevious = pagination.pageIndex > 0;
-  const canNext = pagination.pageIndex < totalPages - 1;
-
   useEffect(() => {
     if (campaignQuery.data) {
       update({ campaignId: campaignQuery.data.name });
@@ -185,9 +244,6 @@ export default function CampaignDetails() {
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
-
-  const isAllSelected =
-    participants.length > 0 && selectedIds.length === participants.length;
 
   if (
     !campaignId ||
@@ -251,14 +307,10 @@ export default function CampaignDetails() {
   };
 
   const handleDeliveryReport = () => {
-    toast.loading("Generating delivery report...", {
-      id: "delivery-report",
-    });
-    deliveryReportMutation.mutate({
-      campaignId,
-      selectedDripStage,
-    });
+    toast.loading("Generating delivery report...", { id: "delivery-report" });
+    deliveryReportMutation.mutate({ campaignId, selectedDripStage });
   };
+
   const isQueuing =
     campaign.status === CampaignStatus.QUEUING ||
     campaign.status === CampaignStatus.DEQUEUING;
@@ -266,14 +318,6 @@ export default function CampaignDetails() {
   const closeEditModal = () => {
     setEditingCampaign(null);
     setIsEditOpen(false);
-  };
-
-  const openAddParticipantModal = () => {
-    setIsAddParticipantOpen(true);
-  };
-
-  const closeAddParticipantModal = () => {
-    setIsAddParticipantOpen(false);
   };
 
   const handleRefresh = async () => {
@@ -292,96 +336,88 @@ export default function CampaignDetails() {
   const canSend =
     campaign.type !== CampaignType.DRIP &&
     [CampaignStatus.DRAFT, CampaignStatus.INACTIVE].includes(campaign.status);
-
-  const hasFailures = campaign.failed > 0;
-  const canResend =
-    campaign.type !== CampaignType.DRIP &&
-    campaign.failed > 0 &&
-    [
-      CampaignStatus.ACTIVE,
-      CampaignStatus.COMPLETED,
-      CampaignStatus.FAILED,
-    ].includes(campaign.status);
-
-  const handleSend = async () => {
-    try {
-      await sendCampaignMutation.mutateAsync({
-        statuses: [
-          CampaignParticipantStatus.PENDING,
-          CampaignParticipantStatus.FAILED,
-        ],
-        sentCampaignChoice: "NOW",
-        status: CampaignStatus.ACTIVE,
-        type: campaign.type,
-      });
-    } catch {
-      // error toast already handled inside hook
-    }
-  };
-  const handleResendSubmit = async (options: ResendOptions) => {
-    await sendCampaignMutation.mutateAsync({
-      statuses: options.statuses,
-      sentCampaignChoice: options.sendMode === "NOW" ? "NOW" : "LATER",
-      campaignSentAt:
-        options.sendMode === "SCHEDULED"
-          ? new Date(`${options.scheduleDate}T${options.scheduleTime}`)
-          : undefined,
+  const handleSend = () => {
+    sendCampaignMutation.mutate({
+      statuses: [
+        CampaignParticipantStatus.PENDING,
+        CampaignParticipantStatus.FAILED,
+      ],
+      sentCampaignChoice: SentCampaignChoice.NOW,
+      status: CampaignStatus.ACTIVE,
       type: campaign.type,
-      status: campaign.status,
     });
   };
 
-  const handleToggleDrip = async () => {
-    try {
-      await sendCampaignMutation.mutateAsync({
-        sentCampaignChoice: "NOW", // ✅ REQUIRED by type
+  const handleResendSubmit = (options: ResendOptions) => {
+    sendCampaignMutation.mutate(
+      {
+        statuses: options.statuses,
+        sentCampaignChoice:
+          options.sendMode === SendMode.NOW
+            ? SentCampaignChoice.NOW
+            : SentCampaignChoice.LATER,
+        campaignSentAt:
+          options.sendMode === SendMode.SCHEDULED
+            ? dayjs(
+                `${options.scheduleDate} ${options.scheduleTime}`,
+                "YYYY-MM-DD HH:mm",
+              ).toDate()
+            : undefined,
+        type: campaign.type,
+        status: campaign.status,
+      },
+      {
+        onSuccess: () => {
+          setIsResendModalOpen(false);
+        },
+      },
+    );
+  };
+
+  const handleToggleDrip = () => {
+    sendCampaignMutation.mutate(
+      {
+        sentCampaignChoice: SentCampaignChoice.NOW,
         status:
           campaign.status === CampaignStatus.INACTIVE
             ? CampaignStatus.ACTIVE
             : CampaignStatus.INACTIVE,
-        statuses: [], // ✅ DRIP does not resend by status
+        statuses: [],
         type: CampaignType.DRIP,
-      });
-
-      toast.success(
-        campaign.status === CampaignStatus.INACTIVE
-          ? t("messages.dripStarted")
-          : t("messages.dripPaused"),
-      );
-    } catch (err) {
-      toast.error(t("messages.dripError"));
-    }
+      },
+      {
+        onSuccess: () => {
+          toast.success(
+            campaign.status === CampaignStatus.INACTIVE
+              ? t("messages.dripStarted")
+              : t("messages.dripPaused"),
+          );
+        },
+        onError: () => {
+          toast.error(t("messages.dripError"));
+        },
+      },
+    );
   };
 
-  const handleResend = async () => {
-    try {
-      await sendCampaignMutation.mutateAsync({
-        statuses: [CampaignParticipantStatus.FAILED],
-        sentCampaignChoice: "RESEND_FAILED",
-        status: campaign.status,
-        type: campaign.type,
-      });
-    } catch {
-      // error toast already handled inside hook
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      setIsDeleteDialogOpen(false);
-      await deleteCampaignMutation.mutateAsync(campaignId);
-      toast.success("Campaign deleted successfully");
-      router.push("/dashboard/campaign");
-    } catch {
-      toast.error("Failed to delete campaign");
-    }
+  const handleDelete = () => {
+    deleteCampaignMutation.mutate(campaignId, {
+      onSuccess: () => {
+        setIsDeleteDialogOpen(false);
+        toast.success("Campaign deleted successfully");
+        router.push("/dashboard/campaign");
+      },
+      onError: () => {
+        toast.error("Failed to delete campaign");
+      },
+    });
   };
 
   return (
     <>
-      <div className="flex flex-col h-full overflow-hidden">
-        {/* Simple Header */}
-        <div className=" border-b ">
+      <div className="flex flex-col h-screen overflow-hidden">
+        {/* ── Header (fixed height) ─────────────────────────────────── */}
+        <div className="shrink-0 border-b">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -437,10 +473,14 @@ export default function CampaignDetails() {
           </div>
         </div>
 
-        {/* Modern Tab Navigation */}
-        <div className="  border-b ">
-          <div className="px-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex-1 min-h-0 flex flex-col"
+        >
+          {/* ── Tab nav bar (fixed height) ─────────────────────────── */}
+          <div className="shrink-0 border-b">
+            <div className="px-6">
               <div className="flex items-center justify-between">
                 <TabsList className="bg-transparent p-0 h-auto gap-2 border-0">
                   <TabsTrigger
@@ -477,6 +517,7 @@ export default function CampaignDetails() {
                     {campaign.status}
                   </Badge>
                   <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+
                   {campaign.type !== CampaignType.DRIP && !isQueuing && (
                     <Button
                       variant="outline"
@@ -485,7 +526,7 @@ export default function CampaignDetails() {
                         if (canSend) {
                           handleSend();
                         } else {
-                          setIsResendModalOpen(true); // 👈 open modal
+                          setIsResendModalOpen(true);
                         }
                       }}
                     >
@@ -524,342 +565,187 @@ export default function CampaignDetails() {
                   </Button>
                 </div>
               </div>
-            </Tabs>
+            </div>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-auto">
-          <Tabs value={activeTab}>
-            {/* Info Tab */}
-            <TabsContent value="info" className="p-6 mt-0">
-              <div className="mx-auto space-y-6">
-                {/* Campaign Header Card */}
-                <Card className="shadow-sm py-2">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
-                            <Send className="w-6 h-6 text-primary-foreground" />
+          <TabsContent
+            value="info"
+            className="flex-1 min-h-0 overflow-auto mt-0 p-6"
+          >
+            <div className="mx-auto space-y-6">
+              {/* Campaign Header Card */}
+              <Card className="shadow-sm py-2">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-linear-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
+                          <Send className="w-6 h-6 text-primary-foreground" />
+                        </div>
+                        <div className="flex-1">
+                          <h2 className="text-xl dark:text-slate-50">
+                            {campaign.name}
+                          </h2>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary">{campaign.type}</Badge>
+                            <Badge variant="outline">
+                              Team: {campaignInfo?.team}
+                            </Badge>
                           </div>
-                          <div className="flex-1">
-                            <h2 className="text-xl dark:text-slate-50">
-                              {campaign.name}
-                            </h2>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="secondary">{campaign.type}</Badge>
-                              <Badge variant="outline">
-                                Team: {campaignInfo?.team}
-                              </Badge>
+                        </div>
+                        {/* Total Participants */}
+                        <div className="px-6 py-4 rounded-xl bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-200 dark:border-slate-700">
+                          <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-lg bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center">
+                              <Users className="w-6 h-6 text-slate-700 dark:text-slate-300" />
                             </div>
-                          </div>
-                          {/* Total Participants - Prominent Display */}
-                          <div className="px-6 py-4 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-200 dark:border-slate-700">
-                            <div className="flex items-center gap-3">
-                              <div className="w-11 h-11 rounded-lg bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center">
-                                <Users className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+                            <div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">
+                                {t("overview.totalParticipants")}
                               </div>
-                              <div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">
-                                  {t("overview.totalParticipants")}
-                                </div>
-                                <div className="text-2xl text-slate-900 dark:text-slate-50">
-                                  {participantsQuery.data?.totalCount}
-                                </div>
+                              <div className="text-2xl text-slate-900 dark:text-slate-50">
+                                {participantsQuery.data?.totalCount}
                               </div>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 text-sm">
-                          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                            <span className="font-medium">
-                              {t("overview.template")}
-                            </span>
-                            <span>{campaignInfo?.template}</span>
-                          </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                          <span className="font-medium">
+                            {t("overview.template")}
+                          </span>
+                          <span>{campaignInfo?.template}</span>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleRefresh}
-                        className="text-slate-400 dark:text-slate-600 hover:text-primary hover:bg-primary/10"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                      </Button>
                     </div>
-                  </CardContent>
-                </Card>
-
-                <CampaignPerformance
-                  data={{
-                    sent: statsQuery.data?.countSent,
-                    delivered: statsQuery.data?.countDelivered,
-                    read: statsQuery.data?.countRead,
-                    pending: statsQuery.data?.countPending,
-                    failed: statsQuery.data?.countFailed,
-                  }}
-                />
-              </div>
-            </TabsContent>
-
-            {/* Participants Tab */}
-            <TabsContent value="participants" className="p-6 mt-0">
-              <div className="mx-auto">
-                {/* Modern Toolbar */}
-                <Card className="mb-4 border-slate-200 dark:border-slate-700 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          onClick={openAddParticipantModal}
-                          className="gap-2"
-                        >
-                          <Plus className="w-4 h-4" />
-                          {t("participants.add")}
-                        </Button>
-
-                        <Button
-                          variant="destructive"
-                          disabled={selectedIds.length === 0}
-                          onClick={() => setOpenDeleteModal(true)}
-                        >
-                          {t("participants.deleteSelected", {
-                            count: selectedIds.length,
-                          })}
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {/* Search */}
-                        <div className="relative w-80">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-600" />
-                          <Input
-                            placeholder={t("participants.searchPlaceholder")}
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            className="pl-9 h-9 border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50"
-                          />
-                        </div>
-
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-9 text-slate-600 dark:text-slate-400 hover:text-primary"
-                          onClick={() => setSearchInput("")}
-                        >
-                          <RotateCcw className="w-4 h-4 mr-2" />
-                          {t("participants.reset")}
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Modern Table */}
-                <Card className="border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12">
-                          <input
-                            type="checkbox"
-                            checked={isAllSelected}
-                            onChange={(e) => toggleSelectAll(e.target.checked)}
-                            className="rounded border-slate-300 dark:border-slate-600"
-                          />
-                        </TableHead>
-
-                        <TableHead className="font-medium dark:text-slate-200">
-                          {t("participants.table.name")}
-                        </TableHead>
-                        <TableHead className="font-medium dark:text-slate-200">
-                          {t("participants.table.phone")}
-                        </TableHead>
-                        <TableHead className="font-medium dark:text-slate-200">
-                          {t("participants.table.status")}
-                        </TableHead>
-                        <TableHead className="text-center font-medium dark:text-slate-200">
-                          {t("participants.table.consent")}
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {participantsQuery.data.participants?.map(
-                        (participant) => (
-                          <TableRow
-                            key={participant.id}
-                            className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                          >
-                            <TableCell>
-                              <input
-                                type="checkbox"
-                                checked={selectedIds.includes(participant.id)}
-                                onChange={() => toggleSelectOne(participant.id)}
-                                className="rounded border-slate-300 dark:border-slate-600"
-                              />
-                            </TableCell>
-
-                            <TableCell className="font-medium dark:text-slate-200">
-                              {participant.contact?.name}
-                            </TableCell>
-                            <TableCell className="text-slate-600 dark:text-slate-400 font-mono text-sm">
-                              {participant.contact?.phone}
-                            </TableCell>
-                            <TableCell>
-                              <StatusBadge status={participant.status} />
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {participant.contact.consent && (
-                                <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30">
-                                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                                </div>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ),
-                      )}
-                    </TableBody>
-                  </Table>
-
-                  {/* Real Pagination */}
-                  <div className="flex items-center justify-between px-6 py-4 border-t dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
-                    {/* Left: page controls */}
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!canPrevious}
-                        onClick={() =>
-                          setPagination((prev) => ({
-                            ...prev,
-                            pageIndex: 0,
-                          }))
-                        }
-                      >
-                        «
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!canPrevious}
-                        onClick={() =>
-                          setPagination((prev) => ({
-                            ...prev,
-                            pageIndex: prev.pageIndex - 1,
-                          }))
-                        }
-                      >
-                        ‹
-                      </Button>
-
-                      <span className="px-3 text-sm dark:text-slate-400">
-                        {t("participants.pagination.page", {
-                          pageIndex: pagination.pageIndex + 1,
-                          totalPages: totalPages || 1,
-                        })}
-                      </span>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!canNext}
-                        onClick={() =>
-                          setPagination((prev) => ({
-                            ...prev,
-                            pageIndex: prev.pageIndex + 1,
-                          }))
-                        }
-                      >
-                        ›
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!canNext}
-                        onClick={() =>
-                          setPagination((prev) => ({
-                            ...prev,
-                            pageIndex: totalPages - 1,
-                          }))
-                        }
-                      >
-                        »
-                      </Button>
-                    </div>
-
-                    {/* Right: page size + count */}
-                    <div className="flex items-center gap-6 text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-600 dark:text-slate-400">
-                          {t("participants.pagination.rowsPerPage")}
-                        </span>
-                        <select
-                          value={pagination.pageSize}
-                          onChange={(e) =>
-                            setPagination({
-                              pageIndex: 0,
-                              pageSize: Number(e.target.value),
-                            })
-                          }
-                          className="border border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                          {PAGE_SIZE.map((size) => (
-                            <option key={size} value={size}>
-                              {size}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="text-slate-700 dark:text-slate-300">
-                        <strong>{totalCount.toLocaleString()}</strong>
-                        <span className="text-slate-500 dark:text-slate-400 ml-1">
-                          {t("participants.pagination.totalRows")}
-                        </span>
-                      </div>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleRefresh}
+                      className="text-slate-400 dark:text-slate-600 hover:text-primary hover:bg-primary/10"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
                   </div>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+                </CardContent>
+              </Card>
 
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {t("dialogs.deleteCampaign.title")}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {t("dialogs.deleteCampaign.description")}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>
-                {t("dialogs.deleteCampaign.cancel")}
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive hover:bg-destructive/90"
-              >
-                {t("dialogs.deleteCampaign.confirm")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              <CampaignPerformance
+                data={{
+                  sent: statsQuery.data?.countSent,
+                  delivered: statsQuery.data?.countDelivered,
+                  read: statsQuery.data?.countRead,
+                  pending: statsQuery.data?.countPending,
+                  failed: statsQuery.data?.countFailed,
+                }}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent
+            value="participants"
+            className="flex-1 min-h-0 flex flex-col mt-0 p-0"
+          >
+            {/* Toolbar (fixed height, never scrolls) */}
+            <div className="shrink-0 px-6 pt-6 pb-4 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => setIsAddParticipantOpen(true)}
+                    className="gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {t("participants.add")}
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    disabled={selectedIds.length === 0}
+                    onClick={() => setOpenDeleteModal(true)}
+                  >
+                    {t("participants.deleteSelected", {
+                      count: selectedIds.length,
+                    })}
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="relative w-80">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-600" />
+                    <Input
+                      placeholder={t("participants.searchPlaceholder")}
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      className="pl-9 h-9 border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50"
+                    />
+                  </div>
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-9 text-slate-600 dark:text-slate-400 hover:text-primary"
+                    onClick={() => setSearchInput("")}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    {t("participants.reset")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <DataTable
+                columns={getParticipantColumns(
+                  selectedIds,
+                  toggleSelectOne,
+                  t,
+                  participantsQuery.data?.participants || [],
+                  toggleSelectAll,
+                )}
+                data={participantsQuery.data?.participants || []}
+                isPending={participantsQuery.isPending}
+                manualPagination={{
+                  pagination,
+                  onPaginationChange: setPagination,
+                  rowCount: participantsQuery.data?.totalCount || 0,
+                }}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
-      {/* Delete Participants Confirmation Dialog */}
+
+      {/* ── Dialogs (portalled, outside layout flow) ──────────────────── */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("dialogs.deleteCampaign.title")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("dialogs.deleteCampaign.description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {t("dialogs.deleteCampaign.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {t("dialogs.deleteCampaign.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -872,7 +758,6 @@ export default function CampaignDetails() {
               })}
             </AlertDialogDescription>
           </AlertDialogHeader>
-
           <AlertDialogFooter>
             <AlertDialogCancel>
               {t("dialogs.deleteParticipants.cancel")}
@@ -900,13 +785,15 @@ export default function CampaignDetails() {
           campaignType={editingCampaign.type}
         />
       )}
+
       {isAddParticipantOpen && campaignQuery.data && (
         <AddParticipantModal
-          close={closeAddParticipantModal}
+          close={() => setIsAddParticipantOpen(false)}
           campaign={campaignQuery.data}
           campaignType={campaignQuery.data.type}
         />
       )}
+
       <ResendCampaignModal
         isOpen={isResendModalOpen}
         onClose={() => setIsResendModalOpen(false)}

@@ -47,7 +47,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -99,7 +98,6 @@ const CreateCampaignModal = ({
   close,
   isEdit,
   campaign,
-  dynamicVariables = [],
   campaignType = CampaignType.WHATSAPP,
 }: CreateCampaignProps) => {
   const [activeTab, setActiveTab] = useState<"basic" | "templates">("basic");
@@ -109,8 +107,8 @@ const CreateCampaignModal = ({
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    mode: "onChange", // ✅ ADD THIS
-    reValidateMode: "onChange", // ✅ (important)
+    mode: "onChange",
+    reValidateMode: "onChange",
     defaultValues: {
       name: campaign?.name || "",
       type: campaignType,
@@ -123,6 +121,13 @@ const CreateCampaignModal = ({
       whatsappSettingsPhoneId: campaign?.whatsappSettingsPhoneId || "",
     },
   });
+
+  const teamId = campaign?.teamId || form.watch("teamId");
+  const watchedType = form.watch("type");
+  const watchedTemplate = form.watch("waTemplateId");
+  const watchedDynamicTags = form.watch("dynamicTags");
+  const templates = useTemplatesAvailableForTeam(teamId);
+
   const [dripStages, setDripStages] = useState<DripStage[]>([
     {
       id: undefined,
@@ -132,11 +137,6 @@ const CreateCampaignModal = ({
       sendAtTime: "09:00",
     },
   ]);
-  const BASIC_FIELDS: (keyof FormValues)[] = [
-    "teamId",
-    "name",
-    "whatsappSettingsPhoneId",
-  ];
 
   useEffect(() => {
     if (campaign) {
@@ -165,9 +165,10 @@ const CreateCampaignModal = ({
       }
     }
   }, [campaign, campaignType, form]);
+  const campaignTypeValue = watchedType;
 
   useEffect(() => {
-    if (form.watch("type") !== CampaignType.DRIP) {
+    if (campaignTypeValue !== CampaignType.DRIP) {
       setDripStages([
         {
           id: undefined,
@@ -178,7 +179,7 @@ const CreateCampaignModal = ({
         },
       ]);
     }
-  }, [form.watch("type")]);
+  }, [campaignTypeValue]);
 
   const addDripStage = useCallback(() => {
     setDripStages((prev) => [
@@ -212,23 +213,22 @@ const CreateCampaignModal = ({
     [],
   );
 
-  const templates = useTemplatesAvailableForTeam(form.watch("teamId"));
   const templatesData = useMemo(() => {
     return (
       templates
-        ?.filter(
-          (t) => t?.data?.status === "APPROVED", // ✅ Meta approved only
-        )
+        ?.filter((t) => t?.data?.status === "APPROVED")
         .map((t) => ({
           value: t.id,
           label: t.data?.name,
         })) || []
     );
   }, [templates]);
+
   const selectedTemplate = useMemo(() => {
-    if (!form.watch("waTemplateId")) return null;
-    return templates?.find((t) => t.id === form.watch("waTemplateId"));
-  }, [templates, form.watch("waTemplateId")]);
+    if (!watchedTemplate) return null;
+    return templates?.find((t) => t.id === watchedTemplate);
+  }, [templates, watchedTemplate]);
+
   const extractedDynamicVariables = useMemo(() => {
     if (!selectedTemplate) return [];
 
@@ -238,16 +238,15 @@ const CreateCampaignModal = ({
 
     const matches = bodyText.match(/{{\d+}}/g) || [];
 
-    return Array.from(new Set(matches)); // ["{{1}}", "{{2}}"]
+    return Array.from(new Set(matches));
   }, [selectedTemplate]);
+
   const lastTemplateRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const templateId = form.getValues("waTemplateId");
+    if (!watchedTemplate || watchedTemplate === lastTemplateRef.current) return;
 
-    if (!templateId || templateId === lastTemplateRef.current) return;
-
-    lastTemplateRef.current = templateId;
+    lastTemplateRef.current = watchedTemplate;
 
     if (extractedDynamicVariables.length > 0) {
       form.setValue(
@@ -261,10 +260,10 @@ const CreateCampaignModal = ({
     } else {
       form.setValue("dynamicTags", []);
     }
-  }, [form.watch("waTemplateId")]);
+  }, [watchedTemplate]);
 
   const createCampaignMutation = useCreateCampaignMutation(
-    form.watch("teamId"),
+    teamId,
     campaignType,
   );
   const updateCampaignMutation = useUpdateCampaignMutation(
@@ -277,7 +276,7 @@ const CreateCampaignModal = ({
   const isFormValid = useMemo(() => {
     const { errors } = form.formState;
 
-    if (form.watch("type") === CampaignType.DRIP) {
+    if (watchedType === CampaignType.DRIP) {
       const hasInvalidStages = dripStages.some((stage) => !stage.templateId);
       const hasOtherErrors = Object.keys(errors).some(
         (key) => key !== "waTemplateId" && key !== "dynamicTags",
@@ -288,10 +287,9 @@ const CreateCampaignModal = ({
     const hasNonTemplateErrors = Object.keys(errors).some(
       (key) => key !== "waTemplateId" && key !== "dynamicTags",
     );
-    const hasTemplate = !!form.watch("waTemplateId");
-    const dynamicTags = form.watch("dynamicTags") || [];
+    const hasTemplate = !!watchedTemplate;
+    const dynamicTags = watchedDynamicTags || [];
 
-    // Check if all required dynamic tags are filled
     const allDynamicTagsFilled =
       extractedDynamicVariables.length === 0 ||
       (dynamicTags.length === extractedDynamicVariables.length &&
@@ -300,9 +298,9 @@ const CreateCampaignModal = ({
     return !hasNonTemplateErrors && hasTemplate && allDynamicTagsFilled;
   }, [
     form.formState.errors,
-    form.watch("type"),
-    form.watch("waTemplateId"),
-    form.watch("dynamicTags"),
+    watchedType,
+    watchedTemplate,
+    watchedDynamicTags,
     dripStages,
     extractedDynamicVariables,
   ]);
@@ -343,7 +341,7 @@ const CreateCampaignModal = ({
           undefined;
 
         if (flowId) {
-          values.flowId = flowId; // only set if it actually has a value
+          values.flowId = flowId;
         }
       }
 
@@ -388,6 +386,7 @@ const CreateCampaignModal = ({
       campaign?.id,
       form,
       close,
+      t,
     ],
   );
 
@@ -412,152 +411,163 @@ const CreateCampaignModal = ({
 
   return (
     <Dialog open onOpenChange={(open) => !open && close()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {isEdit ? t("header.edit") : t("header.create")}
-            <Badge variant="secondary" className="gap-1">
-              {form.watch("type") === CampaignType.DRIP ? (
-                <IconWand className="h-3 w-3" />
-              ) : (
-                <IconRocket className="h-3 w-3" />
-              )}
-              {form.watch("type") === CampaignType.DRIP
-                ? t("badge.drip")
-                : t("badge.whatsapp")}
-            </Badge>
-          </DialogTitle>
-          <DialogDescription>
-            {isEdit ? t("description.edit") : t("description.create")}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col gap-0">
+        {/* Header - Fixed at top */}
+        <div className="px-6 pt-6 pb-4 border-b">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {isEdit ? t("header.edit") : t("header.create")}
+              <Badge variant="secondary" className="gap-1">
+                {watchedType === CampaignType.DRIP ? (
+                  <IconWand className="h-3 w-3" />
+                ) : (
+                  <IconRocket className="h-3 w-3" />
+                )}
+                {watchedType === CampaignType.DRIP
+                  ? t("badge.drip")
+                  : t("badge.whatsapp")}
+              </Badge>
+            </DialogTitle>
+            <DialogDescription>
+              {isEdit ? t("description.edit") : t("description.create")}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
         <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as typeof activeTab)}
+          className="flex flex-col flex-1 min-h-0"
         >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="basic">{t("tabs.basic")}</TabsTrigger>
-            <TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger>
-          </TabsList>
+          {/* Tab List */}
+          <div className="px-6 pt-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="basic">{t("tabs.basic")}</TabsTrigger>
+              <TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger>
+            </TabsList>
+          </div>
 
           <Form {...form}>
             <form
               id="create-campaign-form"
               onSubmit={form.handleSubmit(handleSubmit)}
+              className="flex flex-col flex-1 min-h-0"
             >
-              <TabsContent value="basic" className="space-y-4 mt-4">
-                <div className="space-y-4">
-                  {!isEdit && (
+              {/* Scrollable Content Area */}
+              <div className="flex-1 overflow-y-auto px-6 pb-4">
+                <TabsContent value="basic" className="space-y-4 mt-4 m-0">
+                  <div className="space-y-4">
+                    {!isEdit && (
+                      <FormField
+                        control={form.control}
+                        name="teamId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.team")}</FormLabel>
+                            <FormControl>
+                              <TeamSelector {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
                     <FormField
                       control={form.control}
-                      name="teamId"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t("fields.team")}</FormLabel>
+                          <FormLabel>{t("fields.name")}</FormLabel>
                           <FormControl>
-                            <TeamSelector {...field} />
+                            <Input
+                              placeholder={t("placeholders.name")}
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  )}
 
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("fields.name")}</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t("placeholders.name")}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="whatsappSettingsPhoneId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("fields.phone")}</FormLabel>
+                          <FormControl>
+                            <AccountSelector {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="whatsappSettingsPhoneId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("fields.phone")}</FormLabel>
-                        <FormControl>
-                          <AccountSelector {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-                    <CardContent className="pt-4">
-                      <FormField
-                        control={form.control}
-                        name="useUserConsent"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start justify-between space-y-0">
-                            <div className="space-y-1 flex-1">
-                              <div className="flex items-center gap-2">
-                                <IconCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                <FormLabel className="font-medium">
-                                  {t("consent.label")}
-                                </FormLabel>
+                    <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+                      <CardContent className="pt-4">
+                        <FormField
+                          control={form.control}
+                          name="useUserConsent"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start justify-between space-y-0">
+                              <div className="space-y-1 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <IconCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                  <FormLabel className="font-medium">
+                                    {t("consent.label")}
+                                  </FormLabel>
+                                </div>
+                                <FormDescription className="text-xs">
+                                  {field.value
+                                    ? t("consent.descriptionEnabled")
+                                    : t("consent.descriptionDisabled")}
+                                </FormDescription>
+                                <p className="text-xs text-blue-600 dark:text-blue-400">
+                                  {t("consent.recommended")}
+                                </p>
                               </div>
-                              <FormDescription className="text-xs">
-                                {field.value
-                                  ? t("consent.descriptionEnabled")
-                                  : t("consent.descriptionDisabled")}
-                              </FormDescription>
-                              <p className="text-xs text-blue-600 dark:text-blue-400">
-                                {t("consent.recommended")}
-                              </p>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </CardContent>
-                  </Card>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </CardContent>
+                    </Card>
 
-                  {campaignType === CampaignType.DRIP && (
-                    <Alert>
-                      <IconInfoCircle className="h-4 w-4" />
-                      <AlertDescription>{t("alert.dripInfo")}</AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-              </TabsContent>
+                    {campaignType === CampaignType.DRIP && (
+                      <Alert>
+                        <IconInfoCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          {t("alert.dripInfo")}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                </TabsContent>
 
-              <TabsContent value="templates" className="mt-4">
-                {form.watch("type") === CampaignType.DRIP ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                        {t("drip.header", { count: dripStages.length })}
-                      </p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addDripStage}
-                      >
-                        <IconPlus className="mr-2 h-4 w-4" />
-                        {t("drip.addStage")}
-                      </Button>
-                    </div>
+                <TabsContent value="templates" className="mt-4 m-0">
+                  {watchedType === CampaignType.DRIP ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                          {t("drip.header", { count: dripStages.length })}
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={addDripStage}
+                        >
+                          <IconPlus className="mr-2 h-4 w-4" />
+                          {t("drip.addStage")}
+                        </Button>
+                      </div>
 
-                    <ScrollArea className="h-[400px] pr-4">
                       <div className="space-y-3">
                         {dripStages.map((stage, idx) => (
                           <Card key={idx} className="bg-muted/50">
@@ -719,154 +729,156 @@ const CreateCampaignModal = ({
                           </Card>
                         ))}
                       </div>
-                    </ScrollArea>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      {t("broadcast.description")}
-                    </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        {t("broadcast.description")}
+                      </p>
 
-                    <FormField
-                      control={form.control}
-                      name="waTemplateId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.template")}</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            disabled={templatesData.length === 0}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={
-                                    templatesData.length === 0
-                                      ? t("placeholders.noTemplates")
-                                      : t("placeholders.selectTemplate")
-                                  }
-                                />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {templatesData.map((template) => (
-                                <SelectItem
-                                  key={template.value}
-                                  value={template.value}
-                                >
-                                  {template.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {extractedDynamicVariables.length > 0 && (
-                      <div className="space-y-3">
-                        <div>
-                          <h4 className="text-sm font-medium">
-                            {t("dynamicVariables.title")}
-                          </h4>
-                          <p className="text-xs text-muted-foreground">
-                            {t("dynamicVariables.description")}
-                          </p>
-                        </div>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {extractedDynamicVariables.map((_, i) => (
-                            <FormField
-                              key={i}
-                              control={form.control}
-                              name={`dynamicTags.${i}`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs">
-                                    {t("dynamicVariables.variable", {
-                                      num: i + 1,
-                                    })}
-                                  </FormLabel>
-                                  <Select
-                                    onValueChange={(val) => {
-                                      field.onChange(val);
-                                      // Trigger validation on all fields to update isFormValid
-                                      setTimeout(() => {
-                                        form.trigger();
-                                      }, 0);
-                                    }}
-                                    value={field.value || ""}
+                      <FormField
+                        control={form.control}
+                        name="waTemplateId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("fields.template")}</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              disabled={templatesData.length === 0}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue
+                                    placeholder={
+                                      templatesData.length === 0
+                                        ? t("placeholders.noTemplates")
+                                        : t("placeholders.selectTemplate")
+                                    }
+                                  />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {templatesData.map((template) => (
+                                  <SelectItem
+                                    key={template.value}
+                                    value={template.value}
                                   >
-                                    <FormControl>
-                                      <SelectTrigger className="h-9">
-                                        <SelectValue
-                                          placeholder={t(
-                                            "placeholders.selectTag",
-                                          )}
-                                        />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="name">
-                                        {t("dynamicVariables.name")}
-                                      </SelectItem>
-                                      {customFields?.map((customField) => (
-                                        <SelectItem
-                                          key={customField.slug}
-                                          value={customField.slug}
-                                        >
-                                          {customField.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-            </form>
-            <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={close}>
-                {t("actions.cancel")}
-              </Button>
+                                    {template.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-              {activeTab === "basic" ? (
-                <Button
-                  type="button" // ✅ MUST be button
-                  onClick={handleNext} // ✅ NO submit
-                  className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
-                >
-                  {t("actions.next")}
+                      {extractedDynamicVariables.length > 0 && (
+                        <div className="space-y-3">
+                          <div>
+                            <h4 className="text-sm font-medium">
+                              {t("dynamicVariables.title")}
+                            </h4>
+                            <p className="text-xs text-muted-foreground">
+                              {t("dynamicVariables.description")}
+                            </p>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {extractedDynamicVariables.map((_, i) => (
+                              <FormField
+                                key={i}
+                                control={form.control}
+                                name={`dynamicTags.${i}`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">
+                                      Variable {i + 1}
+                                    </FormLabel>
+                                    <Select
+                                      onValueChange={(val) => {
+                                        field.onChange(val);
+                                        setTimeout(() => {
+                                          form.trigger();
+                                        }, 0);
+                                      }}
+                                      value={field.value || ""}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger className="h-9">
+                                          <SelectValue
+                                            placeholder={t(
+                                              "placeholders.selectTag",
+                                            )}
+                                          />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="name">
+                                          {t("dynamicVariables.name")}
+                                        </SelectItem>
+                                        {customFields?.map((customField) => (
+                                          <SelectItem
+                                            key={customField.slug}
+                                            value={customField.slug}
+                                          >
+                                            {customField.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </TabsContent>
+              </div>
+
+              {/* Footer - Fixed at bottom */}
+              <DialogFooter className="px-6 py-4 border-t bg-background">
+                <Button type="button" variant="outline" onClick={close}>
+                  {t("actions.cancel")}
                 </Button>
-              ) : (
-                <Button
-                  type="submit" // ✅ ONLY submit button
-                  form="create-campaign-form"
-                  disabled={
-                    isEdit
+
+                {activeTab === "basic" ? (
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNext();
+                    }}
+                    className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
+                  >
+                    {t("actions.next")}
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    form="create-campaign-form"
+                    disabled={
+                      isEdit
+                        ? !isFormValid || updateCampaignMutation.isPending
+                        : !isFormValid || createCampaignMutation.isPending
+                    }
+                    className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
+                  >
+                    {isEdit
                       ? updateCampaignMutation.isPending
-                      : !isFormValid || createCampaignMutation.isPending
-                  }
-                  className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
-                >
-                  {isEdit
-                    ? updateCampaignMutation.isPending
-                      ? t("actions.updating")
-                      : t("actions.update")
-                    : createCampaignMutation.isPending
-                      ? t("actions.creating")
-                      : t("actions.create")}
-                </Button>
-              )}
-            </DialogFooter>
+                        ? t("actions.updating")
+                        : t("actions.update")
+                      : createCampaignMutation.isPending
+                        ? t("actions.creating")
+                        : t("actions.create")}
+                  </Button>
+                )}
+              </DialogFooter>
+            </form>
           </Form>
         </Tabs>
       </DialogContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   IconFolderOpen,
@@ -48,7 +48,7 @@ import {
 } from "../../types/enums";
 import { PAGE_SIZE } from "../../utils/constants";
 import { showWarnToast } from "../../utils/notifications";
-import ContactPagination from "../Contacts/ContactPagination";
+import StatePagination from "./CampaignContactPagination";
 
 interface AddParticipantModalProps {
   close: () => void;
@@ -80,7 +80,6 @@ const AddParticipantModal = ({
   });
 
   const { data, isPending } = useContacts(pagination, debouncedSearch);
-  const translations = useTranslations();
   const { data: contactGroup, isLoading: groupIsLoading } =
     useContactGroupsByTeamId(campaign?.teamId);
   const { data: campaignData, isPending: isAllCampaignLoading } =
@@ -96,13 +95,19 @@ const AddParticipantModal = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchText);
+
+      // ✅ Reset to first page when searching
+      setPagination((prev) => ({
+        ...prev,
+        pageIndex: 0,
+      }));
     }, 200);
 
     return () => clearTimeout(timer);
   }, [searchText]);
 
   const contacts = data?.users;
-  const isSelectedAll = (() => {
+  const isSelectedAll = useMemo(() => {
     if (selectedTab === CampaignParticipantSource.INDIVIDUAL) {
       return (
         contacts?.length > 0 && selectedContacts.length === contacts.length
@@ -111,7 +116,8 @@ const AddParticipantModal = ({
 
     if (selectedTab === CampaignParticipantSource.GROUP) {
       const selectableGroups =
-        contactGroup?.data?.filter((g) => g?._count.contacts) || [];
+        contactGroup?.data?.filter((g) => g?._count?.contacts) || [];
+
       return (
         selectableGroups.length > 0 &&
         selectedGroups.length === selectableGroups.length
@@ -121,6 +127,7 @@ const AddParticipantModal = ({
     if (selectedTab === CampaignParticipantSource.CAMPAIGN) {
       const selectableCampaigns =
         campaignData?.data?.filter((c) => c?.campaignParticipantsCount) || [];
+
       return (
         selectableCampaigns.length > 0 &&
         selectedCampaigns.length === selectableCampaigns.length
@@ -128,7 +135,15 @@ const AddParticipantModal = ({
     }
 
     return false;
-  })();
+  }, [
+    selectedTab,
+    contacts,
+    selectedContacts,
+    contactGroup?.data,
+    selectedGroups,
+    campaignData?.data,
+    selectedCampaigns,
+  ]);
 
   const handleSubmit = () => {
     if (
@@ -173,28 +188,35 @@ const AddParticipantModal = ({
   const disableSelectAllIndividual =
     selectedTab === CampaignParticipantSource.INDIVIDUAL &&
     selectableContacts.length === 0;
+
   function handleSelectAll(checked: boolean) {
-    if (selectedTab === CampaignParticipantSource.INDIVIDUAL) {
-      setSelectedContacts(checked ? contacts || [] : []);
-      return;
-    }
+    switch (selectedTab) {
+      case CampaignParticipantSource.INDIVIDUAL: {
+        setSelectedContacts(checked ? (contacts ?? []) : []);
+        break;
+      }
 
-    if (selectedTab === CampaignParticipantSource.GROUP) {
-      setSelectedGroups(
-        checked
-          ? contactGroup?.data?.filter((g) => g?._count.contacts) || []
-          : [],
-      );
-      return;
-    }
+      case CampaignParticipantSource.GROUP: {
+        const selectableGroups =
+          contactGroup?.data?.filter((g) => (g?._count?.contacts ?? 0) > 0) ??
+          [];
 
-    if (selectedTab === CampaignParticipantSource.CAMPAIGN) {
-      setSelectedCampaigns(
-        checked
-          ? campaignData?.data?.filter((c) => c?.campaignParticipantsCount) ||
-              []
-          : [],
-      );
+        setSelectedGroups(checked ? selectableGroups : []);
+        break;
+      }
+
+      case CampaignParticipantSource.CAMPAIGN: {
+        const selectableCampaigns =
+          campaignData?.data?.filter(
+            (c) => (c?.campaignParticipantsCount ?? 0) > 0,
+          ) ?? [];
+
+        setSelectedCampaigns(checked ? selectableCampaigns : []);
+        break;
+      }
+
+      default:
+        break;
     }
   }
 
@@ -209,7 +231,9 @@ const AddParticipantModal = ({
         g.name.toLowerCase().includes(searchText.toLowerCase()),
       )
     : campaignData?.data;
-  const totalPageCount = (data?.totalCount ?? 1) / pagination.pageSize;
+  const totalPageCount = Math.ceil(
+    (data?.totalCount ?? 0) / pagination.pageSize,
+  );
 
   const getSelectedCount = () => {
     return (
@@ -219,10 +243,11 @@ const AddParticipantModal = ({
 
   return (
     <Dialog open onOpenChange={(open) => !open && close()}>
-      <DialogContent className="max-w-5xl h-[90vh] flex flex-col overflow-hidden">
+      <DialogContent className="max-w-xl! sm:max-w-2xl! h-[85vh] flex flex-col overflow-hidden">
+        {/* <DialogContent className="max-w-5xl h-[90vh] flex flex-col overflow-hidden"> */}
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <IconUsers className="h-5 w-5 text-[#2E5BFF]" />
+            <IconUsers className="h-5 w-5 text-primary" />
             {t("title")}
           </DialogTitle>
           <DialogDescription>{t("description")}</DialogDescription>
@@ -317,7 +342,7 @@ const AddParticipantModal = ({
 
                 {isPending || isAllCampaignLoading || groupIsLoading ? (
                   <div className="flex items-center justify-center flex-1">
-                    <div className="w-8 h-8 border-4 border-[#2E5BFF] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                   </div>
                 ) : (
                   <>
@@ -422,10 +447,11 @@ const AddParticipantModal = ({
                     {selectedTab === CampaignParticipantSource.INDIVIDUAL &&
                       filteredContacts?.length > 0 && (
                         <div className="mt-0">
-                          <ContactPagination
+                          <StatePagination
+                            totalItems={data?.totalCount ?? 0}
                             pagination={pagination}
                             setPagination={setPagination}
-                            totalPageCount={totalPageCount}
+                            pageSizeOptions={PAGE_SIZE.map(Number)}
                           />
                         </div>
                       )}
@@ -443,7 +469,7 @@ const AddParticipantModal = ({
                   </h3>
                   <Badge
                     variant="secondary"
-                    className="bg-[#2E5BFF]/10 text-[#2E5BFF]"
+                    className="text-primary bg-primary/10"
                   >
                     {t("select.items", { count: getSelectedCount() })}
                   </Badge>
@@ -518,7 +544,7 @@ const AddParticipantModal = ({
                 selectedCampaigns.length > 0 &&
                 selectedStatus.length === 0)
             }
-            className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90 gap-2"
+            className="bg-primary hover:bg-primary/90 gap-2"
           >
             {addCampaignParticipants.isPending ? (
               <>
@@ -555,9 +581,14 @@ export const Individual = ({
   const isSelected = selectedContacts.some((c) => c?.id === customer?.id);
 
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-background hover:border-[#2E5BFF] hover:bg-[#2E5BFF]/5 transition-all">
+    <div
+      className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-background hover:border-primary hover:bg-primary/5
+ transition-all"
+    >
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-medium truncate">{customer?.name}</h4>
+        <h4 className="font-medium text-sm truncate max-w-42.5">
+          {customer?.name}
+        </h4>
         <p className="text-xs text-slate-500 font-mono">{customer?.phone}</p>
       </div>
       {isSelected ? (
@@ -612,7 +643,9 @@ export const CustomerGroup = ({
   return (
     <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-white hover:border-[#2E5BFF] hover:bg-[#2E5BFF]/5 transition-all">
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-medium truncate">{group?.name}</h4>
+        <h4 className="font-medium text-sm truncate max-w-[170px]">
+          {group?.name}
+        </h4>
         <p className="text-xs text-slate-500">
           {t("labels.members", { count: memberCount })}
         </p>
@@ -663,7 +696,9 @@ const CustomerCampaign = ({
   return (
     <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-white hover:border-[#2E5BFF] hover:bg-[#2E5BFF]/5 transition-all">
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-medium truncate">{campaign?.name}</h4>
+        <h4 className="font-medium text-sm truncate max-w-[170px]">
+          {campaign?.name}
+        </h4>
         <p className="text-xs text-slate-500">
           {t("labels.participants", {
             count: campaign?.campaignParticipantsCount || 0,

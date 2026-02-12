@@ -7,10 +7,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { CampaignParticipantStatus } from "@/types/enums";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
 
@@ -35,7 +31,7 @@ export interface ResendOptions {
 interface ResendCampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (options: ResendOptions) => Promise<void>;
+  onSubmit: (options: ResendOptions) => void;
   isLoading?: boolean;
   stats?: Record<string, number | undefined>;
 }
@@ -113,7 +109,7 @@ export const ResendCampaignModal = ({
     return stats?.[map[status]] ?? 0;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (selectedStatuses.length === 0) {
       toast.error(t("errors.selectStatus"));
       return;
@@ -124,14 +120,12 @@ export const ResendCampaignModal = ({
       return;
     }
 
-    await onSubmit({
+    onSubmit({
       sendMode,
       scheduleDate: sendMode === "SCHEDULED" ? scheduleDate : undefined,
       scheduleTime: sendMode === "SCHEDULED" ? scheduleTime : undefined,
       statuses: selectedStatuses,
     });
-
-    onClose();
   };
 
   return (
