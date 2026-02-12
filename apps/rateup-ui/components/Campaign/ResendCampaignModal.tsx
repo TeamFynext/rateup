@@ -2,12 +2,20 @@
 
 import { useState } from "react";
 
-import { AlertCircle, Calendar, CalendarIcon, Clock, Send } from "lucide-react";
+import { format } from "date-fns";
+import {
+  AlertCircle,
+  CalendarIcon,
+  ChevronDownIcon,
+  Clock,
+  Send,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { CampaignParticipantStatus } from "@/types/enums";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +26,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
 
@@ -34,6 +47,8 @@ interface ResendCampaignModalProps {
   onSubmit: (options: ResendOptions) => void;
   isLoading?: boolean;
   stats?: Record<string, number | undefined>;
+  isFirstSend?: boolean;
+  isIndividualResend?: boolean;
 }
 
 const STATUS_OPTIONS = [
@@ -75,16 +90,25 @@ export const ResendCampaignModal = ({
   onSubmit,
   isLoading = false,
   stats = {},
+  isFirstSend = false,
+  isIndividualResend = false,
 }: ResendCampaignModalProps) => {
   const t = useTranslations("campaign.resend");
 
-  // ✅ OLD UI parity: default FAILED
+  // ✅ For first send: default PENDING, for resend: default FAILED
   const [selectedStatuses, setSelectedStatuses] = useState<
     CampaignParticipantStatus[]
-  >([CampaignParticipantStatus.FAILED]);
+  >(
+    isFirstSend
+      ? [CampaignParticipantStatus.PENDING]
+      : [CampaignParticipantStatus.FAILED],
+  );
 
   const [sendMode, setSendMode] = useState<"NOW" | "SCHEDULED">("NOW");
-  const [scheduleDate, setScheduleDate] = useState("");
+
+  const getToday = () => new Date().toISOString().split("T")[0];
+  const [scheduleDate, setScheduleDate] = useState(getToday());
+
   const [scheduleTime, setScheduleTime] = useState("09:00");
 
   const toggleStatus = (status: CampaignParticipantStatus) => {
@@ -93,20 +117,6 @@ export const ResendCampaignModal = ({
         ? prev.filter((s) => s !== status)
         : [...prev, status],
     );
-  };
-
-  const getToday = () => new Date().toISOString().split("T")[0];
-
-  const getStatusCount = (status: CampaignParticipantStatus) => {
-    const map: Record<CampaignParticipantStatus, string> = {
-      FAILED: "failed",
-      PENDING: "pending",
-      SENT: "sent",
-      DELIVERED: "delivered",
-      READ: "read",
-      COMPLETED: "completed",
-    };
-    return stats?.[map[status]] ?? 0;
   };
 
   const handleSubmit = () => {
@@ -132,8 +142,20 @@ export const ResendCampaignModal = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t("title")}</DialogTitle>
-          <DialogDescription>{t("description")}</DialogDescription>
+          <DialogTitle>
+            {isFirstSend
+              ? "Send Campaign"
+              : isIndividualResend
+                ? "Resend to Participant"
+                : t("title")}
+          </DialogTitle>
+          <DialogDescription>
+            {isFirstSend
+              ? "Choose when to send to participants"
+              : isIndividualResend
+                ? "Resend message to this participant"
+                : t("description")}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
@@ -165,76 +187,90 @@ export const ResendCampaignModal = ({
             </div>
 
             {sendMode === "SCHEDULED" && (
-              <div className="flex items-center gap-1 p-1 bg-muted rounded-xl w-fit">
-                {/* Date */}
-                <div className="relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-background hover:shadow-sm transition-all cursor-pointer">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">
-                    {scheduleDate || t("sendMode.date")}
-                  </span>
-                  <Input
-                    type="date"
-                    min={getToday()}
-                    value={scheduleDate}
-                    onChange={(e) => setScheduleDate(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                  />
-                </div>
+              <div className="flex items-center gap-2 p-1 bg-muted rounded-xl w-fit">
+                {/* DATE PICKER */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-background hover:shadow-sm transition-all"
+                    >
+                      <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">
+                        {scheduleDate
+                          ? format(new Date(scheduleDate), "PPP")
+                          : t("sendMode.date")}
+                      </span>
+                      <ChevronDownIcon className="w-4 h-4" />
+                    </Button>
+                  </PopoverTrigger>
 
-                <div className="w-px h-4 bg-border" />
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={
+                        scheduleDate ? new Date(scheduleDate) : undefined
+                      }
+                      onSelect={(date) => {
+                        if (!date) return;
+                        setScheduleDate(date.toISOString().split("T")[0]);
+                      }}
+                      disabled={(date) =>
+                        date < new Date(new Date().setHours(0, 0, 0, 0))
+                      }
+                      captionLayout="dropdown"
+                    />
+                  </PopoverContent>
+                </Popover>
 
-                {/* Time */}
-                <div className="relative flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-background hover:shadow-sm transition-all cursor-pointer">
+                {/* TIME PICKER */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background">
                   <Clock className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">
-                    {scheduleTime || t("sendMode.time")}
-                  </span>
                   <Input
                     type="time"
                     value={scheduleTime}
                     onChange={(e) => setScheduleTime(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                    className="border-0 p-0 h-auto bg-transparent shadow-none focus-visible:ring-0"
                   />
                 </div>
               </div>
             )}
           </div>
 
-          {/* STATUS SELECTION */}
-          <div className="space-y-2">
-            <Label className="font-semibold">
-              {t("participantStatus.label")}
-            </Label>
+          {/* STATUS SELECTION - Only for resends of multiple participants */}
+          {!isFirstSend && !isIndividualResend && (
+            <div className="space-y-2">
+              <Label className="font-semibold">
+                {t("participantStatus.label")}
+              </Label>
 
-            <div className="flex flex-wrap gap-2">
-              {STATUS_OPTIONS.map((opt) => {
-                const isSelected = selectedStatuses.includes(opt.value);
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => toggleStatus(opt.value)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all cursor-pointer
-            ${isSelected ? "border-transparent bg-muted shadow-sm" : "border-border bg-transparent opacity-50 hover:opacity-80"}`}
-                  >
-                    <span
-                      className={`w-2 h-2 rounded-full ${opt.color.replace("text-", "bg-")}`}
-                    />
-                    <span className={opt.color}>{t(opt.labelKey)}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {getStatusCount(opt.value)}
-                    </span>
-                  </button>
-                );
-              })}
+              <div className="flex flex-wrap gap-2">
+                {STATUS_OPTIONS.map((opt) => {
+                  const isSelected = selectedStatuses.includes(opt.value);
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => toggleStatus(opt.value)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all cursor-pointer
+              ${isSelected ? "border-transparent bg-muted shadow-sm" : "border-border bg-transparent opacity-50 hover:opacity-80"}`}
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full ${opt.color.replace("text-", "bg-")}`}
+                      />
+                      <span className={opt.color}>{t(opt.labelKey)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedStatuses.length === 0 && (
+                <p className="text-xs text-destructive flex items-center gap-1.5">
+                  <AlertCircle className="w-3 h-3" />
+                  {t("participantStatus.required")}
+                </p>
+              )}
             </div>
-
-            {selectedStatuses.length === 0 && (
-              <p className="text-xs text-destructive flex items-center gap-1.5">
-                <AlertCircle className="w-3 h-3" />
-                {t("participantStatus.required")}
-              </p>
-            )}
-          </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -245,7 +281,13 @@ export const ResendCampaignModal = ({
             onClick={handleSubmit}
             disabled={isLoading || selectedStatuses.length === 0}
           >
-            {isLoading ? t("actions.sending") : t("actions.resend")}
+            {isLoading
+              ? t("actions.sending")
+              : isFirstSend
+                ? "Send Campaign"
+                : isIndividualResend
+                  ? "Resend to Participant"
+                  : t("actions.resend")}
           </Button>
         </DialogFooter>
       </DialogContent>

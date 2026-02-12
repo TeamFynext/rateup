@@ -17,6 +17,7 @@ import {
   RotateCcw,
   Search,
   Send,
+  Square,
   Trash2,
   TrendingUp,
   Users,
@@ -86,6 +87,7 @@ const getParticipantColumns = (
   t: any,
   participants: any[] = [],
   onSelectAll?: (checked: boolean) => void,
+  onResendParticipant?: (participantId: string) => void,
 ): ColumnDef<any>[] => [
   {
     id: "select",
@@ -160,6 +162,23 @@ const getParticipantColumns = (
         </div>
       ) : null,
   },
+  {
+    id: "actions",
+    header: () => <div className="text-center">Action</div>,
+    cell: ({ row }: { row: any }) => (
+      <div className="flex justify-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onResendParticipant?.(row.original.id)}
+          className="gap-1 text-slate-600 dark:text-slate-400 hover:text-primary"
+          title="Resend to this participant"
+        >
+          <Send className="w-4 h-4" />
+        </Button>
+      </div>
+    ),
+  },
 ];
 
 export default function CampaignDetails() {
@@ -171,6 +190,8 @@ export default function CampaignDetails() {
   const [sorting, setSorting] = useState([CONTACT_SORT]);
   const [columnFilters, setColumnFilters] = useDebouncedState([], 200);
   const [isResendModalOpen, setIsResendModalOpen] = useState(false);
+  const [selectedParticipantForResend, setSelectedParticipantForResend] =
+    useState<string | null>(null);
 
   const [pagination, setPagination] = useState({
     pageIndex: 0,
@@ -211,7 +232,7 @@ export default function CampaignDetails() {
   const participants = participantsQuery.data?.participants ?? [];
 
   const statsQuery = useCampaignStatsById(campaignId, selectedDripStage);
-
+  const queueCount = statsQuery.data?.queueCount ?? 0;
   const sendCampaignMutation = useSendCampaign(
     campaignId ?? "",
     campaignQuery.data?.teamId ?? "",
@@ -337,21 +358,38 @@ export default function CampaignDetails() {
     campaign.type !== CampaignType.DRIP &&
     [CampaignStatus.DRAFT, CampaignStatus.INACTIVE].includes(campaign.status);
   const handleSend = () => {
-    sendCampaignMutation.mutate({
-      statuses: [
-        CampaignParticipantStatus.PENDING,
-        CampaignParticipantStatus.FAILED,
-      ],
-      sentCampaignChoice: SentCampaignChoice.NOW,
-      status: CampaignStatus.ACTIVE,
-      type: campaign.type,
-    });
+    setIsResendModalOpen(true);
+  };
+
+  const handleResendIndividualParticipant = (participantId: string) => {
+    setSelectedParticipantForResend(participantId);
+    setIsResendModalOpen(true);
   };
 
   const handleResendSubmit = (options: ResendOptions) => {
+    let finalStatuses = options.statuses;
+
+    if (selectedParticipantForResend) {
+      const selectedParticipant = participants.find(
+        (p) => p.id === selectedParticipantForResend,
+      );
+
+      if (!selectedParticipant) {
+        toast.error("Participant not found");
+        return;
+      }
+
+      if (!selectedParticipant.status) {
+        toast.error("Invalid participant status");
+        return;
+      }
+
+      finalStatuses = [selectedParticipant.status];
+    }
+
     sendCampaignMutation.mutate(
       {
-        statuses: options.statuses,
+        statuses: finalStatuses,
         sentCampaignChoice:
           options.sendMode === SendMode.NOW
             ? SentCampaignChoice.NOW
@@ -364,11 +402,13 @@ export default function CampaignDetails() {
               ).toDate()
             : undefined,
         type: campaign.type,
-        status: campaign.status,
+        status: canSend ? CampaignStatus.ACTIVE : campaign.status,
+        participantId: selectedParticipantForResend ?? undefined,
       },
       {
         onSuccess: () => {
           setIsResendModalOpen(false);
+          setSelectedParticipantForResend(null);
         },
       },
     );
@@ -411,6 +451,24 @@ export default function CampaignDetails() {
         toast.error("Failed to delete campaign");
       },
     });
+  };
+  const handleStopCampaign = () => {
+    sendCampaignMutation.mutate(
+      {
+        status: CampaignStatus.INACTIVE,
+        statuses: [CampaignParticipantStatus.FAILED],
+        type: campaign.type,
+        sentCampaignChoice: SentCampaignChoice.NOW,
+      },
+      {
+        onSuccess: () => {
+          toast.success(t("messages.campaignStopped"));
+        },
+        onError: () => {
+          toast.error(t("messages.campaignStopError"));
+        },
+      },
+    );
   };
 
   return (
@@ -534,6 +592,21 @@ export default function CampaignDetails() {
                       <Send className="w-4 h-4" />
                     </Button>
                   )}
+                  {campaign.type !== CampaignType.DRIP &&
+                    queueCount > 0 &&
+                    ![
+                      CampaignStatus.QUEUING,
+                      CampaignStatus.DEQUEUING,
+                    ].includes(campaign.status) && (
+                      <Button
+                        variant="destructive"
+                        className="rounded-full gap-2"
+                        onClick={handleStopCampaign}
+                      >
+                        Stop
+                        <Square className="w-4 h-4" />
+                      </Button>
+                    )}
 
                   {campaign.type === CampaignType.DRIP && (
                     <Button
@@ -704,6 +777,7 @@ export default function CampaignDetails() {
                   t,
                   participantsQuery.data?.participants || [],
                   toggleSelectAll,
+                  handleResendIndividualParticipant,
                 )}
                 data={participantsQuery.data?.participants || []}
                 isPending={participantsQuery.isPending}
@@ -796,9 +870,14 @@ export default function CampaignDetails() {
 
       <ResendCampaignModal
         isOpen={isResendModalOpen}
-        onClose={() => setIsResendModalOpen(false)}
+        onClose={() => {
+          setIsResendModalOpen(false);
+          setSelectedParticipantForResend(null);
+        }}
         onSubmit={handleResendSubmit}
         isLoading={sendCampaignMutation.isPending}
+        isFirstSend={canSend && !selectedParticipantForResend}
+        isIndividualResend={!!selectedParticipantForResend}
         stats={{
           failed: statsQuery.data?.countFailed,
           pending: statsQuery.data?.countPending,
