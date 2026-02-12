@@ -49,6 +49,7 @@ export async function createCampaignParticipantsFromContacts(
       source: CampaignParticipantSource.INDIVIDUAL,
       status: CampaignParticipantStatus.PENDING,
     })),
+    skipDuplicates: true,
   });
   return campaignParticipants;
 }
