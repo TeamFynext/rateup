@@ -215,6 +215,8 @@ export enum CampaignStatus {
   COMPLETED = "COMPLETED",
   QUEUING = "QUEUING",
   DEQUEUING = "DEQUEUING",
+  DRAFT = "DRAFT",
+  FAILED = "FAILED",
 }
 export enum CampaignType {
   WHATSAPP = "WHATSAPP",
@@ -601,4 +603,13 @@ export enum ZapierTriggers {
   TICKET_ASSIGNEE_UPDATED = "ticket_assignee_updated",
   NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
   CONTACT_ADDED_TO_GROUP = "contact_added_to_group",
+}
+export enum SendMode {
+  NOW = "NOW",
+  SCHEDULED = "SCHEDULED",
+}
+
+export enum SentCampaignChoice {
+  NOW = "NOW",
+  LATER = "LATER",
 }

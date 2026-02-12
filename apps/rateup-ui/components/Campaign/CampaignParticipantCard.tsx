@@ -19,7 +19,7 @@ export const CampaignParticipantMenu = ({
 }) => {
   const removeCampainPartcipant = useRemoveCampaignParticipant(id);
   const sendMutation = useSendCampaign(id, teamId);
-  const translations = useTranslations();
+  const t = useTranslations("campaign.participantMenu");
   function handleResendClick() {
     sendMutation.mutate({
       participantId,
@@ -29,16 +29,13 @@ export const CampaignParticipantMenu = ({
   }
   const openDeleteModal = () => {
     modals.openConfirmModal({
-      title: translations("Remove contact"),
+      title: t("confirmRemove.title"),
       centered: true,
-      children: (
-        <Text size="sm">
-          {translations(
-            "Are you sure you want to remove this participant from campaign?",
-          )}
-        </Text>
-      ),
-      labels: { confirm: "Ok", cancel: "cancel" },
+      children: <Text size="sm">{t("confirmRemove.description")}</Text>,
+      labels: {
+        confirm: t("confirmRemove.confirm"),
+        cancel: t("confirmRemove.cancel"),
+      },
       confirmProps: { color: "red" },
       onCancel: () => modals.closeAll(),
       onConfirm: () =>
@@ -54,7 +51,7 @@ export const CampaignParticipantMenu = ({
       <Menu.Target>
         <Box>
           <RateupButtonPrimary
-            title={translations("Select action")}
+            title={t("trigger")}
             variant="light"
             rightIcon={<IconChevronDown size="16px" />}
             size="xs"
@@ -68,7 +65,7 @@ export const CampaignParticipantMenu = ({
           onClick={handleResendClick}
           disabled={!consent}
         >
-          {translations("Resend")}
+          {t("actions.resend")}
         </Menu.Item>
         <Menu.Divider />
         <Menu.Item
@@ -77,7 +74,7 @@ export const CampaignParticipantMenu = ({
           onClick={openDeleteModal}
           disabled={status == CampaignStatus.ACTIVE}
         >
-          {translations("Remove participant")}
+          {t("actions.remove")}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>
