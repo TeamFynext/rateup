@@ -1,807 +1,813 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
-import {
-  ActionIcon,
-  Alert,
-  Badge,
-  Box,
-  Button,
-  Group,
-  MantineProvider,
-  Modal,
-  MultiSelect,
-  Progress,
-  Radio,
-  SegmentedControl,
-  SimpleGrid,
-  Skeleton,
-  Stack,
-  Tabs,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import {
-  IconEye,
-  IconInfoCircle,
-  IconRefresh,
-  IconSend,
-  IconSettings,
-  IconX,
-} from "@tabler/icons-react";
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-} from "@tanstack/react-table";
+import { useDebouncedState } from "@mantine/hooks";
+import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
-import { zod4Resolver } from "mantine-form-zod-resolver";
+import {
+  ArrowLeft,
+  CheckCircle,
+  Edit2,
+  FileDown,
+  MoreVertical,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  Send,
+  Trash2,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { z } from "zod/v4";
+import { toast } from "sonner";
 
 import {
   CampaignParticipantStatus,
   CampaignStatus,
   CampaignType,
+  SendMode,
+  SentCampaignChoice,
 } from "@/types/enums";
-import { Campaign } from "@/types/global";
 import {
   useCampaignById,
   useCampaignResponseDownloadById,
   useCampaignStatsById,
+  useDeleteCampaignMutation,
   useSendCampaign,
 } from "@/backend/campaign/campaign.query";
-import { useCampaignParticipants } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
-import ErrorComponent from "@/components/404/ErrorComponent";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import {
+  useCampaignParticipants,
+  useRemoveMulitpleGroupParticipants,
+} from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
 import AddParticipantModal from "@/components/Campaign/AddParticipantModal";
+import { CampaignPerformance } from "@/components/Campaign/CampaignPerformanceCard";
 import CreateCampaignModal from "@/components/Campaign/CreateCampaignModal";
-import { renderBadge } from "@/components/Card/CampaignCard";
 import {
-  CONTACT_SORT,
-  contactParticipentDetailColumn,
-  WhatsappTableType,
-} from "@/components/Contacts/utils/utils";
+  ResendCampaignModal,
+  ResendOptions,
+} from "@/components/Campaign/ResendCampaignModal";
+import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
+import useDebounce from "@/components/menu/hook/useDebounce";
+import { DataTable } from "@/components/Table/data-table";
 import {
-  ContainedDateTimePickerInput,
-  ContainedSelection,
-} from "@/components/input/ContainedInput/ContainedInput";
-import FormModalLayout from "@/components/Modal/FormModalLayout";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import ContactTable from "@/components/Table/ContactTable";
-import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouteParams } from "@/context/RouteParamsContext";
-import { getErrorMessage } from "@/utils";
 import { PAGE_SIZE } from "@/utils/constants";
-import { getCampaignParticipantStatusLabel } from "@/utils/enums";
-import { showErrorToast, showLoadingToast } from "@/utils/notifications";
 
-import styles from "../campaign.module.css";
-import { SearchInput } from "../page";
+import { StatusBadge } from "../../../../components/Campaign/statusBadge";
 
-dayjs.extend(timezone);
+const getParticipantColumns = (
+  selectedIds: string[],
+  toggleSelectOne: (id: string) => void,
+  t: any,
+  participants: any[] = [],
+  onSelectAll?: (checked: boolean) => void,
+): ColumnDef<any>[] => [
+  {
+    id: "select",
+    size: 50,
+    header: ({ table }: { table: any }) => {
+      const allSelected =
+        participants.length > 0 && selectedIds.length === participants.length;
+      return (
+        <Checkbox
+          checked={allSelected}
+          onCheckedChange={(checked) => {
+            if (onSelectAll) {
+              onSelectAll(checked === true);
+            }
+          }}
+          className="rounded border-slate-300 dark:border-slate-600"
+        />
+      );
+    },
+    cell: ({ row }: { row: any }) => (
+      <Checkbox
+        checked={selectedIds.includes(row.original.id)}
+        onCheckedChange={() => toggleSelectOne(row.original.id)}
+        className="rounded border-slate-300 dark:border-slate-600"
+      />
+    ),
+  },
+  {
+    accessorKey: "contact.name",
+    header: () => (
+      <div className="font-medium">{t("participants.table.name")}</div>
+    ),
+    cell: ({ row }: { row: any }) => (
+      <div className="font-medium dark:text-slate-200">
+        {row.original.contact?.name}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "contact.phone",
+    header: () => (
+      <div className="font-medium">{t("participants.table.phone")}</div>
+    ),
+    cell: ({ row }: { row: any }) => (
+      <div className="text-slate-600 dark:text-slate-400 font-mono text-sm">
+        {row.original.contact?.phone}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: () => (
+      <div className="font-medium">{t("participants.table.status")}</div>
+    ),
+    cell: ({ row }: { row: any }) => (
+      <StatusBadge status={row.original.status} />
+    ),
+  },
+  {
+    accessorKey: "contact.consent",
+    header: () => (
+      <div className="text-center font-medium">
+        {t("participants.table.consent")}
+      </div>
+    ),
+    cell: ({ row }: { row: any }) =>
+      row.original.contact?.consent ? (
+        <div className="flex justify-center">
+          <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30">
+            <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+          </div>
+        </div>
+      ) : null,
+  },
+];
 
-export enum CampaignParticipantsTabs {
-  INFO = "info",
-  PARTICIPANTS = "participants",
-}
+export default function CampaignDetails() {
+  const [activeTab, setActiveTab] = useState("info");
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [sorting, setSorting] = useState([CONTACT_SORT]);
+  const [columnFilters, setColumnFilters] = useDebouncedState([], 200);
+  const [isResendModalOpen, setIsResendModalOpen] = useState(false);
 
-const CampaignById = () => {
-  const [searchText, setSearchText] = useDebouncedState("", 200);
-  const [opened, { open, close }] = useDisclosure(false);
-  const translations = useTranslations();
-  const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
-  const [columnFilters, setColumnFilters] =
-    useDebouncedState<ColumnFiltersState>([], 200);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
-    pageSize: PAGE_SIZE[0],
+    pageSize: Number(PAGE_SIZE[0]),
   });
   const [selectedDripStage, setSelectedDripStage] = useState("all");
+  const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
+
+  const t = useTranslations("campaign.details");
+  const translations = useTranslations();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const params = useParams();
-  const { campaignId } = params;
   const { update } = useRouteParams();
-  const tab = searchParams.get("tab") || CampaignParticipantsTabs.INFO;
+  const rawCampaignId = params?.campaignId;
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
-  let activeTab = tab?.toString() as CampaignParticipantsTabs;
-  const mut = useCampaignResponseDownloadById();
+  const campaignId = useMemo(() => {
+    if (!rawCampaignId) return undefined;
+    return Array.isArray(rawCampaignId) ? rawCampaignId[0] : rawCampaignId;
+  }, [rawCampaignId]);
 
-  const {
-    data: campaignData,
-    isPending,
-    isError,
-    isRefetching,
-    refetch: refetchCampaign,
-  } = useCampaignById(campaignId);
-
-  const {
-    data: filteredParticipants,
-    isPending: isPendingParticipant,
-    isError: isParticipantsError,
-    isRefetching: isRefetchingParticipants,
-    refetch: refetchParticipants,
-  } = useCampaignParticipants(
+  const campaignQuery = useCampaignById(campaignId);
+  const deliveryReportMutation = useCampaignResponseDownloadById();
+  const deleteCampaignMutation = useDeleteCampaignMutation(
+    campaignQuery.data?.teamId,
+    campaignQuery.data?.type,
+  );
+  const debouncedSearch = useDebounce(searchInput, 200);
+  const participantsQuery = useCampaignParticipants(
     campaignId,
     pagination,
-    searchText,
+    debouncedSearch,
     sorting,
     columnFilters,
     selectedDripStage,
   );
+  const participants = participantsQuery.data?.participants ?? [];
 
-  const {
-    data: campaignStats,
-    isPending: isPendingStats,
-    isError: isStatsError,
-    isRefetching: isRefetchingStats,
-    refetch: refetchStats,
-  } = useCampaignStatsById(campaignId, selectedDripStage);
+  const statsQuery = useCampaignStatsById(campaignId, selectedDripStage);
+
+  const sendCampaignMutation = useSendCampaign(
+    campaignId ?? "",
+    campaignQuery.data?.teamId ?? "",
+  );
+
+  const removeMulitpleGroupParticipants = useRemoveMulitpleGroupParticipants(
+    campaignId,
+    () => {
+      setSelectedIds([]);
+      setOpenDeleteModal(false);
+    },
+  );
+
+  useEffect(() => {
+    if (campaignQuery.data) {
+      update({ campaignId: campaignQuery.data.name });
+    }
+  }, [campaignQuery.data, update]);
+
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(participants.map((p) => p.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  if (
+    !campaignId ||
+    campaignQuery.isPending ||
+    participantsQuery.isPending ||
+    statsQuery.isPending
+  ) {
+    return <Skeleton className="h-screen w-full" />;
+  }
+
+  if (
+    campaignQuery.isError ||
+    participantsQuery.isError ||
+    statsQuery.isError ||
+    !campaignQuery.data
+  ) {
+    return (
+      <div className="h-screen flex items-center justify-center text-slate-600">
+        {t("loading.error")}
+      </div>
+    );
+  }
 
   const campaignInfo = {
-    template: campaignData?.templateData?.name,
-    team: campaignData?.teamName,
-  };
-  const { customFields } = useCustomFieldsContext();
-
-  const column: ColumnDef<any>[] = contactParticipentDetailColumn;
-  const sendMutation = useSendCampaign(campaignData?.id, campaignData?.teamId);
-
-  useEffect(() => {
-    if (campaignData) update({ campaignId: campaignData?.name });
-  }, [campaignData, update]);
-
-  const dynamicVariables = useMemo(
-    () =>
-      campaignData?.templateData?.components?.find(
-        (data) => data.example?.body_text,
-      )?.example?.body_text?.[0],
-    [campaignData?.templateData?.components],
-  );
-  const refetch = () => {
-    refetchCampaign();
-    refetchStats();
+    template: campaignQuery.data?.templateData?.name,
+    team: campaignQuery.data?.teamName,
   };
 
-  const dripStages = useMemo(
-    () =>
-      campaignData?.dripStages?.map((d, idx) => ({
-        value: d?.id,
-        label: `Stage ${idx + 1} - ${d?.delay} ${d?.delayUnit}`,
-      })) || [],
-    [campaignData?.dripStages],
-  );
+  const teamName =
+    campaignQuery.data.team?.name ??
+    campaignQuery.data.teamName ??
+    campaignQuery.data.teamId ??
+    "";
+  const stats = campaignQuery.data.stats ?? {
+    participants: 0,
+    pending: 0,
+    sent: 0,
+    delivered: 0,
+    read: 0,
+    failed: 0,
+  };
+  const campaign = {
+    id: campaignQuery.data.id,
+    name: campaignQuery.data.name,
+    type: campaignQuery.data.type,
+    team: teamName,
+    status: campaignQuery.data.status,
+    template:
+      campaignQuery.data.template?.name ?? campaignQuery.data.waTemplateId,
+    participants: stats.participants,
+    pending: stats.pending,
+    sent: stats.sent,
+    delivered: stats.delivered,
+    read: stats.read,
+    failed: stats.failed,
+  };
 
-  useEffect(() => {
-    if (activeTab === CampaignParticipantsTabs.PARTICIPANTS) {
-      setSelectedDripStage(dripStages?.[0]?.value);
-    } else {
-      setSelectedDripStage("all");
+  const openEditCampaign = (campaign: any) => {
+    setEditingCampaign(campaign);
+    setIsEditOpen(true);
+  };
+
+  const handleDeliveryReport = () => {
+    toast.loading("Generating delivery report...", { id: "delivery-report" });
+    deliveryReportMutation.mutate({ campaignId, selectedDripStage });
+  };
+
+  const isQueuing =
+    campaign.status === CampaignStatus.QUEUING ||
+    campaign.status === CampaignStatus.DEQUEUING;
+
+  const closeEditModal = () => {
+    setEditingCampaign(null);
+    setIsEditOpen(false);
+  };
+
+  const handleRefresh = async () => {
+    try {
+      await Promise.all([
+        campaignQuery.refetch(),
+        statsQuery.refetch(),
+        participantsQuery.refetch(),
+      ]);
+      toast.success(t("actions.refreshSuccess"));
+    } catch {
+      toast.error(t("actions.refreshError"));
     }
-  }, [activeTab, dripStages]);
+  };
 
-  if (isError || isParticipantsError || isStatsError)
-    return <ErrorComponent refetch={refetchCampaign} />;
-  return (
-    <Stack className={styles["campaign-id-page-root-div"]}>
-      <Group mih={42}>
-        <SegmentedControl
-          data={Object.values(CampaignParticipantsTabs)}
-          value={activeTab}
-          onChange={(value) =>
-            router.push(`/dashboard/campaign/${campaignId}?tab=${value}`)
-          }
-          radius={"md"}
-          defaultValue={activeTab}
-          tt={"capitalize"}
-          miw={200}
-        />
-        <StartCampaignCard
-          campaign={campaignData}
-          participantCount={filteredParticipants?.totalCount}
-          sendMutation={sendMutation}
-          queueCount={campaignStats?.queueCount}
-          totalCount={filteredParticipants?.totalCount}
-        />
-        {activeTab === CampaignParticipantsTabs.PARTICIPANTS && (
-          <SearchInput
-            placeholder={translations("Search Participants")}
-            searchText={searchText}
-            setSearchText={setSearchText}
-          />
-        )}
-        <RateupButtonPrimary
-          title="Delivery Report"
-          onClick={() => {
-            mut.mutate({
-              campaignId,
-              selectedDripStage,
-            });
-            showLoadingToast("Generating report", "delivery-report");
-          }}
-        />
-        {dripStages?.length && (
-          <ContainedSelection
-            label={"Select drip stages"}
-            data={
-              activeTab === CampaignParticipantsTabs.INFO
-                ? [{ value: "all", label: "All" }, ...dripStages]
-                : dripStages
-            }
-            onChange={setSelectedDripStage}
-            value={selectedDripStage}
-            placeholder="select stage"
-            size="xs"
-            style={{ marginLeft: "auto" }}
-          />
-        )}
-      </Group>
-      <Alert
-        variant="filled"
-        color="red"
-        icon={<IconInfoCircle />}
-        display={
-          campaignData?.errorMessage || sendMutation.isError ? "block" : "none"
-        }
-      >
-        {getErrorMessage(
-          sendMutation.error?.response,
-          campaignData?.errorMessage ?? translations("Error Sending campaign"),
-        )}
-      </Alert>
-
-      <Tabs
-        value={activeTab}
-        color="var(--tertiary-color)"
-        className={styles["tab-panels-container"]}
-      >
-        <Tabs.Panel value={CampaignParticipantsTabs.INFO}>
-          <StartCampaignCardRightSection
-            campaign={campaignData}
-            refetchCampaign={refetch}
-            campaignInfo={campaignInfo}
-            isPending={isPending}
-            dynamicVariables={dynamicVariables}
-          />
-          <CampaignInfoCard
-            participantCount={filteredParticipants?.totalCount}
-            stats={campaignStats}
-            flowId={campaignData?.flowId}
-            isPending={
-              isPendingParticipant ||
-              isRefetchingParticipants ||
-              isPendingStats ||
-              isRefetchingStats
-            }
-          />
-        </Tabs.Panel>
-        <Tabs.Panel value={CampaignParticipantsTabs.PARTICIPANTS} h={"100%"}>
-          <PaperLayout p={0} h={"100%"} mah={800}>
-            <ContactTable
-              columns={column}
-              data={filteredParticipants?.participants}
-              btnTitle="Add"
-              toggle={open}
-              tab={WhatsappTableType.PARTICIPANTS}
-              groupId={campaignData?.id}
-              refetch={refetchParticipants}
-              setSorting={setSorting}
-              sorting={sorting}
-              columnFilters={columnFilters}
-              setColumnFilters={setColumnFilters}
-              isPending={isPendingParticipant}
-              setPagination={setPagination}
-              pagination={pagination}
-              totalCount={filteredParticipants?.searchCount}
-            />
-          </PaperLayout>
-          <Modal
-            opened={opened}
-            onClose={close}
-            centered
-            size={"xl"}
-            radius={"lg"}
-            title={
-              <Title order={2} pl={"md"}>
-                {translations("Add Participants")}
-              </Title>
-            }
-          >
-            <AddParticipantModal
-              close={close}
-              campaign={campaignData}
-              campaignType={CampaignType.WHATSAPP}
-            />
-          </Modal>
-        </Tabs.Panel>
-      </Tabs>
-    </Stack>
-  );
-};
-export default CampaignById;
-
-interface StartCampaignCardProps {
-  campaign: Campaign;
-  participantCount: number;
-  sendMutation;
-  queueCount: number;
-  totalCount: number;
-}
-enum SentCampaignEnum {
-  NOW = "NOW",
-  LATER = "LATER",
-}
-const StartCampaignCard = ({
-  campaign,
-  participantCount,
-  sendMutation,
-  queueCount = 0,
-  totalCount = 0,
-}: StartCampaignCardProps) => {
-  const [errorMsg, setErrorMsg] = useState("");
-  const translations = useTranslations();
-  const [opened, { toggle, close }] = useDisclosure(false);
-  const startCampaign = campaign?.status === CampaignStatus.ACTIVE || false;
-  const schema = z
-    .object({
-      campaignSentAt: z.date().nullable(),
-      sentCampaignChoice: z.enum(SentCampaignEnum),
-      statuses: z.array(z.enum(CampaignParticipantStatus)).optional(),
-    })
-    .check((ctx) => {
-      const { value: values } = ctx;
-      if (startCampaign && values.statuses?.length === 0) {
-        ctx.issues.push({
-          path: ["statuses"],
-          code: "custom",
-          message: translations("Select at least one status"),
-          input: "",
-        });
-      }
+  const canSend =
+    campaign.type !== CampaignType.DRIP &&
+    [CampaignStatus.DRAFT, CampaignStatus.INACTIVE].includes(campaign.status);
+  const handleSend = () => {
+    sendCampaignMutation.mutate({
+      statuses: [
+        CampaignParticipantStatus.PENDING,
+        CampaignParticipantStatus.FAILED,
+      ],
+      sentCampaignChoice: SentCampaignChoice.NOW,
+      status: CampaignStatus.ACTIVE,
+      type: campaign.type,
     });
-  const form = useForm({
-    initialValues: {
-      campaignSentAt: null,
-      statuses: [CampaignParticipantStatus.FAILED],
-      sentCampaignChoice: SentCampaignEnum.NOW,
-    },
-    validate: zod4Resolver(schema),
-    onValuesChange: (values) => {
-      if (
-        values.sentCampaignChoice === SentCampaignEnum.NOW &&
-        values.campaignSentAt
-      ) {
-        form.setFieldValue("campaignSentAt", null);
-      } else if (
-        values.sentCampaignChoice === SentCampaignEnum.LATER &&
-        !values.campaignSentAt
-      ) {
-        form.setFieldValue(
-          "campaignSentAt",
-          new Date(
-            new Date(new Date().setMinutes(0, 0, 0)).setDate(
-              new Date().getDate() + 1,
-            ),
-          ),
-        );
-      }
-    },
-  });
+  };
 
-  const handleCampaign = () => {
-    const { hasErrors, errors } = form.validate();
-    if (hasErrors) {
-      showErrorToast(
-        (Object.values(errors)?.[0] as string) ??
-          translations("Error in campaign senting data"),
-      );
-      return;
-    }
-    if (!participantCount && !startCampaign) {
-      setErrorMsg(translations("No participants found"));
-      return;
-    }
-    if (errorMsg) setErrorMsg("");
-    let values = form.getValues();
-    if (!startCampaign) {
-      values.statuses = Object.values(CampaignParticipantStatus);
-    }
-    sendMutation.mutate(values, {
-      onSettled: () => {
-        close();
+  const handleResendSubmit = (options: ResendOptions) => {
+    sendCampaignMutation.mutate(
+      {
+        statuses: options.statuses,
+        sentCampaignChoice:
+          options.sendMode === SendMode.NOW
+            ? SentCampaignChoice.NOW
+            : SentCampaignChoice.LATER,
+        campaignSentAt:
+          options.sendMode === SendMode.SCHEDULED
+            ? dayjs(
+                `${options.scheduleDate} ${options.scheduleTime}`,
+                "YYYY-MM-DD HH:mm",
+              ).toDate()
+            : undefined,
+        type: campaign.type,
+        status: campaign.status,
+      },
+      {
+        onSuccess: () => {
+          setIsResendModalOpen(false);
+        },
+      },
+    );
+  };
+
+  const handleToggleDrip = () => {
+    sendCampaignMutation.mutate(
+      {
+        sentCampaignChoice: SentCampaignChoice.NOW,
+        status:
+          campaign.status === CampaignStatus.INACTIVE
+            ? CampaignStatus.ACTIVE
+            : CampaignStatus.INACTIVE,
+        statuses: [],
+        type: CampaignType.DRIP,
+      },
+      {
+        onSuccess: () => {
+          toast.success(
+            campaign.status === CampaignStatus.INACTIVE
+              ? t("messages.dripStarted")
+              : t("messages.dripPaused"),
+          );
+        },
+        onError: () => {
+          toast.error(t("messages.dripError"));
+        },
+      },
+    );
+  };
+
+  const handleDelete = () => {
+    deleteCampaignMutation.mutate(campaignId, {
+      onSuccess: () => {
+        setIsDeleteDialogOpen(false);
+        toast.success("Campaign deleted successfully");
+        router.push("/dashboard/campaign");
+      },
+      onError: () => {
+        toast.error("Failed to delete campaign");
       },
     });
   };
 
-  useEffect(() => {
-    if (participantCount) setErrorMsg("");
-  }, [participantCount]);
-
-  if (!campaign) return null;
-
   return (
     <>
-      {campaign?.type !== CampaignType.DRIP ? (
-        campaign?.status !== CampaignStatus.SCHEDULED && (
-          <Button
-            variant="outline"
-            radius={"xl"}
-            disabled={!participantCount}
-            onClick={toggle}
-            rightSection={<IconSend size={16} />}
-          >
-            {startCampaign ? translations("Resend") : translations("Send")}
-          </Button>
-        )
-      ) : (
-        <Button
-          variant="outline"
-          radius={"xl"}
-          disabled={!participantCount}
-          onClick={() => {
-            sendMutation.mutate({
-              status:
-                campaign?.status === CampaignStatus.INACTIVE
-                  ? CampaignStatus.ACTIVE
-                  : CampaignStatus.INACTIVE,
-              statuses: [],
-              type: campaign?.type,
-            });
-          }}
-          rightSection={<IconSend size={16} />}
+      <div className="flex flex-col h-screen overflow-hidden">
+        {/* ── Header (fixed height) ─────────────────────────────────── */}
+        <div className="shrink-0 border-b">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push("/dashboard/campaign")}
+                  className="hover:bg-slate-100 dark:hover:bg-slate-800 gap-2 text-slate-600 dark:text-slate-400"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  {t("header.back")}
+                </Button>
+                <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+                <div>
+                  <h1 className="text-lg dark:text-slate-50">
+                    {campaign.name}
+                  </h1>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {t("header.campaignId", { id: campaign.id })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openEditCampaign(campaignQuery.data)}
+                  className="gap-2 hover:bg-slate-50 dark:hover:bg-slate-800"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  {t("header.edit")}
+                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                      className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {t("header.delete")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex-1 min-h-0 flex flex-col"
         >
-          {campaign?.status === CampaignStatus.INACTIVE ? "Start" : " Pause"}
-        </Button>
+          {/* ── Tab nav bar (fixed height) ─────────────────────────── */}
+          <div className="shrink-0 border-b">
+            <div className="px-6">
+              <div className="flex items-center justify-between">
+                <TabsList className="bg-transparent p-0 h-auto gap-2 border-0">
+                  <TabsTrigger
+                    value="info"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-lg px-4 py-2 transition-all border-0 data-[state=inactive]:shadow-none"
+                  >
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    {t("tabs.overview")}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="participants"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-lg px-4 py-2 transition-all border-0 data-[state=inactive]:shadow-none"
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    {t("tabs.participants")}
+                    <Badge
+                      variant="secondary"
+                      className="ml-2 data-[state=active]:bg-white/20 data-[state=active]:text-white"
+                    >
+                      {participantsQuery.data?.totalCount}
+                    </Badge>
+                  </TabsTrigger>
+                </TabsList>
+
+                <div className="flex items-center gap-2 py-3">
+                  <Badge
+                    className={`${
+                      campaign.status === "ACTIVE"
+                        ? "bg-green-500 dark:bg-green-600"
+                        : "bg-slate-400 dark:bg-slate-600"
+                    } hover:bg-green-500 dark:hover:bg-green-600 text-white border-0 px-3 py-1`}
+                  >
+                    <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse" />
+                    {campaign.status}
+                  </Badge>
+                  <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+
+                  {campaign.type !== CampaignType.DRIP && !isQueuing && (
+                    <Button
+                      variant="outline"
+                      className="rounded-full gap-2"
+                      onClick={() => {
+                        if (canSend) {
+                          handleSend();
+                        } else {
+                          setIsResendModalOpen(true);
+                        }
+                      }}
+                    >
+                      {canSend ? t("actions.send") : t("actions.resend")}
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  )}
+
+                  {campaign.type === CampaignType.DRIP && (
+                    <Button
+                      variant={
+                        campaign.status === CampaignStatus.ACTIVE
+                          ? "destructive"
+                          : "outline"
+                      }
+                      onClick={handleToggleDrip}
+                      className="rounded-full gap-2"
+                    >
+                      {campaign.status === CampaignStatus.INACTIVE
+                        ? t("actions.startDrip")
+                        : t("actions.pauseDrip")}
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  )}
+
+                  <Button
+                    size="sm"
+                    onClick={handleDeliveryReport}
+                    disabled={deliveryReportMutation.isPending}
+                    className="gap-2"
+                  >
+                    <FileDown className="w-3.5 h-3.5" />
+                    {deliveryReportMutation.isPending
+                      ? t("actions.generating")
+                      : t("actions.deliveryReport")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <TabsContent
+            value="info"
+            className="flex-1 min-h-0 overflow-auto mt-0 p-6"
+          >
+            <div className="mx-auto space-y-6">
+              {/* Campaign Header Card */}
+              <Card className="shadow-sm py-2">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-linear-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
+                          <Send className="w-6 h-6 text-primary-foreground" />
+                        </div>
+                        <div className="flex-1">
+                          <h2 className="text-xl dark:text-slate-50">
+                            {campaign.name}
+                          </h2>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary">{campaign.type}</Badge>
+                            <Badge variant="outline">
+                              Team: {campaignInfo?.team}
+                            </Badge>
+                          </div>
+                        </div>
+                        {/* Total Participants */}
+                        <div className="px-6 py-4 rounded-xl bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-200 dark:border-slate-700">
+                          <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-lg bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center">
+                              <Users className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+                            </div>
+                            <div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">
+                                {t("overview.totalParticipants")}
+                              </div>
+                              <div className="text-2xl text-slate-900 dark:text-slate-50">
+                                {participantsQuery.data?.totalCount}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                          <span className="font-medium">
+                            {t("overview.template")}
+                          </span>
+                          <span>{campaignInfo?.template}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleRefresh}
+                      className="text-slate-400 dark:text-slate-600 hover:text-primary hover:bg-primary/10"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <CampaignPerformance
+                data={{
+                  sent: statsQuery.data?.countSent,
+                  delivered: statsQuery.data?.countDelivered,
+                  read: statsQuery.data?.countRead,
+                  pending: statsQuery.data?.countPending,
+                  failed: statsQuery.data?.countFailed,
+                }}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent
+            value="participants"
+            className="flex-1 min-h-0 flex flex-col mt-0 p-0"
+          >
+            {/* Toolbar (fixed height, never scrolls) */}
+            <div className="shrink-0 px-6 pt-6 pb-4 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => setIsAddParticipantOpen(true)}
+                    className="gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {t("participants.add")}
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    disabled={selectedIds.length === 0}
+                    onClick={() => setOpenDeleteModal(true)}
+                  >
+                    {t("participants.deleteSelected", {
+                      count: selectedIds.length,
+                    })}
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="relative w-80">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-600" />
+                    <Input
+                      placeholder={t("participants.searchPlaceholder")}
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      className="pl-9 h-9 border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50"
+                    />
+                  </div>
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-9 text-slate-600 dark:text-slate-400 hover:text-primary"
+                    onClick={() => setSearchInput("")}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    {t("participants.reset")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <DataTable
+                columns={getParticipantColumns(
+                  selectedIds,
+                  toggleSelectOne,
+                  t,
+                  participantsQuery.data?.participants || [],
+                  toggleSelectAll,
+                )}
+                data={participantsQuery.data?.participants || []}
+                isPending={participantsQuery.isPending}
+                manualPagination={{
+                  pagination,
+                  onPaginationChange: setPagination,
+                  rowCount: participantsQuery.data?.totalCount || 0,
+                }}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* ── Dialogs (portalled, outside layout flow) ──────────────────── */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("dialogs.deleteCampaign.title")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("dialogs.deleteCampaign.description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {t("dialogs.deleteCampaign.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {t("dialogs.deleteCampaign.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("dialogs.deleteParticipants.title")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("dialogs.deleteParticipants.description", {
+                count: selectedIds.length,
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              {t("dialogs.deleteParticipants.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90"
+              onClick={() =>
+                removeMulitpleGroupParticipants.mutate({
+                  data: selectedIds,
+                  campaignId,
+                })
+              }
+            >
+              {t("dialogs.deleteParticipants.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {isEditOpen && editingCampaign && (
+        <CreateCampaignModal
+          isEdit
+          campaign={editingCampaign}
+          close={closeEditModal}
+          campaignType={editingCampaign.type}
+        />
       )}
 
-      <Badge
-        variant="light"
-        p={"md"}
-        color={renderBadge(campaign?.status).color}
-      >
-        {campaign?.status}{" "}
-        {campaign?.campaignSentAt && (
-          <>
-            {dayjs(campaign?.campaignSentAt).format("YYYY-MM-DD hh:mm A")}{" "}
-            {dayjs.tz.guess()}
-          </>
-        )}{" "}
-      </Badge>
-      {queueCount > 0 && (
-        <Stack gap={0} align="center">
-          <Tooltip label={queueCount + " participants in queue"}>
-            <Progress value={100 - (queueCount / totalCount) * 100} w={100} />
-          </Tooltip>
-        </Stack>
+      {isAddParticipantOpen && campaignQuery.data && (
+        <AddParticipantModal
+          close={() => setIsAddParticipantOpen(false)}
+          campaign={campaignQuery.data}
+          campaignType={campaignQuery.data.type}
+        />
       )}
-      {queueCount > 0 &&
-        ![CampaignStatus.DEQUEUING, CampaignStatus.QUEUING].includes(
-          campaign?.status,
-        ) && (
-          <Tooltip label={translations("cancel schedule")}>
-            <ActionIcon
-              size={"sm"}
-              variant="light"
-              onClick={() => {
-                sendMutation.mutate({
-                  status: CampaignStatus.INACTIVE,
-                  statuses: [CampaignParticipantStatus.FAILED],
-                });
-              }}
-            >
-              <IconX size={18} />
-            </ActionIcon>
-          </Tooltip>
-        )}
-      <SendCampaignModal
-        close={close}
-        opened={opened}
-        startCampaign={startCampaign}
-        form={form}
-        handleCampaign={handleCampaign}
+
+      <ResendCampaignModal
+        isOpen={isResendModalOpen}
+        onClose={() => setIsResendModalOpen(false)}
+        onSubmit={handleResendSubmit}
+        isLoading={sendCampaignMutation.isPending}
+        stats={{
+          failed: statsQuery.data?.countFailed,
+          pending: statsQuery.data?.countPending,
+          sent: statsQuery.data?.countSent,
+          delivered: statsQuery.data?.countDelivered,
+          read: statsQuery.data?.countRead,
+          completed: statsQuery.data?.countCompleted,
+        }}
       />
     </>
-  );
-};
-const StartCampaignCardRightSection = ({
-  campaign,
-  refetchCampaign,
-  campaignInfo,
-  isPending,
-  dynamicVariables,
-}) => {
-  const translations = useTranslations();
-  const router = useRouter();
-  const [editModalOpened, { open: openEditModal, close: closeEditModal }] =
-    useDisclosure(false);
-
-  if (isPending) return <Skeleton w={"100%"} h={147} />;
-  if (!campaign) return null;
-
-  return (
-    <>
-      <PaperLayout radius={"md"}>
-        <Group justify="space-between">
-          <Box flex={1}>
-            <Title order={2} mb="sm">
-              {campaign.name}
-            </Title>
-            <Group gap="md" mb="sm">
-              <Badge variant="light" size="lg">
-                {campaign.type === "DRIP"
-                  ? "Drip Campaign"
-                  : "WhatsApp Campaign"}
-              </Badge>
-              <Badge variant="outline" size="lg">
-                {campaignInfo?.team}
-              </Badge>
-            </Group>
-            <Text size="sm" c="dimmed">
-              {campaign.type === "DRIP"
-                ? `${campaign.dripStages?.length || 0} stage automation`
-                : `Template: ${campaignInfo?.template}`}
-            </Text>
-          </Box>
-
-          <Stack align="flex-end">
-            <Group>
-              <Tooltip label={translations("Refresh data")}>
-                <ActionIcon
-                  variant="light"
-                  aria-label={translations("refresh")}
-                  onClick={() => refetchCampaign()}
-                >
-                  <IconRefresh
-                    style={{ width: "90%", height: "90%" }}
-                    stroke={1.5}
-                  />
-                </ActionIcon>
-              </Tooltip>
-
-              <Button
-                variant="light"
-                size="sm"
-                onClick={openEditModal}
-                leftSection={<IconSettings size={16} />}
-              >
-                Edit Campaign
-              </Button>
-            </Group>
-
-            {campaignInfo?.flowId && (
-              <Button
-                variant="light"
-                size="sm"
-                onClick={() =>
-                  router.push(
-                    `whatsapp/flows/v${campaignInfo.flowVersion ?? 1}/${campaignInfo.flowId}}?tab=Result`,
-                  )
-                }
-                leftSection={<IconEye size={16} />}
-              >
-                View Responses
-              </Button>
-            )}
-          </Stack>
-        </Group>
-      </PaperLayout>
-
-      <Modal
-        opened={editModalOpened}
-        onClose={closeEditModal}
-        size="xl"
-        centered
-        padding={0}
-        radius="lg"
-        title={null}
-        overlayProps={{ opacity: 0.5, blur: 4 }}
-      >
-        <CreateCampaignModal
-          isEdit={true}
-          campaign={campaign}
-          close={closeEditModal}
-          dynamicVariables={dynamicVariables}
-          campaignType={CampaignType.WHATSAPP}
-        />
-      </Modal>
-    </>
-  );
-};
-const CampaignInfoCard = ({ participantCount, stats, flowId, isPending }) => {
-  const translations = useTranslations();
-  const statsArray = [
-    {
-      key: "participants",
-      label: translations("Participants"),
-      count: participantCount,
-      color: "gray",
-      icon: <IconInfoCircle size={22} />,
-    },
-    {
-      key: "pending",
-      label: translations("Pending"),
-      count: stats?.countPending,
-      color: "yellow",
-      icon: <IconRefresh size={22} />,
-    },
-    {
-      key: "sent",
-      label: translations("Sent"),
-      count: stats?.countSent,
-      color: "blue",
-      icon: <IconSend size={22} />,
-    },
-    {
-      key: "delivered",
-      label: translations("Delivered"),
-      count: stats?.countDelivered,
-      color: "teal",
-      icon: <IconEye size={22} />,
-    },
-    {
-      key: "read",
-      label: translations("Read"),
-      count: stats?.countRead,
-      color: "green",
-      icon: <IconEye size={22} />,
-    },
-    {
-      key: "failed",
-      label: translations("Failed"),
-      count: stats?.countFailed,
-      color: "red",
-      icon: <IconX size={22} />,
-    },
-  ];
-
-  if (flowId) {
-    statsArray.push({
-      key: "completed",
-      label: translations("Completed"),
-      count: stats?.countCompleted,
-      color: "grape",
-      icon: <IconSettings size={22} />,
-    });
-  }
-
-  return (
-    <PaperLayout mt={"sm"}>
-      <Title order={3} mb="lg" ta="center" c="dimmed">
-        Campaign Statistics
-      </Title>
-      <SimpleGrid cols={{ base: 2, sm: 3, lg: 4 }} spacing="lg">
-        {statsArray.map((item) => (
-          <Box
-            key={item.label}
-            p="md"
-            style={{
-              border: `1px solid var(--mantine-color-${item.color}-3)`,
-              borderRadius: "var(--mantine-radius-md)",
-              backgroundColor: `var(--mantine-color-${item.color}-0)`,
-              transition: "all 0.2s ease",
-              cursor: "default",
-            }}
-            className={styles.statCard || ""}
-          >
-            <Stack gap="xs" align="center">
-              {/* <Text fz={24}>
-                {item.icon}
-              </Text> */}
-
-              {isPending ? (
-                <Skeleton w={40} h={32} radius="sm" />
-              ) : (
-                <Text fw={700} fz={28} c={`${item.color}.7`} lh={1}>
-                  {item.count?.toLocaleString() || 0}
-                </Text>
-              )}
-
-              <Text
-                size="sm"
-                fw={500}
-                c={`${item.color}.8`}
-                ta="center"
-                lh={1.2}
-              >
-                {item.label}
-              </Text>
-            </Stack>
-          </Box>
-        ))}
-      </SimpleGrid>
-    </PaperLayout>
-  );
-};
-
-interface SendCampaignModalProps {
-  close: () => void;
-  opened: boolean;
-  startCampaign;
-  form;
-  handleCampaign;
-}
-function SendCampaignModal({
-  close,
-  opened,
-  startCampaign,
-  form,
-  handleCampaign,
-}: Readonly<SendCampaignModalProps>) {
-  const translations = useTranslations();
-  return (
-    <FormModalLayout
-      opened={opened}
-      onClose={close}
-      title={translations("Campaign Sent Settings")}
-      centered
-      onSubmit={handleCampaign}
-      buttonTitle={
-        form.getValues()?.sentCampaignChoice === SentCampaignEnum.LATER
-          ? translations("Schedule Campaign")
-          : translations("Sent Campaign Now")
-      }
-    >
-      <Stack style={{ minHeight: "200px" }}>
-        <Radio.Group
-          label={startCampaign ? translations("Resent") : translations("Sent")}
-          withAsterisk
-          {...form.getInputProps("sentCampaignChoice", {
-            type: "radio",
-          })}
-        >
-          <Group>
-            <Radio
-              checked
-              label={translations("Now")}
-              value={SentCampaignEnum.NOW}
-            />
-            <Radio
-              label={translations("Schedule Later")}
-              value={SentCampaignEnum.LATER}
-            />
-          </Group>
-        </Radio.Group>
-
-        {form.getValues()?.sentCampaignChoice === SentCampaignEnum.LATER && (
-          <Stack>
-            <ContainedDateTimePickerInput
-              valueFormat="DD MMM YYYY - hh mm A"
-              dropdownType="modal"
-              placeholder={translations("Date")}
-              label={translations("Sent Campaign At")}
-              withAsterisk
-              value={form.values.campaignSentAt}
-              onChange={(date) =>
-                form.setFieldValue("campaignSentAt", new Date(date))
-              }
-              minDate={new Date()}
-            />
-            <Text c="red" size="xs">
-              {translations("**Time will be rounded to nearest hours")}
-            </Text>
-          </Stack>
-        )}
-        {startCampaign && (
-          <MultiSelect
-            label={translations(
-              "Select status of participants to resend campaign to",
-            )}
-            placeholder={translations("Select statuses")}
-            data={Object.values(CampaignParticipantStatus).map((status) => ({
-              value: status,
-              label: getCampaignParticipantStatusLabel(status),
-            }))}
-            {...form.getInputProps("statuses")}
-          />
-        )}
-      </Stack>
-    </FormModalLayout>
   );
 }

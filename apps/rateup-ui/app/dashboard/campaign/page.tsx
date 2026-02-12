@@ -1,119 +1,280 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { Center, Flex, Modal, Stack, TextInput } from "@mantine/core";
-import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import { IconSearch } from "@tabler/icons-react";
-import { ColumnDef } from "@tanstack/react-table";
+import {
+  Filter,
+  MessageSquare,
+  Plus,
+  RotateCcw,
+  Search,
+  Send,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { CampaignType } from "@/types/enums";
-import {
-  useCampaignData,
-  useCampaignDataByTeam,
-} from "@/backend/campaign/campaign.query";
+import { useCampaignData } from "@/backend/campaign/campaign.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import UnauthorizedPage from "@/components/404/UnAuthorizedError";
+import CampaignCardList from "@/components/Campaign/CampaignListCard";
 import CreateCampaignModal from "@/components/Campaign/CreateCampaignModal";
-import { contactParticipentColumn } from "@/components/Contacts/utils/utils";
 import { TeamSelector } from "@/components/input/TeamSelector";
-import Heading from "@/components/styled/Heading/Heading";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import TanstackTable from "@/components/Table/TanstackTable";
+import useDebounce from "@/components/menu/hook/useDebounce";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import styles from "./campaign.module.css";
+export default function CampaignsPage() {
+  const t = useTranslations("campaign.list");
+  const router = useRouter();
 
-export default function CampaignList() {
-  const [searchText, setSearchText] = useDebouncedState("", 200);
-  const [selectedTeam, setSelectedTeam] = useState(null);
-  const [opened, { open, close }] = useDisclosure(false);
-  const translations = useTranslations();
+  /* -------------------- UI STATE -------------------- */
+  const [activeTab, setActiveTab] = useState<CampaignType>(
+    CampaignType.WHATSAPP,
+  );
 
-  const {
-    data: campaignData,
-    isPending: isAllCampaignLoading,
-    isError: isAllCampaignError,
-    isRefetching: isRefetchingAllCampaign,
-    refetch: refetchAllkCampaign,
-    error,
-  } = useCampaignData(CampaignType.WHATSAPP);
+  const [search, setSearch] = useState("");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<any>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
 
-  const filteredCampaignsdata =
-    selectedTeam == "all" || !selectedTeam // filtering by team
-      ? campaignData?.data
-      : (campaignData?.data?.filter((c) => c?.teamId === selectedTeam) ?? []);
-  const filteredCampaigns = (
-    searchText
-      ? filteredCampaignsdata.filter(
-          // filtering by search text
-          (campaign) =>
-            campaign?.name.toLowerCase().includes(searchText.toLowerCase()),
-        )
-      : filteredCampaignsdata
-  )?.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)); // sorting by date
+  /* -------------------- DATA -------------------- */
+  const whatsappQuery = useCampaignData(CampaignType.WHATSAPP);
+  const dripQuery = useCampaignData(CampaignType.DRIP);
 
-  if (isAllCampaignError && (error as any)?.response?.status === 403)
+  const activeQuery =
+    activeTab === CampaignType.WHATSAPP ? whatsappQuery : dripQuery;
+
+  const { data, isPending, isError, error, refetch } = activeQuery;
+  const openEditCampaign = (campaign: any) => {
+    setEditingCampaign(campaign);
+    setIsEditOpen(true);
+  };
+
+  /* -------------------- ERROR HANDLING -------------------- */
+
+  if (isError && (error as any)?.response?.status === 403) {
     return <UnauthorizedPage />;
-  if (isAllCampaignError)
-    return <ErrorComponent refetch={refetchAllkCampaign} />;
-  const column: ColumnDef<any>[] = contactParticipentColumn;
+  }
 
+  if (isError) {
+    return <ErrorComponent refetch={refetch} />;
+  }
+
+  const debouncedSearch = useDebounce(search.trim(), 200);
+
+  /* -------------------- FILTERED DATA -------------------- */
+  const campaigns = data?.data ?? [];
+  const filteredCampaigns = useMemo(() => {
+    return campaigns
+      .filter((c) => selectedTeam === "all" || c.teamId === selectedTeam)
+      .filter((c) => selectedStatus === "all" || c.status === selectedStatus)
+      .filter((c) =>
+        c.name?.toLowerCase().includes(debouncedSearch.toLowerCase()),
+      )
+      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  }, [campaigns, debouncedSearch, selectedTeam, selectedStatus]);
+
+  const openCreateCampaign = () => {
+    setIsCreateOpen(true);
+  };
+
+  const closeCreateCampaign = () => {
+    setIsCreateOpen(false);
+  };
+
+  /* -------------------- HANDLERS -------------------- */
+  const resetFilters = () => {
+    setSearch("");
+    setSelectedTeam("all");
+    setSelectedStatus("all");
+  };
+
+  const handleViewDetails = (campaign: any) => {
+    router.push(`/dashboard/campaign/${campaign.id}`);
+  };
+
+  /* -------------------- RENDER -------------------- */
   return (
-    <Stack gap={"sm"} h={"100%"} mx={4}>
-      <Flex justify={"space-between"}>
-        <SearchInput
-          placeholder={translations("Search Campaign")}
-          searchText={searchText}
-          setSearchText={setSearchText}
-        />
-        <TeamSelector
-          value={selectedTeam}
-          onChange={setSelectedTeam}
-          enableAll={true}
-        />
-      </Flex>
-      <Center></Center>
+    <>
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className=" border-b">
+          <div className="px-6 py-4">
+            <h1 className="text-2xl">{t("header.title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("header.description")}
+            </p>
+          </div>
 
-      <PaperLayout p={0} h={"100%"} mah={"850px"}>
-        <TanstackTable
-          columns={column}
-          data={filteredCampaigns}
-          btnTitle={translations("Create")}
-          toggle={open}
-          disableFuzzyFnCustom={true}
-          detailBtn
-          isPending={isAllCampaignLoading || isRefetchingAllCampaign}
+          {/* Tabs + Actions */}
+          <div className="px-6 pb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-1">
+              <Button
+                className="bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
+                onClick={openCreateCampaign}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {t("header.create")}
+              </Button>
+
+              <Tabs
+                value={activeTab}
+                onValueChange={(v) => setActiveTab(v as CampaignType)}
+              >
+                <TabsList className="">
+                  <TabsTrigger value={CampaignType.WHATSAPP}>
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    {t("tabs.broadcast")}
+                    <Badge className="ml-2">
+                      {whatsappQuery.data?.data?.length ?? 0}
+                    </Badge>
+                  </TabsTrigger>
+
+                  <TabsTrigger value={CampaignType.DRIP}>
+                    <Send className="w-4 h-4 mr-2" />
+                    {t("tabs.drip")}
+                    <Badge className="ml-2">
+                      {" "}
+                      {dripQuery.data?.data?.length ?? 0}
+                    </Badge>
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Search + Filters */}
+            <div className="flex items-center gap-2">
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t("search.placeholder")}
+                  className="pl-9 h-9"
+                />
+              </div>
+
+              <Popover open={showFilters} onOpenChange={setShowFilters}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="w-4 h-4 mr-2" />
+                    {t("filters.title")}
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent align="end" className="w-72">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs">{t("filters.team")}</label>
+                      <TeamSelector
+                        value={selectedTeam}
+                        onChange={setSelectedTeam}
+                        enableAll
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs">{t("filters.status")}</label>
+                      <Select
+                        value={selectedStatus}
+                        onValueChange={setSelectedStatus}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">
+                            {t("filters.statuses.all")}
+                          </SelectItem>
+                          <SelectItem value="ACTIVE">
+                            {t("filters.statuses.ACTIVE")}
+                          </SelectItem>
+                          <SelectItem value="INACTIVE">
+                            {t("filters.statuses.INACTIVE")}
+                          </SelectItem>
+                          <SelectItem value="DRAFT">
+                            {t("filters.statuses.DRAFT")}
+                          </SelectItem>
+                          <SelectItem value="SCHEDULED">
+                            {t("filters.statuses.SCHEDULED")}
+                          </SelectItem>
+                          <SelectItem value="COMPLETED">
+                            {t("filters.statuses.COMPLETED")}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex gap-2 pt-2 border-t">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={resetFilters}
+                      >
+                        <RotateCcw className="w-3 h-3 mr-2" />
+                        {t("filters.actions.reset")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-[#2E5BFF]"
+                        onClick={() => setShowFilters(false)}
+                      >
+                        {t("filters.actions.apply")}
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+        </div>
+
+        {/* Campaign List */}
+        <CampaignCardList
+          campaigns={filteredCampaigns}
+          onEdit={openEditCampaign}
+          isLoading={isPending}
+          onView={handleViewDetails}
         />
-      </PaperLayout>
-      <Modal opened={opened} onClose={close} centered size={"lg"} radius={"md"}>
+      </div>
+
+      {/* 🔥 MODAL MUST BE HERE */}
+      {isCreateOpen && (
         <CreateCampaignModal
-          close={close}
-          isEdit={false}
-          campaignType={CampaignType.WHATSAPP}
+          close={closeCreateCampaign}
+          campaignType={activeTab}
         />
-      </Modal>
-    </Stack>
+      )}
+      {isEditOpen && editingCampaign && (
+        <CreateCampaignModal
+          isEdit
+          campaign={editingCampaign}
+          close={() => {
+            setIsEditOpen(false);
+            setEditingCampaign(null);
+          }}
+          campaignType={editingCampaign.type}
+        />
+      )}
+    </>
   );
 }
-
-export const SearchInput = ({
-  placeholder,
-  searchText,
-  setSearchText,
-  width = 500,
-  size = "md",
-}) => {
-  return (
-    <TextInput
-      defaultValue={searchText}
-      onChange={(e) => setSearchText(e.currentTarget.value)}
-      size={size}
-      radius={"xl"}
-      w={width}
-      placeholder={placeholder}
-      leftSection={<IconSearch size={"1rem"} />}
-      classNames={{ input: styles.input }}
-    />
-  );
-};
