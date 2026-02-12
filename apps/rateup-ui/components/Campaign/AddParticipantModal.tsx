@@ -312,7 +312,7 @@ const AddParticipantModal = ({
           {/* Main Content Grid */}
           <div className="grid grid-cols-2 gap-3 flex-1 overflow-hidden">
             {/* Left Panel - Available Items */}
-            <Card className="border-slate-200 bg-slate-50 dark:bg-transparent flex flex-col overflow-hidden py-1">
+            <Card className="bg-slate-50 dark:bg-transparent flex flex-col overflow-hidden py-1">
               <CardContent className="p-3 flex-1 overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-medium">
@@ -461,8 +461,8 @@ const AddParticipantModal = ({
             </Card>
 
             {/* Right Panel - Selected Items */}
-            <Card className="border-slate-200 bg-slate-50 dark:bg-transparent flex flex-col overflow-hidden">
-              <CardContent className="p-4 flex-1 overflow-hidden flex flex-col">
+            <Card className="bg-slate-50 dark:bg-transparent flex flex-col overflow-hidden py-1">
+              <CardContent className="p-3 flex-1 overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-medium">
                     {t("select.selected")}
@@ -582,7 +582,7 @@ export const Individual = ({
 
   return (
     <div
-      className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-background hover:border-primary hover:bg-primary/5
+      className="flex items-center justify-between p-3 rounded-lg border bg-background hover:border-primary hover:bg-primary/5
  transition-all"
     >
       <div className="flex-1 min-w-0">
@@ -611,7 +611,7 @@ export const Individual = ({
             setSelectedContacts([...selectedContacts, customer]);
           }}
           disabled={isAlreadySelected}
-          className="ml-2 shrink-0 bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
+          className="ml-2 shrink-0"
         >
           {isAlreadySelected ? t("actions.added") : t("actions.add")}
         </Button>
@@ -641,9 +641,12 @@ export const CustomerGroup = ({
       : group._count.LoyaltyCustomerMap;
 
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-white hover:border-[#2E5BFF] hover:bg-[#2E5BFF]/5 transition-all">
+    <div
+      className="flex items-center justify-between p-3 rounded-lg border bg-background hover:border-primary hover:bg-primary/5
+ transition-all"
+    >
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-sm truncate max-w-[170px]">
+        <h4 className="font-medium text-sm truncate max-w-42.5">
           {group?.name}
         </h4>
         <p className="text-xs text-slate-500">
@@ -670,7 +673,7 @@ export const CustomerGroup = ({
             setSelectedGroups([...selectedGroups, group]);
           }}
           disabled={isAlreadySelected || !memberCount}
-          className="ml-2 shrink-0 bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
+          className="ml-2 shrink-0"
         >
           {isAlreadySelected ? t("actions.added") : t("actions.add")}
         </Button>
@@ -694,9 +697,12 @@ const CustomerCampaign = ({
   const isSelected = selectedCampaigns.some((c) => c?.id === campaign?.id);
 
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-white hover:border-[#2E5BFF] hover:bg-[#2E5BFF]/5 transition-all">
+    <div
+      className="flex items-center justify-between p-3 rounded-lg border bg-background hover:border-primary hover:bg-primary/5
+ transition-all"
+    >
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-sm truncate max-w-[170px]">
+        <h4 className="font-medium text-sm truncate max-w-42.5">
           {campaign?.name}
         </h4>
         <p className="text-xs text-slate-500">
@@ -725,7 +731,7 @@ const CustomerCampaign = ({
             setSelectedCampaigns([...selectedCampaigns, campaign]);
           }}
           disabled={!campaign?.campaignParticipantsCount}
-          className="ml-2 shrink-0 bg-[#2E5BFF] hover:bg-[#2E5BFF]/90"
+          className="ml-2 shrink-0"
         >
           {t("actions.add")}
         </Button>
