@@ -1533,6 +1533,7 @@ model WaAutomatedReply {
   org                      Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId  String?
   whatsappSettingsPhoneIds String[] @default([]) //for multiple whatsapp integration
+  platform                 String   @default("whatsapp") // enums.ts: AutomationPlatform (whatsapp | instagram)
 
   isEnabled         Boolean @default(true)
   sendOnceIn24Hours Boolean @default(true)
