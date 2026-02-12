@@ -17,6 +17,7 @@ import {
   RotateCcw,
   Search,
   Send,
+  Square,
   Trash2,
   TrendingUp,
   Users,
@@ -86,6 +87,8 @@ const getParticipantColumns = (
   t: any,
   participants: any[] = [],
   onSelectAll?: (checked: boolean) => void,
+  onSendIndividual?: (participantId: string) => void,
+  sendingParticipantId?: string | null,
 ): ColumnDef<any>[] => [
   {
     id: "select",
@@ -160,6 +163,30 @@ const getParticipantColumns = (
         </div>
       ) : null,
   },
+  {
+    id: "actions",
+    size: 80,
+    header: () => <div className="font-medium text-center">Actions</div>,
+    cell: ({ row }: { row: any }) => (
+      <div className="flex justify-center">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onSendIndividual?.(row.original.id)}
+          disabled={!!sendingParticipantId}
+          className="hover:bg-blue-50 dark:hover:bg-blue-900/20 gap-2"
+        >
+          {sendingParticipantId === row.original.id ? (
+            <>
+              <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </>
+          ) : (
+            <Send className="w-4 h-4" />
+          )}
+        </Button>
+      </div>
+    ),
+  },
 ];
 
 export default function CampaignDetails() {
@@ -178,6 +205,9 @@ export default function CampaignDetails() {
   });
   const [selectedDripStage, setSelectedDripStage] = useState("all");
   const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
+  const [sendingParticipantId, setSendingParticipantId] = useState<
+    string | null
+  >(null);
 
   const t = useTranslations("campaign.details");
   const translations = useTranslations();
@@ -211,7 +241,7 @@ export default function CampaignDetails() {
   const participants = participantsQuery.data?.participants ?? [];
 
   const statsQuery = useCampaignStatsById(campaignId, selectedDripStage);
-
+  const queueCount = statsQuery.data?.queueCount ?? 0;
   const sendCampaignMutation = useSendCampaign(
     campaignId ?? "",
     campaignQuery.data?.teamId ?? "",
@@ -337,15 +367,7 @@ export default function CampaignDetails() {
     campaign.type !== CampaignType.DRIP &&
     [CampaignStatus.DRAFT, CampaignStatus.INACTIVE].includes(campaign.status);
   const handleSend = () => {
-    sendCampaignMutation.mutate({
-      statuses: [
-        CampaignParticipantStatus.PENDING,
-        CampaignParticipantStatus.FAILED,
-      ],
-      sentCampaignChoice: SentCampaignChoice.NOW,
-      status: CampaignStatus.ACTIVE,
-      type: campaign.type,
-    });
+    setIsResendModalOpen(true);
   };
 
   const handleResendSubmit = (options: ResendOptions) => {
@@ -364,7 +386,7 @@ export default function CampaignDetails() {
               ).toDate()
             : undefined,
         type: campaign.type,
-        status: campaign.status,
+        status: canSend ? CampaignStatus.ACTIVE : campaign.status,
       },
       {
         onSuccess: () => {
@@ -400,6 +422,31 @@ export default function CampaignDetails() {
     );
   };
 
+  const handleSendIndividual = (participantId: string) => {
+    setSendingParticipantId(participantId);
+    sendCampaignMutation.mutate(
+      {
+        statuses: [
+          CampaignParticipantStatus.PENDING,
+          CampaignParticipantStatus.FAILED,
+        ],
+        sentCampaignChoice: SentCampaignChoice.NOW,
+        participantId,
+        type: campaign.type,
+        status: campaign.status,
+      },
+      {
+        onSuccess: () => {
+          setSendingParticipantId(null);
+          toast.success("Message sent successfully");
+        },
+        onError: () => {
+          setSendingParticipantId(null);
+        },
+      },
+    );
+  };
+
   const handleDelete = () => {
     deleteCampaignMutation.mutate(campaignId, {
       onSuccess: () => {
@@ -411,6 +458,24 @@ export default function CampaignDetails() {
         toast.error("Failed to delete campaign");
       },
     });
+  };
+  const handleStopCampaign = () => {
+    sendCampaignMutation.mutate(
+      {
+        status: CampaignStatus.INACTIVE,
+        statuses: [CampaignParticipantStatus.FAILED],
+        type: campaign.type,
+        sentCampaignChoice: SentCampaignChoice.NOW,
+      },
+      {
+        onSuccess: () => {
+          toast.success(t("messages.campaignStopped"));
+        },
+        onError: () => {
+          toast.error(t("messages.campaignStopError"));
+        },
+      },
+    );
   };
 
   return (
@@ -534,6 +599,21 @@ export default function CampaignDetails() {
                       <Send className="w-4 h-4" />
                     </Button>
                   )}
+                  {campaign.type !== CampaignType.DRIP &&
+                    queueCount > 0 &&
+                    ![
+                      CampaignStatus.QUEUING,
+                      CampaignStatus.DEQUEUING,
+                    ].includes(campaign.status) && (
+                      <Button
+                        variant="destructive"
+                        className="rounded-full gap-2"
+                        onClick={handleStopCampaign}
+                      >
+                        Stop
+                        <Square className="w-4 h-4" />
+                      </Button>
+                    )}
 
                   {campaign.type === CampaignType.DRIP && (
                     <Button
@@ -704,6 +784,8 @@ export default function CampaignDetails() {
                   t,
                   participantsQuery.data?.participants || [],
                   toggleSelectAll,
+                  handleSendIndividual,
+                  sendingParticipantId,
                 )}
                 data={participantsQuery.data?.participants || []}
                 isPending={participantsQuery.isPending}
@@ -799,6 +881,7 @@ export default function CampaignDetails() {
         onClose={() => setIsResendModalOpen(false)}
         onSubmit={handleResendSubmit}
         isLoading={sendCampaignMutation.isPending}
+        isFirstSend={canSend}
         stats={{
           failed: statsQuery.data?.countFailed,
           pending: statsQuery.data?.countPending,
