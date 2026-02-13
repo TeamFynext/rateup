@@ -252,7 +252,7 @@ export async function handleWaOrderfromCatalog(
       const integration = await prisma.integration.findFirst({
         where: {
           orgId: catalog.orgId,
-          slug: "shopify",
+          name: "shopify",
         },
       });
 
@@ -271,7 +271,7 @@ export async function handleWaOrderfromCatalog(
           await sendMessage(catalog.orgId, {
             messaging_product: "whatsapp",
             recipient_type: "individual",
-            to: (messageObj as any).from || messageObj.contact.phone, // Ensure we have the phone
+            to: (messageObj as any).from || data.messages[0].from, // Ensure we have the phone
             type: "text",
             text: {
               body: `Please complete your purchase securely using the link below:\n\n${checkoutUrl}`,
