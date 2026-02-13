@@ -3434,5 +3434,35 @@
         "creating": "Creating..."
       }
     }
-  }
+  },
+  "apianalytics": {
+    "WhatsApp Messages Analytics": "WhatsApp Messages Analytics",
+    "Detailed analytics of WhatsApp messages sent": "Detailed analytics of WhatsApp messages sent",
+    "Total Messages Sent": "Total Messages Sent",
+    "Successful Delivery": "Successful Delivery",
+    "Failed Messages": "Failed Messages",
+    "Avg Delivery Time": "Avg Delivery Time",
+    "Message Delivery Trend (24h)": "Message Delivery Trend (24h)",
+    "No data available for the last 24 hours": "No data available for the last 24 hours",
+    "Daily Message Volume": "Daily Message Volume",
+    "No data available": "No data available",
+    "Success": "Success",
+    "Failed": "Failed",
+    "Team Performance Breakdown": "Team Performance Breakdown",
+    "No team data available": "No team data available",
+    "messages sent": "messages sent",
+    "WhatsApp Template Analytics": "WhatsApp Template Analytics",
+    "of total": "of total",
+    "Last used": "Last used",
+    "Messages Sent": "Messages Sent",
+    "Success Rate": "Success Rate",
+    "Failure Rate": "Failure Rate",
+    "Avg Response": "Avg Response",
+    "External API": "External API",
+    "WhatsApp API": "WhatsApp API",
+    "All APIs": "All APIs"
+  },
+  "Team Performance": "Team Performance",
+  "Message Analytics": "Message Analytics",
+  "Team Activity": "Team Activity"
 }

@@ -82,7 +82,7 @@ export type ContactsWithLastMessage = ContactsData & {
   lastReceivedMessageTimeStamp: string;
   total_contact_count?: string;
   unReadMessageCount?: number;
-  assignedUsers: { id: string; name: string }[];
+  assignedUsers: { id: string; name: string; teamId: string }[];
   messages: Partial<WaGetMessagesBody>[];
 };
 type ContactsWithLastMessageResponse = {
