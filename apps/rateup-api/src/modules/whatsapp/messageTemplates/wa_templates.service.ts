@@ -649,7 +649,19 @@ export async function sendTemplateToPhone({
     components: components,
   };
   const templateMessage = createTemplateMessage(phone, templateQuery);
-  await sendMessage(orgId, templateMessage, null, userId);
+  await sendMessage(
+    orgId,
+    templateMessage,
+    null,
+    userId,
+    undefined,
+    undefined,
+    undefined,
+    teamId,
+    "TEMPLATE",
+    false,
+    false,
+  );
   log.trace("Template send to user successfully");
 }
 

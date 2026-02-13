@@ -544,7 +544,17 @@ export async function sendWhatsAppTemplateToCustomer(
     };
     const templateMessage = createTemplateMessage(phone, templateQuery);
     await wait(50);
-    const res = await sendMessage(orgId, templateMessage, customerName);
+    const res = await sendMessage(
+      orgId,
+      templateMessage,
+      customerName,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      teamId,
+      "TEMPLATE",
+    );
     await updateMonthlyStat(
       SubscriptionFeaturePathName.WhatsAppTemplate,
       orgId,

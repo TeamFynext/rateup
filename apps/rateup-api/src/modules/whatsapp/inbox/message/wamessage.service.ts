@@ -613,7 +613,7 @@ export async function filterChats(
         SELECT 
           winb."contactId",
           json_agg(
-            json_build_object('id', u.id, 'name', u.name)
+            json_build_object('id', u.id, 'teamId', winb."teamId", 'name', u.name)
           ) as users
         FROM "WaInboxAssign" winb
         INNER JOIN "User" u ON winb."assignedUserId" = u.id
@@ -1204,6 +1204,7 @@ export async function sendMediaMessages(
   platform: PlatformType,
   caption = "",
   whatsappSettingsPhoneId = "",
+  teamId,
 ) {
   for (let i = 0; i < media.length; i++) {
     const item = media[i];
@@ -1245,6 +1246,8 @@ export async function sendMediaMessages(
       userId,
       whatsappSettingsPhoneId,
       platform,
+      undefined,
+      teamId,
     );
     if (!isLastItem) wait(50);
   }
@@ -1270,6 +1273,7 @@ export async function sendContactMessage(
   orgId,
   userId,
   whatsappSettingsPhoneId,
+  teamId,
 ) {
   if (!contacts.contactIds && !contacts.groupIds) return;
   let filterCondition = {
@@ -1310,7 +1314,16 @@ export async function sendContactMessage(
   });
 
   const messageBody = createContactMessage(phone, contactsData);
-  await sendMessage(orgId, messageBody, null, userId, whatsappSettingsPhoneId);
+  await sendMessage(
+    orgId,
+    messageBody,
+    null,
+    userId,
+    whatsappSettingsPhoneId,
+    undefined,
+    undefined,
+    teamId,
+  );
 }
 
 export async function sendLocationMessage(
@@ -1319,9 +1332,19 @@ export async function sendLocationMessage(
   orgId,
   userId,
   whatsappSettingsPhoneId,
+  teamId,
 ) {
   const messageBody = createLocationMessage(phone, location);
-  await sendMessage(orgId, messageBody, null, userId, whatsappSettingsPhoneId);
+  await sendMessage(
+    orgId,
+    messageBody,
+    null,
+    userId,
+    whatsappSettingsPhoneId,
+    undefined,
+    undefined,
+    teamId,
+  );
 }
 
 export async function getWaMessageByMessageId(
@@ -1733,4 +1756,28 @@ export async function createInternalWaMessage({
     }
     return wamessage;
   }
+}
+
+type CreateWaMessageOrgTeamMapInput = {
+  teamId: string;
+  messageId: string;
+  orgId: string;
+  isAutomedMessage?: boolean;
+  type: "INBOX" | "TEMPLATE" | "CAMPAIGN" | "AUTOMATED" | "FLOW";
+  externalApi: boolean;
+};
+
+export async function createWaMessageOrgTeamMap(
+  data: CreateWaMessageOrgTeamMapInput,
+) {
+  return prisma.waMessageOrgTeamMap.create({
+    data: {
+      teamId: data.teamId,
+      messageId: data.messageId,
+      orgId: data.orgId,
+      isAutomedMessage: data.isAutomedMessage ?? false,
+      type: data.type,
+      externalApi: data.externalApi,
+    },
+  });
 }

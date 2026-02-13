@@ -28,6 +28,7 @@ import {
   generateChatAnalytics,
   generateInboxResponse,
   createInternalWaMessage,
+  createWaMessageOrgTeamMap,
 } from "./wamessage.service.js";
 import {
   ByContactIdParams,
@@ -95,6 +96,15 @@ export async function handleWaMessages(
   messageId?: string,
   userId?: string,
   failed: boolean = false,
+  teamId: string | null = null,
+  messageType:
+    | "INBOX"
+    | "TEMPLATE"
+    | "CAMPAIGN"
+    | "AUTOMATED"
+    | "FLOW" = "INBOX",
+  isAutomated: boolean = false,
+  externalApi: boolean = false,
 ) {
   try {
     // Prepare message body
@@ -231,6 +241,21 @@ export async function handleWaMessages(
       userId,
       failed,
     );
+
+    const teamID = teamId && teamId.trim() !== "" ? teamId : null;
+
+    // add to wamessageorgteammap
+    if (type === "send") {
+      await createWaMessageOrgTeamMap({
+        teamId: teamID,
+        messageId: waMessage.id,
+        orgId,
+        isAutomedMessage: isAutomated,
+        type: messageType,
+        externalApi,
+      });
+    }
+
     if (type === "send" && conversation) {
       const isFirstSendMessage = await checkIfFirstSendMessageInConversation(
         conversation.id,
@@ -296,8 +321,14 @@ export async function sendNewWaMessageHandler(
 ) {
   try {
     const { contactId } = request.params;
-    const { type, contacts, location, whatsappSettingsPhoneId, platform } =
-      request.body;
+    const {
+      type,
+      contacts,
+      location,
+      whatsappSettingsPhoneId,
+      platform,
+      teamId,
+    } = request.body;
     const { orgId, userId } = request.user;
     const contact = await getContactById(contactId);
     let to;
@@ -328,8 +359,10 @@ export async function sendNewWaMessageHandler(
             contact.phone,
             orgId,
             userId,
+            platform as PlatformType,
             caption,
             whatsappSettingsPhoneId,
+            teamId,
           );
           break;
         }
@@ -346,6 +379,11 @@ export async function sendNewWaMessageHandler(
           userId,
           whatsappSettingsPhoneId,
           platform as PlatformType,
+          undefined,
+          teamId,
+          "INBOX",
+          false,
+          false,
         );
         break;
       }
@@ -365,6 +403,11 @@ export async function sendNewWaMessageHandler(
           userId,
           whatsappSettingsPhoneId,
           platform as PlatformType,
+          undefined,
+          teamId,
+          "INBOX",
+          false,
+          false,
         );
         break;
       }
@@ -378,6 +421,7 @@ export async function sendNewWaMessageHandler(
             platform as PlatformType,
             "",
             whatsappSettingsPhoneId,
+            teamId,
           );
         break;
       case "contact": {
@@ -387,6 +431,7 @@ export async function sendNewWaMessageHandler(
           orgId,
           userId,
           whatsappSettingsPhoneId,
+          teamId,
         );
         break;
       }
@@ -397,6 +442,7 @@ export async function sendNewWaMessageHandler(
           orgId,
           userId,
           whatsappSettingsPhoneId,
+          teamId,
         );
         break;
     }

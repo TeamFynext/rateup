@@ -37,6 +37,7 @@ const WaMedia = z.array(
 const NewWaMessageBody = z.object({
   type: z.enum(["text", "reaction", "media", "contact", "location"]),
   text: WaMessageText.optional(),
+  teamId: z.string().optional(),
   reaction: WaReaction.optional(),
   media: WaMedia.optional(),
   messageId: string().optional(), // for internal messages

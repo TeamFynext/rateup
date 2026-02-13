@@ -113,6 +113,8 @@ import { externalIntegrationRoutes } from "./modules/integrations/external/exter
 import healthRoutes from "./routes/health.js";
 import { approvalSchemas } from "./modules/loyalty/approvals/approval.schema.js";
 import { customerAccountPublicRoutes } from "./modules/loyalty/accounts/account.public.route.js";
+import { apiAnalyticsSchemas } from "./modules/apiAnalytics/apianalytics.schema.js";
+import { apiAnalyticsRoutes } from "./modules/apiAnalytics/apianalytics.routes.js";
 
 // Schema collections
 const schemaModules = [
@@ -167,6 +169,7 @@ const schemaModules = [
   bookDemoSchemas,
   zapierSchemas,
   businessHourSchemas,
+  apiAnalyticsSchemas,
 ];
 
 // Route configurations
@@ -239,6 +242,7 @@ const routeConfigs = [
   { plugin: lifecycleRoutes, prefix: "/api/lifecycles" },
   { plugin: bookDemoRoutes, prefix: "/api/bookdemo" },
   { plugin: externalIntegrationRoutes, prefix: "/api/integration/external" },
+  { plugin: apiAnalyticsRoutes, prefix: "/api/apianalytics" },
 ];
 
 async function registerSchemas(server: FastifyInstance): Promise<void> {

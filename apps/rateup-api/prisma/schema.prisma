@@ -182,6 +182,7 @@ model Org {
   businessHours            BusinessHour[]
   rules                    Rule[]
   ruleMessageBodyLocks     RuleMessageBodyLock[]
+  waMessageOrgTeamMaps     WaMessageOrgTeamMap[]
 }
 
 model UsageStats {
@@ -439,6 +440,8 @@ model Team {
   ticketBoards           TicketBoardTeam[]
   assignedConversations  ConversationAssignedUserTeamMap[]
   whatsappChannels       WhatsappSettings[]
+  waMessageOrgTeamMaps     WaMessageOrgTeamMap[]
+  waMessageSchedule      WaMessageSchedule[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -1500,6 +1503,7 @@ model WaMessage {
   sourceIdentifier                String?
   conversationId                  String?                           @db.Uuid
   Conversation                    Conversation?                     @relation(fields: [conversationId], references: [id])
+  waMessageOrgTeamMaps     WaMessageOrgTeamMap[]
 
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
@@ -1698,6 +1702,8 @@ model WaMessageSchedule {
   org             Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
   surveyTeamMapId String?        @db.Uuid
   surveyTeamMap   SurveyTeamMap? @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
+  teamId          String?        @db.Uuid
+  team            Team?          @relation(fields: [teamId], references: [id], onDelete: SetNull)
 }
 
 // ============================================================================
@@ -2405,4 +2411,31 @@ model Conversation {
   @@index([contactId])
   @@index([firstRespondedAt])
   @@index([createdAt])
+}
+
+enum WaMessageOrgTeamType {
+  TEMPLATE
+  CAMPAIGN
+  INBOX
+  FLOW
+  AUTOMATED
+}
+
+model WaMessageOrgTeamMap {
+  id               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt        DateTime             @default(now())
+  teamId           String?              @db.Uuid
+  team             Team?                @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  messageId        String               @db.Uuid
+  waMessage        WaMessage            @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  orgId            String               @db.Uuid
+  org              Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  isAutomedMessage Boolean              @default(false)
+  type             WaMessageOrgTeamType
+  externalApi      Boolean              @default(false)
+
+  @@index([orgId])
+  @@index([teamId])
+  @@index([type])
+  @@index([externalApi])
 }
