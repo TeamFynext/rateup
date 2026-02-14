@@ -2235,7 +2235,19 @@ async function _sendCampaignToParticipants(
 
     updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppTemplate, orgId);
     await wait(50); // wait 50ms (throughput will be ~20 messages per second)
-    sendMessage(orgId, templateMessage, null, userId)
+    sendMessage(
+      orgId,
+      templateMessage,
+      null,
+      userId,
+      undefined,
+      undefined,
+      undefined,
+      teamId,
+      "CAMPAIGN",
+      false,
+      true,
+    )
       .then(sendCampaignCallback)
       .catch((e) => {
         log.error("Could not send campaign to %s", contact.phone);

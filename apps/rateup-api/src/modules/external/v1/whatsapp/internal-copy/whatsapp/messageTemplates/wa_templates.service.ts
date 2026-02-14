@@ -428,6 +428,7 @@ interface SendTemplateToPhoneProps {
   phone: string;
   timeDelay: number; // number of minutes
   components: any[];
+  teamId: string | null;
   surveyTeamMap?: string;
 }
 export async function sendTemplateToPhone({
@@ -436,6 +437,7 @@ export async function sendTemplateToPhone({
   phone,
   timeDelay,
   components,
+  teamId,
   surveyTeamMap,
 }: SendTemplateToPhoneProps) {
   dbTemplate.data.components.forEach((item) => {
@@ -512,10 +514,20 @@ export async function sendTemplateToPhone({
       surveyTeamMapId: surveyTeamMap,
       timeDelay,
       source: waMessageScheduleSource.ExternalApi,
+      teamId: teamId,
     });
     log.trace("Template schedule created successfully");
   } else {
-    res = await sendMessage(orgId, templateMessage);
+    res = await sendMessage(
+      orgId,
+      templateMessage,
+      undefined,
+      undefined,
+      teamId,
+      false,
+      "TEMPLATE",
+      true,
+    );
     await updateMonthlyStat(
       SubscriptionFeaturePathName.WhatsAppTemplate,
       orgId,
@@ -869,6 +881,14 @@ export async function sendTemplateToUserCore(
   } else {
     templateMessage = createTemplateMessage(phone, templateQuery);
   }
-  await sendMessage(orgId, templateMessage, null, userId);
+  await sendMessage(
+    orgId,
+    templateMessage,
+    null,
+    userId,
+    teamId,
+    false,
+    "TEMPLATE",
+  );
   await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppTemplate, orgId);
 }

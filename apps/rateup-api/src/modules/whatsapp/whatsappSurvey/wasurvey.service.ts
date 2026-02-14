@@ -96,6 +96,15 @@ export async function sendMessage(
   whatsappSettingsPhoneId?: string,
   platform: PlatformType = PlatformType.WHATSAPP,
   category?: WaTemplateCategory,
+  teamId: string | null = null,
+  messageType:
+    | "INBOX"
+    | "TEMPLATE"
+    | "CAMPAIGN"
+    | "AUTOMATED"
+    | "FLOW" = "INBOX",
+  isAutomated?: boolean,
+  externalApi?: boolean,
 ) {
   let waSettings: Omit<WhatsappSettings, "accessToken_iv">;
   let to: string;
@@ -154,6 +163,11 @@ export async function sendMessage(
       userName,
       messageId,
       userId,
+      false,
+      teamId ?? null,
+      messageType,
+      isAutomated,
+      externalApi,
     );
     return { status: true, message: messageId };
   } catch (e: any) {
@@ -173,6 +187,10 @@ export async function sendMessage(
       null,
       userId,
       true,
+      teamId ?? null,
+      messageType,
+      isAutomated,
+      externalApi,
     );
     await prisma.waLogs.create({
       data: {
@@ -845,7 +863,19 @@ export async function sendTextMessage(
   description: any = "",
 ) {
   const messageData = createTextMessage(to.phone, title, description);
-  await sendMessage(to.orgId, messageData);
+  await sendMessage(
+    to.orgId,
+    messageData,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "AUTOMATED",
+    true,
+    false,
+  );
 }
 interface sendSurveyToParticipantParams {
   campaignParticipantId: string;

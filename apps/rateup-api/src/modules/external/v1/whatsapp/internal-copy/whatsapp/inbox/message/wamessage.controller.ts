@@ -23,17 +23,27 @@ import {
   getOrCreateContactByPhone,
 } from "../../../../../contact/internal-copy/contact/contact.service.js";
 import { WaSendMessageBody } from "../../../../../../../../types/whatsapp.types.js";
+import { createWaMessageOrgTeamMap } from "../../../../../../../whatsapp/inbox/message/wamessage.service.js";
 
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
   messageBody: any,
+  teamId: string,
   phone: string,
   orgId: string,
   userName?: string,
   messageId?: string,
   userId?: string,
   failed: boolean = false,
+  isAutomated: boolean = false,
+  messageType:
+    | "INBOX"
+    | "TEMPLATE"
+    | "CAMPAIGN"
+    | "AUTOMATED"
+    | "FLOW" = "INBOX",
+  externalApi: boolean = false,
 ) {
   try {
     // Create the message body
@@ -79,6 +89,19 @@ export async function handleWaMessages(
       userId,
       failed,
     );
+    const teamID = teamId && teamId.trim() !== "" ? teamId : null;
+
+    // add to wamessageorgteammap
+    if (type === "send") {
+      await createWaMessageOrgTeamMap({
+        teamId: teamID,
+        messageId: waMessage.id,
+        orgId,
+        isAutomedMessage: isAutomated,
+        type: messageType,
+        externalApi: externalApi,
+      });
+    }
 
     // Send the message to the connected clients
     await sendViaWstoOrgHandler(orgId, {
