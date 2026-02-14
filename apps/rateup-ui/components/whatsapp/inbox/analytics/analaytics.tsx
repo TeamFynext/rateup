@@ -12,6 +12,7 @@ import AuditLogs from "@/app/dashboard/analytics/audit-log/page";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
+import ApiAnalytics from "./ApiAnalytics";
 import ConversationStatsAgentPerformance from "./ConversationStatsAgentPerformance";
 import ConversationStatsOverview from "./ConversationStatsOverview";
 import DateRangeSelector from "./DateRangeSelector";
@@ -36,6 +37,10 @@ const Analytics = () => {
       queryKey: ["ConversationAccountDistribution"],
     });
     queryClient.invalidateQueries({ queryKey: ["ConversationQuickStats"] });
+    queryClient.invalidateQueries({ queryKey: ["analyticsapiOverview"] });
+    queryClient.invalidateQueries({ queryKey: ["deliveredfailedtrend"] });
+    queryClient.invalidateQueries({ queryKey: ["templateapioverview"] });
+    queryClient.invalidateQueries({ queryKey: ["teamapioverview"] });
     queryClient.invalidateQueries({ queryKey: ["teamoverview"] });
     queryClient.invalidateQueries({
       queryKey: ["StaffPerformanceonConversation"],
@@ -48,6 +53,10 @@ const Analytics = () => {
     ["ConversationQuickStats"],
     ["StaffPerformanceonConversation"],
     ["StaffDetailedConversationAnalytics"],
+    ["analyticsapiOverview"],
+    ["deliveredfailedtrend"],
+    ["templateapioverview"],
+    ["teamapioverview"],
   ];
 
   const fetchCounts = queries.map((key) => useIsFetching({ queryKey: key }));
@@ -124,6 +133,7 @@ const Analytics = () => {
             {tab === "team-performance" && (
               <TeamPerformance dateRange={dateRange} />
             )}
+            {tab === "api-analytics" && <ApiAnalytics dateRange={dateRange} />}
           </div>
         </div>
       )}

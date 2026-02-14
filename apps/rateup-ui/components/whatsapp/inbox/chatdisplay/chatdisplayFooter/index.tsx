@@ -59,11 +59,14 @@ export default function WaInboxChatDisplayFooter({
   const inputRef = useRef(null);
   const submiRef = useRef(null);
   const translations = useTranslations();
+  const { user } = useUser();
   const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
+  const currentUser = contact.assignedUsers?.find((c) => c.id === user?.userId);
   const platform =
     contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const sendnewWaMessage = useSendNewWaMessage(
     contact.id,
+    currentUser.teamId,
     whatsappSettingsPhoneId,
     platform as MessagePlatform,
   );
@@ -74,7 +77,6 @@ export default function WaInboxChatDisplayFooter({
   const { body, setBody, resetBody } = useMessageBodyStore();
   const { updateContactById } = useContactsStore();
   const messagesStore = useMessagesStore();
-  const { user } = useUser();
 
   const form = useForm({
     initialValues: {
@@ -543,6 +545,7 @@ export const WaInboxAssignUserFooter = ({
               {
                 id: user.userId,
                 name: user?.userName,
+                teamId: user.teams?.[0],
               },
             ],
           }));

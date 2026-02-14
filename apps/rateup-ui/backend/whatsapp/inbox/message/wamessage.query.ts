@@ -60,6 +60,7 @@ export const useGetMessagesByContactId = (
 
 export const useSendNewWaMessage = (
   contactId: string,
+  teamId: string | null,
   whatsappSettingsPhoneId: string,
   platform = MessagePlatform.WHATSAPP,
 ) => {
@@ -70,6 +71,7 @@ export const useSendNewWaMessage = (
         ...message,
         whatsappSettingsPhoneId,
         platform,
+        teamId,
       }),
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });

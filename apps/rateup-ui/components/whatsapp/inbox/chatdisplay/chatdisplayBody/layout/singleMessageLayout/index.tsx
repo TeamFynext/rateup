@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/popover";
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar";
+import { useUser } from "@/context/UserContext";
 import { showErrorToast } from "@/utils/notifications";
 
 import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
@@ -98,13 +99,19 @@ export const getColorForUser = (userName = "") => {
 export default function WaInboxSingleMessageLayout(props: Props) {
   const { exchangeProcess, messageObject, reaction } = props;
   const [isHovered, setIsHovered] = useState(false);
+  const { user } = useUser();
   const { selectedContact } = useContactsStore();
+  const currentUser = selectedContact.assignedUsers?.find(
+    (c) => c.id === user?.userId,
+  );
+
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const messageContentRef = React.useRef(null);
   const platform =
     selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const sendnewWaMessage = useSendNewWaMessage(
     selectedContact?.id,
+    currentUser?.teamId,
     whatsappSettingsPhoneId,
     platform,
   );

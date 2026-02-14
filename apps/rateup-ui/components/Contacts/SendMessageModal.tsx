@@ -33,6 +33,7 @@ const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
   const [platform, setPlatform] = useState<string>(MessagePlatform.WHATSAPP);
   const sendnewWaMessage = useSendNewWaMessage(
     selectedContact.id,
+    null,
     whatsappSettingsPhoneId,
     platform as MessagePlatform,
   );
