@@ -2,28 +2,23 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   TouchableOpacity,
-  PermissionsAndroid,
-  Platform,
   Animated,
   ActivityIndicator,
 } from "react-native";
-import AudioRecorderPlayer from "react-native-audio-recorder-player";
 import { Mic, CircleStop } from "lucide-react-native";
-import RNFS from "react-native-fs";
 import { uploadFile, getFileUrlFromKey } from "@/src/utils/fileUpload";
 import { create } from "zustand";
 import { useToast } from "react-native-toast-notifications";
+import {
+  useAudioRecorder,
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+} from "expo-audio";
 
-const audioRecorderPlayer = new AudioRecorderPlayer();
 
 const requestPermission = async () => {
-  if (Platform.OS === "android") {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-    );
-    return granted === PermissionsAndroid.RESULTS.GRANTED;
-  }
-  return true;
+  const { granted } = await requestRecordingPermissionsAsync();
+  return granted;
 };
 
 const VoiceVisualizer = () => {
@@ -42,7 +37,7 @@ const VoiceVisualizer = () => {
           duration: 300,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     pulse.start();
 
@@ -65,35 +60,31 @@ const VoiceVisualizer = () => {
 
 const VoiceRecorder = ({
   onRecordingUpload,
-  iconColor
-  
+  iconColor,
 }: {
-  iconColor?:string;
+  iconColor?: string;
   onRecordingUpload?: (file: {
     key: string;
     url: string;
     name: string;
   }) => void;
 }) => {
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [isRecording, setIsRecording] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const toast = useToast();
 
   const startRecording = async () => {
     if (!(await requestPermission())) return;
-
-    const path = Platform.select({
-      ios: `${RNFS.DocumentDirectoryPath}/voice.m4a`,
-      android: `${RNFS.ExternalDirectoryPath}/voice.mp4`,
-    })!;
-
-    await audioRecorderPlayer.startRecorder(path);
+    await audioRecorder.prepareToRecordAsync();
+    audioRecorder.record();
     setIsRecording(true);
   };
 
-  const stopRecording = async () => {
-    const result = await audioRecorderPlayer.stopRecorder();
-    setIsRecording(false);
+   const stopRecording = async () => {
+    await audioRecorder.stop();
+    const result = audioRecorder.uri
+        setIsRecording(false);
 
     const name = `voice-${Date.now()}.mp4`;
     setIsUploading(true);

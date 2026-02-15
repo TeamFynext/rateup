@@ -8,7 +8,7 @@ import {
   Play,
   Reply,
 } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -32,6 +32,7 @@ import {
   WaTemplateFetchBodyComponent,
 } from "@/src/context/type";
 import TextWithFormatting from "@/src/utils/TextFormatting";
+import { useAudioPlayer } from "expo-audio";
 
 export default function WaInboxText({
   messageContent,
@@ -51,7 +52,7 @@ export default function WaInboxText({
           <Text className="text-base" key={index}>
             {text}
           </Text>
-        )
+        ),
       )}
     </View>
   );
@@ -239,18 +240,46 @@ export function WaInboxAudio({
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
-  const playerRef = useRef<any>(null);
   const appFolderPath = `${RNFS.DocumentDirectoryPath}/wa_media`;
   const downloadPath = `${appFolderPath}/${id}.mp3`;
-
   const link = id.startsWith("http") ? id : null;
   const toast = useToast();
+  const source = localPath || link || null;
+  const player = useAudioPlayer(source ? { uri: source } : null);
+
+  useEffect(() => {
+    if (!player) return;
+
+    let raf: number;
+    let cancelled = false;
+
+    const update = () => {
+      if (cancelled) return;
+
+      try {
+        setProgress(player.currentTime || 0);
+        setDuration(player.duration || 0);
+        setIsPlaying(player.playing || false);
+      } catch {
+        // Player was released — stop loop
+        return;
+      }
+
+      raf = requestAnimationFrame(update);
+    };
+
+    raf = requestAnimationFrame(update);
+
+    return () => {
+      cancelled = true;
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [player]);
 
   useEffect(() => {
     const checkLocalFile = async () => {
       const appFolderExists = await RNFS.exists(appFolderPath);
       if (!appFolderExists) await RNFS.mkdir(appFolderPath);
-
       const exists = await RNFS.exists(downloadPath);
       if (exists) {
         setLocalPath("file://" + downloadPath);
@@ -283,8 +312,21 @@ export function WaInboxAudio({
     });
   };
 
-  const togglePlay = () => {
-    setIsPlaying((prev) => !prev);
+  const play = () => {
+    if (!player) return;
+
+    try {
+      const ended =
+        player.duration && player.currentTime >= player.duration - 0.1;
+
+      if (ended) {
+        player.seekTo(0);
+      }
+
+      player.playing ? player.pause() : player.play();
+    } catch {
+      // player already released
+    }
   };
 
   const formatTime = (sec: number) => {
@@ -305,7 +347,7 @@ export function WaInboxAudio({
 
             {/* Play / Pause Button */}
             <TouchableOpacity
-              onPress={togglePlay}
+              onPress={play}
               className="p-2 rounded-full bg-gray-100"
             >
               {isPlaying ? (
@@ -322,7 +364,9 @@ export function WaInboxAudio({
             <View className="h-2 bg-rateUpGreen20 rounded-full overflow-hidden mb-1">
               <View
                 className="h-full bg-rateUpGreen rounded-full"
-                style={{ width: `${(progress / duration) * 100 || 0}%` }}
+                style={{
+                  width: duration ? `${(progress / duration) * 100}%` : "0%",
+                }}
               />
             </View>
 
@@ -334,23 +378,6 @@ export function WaInboxAudio({
               <Text className="text-xs text-gray-500">{timestamp}</Text>
             </View>
           </View>
-
-          {/* Hidden Video */}
-          <Video
-            ref={playerRef}
-            source={{ uri: localPath ?? link! }}
-            paused={!isPlaying}
-            onEnd={() => {
-              setIsPlaying(false);
-              setProgress(0);
-              playerRef.current?.seek(0);
-            }}
-            onLoad={(meta) => setDuration(meta.duration)}
-            onProgress={(p) => setProgress(p.currentTime)}
-            playInBackground={false}
-            playWhenInactive={false}
-            style={{ width: 0, height: 0 }}
-          />
         </View>
       ) : (
         <View className="flex-row items-center space-x-3">
@@ -459,7 +486,7 @@ export function WaInboxDocument({
         await RNFS.writeFile(
           downloadPath,
           Buffer.from(fileData).toString("base64"),
-          "base64"
+          "base64",
         );
 
         setLocalPath("file://" + downloadPath);
@@ -476,7 +503,7 @@ export function WaInboxDocument({
     if (localPath) {
       try {
         await FileViewer.open(localPath, {
-          showOpenWithDialog: true, // shows the "Open with..." prompt
+          showOpenWithDialog: true, 
         });
       } catch (err) {
         console.error("Error opening file:", err);
@@ -612,7 +639,7 @@ export function WaInboxTemplate({ templateBody, parameters }: Props2) {
         const param =
           parameters?.find(
             (param: any) =>
-              param?.type?.toLowerCase() === component?.type?.toLowerCase()
+              param?.type?.toLowerCase() === component?.type?.toLowerCase(),
           ) ?? undefined;
 
         return (

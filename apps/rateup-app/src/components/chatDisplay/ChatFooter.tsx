@@ -19,13 +19,13 @@ import { useGetAssignedUserForContact } from "@/src/api/inbox/messages/message.q
 
 const ChatFooter = ({ id }: { id: string }) => {
   const waAssignStatus = useChatAssignStatusStore(
-    (state) => state.waAssignStatus
+    (state) => state.waAssignStatus,
   );
   const { data: assignedUsers } = useGetAssignedUserForContact(id);
   const { userId } = useAuth();
   const [isModalVisible, setModalVisible] = useState(false);
   let currentUserAssignment = assignedUsers?.find(
-    (entry: any) => entry.assignedUserId == userId
+    (entry: any) => entry.assignedUserId == userId,
   );
   const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
   const toggleModal = () => setModalVisible(!isModalVisible);
@@ -70,7 +70,7 @@ const ChatFooter = ({ id }: { id: string }) => {
   );
 
   if (
-    (!currentUserAssignment) ||
+    !currentUserAssignment ||
     waAssignStatus === "UNASSIGNED" ||
     waAssignStatus === "NEW" ||
     WaMessageClosedStatus.includes(waAssignStatus as WaMessageAssignStatus)

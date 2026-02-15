@@ -56,7 +56,7 @@ export interface filteredContactCount {
   unassigned: number;
 }
 
-export type HomeInterface = "inbox" | "flow" | "webform" | "";
+export type HomeInterface = string | "inbox" | "flow" | "webform" | "";
 
 export enum WaMessageTypes {
   text = "text",
