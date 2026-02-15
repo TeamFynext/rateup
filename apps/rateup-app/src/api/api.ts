@@ -59,8 +59,8 @@ export const signOut = async () => {
     if (token) {
       await deleteToken(token);
     }
-    await SuperTokens.signOut();
     await AsyncStorage.removeItem("accessToken");
+    await SuperTokens.signOut();
     router.replace("/auth/SignIn");
     return { success: true };
   } catch (err: any) {

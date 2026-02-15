@@ -37,24 +37,24 @@ const AccountBar = ({
 
   return (
     <ScrollView
-      className="flex-1 bg-white px-6 pt-6"
+      className="flex-1 bg-white dark:bg-gray-900 px-6 pt-6"
       showsHorizontalScrollIndicator={false}
       showsVerticalScrollIndicator={false}
     >
       {/* Heading */}
-      <Text className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">
+      <Text className="text-xl sm:text-2xl font-bold dark:text-white mb-6">
         Account Details
       </Text>
 
       {/* Top section: Role Badge + Profile Picture */}
       <View className="flex-row items-start justify-between mb-6">
-        <View className="bg-[#FFA500] px-3 py-1 rounded-full">
+        <View className="bg-yellow-500 px-3 py-1 rounded-full">
           <Text className="text-white font-semibold text-xs sm:text-sm">
             {role}
           </Text>
         </View>
 
-        <View className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-200">
+        <View className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-chatAvatarBlue">
           {profilePhoto ? (
             <Image
               source={{
@@ -65,7 +65,7 @@ const AccountBar = ({
             />
           ) : (
             <View className="flex-1 justify-center items-center">
-              <Text className="text-rateUpGreen font-bold text-xl">
+              <Text className="text-white font-bold text-xl">
                 {namePreview(userName)}
               </Text>
             </View>
@@ -76,36 +76,40 @@ const AccountBar = ({
       {/* Details Section */}
       <View className="flex flex-col gap-3 pb-20">
         <View>
-          <Text className="text-gray-400 text-xs">Name</Text>
-          <Text className="text-gray-900 font-semibold text-base sm:text-lg">
+          <Text className="text-gray-400 dark:text-white text-xs">Name</Text>
+          <Text className="text-gray-900 dark:text-white font-semibold text-base sm:text-lg">
             {userName}
           </Text>
         </View>
 
         <View>
-          <Text className="text-gray-400 text-xs">Organization Name</Text>
-          <Text className="text-gray-900 font-semibold text-base sm:text-lg">
+          <Text className="text-gray-400 dark:text-white text-xs">
+            Organization Name
+          </Text>
+          <Text className="text-gray-900 dark:text-white font-semibold text-base sm:text-lg">
             {orgName}
           </Text>
         </View>
 
         <View>
-          <Text className="text-gray-400 text-xs">Phone Number</Text>
-          <Text className="text-gray-900 font-semibold text-base sm:text-lg">
+          <Text className="text-gray-400 dark:text-white text-xs">
+            Phone Number
+          </Text>
+          <Text className="text-gray-900 dark:text-white font-semibold text-base sm:text-lg">
             {orgPhone}
           </Text>
         </View>
 
         <View>
-          <Text className="text-gray-400 text-xs">Email</Text>
-          <Text className="text-gray-900 font-semibold text-base sm:text-lg">
+          <Text className="text-gray-400 dark:text-white text-xs">Email</Text>
+          <Text className="text-gray-900 dark:text-white font-semibold text-base sm:text-lg">
             {email}
           </Text>
         </View>
 
         <TouchableOpacity
           className={`rounded-lg flex items-center justify-center ${
-            loading ? "bg-[#343a4061]" : "bg-[#343A40]"
+            loading ? "bg-gray-800" : "bg-gray-700"
           }`}
           onPress={handleSignOut}
           disabled={loading}

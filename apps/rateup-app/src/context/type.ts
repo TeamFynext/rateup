@@ -11,6 +11,7 @@ export type WaGetMessagesBody = {
   waContctId: string;
   createdAt: string;
   waCreatedAt: string;
+  sendBy?:string;
   messageBody: any;
   templateComponentParams: any;
   stats?: { read: string; delivered: string; sent: string; error: string };
@@ -35,6 +36,7 @@ export type WaGetMessagesBody = {
     waMessageAssignStatus:any;
     whatsappUserName?: string;
     blockedOnWhatsApp: boolean;
+    lastReceivedMessageTimeStamp?:string;
     loyaltyCustomer?: {
       id: string;
       email?: string;
@@ -160,3 +162,24 @@ type Image = {
 type Document = {
   link: string;
 };
+
+
+export interface MembersResponse {
+    message: string;
+    data: TeamMembersData[];
+  }
+
+  type Team = {
+    team_id: string;
+    team_name: string;
+    team_code: string;
+  };
+  export interface TeamMembersData {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    teams: Team[];
+    isPaused?: boolean;
+    status: "online" | "offline";
+  }

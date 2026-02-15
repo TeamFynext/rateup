@@ -8,8 +8,9 @@ import {
 } from "react";
 import { AppState } from "react-native";
 import { orgWsMessage } from "./type";
-import { useOrgWsAuthCheck } from "../api/inbox/messages/message.query";
 import { useAuth } from "./AuthContext";
+import { getMobileId } from "../util";
+import SuperTokens from "supertokens-react-native";
 
 interface UserContextProps {
   user: any;
@@ -30,25 +31,40 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [wsData, setWsData] = useState<orgWsMessage>({} as orgWsMessage);
   const { orgId, isAuthenticated } = useAuth();
-
-  const { data, error } = useOrgWsAuthCheck(isAuthenticated);
-
+  const [mobileId, setMobileId] = useState<string | null>(null);
   const connectionRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const retryIntervalRef = useRef(1000); // 1s, exponential backoff
+  useEffect(() => {
+    let mounted = true;
 
-  const connectWebSocket = () => {
-    if (
-      connectionRef.current ||
-      !isAuthenticated ||
-      !data?.afterAuthId ||
-      !orgId ||
-      error
-    ) {
+    const loadMobileId = async () => {
+      const id = await getMobileId();
+      if (mounted) setMobileId(id);
+    };
+
+    loadMobileId();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const connectWebSocket = async () => {
+    if (connectionRef.current || !isAuthenticated || !orgId) {
+      return;
+    }
+    const token = await SuperTokens.getAccessToken();
+
+    if(!token){
+      console.log("no token found")
       return;
     }
 
-    const socket = new WebSocket(`${WS_URL}/${data.afterAuthId}/ws/${orgId}`);
+    const socket = new WebSocket(
+      `${WS_URL}/${mobileId}/mobilews?accessToken=${encodeURIComponent(token)}`,
+    );
+
     connectionRef.current = socket;
 
     socket.onopen = () => {
@@ -75,7 +91,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
       reconnectTimeoutRef.current = setTimeout(() => {
         retryIntervalRef.current = Math.min(
           retryIntervalRef.current * 2,
-          30000
+          30000,
         );
         connectWebSocket();
       }, retryIntervalRef.current);
@@ -87,10 +103,8 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (isAuthenticated && data?.afterAuthId && !error) {
-      connectWebSocket();
-    }
-
+    if (!mobileId) return;
+    connectWebSocket();
     return () => {
       if (connectionRef.current) {
         connectionRef.current.close();
@@ -101,7 +115,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         reconnectTimeoutRef.current = null;
       }
     };
-  }, [isAuthenticated, data?.afterAuthId, error, orgId]);
+  }, [mobileId, orgId]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {

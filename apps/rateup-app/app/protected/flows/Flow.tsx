@@ -6,6 +6,7 @@ import FlowSearchBar from "@/src/components/flow/FlowSearchBar";
 import { useRouter } from "expo-router";
 import { useFlowFilterStore, useSearchFlowStore } from "@/src/utils/store";
 import { MoveRight } from "lucide-react-native";
+import { colors } from "@/src/constants/constants";
 
 const getStatusBadge = (status: string) => {
   const color = status === "PUBLISHED" ? "bg-green-500" : "bg-orange-400";
@@ -76,9 +77,9 @@ const Flow = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white px-4 pt-4 w-screen justify-center items-center">
+      <View className="flex-1 bg-white dark:bg-slate-950 px-4 pt-4 w-screen justify-center items-center">
         <ActivityIndicator size="large" />
-        <Text className="text-rateUpGreen font-semibold">Loading flows...</Text>
+        <Text className="text-primaryBlue font-semibold">Loading flows...</Text>
       </View>
     );
   }
@@ -100,7 +101,7 @@ const Flow = () => {
 
     return (
       <TouchableOpacity
-        className="bg-white rounded-xl px-4 py-3 mb-3 shadow-md"
+        className="bg-white dark:bg-slate-900 rounded-xl px-4 py-3 mb-3 shadow-md"
         onPress={() =>
           router.push({
             //@ts-ignore
@@ -110,7 +111,7 @@ const Flow = () => {
         }
       >
         <View className="flex-row justify-between items-center mb-1">
-          <Text className="text-base font-semibold text-gray-900">
+          <Text className="text-base font-semibold dark:text-white">
             {item.name}
           </Text>
           <Text className="text-xs text-gray-500">
@@ -120,12 +121,12 @@ const Flow = () => {
 
         <View className="flex-row justify-between items-center mt-1">
           {getStatusBadge(item.status)}
-          <View className="bg-rateUpLightGreen px-2 py-0.5 rounded-full">
+          <View className="bg-primaryBlue/20 px-2 py-0.5 rounded-full">
             <View className="flex-row items-center justify-center gap-1">
-              <Text className="text-xs font-semibold text-rateUpGreen">
+              <Text className="text-xs font-semibold text-primaryBlue">
                 Response
               </Text>
-              <MoveRight width={15} height={15} color={"black"} />
+              <MoveRight width={15} height={15} color={colors["primary-blue"]} />
             </View>
           </View>
         </View>
@@ -136,7 +137,7 @@ const Flow = () => {
   return (
     <View className="flex-1">
       <FlowSearchBar />
-      <View className="flex-1 bg-white px-4 pt-4 w-screen">
+      <View className="flex-1 bg-white dark:bg-slate-950 px-4 pt-4 w-screen">
         <FlashList
           data={filteredAndSortedFlows}
           renderItem={renderItem}

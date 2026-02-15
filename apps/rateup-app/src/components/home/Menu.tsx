@@ -1,13 +1,18 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, useColorScheme } from "react-native";
 import React, { useState } from "react";
-import { MessageCircleMore, PanelsTopLeft, Activity } from "lucide-react-native";
+import {
+  MessageCircleMore,
+  PanelsTopLeft,
+  Activity,
+} from "lucide-react-native";
+import { colors } from "@/src/constants/constants";
 
 const MENU_ITEMS = [
   {
     key: "inbox",
     label: "Inbox",
     Icon: MessageCircleMore,
-    iconColor: "#004F98",
+    iconColor: colors["primary-blue"],
   },
   {
     key: "flow",
@@ -30,6 +35,8 @@ const MenuBar = ({
   onSendValue: (val: any) => void;
   selected: string;
 }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [selectedInterface, setSelectedInterface] = useState(selected);
 
   const handlePress = (val: string) => {
@@ -38,30 +45,27 @@ const MenuBar = ({
   };
 
   return (
-    <View>
-      <Text className="text-xl font-medium mb-4">Menu</Text>
+    <View className="dark:bg-gray-900">
+      <Text className="text-xl font-medium mb-4 dark:text-white">Menu</Text>
 
       {MENU_ITEMS.map(({ key, label, Icon, iconColor }) => {
         const isSelected = selectedInterface === key;
+        const textColor = isSelected
+          ? colors["primary-blue"]
+          : isDark
+          ? colors["light-blue"]
+          : colors["gray-700"];
 
         return (
           <Pressable
             key={key}
             className={`p-2 rounded-md mb-2 flex-row justify-start items-center gap-1 ${
-              isSelected ? "bg-[#C4D7F5]" : "bg-white"
+              isSelected ? "bg-primaryBlue/30" : "bg-white dark:bg-gray-900"
             }`}
             onPress={() => handlePress(key)}
           >
-            <Icon
-              color={isSelected ? iconColor : "#C4D7F5"}
-              width={24}
-              height={24}
-            />
-            <Text
-              className={`text-base ${
-                isSelected ? "text-[#004F98]" : "text-[#7A8289]"
-              }`}
-            >
+            <Icon color={textColor} width={24} height={24} />
+            <Text className={`text-base`} style={{ color: textColor }}>
               {label}
             </Text>
           </Pressable>

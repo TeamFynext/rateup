@@ -6,19 +6,33 @@ import {
   Modal,
   Dimensions,
   ActivityIndicator,
+  useColorScheme,
 } from "react-native";
 import React, { useState } from "react";
-import { BackIcon, DotsIcon } from "@/src/constants/imageExports";
 import { useRouter } from "expo-router";
-import { namePreview } from "../../utils/chatbox_utils";
+import {
+  generateInternalMessageId,
+  namePreview,
+} from "../../utils/chatbox_utils";
 import { closeChat } from "@/src/api/inbox/contacts/contacts.api";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useChatAssignStatusStore } from "@/src/utils/store";
 import { useToast } from "react-native-toast-notifications";
+import AssignToUser from "./chatFooter/AssignToUser";
+import {
+  ArrowLeft,
+  CircleCheckBig,
+  MoreVertical,
+  Pencil,
+} from "lucide-react-native";
+import { useEditContactMutation } from "@/src/api/inbox/contacts/contacts.query";
+import { WaMessageClosedStatus } from "@/src/constants/constants";
+import { WaMessageAssignStatus } from "@/src/api/inbox/types";
+import { getClosedIcon } from "@/src/util";
 
 const { width: screenWidth } = Dimensions.get("window");
-let userId: string;
+let contactId: string;
 
 const MoreOptions = ({
   visible,
@@ -29,6 +43,8 @@ const MoreOptions = ({
   onClose: () => void;
   onCloseChatPress: () => void;
 }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const router = useRouter();
   const modalWidth = screenWidth * 0.4;
   const waAssignStatus = useChatAssignStatusStore(
@@ -43,44 +59,43 @@ const MoreOptions = ({
     >
       <Pressable className="flex-1" onPress={onClose}>
         <View
-          className="absolute right-[10px] top-[55px] rounded-md p-2 bg-white shadow-md z-50"
+          className="absolute right-[10px] top-[55px] rounded-md p-2 bg-white dark:bg-slate-900 shadow-md z-50 flex items-start"
           style={{ width: modalWidth }}
         >
           <TouchableOpacity
-            className="p-3"
+            className="p-3 w-full"
             onPress={() => {
               onClose();
               router.push({
                 pathname: "/protected/inbox/contact/Edit",
-                params: { userId },
+                params: { contactId },
               });
             }}
           >
-            <Text className="text-gray-800 text-lg">Edit</Text>
+            <View className="flex-row items-center gap-1">
+              <Pencil color={isDark ? "white" : "black"} size={18} />
+              <Text className="dark:text-white font-semibold" style={{fontSize:16}}>
+                Edit
+              </Text>
+            </View>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            className="p-3"
-            onPress={() => {
-              onClose();
-              router.push({
-                pathname: "/protected/inbox/contact/AssignToUser",
-                params: { contactId: userId },
-              });
-            }}
-          >
-            <Text className="text-gray-800 text-lg">Assign</Text>
-          </TouchableOpacity>
+          <AssignToUser contactId={contactId} iconSize={18} fontSize={16} />
 
           {waAssignStatus !== "CLOSED" ? (
             <TouchableOpacity
-              className="p-3"
+              className="p-3 w-full"
               onPress={() => {
                 onClose();
                 onCloseChatPress();
               }}
             >
-              <Text className="text-gray-800 text-lg">Close Chat</Text>
+              <View className="flex-row items-center gap-1">
+                <CircleCheckBig color={isDark ? "white" : "black"} size={18} />
+                <Text className="dark:text-white font-semibold" style={{fontSize:16}}>
+                  Close
+                </Text>
+              </View>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -92,14 +107,41 @@ const MoreOptions = ({
 const ConfirmationModal = ({
   visible,
   onCancel,
-  onProceed,
-  isLoading,
+  contactId,
 }: {
   visible: boolean;
   onCancel: () => void;
-  onProceed: () => void;
-  isLoading: boolean;
+  contactId: string;
 }) => {
+  const queryClient = useQueryClient();
+  const editContactMutation = useEditContactMutation();
+
+  const handleCloseChat = (status: string) => {
+    const id = generateInternalMessageId();
+
+    editContactMutation.mutate(
+      {
+        contactId,
+        data: { waMessageAssignStatus: status, messageId: id },
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: ["assigned-contact", contactId],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["wa-messages", contactId]
+          });
+          queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
+          queryClient.invalidateQueries({
+            queryKey: ["assignedInboxUser", contactId],
+          });
+          onCancel();
+        },
+      }
+    );
+  };
+
   return (
     <Modal
       visible={visible}
@@ -107,34 +149,59 @@ const ConfirmationModal = ({
       animationType="fade"
       onRequestClose={onCancel}
     >
-      <View className="flex-1 justify-center items-center bg-black/50">
-        <View className="bg-white p-6 rounded-xl w-[80vw] flex gap-3">
-          <Text className="text-xl font-semibold">Close This Chat?</Text>
-          <Text className="text-md">This chat will be moved to Closed</Text>
-          <View className="flex-row items-center justify-end gap-6 mt-4">
+      {/* Center Container */}
+      <View className="flex-1 justify-center items-center px-16">
+        <View className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 px-5 py-6">
+          <Text className="text-lg font-semibold mb-4 dark:text-white text-center">
+            Close Chat
+          </Text>
+          <View className="flex items-center justify-center">
             <TouchableOpacity
-              className="border py-2 px-6 rounded-full"
-              onPress={onCancel}
+              onPress={() => handleCloseChat(WaMessageAssignStatus.RESOLVED)}
+              className="py-3 flex-row items-center justify-center gap-2 w-full"
             >
-              <Text className="text-gray-800 font-semibold">Cancel</Text>
+              {getClosedIcon(WaMessageAssignStatus.RESOLVED)}
+              <Text className="text-lg font-semibold text-green-500">
+                Mark as Resolved
+              </Text>
             </TouchableOpacity>
-
             <TouchableOpacity
-              className={`py-2 rounded-full w-[30%] ${
-                isLoading ? "bg-gray-400" : "bg-rateUpGreen"
-              }`}
-              onPress={isLoading ? undefined : onProceed}
-              disabled={isLoading}
+              onPress={() => handleCloseChat(WaMessageAssignStatus.CLOSED)}
+              className="py-3 flex-row items-center justify-center gap-2 w-full"
             >
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text className="text-white font-semibold text-center">
-                  Close
-                </Text>
-              )}
+              {getClosedIcon(WaMessageAssignStatus.CLOSED)}
+              <Text className="text-lg font-semibold text-blue-500">
+                Mark as Closed
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleCloseChat(WaMessageAssignStatus.SPAM)}
+              className="py-3 flex-row items-center justify-center gap-2 w-full"
+            >
+              {getClosedIcon(WaMessageAssignStatus.SPAM)}
+              <Text className="text-lg font-semibold text-red-500">
+                Mark as Spam
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleCloseChat(WaMessageAssignStatus.UNRESOLVED)}
+              className="py-3 flex-row items-center justify-center gap-2 w-full"
+            >
+              {getClosedIcon(WaMessageAssignStatus.UNRESOLVED)}
+              <Text className="text-lg font-semibold text-orange-500">
+                Mark as Unresolved
+              </Text>
             </TouchableOpacity>
           </View>
+          {/* Cancel */}
+          <TouchableOpacity
+            onPress={onCancel}
+            className="mt-4 py-3 rounded-lg bg-slate-800"
+          >
+            <Text className="text-center font-semibold text-white">
+              Cancel
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -155,57 +222,41 @@ const ChatHeader = ({
   const router = useRouter();
   const [optionsVisible, setOptionsVisible] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const queryClient = useQueryClient();
-  userId = id;
+  contactId = id;
   const sessionExpiry = dayjs(lastReceivedMessageTimeStamp).add(24, "hour");
   const now = dayjs();
   const diffInMinutes = sessionExpiry.diff(now, "minute");
   const isSessionActive = diffInMinutes > 0;
-
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const hoursLeft = Math.floor(diffInMinutes / 60);
   const minutesLeft = diffInMinutes % 60;
-  const toast = useToast();
-
-  const handleProceedCloseChat = async () => {
-    setIsLoading(true);
-    try {
-      await closeChat(userId, { waMessageAssignStatus: "CLOSED" });
-      setConfirmModalVisible(false);
-      queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
-      router.back();
-    } catch (error) {
-      toast.show("Error closing chat", { type: "danger" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
-    <View className="flex-row items-center justify-between px-6 py-4 bg-white gap-3">
+    <View className="flex-row items-center justify-between px-6 py-4 bg-white dark:bg-slate-950 shadow-md gap-3">
       <View className="flex-row items-center gap-3">
-        <TouchableOpacity onPress={() => router.back()}>
-          <BackIcon width={24} height={22} />
+        <TouchableOpacity onPress={() => router.back()} className="p-1">
+          <ArrowLeft color={isDark ? "white" : "black"} />
         </TouchableOpacity>
 
-        <View className="w-12 h-12 rounded-full bg-[#00998733] flex items-center justify-center">
-          <Text className="text-rateUpGreen font-bold text-xl">
+        <View className="w-12 h-12 rounded-full bg-chatAvatarBlue flex items-center justify-center">
+          <Text className="text-white font-bold text-xl">
             {namePreview(name)}
           </Text>
         </View>
 
         <View>
-          <Text className="text-xl text-[#343A40] font-medium">{name}</Text>
-          <Text className="text-[#7A8289]">{phone}</Text>
+          <Text className="text-xl dark:text-white font-medium">{formatName(name)}</Text>
+          <Text className="text-gray-500">{phone}</Text>
           {isSessionActive ? (
-            <View className="mt-1 bg-rateUpGreen20 w-fit px-2 py-0.5 rounded-md">
-              <Text className="text-rateUp text-sm text-center">
+            <View className="mt-1 w-fit px-2 py-0.5 rounded-md">
+              <Text className="text-primaryBlue text-sm text-center">
                 Session expires in {hoursLeft}h {minutesLeft}m
               </Text>
             </View>
           ) : (
-            <View className="mt-1 bg-[#99000014] w-fit px-2 py-0.5 rounded-md">
-              <Text className="text-[#990000] text-sm text-center">
+            <View className="mt-1 bg-red-100 w-fit px-2 py-0.5 rounded-md">
+              <Text className="text-red-600 text-sm text-center">
                 Session expired
               </Text>
             </View>
@@ -214,10 +265,10 @@ const ChatHeader = ({
       </View>
 
       <TouchableOpacity
-        className="bg-[#00998733] h-5 w-5 flex justify-center items-center p-4 rounded-md"
+        className="h-5 w-5 flex justify-center items-center p-4"
         onPress={() => setOptionsVisible(true)}
       >
-        <DotsIcon />
+        <MoreVertical color={isDark ? "white" : "black"} />
       </TouchableOpacity>
 
       <MoreOptions
@@ -227,13 +278,17 @@ const ChatHeader = ({
       />
 
       <ConfirmationModal
+        contactId={contactId}
         visible={confirmModalVisible}
         onCancel={() => setConfirmModalVisible(false)}
-        onProceed={handleProceedCloseChat}
-        isLoading={isLoading}
       />
     </View>
   );
 };
 
 export default ChatHeader;
+
+function formatName(name:string) {
+  return name.length > 20 ? name.slice(0, 20) + "..." : name;
+}
+

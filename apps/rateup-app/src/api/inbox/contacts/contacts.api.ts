@@ -68,3 +68,8 @@ export const getFilteredContacts = async (filterData: string, page: number) => {
 export async function getChatFilterData() {
   return (await axios.get(`/api/wa/inbox/message/filterdata`)).data;
 }
+
+export const editContact = async ({ data, contactId }:{data:any,contactId:string}) => {
+  let res = await axios.put(`/api/contact/${contactId}`, data);
+  return res;
+};

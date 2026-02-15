@@ -2,7 +2,7 @@
   "expo": {
     "name": "RateUp",
     "slug": "rateup",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "RateUp",
@@ -12,13 +12,20 @@
       "supportsTablet": true
     },
     "android": {
+      "permissions": [
+        "RECORD_AUDIO"
+      ],
+      "statusBar": {
+        "translucent": true,
+        "backgroundColor": "transparent"
+      },
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.rateupapp.rateup",
-      "googleServicesFile": "./android/app/google-services.json"
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -33,11 +40,11 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/logo.png",
-          "backgroudColor":"#FFFFFF",
-          "resizeMode":"cover",
-          "splashScreenStyle":"single-screen",
-          "light":{
-            "backgroudColor":"#FFFFFF"
+          "backgroudColor": "#FFFFFF",
+          "resizeMode": "cover",
+          "splashScreenStyle": "single-screen",
+          "light": {
+            "backgroudColor": "#FFFFFF"
           }
         }
       ]

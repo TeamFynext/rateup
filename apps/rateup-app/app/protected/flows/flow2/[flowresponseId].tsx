@@ -3,8 +3,6 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Image,
-  Alert,
 } from "react-native";
 import React, { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,11 +17,7 @@ import {
   SmileyResponseMap,
   YNResponseMap,
 } from "@/src/components/flow/enumMap";
-import RNFS from "react-native-fs";
-import FileViewer from "react-native-file-viewer";
 import { useToast } from "react-native-toast-notifications";
-import requestStoragePermission from "@/src/utils/permission";
-import { Download } from "lucide-react-native";
 import DocumentResponse from "@/src/components/flow/DocumentResponse";
 import ImageResponse from "@/src/components/flow/ImageResponse";
 

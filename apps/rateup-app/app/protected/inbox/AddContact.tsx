@@ -10,8 +10,9 @@ import {
   Platform,
   ActivityIndicator,
   useWindowDimensions,
+  useColorScheme,
 } from "react-native";
-import { ChevronDown, ChevronUp } from "lucide-react-native";
+import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react-native";
 import { countries } from "@/src/constants/countries";
 import {
   BackIcon,
@@ -21,6 +22,7 @@ import {
 import { useRouter } from "expo-router";
 import { createContact } from "@/src/api/inbox/contacts/contacts.api";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors } from "@/src/constants/constants";
 
 export default function AddContactScreen() {
   const [name, setName] = useState("");
@@ -32,6 +34,9 @@ export default function AddContactScreen() {
   const [error, setError] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const textColor = isDark ? "white" : colors["slate-950"];
 
   const router = useRouter();
   const { width, height } = useWindowDimensions();
@@ -79,20 +84,20 @@ export default function AddContactScreen() {
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       onPress={() => handleSelectCountry(item)}
-      className="flex-row items-center px-3 py-3 bg-white"
+      className="flex-row items-center px-3 py-3 bg-white dark:bg-slate-900"
     >
-      <Text className="text-black mr-2">{item.flag}</Text>
-      <Text className="text-black mr-2">{item.name}</Text>
-      <Text className="text-black text-sm">{item.dial_code}</Text>
+      <Text className="text-black dark:text-white mr-2">{item.flag}</Text>
+      <Text className="text-black dark:text-white mr-2">{item.name}</Text>
+      <Text className="text-black dark:text-white text-sm">{item.dial_code}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white dark:bg-slate-950 py-4">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-        className="flex-grow px-4 bg-white"
+        className="flex-grow px-4 bg-white dark:bg-slate-950"
       >
         <View className="flex-grow justify-between">
           {/* Form */}
@@ -100,9 +105,9 @@ export default function AddContactScreen() {
             {/* Header */}
             <View className="flex-row items-center justify-start mb-8 gap-2">
               <Pressable onPress={() => router.back()}>
-                <BackIcon height={25} width={25} />
+                <ArrowLeft color={textColor} />
               </Pressable>
-              <Text className="text-black text-2xl font-bold">
+              <Text className="dark:text-white text-2xl font-bold">
                 Add New Contact
               </Text>
             </View>
@@ -131,7 +136,7 @@ export default function AddContactScreen() {
               <View className="border border-[#E2E5ED] rounded-lg px-4 py-4 flex-row gap-2 items-center">
                 <UsernameIcon />
                 <TextInput
-                  className="text-black text-base flex-1"
+                  className="dark:text-white text-base flex-1"
                   placeholder="Enter contact name"
                   placeholderTextColor="#E2E5ED"
                   value={name}
@@ -149,26 +154,26 @@ export default function AddContactScreen() {
                 <View className="relative">
                   <Pressable
                     onPress={() => setShowDropdown(!showDropdown)}
-                    className="flex-row items-center border border-[#E2E5ED] rounded-lg px-3 py-3 bg-white"
+                    className="flex-row items-center border border-[#E2E5ED] rounded-lg px-3 py-3 bg-white dark:bg-slate-950"
                     style={{ minWidth: width * 0.28 }}
                   >
-                    <Text className="text-black mr-2 text-base">
+                    <Text className="dark:text-white mr-2 text-base">
                       {selectedCountry.flag}
                     </Text>
-                    <Text className="text-black text-base">
+                    <Text className="dark:text-white text-base">
                       {selectedCountry.dial_code}
                     </Text>
                     {showDropdown ? (
-                      <ChevronUp size={18} color="black" />
+                      <ChevronUp size={18} color={textColor} />
                     ) : (
-                      <ChevronDown size={18} color="black" />
+                      <ChevronDown size={18} color={textColor} />
                     )}
                   </Pressable>
 
                   {/* Dropdown */}
                   {showDropdown && (
                     <View
-                      className="absolute top-14 border border-[#E2E5ED] rounded-lg shadow-md bg-white"
+                      className="absolute top-14 border border-[#E2E5ED] rounded-lg shadow-md bg-white dark:bg-slate-900"
                       style={{
                         width: width * 0.8,
                         maxHeight: height * 0.4,
@@ -186,7 +191,7 @@ export default function AddContactScreen() {
                 </View>
 
                 <TextInput
-                  className="flex-1 ml-2 border border-[#E2E5ED] rounded-lg px-4 py-4 text-black text-base"
+                  className="flex-1 ml-2 border border-[#E2E5ED] rounded-lg px-4 py-4 dark:text-white text-base"
                   placeholder="Enter contact phone number"
                   placeholderTextColor="#E2E5ED"
                   value={phone}
@@ -204,7 +209,7 @@ export default function AddContactScreen() {
               <View className="border border-[#E2E5ED] rounded-lg px-4 py-4 flex-row gap-2 items-center">
                 <EmailIcon />
                 <TextInput
-                  className="text-black text-base flex-1"
+                  className="dark:text-white text-base flex-1"
                   placeholder="Enter contact email"
                   placeholderTextColor="#E2E5ED"
                   value={email}
@@ -220,7 +225,7 @@ export default function AddContactScreen() {
             <Pressable
               onPress={handleAddContact}
               disabled={loading}
-              className="bg-rateUpGreen rounded-xl py-4 flex items-center justify-center"
+              className="bg-primaryBlue rounded-xl py-4 flex items-center justify-center"
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />

@@ -1,6 +1,5 @@
 import { useGetMediaFile } from "@/src/api/inbox/messages/message.query";
 import { getFileUrlFromKey } from "@/src/utils/fileUpload";
-import requestStoragePermission from "@/src/utils/permission";
 import {
   Download,
   Headphones,
@@ -46,10 +45,10 @@ export default function WaInboxText({
       {parts?.map((text, index) =>
         urlRegex.test(text) ? (
           <Pressable key={index} onPress={() => Linking.openURL(text)}>
-            <Text className="underline text-blue-600 text-lg">{text}</Text>
+            <Text className="underline text-blue-600 text-base">{text}</Text>
           </Pressable>
         ) : (
-          <Text className="text-lg" key={index}>
+          <Text className="text-base" key={index}>
             {text}
           </Text>
         )
@@ -115,8 +114,9 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
   const [localPath, setLocalPath] = useState<string | null>(null);
   const [id, caption] = messageContent.split("_caption_");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const appFolderPath = `${RNFS.ExternalDirectoryPath}/wa_media`;
+  const appFolderPath = `${RNFS.DocumentDirectoryPath}/wa_media`;
   const downloadPath = `${appFolderPath}/${id}.mp4`;
+
   const link = id.startsWith("http") ? id : null;
   const toast = useToast();
   // Check if file already exists on mount
@@ -127,8 +127,7 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
         await RNFS.mkdir(appFolderPath);
       }
       const exists = await RNFS.exists(downloadPath);
-      const hasPermission = await requestStoragePermission();
-      if (hasPermission && exists) {
+      if (exists) {
         setLocalPath("file://" + downloadPath);
       }
     };
@@ -136,12 +135,6 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
   }, [downloadPath]);
 
   const handleDownload = async () => {
-    const hasPermission = await requestStoragePermission();
-    if (!hasPermission) {
-      toast.show("Storage permission denied.", { type: "warning" });
-      return;
-    }
-
     // Recheck existence before downloading
     const exists = await RNFS.exists(downloadPath);
     if (exists) {
@@ -247,8 +240,9 @@ export function WaInboxAudio({
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const playerRef = useRef<any>(null);
-  const appFolderPath = `${RNFS.ExternalDirectoryPath}/wa_media`;
+  const appFolderPath = `${RNFS.DocumentDirectoryPath}/wa_media`;
   const downloadPath = `${appFolderPath}/${id}.mp3`;
+
   const link = id.startsWith("http") ? id : null;
   const toast = useToast();
 
@@ -258,8 +252,7 @@ export function WaInboxAudio({
       if (!appFolderExists) await RNFS.mkdir(appFolderPath);
 
       const exists = await RNFS.exists(downloadPath);
-      const hasPermission = await requestStoragePermission();
-      if (hasPermission && exists) {
+      if (exists) {
         setLocalPath("file://" + downloadPath);
       }
     };
@@ -267,12 +260,6 @@ export function WaInboxAudio({
   }, [downloadPath]);
 
   const handleDownload = async () => {
-    const hasPermission = await requestStoragePermission();
-    if (!hasPermission) {
-      toast.show("Storage permission denied.", { type: "warning" });
-      return;
-    }
-
     const exists = await RNFS.exists(downloadPath);
     if (exists) {
       setLocalPath("file://" + downloadPath);
@@ -412,8 +399,9 @@ export function WaInboxDocument({
   // Parse messageContent
   const [id, filename = "document.pdf", caption = ""] =
     messageContent.split("_caption_");
-  const appFolderPath = `${RNFS.ExternalDirectoryPath}/wa_media`;
+  const appFolderPath = `${RNFS.DocumentDirectoryPath}/wa_media`;
   const downloadPath = `${appFolderPath}/${filename}`;
+
   useEffect(() => {
     // Check if the document exists locally
     const checkLocalFile = async () => {
@@ -434,14 +422,9 @@ export function WaInboxDocument({
   const { mutateAsync } = useGetMediaFile();
 
   const handleDownload = async () => {
-    const hasPermission = await requestStoragePermission();
-    if (!hasPermission) {
-      toast.show("Storage permission denied.", { type: "warning" });
-      return;
-    }
-
-    const folderPath = `${RNFS.ExternalDirectoryPath}/wa_media`;
+    const folderPath = `${RNFS.DocumentDirectoryPath}/wa_media`;
     const fullPath = `${folderPath}/${filename}`;
+
     if (id.startsWith("http")) {
       const downloadOptions = {
         fromUrl: id, // direct URL to the document

@@ -5,32 +5,30 @@ import {
   Modal,
   Pressable,
   FlatList,
-  Keyboard,
-  Platform,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { IIcon } from "@/src/constants/imageExports";
-import { useAssignedContact } from "@/src/api/inbox/contacts/contacts.query";
 import NotAssigned from "./chatFooter/NotAssigned";
 import MessageSendPanel from "./chatFooter/MessageSendPanel";
 import { useAuth } from "@/src/context/AuthContext";
 import { useChatAssignStatusStore } from "@/src/utils/store";
 import { UserCheck } from "lucide-react-native";
+import { WaMessageClosedStatus } from "@/src/constants/constants";
+import { WaMessageAssignStatus } from "@/src/api/inbox/types";
+import { useGetAssignedUserForContact } from "@/src/api/inbox/messages/message.query";
 
 const ChatFooter = ({ id }: { id: string }) => {
   const waAssignStatus = useChatAssignStatusStore(
     (state) => state.waAssignStatus
   );
-  const { data: assignedData = [] } = useAssignedContact(id);
+  const { data: assignedUsers } = useGetAssignedUserForContact(id);
   const { userId } = useAuth();
   const [isModalVisible, setModalVisible] = useState(false);
-
-  let currentUserAssignment = assignedData.find(
-    (entry: any) => entry.assignedUserId === userId
+  let currentUserAssignment = assignedUsers?.find(
+    (entry: any) => entry.assignedUserId == userId
   );
-
+  const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
   const toggleModal = () => setModalVisible(!isModalVisible);
-
   const AssignedUsersModal = () => (
     <Modal
       animationType="fade"
@@ -42,7 +40,7 @@ const ChatFooter = ({ id }: { id: string }) => {
         className="flex-1 justify-center items-center bg-black/50"
         onPress={toggleModal}
       >
-        <View className="bg-white rounded-2xl p-4 w-[80%] max-h-[50%] min-h-[50%]">
+        <View className=" rounded-2xl p-4 w-[80%] max-h-[50%] min-h-[50%]">
           <Text className="text-xl font-bold mb-4">Assigned Members</Text>
           <FlatList
             contentContainerStyle={{
@@ -50,7 +48,7 @@ const ChatFooter = ({ id }: { id: string }) => {
               justifyContent: "center",
               gap: 5,
             }}
-            data={assignedData}
+            data={assignedUsers}
             keyExtractor={(item) => item.assignedUserId}
             renderItem={({ item }) => (
               <View className="flex-row gap-1 justify-start items-center px-6 bg-rateUpGreen20 rounded-lg">
@@ -71,34 +69,30 @@ const ChatFooter = ({ id }: { id: string }) => {
     </Modal>
   );
 
-  if (waAssignStatus === "UNASSIGNED" || waAssignStatus === "NEW") {
+  if (
+    (!currentUserAssignment) ||
+    waAssignStatus === "UNASSIGNED" ||
+    waAssignStatus === "NEW" ||
+    WaMessageClosedStatus.includes(waAssignStatus as WaMessageAssignStatus)
+  ) {
     return (
-      <>
+      <View>
         <View className="bg-black flex-row py-2 px-1 items-center justify-center gap-1">
           <IIcon />
           <Text className="text-white">Please assign to start the chat</Text>
         </View>
         <NotAssigned contactId={id} />
-      </>
-    );
-  }
-
-  if (waAssignStatus === "CLOSED") {
-    return (
-      <View className="bg-black flex-row py-2 px-1 items-center justify-center gap-1">
-        <IIcon />
-        <Text className="text-white">This chat is Closed</Text>
       </View>
     );
   }
 
   return (
     <View>
-      {!currentUserAssignment && (
+      {!currentUserAssignment && hasAssignedUsers && (
         <View className="bg-black flex-row py-3 px-1 items-center justify-center gap-1 flex-wrap">
           <IIcon />
           <Text className="text-white">This chat is not assigned to you.</Text>
-          {assignedData && (
+          {assignedUsers && (
             <TouchableOpacity onPress={toggleModal}>
               <Text className="text-rateUpGreen underline">View Members?</Text>
             </TouchableOpacity>

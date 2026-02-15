@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ChatFilter } from "../api/inbox/types";
+import { WaMessageAssignStatus } from "../api/inbox/types";
 import { deleteUploadedFiles } from "./fileUpload";
 
 type ChatState = {
@@ -41,26 +41,97 @@ export const useSessionActiveStore = create<SessionState>((set: any) => ({
   setIsSessionActive: (session: boolean) => set({ isSessionActive: session }),
 }));
 
+
+export type ChatFilter = {
+  messageType: "all" | "replied" | "unread" | "usermessages";
+  strictFilter: boolean;
+  searchTerm?: string;
+  contactGroups: Array<any>;
+  campaigns: Array<any>;
+  tags: Array<any>;
+  waMessageAssignStatus?: string | null;
+  blockedUsers: boolean;
+  status: string[];
+  assignedTeams: string[];
+  phone?: string;
+  labels: string[];
+  sortBy: "newest" | "oldest";
+  category: "conversation" | "campaign" | "automation" | null;
+  lifecycle?: string;
+  assignedUserIds: string[];
+};
+interface Props {
+  setFilterCount: (value: number) => void;
+}
+
 type ChatFilterStore = {
   filter: ChatFilter;
   setFilter: (value: ChatFilter) => void;
+  clearFilter: () => void;
+  previousFilterForTab: {
+    tab: string;
+    filter: ChatFilter;
+  }[];
+  setPreviousFilterForTab: (value:any) => void;
+};
+
+// export const useChatFilterStore = create<ChatFilterStore>((set) => ({
+//   filter: {
+//     messageType: "usermessages",
+//     strictFilter: false,
+//     searchTerm: "",
+//     contactGroups: [],
+//     campaigns: [],
+//     tags: [],
+//     waMessageAssignStatus: "New",
+//     blockedUsers: false,
+//     newStatuses: [],
+//   },
+//   setFilter: (value) => set({ filter: value }),
+// }));
+
+const intialValues: ChatFilter = {
+  messageType: "usermessages",
+  strictFilter: false,
+  searchTerm: "",
+  contactGroups: [],
+  campaigns: [],
+  tags: [],
+  waMessageAssignStatus: null,
+  blockedUsers: false,
+  status: Object.values(WaMessageAssignStatus).filter(
+    (st) => st !== WaMessageAssignStatus.NEW,
+  ),
+  assignedTeams: [],
+  phone: "all",
+  labels: [],
+  lifecycle: "",
+  sortBy: "newest",
+  category: null,
+  assignedUserIds: [],
 };
 
 export const useChatFilterStore = create<ChatFilterStore>((set) => ({
-  filter: {
-    messageType: "usermessages",
-    strictFilter: false,
-    searchTerm: "",
-    contactGroups: [],
-    campaigns: [],
-    tags: [],
-    waMessageAssignStatus: "New",
-    blockedUsers: false,
-    newStatuses: [],
-  },
-  setFilter: (value) => set({ filter: value }),
-}));
+  filter: intialValues,
 
+  setFilter: (value) =>
+    set({
+      filter: value,
+    }),
+
+  previousFilterForTab: [],
+
+  setPreviousFilterForTab: (value) =>
+    set({
+      previousFilterForTab: value,
+    }),
+
+  clearFilter: () => {
+    set({
+      filter: intialValues,
+    });
+  },
+}));
 type FlowStatus = "all" | "PUBLISHED" | "DRAFT";
 type AlphabeticalOrder = "A-Z" | "Z-A" | null;
 
@@ -105,35 +176,6 @@ export const useWebFormFilterStore = create<any>((set) => ({
     }),
 }));
 
-type WaMedia = {
-  type: string;
-  url: string;
-  name: string;
-  key: string;
-};
-
-interface MediaStore {
-  media: WaMedia[];
-  addMedia: (value: WaMedia) => void;
-  resetMedia: () => void;
-  removeMedia: (key: string) => Promise<void>;
-}
-
-export const useMediaStore = create<MediaStore>((set, get) => ({
-  media: [],
-  addMedia: (value) => set((state) => ({ media: [...state.media, value] })),
-  resetMedia: () => set(() => ({ media: [] })),
-  removeMedia: async (key) => {
-    try {
-      await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] }); // ☁️ Delete from cloud
-      set((state) => ({
-        media: state.media.filter((m) => m.key !== key), // 🧹 Remove from store
-      }));
-    } catch (err) {
-      console.error("Failed to delete media:", err);
-    }
-  },
-}));
 
 interface Message {
   id?: string;
@@ -294,3 +336,35 @@ export const useWebFormResponseDataStore = create<WebFormResponseDataStore>(
     setData: (newData) => set({ data: newData }),
   })
 );
+
+
+type WaMedia = {
+  type: string;
+  url: string;
+  name: string;
+  key: string;
+};
+
+interface MediaStore {
+  media: WaMedia[];
+  addMedia: (value: WaMedia) => void;
+  removeMedia: (key) => void;
+  resetMedia: () => void;
+  selectedMedia: WaMedia;
+  setSelectedMedia: (value) => void;
+}
+
+export const useMediaStore = create<MediaStore>((set) => ({
+  media: [],
+  addMedia: (value) => set((state) => ({ media: [...state.media, value] })),
+  selectedMedia: null,
+  setSelectedMedia: (value) => set(() => ({ selectedMedia: value })),
+  removeMedia: async (key) => {
+    await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
+    set((state) => {
+      const medias = state.media.filter((m) => m.key !== key);
+      return { media: medias };
+    });
+  },
+  resetMedia: () => set(() => ({ media: [] })),
+}));

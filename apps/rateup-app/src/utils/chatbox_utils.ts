@@ -5,7 +5,7 @@ import utc from "dayjs/plugin/utc";
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
-export const namePreview = (name_: string) => {
+export const namePreview = (name_: any) => {
   if (name_) {
     const name1 = name_.trim();
     const nameArray = name1.split(" ");
@@ -24,4 +24,13 @@ export function isInboxSessionExpired(timeStamp: string) {
   const givenTime = dayjs(timeStamp).utc();
   const diffInHours = currentTime.diff(givenTime, "hours");
   return diffInHours >= 24;
+}
+
+export function generateInternalMessageId() {
+  return (
+    "wamid." +
+    Date.now().toString(36) +
+    "-" +
+    Math.random().toString(36).slice(2, 10)
+  );
 }

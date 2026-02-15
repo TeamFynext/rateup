@@ -1,5 +1,12 @@
-import { View, TextInput, Pressable } from "react-native";
-import { SearchIcon, BackIcon } from "@/src/constants/imageExports";
+import {
+  View,
+  TextInput,
+  Pressable,
+  useColorScheme,
+} from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Search, X } from "lucide-react-native";
+import { colors } from "@/src/constants/constants";
 
 type SearchBarProps = {
   searchTerm: string;
@@ -10,26 +17,74 @@ export default function SearchBar({
   searchTerm,
   setSearchTerm,
 }: SearchBarProps) {
-  return (
-    <View className="flex-1 bg-rateUpLightGreen">
-      {/* Search Input */}
-      <View className="flex-row items-center border border-[#E2E5ED] bg-white rounded-full px-4 py-2">
-        {searchTerm ? (
-          <Pressable onPress={() => setSearchTerm("")}>
-            <BackIcon width={20} height={20} />
-          </Pressable>
-        ) : (
-          <SearchIcon width={20} height={20} />
-        )}
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<TextInput>(null);
 
-        <TextInput
-          placeholder="Search Contacts"
-          placeholderTextColor="#E2E5ED"
-          className="flex-1 ml-2 text-sm"
-          value={searchTerm}
-          onChangeText={setSearchTerm}
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const textColor = isDark ? "white" : colors["slate-950"];
+  const bgColor = isDark ? "#0f172a" : "#f8fafc";
+
+  // Auto-focus when opened
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
+    }
+  }, [open]);
+
+  const closeSearch = () => {
+    setSearchTerm("")
+    setOpen(false);
+  };
+
+  return (
+    <View className="relative">
+      {/* SEARCH ICON */}
+      <Pressable onPress={() => setOpen(true)} hitSlop={10}>
+        <Search size={20} color={"white"} />
+      </Pressable>
+
+      {/* BACKDROP (click outside) */}
+      {open && (
+        <Pressable
+          onPress={closeSearch}
+          style={{
+            position: "absolute",
+            top: -1000,
+            bottom: -1000,
+            left: -1000,
+            right: -1000,
+            zIndex: 40,
+          }}
         />
-      </View>
+      )}
+
+      {/* FLOATING SEARCH MODAL */}
+      {open && (
+        <View className="absolute -top-5 right-8 z-50 w-72">
+          <View
+            className="flex-row items-center gap-2 rounded-xl px-3 py-2 shadow-lg"
+            style={{ backgroundColor: bgColor }}
+          >
+            <TextInput
+              ref={inputRef}
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+              placeholder="Search…"
+              placeholderTextColor={isDark ? "#94a3b8" : "#64748b"}
+              className="flex-1 text-base"
+              style={{ color: textColor }}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+            <Pressable onPress={()=>setSearchTerm("")} hitSlop={10}>
+              <X size={20} color={textColor} />
+            </Pressable>
+          </View>
+        </View>
+      )}
     </View>
   );
 }

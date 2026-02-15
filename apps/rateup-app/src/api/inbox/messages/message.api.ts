@@ -24,9 +24,19 @@ export async function getWaChatMediaFile(mediaId: string) {
   return response.data;
 }
 
-const ORG_WS_BASE_PATH = "/api/org/ws";
-export async function orgWsAuthCheck() {
-  return (await axios.get(`${ORG_WS_BASE_PATH}/auth`)).data as {
-    afterAuthId: string;
-  };
+export async function assignInboxToUser(data: {
+  contactId: string;
+  assignees: { userId: string; teamId: string }[];
+  messageId: string; // for internal message
+}): Promise<{ id: string; name: string }[]> {
+  return (await axios.post(`/api/wa/inbox/message/assign`, data)).data;
+}
+
+export async function getAssignedUserForContact(contactId: any) {
+  return (await axios.get(`/api/wa/inbox/message/assign/${contactId}`)).data;
+}
+
+export async function createPrivateMessage(contactId: string, data: any) {
+  return (await axios.post(`/api/wa/inbox/message/privatemessage/${contactId}`, data))
+    .data;
 }

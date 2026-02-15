@@ -1,15 +1,43 @@
+import { colors } from "@/src/constants/constants";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import React from "react";
+import { StatusBar, useColorScheme } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
-export default function RootLayout() {
+export const queryClient = new QueryClient();
+
+function RootLayout() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen name="protected" />
-      <Stack.Screen name="auth" />
-    </Stack>
+    <>
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={isDark ? colors["slate-950"] : "white"}
+        translucent
+      />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: {
+            backgroundColor: isDark ? colors["slate-950"] : "white",
+          },
+        }}
+      >
+        <Stack.Screen name="protected" />
+        <Stack.Screen name="auth" />
+      </Stack>
+    </>
+  );
+}
+
+export default function LayoutWrapper() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <RootLayout />
+      </SafeAreaProvider>
+    </QueryClientProvider>
   );
 }

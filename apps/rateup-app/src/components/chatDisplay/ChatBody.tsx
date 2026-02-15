@@ -55,10 +55,10 @@ const ChatBody = ({ id }: { id: string }) => {
   React.useEffect(() => {
     if (
       wsData?.type === "inbox" &&
-      wsData.inbox.contact.id === id // only for current chat
+      wsData.inbox?.contact.id === id // only for current chat
     ) {
       const isDuplicate = messageList.some(
-        (msg) => msg.id === wsData.inbox.message.id
+        (msg) => msg.id === wsData.inbox?.message.id
       );
       if (!isDuplicate) {
         queryClient.setQueryData(["wa-messages", id], (oldData: any) => {
@@ -67,7 +67,7 @@ const ChatBody = ({ id }: { id: string }) => {
           const newPages = [...oldData.pages];
           newPages[0] = {
             ...newPages[0],
-            messages: [wsData.inbox.message, ...newPages[0].messages],
+            messages: [wsData.inbox?.message, ...newPages[0].messages],
           };
 
           return {
@@ -101,7 +101,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => {
-      const parsed = parseWaMessage_(item.messageBody);
+      const parsed = parseWaMessage_(item);
       const time = dayjs(item.createdAt).format("h:mm A");
 
       const currentDate = dayjs(item.createdAt).format("YYYY-MM-DD");
@@ -112,9 +112,8 @@ const ChatBody = ({ id }: { id: string }) => {
         : null;
 
       const shouldShowDate = currentDate !== nextDate;
-
       return (
-        <>
+        <View className="bg-gray-50 dark:bg-slate-800">
           {shouldShowDate && (
             <DateSeparator
               label={dayjs(item.createdAt).format("DD MMM YYYY")}
@@ -124,13 +123,14 @@ const ChatBody = ({ id }: { id: string }) => {
             messageContent={parsed.messageContent}
             interactive={parsed.interactive} //if it is interactive
             timestamp={time}
-            isSent={item.messageBody.exchangeProcess === "send"}
+            assignStatus={item.messageBody?.internal?.assignStatus || ""} // for internal
+            exchangeProcess={item.messageBody.exchangeProcess}
             senderName={item.sender?.name || ""}
             messageType={parsed.messageType}
             template={parsed.template} //if it is template
             templateComponentParams={item.templateComponentParams}
           />
-        </>
+        </View>
       );
     },
     [messageList]
@@ -140,7 +140,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
   if (isPending) {
     return (
-      <View className="flex-1 justify-center items-center bg-rateUpGreen20">
+      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-slate-800">
         <ActivityIndicator size="large" color="#009987" />
       </View>
     );
@@ -148,7 +148,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
   if (isError) {
     return (
-      <View className="flex-1 justify-center items-center bg-rateUpGreen20">
+      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-slate-800">
         <Text className="text-red-500">
           {error?.message || "Something went wrong"}
         </Text>
@@ -157,7 +157,7 @@ const ChatBody = ({ id }: { id: string }) => {
   }
 
   return (
-    <View className="flex-1 bg-rateUpGreen20">
+    <View className="flex-1 bg-gray-50 dark:bg-slate-800">
       <FlashList
         inverted
         data={messageList}
