@@ -95,7 +95,6 @@ export async function createInstagramAutomationHandler(
     Body: {
       name: string;
       matchData: any;
-      commands?: string[];
       whatsappSettingsPhoneId?: string;
       sendOnceIn24Hours?: boolean;
       isActive?: boolean;
@@ -111,7 +110,6 @@ export async function createInstagramAutomationHandler(
       orgId,
       name: body.name,
       matchData: body.matchData,
-      commands: body.commands,
       whatsappSettingsPhoneId: body.whatsappSettingsPhoneId,
       sendOnceIn24Hours: body.sendOnceIn24Hours,
       isActive: body.isActive,
@@ -146,7 +144,6 @@ export async function updateInstagramAutomationHandler(
     Body: {
       name?: string;
       matchData?: any;
-      commands?: string[];
       whatsappSettingsPhoneId?: string;
       sendOnceIn24Hours?: boolean;
       isActive?: boolean;

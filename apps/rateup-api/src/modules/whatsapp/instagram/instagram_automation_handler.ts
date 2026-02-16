@@ -5,10 +5,7 @@
  */
 
 import { log } from "../../../utils/logger.js";
-import {
-  getInstagramCommandByOrgIdAndCommand,
-  findRecentInstagramAutomation,
-} from "../automatedReply/instagram_automatedReply.service.js";
+import { findRecentInstagramAutomation } from "../automatedReply/instagram_automatedReply.service.js";
 import {
   startInstagramAutomationFlow,
   handleInstagramUserResponse,
@@ -60,81 +57,10 @@ export async function handleInstagramAutomation(
       }
     }
 
-    // Check if message matches any automation command
-    const messageLowerCase = messageText?.trim()?.toLowerCase() || "";
-
-    if (!messageLowerCase) {
-      log.trace(
-        `[Instagram Automation Handler] Empty message, skipping automation check`,
-      );
-      return;
-    }
-
-    const automationCommand = await getInstagramCommandByOrgIdAndCommand(
-      orgId,
-      messageLowerCase,
-    );
-
-    if (automationCommand?.waAutomatedReply) {
-      log.info(
-        `[Instagram Automation Handler] Command "${messageLowerCase}" matched automation ${automationCommand.waAutomatedReply.id}`,
-      );
-
-      // Check if automation is active
-      if (!automationCommand.waAutomatedReply.isEnabled) {
-        log.warn(
-          `[Instagram Automation Handler] Automation ${automationCommand.waAutomatedReply.id} is not active`,
-        );
-        return;
-      }
-
-      // Start the automation flow
-      await startInstagramAutomationFlow(
-        igsId,
-        automationCommand.waAutomatedReply as any,
-        orgId,
-      );
-
-      log.info(
-        `[Instagram Automation Handler] Started automation ${automationCommand.waAutomatedReply.id} for igsId ${igsId}`,
-      );
-      return;
-    }
-
-    // Check for wildcard automation (command: "*")
-    const wildcardCommand = await getInstagramCommandByOrgIdAndCommand(
-      orgId,
-      "*",
-    );
-
-    if (wildcardCommand?.waAutomatedReply) {
-      log.info(
-        `[Instagram Automation Handler] Wildcard automation ${wildcardCommand.waAutomatedReply.id} matched for igsId ${igsId}`,
-      );
-
-      // Check if automation is active
-      if (!wildcardCommand.waAutomatedReply.isEnabled) {
-        log.warn(
-          `[Instagram Automation Handler] Wildcard automation ${wildcardCommand.waAutomatedReply.id} is not active`,
-        );
-        return;
-      }
-
-      // Start the automation flow
-      await startInstagramAutomationFlow(
-        igsId,
-        wildcardCommand.waAutomatedReply as any,
-        orgId,
-      );
-
-      log.info(
-        `[Instagram Automation Handler] Started wildcard automation ${wildcardCommand.waAutomatedReply.id} for igsId ${igsId}`,
-      );
-      return;
-    }
-
+    // Command matching is now handled by the Rule system (RuleMessageBodyLock)
+    // The Rule system will trigger automations based on message body conditions
     log.trace(
-      `[Instagram Automation Handler] No automation matched for message "${messageLowerCase}"`,
+      `[Instagram Automation Handler] No active automation found for message "${messageText}" from igsId ${igsId}. Command matching is handled by the Rule system.`,
     );
   } catch (error) {
     // Catch all errors to prevent Instagram automation from affecting other operations
@@ -159,34 +85,10 @@ export async function handleInstagramStoryMentionAutomation(
       `[Instagram Automation Handler] Story mention received from igsId ${igsId} for story ${storyId}`,
     );
 
-    // Check for story reply automation (command: "story_mention")
-    const storyAutomation = await getInstagramCommandByOrgIdAndCommand(
-      orgId,
-      "story_mention",
+    // Story mention automation triggering is now handled by the Rule system
+    log.trace(
+      `[Instagram Automation Handler] Story mention command matching is handled by the Rule system.`,
     );
-
-    if (storyAutomation?.waAutomatedReply) {
-      log.info(
-        `[Instagram Automation Handler] Story mention automation ${storyAutomation.waAutomatedReply.id} matched`,
-      );
-
-      if (!storyAutomation.waAutomatedReply.isEnabled) {
-        log.warn(
-          `[Instagram Automation Handler] Story mention automation ${storyAutomation.waAutomatedReply.id} is not active`,
-        );
-        return;
-      }
-
-      await startInstagramAutomationFlow(
-        igsId,
-        storyAutomation.waAutomatedReply as any,
-        orgId,
-      );
-
-      log.info(
-        `[Instagram Automation Handler] Started story mention automation ${storyAutomation.waAutomatedReply.id}`,
-      );
-    }
   } catch (error) {
     log.error(
       `[Instagram Automation Handler] Error handling story mention automation: %o`,
@@ -208,34 +110,10 @@ export async function handleInstagramCommentAutomation(
       `[Instagram Automation Handler] Comment received from igsId ${igsId}: "${commentText}"`,
     );
 
-    // Check for comment automation (command: "post_comment")
-    const commentAutomation = await getInstagramCommandByOrgIdAndCommand(
-      orgId,
-      "post_comment",
+    // Comment automation triggering is now handled by the Rule system
+    log.trace(
+      `[Instagram Automation Handler] Comment command matching is handled by the Rule system.`,
     );
-
-    if (commentAutomation?.waAutomatedReply) {
-      log.info(
-        `[Instagram Automation Handler] Comment automation ${commentAutomation.waAutomatedReply.id} matched`,
-      );
-
-      if (!commentAutomation.waAutomatedReply.isEnabled) {
-        log.warn(
-          `[Instagram Automation Handler] Comment automation ${commentAutomation.waAutomatedReply.id} is not active`,
-        );
-        return;
-      }
-
-      await startInstagramAutomationFlow(
-        igsId,
-        commentAutomation.waAutomatedReply as any,
-        orgId,
-      );
-
-      log.info(
-        `[Instagram Automation Handler] Started comment automation ${commentAutomation.waAutomatedReply.id}`,
-      );
-    }
   } catch (error) {
     log.error(
       `[Instagram Automation Handler] Error handling comment automation: %o`,

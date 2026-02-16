@@ -18,9 +18,6 @@ export async function getInstagramAutomatedRepliesByOrgId(orgId: string) {
         orgId,
         platform: PlatformType.INSTAGRAM,
       },
-      include: {
-        WaAutomatedReplyCommands: true,
-      },
       orderBy: {
         createdAt: "desc",
       },
@@ -44,9 +41,6 @@ export async function getInstagramAutomatedReplyById(id: string) {
         id,
         platform: PlatformType.INSTAGRAM,
       },
-      include: {
-        WaAutomatedReplyCommands: true,
-      },
     });
   } catch (error) {
     log.error(
@@ -64,7 +58,6 @@ export async function createInstagramAutomatedReply(data: {
   orgId: string;
   name: string;
   matchData: any;
-  commands?: string[];
   whatsappSettingsPhoneId?: string;
   sendOnceIn24Hours?: boolean;
   isActive?: boolean;
@@ -82,17 +75,6 @@ export async function createInstagramAutomatedReply(data: {
         isEnabled: data.isActive ?? true,
       },
     });
-
-    // Create commands if provided
-    if (data.commands && data.commands.length > 0) {
-      await prisma.waAutomatedReplyCommands.createMany({
-        data: data.commands.map((command) => ({
-          waAutomatedReplyId: automation.id,
-          command: command.toLowerCase().trim(),
-          orgId: data.orgId,
-        })),
-      });
-    }
 
     log.info(
       `[Instagram Automation] Created automation ${automation.id} for orgId ${data.orgId}`,
@@ -116,14 +98,12 @@ export async function updateInstagramAutomatedReply(
   data: {
     name?: string;
     matchData?: any;
-    commands?: string[];
     whatsappSettingsPhoneId?: string;
     sendOnceIn24Hours?: boolean;
     isActive?: boolean;
   },
 ) {
   try {
-    // Update automation
     const automation = await prisma.waAutomatedReply.update({
       where: {
         id,
@@ -137,25 +117,6 @@ export async function updateInstagramAutomatedReply(
         isEnabled: data.isActive,
       },
     });
-
-    // Update commands if provided
-    if (data.commands !== undefined) {
-      // Delete existing commands
-      await prisma.waAutomatedReplyCommands.deleteMany({
-        where: { waAutomatedReplyId: id },
-      });
-
-      // Create new commands
-      if (data.commands.length > 0) {
-        await prisma.waAutomatedReplyCommands.createMany({
-          data: data.commands.map((command) => ({
-            waAutomatedReplyId: id,
-            command: command.toLowerCase().trim(),
-            orgId: automation.orgId,
-          })),
-        });
-      }
-    }
 
     log.info(`[Instagram Automation] Updated automation ${id}`);
 
@@ -174,11 +135,6 @@ export async function updateInstagramAutomatedReply(
  */
 export async function deleteInstagramAutomatedReply(id: string) {
   try {
-    // Delete commands first
-    await prisma.waAutomatedReplyCommands.deleteMany({
-      where: { waAutomatedReplyId: id },
-    });
-
     // Delete automation messages
     await prisma.waAutomatedReplyMessage.deleteMany({
       where: { waAutomatedReplyId: id },
@@ -201,36 +157,6 @@ export async function deleteInstagramAutomatedReply(id: string) {
       error,
     );
     throw error;
-  }
-}
-
-/**
- * Get Instagram automation command by org and command text
- */
-export async function getInstagramCommandByOrgIdAndCommand(
-  orgId: string,
-  command: string,
-) {
-  try {
-    return await prisma.waAutomatedReplyCommands.findFirst({
-      where: {
-        orgId,
-        command: command.toLowerCase().trim(),
-        waAutomatedReply: {
-          platform: PlatformType.INSTAGRAM,
-          isEnabled: true,
-        },
-      },
-      include: {
-        waAutomatedReply: true,
-      },
-    });
-  } catch (error) {
-    log.error(
-      `[Instagram Automation] Error finding command "${command}" for orgId ${orgId}: %o`,
-      error,
-    );
-    return null;
   }
 }
 
