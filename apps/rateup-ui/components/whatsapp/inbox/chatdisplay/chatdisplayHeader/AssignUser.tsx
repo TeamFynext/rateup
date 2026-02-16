@@ -230,7 +230,7 @@ const AssignUser = ({
               waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
               assignedUsers: assignees.map((a) => {
                 const user = staffMembers?.find((m) => m.id === a.userId);
-                return { id: user?.id, name: user?.name };
+                return { id: user?.id, name: user?.name, teamId: a?.teamId };
               }),
             }));
           },
