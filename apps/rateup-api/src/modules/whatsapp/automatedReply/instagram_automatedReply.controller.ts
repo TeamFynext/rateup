@@ -107,14 +107,6 @@ export async function createInstagramAutomationHandler(
     const { orgId } = request.user as any;
     const body = request.body;
 
-    // Validation
-    if (!body.name || !body.matchData) {
-      return reply.code(400).send({
-        success: false,
-        error: "Name and matchData are required",
-      });
-    }
-
     const automation = await createInstagramAutomatedReply({
       orgId,
       name: body.name,
@@ -266,13 +258,6 @@ export async function initiateInstagramAutomationHandler(
     const { orgId } = request.user as any;
     const { id } = request.params;
     const { igsId } = request.body;
-
-    if (!igsId) {
-      return reply.code(400).send({
-        success: false,
-        error: "Instagram Scoped ID (igsId) is required",
-      });
-    }
 
     // Get automation
     const automation = await getInstagramAutomatedReplyById(id);
