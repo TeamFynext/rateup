@@ -15,6 +15,7 @@ const coreCampaignSchema = z
     waTemplateId: z.string().optional(),
     flowId: z.string().optional(),
     whatsappSettingsPhoneId: z.string(),
+    dynamicTags: z.array(z.string().nullable()).optional(),
     dripStages: z
       .array(
         z.object({
