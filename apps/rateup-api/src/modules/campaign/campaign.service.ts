@@ -303,6 +303,7 @@ export async function createCampaign(data: CreateCampaignInput) {
       waTemplateId: data.waTemplateId ?? undefined,
       flowId: flowId,
       whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
+      dynamicTags: data.dynamicTags ?? [],
     },
   });
   await prisma.campaignDripStage.createMany({
