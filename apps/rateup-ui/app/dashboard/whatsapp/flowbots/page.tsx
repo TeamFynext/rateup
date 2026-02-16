@@ -82,7 +82,10 @@ const WaAutomationCardsList = ({
 
   // Combine both WhatsApp and Instagram automations
   const combinedData = useMemo(() => {
-    return [...(waData || []), ...(igData || [])];
+    return [...(waData || []), ...(igData || [])].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
   }, [waData, igData]);
 
   // Filter data based on search query
