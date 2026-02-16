@@ -71,7 +71,9 @@ function TeamOverview({ teamData, isLoading }) {
                 <div className="text-right">
                   <p className="text-sm hidden sm:block">{t("Success Rate")}</p>
                   <p className="text-lg text-primary">
-                    {team.successPercentage}%
+                    {team?.successPercentage != null
+                      ? `${Number(team.successPercentage).toFixed(1)}%`
+                      : "NA"}
                   </p>
                 </div>
               </div>

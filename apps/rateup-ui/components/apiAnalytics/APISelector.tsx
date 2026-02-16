@@ -21,7 +21,7 @@ export function ApiSelector({ value, onChange, className }: ApiSelectorProps) {
   const t = useTranslations("apianalytics");
   const apiOptions = [
     { value: "external", label: t("External API"), icon: Globe },
-    { value: "whatsapp", label: t("WhatsApp API"), icon: MessageCircle },
+    { value: "whatsapp", label: t("Campaign API"), icon: MessageCircle },
     { value: "all", label: t("All APIs"), icon: MessageCircle },
   ];
 
