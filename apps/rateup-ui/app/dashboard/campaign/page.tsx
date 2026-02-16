@@ -14,7 +14,10 @@ import {
 import { useTranslations } from "next-intl";
 
 import { CampaignType } from "@/types/enums";
-import { useCampaignData } from "@/backend/campaign/campaign.query";
+import {
+  useCampaignById,
+  useCampaignData,
+} from "@/backend/campaign/campaign.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import UnauthorizedPage from "@/components/404/UnAuthorizedError";
 import CampaignCardList from "@/components/Campaign/CampaignListCard";
@@ -49,12 +52,15 @@ export default function CampaignsPage() {
 
   const [search, setSearch] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState<any>(null);
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  // const [, setEditingCampaign] = useState<any>(null);
   const [selectedTeam, setSelectedTeam] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
+    null,
+  );
 
+  const campaignByIdQuery = useCampaignById(selectedCampaignId);
   /* -------------------- DATA -------------------- */
   const whatsappQuery = useCampaignData(CampaignType.WHATSAPP);
   const dripQuery = useCampaignData(CampaignType.DRIP);
@@ -63,11 +69,10 @@ export default function CampaignsPage() {
     activeTab === CampaignType.WHATSAPP ? whatsappQuery : dripQuery;
 
   const { data, isPending, isError, error, refetch } = activeQuery;
-  const openEditCampaign = (campaign: any) => {
-    setEditingCampaign(campaign);
-    setIsEditOpen(true);
-  };
 
+  const openEditCampaign = (campaign: any) => {
+    setSelectedCampaignId(campaign.id);
+  };
   /* -------------------- ERROR HANDLING -------------------- */
 
   if (isError && (error as any)?.response?.status === 403) {
@@ -261,15 +266,14 @@ export default function CampaignsPage() {
           campaignType={activeTab}
         />
       )}
-      {isEditOpen && editingCampaign && (
+      {selectedCampaignId && campaignByIdQuery?.data && (
         <CreateCampaignModal
           isEdit
-          campaign={editingCampaign}
+          campaign={campaignByIdQuery.data}
           close={() => {
-            setIsEditOpen(false);
-            setEditingCampaign(null);
+            setSelectedCampaignId(null);
           }}
-          campaignType={editingCampaign.type}
+          campaignType={campaignByIdQuery.data.type}
         />
       )}
     </>
