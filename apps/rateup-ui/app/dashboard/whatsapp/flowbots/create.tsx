@@ -4,8 +4,10 @@ import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { useForm } from "@mantine/form";
+import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { AutomationPlatform } from "@/types/platform";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,12 +17,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { showSuccessToast } from "@/utils/notifications";
 
 import {
   useCreateWaAutomatedReplyMutation,
   useUpdateWaAutomatedReplyMutation,
 } from "../../../../backend/whatsapp/automated-reply/automatedReply.query";
+import {
+  useCreateInstagramAutomationMutation,
+  useUpdateInstagramAutomationMutation,
+} from "../../../../backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { ContainedTextField } from "../../../../components/input/ContainedInput/ContainedInput";
 import { WaAutomatedReply } from "../../../../types/global";
 
@@ -42,6 +55,7 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
   if (initialValues) return initialValues;
   return {
     name: "",
+    platform: AutomationPlatform.WHATSAPP,
     matchData: {
       json: {
         nodes: [
@@ -96,8 +110,15 @@ export function AutomatedReplyForm({
   const searchParams = useSearchParams();
   const waAutomatedReplyId = searchParams.get("waAutomatedReplyId");
 
+  // WhatsApp mutations
   const createMutation = useCreateWaAutomatedReplyMutation();
   const updateMutation = useUpdateWaAutomatedReplyMutation();
+
+  // Instagram mutations
+  const createInstagramMutation = useCreateInstagramAutomationMutation();
+  const updateInstagramMutation = useUpdateInstagramAutomationMutation();
+
+  const isInstagram = rootForm.values.platform === AutomationPlatform.INSTAGRAM;
 
   function handleCancelClick() {
     rootForm.reset();
@@ -108,20 +129,44 @@ export function AutomatedReplyForm({
     const data = rootForm.values;
 
     if (editMode) {
-      updateMutation.mutate(data, {
-        onSuccess: () => {
-          qc.invalidateQueries({
-            queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
-          });
-          showSuccessToast("Automated Reply Updated Successfully");
-        },
-      });
+      // Update based on platform
+      if (isInstagram) {
+        updateInstagramMutation.mutate(data, {
+          onSuccess: () => {
+            qc.invalidateQueries({
+              queryKey: [
+                "instagramAutomation",
+                { automationId: waAutomatedReplyId },
+              ],
+            });
+            showSuccessToast("Instagram Automation Updated Successfully");
+          },
+        });
+      } else {
+        updateMutation.mutate(data, {
+          onSuccess: () => {
+            qc.invalidateQueries({
+              queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
+            });
+            showSuccessToast("Automated Reply Updated Successfully");
+          },
+        });
+      }
     } else {
-      createMutation.mutate(data, {
-        onSettled: () => {
-          handleCancelClick();
-        },
-      });
+      // Create based on platform
+      if (isInstagram) {
+        createInstagramMutation.mutate(data, {
+          onSettled: () => {
+            handleCancelClick();
+          },
+        });
+      } else {
+        createMutation.mutate(data, {
+          onSettled: () => {
+            handleCancelClick();
+          },
+        });
+      }
     }
   }
 
@@ -141,11 +186,59 @@ export function AutomatedReplyForm({
             required
             {...rootForm.getInputProps("name")}
           />
-          <AccountSelector
-            optional={true}
-            label="WhatsApp Account (only needed if there is a lead automation)"
-            {...rootForm.getInputProps("whatsappSettingsPhoneId")}
-          />
+
+          {/* Platform Selector */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Platform</label>
+            <Select
+              value={rootForm.values.platform}
+              onValueChange={(value) =>
+                rootForm.setFieldValue("platform", value)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    {rootForm.values.platform ===
+                    AutomationPlatform.WHATSAPP ? (
+                      <>
+                        <IconBrandWhatsapp size={16} />
+                        <span>WhatsApp</span>
+                      </>
+                    ) : (
+                      <>
+                        <IconBrandInstagram size={16} />
+                        <span>Instagram</span>
+                      </>
+                    )}
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={AutomationPlatform.WHATSAPP}>
+                  <div className="flex items-center gap-2">
+                    <IconBrandWhatsapp size={16} />
+                    <span>WhatsApp</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value={AutomationPlatform.INSTAGRAM}>
+                  <div className="flex items-center gap-2">
+                    <IconBrandInstagram size={16} />
+                    <span>Instagram</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* WhatsApp Account - Only show for WhatsApp platform */}
+          {!isInstagram && (
+            <AccountSelector
+              optional={true}
+              label="WhatsApp Account (only needed if there is a lead automation)"
+              {...rootForm.getInputProps("whatsappSettingsPhoneId")}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -155,9 +248,17 @@ export function AutomatedReplyForm({
         </Button>
         <Button
           type="submit"
-          disabled={createMutation.isPending || updateMutation.isPending}
+          disabled={
+            createMutation.isPending ||
+            updateMutation.isPending ||
+            createInstagramMutation.isPending ||
+            updateInstagramMutation.isPending
+          }
         >
-          {createMutation.isPending || updateMutation.isPending ? (
+          {createMutation.isPending ||
+          updateMutation.isPending ||
+          createInstagramMutation.isPending ||
+          updateInstagramMutation.isPending ? (
             <>
               <span className="mr-2">Saving</span>
               <span className="animate-spin">⏳</span>

@@ -24,6 +24,10 @@ import {
   IconVideo,
 } from "@tabler/icons-react";
 
+import {
+  AutomationPlatform,
+  isComponentSupportedOnPlatform,
+} from "@/types/platform";
 import { Card } from "@/components/ui/card";
 
 // Component categories and items
@@ -70,6 +74,36 @@ const categories = [
     ],
   },
   {
+    name: "Instagram Templates",
+    items: [
+      {
+        id: "instagramGenericTemplateNode",
+        label: "Generic Template",
+        icon: <IconLayout size={16} />,
+      },
+      {
+        id: "instagramQuickReplyNode",
+        label: "Quick Reply",
+        icon: <IconSquare size={16} />,
+      },
+      {
+        id: "instagramStoryReplyNode",
+        label: "Story Reply",
+        icon: <IconImageInPicture size={16} />,
+      },
+      {
+        id: "instagramProductTemplateNode",
+        label: "Product Template",
+        icon: <IconBuildingStore size={16} />,
+      },
+      {
+        id: "instagramIceBreakerNode",
+        label: "Ice Breaker",
+        icon: <IconInputSpark size={16} />,
+      },
+    ],
+  },
+  {
     name: "Location & Contacts",
     items: [
       { id: "locationNode", label: "Location", icon: <IconMapPin size={16} /> },
@@ -106,22 +140,106 @@ const categories = [
   },
 ];
 
-export default function ComponentSidebar() {
+export default function ComponentSidebar({ platform }: { platform: string }) {
+  const selectedPlatform = platform as AutomationPlatform;
+
+  // Debug log to verify platform
+  console.log(
+    "[ComponentSidebar] Received platform:",
+    platform,
+    "Parsed as:",
+    selectedPlatform,
+  );
+
+  // Function to get default node data based on node type
+  const getDefaultNodeData = useCallback((nodeId: string, label: string) => {
+    const baseData = { label, type: nodeId };
+
+    switch (nodeId) {
+      case "instagramGenericTemplateNode":
+        return {
+          ...baseData,
+          elements: [
+            {
+              title: "",
+              subtitle: "",
+              image_url: "",
+              buttons: [],
+            },
+          ],
+        };
+      case "instagramQuickReplyNode":
+        return {
+          ...baseData,
+          text: "",
+          quick_replies: [],
+        };
+      case "instagramStoryReplyNode":
+        return {
+          ...baseData,
+          text: "",
+          story_mention: false,
+        };
+      case "instagramProductTemplateNode":
+        return {
+          ...baseData,
+          elements: [],
+        };
+      case "instagramIceBreakerNode":
+        return {
+          ...baseData,
+          iceBreakers: [],
+        };
+      default:
+        return baseData;
+    }
+  }, []);
+
   // Function to handle drag start
   const onDragStart = useCallback(
     (event: React.DragEvent, nodeType: string, nodeData: any) => {
       event.dataTransfer.setData("application/reactflow", nodeType);
       event.dataTransfer.setData(
         "application/nodeData",
-        JSON.stringify(nodeData),
+        JSON.stringify({ ...nodeData, platform: selectedPlatform }),
       );
       event.dataTransfer.effectAllowed = "move";
     },
-    [],
+    [selectedPlatform],
   );
 
+  // Filter categories based on selected platform
+  const getFilteredCategories = () => {
+    const filtered = categories
+      .map((category) => ({
+        ...category,
+        items: category.items.filter((item) => {
+          const isSupported = isComponentSupportedOnPlatform(
+            item.id,
+            selectedPlatform,
+          );
+          console.log(
+            `[Filter] ${item.id} on ${selectedPlatform}:`,
+            isSupported,
+          );
+          return isSupported;
+        }),
+      }))
+      .filter((category) => category.items.length > 0);
+
+    console.log(
+      "[ComponentSidebar] Filtered categories:",
+      filtered.length,
+      "Total items:",
+      filtered.reduce((sum, cat) => sum + cat.items.length, 0),
+    );
+    return filtered;
+  };
+
+  const filteredCategories = getFilteredCategories();
+
   return (
-    <Card className="w-[250px] overflow-y-auto p-4">
+    <Card className="w-62.5 overflow-y-auto p-4">
       <div className="mb-4">
         <h2 className="text-lg font-semibold">Components</h2>
         <p className="text-sm text-muted-foreground">
@@ -129,7 +247,7 @@ export default function ComponentSidebar() {
         </p>
       </div>
 
-      {categories.map((category) => (
+      {filteredCategories.map((category) => (
         <div key={category.name} className="mb-6">
           <h3 className="mb-2 text-sm font-medium text-muted-foreground">
             {category.name}
@@ -142,10 +260,11 @@ export default function ComponentSidebar() {
                 role="none"
                 draggable
                 onDragStart={(event) =>
-                  onDragStart(event, item.id, {
-                    label: item.label,
-                    type: item.id,
-                  })
+                  onDragStart(
+                    event,
+                    item.id,
+                    getDefaultNodeData(item.id, item.label),
+                  )
                 }
               >
                 <div className="text-muted-foreground">{item.icon}</div>

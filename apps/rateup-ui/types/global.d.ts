@@ -1172,6 +1172,7 @@ export type WaAutomatedReply = {
   assignType: string;
   memberChoice: string;
   isEnabled: boolean;
+  platform?: string; // "whatsapp" | "instagram"
   WaAutomatedReplyAssignedUser: Array<{
     userId: string;
   }>;
