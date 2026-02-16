@@ -210,7 +210,9 @@ export function DataTableToolbar<TData>({
                 onChange={(event) =>
                   setFilter({
                     ...filter,
-                    searchTerm: event.currentTarget.value,
+                    searchTerm: event.currentTarget.value
+                      ?.trimStart()
+                      .replaceAll("+", ""),
                   })
                 }
               />
