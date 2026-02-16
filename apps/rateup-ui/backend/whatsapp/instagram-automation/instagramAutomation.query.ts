@@ -27,8 +27,6 @@ export const useInstagramAutomationById = (automationId: string) =>
       return response.data;
     },
     enabled: !!automationId,
-    retry: false, // Don't retry on 404 - the automation might be on WhatsApp instead
-    throwOnError: false, // Don't throw errors - let the component handle it
   });
 
 export const useCreateInstagramAutomationMutation = () => {

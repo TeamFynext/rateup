@@ -18,6 +18,7 @@ import { useTimeSince } from "@/hooks/timeSince";
 import { useDeleteWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useDeleteInstagramAutomationMutation } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import { Card } from "@/components/ui/card";
 
 interface WaAutomationCardsProps {
   data: any;
@@ -48,8 +49,8 @@ function AutomationCard({ automation }: Readonly<WaAutomationCardProps>) {
   const isInstagram = platform === "instagram";
 
   return (
-    <div
-      className="bg-card border border-border rounded-lg hover:border-primary/50 transition-colors cursor-pointer overflow-hidden"
+    <Card
+      className="hover:shadow-lg dark:hover:shadow-primary-foreground transition-shadow cursor-pointer py-0 gap-0"
       onClick={() => router.push(`flowbots/${automation.id}`)}
     >
       <div className="p-3 pb-2">
@@ -100,7 +101,7 @@ function AutomationCard({ automation }: Readonly<WaAutomationCardProps>) {
           </span>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 function DeleteButton({ automationId, platform }) {

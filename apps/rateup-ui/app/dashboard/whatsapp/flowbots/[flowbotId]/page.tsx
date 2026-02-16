@@ -59,19 +59,21 @@ const FlowbotId = () => {
   const searchParams = useSearchParams();
   const selectedTab = searchParams.get("tab") || "flow";
 
-  // Try to fetch from both APIs - one will succeed based on platform
+  // Try WhatsApp API first
   const {
     data: waData,
     isPending: waPending,
     isError: waError,
     refetch: waRefetch,
   } = useWaAutomatedReplyById(flowbotId);
+
+  // Only try Instagram API if WhatsApp query completed with no data
   const {
     data: igData,
     isPending: igPending,
     isError: igError,
     refetch: igRefetch,
-  } = useInstagramAutomationById(flowbotId);
+  } = useInstagramAutomationById(!waPending && !waData ? flowbotId : "");
 
   const { data: waAutomtedReplyMessage, isLoading } =
     useWaAutomatedRepliesMessageById(flowbotId);
@@ -80,11 +82,11 @@ const FlowbotId = () => {
   // Use whichever data is available (WhatsApp or Instagram)
   const data = waData || igData;
 
-  // Wait for both queries to finish before showing loading state
-  const isQueryPending = waPending || igPending;
+  // Still loading if WA is pending, or if WA failed and IG is pending
+  const isQueryPending = waPending || (!waData && igPending);
   const isPending = isQueryPending || isLoading || waPendingSettings;
 
-  // Only show error if BOTH queries have completed and both failed with no data
+  // Only show error if both queries have completed and both failed with no data
   const hasError = !isQueryPending && waError && igError && !data;
 
   const refetch = async () => {

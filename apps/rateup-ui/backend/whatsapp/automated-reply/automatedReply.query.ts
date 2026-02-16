@@ -37,8 +37,6 @@ export const useWaAutomatedReplyById = (waAutomatedReplyId: string) =>
     queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
     queryFn: () => getWaAutomatedRepliesById(waAutomatedReplyId),
     enabled: !!waAutomatedReplyId,
-    retry: false, // Don't retry on 404 - the automation might be on Instagram instead
-    throwOnError: false, // Don't throw errors - let the component handle it
   });
 
 export const useCreateWaAutomatedReplyMutation = () => {
