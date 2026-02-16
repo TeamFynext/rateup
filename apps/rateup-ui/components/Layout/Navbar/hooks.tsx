@@ -214,14 +214,14 @@ export function useNavMain({
             icon: Activity,
           },
           {
-            title: t("Team Activity"),
-            url: "/dashboard/analytics?tab=team-activity",
-            icon: FileText,
-          },
-          {
             title: t("Message Analytics"),
             url: "/dashboard/analytics?tab=api-analytics",
             icon: ChartLine,
+          },
+          {
+            title: t("Team Activity"),
+            url: "/dashboard/analytics?tab=team-activity",
+            icon: FileText,
           },
         ],
       },
