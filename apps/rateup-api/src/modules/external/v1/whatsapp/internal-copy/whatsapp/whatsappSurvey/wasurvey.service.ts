@@ -66,6 +66,15 @@ export async function sendMessage(
   messageData: WaSendMessageBody,
   userName?: string,
   userId?: string,
+  teamId?: string,
+  isAutomated: boolean = false,
+  messageType:
+    | "INBOX"
+    | "TEMPLATE"
+    | "CAMPAIGN"
+    | "AUTOMATED"
+    | "FLOW" = "INBOX",
+  externalApi: boolean = false,
 ) {
   const waSettings = await getWaSettings(orgId);
   const { to } = messageData;
@@ -85,11 +94,16 @@ export async function sendMessage(
     await handleWaMessages(
       "send",
       messageData,
+      teamId,
       to,
       orgId,
       userName,
       res?.data?.messages?.[0]?.id,
       userId,
+      undefined,
+      isAutomated,
+      messageType,
+      externalApi,
     );
     return { status: true, message: res?.data?.messages?.[0]?.id };
   } catch (e: any) {
@@ -97,12 +111,16 @@ export async function sendMessage(
     await handleWaMessages(
       "send",
       messageData,
+      teamId,
       to,
       orgId,
       userName,
       null,
       userId,
       true,
+      isAutomated,
+      messageType,
+      externalApi,
     );
     log.error("Error sending message", e);
     return {

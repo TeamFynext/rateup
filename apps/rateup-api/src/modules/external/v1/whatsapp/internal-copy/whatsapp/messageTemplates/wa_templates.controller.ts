@@ -347,6 +347,7 @@ export async function sendTemplateToContactHandler(
       dbTemplate,
       timeDelay,
       components,
+      teamId,
       surveyTeamMap,
     });
     res
@@ -437,6 +438,7 @@ export async function sendTemplateByNameToPhoneHandler(
       tag,
       whatsappSettingsPhoneId,
       buttonVariable,
+      true,
     );
     rep
       .code(200)
@@ -592,6 +594,7 @@ export async function sendTemplateByNameToPhoneWithFileHandler(
       tag,
       whatsappSettingsPhoneId,
       buttonVariable,
+      true,
     );
     rep
       .code(200)
@@ -660,6 +663,7 @@ export async function sendTemplatesToContactsHandler(
         dbTemplate,
         timeDelay,
         components: templateComponents,
+        teamId,
         surveyTeamMap,
       });
     }
@@ -720,6 +724,7 @@ export async function sendTemplatesToContactGroupsHandler(
         dbTemplate,
         timeDelay: req.body.timeDelay,
         components: templateComponents,
+        teamId: null,
         surveyTeamMap,
       });
     }
