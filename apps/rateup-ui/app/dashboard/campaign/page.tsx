@@ -266,7 +266,7 @@ export default function CampaignsPage() {
           campaignType={activeTab}
         />
       )}
-      {selectedCampaignId && campaignByIdQuery.data && (
+      {selectedCampaignId && campaignByIdQuery?.data && (
         <CreateCampaignModal
           isEdit
           campaign={campaignByIdQuery.data}

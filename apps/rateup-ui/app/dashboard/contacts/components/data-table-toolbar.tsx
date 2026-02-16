@@ -212,7 +212,7 @@ export function DataTableToolbar<TData>({
                     ...filter,
                     searchTerm: event.currentTarget.value
                       ?.trimStart()
-                      .replaceAll("+", ""),
+                      ?.replaceAll("+", ""),
                   })
                 }
               />
