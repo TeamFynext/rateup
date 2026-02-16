@@ -194,6 +194,12 @@ export enum WaEvent {
   READ = "read",
   LEADGEN = "leadgen",
   SMBMessageEchoes = "smb_message_echoes",
+  ACCOUNT_UPDATE = "account_update",
+}
+
+export enum WhatsappSettingsStatus {
+  ACTIVE = "ACTIVE",
+  DISCONNECTED = "DISCONNECTED",
 }
 
 // Changes to these enums should be reflected in schema.prisma defaultValues

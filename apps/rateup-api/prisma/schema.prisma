@@ -280,6 +280,7 @@ model WhatsappSettings {
   phoneDisplayName String?
 
   type             String // enums.ts: WaConfigType
+  status           String             @default("ACTIVE")
   createdAt        DateTime           @default(now())
   /// [PWaEncryptionKeys]
   encryption       Json? // for flow {publicKey: string, privateKey: string}

@@ -45,6 +45,7 @@ import {
   SubscriptionFeaturePathName,
   WaTemplateSupportedFormats,
   CampaignStatus,
+  WhatsappSettingsStatus,
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import {
@@ -55,6 +56,7 @@ import {
 import {
   getWaSettingsByPhoneId,
   MetaAsset,
+  updateWaSettingsStatusByWabaId,
 } from "../settings/wa_settings.service.js";
 import {
   WaMessageBody,
@@ -212,6 +214,9 @@ export async function whatsappEventHandler(
 
       case WaEvent.LEADGEN:
         await handleLeadGen(body);
+        break;
+      case WaEvent.ACCOUNT_UPDATE:
+        await handleAccountUpdateEvent(body);
         break;
 
       case WaEvent.SMBMessageEchoes:
@@ -395,6 +400,31 @@ async function handleMessageStatusEvent(
   );
 
   await Promise.all(promises);
+}
+
+async function handleAccountUpdateEvent(body: WaMessageBody) {
+  const wabaId = body.entry?.[0]?.id;
+  const changes = body.entry?.[0]?.changes?.[0];
+  const value = (changes?.value as any) || {};
+
+  log.info(`Handling Account Update Event for WABA ID: ${wabaId}`);
+
+  // Disconnect if banned or restricted
+  if (
+    value.ban_info?.ban_status === "BANNED" ||
+    (value.restriction_info && value.restriction_info.length > 0)
+  ) {
+    log.warn(
+      `WABA ID ${wabaId} account restricted or banned. Marking as DISCONNECTED.`,
+    );
+    await updateWaSettingsStatusByWabaId(
+      wabaId,
+      WhatsappSettingsStatus.DISCONNECTED,
+    );
+  } else {
+    // Other account updates might not imply disconnection, but we log them.
+    log.info(`Account update received for WABA ID ${wabaId}: %o`, value);
+  }
 }
 
 interface changeValue {
