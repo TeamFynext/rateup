@@ -102,7 +102,15 @@ const WaAutomationCardsList = ({
   if (isError) return <ErrorComponent refetch={handleRefetch} />;
 
   if (combinedData.length === 0)
-    return <NothingFound text={translations("No Automated Replies Found")} />;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60dvh] gap-4">
+        <NothingFound text={translations("No Automated Replies Found")} />
+        <Button onClick={() => setOpened(true)} className="h-9 px-4 gap-2">
+          <IconPlus className="h-4 w-4" />
+          {translations("Create Chatbot")}
+        </Button>
+      </div>
+    );
 
   if (filteredData.length === 0 && searchQuery.trim()) {
     return (
