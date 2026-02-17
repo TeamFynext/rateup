@@ -2605,9 +2605,9 @@
     "Success Rate": "सफलता दर",
     "Failure Rate": "विफलता दर",
     "Avg Response": "औसत प्रतिक्रिया",
-    "External API": "बाहरी API",
-    "Campaign API": "अभियान API",
-    "All APIs": "सभी APIs"
+    "External": "बाहरी",
+    "Campaign & Inbox": "अभियान और इनबॉक्स",
+    "All": "सभी"
   },
   "Team Performance": "टीम प्रदर्शन",
   "Message Analytics": "संदेश विश्लेषण",

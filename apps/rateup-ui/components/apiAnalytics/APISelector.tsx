@@ -20,9 +20,9 @@ interface ApiSelectorProps {
 export function ApiSelector({ value, onChange, className }: ApiSelectorProps) {
   const t = useTranslations("apianalytics");
   const apiOptions = [
-    { value: "external", label: t("External API"), icon: Globe },
-    { value: "whatsapp", label: t("Campaign API"), icon: MessageCircle },
-    { value: "all", label: t("All APIs"), icon: MessageCircle },
+    { value: "external", label: t("External"), icon: Globe },
+    { value: "whatsapp", label: t("Campaign & Inbox"), icon: MessageCircle },
+    { value: "all", label: t("All"), icon: MessageCircle },
   ];
 
   const selectedOption = apiOptions.find((opt) => opt.value === value);
