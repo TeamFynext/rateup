@@ -2606,9 +2606,9 @@
     "Success Rate": "Erfolgsquote",
     "Failure Rate": "Fehlerrate",
     "Avg Response": "Durchschnittliche Antwort",
-    "External API": "Externe API",
-    "Campaign API": "Kampagnen-API",
-    "All APIs": "Alle APIs"
+    "External": "Extern",
+    "Campaign & Inbox": "Kampagne & Posteingang",
+    "All": "Alle"
   },
   "Team Performance": "Teamleistung",
   "Message Analytics": "Nachrichtenanalyse",

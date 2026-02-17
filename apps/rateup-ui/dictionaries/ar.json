@@ -2601,9 +2601,9 @@
     "Success Rate": "معدل النجاح",
     "Failure Rate": "معدل الفشل",
     "Avg Response": "متوسط الاستجابة",
-    "External API": "واجهة برمجة خارجية",
-    "Campaign API": "واجهة برمجة حملات التسويق",
-    "All APIs": "جميع الواجهات"
+    "External": "خارجي",
+    "Campaign & Inbox": "الحملة وصندوق الوارد",
+    "All": "الكل"
   },
   "Team Performance": "أداء الفريق",
   "Message Analytics": "تحليلات الرسائل",
