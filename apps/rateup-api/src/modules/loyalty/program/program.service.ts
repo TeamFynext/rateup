@@ -37,6 +37,7 @@ export async function createLoyaltyProgram(
       whatsappNotifications: data.whatsappNotifications,
       enablePointsExpiration: data.enablePointsExpiration,
       pointsExpirationMonths: data.pointsExpirationMonths,
+      whatsappSettingsId: data.whatsappSettingsId,
     },
     include: {
       tiers: true,

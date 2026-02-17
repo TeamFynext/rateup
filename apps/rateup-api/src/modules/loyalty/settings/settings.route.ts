@@ -6,6 +6,11 @@ import {
   getAllLoyaltyTemplateHandler,
   getLoyaltyTemplateHandler,
   updateLoyaltyTemplateHandler,
+  createEventTriggerHandler,
+  updateEventTriggerHandler,
+  getEventTriggerHandler,
+  getAllEventTriggersHandler,
+  deleteEventTriggerHandler,
 } from "./settings.controller.js";
 import { $lsRef } from "./settings.schema.js";
 
@@ -53,4 +58,56 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
   );
 
   server.get("/template/all", getAllLoyaltyTemplateHandler);
+
+  // Event Trigger Routes
+  server.post(
+    "/event-trigger",
+    {
+      schema: {
+        body: $lsRef("eventTriggerSchema"),
+      },
+    },
+    createEventTriggerHandler,
+  );
+
+  server.put(
+    "/event-trigger/:id",
+    {
+      schema: {
+        params: $lsRef("byIdSchema"),
+        body: $lsRef("updateEventTriggerSchema"),
+      },
+    },
+    updateEventTriggerHandler,
+  );
+
+  server.get(
+    "/event-trigger/:id",
+    {
+      schema: {
+        params: $lsRef("byIdSchema"),
+      },
+    },
+    getEventTriggerHandler,
+  );
+
+  server.get(
+    "/event-trigger/all",
+    {
+      schema: {
+        querystring: $lsRef("programIdQuerySchema"),
+      },
+    },
+    getAllEventTriggersHandler,
+  );
+
+  server.delete(
+    "/event-trigger/:id",
+    {
+      schema: {
+        params: $lsRef("byIdSchema"),
+      },
+    },
+    deleteEventTriggerHandler,
+  );
 }

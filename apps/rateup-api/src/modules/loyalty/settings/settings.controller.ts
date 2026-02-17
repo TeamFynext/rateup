@@ -5,6 +5,9 @@ import {
   IdParamInput,
   LoyaltyTemplateInput,
   UpdateLoyaltyTemplateInput,
+  EventTriggerInput,
+  UpdateEventTriggerInput,
+  ProgramIdQueryInput,
 } from "./settings.schema.js";
 import {
   createLoyaltyWaCommand,
@@ -12,6 +15,11 @@ import {
   getAllLoyaltyWaCommands,
   getLoyaltyWaCommand,
   updateLoyaltyWaCommand,
+  createEventTrigger,
+  updateEventTrigger,
+  getEventTrigger,
+  getAllEventTriggers,
+  deleteEventTrigger,
 } from "./settings.service.js";
 import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service.js";
 
@@ -99,6 +107,79 @@ export async function deleteLoyaltyTemplateHandler(
   try {
     const { id } = request.params;
     const res = await deleteLoyaltyWaCommandById(id);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+// Event Trigger Handlers
+export async function createEventTriggerHandler(
+  request: FastifyRequest<{ Body: EventTriggerInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await createEventTrigger(request.body);
+    reply.code(201).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function updateEventTriggerHandler(
+  request: FastifyRequest<{
+    Body: UpdateEventTriggerInput;
+    Params: IdParamInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { id } = request.params;
+    const res = await updateEventTrigger(id, request.body);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getEventTriggerHandler(
+  request: FastifyRequest<{ Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { id } = request.params;
+    const res = await getEventTrigger(id);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getAllEventTriggersHandler(
+  request: FastifyRequest<{ Querystring: ProgramIdQueryInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { programId } = request.query;
+    const res = await getAllEventTriggers(programId);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function deleteEventTriggerHandler(
+  request: FastifyRequest<{ Params: IdParamInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { id } = request.params;
+    const res = await deleteEventTrigger(id);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

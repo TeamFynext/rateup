@@ -1,20 +1,8 @@
-import { WaAutomatedReplyResponseType } from "../../types/enums.js";
 import { log } from "../../utils/logger.js";
 import prisma from "../../utils/prisma.js";
-import { sendTemplateToPhone } from "../whatsapp/messageTemplates/wa_templates.service.js";
-import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js";
-import { replacedContentByDynamicVariable } from "./settings/settings.service.js";
 
-/**
- * Commands for Loyalty WhatsApp Notifications
- */
-export const LOYALTY_WA_COMMANDS = {
-  POINTS_ISSUED: "LOYALTY_POINTS_ISSUED",
-  POINTS_ADJUSTED: "LOYALTY_POINTS_ADJUSTED",
-  REWARD_ISSUED: "LOYALTY_REWARD_ISSUED",
-  REWARD_REDEEMED: "LOYALTY_REWARD_REDEEMED",
-  TIER_UPGRADED: "LOYALTY_TIER_UPGRADED",
-};
+import { LoyaltyEventType } from "../../types/enums.js";
+import { handleSendTemplate } from "../contact/contact.utils.js";
 
 /**
  * Dispatcher for Loyalty WhatsApp Notifications
@@ -74,8 +62,8 @@ export async function dispatchLoyaltyNotification(
 
     // Check Points Activity Alerts specifically for point-related commands
     if (
-      (commandKey === LOYALTY_WA_COMMANDS.POINTS_ISSUED ||
-        commandKey === LOYALTY_WA_COMMANDS.POINTS_ADJUSTED) &&
+      (commandKey === LoyaltyEventType.POINTS_ISSUED ||
+        commandKey === LoyaltyEventType.POINTS_ADJUSTED) &&
       !program.pointsActivityAlerts
     ) {
       log.debug(
@@ -90,37 +78,29 @@ export async function dispatchLoyaltyNotification(
       );
       return;
     }
-    // 1. Resolve Template ID
+    // 1. Resolve Template ID via Event Trigger system
     let templateId: string | null = null;
-    let templateSource = "command";
 
-    // Check for Reward Level Override
-    if (payload.rewardWaTemplateId) {
-      templateId = payload.rewardWaTemplateId;
-      templateSource = "reward_override";
-    }
-    let responseType = WaAutomatedReplyResponseType.Template; // For now, only template messages
-    let content: any = "";
-    // Fallback to Command Resolution
-    if (!templateId) {
-      const command = await prisma.loyaltyWaCommand.findUnique({
-        where: {
-          request_message_org_unique: {
-            orgId,
-            requestMessage: commandKey,
+    const eventTrigger = await prisma.loyaltyEventTrigger.findFirst({
+      where: {
+        program: { orgId },
+        eventType: commandKey as LoyaltyEventType,
+        enabled: true,
+      },
+      include: {
+        waTemplate: true,
+        program: {
+          select: {
+            whatsappSettingsId: true,
           },
         },
-      });
-      if (command) {
-        templateId = command?.waTemplateId;
-        responseType = command.responseType as WaAutomatedReplyResponseType;
-        content = command.content;
-      } else {
-        log.trace(
-          `[LoyaltyWaDispatcher] No command/template found for ${commandKey} in org ${orgId}`,
-        );
-        return; // Fail-safe: silently skip
-      }
+      },
+    });
+
+    if (eventTrigger) {
+      templateId = eventTrigger.waTemplateId;
+    } else {
+      templateId = payload.rewardWaTemplateId || null;
     }
     const params: string[] = [];
 
@@ -128,78 +108,36 @@ export async function dispatchLoyaltyNotification(
     if (payload.customerName) params.push(payload.customerName);
 
     if (
-      commandKey === LOYALTY_WA_COMMANDS.POINTS_ISSUED ||
-      commandKey === LOYALTY_WA_COMMANDS.POINTS_ADJUSTED
+      commandKey === LoyaltyEventType.POINTS_ISSUED ||
+      commandKey === LoyaltyEventType.POINTS_ADJUSTED
     ) {
       if (payload.points !== undefined) params.push(payload.points.toString());
       if (payload.balanceAfter !== undefined)
         params.push(payload.balanceAfter.toString());
     } else if (
-      commandKey === LOYALTY_WA_COMMANDS.REWARD_ISSUED ||
-      commandKey === LOYALTY_WA_COMMANDS.REWARD_REDEEMED
+      commandKey === LoyaltyEventType.REWARD_ISSUED ||
+      commandKey === LoyaltyEventType.REWARD_REDEEMED
     ) {
       if (payload.rewardName) params.push(payload.rewardName);
       if (payload.redemptionCode) params.push(payload.redemptionCode);
       if (payload.points !== undefined)
         params.push(Math.abs(payload.points).toString()); // Cost
-    } else if (commandKey === LOYALTY_WA_COMMANDS.TIER_UPGRADED) {
+    } else if (commandKey === LoyaltyEventType.TIER_UPGRADED) {
       if (payload.newTier) params.push(payload.newTier);
     }
 
-    // Construct Body Component with params
-    const components = [
-      {
-        type: "body",
-        parameters: params.map((p) => ({
-          type: "text",
-          text: String(p),
-        })),
-      },
-    ];
-
     log.trace(
-      `[LoyaltyWaDispatcher] Sending ${commandKey} (${templateSource}) to ${payload.customerPhone}`,
+      `[LoyaltyWaDispatcher] Sending ${commandKey} to ${payload.customerPhone}`,
     );
-
-    if (responseType === WaAutomatedReplyResponseType.Template) {
-      // Fetch the template details to get name and language
-      const template = await prisma.waTemplate.findUnique({
-        where: { id: templateId },
-      });
-
-      if (!template) {
-        log.warn(
-          `[LoyaltyWaDispatcher] Template ${templateId} not found for command ${commandKey}`,
-        );
-        return;
-      }
-
-      const templateData = template.data as any;
-      const templateName = templateData?.name;
-
-      if (!templateName) {
-        log.warn(
-          `[LoyaltyWaDispatcher] Invalid template data for ${templateId}`,
-        );
-        return;
-      }
-      await sendTemplateToPhone({
-        orgId,
-        phone: payload.customerPhone,
-        dbTemplate: template as any,
-        teamId: null,
-        userId: null,
-        header: components?.[0] as any, // escaping strict type check for now if needed, but looks standard
-      });
-    } else if (responseType === WaAutomatedReplyResponseType.Text) {
-      const message = replacedContentByDynamicVariable(content, params);
-      await sendTextMessage(
-        { phone: payload.customerPhone, orgId },
-        null,
-        message,
-      );
-    }
+    await handleSendTemplate(
+      templateId,
+      orgId,
+      payload.customerPhone,
+      params,
+      eventTrigger?.program?.whatsappSettingsId,
+    );
   } catch (error) {
+    console.log("🚀 ~ dispatchLoyaltyNotification ~ error:", error);
     log.error(
       `[LoyaltyWaDispatcher] Error dispatching ${commandKey}: %o`,
       error,

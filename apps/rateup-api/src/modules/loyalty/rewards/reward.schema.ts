@@ -1,4 +1,8 @@
 import z from "zod";
+import {
+  LoyaltyPointRewardSubType,
+  LoyaltyRewardType,
+} from "../../../types/loyalty.js";
 
 export enum LoyaltyRewardStatus {
   ACTIVE = "ACTIVE",
@@ -7,25 +11,22 @@ export enum LoyaltyRewardStatus {
   OUT_OF_STOCK = "OUT_OF_STOCK",
 }
 
-export enum LoyaltyRewardType {
-  DISCOUNT_FIXED = "DISCOUNT_FIXED",
-  DISCOUNT_PERCENTAGE = "DISCOUNT_PERCENTAGE",
-  FREE_ITEM = "FREE_ITEM",
-}
-
 const discountFixedValueSchema = z.object({
+  type: z.literal(LoyaltyPointRewardSubType.DISCOUNT_FIXED),
   amount: z.number().min(0),
-  currency: z.string().default("USD"),
 });
 
 const discountPercentageValueSchema = z.object({
+  type: z.literal(LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE),
   percentage: z.number().min(0).max(100),
-  maxAmount: z.number().optional().nullable(),
+  max_discount_amount: z.number().optional().nullable(),
 });
 
 const freeItemValueSchema = z.object({
-  itemName: z.string(),
-  itemSku: z.string().optional().nullable(),
+  type: z.literal(LoyaltyPointRewardSubType.FREE_ITEM),
+  item_name: z.string(),
+  item_sku: z.string().optional().nullable(),
+  item_value: z.number().optional().nullable(),
   quantity: z.number().default(1),
 });
 
@@ -93,20 +94,17 @@ const redemptionRulesSchema = z.object({
 export const loyaltyRewardSchema = z.object({
   name: z.string().min(1, "Reward name is required"),
   description: z.string().optional().nullable(),
-  rewardType: z.enum(["point", "coupon", "assigned"]),
+  rewardType: z.nativeEnum(LoyaltyRewardType),
   pointsCost: z.number().min(0),
   rewardValue: z.union([
-    z.object({ points: z.number() }),
-    z.object({
-      code: z.string().optional(),
-      description: z.string().optional(),
-    }),
-    z.object({
-      description: z.string().optional(),
-      sku: z.string().optional(),
-    }),
+    z.discriminatedUnion("type", [
+      discountFixedValueSchema,
+      discountPercentageValueSchema,
+      freeItemValueSchema,
+    ]),
+    z.record(z.unknown()),
   ]),
-  status: z.enum(["active", "inactive", "out_of_stock"]).default("active"),
+  status: z.nativeEnum(LoyaltyRewardStatus).default(LoyaltyRewardStatus.ACTIVE),
   redemptionRules: redemptionRulesSchema.optional(),
   stockQuantity: z.number().optional().nullable(),
   availableForTiers: z.array(z.string()).optional(),
