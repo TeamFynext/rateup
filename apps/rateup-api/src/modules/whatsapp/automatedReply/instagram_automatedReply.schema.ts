@@ -9,7 +9,7 @@ export const instagramAutomationIdParamSchema = z.object({
 export const createInstagramAutomationBodySchema = z.object({
   name: z.string().min(1, "Name is required"),
   matchData: z.any(),
-  whatsappSettingsPhoneId: z.string().optional(),
+  whatsappSettingsPhoneId: z.string().nullish(),
   sendOnceIn24Hours: z.boolean().optional(),
   isActive: z.boolean().optional(),
 });
@@ -17,7 +17,7 @@ export const createInstagramAutomationBodySchema = z.object({
 export const updateInstagramAutomationBodySchema = z.object({
   name: z.string().min(1).optional(),
   matchData: z.any().optional(),
-  whatsappSettingsPhoneId: z.string().optional(),
+  whatsappSettingsPhoneId: z.string().nullish(),
   sendOnceIn24Hours: z.boolean().optional(),
   isActive: z.boolean().optional(),
 });
