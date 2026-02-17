@@ -14,6 +14,7 @@ export const customerLoyaltyAccountSchema = z.object({
   referCode: z.string().optional(),
   source: z.string().optional(),
   orgId: z.string().min(1),
+  dob: z.string().datetime().optional(),
 });
 
 export const customerLoyaltyAccountUpdateSchema = z.object({

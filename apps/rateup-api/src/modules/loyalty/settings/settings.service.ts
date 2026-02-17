@@ -3,7 +3,11 @@ import {
   WaAutomatedReplyResponseType,
 } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
-import { LoyaltyTemplateInput } from "./settings.schema.js";
+import {
+  LoyaltyTemplateInput,
+  EventTriggerInput,
+  UpdateEventTriggerInput,
+} from "./settings.schema.js";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { LoyaltyWaCommand } from "../../../../generated/prisma/client.js";
 import dayjs from "dayjs";
@@ -13,6 +17,7 @@ import {
 } from "../accounts/account.service.js";
 import { handleSendTemplate } from "../../contact/contact.utils.js";
 import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
+import { convertNodeToWhatsAppMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 
 export async function createLoyaltyWaCommand(
   data: LoyaltyTemplateInput & { orgId: string },
@@ -101,8 +106,8 @@ export async function handleLoyaltyWaCommand(
       await handleCustomerRemovalFromLoyalty(phone, loyaltyWaCommand);
       break;
     case LoyaltyTemplateTypes.RewardsIssued:
+      await handleIssuedRewardsCommand(phone, loyaltyWaCommand);
       break;
-    // await handleIssuedRewardsCommand(phone, loyaltyWaCommand);
   }
 }
 
@@ -112,6 +117,10 @@ export async function getAllLoyaltyWaCommands(orgId) {
       orgId,
     },
   });
+}
+async function handleIssuedRewardsCommand(phone, loyaltyWaCommand) {
+  // const node=""
+  // convertNodeToWhatsAppMessage(node,phone);
 }
 
 export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
@@ -245,4 +254,67 @@ export async function handleCustomerRemovalFromLoyalty(
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
     await sendTextMessage({ phone, orgId }, null, content);
   }
+}
+
+// Event Trigger CRUD Services
+export async function createEventTrigger(data: EventTriggerInput) {
+  return await prisma.loyaltyEventTrigger.create({
+    data: {
+      programId: data.programId,
+      eventType: data.eventType,
+      enabled: data.enabled ?? true,
+      triggerDays: data.triggerDays,
+      waTemplateId: data.waTemplateId ? data.waTemplateId : undefined,
+      rewardId: data.rewardId || undefined,
+    },
+    include: {
+      waTemplate: true,
+      reward: true,
+    },
+  });
+}
+
+export async function updateEventTrigger(
+  id: string,
+  data: UpdateEventTriggerInput,
+) {
+  return await prisma.loyaltyEventTrigger.update({
+    where: { id },
+    data,
+    include: {
+      waTemplate: true,
+      reward: true,
+    },
+  });
+}
+
+export async function getEventTrigger(id: string) {
+  return await prisma.loyaltyEventTrigger.findUnique({
+    where: { id },
+    include: {
+      waTemplate: true,
+      reward: true,
+      program: true,
+    },
+  });
+}
+
+export async function getAllEventTriggers(programId?: string) {
+  return await prisma.loyaltyEventTrigger.findMany({
+    where: programId ? { programId } : undefined,
+    include: {
+      waTemplate: true,
+      reward: true,
+      program: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+export async function deleteEventTrigger(id: string) {
+  return await prisma.loyaltyEventTrigger.delete({
+    where: { id },
+  });
 }

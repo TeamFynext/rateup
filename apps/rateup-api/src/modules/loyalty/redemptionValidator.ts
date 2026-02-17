@@ -68,8 +68,11 @@ export class RedemptionValidator {
 
     const rules = reward.redemptionRules as LoyaltyRedemptionRules;
 
-    // 1. Check points balance
-    if (customer.currentPoints < reward.pointsCost) {
+    // 1. Check points balance (skip for assigned type rewards)
+    if (
+      reward.rewardType !== "assigned" &&
+      customer.currentPoints < reward.pointsCost
+    ) {
       violations.push(
         `Not enough points. Need ${reward.pointsCost}, have ${customer.currentPoints}`,
       );

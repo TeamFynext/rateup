@@ -37,7 +37,7 @@ export async function getActiveLoyaltyRewards(programId: string) {
   return await prisma.loyaltyReward.findMany({
     where: {
       programId,
-      status: "active",
+      status: "ACTIVE",
     },
     orderBy: { pointsCost: "asc" },
   });

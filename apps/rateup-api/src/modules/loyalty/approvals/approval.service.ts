@@ -7,10 +7,8 @@ import {
 } from "./approval.schema.js";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
-import {
-  dispatchLoyaltyNotification,
-  LOYALTY_WA_COMMANDS,
-} from "../loyaltyWaDispatcher.js";
+import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
+import { LoyaltyEventType } from "../../../types/enums.js";
 
 /**
  * Create a new approval request
@@ -435,7 +433,7 @@ async function approveRedemption(approval: any, data: ApproveRequestInput) {
     if (approval.account?.contact?.phone && approval.account?.contact?.orgId) {
       await dispatchLoyaltyNotification(
         approval.account.contact.orgId,
-        LOYALTY_WA_COMMANDS.REWARD_REDEEMED,
+        LoyaltyEventType.REWARD_REDEEMED,
         {
           customerPhone: approval.account.contact.phone,
           customerName: approval.account.contact.name || "Customer",
@@ -550,7 +548,7 @@ async function approvePointsAdjustment(
     if (approval.account?.contact?.phone && approval.account?.contact?.orgId) {
       await dispatchLoyaltyNotification(
         approval.account.contact.orgId,
-        LOYALTY_WA_COMMANDS.POINTS_ADJUSTED,
+        LoyaltyEventType.POINTS_ADJUSTED,
         {
           customerPhone: approval.account.contact.phone,
           customerName: approval.account.contact.name || "Customer",
@@ -615,7 +613,7 @@ async function approveTierOverride(approval: any, data: ApproveRequestInput) {
     if (approval.account?.contact?.phone && approval.account?.contact?.orgId) {
       await dispatchLoyaltyNotification(
         approval.account.contact.orgId,
-        LOYALTY_WA_COMMANDS.TIER_UPGRADED,
+        LoyaltyEventType.TIER_UPGRADED,
         {
           customerPhone: approval.account.contact.phone,
           customerName: approval.account.contact.name || "Customer",
