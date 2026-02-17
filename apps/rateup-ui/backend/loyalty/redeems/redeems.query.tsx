@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
@@ -45,7 +46,7 @@ export const useRedeemRewardByShortCode = () => {
   });
 };
 
-export const useRedeemReward = () => {
+export const useRedeemReward = (selectedPhone: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: redeemReward,
@@ -53,7 +54,10 @@ export const useRedeemReward = () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Reward redeemed successfully");
+      qc.invalidateQueries({
+        queryKey: ["loyalty-cashier-customer", selectedPhone],
+      });
+      toast.success("Reward claimed successfully");
     },
     onError: (e: any) => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
