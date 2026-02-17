@@ -861,6 +861,7 @@ declare global {
     name: string | null;
     phone: string;
     email: string | null;
+    dob?: Date | null;
     points: number;
     orgId: string;
   };

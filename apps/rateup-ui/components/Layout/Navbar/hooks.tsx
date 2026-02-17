@@ -48,6 +48,7 @@ import {
   Folder,
   Inbox,
   Settings,
+  ShoppingCart,
   Sparkles,
   Tag,
   User,
@@ -344,6 +345,11 @@ export function useNavMain({
                   title: t("Overview"),
                   url: "/dashboard/loyalty/dashboard",
                   icon: IconDashboard,
+                },
+                {
+                  title: t("Cashier Portal"),
+                  url: "/dashboard/loyalty/cashier",
+                  icon: ShoppingCart,
                 },
                 {
                   title: t("Customers"),
