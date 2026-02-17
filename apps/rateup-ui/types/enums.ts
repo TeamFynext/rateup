@@ -614,6 +614,9 @@ export enum SentCampaignChoice {
   LATER = "LATER",
 }
 
+export enum WhatsappSettingsStatus {
+  ACTIVE = "ACTIVE",
+  DISCONNECTED = "DISCONNECTED",
 export enum LoyaltyRewardType {
   POINT = "point",
   COUPON = "coupon",

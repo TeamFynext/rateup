@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { showSuccessToast } from "@/utils/notifications";
 
 export function BookDemoComponent() {
   const router = useRouter();
@@ -94,6 +95,7 @@ export function BookDemoComponent() {
 
     mutate(payload, {
       onSuccess: () => {
+        showSuccessToast(translations("Demo Booked Successfully!"));
         setIsSubmitted(true);
         reset();
       },
