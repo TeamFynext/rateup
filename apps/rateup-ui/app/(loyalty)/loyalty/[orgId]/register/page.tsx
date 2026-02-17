@@ -18,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Form,
   FormControl,
@@ -42,6 +43,7 @@ const formSchema = z.object({
       message: "Please enter a valid phone number",
     }),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  dob: z.date(),
   referCode: z.string().optional(),
 });
 
@@ -61,6 +63,7 @@ function RegisterForm() {
       name: "",
       phone: "",
       email: "",
+      dob: undefined,
       referCode: referCodeParam || "",
     },
   });
@@ -145,6 +148,20 @@ function RegisterForm() {
                       type="email"
                       {...field}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dob"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date of Birth</FormLabel>
+                  <FormControl>
+                    <DatePicker value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

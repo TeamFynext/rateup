@@ -332,6 +332,41 @@ export default function NodeEditor({
             handleInputChange={handleInputChange}
           />
         );
+      case "instagramGenericTemplateNode":
+        return (
+          <InstagramGenericTemplateNodeEditor
+            nodeData={nodeData as NodeTypeMap["instagramGenericTemplateNode"]}
+            handleInputChange={handleInputChange}
+          />
+        );
+      case "instagramQuickReplyNode":
+        return (
+          <InstagramQuickReplyNodeEditor
+            nodeData={nodeData as NodeTypeMap["instagramQuickReplyNode"]}
+            handleInputChange={handleInputChange}
+          />
+        );
+      case "instagramStoryReplyNode":
+        return (
+          <InstagramStoryReplyNodeEditor
+            nodeData={nodeData as NodeTypeMap["instagramStoryReplyNode"]}
+            handleInputChange={handleInputChange}
+          />
+        );
+      case "instagramProductTemplateNode":
+        return (
+          <InstagramProductTemplateNodeEditor
+            nodeData={nodeData as NodeTypeMap["instagramProductTemplateNode"]}
+            handleInputChange={handleInputChange}
+          />
+        );
+      case "instagramIceBreakerNode":
+        return (
+          <InstagramIceBreakerNodeEditor
+            nodeData={nodeData as NodeTypeMap["instagramIceBreakerNode"]}
+            handleInputChange={handleInputChange}
+          />
+        );
 
       default:
         return (
@@ -2776,6 +2811,458 @@ const CatalogNodeEditor = ({
           + Add Section
         </Button>
       )}
+    </Stack>
+  );
+};
+
+// Instagram Generic Template Node Editor
+const InstagramGenericTemplateNodeEditor: React.FC<
+  NodeComponentProps<"instagramGenericTemplateNode">
+> = ({ nodeData, handleInputChange }) => {
+  const typedData = nodeData;
+
+  return (
+    <Stack gap={"xs"}>
+      <Text size="sm" fw={500}>
+        Template Elements (Cards)
+      </Text>
+      <Text size="xs" c="dimmed">
+        Create cards with images, text, and buttons for Instagram messaging
+      </Text>
+
+      {(typedData.elements || []).map((element, index: number) => (
+        <Stack
+          key={index}
+          p="sm"
+          style={{ border: "1px solid #eee", borderRadius: "8px" }}
+        >
+          <Group justify="space-between">
+            <Text size="sm" fw={500}>
+              Card {index + 1}
+            </Text>
+            <ActionIcon
+              color="red"
+              variant="subtle"
+              onClick={() => {
+                const newElements = [...(typedData.elements || [])];
+                newElements.splice(index, 1);
+                handleInputChange("elements", newElements);
+              }}
+            >
+              <IconX size={16} />
+            </ActionIcon>
+          </Group>
+
+          <ContainedTextField
+            label="Title"
+            placeholder="Enter card title"
+            required
+            value={element.title || ""}
+            onChange={(e) => {
+              const newElements = [...(typedData.elements || [])];
+              newElements[index] = {
+                ...newElements[index],
+                title: e.target.value,
+              };
+              handleInputChange("elements", newElements);
+            }}
+            maxLength={80}
+          />
+
+          <ContainedTextField
+            label="Subtitle"
+            placeholder="Enter subtitle (optional)"
+            value={element.subtitle || ""}
+            onChange={(e) => {
+              const newElements = [...(typedData.elements || [])];
+              newElements[index] = {
+                ...newElements[index],
+                subtitle: e.target.value,
+              };
+              handleInputChange("elements", newElements);
+            }}
+            maxLength={80}
+          />
+
+          <ContainedTextField
+            label="Image URL"
+            placeholder="https://..."
+            value={element.image_url || ""}
+            onChange={(e) => {
+              const newElements = [...(typedData.elements || [])];
+              newElements[index] = {
+                ...newElements[index],
+                image_url: e.target.value,
+              };
+              handleInputChange("elements", newElements);
+            }}
+          />
+
+          <Text size="xs" fw={500} mt="xs">
+            Buttons
+          </Text>
+          {(element.buttons || []).map((button, btnIndex: number) => (
+            <Group key={btnIndex} gap="xs">
+              <Select
+                size="xs"
+                value={button.type}
+                onChange={(value) => {
+                  const newElements = [...(typedData.elements || [])];
+                  newElements[index].buttons[btnIndex].type = value as
+                    | "web_url"
+                    | "postback";
+                  handleInputChange("elements", newElements);
+                }}
+                data={[
+                  { value: "web_url", label: "URL" },
+                  { value: "postback", label: "Action" },
+                ]}
+                style={{ width: "100px" }}
+              />
+              <ContainedTextField
+                flex={1}
+                placeholder="Button title"
+                value={button.title}
+                onChange={(e) => {
+                  const newElements = [...(typedData.elements || [])];
+                  newElements[index].buttons[btnIndex].title = e.target.value;
+                  handleInputChange("elements", newElements);
+                }}
+                maxLength={20}
+              />
+              {button.type === "web_url" && (
+                <ContainedTextField
+                  flex={1}
+                  placeholder="URL"
+                  value={button.url || ""}
+                  onChange={(e) => {
+                    const newElements = [...(typedData.elements || [])];
+                    newElements[index].buttons[btnIndex].url = e.target.value;
+                    handleInputChange("elements", newElements);
+                  }}
+                />
+              )}
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                onClick={() => {
+                  const newElements = [...(typedData.elements || [])];
+                  newElements[index].buttons.splice(btnIndex, 1);
+                  handleInputChange("elements", newElements);
+                }}
+              >
+                <IconX size={14} />
+              </ActionIcon>
+            </Group>
+          ))}
+          <Button
+            size="xs"
+            variant="light"
+            disabled={element.buttons?.length >= 3}
+            onClick={() => {
+              const newElements = [...(typedData.elements || [])];
+              if (!newElements[index].buttons) {
+                newElements[index].buttons = [];
+              }
+              newElements[index].buttons.push({
+                type: "postback",
+                title: "",
+              });
+              handleInputChange("elements", newElements);
+            }}
+          >
+            + Add Button
+          </Button>
+        </Stack>
+      ))}
+
+      <Button
+        variant="outline"
+        disabled={typedData.elements?.length >= 10}
+        onClick={() => {
+          const newElements = [
+            ...(typedData.elements || []),
+            { title: "", buttons: [] },
+          ];
+          handleInputChange("elements", newElements);
+        }}
+      >
+        + Add Card
+      </Button>
+    </Stack>
+  );
+};
+
+// Instagram Quick Reply Node Editor
+const InstagramQuickReplyNodeEditor: React.FC<
+  NodeComponentProps<"instagramQuickReplyNode">
+> = ({ nodeData, handleInputChange }) => {
+  const typedData = nodeData;
+
+  return (
+    <Stack gap={"xs"}>
+      <ContainedTextField
+        label="Message Text"
+        placeholder="Enter your message"
+        required
+        value={typedData.text || ""}
+        onChange={(e) => handleInputChange("text", e.target.value)}
+      />
+
+      <Text size="sm" fw={500} mt="md">
+        Quick Replies
+      </Text>
+      <Text size="xs" c="dimmed">
+        Add up to 13 quick reply buttons
+      </Text>
+
+      {(typedData.quick_replies || []).map((reply, index: number) => (
+        <Group key={index} gap="xs">
+          <ContainedTextField
+            flex={1}
+            placeholder="Reply text"
+            value={reply.title || ""}
+            onChange={(e) => {
+              const newReplies = [...(typedData.quick_replies || [])];
+              newReplies[index] = {
+                ...newReplies[index],
+                title: e.target.value,
+              };
+              handleInputChange("quick_replies", newReplies);
+            }}
+            maxLength={20}
+          />
+          <ContainedTextField
+            flex={1}
+            placeholder="Payload (optional)"
+            value={reply.payload || ""}
+            onChange={(e) => {
+              const newReplies = [...(typedData.quick_replies || [])];
+              newReplies[index] = {
+                ...newReplies[index],
+                payload: e.target.value,
+              };
+              handleInputChange("quick_replies", newReplies);
+            }}
+          />
+          <ActionIcon
+            size="sm"
+            variant="subtle"
+            onClick={() => {
+              const newReplies = [...(typedData.quick_replies || [])];
+              newReplies.splice(index, 1);
+              handleInputChange("quick_replies", newReplies);
+            }}
+          >
+            <IconX size={14} />
+          </ActionIcon>
+        </Group>
+      ))}
+
+      <Button
+        variant="outline"
+        disabled={typedData.quick_replies?.length >= 13}
+        onClick={() => {
+          const newReplies = [
+            ...(typedData.quick_replies || []),
+            { content_type: "text", title: "" },
+          ];
+          handleInputChange("quick_replies", newReplies);
+        }}
+      >
+        + Add Quick Reply
+      </Button>
+    </Stack>
+  );
+};
+
+// Instagram Story Reply Node Editor
+const InstagramStoryReplyNodeEditor: React.FC<
+  NodeComponentProps<"instagramStoryReplyNode">
+> = ({ nodeData, handleInputChange }) => {
+  const typedData = nodeData;
+
+  return (
+    <Stack gap={"xs"}>
+      <Switch
+        label="Story Mention"
+        description="Enable if this is a response to a story mention"
+        checked={typedData.story_mention || false}
+        onChange={(e) =>
+          handleInputChange("story_mention", e.currentTarget.checked)
+        }
+      />
+
+      <ContainedTextField
+        label="Reply Text"
+        placeholder="Enter your reply message"
+        required
+        value={typedData.text || ""}
+        onChange={(e) => handleInputChange("text", e.target.value)}
+      />
+
+      <Text size="xs" c="dimmed">
+        This node will send a message in response to Instagram story replies or
+        mentions
+      </Text>
+    </Stack>
+  );
+};
+
+// Instagram Product Template Node Editor
+const InstagramProductTemplateNodeEditor: React.FC<
+  NodeComponentProps<"instagramProductTemplateNode">
+> = ({ nodeData, handleInputChange }) => {
+  const typedData = nodeData;
+
+  return (
+    <Stack gap={"xs"}>
+      <Text size="sm" fw={500}>
+        Products
+      </Text>
+      <Text size="xs" c="dimmed">
+        Add products from your Instagram catalog
+      </Text>
+
+      {(typedData.elements || []).map((element, index: number) => (
+        <Group key={index} gap="xs">
+          <ContainedTextField
+            flex={1}
+            label="Product ID"
+            placeholder="Enter product ID"
+            value={element.id || ""}
+            onChange={(e) => {
+              const newElements = [...(typedData.elements || [])];
+              newElements[index] = {
+                ...newElements[index],
+                id: e.target.value,
+              };
+              handleInputChange("elements", newElements);
+            }}
+          />
+          <ContainedTextField
+            flex={1}
+            label="Retailer ID (optional)"
+            placeholder="Retailer ID"
+            value={element.retailer_id || ""}
+            onChange={(e) => {
+              const newElements = [...(typedData.elements || [])];
+              newElements[index] = {
+                ...newElements[index],
+                retailer_id: e.target.value,
+              };
+              handleInputChange("elements", newElements);
+            }}
+          />
+          <ActionIcon
+            style={{ marginTop: "20px" }}
+            variant="subtle"
+            onClick={() => {
+              const newElements = [...(typedData.elements || [])];
+              newElements.splice(index, 1);
+              handleInputChange("elements", newElements);
+            }}
+          >
+            <IconX size={16} />
+          </ActionIcon>
+        </Group>
+      ))}
+
+      <Button
+        variant="outline"
+        onClick={() => {
+          const newElements = [
+            ...(typedData.elements || []),
+            { id: "", retailer_id: "" },
+          ];
+          handleInputChange("elements", newElements);
+        }}
+      >
+        + Add Product
+      </Button>
+    </Stack>
+  );
+};
+
+// Instagram Ice Breaker Node Editor
+const InstagramIceBreakerNodeEditor: React.FC<
+  NodeComponentProps<"instagramIceBreakerNode">
+> = ({ nodeData, handleInputChange }) => {
+  const typedData = nodeData;
+
+  return (
+    <Stack gap={"xs"}>
+      <Text size="sm" fw={500}>
+        Ice Breakers
+      </Text>
+      <Text size="xs" c="dimmed">
+        Add conversation starters that appear in the Instagram chat. Users can
+        tap these to start a conversation.
+      </Text>
+
+      {(typedData.iceBreakers || []).map((iceBreaker, index: number) => (
+        <Group key={index} gap="xs" align="flex-start">
+          <Stack flex={1} gap="xs">
+            <ContainedTextField
+              label="Question"
+              placeholder="e.g., What are your hours?"
+              value={iceBreaker.question || ""}
+              onChange={(e) => {
+                const newIceBreakers = [...(typedData.iceBreakers || [])];
+                newIceBreakers[index] = {
+                  ...newIceBreakers[index],
+                  question: e.target.value,
+                };
+                handleInputChange("iceBreakers", newIceBreakers);
+              }}
+            />
+            <ContainedTextField
+              label="Payload (optional)"
+              placeholder="Custom data for tracking"
+              value={iceBreaker.payload || ""}
+              onChange={(e) => {
+                const newIceBreakers = [...(typedData.iceBreakers || [])];
+                newIceBreakers[index] = {
+                  ...newIceBreakers[index],
+                  payload: e.target.value,
+                };
+                handleInputChange("iceBreakers", newIceBreakers);
+              }}
+            />
+          </Stack>
+          <ActionIcon
+            style={{ marginTop: "20px" }}
+            color="red"
+            variant="subtle"
+            onClick={() => {
+              const newIceBreakers = [...(typedData.iceBreakers || [])];
+              newIceBreakers.splice(index, 1);
+              handleInputChange("iceBreakers", newIceBreakers);
+            }}
+          >
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Group>
+      ))}
+
+      <Button
+        variant="outline"
+        leftSection={<IconPlus size={16} />}
+        onClick={() => {
+          const newIceBreakers = [
+            ...(typedData.iceBreakers || []),
+            { question: "", payload: "" },
+          ];
+          handleInputChange("iceBreakers", newIceBreakers);
+        }}
+      >
+        Add Ice Breaker
+      </Button>
+
+      <Text size="xs" c="dimmed" mt="xs">
+        Note: Ice breakers are displayed to users when they first open a
+        conversation with your Instagram account.
+      </Text>
     </Stack>
   );
 };

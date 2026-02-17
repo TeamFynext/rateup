@@ -1,6 +1,7 @@
 import { axiosClient } from "@/backend/apiClient";
 
 import { LOYALTY_BASE } from "../base";
+import { LoyaltyRewardStatus } from "../reward.api";
 
 const base = `${LOYALTY_BASE}/accounts`;
 
@@ -22,6 +23,28 @@ export interface CustomerRedemption {
   };
 }
 
+interface CustomerReward {
+  id: string;
+  programId: string;
+  name: string;
+  description: string;
+  status: LoyaltyRewardStatus;
+  pointsCost: number;
+  rewardType: "assigned" | "coupon" | "point";
+  rewardValue: {
+    maxAmount: number | null;
+    percentage?: number;
+    amount?: number;
+    itemId?: string;
+  };
+  stockQuantity: number | null;
+  stockRedeemed: number;
+  redemptionRules: Record<string, any>;
+  availableForTiers: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CustomerRewardsResponse {
   customer: {
     id: string;
@@ -39,27 +62,8 @@ export interface CustomerRewardsResponse {
     points: number;
     status: string;
   };
-  availableRewards: Array<{
-    id: string;
-    programId: string;
-    name: string;
-    description: string;
-    status: "active" | "inactive" | "out_of_stock";
-    pointsCost: number;
-    rewardType: "assigned" | "coupon" | "point";
-    rewardValue: {
-      maxAmount: number | null;
-      percentage?: number;
-      amount?: number;
-      itemId?: string;
-    };
-    stockQuantity: number | null;
-    stockRedeemed: number;
-    redemptionRules: Record<string, any>;
-    availableForTiers: string[];
-    createdAt: string;
-    updatedAt: string;
-  }>;
+  availableRewards: Array<CustomerReward>;
+  issuableRewards: Array<CustomerReward>;
   redeemedRewards: CustomerRedemption[];
   //   redemptions: {
   //     unused: CustomerRedemption[];

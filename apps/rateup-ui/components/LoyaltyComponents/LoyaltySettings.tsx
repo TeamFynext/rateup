@@ -112,20 +112,7 @@ export enum LoyaltyTemplateTypes {
   Referral = "Referral",
   CustomerRemoval = "CustomerRemoval",
   RewardsIssued = "RewardsIssued",
-  PointsIssued = "PointsIssued",
-  PointsAdjusted = "PointsAdjusted",
-  RewardIssued = "RewardIssued",
-  RewardRedeemed = "RewardRedeemed",
-  TierUpgraded = "TierUpgraded",
 }
-
-export const LOYALTY_WA_COMMANDS = {
-  [LoyaltyTemplateTypes.PointsIssued]: "LOYALTY_POINTS_ISSUED",
-  [LoyaltyTemplateTypes.PointsAdjusted]: "LOYALTY_POINTS_ADJUSTED",
-  [LoyaltyTemplateTypes.RewardIssued]: "LOYALTY_REWARD_ISSUED",
-  [LoyaltyTemplateTypes.RewardRedeemed]: "LOYALTY_REWARD_REDEEMED",
-  [LoyaltyTemplateTypes.TierUpgraded]: "LOYALTY_TIER_UPGRADED",
-};
 
 export const LoyaltyWaTemplateConfig = ({
   config,
@@ -173,15 +160,6 @@ export const LoyaltyWaTemplateConfig = ({
       whatsappSettingsPhoneId: isNotEmpty("required"),
     },
   });
-
-  useEffect(() => {
-    if (LOYALTY_WA_COMMANDS[form.values.type]) {
-      form.setFieldValue(
-        "requestMessage",
-        LOYALTY_WA_COMMANDS[form.values.type],
-      );
-    }
-  }, [form.values.type]);
 
   const hanldeTemplateConfig = () => {
     if (form.validate().hasErrors) return;
@@ -254,7 +232,6 @@ export const LoyaltyWaTemplateConfig = ({
         <ContainedTextField
           label={translations("Request Message")}
           {...form.getInputProps("requestMessage")}
-          disabled={!!LOYALTY_WA_COMMANDS[form.values.type]}
         />
         {form.values.type !== LoyaltyTemplateTypes.Referral ? (
           <>
@@ -339,41 +316,7 @@ function getLoyaltyTemplateLabel(type, translations) {
       };
     case LoyaltyTemplateTypes.RewardsIssued:
       return {
-        label: translations("Issued Rewards Information"),
-        templateLabel: translations(
-          "WhatsApp Template for Issued Rewards Information",
-        ),
-        templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")} , {{2}} ${translations("Numbered list of All the issued rewards to the customer with redeem code")} `,
-      };
-    case LoyaltyTemplateTypes.PointsIssued:
-      return {
-        label: translations("Points Issued"),
-        templateLabel: translations("WhatsApp Template for Points Issued"),
-        templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")}, {{2}} - ${translations("Points")}, {{3}} - ${translations("Balance")}`,
-      };
-    case LoyaltyTemplateTypes.PointsAdjusted:
-      return {
-        label: translations("Points Adjusted"),
-        templateLabel: translations("WhatsApp Template for Points Adjusted"),
-        templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")}, {{2}} - ${translations("Points")}, {{3}} - ${translations("Balance")}`,
-      };
-    case LoyaltyTemplateTypes.RewardIssued:
-      return {
-        label: translations("Reward Issued"),
-        templateLabel: translations("WhatsApp Template for Reward Issued"),
-        templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")}, {{2}} - ${translations("Reward Name")}, {{3}} - ${translations("Redemption Code")}, {{4}} - ${translations("Cost")}`,
-      };
-    case LoyaltyTemplateTypes.RewardRedeemed:
-      return {
-        label: translations("Reward Redeemed"),
-        templateLabel: translations("WhatsApp Template for Reward Redeemed"),
-        templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")}, {{2}} - ${translations("Reward Name")}, {{3}} - ${translations("Redemption Code")}, {{4}} - ${translations("Cost")}`,
-      };
-    case LoyaltyTemplateTypes.TierUpgraded:
-      return {
-        label: translations("Tier Upgraded"),
-        templateLabel: translations("WhatsApp Template for Tier Upgraded"),
-        templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")}, {{2}} - ${translations("Tier Name")}`,
+        label: translations("Rewards Issue list"),
       };
     default:
       return {

@@ -177,7 +177,9 @@ const CustomerPage = () => {
   const exportMutation = useExportCustomersMutation();
   const user = useUser();
 
-  const redeemRewardMutation = useRedeemReward();
+  const redeemRewardMutation = useRedeemReward(
+    selectedCustomer?.contact?.phone || "",
+  );
   const assignRewardMutation = useAssignRewardMutation(() => {
     setIsRedeemOpen(false);
     setRewardForm({ reward: "", notes: "" });
@@ -284,6 +286,18 @@ const CustomerPage = () => {
       cell: ({ row }) => (
         <span className="text-primary font-medium">
           {row.getValue<number>("lifetimePoints")?.toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "contact.dob",
+      id: "dob",
+      header: "Date of Birth",
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {row.getValue("dob")
+            ? new Date(row.getValue("dob")).toLocaleDateString()
+            : ""}
         </span>
       ),
     },

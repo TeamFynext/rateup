@@ -8,6 +8,7 @@ import {
   getLoyaltyRewardById,
   getLoyaltyRewards,
   LoyaltyRewardInput,
+  LoyaltyRewardStatus,
   LoyaltyRewardUpdateInput,
   updateLoyaltyReward,
 } from "./reward.api";
@@ -122,7 +123,6 @@ export const useDeleteLoyaltyRewardMutation = (
  * Hook to toggle reward status
  */
 export const useToggleLoyaltyRewardStatusMutation = (
-  rewardId: string,
   onSuccess?: () => void,
   onError?: () => void,
 ) => {
@@ -130,14 +130,18 @@ export const useToggleLoyaltyRewardStatusMutation = (
 
   return useMutation({
     mutationFn: ({
+      rewardId,
       status,
     }: {
-      status: "active" | "inactive" | "out_of_stock";
+      rewardId: string;
+      status: LoyaltyRewardStatus;
     }) => updateLoyaltyReward(rewardId, { status }),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       showSuccessToast("Reward status updated successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
-      queryClient.invalidateQueries({ queryKey: ["loyalty-reward", rewardId] });
+      queryClient.invalidateQueries({
+        queryKey: ["loyalty-reward", variables.rewardId],
+      });
       onSuccess?.();
     },
     onError: (error: any) => {

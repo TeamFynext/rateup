@@ -1,0 +1,159 @@
+"use client";
+
+import { Clock, Info, Loader2, Save } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { UseFormReturn } from "react-hook-form";
+
+import { TemplateType } from "@/types/enums";
+import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
+import WaTemplateSelector from "@/components/input/WaTemplateSelector";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormField } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+
+import { getLoyaltyTemplateLabel, LoyaltyTemplateTypes } from "./utils";
+
+interface PointsReminderSettingsProps {
+  form: UseFormReturn<any>;
+  isPending: boolean;
+  onToggle: (eventType: LoyaltyEventType, enabled: boolean) => void;
+  onSave: () => void;
+  isModified: boolean;
+  onModify: () => void;
+}
+
+export function PointsReminderSettings({
+  form,
+  isPending,
+  onToggle,
+  onSave,
+  isModified,
+  onModify,
+}: PointsReminderSettingsProps) {
+  const t = useTranslations();
+  const templateInfo = getLoyaltyTemplateLabel(
+    LoyaltyTemplateTypes.InactivityReminder,
+    t,
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Clock className="w-4 h-4 text-primary" />
+          {t("Points Reminder")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <FormField
+          control={form.control}
+          name={`${LoyaltyEventType.INACTIVITY_REMINDER}.enabled`}
+          render={({ field }) => (
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
+              <div>
+                <p className="text-sm font-medium">
+                  {t("Enable Points Reminder")}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t("Remind customers about their points balance")}
+                </p>
+              </div>
+              <Switch
+                checked={field.value}
+                onCheckedChange={(val) => {
+                  onToggle(LoyaltyEventType.INACTIVITY_REMINDER, val);
+                }}
+              />
+            </div>
+          )}
+        />
+
+        {form.watch(`${LoyaltyEventType.INACTIVITY_REMINDER}.enabled`) && (
+          <>
+            <div className="space-y-2">
+              <FormField
+                control={form.control}
+                name={`${LoyaltyEventType.INACTIVITY_REMINDER}.triggerDays`}
+                render={({ field }) => (
+                  <>
+                    <Label htmlFor="reminder-days" className="text-sm">
+                      {t("Days of Inactivity")}
+                    </Label>
+                    <Input
+                      id="reminder-days"
+                      type="number"
+                      value={field.value}
+                      onChange={(e) => {
+                        field.onChange(e.target.value);
+                        onModify();
+                      }}
+                      placeholder="30"
+                      min="1"
+                      className="h-10"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "Send reminder after {days} days of no purchase activity",
+                        { days: field.value || "0" },
+                      )}
+                    </p>
+                  </>
+                )}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <FormField
+                control={form.control}
+                name={`${LoyaltyEventType.INACTIVITY_REMINDER}.waTemplateId`}
+                render={({ field }) => (
+                  <WaTemplateSelector
+                    templateType={TemplateType.LOYALTY}
+                    label={templateInfo.templateLabel}
+                    description={templateInfo.templateDescription}
+                    value={field.value}
+                    onChange={(value) => {
+                      field.onChange(value);
+                      onModify();
+                    }}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {t("Preview Message")}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    "Hi {"{"}customer_name{"}"}, you have {"{"}
+                    points_balance
+                    {"}"} points available! Visit us soon to redeem your
+                    rewards. 🎁"
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {isModified && (
+              <Button size="sm" onClick={onSave} disabled={isPending}>
+                {isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                {t("Save Settings")}
+              </Button>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

@@ -109,7 +109,7 @@ const StatePagination = ({
             key={page}
             size="sm"
             variant={pageIndex === page ? "default" : "outline"}
-            className="h-8 min-w-[32px] px-2.5 text-sm"
+            className="h-8 min-w-8 px-2.5 text-sm"
             onClick={() => goTo(page)}
             aria-label={`Page ${page + 1}`}
             aria-current={pageIndex === page ? "page" : undefined}
@@ -154,7 +154,7 @@ const StatePagination = ({
           }))
         }
       >
-        <SelectTrigger className="h-8 w-[70px] text-sm ml-1">
+        <SelectTrigger className="h-8 w-17.5 text-sm ml-1">
           <SelectValue />
         </SelectTrigger>
         <SelectContent position="popper">

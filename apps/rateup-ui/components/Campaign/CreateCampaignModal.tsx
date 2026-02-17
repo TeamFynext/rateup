@@ -248,6 +248,9 @@ const CreateCampaignModal = ({
 
     lastTemplateRef.current = watchedTemplate;
 
+    if (isEdit && campaign?.dynamicTags?.length) {
+      return;
+    }
     if (extractedDynamicVariables.length > 0) {
       form.setValue(
         "dynamicTags",
