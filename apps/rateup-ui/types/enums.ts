@@ -613,3 +613,8 @@ export enum SentCampaignChoice {
   NOW = "NOW",
   LATER = "LATER",
 }
+
+export enum WhatsappSettingsStatus {
+  ACTIVE = "ACTIVE",
+  DISCONNECTED = "DISCONNECTED",
+}

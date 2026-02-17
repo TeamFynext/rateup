@@ -74,6 +74,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
         accountOptions.push({
           value: val,
           label: account?.phoneDisplayName || account.phone,
+          status: account.status,
         });
       }
     }
@@ -83,6 +84,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
           accountOptions.push({
             value: account.ibaId,
             label: account.igUserName ?? account.ibaId,
+            status: account.status,
           });
         }
       }
@@ -160,16 +162,31 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
         required={!optional}
       >
         <SelectTrigger
-          className={`!text-xs text-muted-foreground cursor-pointer hover:bg-accent ${className}`}
+          className={`!text-xs text-muted-foreground cursor-pointer hover:bg-accent h-9 ${className}`}
         >
           <SelectValue placeholder={translations("Select Account")} />
         </SelectTrigger>
         <SelectContent>
-          {accountOptions.map((account) => (
-            <SelectItem value={account?.value} key={account?.value}>
-              {account?.label}
-            </SelectItem>
-          ))}
+          {accountOptions.map((account) => {
+            const isDisconnected = account.status === "DISCONNECTED";
+            return (
+              <SelectItem
+                value={account?.value}
+                key={account?.value}
+                disabled={isDisconnected}
+                className="flex items-center justify-between w-full"
+              >
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span>{account?.label}</span>
+                  {isDisconnected && (
+                    <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-medium">
+                      {translations("Disconnected")}
+                    </span>
+                  )}
+                </div>
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
     </div>
