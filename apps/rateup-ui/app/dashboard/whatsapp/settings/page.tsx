@@ -133,7 +133,8 @@ function WhatsAppManualConfiguration({ waSettings }) {
   const upsertMutation = useUpsertWaSettingsMutation();
   const deleteMutation = useDeleteWaSettingsMutation();
   const handleSubmit = (values: any) => {
-    upsertMutation.mutate(values);
+    const { teams, ...rest } = waSettings;
+    upsertMutation.mutate(rest);
   };
   const handleDelete = () => {
     deleteMutation.mutate(waSettings?.phoneId);
@@ -815,7 +816,7 @@ function MetaLoginStatus({ waSettings }) {
       ? metaAssets.pages.map((page) => ({ value: page.id, label: page.name }))
       : [];
     if (!selectedWaSettings) return null;
-    const { id, ...rest } = selectedWaSettings;
+    const { id, teams, ...rest } = selectedWaSettings;
     return (
       <Modal
         opened={opened}
