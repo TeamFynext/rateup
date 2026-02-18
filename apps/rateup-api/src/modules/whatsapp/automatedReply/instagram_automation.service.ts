@@ -390,7 +390,17 @@ async function handleInstagramGenericTemplateNode(
   orgId: string,
 ): Promise<void> {
   try {
-    const elements = node.data?.elements || [];
+    const elements = (node.data?.elements || []).map((el: any) => ({
+      ...el,
+      buttons: (el.buttons || []).map((btn: any) => ({
+        ...btn,
+        // Use the button's id as the payload so it matches the edge sourceHandle
+        payload:
+          btn.type === "postback"
+            ? btn.id || btn.payload || btn.title
+            : btn.payload,
+      })),
+    }));
 
     if (elements.length === 0) {
       log.warn(
