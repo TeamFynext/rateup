@@ -123,7 +123,8 @@ function WhatsAppManualConfiguration({ waSettings }) {
 
   useEffect(() => {
     if (waSettings) {
-      form.setValues(waSettings);
+      const { teams, ...rest } = waSettings;
+      form.setValues(rest);
     } else {
       form.reset();
     }
