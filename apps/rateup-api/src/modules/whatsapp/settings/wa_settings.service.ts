@@ -5,7 +5,7 @@ import {
 } from "../../../../utils/encryption/encryption.utils.js";
 import prisma from "../../../utils/prisma.js";
 import { getPhoneDetails } from "../auth/wa_auth.service.js";
-import { WaConfigType } from "../../../types/enums.js";
+import { WaConfigType, WhatsappSettingsStatus } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import {
   ContactTagSchema,
@@ -498,8 +498,25 @@ export async function getWaSettingsByPhone(phone: string) {
     where: {
       phone,
     },
-    select: {
-      phoneId: true,
-    },
+  });
+}
+
+export async function updateWaSettingsStatus(
+  phoneId: string,
+  status: WhatsappSettingsStatus,
+) {
+  return await prisma.whatsappSettings.update({
+    where: { phoneId },
+    data: { status },
+  });
+}
+
+export async function updateWaSettingsStatusByWabaId(
+  wabaId: string,
+  status: WhatsappSettingsStatus,
+) {
+  return await prisma.whatsappSettings.updateMany({
+    where: { wabaId },
+    data: { status },
   });
 }

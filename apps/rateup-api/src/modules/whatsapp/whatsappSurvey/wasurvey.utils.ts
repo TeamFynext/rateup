@@ -59,6 +59,8 @@ export function getEventType(data: WaMessageBody) {
   if (data.object === "whatsapp_business_account") {
     if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
       return WaEvent.TemplateStatusChange;
+    } else if (data.entry[0].changes[0].field === WaEvent.ACCOUNT_UPDATE) {
+      return WaEvent.ACCOUNT_UPDATE;
     } else if (
       data.entry[0].changes[0].field === WaEvent.Message &&
       (data.entry[0].changes[0].value as WaReceiveMessageBody).messages

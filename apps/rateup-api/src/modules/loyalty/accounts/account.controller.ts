@@ -13,10 +13,7 @@ import {
   markRewardAsRedeemed,
 } from "./account.service.js";
 import { log } from "../../../utils/logger.js";
-import {
-  getActiveLoyaltyRewards,
-  getLoyaltyRewardById,
-} from "../rewards/reward.service.js";
+import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
 import {
   AwardPointsInput,
   CustomerIdParam,
@@ -123,24 +120,57 @@ export async function getCustomerAccountByPhoneHandler(
       return reply.code(404).send({ error: "Customer account not found" });
     }
 
-    // Get available rewards
+    // Get all active rewards from the program
     const allRewards = await getActiveLoyaltyRewards(program.id);
+
+    // Get assigned reward IDs for this customer (excluding redeemed ones)
     const assignedRewardIds = (account as any).assignedRewards
-      ? (account as any).assignedRewards.map((ar: any) => ar.rewardId)
+      ? (account as any).assignedRewards
+          .filter((d) => d.status !== "REDEEMED")
+          .map((ar: any) => ar.rewardId)
       : [];
 
+    // Get coupon redemptions (active ones)
+    const couponRedemptions = (account as any).redemptions
+      ? (account as any).redemptions
+          .filter(
+            (r: any) =>
+              r.reward?.rewardType === "coupon" &&
+              r?.status === "APPROVED" &&
+              !r.usedAt,
+          )
+          .map((r: any) => ({
+            id: r.id,
+            rewardId: r.rewardId,
+            redemptionCode: r.redemptionCode,
+            status: r.status,
+            createdAt: r.createdAt,
+            reward: r.reward,
+          }))
+      : [];
+
+    // Filter rewards based on type and assignment status
     const availableRewards = allRewards.filter((reward) => {
-      // If reward requires assignment, check if assigned
-      if (reward.rewardType === "assigned") {
+      // For "assigned" and "point" type rewards: only include if assigned to this customer and not redeemed
+      if (reward.rewardType === "assigned" || reward.rewardType === "point") {
         return assignedRewardIds.includes(reward.id);
       }
-      // Otherwise (POINT, COUPON, etc.), it's available to all (subject to tier checks below)
+      // For coupon and other reward types: available to all (subject to tier checks)
       return true;
     });
+    const issuableRewards = allRewards.filter((reward) => {
+      if (reward.rewardType === "point") {
+        return assignedRewardIds.includes(reward.id);
+      } else if (reward.rewardType === "assigned") {
+        return true;
+      }
+      // For coupon and other reward types: available to all (subject to tier checks)
+      return false;
+    });
 
-    // Filter rewards by tier eligibility and customer points
+    // Further filter by tier eligibility
     const eligibleRewards = availableRewards.filter((reward: any) => {
-      // Check tier eligibility
+      // Check if reward is restricted to specific tiers
       if (reward.availableForTiers && reward.availableForTiers.length > 0) {
         if (
           !account.currentTier ||
@@ -167,7 +197,9 @@ export async function getCustomerAccountByPhoneHandler(
         status: account.status,
       },
       availableRewards: eligibleRewards,
-      redeemedRewards: account.redemptions || [],
+      issuableRewards: issuableRewards,
+      activeCoupons: couponRedemptions, // Active coupon redemptions
+      redeemedRewards: account.redemptions || [], // Full redemption history
     });
   } catch (e) {
     log.error(e);
@@ -336,6 +368,9 @@ export async function assignRewardToCustomerHandler(
     });
   } catch (e) {
     log.error(e);
+    if (e.message === "Reward is already assigned to this customer") {
+      return reply.code(400).send({ error: e.message });
+    }
     reply.code(500).send({ error: e.message });
   }
 }

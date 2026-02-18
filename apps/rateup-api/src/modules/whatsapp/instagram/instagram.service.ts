@@ -10,6 +10,7 @@ import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { getInstagramWebhookEvent } from "./instagram.util.js";
 import { InstagramEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
+import { handleInstagramAutomation } from "./instagram_automation_handler.js";
 
 export async function getIgUserDetailsFromMeta(igsId, ibaId) {
   const { pageAccessToken } = await getWaSettingsByIbaId(ibaId);
@@ -67,6 +68,8 @@ export async function handleInstagramMessages(
   const { sender, message } = data.entry[0].messaging[0];
   const { mid } = message;
   if (message.is_echo) return;
+
+  // Handle message storage
   await handleWaMessages(
     "receive",
     data.entry[0].messaging[0],
@@ -77,6 +80,22 @@ export async function handleInstagramMessages(
     undefined,
     mid,
   );
+
+  // Handle Instagram automation - wrapped in try-catch to isolate errors
+  try {
+    await handleInstagramAutomation(
+      sender.id,
+      message.text || "",
+      orgId,
+      data.entry[0].messaging[0],
+    );
+  } catch (error) {
+    log.error(
+      `[Instagram] Error in automation handler (isolated - not affecting message processing): %o`,
+      error,
+    );
+    // Error is caught and logged but doesn't affect message handling
+  }
 }
 
 export async function handleInstagramMessageSeen(data: InstagramWebhookBody) {

@@ -272,6 +272,7 @@ export async function getLoggedUserInfo(
       WhatsappSettings: {
         select: {
           appId: true,
+          status: true,
         },
       },
       showLifecycle: true,
@@ -296,7 +297,9 @@ export async function getLoggedUserInfo(
     prefLanguage: profile?.prefLanguage,
     waAssignedChatPermission: orgData?.waAssignedChatPermission,
     status: profile?.orgMember?.[0]?.status,
-    hasWhatsAppSettings: !!orgData?.WhatsappSettings?.[0]?.appId,
+    hasWhatsAppSettings:
+      !!orgData?.WhatsappSettings?.[0]?.appId &&
+      orgData?.WhatsappSettings?.[0]?.status !== "DISCONNECTED",
     onboardingCompleted: orgData?.onboardingCompleted,
     onboarding: orgData?.onboarding,
     presenceMode: profile?.presenceMode,

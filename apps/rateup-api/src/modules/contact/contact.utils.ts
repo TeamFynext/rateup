@@ -170,6 +170,7 @@ export async function handleSendTemplate(
   orgId,
   phone,
   dynamicVariables,
+  whatsappSettingsPhoneId?,
 ) {
   if (!waTemplateId) {
     log.trace("No template Id found");
@@ -185,5 +186,16 @@ export async function handleSendTemplate(
   });
   const subscription = await getSubscription(orgId);
   await verifyTemplateMessageLimit(subscription);
-  await sendTemplateToUserCore(orgId, waTemplateId, phone, components);
+  await sendTemplateToUserCore(
+    orgId,
+    waTemplateId,
+    phone,
+    components,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    whatsappSettingsPhoneId,
+  );
 }

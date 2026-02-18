@@ -280,6 +280,7 @@ model WhatsappSettings {
   phoneDisplayName String?
 
   type             String // enums.ts: WaConfigType
+  status           String             @default("ACTIVE")
   createdAt        DateTime           @default(now())
   /// [PWaEncryptionKeys]
   encryption       Json? // for flow {publicKey: string, privateKey: string}
@@ -440,7 +441,7 @@ model Team {
   ticketBoards           TicketBoardTeam[]
   assignedConversations  ConversationAssignedUserTeamMap[]
   whatsappChannels       WhatsappSettings[]
-  waMessageOrgTeamMaps     WaMessageOrgTeamMap[]
+  waMessageOrgTeamMaps   WaMessageOrgTeamMap[]
   waMessageSchedule      WaMessageSchedule[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
@@ -998,23 +999,24 @@ model ContactForm {
 }
 
 model WaTemplate {
-  id                String              @id @default(uuid()) @db.Uuid
-  createdAt         DateTime            @default(now())
+  id                String                @id @default(uuid()) @db.Uuid
+  createdAt         DateTime              @default(now())
   /// [PWaTemplateWithTypesData]
   data              Json
   acceptButton      String? // QuickReplyButton text which on clicking will send the survey to the user
   /// [PWaTemplateDefaultValues]
   defaultValues     Json? // default values for images and other fields
-  templateType      TemplateType        @default(GENERAL_NOTIFICATION)
+  templateType      TemplateType          @default(GENERAL_NOTIFICATION)
   config            Json?
-  org               Org                 @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId             String              @db.Uuid
+  org               Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId             String                @db.Uuid
   waSession         WaSession[]
   Campaign          Campaign[]
   waMessageSchedule WaMessageSchedule[]
   loyaltyTemplates  LoyaltyWaCommand[]
   CampaignDripStage CampaignDripStage[]
   loyaltyRewards    LoyaltyReward[]
+  eventTriggers     LoyaltyEventTrigger[]
 }
 
 model MenuLanding {
@@ -1503,7 +1505,7 @@ model WaMessage {
   sourceIdentifier                String?
   conversationId                  String?                           @db.Uuid
   Conversation                    Conversation?                     @relation(fields: [conversationId], references: [id])
-  waMessageOrgTeamMaps     WaMessageOrgTeamMap[]
+  waMessageOrgTeamMaps            WaMessageOrgTeamMap[]
 
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
@@ -1528,16 +1530,16 @@ enum AssignType {
 }
 
 model WaAutomatedReply {
-  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                       String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                     String
-  createdAt                DateTime @default(now())
+  createdAt                DateTime     @default(now())
   matchData                Json
   matchType                String // enums.ts: WaAutomatedReplyMatchType
-  orgId                    String?  @db.Uuid
-  org                      Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                    String?      @db.Uuid
+  org                      Org?         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId  String?
-  whatsappSettingsPhoneIds String[] @default([]) //for multiple whatsapp integration
-  platform                 String   @default("whatsapp") // enums.ts: AutomationPlatform (whatsapp | instagram)
+  whatsappSettingsPhoneIds String[]     @default([]) //for multiple whatsapp integration
+  platform                 String   @default("WHATSAPP") // enums.ts: AutomationPlatform (WHATSAPP | INSTAGRAM)
 
   isEnabled         Boolean @default(true)
   sendOnceIn24Hours Boolean @default(true)
@@ -1581,18 +1583,18 @@ enum WaAutomationProgressStatus {
 }
 
 model WaAutomatedReplyMessage {
-  id                 String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  phone              String
-  currentNode        String?
-  response           Json?
-  status             WaAutomationProgressStatus @default(inProgress)
+  id          String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone       String
+  currentNode String?
+  response    Json?
+  status      WaAutomationProgressStatus @default(inProgress)
 
-  createdAt          DateTime                   @default(now())
+  createdAt DateTime @default(now())
 
-  waAutomatedReplyId String?                    @db.Uuid
-  waAutomatedReply   WaAutomatedReply?          @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
-  orgId              String                     @db.Uuid
-  org                Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  waAutomatedReplyId String?           @db.Uuid
+  waAutomatedReply   WaAutomatedReply? @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
+  orgId              String            @db.Uuid
+  org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
   ticket             Ticket[]
   ticketCards        TicketCard[]
 }
@@ -1729,9 +1731,9 @@ model LoyaltyProgram {
   status String @default("draft") // 'draft', 'active', 'paused'
 
   // Currency Configuration
-  currencyName   String @default("Points") // Points, Stars, Beans, etc.
-  currencyCode   String @default("INR") // AED, USD, EUR, GBP, SAR, INR
-  currencySymbol String @default("₹") // د.إ, $, €, £, ﷼, ₹
+  currencyName       String @default("Points") // Points, Stars, Beans, etc.
+  currencyCode       String @default("INR") // AED, USD, EUR, GBP, SAR, INR
+  currencySymbol     String @default("₹") // د.إ, $, €, £, ﷼, ₹
   defaultCountryCode String @default("IN")
 
   // Fixed Bonuses
@@ -1742,6 +1744,9 @@ model LoyaltyProgram {
   // Tier Configuration
   tiersEnabled    Boolean @default(true)
   tierResetPeriod String? // 'never', 'yearly', 'monthly'
+
+  // WhatsApp Business Account / Number
+  whatsappSettingsId String?
 
   // Settings
   pointsActivityAlerts   Boolean @default(true)
@@ -1756,12 +1761,13 @@ model LoyaltyProgram {
   updatedAt DateTime @updatedAt
 
   // Relations
-  tiers        LoyaltyTier[]
-  earningRules LoyaltyEarningRule[]
-  rewards      LoyaltyReward[]
-  customers    CustomerLoyaltyAccount[]
-  transactions LoyaltyTransaction[]
-  referrals    LoyaltyReferral[]
+  tiers         LoyaltyTier[]
+  earningRules  LoyaltyEarningRule[]
+  rewards       LoyaltyReward[]
+  customers     CustomerLoyaltyAccount[]
+  transactions  LoyaltyTransaction[]
+  referrals     LoyaltyReferral[]
+  eventTriggers LoyaltyEventTrigger[]
 
   @@index([orgId])
   @@index([status])
@@ -1863,9 +1869,9 @@ model LoyaltyReward {
 
   // Reward Value
   pointsCost  Int
-  rewardType  String // 'discount_fixed', 'discount_percentage', 'free_item'
+  rewardType  String // 'point', 'coupon', 'assigned'
   /// [LoyaltyRewardValue]
-  rewardValue Json // Type-specific value data
+  rewardValue Json // Type-specific value data (e.g. { type: 'discount_fixed', amount: 10, ... })
 
   // Stock Management (optional)
   stockQuantity Int? // NULL = unlimited
@@ -1889,6 +1895,7 @@ model LoyaltyReward {
   redemptions         LoyaltyRedemption[]
   loyaltyTransactions LoyaltyTransaction[]
   assignedRewards     CustomerReward[]
+  eventTriggers       LoyaltyEventTrigger[]
 
   @@index([programId])
   @@index([status])
@@ -2155,6 +2162,42 @@ model LoyaltyReferral {
   @@index([referrerAccountId])
   @@index([refereeAccountId])
   @@index([status])
+}
+
+enum LoyaltyEventType {
+  POINTS_ISSUED
+  POINTS_ADJUSTED
+  REWARD_ISSUED
+  REWARD_REDEEMED
+  TIER_UPGRADED
+  BIRTHDAY
+  INACTIVITY_REMINDER
+}
+
+model LoyaltyEventTrigger {
+  id        String         @id @default(uuid()) @db.Uuid
+  programId String         @db.Uuid
+  program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  eventType LoyaltyEventType
+  enabled   Boolean          @default(true)
+
+  // For inactivity reminders
+  triggerDays Int?
+
+  // WhatsApp Template
+  waTemplateId String?     @db.Uuid
+  waTemplate   WaTemplate? @relation(fields: [waTemplateId], references: [id], onDelete: SetNull)
+
+  // Optional reward to auto-issue
+  rewardId String?        @db.Uuid
+  reward   LoyaltyReward? @relation(fields: [rewardId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([programId])
+  @@index([eventType])
 }
 
 model LoyaltyWaCommand {

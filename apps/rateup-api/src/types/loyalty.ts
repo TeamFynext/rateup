@@ -137,17 +137,26 @@ export interface LoyaltyEarningRuleConditions {
 // REWARD VALUE TYPES
 // ============================================================================
 
+export enum LoyaltyPointRewardSubType {
+  DISCOUNT_FIXED = "discount_fixed",
+  DISCOUNT_PERCENTAGE = "discount_percentage",
+  FREE_ITEM = "free_item",
+}
+
 export interface DiscountFixedValue {
+  type: LoyaltyPointRewardSubType.DISCOUNT_FIXED;
   amount: number;
   currency: string;
 }
 
 export interface DiscountPercentageValue {
+  type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE;
   percentage: number;
   max_discount_amount?: number;
 }
 
 export interface FreeItemValue {
+  type: LoyaltyPointRewardSubType.FREE_ITEM;
   item_name: string;
   item_sku?: string;
   item_value?: number;

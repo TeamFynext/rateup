@@ -11,11 +11,9 @@ import {
 import { generateRewardShortCode } from "../../../utils/misc/random.utils.js";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { parsePhoneforWa } from "../util.js";
-import {
-  dispatchLoyaltyNotification,
-  LOYALTY_WA_COMMANDS,
-} from "../loyaltyWaDispatcher.js";
+import { dispatchLoyaltyNotification } from "../loyaltyWaDispatcher.js";
 import { generateWhatsAppJoinLink } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+import { LoyaltyEventType } from "../../../types/enums.js";
 
 export async function createCustomerAccount(
   data: CustomerLoyaltyAccountInput,
@@ -46,6 +44,7 @@ export async function createCustomerAccount(
         name: data.name,
         email: data.email,
         source: "loyalty_program",
+        dob: data.dob ? new Date(data.dob) : null,
       },
     });
     contactId = contact.id;
@@ -186,18 +185,14 @@ You are now registered in our Loyalty Program.
     }
 
     // Dispatch Points Issued
-    await dispatchLoyaltyNotification(
-      orgId,
-      LOYALTY_WA_COMMANDS.POINTS_ISSUED,
-      {
-        customerPhone: phone,
-        customerName: contact?.name || "Customer",
-        points: signupBonus,
-        balanceAfter: signupBonus,
-        reason: "Signup Bonus",
-        referralCode, // passing just in case
-      },
-    );
+    await dispatchLoyaltyNotification(orgId, LoyaltyEventType.POINTS_ISSUED, {
+      customerPhone: phone,
+      customerName: contact?.name || "Customer",
+      points: signupBonus,
+      balanceAfter: signupBonus,
+      reason: "Signup Bonus",
+      referralCode, // passing just in case
+    });
   }
 
   return account;
@@ -433,7 +428,7 @@ export async function awardPoints(
     // Points Issued
     await dispatchLoyaltyNotification(
       customer.contact.orgId,
-      LOYALTY_WA_COMMANDS.POINTS_ISSUED,
+      LoyaltyEventType.POINTS_ISSUED,
       {
         customerPhone: customer.contact.phone,
         customerName: customer.contact.name || "Customer",
@@ -447,7 +442,7 @@ export async function awardPoints(
     if (upgradeResult?.upgraded) {
       await dispatchLoyaltyNotification(
         customer.contact.orgId,
-        LOYALTY_WA_COMMANDS.TIER_UPGRADED,
+        LoyaltyEventType.TIER_UPGRADED,
         {
           customerPhone: customer.contact.phone,
           customerName: customer.contact.name || "Customer",
@@ -531,8 +526,11 @@ export async function assignRewardToCustomer(
     const exists = await (prisma as any).customerReward.findUnique({
       where: { shortCode },
     });
-    if (!exists) unique = true;
-    else shortCode = generateRewardShortCode();
+    if (exists) {
+      shortCode = generateRewardShortCode();
+    } else {
+      unique = true;
+    }
   }
 
   // Assign reward
@@ -552,7 +550,7 @@ export async function assignRewardToCustomer(
   if (customer.contact?.phone && customer.contact?.orgId) {
     await dispatchLoyaltyNotification(
       customer.contact.orgId,
-      LOYALTY_WA_COMMANDS.REWARD_ISSUED,
+      LoyaltyEventType.REWARD_ISSUED,
       {
         customerPhone: customer.contact.phone,
         customerName: customer.contact.name || "Customer",

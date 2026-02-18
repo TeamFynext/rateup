@@ -31,6 +31,10 @@ export async function redeemRewardHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
+    if (e.code === "P2002") {
+      reply.code(400).send({ error: "Reward already redeemed" });
+      return;
+    }
     reply.code(500).send({ error: e.message });
   }
 }

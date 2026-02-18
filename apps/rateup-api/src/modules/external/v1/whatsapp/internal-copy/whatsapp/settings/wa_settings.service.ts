@@ -26,10 +26,12 @@ export async function createWaSettings(
     | "igDisplayName"
     | "phoneDisplayName"
     | "assets"
+    | "status"
   > & {
     phone?: string;
     webhookPassword?: string;
     encryption?: WaEncryptionKeys;
+    status?: string;
   },
 ) {
   const accessToken = data.accessToken;
