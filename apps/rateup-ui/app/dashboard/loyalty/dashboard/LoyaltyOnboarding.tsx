@@ -410,7 +410,7 @@ export function LoyaltyOnboarding({
                     points: parseFloat(reward.value),
                   }),
               },
-              status: "active",
+              status: "ACTIVE",
             }),
           ),
         );

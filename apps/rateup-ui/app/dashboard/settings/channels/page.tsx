@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { Info, Shield, Users } from "lucide-react";
+import { AlertCircle, Info, Shield, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
@@ -18,13 +18,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const ChannelRow = ({ channel, teamOptions, translations: t }: any) => {
   const updateMutation = useUpdateWaSettingsMutation(channel.id);
+  const isDisconnected = channel.status === "DISCONNECTED";
 
   const handleUpdateTeams = (teamIds: string[]) => {
     updateMutation.mutate({ teams: teamIds });
   };
 
   return (
-    <Card className="p-6 transition-all hover:shadow-md border-gray-200">
+    <Card
+      className={`p-6 transition-all hover:shadow-md border-gray-200 ${isDisconnected ? "bg-red-50/30" : ""}`}
+    >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex flex-col gap-2 min-w-[200px]">
           <div className="flex items-center gap-2">
@@ -34,6 +37,14 @@ const ChannelRow = ({ channel, teamOptions, translations: t }: any) => {
             <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
               {channel.type}
             </Badge>
+            {channel.status && (
+              <Badge
+                variant={isDisconnected ? "destructive" : "default"}
+                className={`text-[10px] h-5 px-1.5 ${!isDisconnected && "bg-green-600 hover:bg-green-700"}`}
+              >
+                {channel.status}
+              </Badge>
+            )}
           </div>
           {channel.igUserName && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -65,6 +76,7 @@ const ChannelRow = ({ channel, teamOptions, translations: t }: any) => {
               defaultValue={channel.teams?.map((team: any) => team.id) || []}
               onValueChange={handleUpdateTeams}
               searchable
+              disabled={isDisconnected}
               emptyIndicator={
                 <p className="text-center text-sm">{t("No teams found")}</p>
               }
@@ -133,6 +145,18 @@ const ChannelPermissionsPage = () => {
           )}
         </AlertDescription>
       </Alert>
+
+      {channels?.some((c: any) => c.status === "DISCONNECTED") && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{t("Attention Needed")}</AlertTitle>
+          <AlertDescription>
+            {t(
+              "One or more of your WhatsApp channels are disconnected. Please reconnect them to continue using their features.",
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-6">
         {channels && channels.length > 0 ? (

@@ -24,6 +24,7 @@ export interface LoyaltyProgram {
   whatsappNotifications?: boolean;
   createdAt: Date;
   updatedAt: Date;
+  whatsappSettingsId?: string;
 }
 
 export interface LoyaltyProgramInput {
@@ -48,6 +49,7 @@ export interface LoyaltyProgramInput {
   programActive?: boolean;
   pointsActivityAlerts?: boolean;
   enablePointsExpiration?: boolean;
+  whatsappSettingsId?: string;
 }
 
 export interface LoyaltyProgramUpdateInput extends Partial<LoyaltyProgramInput> {}

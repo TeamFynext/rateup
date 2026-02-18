@@ -1,5 +1,9 @@
 import { WHATSAPP_URL } from "..";
-import { MetaLoginAssets, WaConfigType } from "../../../types/enums";
+import {
+  MetaLoginAssets,
+  WaConfigType,
+  WhatsappSettingsStatus,
+} from "../../../types/enums";
 import { axiosClient } from "../../apiClient";
 import { GetLabelsRes } from "../../lifecycle/lifecycle.types";
 
@@ -23,6 +27,7 @@ export type WaSettings = {
   igDisplayName: string;
   assets: MetaLoginAssets[];
   teams: { id: string; name: string }[];
+  status?: WhatsappSettingsStatus;
 }[];
 
 export type UpdateWaSettingsInput = Partial<

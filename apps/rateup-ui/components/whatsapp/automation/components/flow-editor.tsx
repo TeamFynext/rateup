@@ -628,7 +628,7 @@ function FlowEditorContent({
           </Panel>
         </ReactFlow>
       </div>
-      <ComponentSidebar />
+      <ComponentSidebar platform={waAutomationData.platform || "whatsapp"} />
       {isEditorOpen && selectedNode && (
         <NodeEditor
           node={selectedNode}

@@ -48,6 +48,7 @@ import {
   Folder,
   Inbox,
   Settings,
+  ShoppingCart,
   Sparkles,
   Tag,
   User,
@@ -214,14 +215,14 @@ export function useNavMain({
             icon: Activity,
           },
           {
-            title: t("Team Activity"),
-            url: "/dashboard/analytics?tab=team-activity",
-            icon: FileText,
-          },
-          {
             title: t("Message Analytics"),
             url: "/dashboard/analytics?tab=api-analytics",
             icon: ChartLine,
+          },
+          {
+            title: t("Team Activity"),
+            url: "/dashboard/analytics?tab=team-activity",
+            icon: FileText,
           },
         ],
       },
@@ -344,6 +345,11 @@ export function useNavMain({
                   title: t("Overview"),
                   url: "/dashboard/loyalty/dashboard",
                   icon: IconDashboard,
+                },
+                {
+                  title: t("Cashier Portal"),
+                  url: "/dashboard/loyalty/cashier",
+                  icon: ShoppingCart,
                 },
                 {
                   title: t("Customers"),

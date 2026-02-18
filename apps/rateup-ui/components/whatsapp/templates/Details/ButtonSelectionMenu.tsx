@@ -18,6 +18,7 @@ import {
   IconChevronDown,
   IconCopy,
   IconCreditCardPay,
+  IconInfoCircle,
   IconLink,
   IconPhone,
   IconPlus,
@@ -416,6 +417,12 @@ export const ButtonSelection = ({
         <IconBulb size={16} />
         {translations(
           "If you add more than three buttons, they will appear in a list",
+        )}
+      </Group>
+      <Group fz={14} gap={"xs"} wrap="nowrap" c="blue">
+        <IconInfoCircle size={16} />
+        {translations(
+          "Custom buttons must be placed either at the beginning or at the end of the button list.",
         )}
       </Group>
     </Stack>

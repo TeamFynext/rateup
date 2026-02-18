@@ -108,7 +108,7 @@ function TemplateOverview({
                           <div className="flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3 text-green-600" />
                             <p className="text-sm text-green-600">
-                              {template?.successPercentage}%
+                              {template?.successPercentage?.toFixed(1)}%
                             </p>
                           </div>
                         </div>
@@ -119,7 +119,7 @@ function TemplateOverview({
                           <div className="flex items-center gap-1">
                             <XCircle className="w-3 h-3 text-red-600" />
                             <p className="text-sm text-red-600">
-                              {template?.failurePercentage}%
+                              {template?.failurePercentage?.toFixed(1)}%
                             </p>
                           </div>
                         </div>
@@ -131,7 +131,7 @@ function TemplateOverview({
                             <Zap className="w-3 h-3 text-purple-600" />
                             <p className="text-sm">
                               {template?.avgDeliveryTimeSeconds
-                                ? `${template?.avgDeliveryTimeSeconds}s`
+                                ? `${template?.avgDeliveryTimeSeconds?.toFixed(1)}s`
                                 : "NA"}
                             </p>
                           </div>

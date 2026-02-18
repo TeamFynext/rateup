@@ -1,8 +1,31 @@
+import { LoyaltyPointRewardSubType, LoyaltyRewardType } from "@/types/enums";
+
 import { axiosClient } from "../apiClient";
 
-export interface PointValue {
-  points: number;
+export interface DiscountFixedValue {
+  type: LoyaltyPointRewardSubType.DISCOUNT_FIXED;
+  amount: number;
+  currency: string;
 }
+
+export interface DiscountPercentageValue {
+  type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE;
+  percentage: number;
+  max_discount_amount?: number;
+}
+
+export interface FreeItemValue {
+  type: LoyaltyPointRewardSubType.FREE_ITEM;
+  item_name: string;
+  item_sku?: string;
+  item_value?: number;
+  quantity: number;
+}
+
+export type PointRewardValue =
+  | DiscountFixedValue
+  | DiscountPercentageValue
+  | FreeItemValue;
 
 export interface CouponValue {
   code?: string | null;
@@ -14,7 +37,11 @@ export interface AssignedValue {
   sku?: string | null;
 }
 
-export type RewardValue = PointValue | CouponValue | AssignedValue;
+export type LoyaltyRewardValue =
+  | PointRewardValue
+  | CouponValue
+  | AssignedValue
+  | Record<string, unknown>;
 
 // Redemption rules schemas
 export interface TimeRestrictions {
@@ -71,28 +98,34 @@ export interface RedemptionRules {
   approval_rules?: ApprovalRules;
 }
 
-// Main reward interface
+// Status type matching backend
+export type LoyaltyRewardStatus =
+  | "ACTIVE"
+  | "INACTIVE"
+  | "OUT_OF_STOCK"
+  | "EXPIRED";
+
+// Main reward interface matching backend response
 export interface LoyaltyReward {
   id: string;
   programId: string;
   name: string;
   description?: string | null;
-  rewardType:
-    | "discount_fixed"
-    | "discount_percentage"
-    | "free_item"
-    | "point"
-    | "coupon"
-    | "assigned";
+  rewardType: "point" | "coupon" | "assigned";
   pointsCost: number;
-  rewardValue: RewardValue;
-  status: "active" | "inactive" | "out_of_stock";
+  rewardValue: {
+    points?: number;
+    code?: string | null;
+    description?: string | null;
+  };
+  status: LoyaltyRewardStatus;
   redemptionRules?: RedemptionRules;
   stockQuantity?: number | null;
-  availableForTiers?: string[];
   stockRedeemed: number;
-  createdAt: Date;
-  updatedAt: Date;
+  waTemplateId?: string | null;
+  availableForTiers: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LoyaltyRewardInput {
@@ -100,12 +133,16 @@ export interface LoyaltyRewardInput {
   description?: string | null;
   rewardType: "point" | "coupon" | "assigned";
   pointsCost: number;
-  rewardValue: RewardValue;
-  status?: "active" | "inactive" | "out_of_stock";
+  rewardValue: {
+    points?: number;
+    code?: string | null;
+    description?: string | null;
+  };
+  status?: LoyaltyRewardStatus;
   redemptionRules?: RedemptionRules;
   stockQuantity?: number | null;
+  waTemplateId?: string | null;
   availableForTiers?: string[];
-  stockRedeemed?: number;
 }
 
 const LOYALTY_REWARDS_BASE = "/loyalty/rewards";

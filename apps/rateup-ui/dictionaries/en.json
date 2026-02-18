@@ -3458,9 +3458,9 @@
     "Success Rate": "Success Rate",
     "Failure Rate": "Failure Rate",
     "Avg Response": "Avg Response",
-    "External API": "External API",
-    "WhatsApp API": "WhatsApp API",
-    "All APIs": "All APIs"
+    "External": "External",
+    "Campaign & Inbox": "Campaign & Inbox",
+    "All": "All"
   },
   "Team Performance": "Team Performance",
   "Message Analytics": "Message Analytics",

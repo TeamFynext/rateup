@@ -130,7 +130,7 @@ function ApiAnalytics({ dateRange }) {
             iconColor={"text-green-500"}
             Icon={CheckCircle2}
             trendLogoRequired={false}
-            trendValue={data?.deliveredPercentage}
+            trendValue={data?.deliveredPercentage?.toFixed(1)}
           />
           <OverviewCard
             value={data?.failedMessages ?? 0}
@@ -139,12 +139,13 @@ function ApiAnalytics({ dateRange }) {
             iconColor={"text-red-500"}
             Icon={XCircle}
             trendLogoRequired={false}
-            trendValue={data?.failedPercentage}
+            trendValue={data?.failedPercentage?.toFixed(1)}
           />
           <OverviewCard
             value={
-              data?.avgDeliveryTimeSeconds
-                ? `${data?.avgDeliveryTimeSeconds}s`
+              data?.avgDeliveryTimeSeconds !== undefined &&
+              data?.avgDeliveryTimeSeconds !== null
+                ? `${Number(data.avgDeliveryTimeSeconds).toFixed(1)}s`
                 : "NA"
             }
             title={t("Avg Delivery Time")}

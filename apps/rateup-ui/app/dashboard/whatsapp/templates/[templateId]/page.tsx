@@ -342,6 +342,25 @@ export default function WhatsappTemplateById() {
       );
       return;
     }
+
+    if (values?.buttons?.length > 2) {
+      const isCustomButtonInMiddle = values.buttons.some((button, index) => {
+        return (
+          button.type === WHATSAPP_BUTTON_TYPE.QUICK_REPLY &&
+          index > 0 &&
+          index < values.buttons.length - 1
+        );
+      });
+
+      if (isCustomButtonInMiddle) {
+        showErrorToast(
+          translations(
+            "Custom buttons must be placed either at the beginning or at the end of the button list.",
+          ),
+        );
+        return;
+      }
+    }
     if (values.templateType === TemplateType.CAROUSEL) {
       for (const card of values.mediaCarousel) {
         const dynamicVariableArr = parseStringWithVariables(card.body);
@@ -1107,15 +1126,13 @@ export default function WhatsappTemplateById() {
                           : form.values.footer}
                       </Text>
                     </ResponseMessageContainer>
-                    {form.values?.buttons
-                      ?.slice(0, 2)
-                      .map((data) => (
-                        <QuickReplyButton
-                          text={data?.text}
-                          key={data?.text}
-                          type={data.type}
-                        />
-                      ))}
+                    {form.values?.buttons?.slice(0, 2).map((data) => (
+                      <QuickReplyButton
+                        text={data?.text}
+                        key={data?.text}
+                        type={data.type}
+                      />
+                    ))}
                     {form.values?.buttons?.length > 2 && (
                       <QuickReplyButton
                         text={translations("See all options")}
