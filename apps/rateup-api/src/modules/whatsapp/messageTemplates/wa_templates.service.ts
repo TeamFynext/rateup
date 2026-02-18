@@ -428,6 +428,68 @@ export async function updateTemplate(
  * @param orgId
  * @returns
  */
+/**
+ * Helper function to determine template type from WhatsApp template
+ */
+function inferTemplateType(template: any): TemplateType {
+  // Check if it's a carousel template
+  const hasCarousel = template.components?.some(
+    (c: any) => c.type?.toLowerCase() === "carousel",
+  );
+  if (hasCarousel) {
+    return TemplateType.CAROUSEL;
+  }
+
+  // Check category to determine type
+  if (template.category === "MARKETING" || template.category === "UTILITY") {
+    return TemplateType.GENERAL_NOTIFICATION;
+  }
+
+  // Default to GENERAL_NOTIFICATION for WhatsApp templates
+  return TemplateType.GENERAL_NOTIFICATION;
+}
+
+/**
+ * Helper function to extract default values from template components
+ */
+function extractDefaultValues(template: any): WaTemplateDefaultValues {
+  const defaultValues: WaTemplateDefaultValues = {};
+
+  const headerComponent = template.components?.find(
+    (c: any) => c.type?.toLowerCase() === WaTemplateComponentType.HEADER,
+  );
+
+  if (headerComponent) {
+    // Extract image link if present
+    if (headerComponent.format === WaTemplateSupportedFormats.IMAGE) {
+      if (headerComponent.example?.header_handle?.[0]) {
+        defaultValues.image = {
+          link: headerComponent.example.header_handle[0],
+        };
+      }
+    }
+    // Extract video link if present
+    else if (headerComponent.format === WaTemplateSupportedFormats.VIDEO) {
+      if (headerComponent.example?.header_handle?.[0]) {
+        defaultValues.video = {
+          link: headerComponent.example.header_handle[0],
+        };
+      }
+    }
+    // Extract document link if present
+    else if (headerComponent.format === WaTemplateSupportedFormats.DOCUMENT) {
+      if (headerComponent.example?.header_handle?.[0]) {
+        defaultValues.document = {
+          link: headerComponent.example.header_handle[0],
+          filename: headerComponent.example?.header_text?.[0] || undefined,
+        };
+      }
+    }
+  }
+
+  return defaultValues;
+}
+
 export async function syncTemplates(orgId: string) {
   try {
     log.trace("Syncing templates for orgId %s", orgId);
@@ -443,6 +505,16 @@ export async function syncTemplates(orgId: string) {
     for (let wt of waTemplates) {
       if (waTemplateIds.includes(wt.id)) {
         await updateTemplateInDb(idToHSMIdMap[wt.id], wt);
+      } else {
+        // New template found in WhatsApp, create it in DB
+        const templateType = inferTemplateType(wt);
+        const defaultValues = extractDefaultValues(wt);
+        log.trace(
+          "Creating new template in DB: %s (type: %s)",
+          wt.name,
+          templateType,
+        );
+        await saveTemplate(wt, orgId, defaultValues, templateType);
       }
     }
     log.trace("Templates synced");
