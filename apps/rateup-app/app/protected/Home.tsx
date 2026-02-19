@@ -28,6 +28,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Flow from "./flows/Flow";
 import WebForm from "./webForms/WebForm";
 import { colors } from "@/src/constants/constants";
+import CashierPortal from "@/src/components/loyalty/CashierPortal";
+import { IconGift } from "@tabler/icons-react-native";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -53,6 +55,12 @@ const MENU_ITEMS = [
     key: "webform",
     label: "Web Forms",
     Icon: PanelsTopLeft,
+    iconColor: "#004F98",
+  },
+  {
+    key: "loyalty",
+    label: "Loyalty",
+    Icon: IconGift,
     iconColor: "#004F98",
   },
 ];
@@ -83,6 +91,8 @@ export default function Home() {
         return <Flow />;
       case "webform":
         return <WebForm />;
+      case "loyalty":
+        return <CashierPortal/>;
     }
   }, [selectedInterface]);
 
