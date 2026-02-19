@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Group, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
@@ -11,6 +11,7 @@ import {
   useContactsStore,
   useMessagesStore,
 } from "@/app/dashboard/inbox/store";
+import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useUser } from "@/context/UserContext";
 
 import WaInboxChatDisplayBody from "./chatdisplayBody";
@@ -30,6 +31,7 @@ export default function WaInboxChatDisplay({
 }>) {
   const contact = useContactsStore((s) => s.selectedContact);
 
+  const { updateContactById } = useContactsStore();
   const { user } = useUser();
   const isAssignedToMe = useMemo(
     () =>
@@ -40,6 +42,33 @@ export default function WaInboxChatDisplay({
   const translations = useTranslations();
   const { isLoading } = useMessagesStore();
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
+
+  const contactId = contact?.id;
+  const { data: assignedUserList } = useGetAssignedUserForContact(contactId);
+
+  useEffect(() => {
+    if (!contact?.id || !assignedUserList) return;
+
+    const mapped = assignedUserList.map((a) => ({
+      id: a.assignedUserId,
+      name: a.assignedUser?.name,
+      teamId: a.teamId,
+    }));
+
+    updateContactById(contact.id, (prev) => {
+      if (
+        prev.assignedUsers?.length === mapped.length &&
+        prev.assignedUsers?.every((u, i) => u.id === mapped[i].id)
+      ) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        assignedUsers: mapped,
+      };
+    });
+  }, [assignedUserList, contact?.id]);
 
   let footerContent = null;
   if (contact?.blockedOnWhatsApp) {
