@@ -1,4 +1,5 @@
 import prisma from "../../../../utils/prisma.js";
+import { log } from "../../../../utils/logger.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
 import { callWhatsappApi } from "../../wa_axios.js";
 import { getWaCatalog } from "../catalog.service.js";
