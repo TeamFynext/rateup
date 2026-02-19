@@ -2967,6 +2967,7 @@ const InstagramGenericTemplateNodeEditor: React.FC<
               newElements[index].buttons.push({
                 type: "postback",
                 title: "",
+                id: crypto.randomUUID(),
               });
               handleInputChange("elements", newElements);
             }}
@@ -3065,7 +3066,11 @@ const InstagramQuickReplyNodeEditor: React.FC<
         onClick={() => {
           const newReplies = [
             ...(typedData.quick_replies || []),
-            { content_type: "text", title: "" },
+            {
+              content_type: "text" as const,
+              title: "",
+              id: crypto.randomUUID(),
+            },
           ];
           handleInputChange("quick_replies", newReplies);
         }}

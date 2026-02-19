@@ -279,6 +279,7 @@ export interface InstagramGenericTemplateNodeData extends BaseNodeData {
       title: string;
       url?: string;
       payload?: string;
+      id?: string;
     }>;
   }>;
 }
@@ -289,6 +290,7 @@ export interface InstagramQuickReplyNodeData extends BaseNodeData {
     content_type: "text";
     title: string;
     payload?: string;
+    id?: string;
   }>;
 }
 
