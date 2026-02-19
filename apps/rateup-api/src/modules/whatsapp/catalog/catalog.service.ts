@@ -4,7 +4,7 @@ import {
   WhatsappSettings,
 } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callWhatsappApi, GraphApiError } from "../wa_axios.js";
 import {
   CatalogWhatsappSettingSchema,
   UpdateCatalogSchema,
@@ -164,25 +164,46 @@ export async function syncWaCatalogs(orgId: string) {
       }
 
       console.log("connectedCatalog", connectedCatalog.data);
-      if (!connectedCatalog.data.data.length) {
-        await prisma.catalogPhoneIdMap.deleteMany({
-          where: {
-            WhatsappSettings: {
-              wabaId,
+      if (connectedCatalog.data?.data) {
+        if (connectedCatalog.data.data.length === 0) {
+          await prisma.catalogPhoneIdMap.deleteMany({
+            where: {
+              WhatsappSettings: {
+                wabaId,
+              },
             },
-          },
-        });
-        continue;
+          });
+        } else {
+          const phoneIds = waSettings
+            .filter((s) => s.wabaId === wabaId)
+            .map((s) => s.phoneId);
+
+          // Clear existing mappings for these phone numbers before re-syncing from Meta
+          // This ensures we always have the most up-to-date mappings
+          await prisma.catalogPhoneIdMap.deleteMany({
+            where: {
+              whatsappSettingsPhoneId: { in: phoneIds },
+            },
+          });
+
+          const mappings = [];
+          for (const linkedCatalog of connectedCatalog.data.data) {
+            for (const phoneId of phoneIds) {
+              mappings.push({
+                catalogId: linkedCatalog.id,
+                whatsappSettingsPhoneId: phoneId,
+              });
+            }
+          }
+
+          if (mappings.length) {
+            await prisma.catalogPhoneIdMap.createMany({
+              data: mappings,
+              skipDuplicates: true,
+            });
+          }
+        }
       }
-      await prisma.catalogPhoneIdMap.createMany({
-        data: waSettings
-          .filter((s) => s.wabaId === wabaId)
-          .map((s) => ({
-            catalogId: connectedCatalog.data.data[0].id,
-            whatsappSettingsPhoneId: s.phoneId,
-          })),
-        skipDuplicates: true,
-      });
     } catch (e) {
       log.error(e);
     }
@@ -428,17 +449,41 @@ export async function updateConnectWaCatalog(wabaId, orgId, catalogId) {
   }
   const { accessToken } = getWaSettingsWithAccessTokenDecrypted(waSettings[0]);
   let url = `/${wabaId}/product_catalogs`;
-  const res = await callWhatsappApi(url, "POST", accessToken, {
-    catalog_id: catalogId,
-  });
-  if (res?.data?.success) {
-    await prisma.catalogPhoneIdMap.createMany({
-      data: waSettings.map((s) => ({
-        catalogId,
-        whatsappSettingsPhoneId: s.phoneId,
-      })),
-      skipDuplicates: true,
+
+  try {
+    const res = await callWhatsappApi(url, "POST", accessToken, {
+      catalog_id: catalogId,
     });
+
+    if (res?.data?.success) {
+      await prisma.catalogPhoneIdMap.createMany({
+        data: waSettings.map((s) => ({
+          catalogId,
+          whatsappSettingsPhoneId: s.phoneId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+  } catch (error) {
+    if (error instanceof GraphApiError) {
+      // Error code 100 or subcode 2388099 usually indicates catalog is already linked
+      if (error.error.code === 100 || error.error.error_subcode === 2388099) {
+        log.info(
+          "Catalog %s already linked to WABA %s, updating mapping in DB",
+          catalogId,
+          wabaId,
+        );
+        await prisma.catalogPhoneIdMap.createMany({
+          data: waSettings.map((s) => ({
+            catalogId,
+            whatsappSettingsPhoneId: s.phoneId,
+          })),
+          skipDuplicates: true,
+        });
+        return;
+      }
+    }
+    throw error;
   }
 }
 
