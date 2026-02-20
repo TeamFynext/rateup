@@ -1,25 +1,13 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 
 import { IconCards } from "@tabler/icons-react";
 import { Handle, NodeProps, Position } from "@xyflow/react";
 
+import { InstagramGenericTemplateNodeData } from "../../types/node-types";
 import BaseNode from "./base-node";
-
-interface InstagramGenericTemplateNodeData {
-  label: string;
-  elements?: Array<{
-    title: string;
-    subtitle?: string;
-    image_url?: string;
-    buttons?: Array<{
-      type: string;
-      title: string;
-      url?: string;
-    }>;
-  }>;
-}
+import styles from "./node-styles.module.css";
 
 function InstagramGenericTemplateNode(
   props: NodeProps & {
@@ -27,26 +15,66 @@ function InstagramGenericTemplateNode(
     isConnectable: boolean;
   },
 ) {
-  const { data, isConnectable } = props;
+  const { data } = props;
+
+  // Collect all postback buttons across all cards for per-option handles
+  const postbackButtons = useMemo(() => {
+    const buttons: Array<{
+      title: string;
+      _handleId: string;
+      cardIndex: number;
+      btnIndex: number;
+    }> = [];
+    (data.elements || []).forEach((element, cardIndex) => {
+      (element.buttons || []).forEach((button, btnIndex) => {
+        if (button.type === "postback") {
+          buttons.push({
+            title: button.title,
+            _handleId:
+              button.id || button.payload || `btn_${cardIndex}_${btnIndex}`,
+            cardIndex,
+            btnIndex,
+          });
+        }
+      });
+    });
+    return buttons;
+  }, [data.elements]);
+
   const elementCount = data.elements?.length || 0;
 
   return (
-    <BaseNode {...props} icon={<IconCards size={18} />} color="#a855f7">
-      <Handle
-        type="target"
-        position={Position.Top}
-        isConnectable={isConnectable}
-        className="bg-purple-500!"
-      />
-      <div className="text-xs text-gray-500">
-        {elementCount} card{elementCount !== 1 ? "s" : ""}
+    <BaseNode
+      {...props}
+      icon={<IconCards size={16} />}
+      color="#a855f7"
+      disableRight
+    >
+      <div className={styles.buttonContent}>
+        <div className={styles.question}>
+          {elementCount} card{elementCount !== 1 ? "s" : ""}
+        </div>
+
+        {postbackButtons.length > 0 && (
+          <div className={styles.buttons}>
+            {postbackButtons.map((button) => (
+              <div key={button._handleId} className={styles.button}>
+                {button.title || `Button`}
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={button._handleId}
+                  className={styles.handle}
+                  style={{
+                    border: `3px solid #a855f7`,
+                    zIndex: 12,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        isConnectable={isConnectable}
-        className="bg-purple-500!"
-      />
     </BaseNode>
   );
 }

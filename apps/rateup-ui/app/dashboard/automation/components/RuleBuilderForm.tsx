@@ -84,11 +84,12 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                 name="whatsappSettingsPhoneIds"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>Channel</FieldLabel>
+                    <FieldLabel>Channels (WhatsApp & Instagram)</FieldLabel>
                     <AccountSelector
                       multiple
                       value={field.value}
                       onChange={field.onChange}
+                      platform="all"
                     />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
