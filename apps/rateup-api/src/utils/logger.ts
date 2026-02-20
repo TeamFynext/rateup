@@ -33,7 +33,7 @@ if (NO_LOG === "true") {
   logOptionsValue = true;
 }
 export const logOptions: any = logOptionsValue;
-export const log = pino.default({
+export const log = pino({
   enabled: NO_LOG !== "true",
   // available levels: fatal, error, warn, info, debug, trace
   level: process.env.LOG_LEVEL || "info",

@@ -122,7 +122,7 @@ export async function sendMessage(
       messageType,
       externalApi,
     );
-    log.error("Error sending message", e);
+    log.error({ err: e }, "Error sending message");
     return {
       status: false,
       message: e?.message?.split("error_message:")?.[1] ?? "failed to send",
@@ -535,7 +535,7 @@ export async function startTestimonialQuestion(
   session: WaSessionWithRelations,
 ) {
   if (!session.language) {
-    log.error("No language found for session", session);
+    log.error({ session }, "No language found for session");
     throw new Error("No language found for session");
   }
   const title = question.title[session.language];

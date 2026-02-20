@@ -53,7 +53,7 @@ export async function subscriptionExpiryAlert() {
     ]);
     log.info("....All Subscription expiry alert has sent....");
   } catch (e) {
-    log.error("Error sending subscription expiry email", e);
+    log.error({ err: e }, "Error sending subscription expiry email");
   }
 }
 

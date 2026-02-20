@@ -133,9 +133,11 @@ export function generateQuestionResponsesFromFlowResponse({
   const flowMap = flow.map;
 
   log.trace(
+    {
+      flowResponses,
+      flowMap,
+    },
     "Generating question-responses from flow response\nflowResopnse => %o\nflowMap",
-    flowResponses,
-    flowMap,
   );
   let responses = [];
   for (const [payloadName, value] of Object.entries(flowResponses)) {
@@ -174,8 +176,14 @@ export function generateQuestionResponsesFromFlowResponse({
         value,
       );
       log.trace(
-        `elementName => %s \n flowMap => %o\nflowResopnse => %o`,
-        findElementNameFromPayloadName(payloadName, flow.json as any),
+        {
+          elementName: findElementNameFromPayloadName(
+            payloadName,
+            flow.json as any,
+          ),
+          flowMap: flowMap,
+        },
+        "Flow debug information",
       );
       throw e;
     }
@@ -713,9 +721,9 @@ export function parseResponseFromCurrentScreenResponse(
         [question.type]: parsedResponse,
       },
     };
-    log.trace("questionResponse", questionResponse);
+    log.trace({ questionResponse }, "questionResponse");
     responses.push(questionResponse);
   }
-  log.trace("responses", responses);
+  log.trace({ responses }, "responses");
   return responses;
 }

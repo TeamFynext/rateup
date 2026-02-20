@@ -183,7 +183,7 @@ export async function syncLocalFlowToWhatsapp(orgId: string, dbFlowId: string) {
     flow.flowId,
     jsonWithTitle as WaFlowJson,
   );
-  log.trace("Flow synced to whatsapp: %o", response);
+  log.trace({ response }, "Flow synced to whatsapp");
   await updateFlowInDb(orgId, dbFlowId, { pendingSave: false });
 }
 

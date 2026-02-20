@@ -275,7 +275,7 @@ export async function getCustomFieldHandler(
     const data = await getCustomFields(orgId);
     reply.code(200).send(data ?? { contactTags: [] });
   } catch (error) {
-    log.error("Error while getting custom fields", error);
+    log.error({ err: error }, "Error while getting custom fields");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -292,7 +292,7 @@ export async function addCustomFieldHandler(
     if (e.code === "P2002") {
       return reply.code(409).send({ message: "Field already exists" });
     }
-    log.error(e);
+    log.error({ err: e }, "Error creating custom field");
     reply.code(500).send({ message: "Error creating field" });
   }
 }

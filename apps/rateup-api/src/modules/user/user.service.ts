@@ -165,7 +165,10 @@ export async function createUserSignup({
     }
 
     // Commit the transaction
-    log.trace(" create user transaction committed..........:", result);
+    log.trace({
+      message: "create user transaction committed..........:",
+      result,
+    });
     const companyId = await createHubSpotCompany({
       name: orgName,
       joined_date: org.createdAt,

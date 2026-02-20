@@ -106,7 +106,7 @@ export async function verifyMessageMonthlyLimitRestrictionForCampaign(
       });
     }
   } catch (error) {
-    log.error("Error verifying message limit:", error);
+    log.error({ err: error }, "Error verifying message limit:");
     return reply.code(500).send({ message: "Internal server error." });
   }
 }
