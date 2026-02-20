@@ -23,6 +23,7 @@ import {
 async function findInstagramAutomationByCommand(
   orgId: string,
   messageBody: string,
+  ibaId: string,
 ) {
   try {
     // Look for a RuleMessageBodyLock entry matching the message body (or wildcard "*")
@@ -62,6 +63,18 @@ async function findInstagramAutomationByCommand(
       const rule = lock.ruleCondition?.group?.rule;
       if (!rule || !rule.isActive) continue;
 
+      // Verify this rule applies to this Instagram account
+      if (
+        !rule.whatsappSettingsPhoneIds ||
+        rule.whatsappSettingsPhoneIds.length === 0 ||
+        !rule.whatsappSettingsPhoneIds.includes(ibaId)
+      ) {
+        log.trace(
+          `[Instagram Automation Handler] Rule ${rule.id} doesn't apply to ibaId ${ibaId}`,
+        );
+        continue;
+      }
+
       // Find a TRIGGER_CHATBOT action — this contains the automation ID
       const triggerAction = rule.actions?.find(
         (action) => action.type === "TRIGGER_CHATBOT",
@@ -99,6 +112,7 @@ export async function handleInstagramAutomation(
   igsId: string,
   messageText: string,
   orgId: string,
+  ibaId: string,
   messagingObject: any,
 ): Promise<void> {
   try {
@@ -141,6 +155,7 @@ export async function handleInstagramAutomation(
     const matchedAutomation = await findInstagramAutomationByCommand(
       orgId,
       messageText,
+      ibaId,
     );
 
     if (matchedAutomation) {
