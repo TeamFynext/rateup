@@ -65,9 +65,8 @@ export async function syncWaCatalogs(orgId: string) {
       )
         continue;
       const { accessToken, wabaId } = setting;
-      let businessId = map.get(wabaId);
-      if (businessId) continue; //already synced
-      map.set(wabaId, businessId);
+      if (map.has(wabaId)) continue; //already synced
+      map.set(wabaId, true);
       const businessInfo = await getMetaBusinessInfoByWABAId(
         wabaId,
         accessToken,
@@ -75,7 +74,7 @@ export async function syncWaCatalogs(orgId: string) {
       if (!businessInfo) {
         continue;
       }
-      businessId = businessInfo.id;
+      const businessId = businessInfo.id;
 
       const res = await callWhatsappApi(
         `/${businessId}/owned_product_catalogs?fields=name,vertical&access_token=${accessToken}`,
@@ -490,10 +489,16 @@ export async function updateConnectWaCatalog(wabaId, orgId, catalogId) {
     });
 
     if (res?.data?.success) {
+      const phoneIds = waSettings.map((s) => s.phoneId).filter(Boolean);
+      await prisma.catalogPhoneIdMap.deleteMany({
+        where: {
+          whatsappSettingsPhoneId: { in: phoneIds },
+        },
+      });
       await prisma.catalogPhoneIdMap.createMany({
-        data: waSettings.map((s) => ({
+        data: phoneIds.map((pId) => ({
           catalogId,
-          whatsappSettingsPhoneId: s.phoneId,
+          whatsappSettingsPhoneId: pId,
         })),
         skipDuplicates: true,
       });
@@ -507,10 +512,16 @@ export async function updateConnectWaCatalog(wabaId, orgId, catalogId) {
           catalogId,
           wabaId,
         );
+        const phoneIds = waSettings.map((s) => s.phoneId).filter(Boolean);
+        await prisma.catalogPhoneIdMap.deleteMany({
+          where: {
+            whatsappSettingsPhoneId: { in: phoneIds },
+          },
+        });
         await prisma.catalogPhoneIdMap.createMany({
-          data: waSettings.map((s) => ({
+          data: phoneIds.map((pId) => ({
             catalogId,
-            whatsappSettingsPhoneId: s.phoneId,
+            whatsappSettingsPhoneId: pId,
           })),
           skipDuplicates: true,
         });
