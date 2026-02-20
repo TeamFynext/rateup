@@ -10,7 +10,6 @@ import {
   ScrollView,
   Modal,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useMemo, useState } from "react";
 import { countries } from "@/src/constants/countries";
 import {
@@ -33,6 +32,10 @@ import {
   useRedeemReward,
 } from "@/src/api/loyalty/loyalty.query";
 import { useToast } from "react-native-toast-notifications";
+import {
+  AvailableRewardsCard,
+  PendingRedemptionsCard,
+} from "./cashierPortal/components";
 
 const CashierPortal = () => {
   const toast = useToast();
@@ -254,7 +257,12 @@ const CashierPortal = () => {
       {/* Body */}
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 10 }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 40,
+          gap: 10,
+          flexGrow: 1,
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* Card */}
@@ -330,154 +338,177 @@ const CashierPortal = () => {
             </Text>
           </Pressable>
         </View>
-        {/* customer details */}
-        <View className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
-          <View className="flex-row justify-between items-start">
-            {/* Left Section */}
-            <View className="flex-row items-center flex-1">
-              <View className="w-16 h-16 rounded-full bg-primaryBlue/10 items-center justify-center mr-4">
-                <User size={28} color={isDark ? "#60a5fa" : "#2563eb"} />
-              </View>
-
-              {/* Customer Info */}
-              <View className="flex-1">
-                <Text className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {customer?.name || "N/A"}
-                </Text>
-
-                <Text className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {customer?.phone || "N/A"}
-                </Text>
-
-                <Text className="text-sm text-gray-500 dark:text-gray-400">
-                  {customer?.email || "N/A"}
-                </Text>
-              </View>
+        {!customer && (
+          <View className="h-full justify-center flex-1 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-gray-200 dark:border-slate-800 shadow-sm items-center">
+            {/* Icon */}
+            <View className="w-16 h-16 rounded-full bg-primaryBlue/10 items-center justify-center mb-4">
+              <User size={28} color={isDark ? "#60a5fa" : "#2563eb"} />
             </View>
-          </View>
 
-          {/* grids */}
-          <View className="px-4 mt-4">
-            <View className="flex-row flex-wrap justify-between">
-              {/* Available Points */}
-              <View className="w-[48%] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4 mb-4">
-                <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Available Points
-                </Text>
-                <Text className="text-2xl font-bold text-primaryBlue">
-                  {customer?.currentPoints || 0}
-                </Text>
-              </View>
+            {/* Title */}
+            <Text className="text-lg font-semibold text-gray-900 dark:text-white">
+              No Customer Selected
+            </Text>
 
-              {/* Lifetime Points */}
-              <View className="w-[48%] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4 mb-4">
-                <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Lifetime Points
-                </Text>
-                <Text className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {customer?.lifetimePoints || 0}
-                </Text>
-              </View>
-
-              {/* Tier */}
-              <View className="w-[48%] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4">
-                <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Current Tier
-                </Text>
-
-                <View className="flex-row items-center">
-                  <View
-                    className="w-3 h-3 rounded-full mr-2"
-                    style={{ backgroundColor: tierColor }}
-                  />
-                  <Text className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {customer?.currentTier?.name || "N/A"}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Status */}
-              <View className="w-[48%] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4">
-                <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Status
-                </Text>
-
-                <View
-                  className={`self-start px-3 py-1 rounded-full ${getStatusStyle()}`}
-                >
-                  <Text className="text-xs font-semibold capitalize">
-                    {customer?.status || "active"}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* quick actions */}
-        <View className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
-          {/* Header */}
-          <View className="flex-row items-center gap-1 mb-3">
-            <Text className="text-base font-semibold text-gray-900 dark:text-white">
-              Quick Actions
+            {/* Description */}
+            <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1 mb-5">
+              Search for a customer using their phone number to view details and
+              perform actions.
             </Text>
           </View>
+        )}
+        {customer && (
+          <View className="flex-1 gap-3">
+            {/* customer details */}
+            <View className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
+              <View className="flex-row justify-between items-start">
+                {/* Left Section */}
+                <View className="flex-row items-center flex-1">
+                  <View className="w-16 h-16 rounded-full bg-primaryBlue/10 items-center justify-center mr-4">
+                    <User size={28} color={isDark ? "#60a5fa" : "#2563eb"} />
+                  </View>
 
-          {/* Grid */}
-          <View className="flex-row flex-wrap justify-between">
-            <ActionCard
-              title="Issue Points"
-              subtitle="Add points"
-              onPress={() => setIssuePointsOpen(true)}
-              color="#1873E8"
-              lightBg="#EFF6FF"
-              border="#DBEAFE"
-              icon={<Plus size={16} color="white" />}
+                  {/* Customer Info */}
+                  <View className="flex-1">
+                    <Text className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {customer?.name || "N/A"}
+                    </Text>
+
+                    <Text className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      {customer?.phone || "N/A"}
+                    </Text>
+
+                    <Text className="text-sm text-gray-500 dark:text-gray-400">
+                      {customer?.email || "N/A"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* grids */}
+              <View className="px-4 mt-4">
+                <View className="flex-row flex-wrap justify-between">
+                  {/* Available Points */}
+                  <View className="w-[48%] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4 mb-4">
+                    <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      Available Points
+                    </Text>
+                    <Text className="text-2xl font-bold text-primaryBlue">
+                      {customer?.currentPoints || 0}
+                    </Text>
+                  </View>
+
+                  {/* Lifetime Points */}
+                  <View className="w-[48%] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4 mb-4">
+                    <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      Lifetime Points
+                    </Text>
+                    <Text className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {customer?.lifetimePoints || 0}
+                    </Text>
+                  </View>
+
+                  {/* Tier */}
+                  <View className="w-[48%] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4">
+                    <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      Current Tier
+                    </Text>
+
+                    <View className="flex-row items-center">
+                      <View
+                        className="w-3 h-3 rounded-full mr-2"
+                        style={{ backgroundColor: tierColor }}
+                      />
+                      <Text className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {customer?.currentTier?.name || "N/A"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Status */}
+                  <View className="w-[48%] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4">
+                    <Text className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      Status
+                    </Text>
+
+                    <View
+                      className={`self-start px-3 py-1 rounded-full ${getStatusStyle()}`}
+                    >
+                      <Text className="text-xs font-semibold capitalize">
+                        {customer?.status || "active"}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* quick actions */}
+            <View className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
+              {/* Header */}
+              <View className="flex-row items-center gap-1 mb-3">
+                <Text className="text-base font-semibold text-gray-900 dark:text-white">
+                  Quick Actions
+                </Text>
+              </View>
+
+              {/* Grid */}
+              <View className="flex-row flex-wrap justify-between">
+                <ActionCard
+                  title="Issue Points"
+                  subtitle="Add points"
+                  onPress={() => setIssuePointsOpen(true)}
+                  color="#1873E8"
+                  lightBg="#EFF6FF"
+                  border="#DBEAFE"
+                  icon={<Plus size={16} color="white" />}
+                />
+
+                <ActionCard
+                  title="Issue Reward"
+                  subtitle="Grant reward"
+                  onPress={() => setAssignRewardOpen(true)}
+                  color="#A855F7"
+                  lightBg="#F5F3FF"
+                  border="#E9D5FF"
+                  icon={<Gift size={16} color="white" />}
+                />
+
+                <ActionCard
+                  title="Redeem Coupon"
+                  subtitle="Use coupon"
+                  onPress={() => setRedeemCouponOpen(true)}
+                  color="#F97316"
+                  lightBg="#FFF7ED"
+                  border="#FED7AA"
+                  icon={<Ticket size={16} color="white" />}
+                />
+
+                <ActionCard
+                  title="Redeem Reward"
+                  subtitle="Use points"
+                  onPress={() => setClaimRewardOpen(true)}
+                  color="#6366F1"
+                  lightBg="#EEF2FF"
+                  border="#C7D2FE"
+                  icon={<Trophy size={16} color="white" />}
+                />
+              </View>
+            </View>
+
+            {/* available rewards */}
+            <AvailableRewardsCard
+              availableRewards={availableRewards}
+              customer={customer}
+              isDark={isDark}
+              setSelectedCouponCode={setSelectedCouponCode}
             />
-
-            <ActionCard
-              title="Issue Reward"
-              subtitle="Grant reward"
-              onPress={() => setAssignRewardOpen(true)}
-              color="#A855F7"
-              lightBg="#F5F3FF"
-              border="#E9D5FF"
-              icon={<Gift size={16} color="white" />}
-            />
-
-            <ActionCard
-              title="Redeem Coupon"
-              subtitle="Use coupon"
-              onPress={() => setRedeemCouponOpen(true)}
-              color="#F97316"
-              lightBg="#FFF7ED"
-              border="#FED7AA"
-              icon={<Ticket size={16} color="white" />}
-            />
-
-            <ActionCard
-              title="Redeem Reward"
-              subtitle="Use points"
-              onPress={() => setClaimRewardOpen(true)}
-              color="#6366F1"
-              lightBg="#EEF2FF"
-              border="#C7D2FE"
-              icon={<Trophy size={16} color="white" />}
+            <PendingRedemptionsCard
+              isDark={isDark}
+              unusedRedemptions={unusedRedemptions}
             />
           </View>
-        </View>
-
-        {/* available rewards */}
-        <AvailableRewardsCard
-          availableRewards={availableRewards}
-          customer={customer}
-          isDark={isDark}
-          setSelectedCouponCode={setSelectedCouponCode}
-        />
-        <PendingRedemptionsCard
-          isDark={isDark}
-          unusedRedemptions={unusedRedemptions}
-        />
+        )}
       </ScrollView>
 
       {/* modals  */}
@@ -836,228 +867,3 @@ const CashierPortal = () => {
 };
 
 export default CashierPortal;
-
-const AvailableRewardsCard = ({
-  availableRewards,
-  customer,
-  isDark,
-  setSelectedCouponCode,
-}: any) => {
-  const [selectedReward, setSelectedReward] = useState<any>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const openReward = (reward: any) => {
-    setSelectedReward(reward);
-    setModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
-    setSelectedReward(null);
-  };
-
-  const eligibleRewards = availableRewards?.filter(
-    (reward: any) =>
-      reward.status === "ACTIVE" &&
-      reward.pointsCost <= (customer?.currentPoints || 0),
-  );
-
-  return (
-    <View className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
-      {/* Header */}
-      <View className="flex-row items-center gap-1 mb-3">
-        <Text className="text-base font-semibold text-gray-900 dark:text-white">
-          Available Rewards for Customer
-        </Text>
-      </View>
-
-      {/* Rewards List */}
-      {eligibleRewards?.length > 0 ? (
-        eligibleRewards.map((reward: any) => (
-          <Pressable
-            key={reward.id}
-            onPress={() => openReward(reward)}
-            className="flex-row items-center justify-between px-3 py-2.5 mb-2 rounded-lg border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900"
-          >
-            {/* Left */}
-            <View className="flex-row items-center flex-1 mr-3">
-              <View className="w-9 h-9 rounded-lg bg-primaryBlue/10 items-center justify-center mr-2">
-                <Gift size={16} color={isDark ? "#60a5fa" : "#2563eb"} />
-              </View>
-              <View className="flex-1">
-                <Text
-                  numberOfLines={1}
-                  className="text-sm font-semibold text-gray-900 dark:text-white"
-                >
-                  {reward.name}
-                </Text>
-
-                <Text
-                  numberOfLines={1}
-                  className="text-[11px] text-gray-500 dark:text-gray-400"
-                >
-                  {reward.description || "No description"}
-                </Text>
-
-                {reward.rewardType === "coupon" && (
-                  <Text
-                    numberOfLines={1}
-                    className="text-[10px] text-gray-400 dark:text-gray-500"
-                  >
-                    Code: {(reward.rewardValue as any)?.code}
-                  </Text>
-                )}
-              </View>
-            </View>
-
-            {/* Right */}
-            <View className="items-end min-w-[70px]">
-              <Text className="text-sm font-semibold text-primaryBlue">
-                {reward.pointsCost}
-                <Text className="text-[10px] text-gray-500 dark:text-gray-400">
-                  {" "}
-                  pts
-                </Text>
-              </Text>
-
-              <View className="mt-1 px-2 py-[2px] rounded-full bg-primaryBlue/20">
-                <Text className="text-[9px] font-semibold text-primaryBlue">
-                  Available
-                </Text>
-              </View>
-            </View>
-          </Pressable>
-        ))
-      ) : (
-        <View className="items-center py-8">
-          <Gift size={28} color={isDark ? "#475569" : "#cbd5e1"} />
-          <Text className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
-            No rewards available with current points
-          </Text>
-        </View>
-      )}
-
-      <Modal
-        transparent
-        visible={modalVisible}
-        animationType="fade"
-        onRequestClose={closeModal}
-      >
-        <View className="flex-1 bg-black/40 items-center justify-center px-5">
-          <View className="w-full bg-white dark:bg-slate-900 rounded-2xl p-5 border border-gray-200 dark:border-slate-800">
-            {/* Header */}
-            <Text className="text-lg font-bold text-gray-900 dark:text-white text-center mb-1">
-              {selectedReward?.name}
-            </Text>
-
-            <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mb-4">
-              {selectedReward?.description || "No description"}
-            </Text>
-
-            {/* Coupon Box */}
-            {selectedReward?.rewardType === "coupon" && (
-              <View className="border-2 border-dashed border-primaryBlue rounded-xl py-4 items-center mb-4 bg-primaryBlue/5">
-                <Text className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
-                  COUPON CODE
-                </Text>
-
-                <Text className="text-2xl font-bold tracking-widest text-primaryBlue">
-                  {(selectedReward.rewardValue as any)?.code}
-                </Text>
-              </View>
-            )}
-
-            {/* Points */}
-            <View className="flex-row justify-between items-center mb-5">
-              <Text className="text-sm text-gray-500 dark:text-gray-400">
-                Points Required
-              </Text>
-              <Text className="text-lg font-semibold text-primaryBlue">
-                {selectedReward?.pointsCost} pts
-              </Text>
-            </View>
-
-            {/* Buttons */}
-            <View className="flex-row gap-3">
-              <Pressable
-                onPress={closeModal}
-                className="flex-1 py-3 rounded-xl bg-gray-200 dark:bg-slate-700 items-center"
-              >
-                <Text className="font-semibold text-gray-800 dark:text-white">
-                  Close
-                </Text>
-              </Pressable>
-
-              <Pressable
-                className="flex-1 py-3 rounded-xl bg-primaryBlue items-center active:opacity-80"
-                onPress={() => {
-                  setSelectedCouponCode(
-                    (selectedReward.rewardValue as any)?.code,
-                  );
-                  closeModal();
-                }}
-              >
-                <Text className="font-semibold text-white">Redeem</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
-  );
-};
-
-const PendingRedemptionsCard = ({ unusedRedemptions, isDark }: any) => {
-  return (
-    <View className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-gray-200 dark:border-slate-800 shadow-sm">
-      {/* Header */}
-      <Text className="text-base font-semibold text-gray-900 dark:text-white mb-3">
-        Pending Redemptions
-      </Text>
-
-      {unusedRedemptions?.length > 0 ? (
-        unusedRedemptions.map((redemption: any) => (
-          <View
-            key={redemption.id}
-            className="flex-row items-center justify-between px-3 py-2.5 mb-2 rounded-lg border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900"
-          >
-            {/* Left */}
-            <View className="flex-row items-center flex-1 mr-3">
-              <View className="w-9 h-9 rounded-lg bg-primaryBlue/10 items-center justify-center mr-2">
-                <Ticket size={16} color={isDark ? "#60a5fa" : "#2563eb"} />
-              </View>
-
-              <View className="flex-1">
-                <Text
-                  numberOfLines={1}
-                  className="text-sm font-semibold text-gray-900 dark:text-white"
-                >
-                  {redemption.reward?.name || "Reward"}
-                </Text>
-
-                <Text className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-                  Redeemed:{" "}
-                  {new Date(redemption.createdAt).toLocaleDateString()}
-                </Text>
-              </View>
-            </View>
-
-            {/* Status */}
-            <View className="px-2 py-[2px] rounded-full bg-yellow-100 dark:bg-yellow-900/30">
-              <Text className="text-[10px] font-semibold text-yellow-700 dark:text-yellow-400 capitalize">
-                {redemption.status || "pending"}
-              </Text>
-            </View>
-          </View>
-        ))
-      ) : (
-        <View className="items-center py-8">
-          <Ticket size={28} color={isDark ? "#475569" : "#cbd5e1"} />
-          <Text className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
-            No pending redemptions
-          </Text>
-        </View>
-      )}
-    </View>
-  );
-};
