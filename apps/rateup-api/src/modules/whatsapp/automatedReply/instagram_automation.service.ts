@@ -26,13 +26,13 @@ export type InstagramNodeType =
   | "endNode"
   | "textNode"
   | "imageNode"
-  | "genericTemplateNode"
-  | "quickReplyNode"
-  | "storyReplyNode"
-  | "iceBreakersNode"
-  | "productTemplateNode"
   | "pauseNode"
-  | "textInputNode";
+  | "textInputNode"
+  | "instagramQuickReplyNode"
+  | "instagramGenericTemplateNode"
+  | "instagramStoryReplyNode"
+  | "instagramProductTemplateNode"
+  | "instagramIceBreakerNode";
 
 interface InstagramNode {
   id: string;
@@ -218,22 +218,22 @@ export async function processNextInstagramNode(
         messageSent = true;
         break;
 
-      case "genericTemplateNode":
+      case "instagramGenericTemplateNode":
         await handleInstagramGenericTemplateNode(node, igsId, orgId);
         messageSent = true;
         break;
 
-      case "quickReplyNode":
+      case "instagramQuickReplyNode":
         await handleInstagramQuickReplyNode(node, igsId, orgId);
         messageSent = true;
         break;
 
-      case "productTemplateNode":
+      case "instagramProductTemplateNode":
         await handleInstagramProductTemplateNode(node, igsId, orgId);
         messageSent = true;
         break;
 
-      case "storyReplyNode":
+      case "instagramStoryReplyNode":
         // Story replies are handled differently - they respond to story mentions
         log.info(
           `[Instagram Automation] Story reply node ${nodeId} - waiting for story mention`,
@@ -241,7 +241,7 @@ export async function processNextInstagramNode(
         messageSent = false;
         break;
 
-      case "iceBreakersNode":
+      case "instagramIceBreakerNode":
         // Ice breakers are set at profile level, not sent as messages
         log.info(
           `[Instagram Automation] Ice breakers node ${nodeId} - configuration node`,
@@ -288,8 +288,8 @@ export async function processNextInstagramNode(
 
     // Determine if we should continue to the next node
     const requiresUserInput = [
-      "quickReplyNode",
-      "genericTemplateNode",
+      "instagramQuickReplyNode",
+      "instagramGenericTemplateNode",
       "textInputNode",
     ].includes(node.type);
 
@@ -390,7 +390,17 @@ async function handleInstagramGenericTemplateNode(
   orgId: string,
 ): Promise<void> {
   try {
-    const elements = node.data?.elements || [];
+    const elements = (node.data?.elements || []).map((el: any) => ({
+      ...el,
+      buttons: (el.buttons || []).map((btn: any) => ({
+        ...btn,
+        // Use the button's id as the payload so it matches the edge sourceHandle
+        payload:
+          btn.type === "postback"
+            ? btn.id || btn.payload || btn.title
+            : btn.payload,
+      })),
+    }));
 
     if (elements.length === 0) {
       log.warn(
@@ -418,7 +428,15 @@ async function handleInstagramQuickReplyNode(
 ): Promise<void> {
   try {
     const text = node.data?.text || "Choose an option:";
-    const quickReplies = node.data?.quickReplies || [];
+    const quickReplies = (
+      node.data?.quick_replies ||
+      node.data?.quickReplies ||
+      []
+    ).map((qr: any) => ({
+      ...qr,
+      // Use the reply's id as the payload so it matches the edge sourceHandle
+      payload: qr.id || qr.payload || qr.title,
+    }));
 
     if (quickReplies.length === 0) {
       log.warn(
@@ -619,8 +637,8 @@ export async function handleInstagramUserResponse(
     }
 
     if (
-      currentNode.type === "quickReplyNode" ||
-      currentNode.type === "genericTemplateNode"
+      currentNode.type === "instagramQuickReplyNode" ||
+      currentNode.type === "instagramGenericTemplateNode"
     ) {
       // Find the next node based on the button clicked
       const nextEdges = automation.matchData?.json?.edges?.filter(
