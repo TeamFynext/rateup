@@ -133,8 +133,14 @@ function WhatsAppManualConfiguration({ waSettings }) {
   const upsertMutation = useUpsertWaSettingsMutation();
   const deleteMutation = useDeleteWaSettingsMutation();
   const handleSubmit = (values: any) => {
-    const { teams, ...rest } = waSettings;
-    upsertMutation.mutate(rest);
+    let payload = { ...values };
+    if (waSettings) {
+      payload = { ...waSettings, ...values };
+    }
+    if ("teams" in payload) {
+      delete payload.teams;
+    }
+    upsertMutation.mutate(payload);
   };
   const handleDelete = () => {
     deleteMutation.mutate(waSettings?.phoneId);
