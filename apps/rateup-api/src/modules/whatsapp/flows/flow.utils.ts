@@ -136,9 +136,8 @@ export function generateQuestionResponsesFromFlowResponse({
   const flowMap = flow.map;
 
   log.trace(
+    { flowResponses, flowMap },
     "Generating question-responses from flow response\nflowResopnse => %o\nflowMap",
-    flowResponses,
-    flowMap,
   );
   let responses = [];
   for (const [payloadName, value] of Object.entries(flowResponses)) {
@@ -190,8 +189,15 @@ export function generateQuestionResponsesFromFlowResponse({
         value,
       );
       log.trace(
+        {
+          flowPayload: findElementNameFromPayloadName(
+            payloadName,
+            flow.json as any,
+          ),
+          flowMap,
+          flowResponses,
+        },
         `elementName => %s \n flowMap => %o\nflowResopnse => %o`,
-        findElementNameFromPayloadName(payloadName, flow.json as any),
       );
       throw e;
     }
@@ -267,7 +273,7 @@ export function parseFlowResponse({
   }
 }
 export function parseFlowResponseV2(metaType, response, dataSource) {
-  log.trace("Parsing response for element %s\nresponse => %o", response);
+  log.trace({ response }, "Parsing response for element %s\nresponse => %o");
 
   if (!response) {
     log.fatal("Unhandled empty response found for element %s", metaType);
@@ -849,10 +855,10 @@ export function parseResponseFromCurrentScreenResponse(
         [question.type]: parsedResponse,
       },
     };
-    log.trace("questionResponse", questionResponse);
+    log.trace({ questionResponse }, "questionResponse");
     responses.push(questionResponse);
   }
-  log.trace("responses", responses);
+  log.trace({ responses }, "responses");
   return responses;
 }
 export function parseResponseFromCurrentScreenResponseV2(
@@ -869,7 +875,7 @@ export function parseResponseFromCurrentScreenResponseV2(
       response: response_data[questionId],
     };
   });
-  log.trace("responses", responses);
+  log.trace({ responses }, "responses");
   return responses;
 }
 

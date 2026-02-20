@@ -246,7 +246,7 @@ export async function generateChatFilterData(orgId: string) {
     const chatFilters = [groupData, campaignsData, ...multiSelectTagsData];
     return chatFilters;
   } catch (error) {
-    log.error("Error in inbox chat filter get api", error);
+    log.error({ err: error }, "Error in inbox chat filter get api");
     return null;
   }
 }

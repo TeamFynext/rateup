@@ -172,9 +172,9 @@ export async function downloadExcelResponseHandler(
       );
       reply.status(200).type("application/xlsx").send(data);
     }
-  } catch (e) {
-    log.error("Error downloading excel", e);
-    reply.status(500).send(e);
+  } catch (error) {
+    log.error({ err: error }, "Error downloading excel");
+    reply.status(500).send(error);
   }
 }
 

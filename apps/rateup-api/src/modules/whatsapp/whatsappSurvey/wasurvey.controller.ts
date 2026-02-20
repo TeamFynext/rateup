@@ -1693,8 +1693,8 @@ async function handleStartSurvey({
     const msgLimit = await checkMessageLimitExceeded(orgId);
     if (!msgLimit) {
       log.error(
+        { orgId },
         "You have reached the maximum monthly limit of messages.",
-        orgId,
       );
       return;
     }
@@ -2100,7 +2100,7 @@ async function _sendCampaignToParticipants(
       status: CampaignStatus.INACTIVE,
       errorMessage: errorMessage,
     });
-    log.error(errorMessage, "in _sendCampaignToParticipants", orgId);
+    log.error({ errorMessage, orgId }, "in _sendCampaignToParticipants");
     return;
   }
 
@@ -2134,7 +2134,7 @@ async function _sendCampaignToParticipants(
       status: CampaignStatus.INACTIVE,
       errorMessage: errorMessage,
     });
-    log.error(errorMessage, "in _sendCampaignToParticipants", orgId);
+    log.error({ errorMessage, orgId }, "in _sendCampaignToParticipants");
     return;
   } else if (
     (usage.monthlyTemplateMessageCount ?? 0) + newMessagesCount >
@@ -2150,7 +2150,7 @@ async function _sendCampaignToParticipants(
       status: CampaignStatus.INACTIVE,
       errorMessage: errorMessage,
     });
-    log.error(errorMessage, "in _sendCampaignToParticipants", orgId);
+    log.error({ errorMessage, orgId }, "in _sendCampaignToParticipants");
     return;
   }
 

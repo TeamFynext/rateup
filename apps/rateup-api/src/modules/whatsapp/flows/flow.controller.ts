@@ -272,7 +272,7 @@ export async function saveFlowJsonToWhatsappHandler(
 
     res.status(200).send();
   } catch (error) {
-    log.error("Error saving flow json to whatsapp", error);
+    log.error({ err: error }, "Error saving flow json to whatsapp");
     res.status(500).send(error.message);
   }
 }
@@ -297,12 +297,12 @@ export async function updateFlowMetaDataHandler(
       req.body,
     );
     if (!data?.success) {
-      log.error("Flow Not updated in whatsapp\n%o", data);
+      log.error({ err: data }, "Flow Not updated in whatsapp");
       throw new Error("Flow Not updated in whatsapp");
     }
     res.status(204).send();
   } catch (error) {
-    log.error("Error Updating flow meta data", error);
+    log.error({ err: error }, "Error Updating flow meta data");
     res.status(500).send(error);
   }
 }
@@ -391,7 +391,7 @@ export async function deleteFlowHandler(
     log.trace("deleting flow in wa %s", flow.flowId);
     if (flow.flowId) await deleteFlowInWa(orgId, flow.flowId);
   } catch (error) {
-    log.error("Error deleting flow in wa", error);
+    log.error({ err: error }, "Error deleting flow in wa");
   }
 
   if (flow.surveyId) {

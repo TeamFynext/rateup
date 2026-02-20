@@ -1307,7 +1307,7 @@ export async function generateMessageDataFromQuestion(
 ): Promise<WaSendMessageBody> {
   const to = session.phone;
   if (!session.language) {
-    log.error("No language found for session", session);
+    log.error({ session }, "No language found for session");
     throw new Error("No language found for session");
   }
   const lang = session.language;
@@ -1422,7 +1422,7 @@ export function isValidResponse(
     case Q.WaButtons:
     case Q.CustomNPS:
       if (!question.choices) {
-        log.fatal("No choices found for question", question);
+        log.fatal({ question }, "No choices found for question");
         throw new Error("No choices found for question");
       }
       return question.choices[lang]?.includes(response);
@@ -1500,7 +1500,7 @@ export async function parseResponse(
           (c) => c.value === message,
         );
         if (!choice) {
-          log.error("Couldn't find choice for message", message);
+          log.error({ message, question }, "Couldn't find choice for message");
           return false;
         } else {
           return choice;

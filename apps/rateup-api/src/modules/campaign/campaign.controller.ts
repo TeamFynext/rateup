@@ -175,7 +175,7 @@ export async function sendCampaignHandler(
       code: "ENQUEUE_REQUEST_ACCEPTED",
     });
   } catch (error) {
-    log.error("Error while handling sendCampaignHandler", error);
+    log.error({ err: error }, "Error while handling sendCampaignHandler");
     return reply.code(500).send({
       message: "Internal server error",
       code: "INTERNAL_SERVER_ERROR",
@@ -204,7 +204,7 @@ export async function getResponseByCampaignByIdHandler(
     const res = await getResponseByCampaignById(request.params.campaignId);
     return reply.status(200).send(res);
   } catch (error) {
-    log.error("Error while handling getResponseByCampaignById", error);
+    log.error({ err: error }, "Error while handling getResponseByCampaignById");
     return reply.code(500).send(error);
   }
 }
@@ -225,7 +225,10 @@ export async function getResponseExcelByCampaignByIdHandler(
     reply.header("Access-Control-Expose-Headers", "filename");
     reply.status(200).type("application/xlsx").send(data);
   } catch (error) {
-    log.error("Error while handling getResponseExcelByCampaignById", error);
+    log.error(
+      { err: error },
+      "Error while handling getResponseExcelByCampaignById",
+    );
     return reply.code(500).send(error);
   }
 }
@@ -244,7 +247,7 @@ export async function getCampaignStatsHandler(
     );
     reply.code(200).send(stats);
   } catch (e) {
-    log.error("Error in getting campain stats", e);
+    log.error({ err: e }, "Error in getting campain stats");
     return reply.code(500).send(e);
   }
 }
