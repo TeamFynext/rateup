@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -10,7 +10,6 @@ import {
   Group,
   Stack,
   Text,
-  Title,
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -18,6 +17,7 @@ import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
+import { TemplateType } from "@/types/enums";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import {
   useDeleteWaTemplateMutation,
@@ -28,13 +28,14 @@ import { TemplatesCardListSkeleton } from "@/components/animation/skeleton/wa/Te
 import InfoButton from "@/components/Button/InfoButton";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import RefreshButton from "@/components/Button/RefreshButton";
-import SortDropdown, { sortData } from "@/components/Dashboard/SortDropDown";
+import { sortData } from "@/components/Dashboard/SortDropDown";
 import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import styles from "@/components/WelcomeTour/components/Tour.module.css";
 import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps";
 import WelcomeTour from "@/components/WelcomeTour/WelcomeTour";
+import { TemplateFilterSort } from "@/components/whatsapp/templates/FilterAndSort";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge";
 import { docsPath } from "@/utils/constants";
@@ -42,10 +43,50 @@ import { docsPath } from "@/utils/constants";
 export default function Template() {
   const { data: templates, isPending, isError, refetch } = useWaTemplates();
   const [sortOption, setSortOption] = useState("latest");
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [deleteDialogOpened, { toggle, close }] = useDisclosure();
-  const { data, isPending: waSettingsPending } = useWaSettings();
+  const { data } = useWaSettings();
   const translations = useTranslations();
+  const [filters, setFilters] = useState({
+    status: "all",
+    category: "all",
+    templateType: "all",
+  });
+  function formatLabel(value: string) {
+    return value
+      .toLowerCase()
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  const templateTypeOptions = [
+    { value: "all", label: "All Types" },
+    ...Object.values(TemplateType).map((type) => ({
+      value: type,
+      label: formatLabel(type),
+    })),
+  ];
+
+  const sortedTemplates = useMemo(() => {
+    const filtered = (templates ?? []).filter((template) => {
+      const status = template?.data?.status;
+      const category = template?.data?.category;
+      const type = template?.templateType;
+
+      const matchStatus = filters.status === "all" || status === filters.status;
+
+      const matchCategory =
+        filters.category === "all" || category === filters.category;
+
+      const matchTemplateType =
+        filters.templateType === "all" || type === filters.templateType;
+
+      return matchStatus && matchCategory && matchTemplateType;
+    });
+
+    return sortData(filtered, sortOption);
+  }, [templates, filters, sortOption]);
+
   const templateDeleteMutation = useDeleteWaTemplateMutation(
     () => {
       setSelectedTemplate(null);
@@ -62,12 +103,6 @@ export default function Template() {
   function handleEditClick(template) {
     router.push(`/dashboard/whatsapp/templates/${template.id}`);
   }
-
-  const onSortChange = (value) => {
-    setSortOption(value);
-  };
-
-  const sortedTemplates = sortData(templates, sortOption);
 
   const tourSteps = WaPageTourSteps({ styles });
 
@@ -117,12 +152,14 @@ export default function Template() {
           direction="row"
           wrap="wrap"
         >
-          <div className={styles["sort-dropdown"]}>
-            <SortDropdown
-              onSortChange={onSortChange}
-              defaultSortOption={sortOption}
-            />
-          </div>
+          <TemplateFilterSort
+            filters={filters}
+            setFilters={setFilters}
+            sortOption={sortOption}
+            setSortOption={setSortOption}
+            templateTypeOptions={templateTypeOptions}
+          />
+
           <Tooltip
             label={translations(
               "Connect a WhatsApp number in settings to sync Template",
@@ -208,7 +245,7 @@ function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
       <Stack>
         <Flex justify={"space-between"} align={"center"}>
           <Text mr={"sm"} truncate size="lg" fw={500}>
-            {template.data.name}
+            {template?.data?.name}
           </Text>
           <Group>
             <Tooltip
@@ -238,9 +275,12 @@ function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
         </Flex>
         <CreatedSinceText createdAt={template.createdAt} />
         <Group gap={8}>
-          <WaTemplateStatusBadge status={template.data.status} />
-          <WaTemplateStatusBadge status={template.data.category} defaultType />
-          <WaTemplateStatusBadge status={template.templateType} defaultType />
+          <WaTemplateStatusBadge status={template?.data?.status} />
+          <WaTemplateStatusBadge
+            status={template?.data?.category}
+            defaultType
+          />
+          <WaTemplateStatusBadge status={template?.templateType} defaultType />
         </Group>
       </Stack>
     </PaperLayout>

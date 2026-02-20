@@ -25,7 +25,6 @@ import {
   IconRobotFace,
   IconSettings,
   IconSitemap,
-  IconSpeakerphone,
   IconTemplate,
   IconTerminal2,
   IconTicket,
@@ -47,6 +46,7 @@ import {
   FileText,
   Folder,
   Inbox,
+  Send,
   Settings,
   ShoppingCart,
   Sparkles,
@@ -267,7 +267,7 @@ export function useNavMain({
             {
               title: t("Campaign"),
               url: "/dashboard/campaign",
-              icon: IconSpeakerphone,
+              icon: Send,
             },
           ]
         : []),
