@@ -14,55 +14,52 @@ import {
   startInstagramAutomationFlow,
   handleInstagramUserResponse,
 } from "../automatedReply/instagram_automation.service.js";
+import { validateRuleConditions } from "../automatedReply/wa_automatedReply.utils.js";
 
 /**
- * Find an Instagram automation by matching a message body against the Rule system.
- * Queries RuleMessageBodyLock → RuleCondition → RuleConditionGroup → Rule → RuleAction (TRIGGER_CHATBOT)
- * to find the automation ID, then fetches the automation.
+ * Find an Instagram automation by matching a message against active rules.
+ * Evaluates all rule conditions properly (CONTAINS, EQUALS, etc.) rather than just exact matching.
  */
 async function findInstagramAutomationByCommand(
   orgId: string,
   messageBody: string,
   ibaId: string,
+  igsId: string,
 ) {
   try {
-    // Look for a RuleMessageBodyLock entry matching the message body (or wildcard "*")
-    const messageLowerCase = messageBody?.trim()?.toLowerCase() || "";
-
-    // Try exact match first, then wildcard
-    const candidates = [messageLowerCase];
-    if (messageLowerCase !== "*") {
-      candidates.push("*");
-    }
-
-    for (const candidate of candidates) {
-      const lock = await prisma.ruleMessageBodyLock.findFirst({
-        where: {
-          orgId,
-          messageBody: candidate,
+    // Find all active rules for this organization with TRIGGER_CHATBOT action
+    const rules = await prisma.rule.findMany({
+      where: {
+        orgId,
+        isActive: true,
+        actions: {
+          some: {
+            type: "TRIGGER_CHATBOT",
+          },
         },
-        include: {
-          ruleCondition: {
-            include: {
-              group: {
-                include: {
-                  rule: {
-                    include: {
-                      actions: true,
-                    },
+      },
+      include: {
+        groups: {
+          include: {
+            conditions: {
+              include: {
+                messageBodyLock: {
+                  include: {
+                    businessHour: true,
                   },
                 },
               },
             },
           },
         },
-      });
+        actions: true,
+      },
+    });
 
-      if (!lock) continue;
+    if (!rules || rules.length === 0) return null;
 
-      const rule = lock.ruleCondition?.group?.rule;
-      if (!rule || !rule.isActive) continue;
-
+    // Check each rule to see if it matches
+    for (const rule of rules) {
       // Verify this rule applies to this Instagram account
       if (
         !rule.whatsappSettingsPhoneIds ||
@@ -75,7 +72,17 @@ async function findInstagramAutomationByCommand(
         continue;
       }
 
-      // Find a TRIGGER_CHATBOT action — this contains the automation ID
+      // Validate all conditions using the proper validation function
+      const isMatch = await validateRuleConditions(
+        rule as any,
+        messageBody,
+        orgId,
+        igsId, // Use igsId as the "phone" parameter for contact lookups
+      );
+
+      if (!isMatch) continue;
+
+      // Find the TRIGGER_CHATBOT action
       const triggerAction = rule.actions?.find(
         (action) => action.type === "TRIGGER_CHATBOT",
       );
@@ -88,7 +95,7 @@ async function findInstagramAutomationByCommand(
       const automation = await getInstagramAutomatedReplyById(automationId);
       if (automation && automation.isEnabled) {
         log.info(
-          `[Instagram Automation Handler] Found ${candidate === "*" ? "wildcard" : "exact"} match via Rule system: automation ${automationId}`,
+          `[Instagram Automation Handler] Rule ${rule.id} matched for message "${messageBody}" - triggering automation ${automationId}`,
         );
         return automation;
       }
@@ -140,6 +147,7 @@ export async function handleInstagramAutomation(
         igsId,
         messageText,
         orgId,
+        ibaId,
         buttonPayload,
       );
 
@@ -156,6 +164,7 @@ export async function handleInstagramAutomation(
       orgId,
       messageText,
       ibaId,
+      igsId,
     );
 
     if (matchedAutomation) {
@@ -166,6 +175,7 @@ export async function handleInstagramAutomation(
         igsId,
         matchedAutomation as any,
         orgId,
+        ibaId,
       );
       return;
     }
