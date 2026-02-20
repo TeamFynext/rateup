@@ -732,54 +732,57 @@ export default function CampaignDetails() {
             className="flex-1 min-h-0 flex flex-col mt-0 p-0"
           >
             {/* Toolbar (fixed height, never scrolls) */}
-            <div className="shrink-0 px-6 pt-6 pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => setIsAddParticipantOpen(true)}
-                    className="gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    {t("participants.add")}
-                  </Button>
-                  {selectedIds?.length > 0 && (
-                    <Button
-                      variant="destructive"
-                      disabled={selectedIds.length === 0}
-                      onClick={() => setOpenDeleteModal(true)}
-                    >
-                      {t("participants.deleteSelected", {
-                        count: selectedIds.length,
-                      })}
-                    </Button>
-                  )}
-                </div>
+            <Card className="mb-4 p-0  border-slate-200 shadow-sm">
+              <CardContent className="mx-0">
+                <div className="shrink-0  pt-6 pb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => setIsAddParticipantOpen(true)}
+                        className="gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        {t("participants.add")}
+                      </Button>
+                      {selectedIds?.length > 0 && (
+                        <Button
+                          variant="destructive"
+                          disabled={selectedIds.length === 0}
+                          onClick={() => setOpenDeleteModal(true)}
+                        >
+                          {t("participants.deleteSelected", {
+                            count: selectedIds.length,
+                          })}
+                        </Button>
+                      )}
+                    </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="relative w-80">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-600" />
-                    <Input
-                      placeholder={t("participants.searchPlaceholder")}
-                      value={searchInput}
-                      onChange={(e) => setSearchInput(e.target.value)}
-                      className="pl-9 h-9 border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50"
-                    />
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-80">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-600" />
+                        <Input
+                          placeholder={t("participants.searchPlaceholder")}
+                          value={searchInput}
+                          onChange={(e) => setSearchInput(e.target.value)}
+                          className="pl-9 h-9 border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50"
+                        />
+                      </div>
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-9 text-slate-600 dark:text-slate-400 hover:text-primary"
+                        onClick={() => setSearchInput("")}
+                      >
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        {t("participants.reset")}
+                      </Button>
+                    </div>
                   </div>
-
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-9 text-slate-600 dark:text-slate-400 hover:text-primary"
-                    onClick={() => setSearchInput("")}
-                  >
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    {t("participants.reset")}
-                  </Button>
                 </div>
-              </div>
-            </div>
-
+              </CardContent>{" "}
+            </Card>
             <div className="flex-1 min-h-0 overflow-hidden">
               <DataTable
                 columns={getParticipantColumns(
