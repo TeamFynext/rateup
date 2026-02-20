@@ -251,16 +251,50 @@ export async function handleWaOrderfromCatalog(
     log.trace("catalog not synced yet => %s", order.catalog_id);
     return;
   }
+  const retailerIds = order.product_items.map((p) => p.product_retailer_id);
+  const dbProducts = await prisma.waCatalogProduct.findMany({
+    where: {
+      catalogId: order.catalog_id,
+      retailer_id: { in: retailerIds },
+    },
+  });
+
+  const productsWithDetails = order.product_items.map((p) => {
+    const dbProduct = dbProducts.find(
+      (dp) => dp.retailer_id === p.product_retailer_id,
+    );
+    const props = (dbProduct?.productProps as any) || {};
+
+    // Exclude fields that are explicitly handled or not needed in the dynamic spread
+    const {
+      title,
+      name,
+      image_link,
+      image,
+      retailer_id,
+      description,
+      price: _price,
+      currency: _currency,
+      ...restProps
+    } = props;
+
+    // Prioritize image link from props, fallback to product item image if available
+    return {
+      retailerId: p.product_retailer_id,
+      currency: p.currency,
+      price: p.item_price,
+      quantity: p.quantity,
+      title: title || name || `Product ${p.product_retailer_id}`,
+      image: image_link || (image && image.length > 0 ? image[0].url : null),
+      ...restProps, // Dynamically spread all other properties (size, color, material, pattern, additional_variant_attributes, etc.)
+    };
+  });
+
   const newOrder = await prisma.waCatalogOrder.create({
     data: {
       catalogId: order.catalog_id,
       contactId: messageObj.contactId,
-      products: order.product_items.map((p) => ({
-        retailerId: p.product_retailer_id,
-        currency: p.currency,
-        price: p.item_price,
-        quantity: p.quantity,
-      })),
+      products: productsWithDetails,
       createdAt: messageObj.waCreatedAt,
     },
   });
