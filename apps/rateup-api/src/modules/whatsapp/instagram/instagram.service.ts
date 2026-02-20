@@ -87,6 +87,7 @@ export async function handleInstagramMessages(
       sender.id,
       message.text || "",
       orgId,
+      ibaId,
       data.entry[0].messaging[0],
     );
   } catch (error) {
