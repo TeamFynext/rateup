@@ -652,7 +652,7 @@ function ConnectMetaAccountButton() {
 
 export default function WhatsAppSettingsPage() {
   const { data: waSettings, isLoading } = useWaSettings();
-  const [tab, setTab] = useState<WaConfigType>(WaConfigType.Automated);
+  const [tab, setTab] = useState<string>(WaConfigType.Automated);
   const translations = useTranslations();
   useEffect(() => {
     if (waSettings) {

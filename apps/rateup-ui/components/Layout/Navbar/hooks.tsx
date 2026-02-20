@@ -320,6 +320,11 @@ export function useNavMain({
                   url: "/dashboard/whatsapp/settings",
                   icon: IconSettings,
                 },
+                {
+                  title: "Orders and Payments",
+                  url: "/dashboard/whatsapp/orders-and-payments",
+                  icon: IconBrandWhatsapp, // Or a more specific icon like IconCreditCard if available, or just keep it simple. Using IconBrandWhatsapp as placeholder or reuse IconSettings
+                },
               ],
             },
             ...(hasFeature(subscription, sfpn.WhatsAppAutomation)
