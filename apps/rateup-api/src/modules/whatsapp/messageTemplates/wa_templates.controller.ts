@@ -372,6 +372,7 @@ export async function sendTemplateToUserCore(
   tag?: string,
   whatsappSettingsPhoneId?: string,
   buttonVariable?: string,
+  externalApi: boolean = false,
 ): Promise<{ status: boolean; message: string; id?: string }> {
   let dbTemplate = null;
   const phone = parsePhoneforWa(phoneNumber);
@@ -1173,6 +1174,7 @@ export async function sendTemplateToUserCore(
       surveyTeamMapId: surveyTeamMapId,
       timeDelay,
       source: waMessageScheduleSource.ExternalApi,
+      teamId,
     });
     log.trace("Template schedule created successfully");
   } else {
@@ -1183,6 +1185,12 @@ export async function sendTemplateToUserCore(
       null,
       userId,
       whatsappSettingsPhoneId,
+      undefined,
+      dbTemplate.data?.category,
+      teamId,
+      "TEMPLATE",
+      false,
+      externalApi,
     );
     await updateMonthlyStat(
       SubscriptionFeaturePathName.WhatsAppTemplate,

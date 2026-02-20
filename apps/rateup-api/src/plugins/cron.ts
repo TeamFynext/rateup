@@ -18,7 +18,11 @@ import {
   processDripCampaigns,
   sendSchedulesWaMessages,
 } from "../modules/whatsapp/wa_message_scheduler.js";
-import { deactivateExpiredActions } from "../modules/loyalty/actions/actions.service.js";
+import {
+  checkBirthdayEventTriggers,
+  checkInactivityEventTriggers,
+  checkPointsExpiration,
+} from "../modules/loyalty/settings/eventTriggerCron.service.js";
 
 export async function registerCronJobs(
   server,
@@ -56,16 +60,6 @@ export async function registerCronJobs(
         timeZone: "Etc/UTC",
       },
       {
-        name: "dailyJobs",
-        cronTime: "0 9 * * *",
-        onTick: async () => {
-          server.log.info("Running Daily Jobs");
-          await subscriptionExpiryAlert();
-          await deactivateExpiredActions();
-        },
-        start: true,
-      },
-      {
         name: "hourlyJobs",
         cronTime: "0 * * * *",
         onTick: async () => {
@@ -81,6 +75,39 @@ export async function registerCronJobs(
           server.log.info("Running Every Day 12.30 AM --> Stats Reset");
           await resetMonthlyCounts();
           await resetAnnualCounts();
+        },
+        start: true,
+      },
+      {
+        name: "loyaltyBirthdayCheck",
+        cronTime: "0 0 * * *", // Every day at 12:00 AM
+        onTick: async () => {
+          server.log.info(
+            "Running Daily at 12:00 AM --> Loyalty Birthday Event Triggers",
+          );
+          await checkBirthdayEventTriggers();
+        },
+        start: true,
+      },
+      {
+        name: "loyaltyInactivityCheck",
+        cronTime: "0 2 * * *", // Every day at 2:00 AM
+        onTick: async () => {
+          server.log.info(
+            "Running Daily at 2:00 AM --> Loyalty Inactivity Event Triggers",
+          );
+          await checkInactivityEventTriggers();
+        },
+        start: true,
+      },
+      {
+        name: "loyaltyPointsExpiration",
+        cronTime: "0 1 * * *", // Every day at 1:00 AM
+        onTick: async () => {
+          server.log.info(
+            "Running Daily at 1:00 AM --> Loyalty Points Expiration",
+          );
+          await checkPointsExpiration();
         },
         start: true,
       },

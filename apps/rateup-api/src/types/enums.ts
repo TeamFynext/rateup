@@ -193,6 +193,13 @@ export enum WaEvent {
   FAILED = "failed",
   READ = "read",
   LEADGEN = "leadgen",
+  SMBMessageEchoes = "smb_message_echoes",
+  ACCOUNT_UPDATE = "account_update",
+}
+
+export enum WhatsappSettingsStatus {
+  ACTIVE = "ACTIVE",
+  DISCONNECTED = "DISCONNECTED",
 }
 
 // Changes to these enums should be reflected in schema.prisma defaultValues
@@ -410,6 +417,11 @@ export enum LoyaltyTemplateTypes {
   Referral = "Referral",
   CustomerRemoval = "CustomerRemoval",
   RewardsIssued = "RewardsIssued",
+  PointsIssued = "PointsIssued",
+  PointsAdjusted = "PointsAdjusted",
+  RewardIssued = "RewardIssued",
+  RewardRedeemed = "RewardRedeemed",
+  TierUpgraded = "TierUpgraded",
 }
 
 export enum WaMessageAssignStatus {
@@ -424,6 +436,16 @@ export enum WaMessageAssignStatus {
 export enum LoyaltyApiFeature {
   action = "action",
   reward = "reward",
+}
+
+export enum LoyaltyEventType {
+  POINTS_ISSUED = "POINTS_ISSUED",
+  POINTS_ADJUSTED = "POINTS_ADJUSTED",
+  REWARD_ISSUED = "REWARD_ISSUED",
+  REWARD_REDEEMED = "REWARD_REDEEMED",
+  TIER_UPGRADED = "TIER_UPGRADED",
+  BIRTHDAY = "BIRTHDAY",
+  INACTIVITY_REMINDER = "INACTIVITY_REMINDER",
 }
 
 export enum AssignType {

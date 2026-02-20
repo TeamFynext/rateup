@@ -76,6 +76,11 @@ enum UserPresenceMode {
   manual
 }
 
+enum CustomerRewardStatus {
+  ISSUED
+  REDEEMED
+}
+
 model User {
   id             String           @id @default(uuid()) @db.Uuid
   createdAt      DateTime         @default(now())
@@ -158,9 +163,7 @@ model Org {
   Integration              Integration[]
   waMessageSchedule        WaMessageSchedule[]
   WaLogs                   WaLogs[]
-  loyaltyActions           LoyaltyAction[]
-  loyaltyRewards           LoyaltyReward[]
-  loyaltyCustomers         LoyaltyCustomer[]
+  loyaltyProgram           LoyaltyProgram?
   loyaltyTemplates         LoyaltyWaCommand[]
   WaAutomatedReplyMessage  WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]
@@ -179,6 +182,7 @@ model Org {
   businessHours            BusinessHour[]
   rules                    Rule[]
   ruleMessageBodyLocks     RuleMessageBodyLock[]
+  waMessageOrgTeamMaps     WaMessageOrgTeamMap[]
 }
 
 model UsageStats {
@@ -276,6 +280,7 @@ model WhatsappSettings {
   phoneDisplayName String?
 
   type             String // enums.ts: WaConfigType
+  status           String             @default("ACTIVE")
   createdAt        DateTime           @default(now())
   /// [PWaEncryptionKeys]
   encryption       Json? // for flow {publicKey: string, privateKey: string}
@@ -285,6 +290,7 @@ model WhatsappSettings {
   catalog          CatalogPhoneIdMap?
   assets           String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
   paymentMethod    String             @default("NATIVE") // NATIVE, SHOPIFY_LINK
+  teams            Team[]
 }
 
 model Rule {
@@ -435,6 +441,9 @@ model Team {
   waInboxAssign          WaInboxAssign[]
   ticketBoards           TicketBoardTeam[]
   assignedConversations  ConversationAssignedUserTeamMap[]
+  whatsappChannels       WhatsappSettings[]
+  waMessageOrgTeamMaps   WaMessageOrgTeamMap[]
+  waMessageSchedule      WaMessageSchedule[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -628,7 +637,6 @@ model Contact {
   consent                      Boolean                   @default(true)
   email                        String?
   dob                          DateTime?
-  loyaltyCustomer              LoyaltyCustomer?
   external_id                  String?
   aiWaChat                     Boolean                   @default(false)
   isAiBotActive                Boolean                   @default(false)
@@ -660,6 +668,7 @@ model Contact {
   ContactLabelMap             ContactLabelMap[]
   notes                       String?
   Conversations               Conversation[]
+  loyaltyAccounts             CustomerLoyaltyAccount[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -768,7 +777,6 @@ model ContactGroup {
   team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId               String                @db.Uuid
   campaignParticipants CampaignParticipant[]
-  LoyaltyCustomerMap   LoyaltyCustomerMap[]
   type                 ContactGroupType      @default(NORMAL)
 
   @@unique([name, teamId], name: "group_name_team_id_unique")
@@ -992,27 +1000,24 @@ model ContactForm {
 }
 
 model WaTemplate {
-  id                String              @id @default(uuid()) @db.Uuid
-  createdAt         DateTime            @default(now())
+  id                String                @id @default(uuid()) @db.Uuid
+  createdAt         DateTime              @default(now())
   /// [PWaTemplateWithTypesData]
   data              Json
   acceptButton      String? // QuickReplyButton text which on clicking will send the survey to the user
   /// [PWaTemplateDefaultValues]
   defaultValues     Json? // default values for images and other fields
-  templateType      TemplateType        @default(GENERAL_NOTIFICATION)
+  templateType      TemplateType          @default(GENERAL_NOTIFICATION)
   config            Json?
-  org               Org                 @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId             String              @db.Uuid
+  org               Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId             String                @db.Uuid
   waSession         WaSession[]
   Campaign          Campaign[]
   waMessageSchedule WaMessageSchedule[]
   loyaltyTemplates  LoyaltyWaCommand[]
+  CampaignDripStage CampaignDripStage[]
   loyaltyRewards    LoyaltyReward[]
-
-  LoyaltyAction LoyaltyAction[] @relation("customer_relation")
-
-  loyaltyRefereeActions LoyaltyAction[]     @relation("referee_relation")
-  CampaignDripStage     CampaignDripStage[]
+  eventTriggers     LoyaltyEventTrigger[]
 }
 
 model MenuLanding {
@@ -1268,15 +1273,14 @@ model WaFlow {
   /// [PWaFlowStartMessageConfig]
   startMessageConfig Json @default("{}")
 
-  org           Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId         String         @db.Uuid
-  survey        Survey         @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId      String         @unique @db.Uuid
-  anonymous     Boolean        @default(false)
-  version       Int            @default(1)
-  loyaltyAction LoyaltyAction?
+  org          Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId        String  @db.Uuid
+  survey       Survey  @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId     String  @unique @db.Uuid
+  anonymous    Boolean @default(false)
+  version      Int     @default(1)
   ///[FlowTicket[]]
-  ticketIssued  Json[]
+  ticketIssued Json[]
 
   @@unique([flowId, orgId])
 }
@@ -1478,6 +1482,7 @@ enum PlatformType {
   WHATSAPP
   INSTAGRAM
   WEBCHAT
+  INTERNAL
 }
 
 model WaMessage {
@@ -1501,6 +1506,7 @@ model WaMessage {
   sourceIdentifier                String?
   conversationId                  String?                           @db.Uuid
   Conversation                    Conversation?                     @relation(fields: [conversationId], references: [id])
+  waMessageOrgTeamMaps            WaMessageOrgTeamMap[]
 
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
@@ -1525,15 +1531,16 @@ enum AssignType {
 }
 
 model WaAutomatedReply {
-  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                       String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                     String
-  createdAt                DateTime @default(now())
+  createdAt                DateTime     @default(now())
   matchData                Json
   matchType                String // enums.ts: WaAutomatedReplyMatchType
-  orgId                    String?  @db.Uuid
-  org                      Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                    String?      @db.Uuid
+  org                      Org?         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId  String?
-  whatsappSettingsPhoneIds String[] @default([]) //for multiple whatsapp integration
+  whatsappSettingsPhoneIds String[]     @default([]) //for multiple whatsapp integration
+  platform                 String   @default("WHATSAPP") // enums.ts: AutomationPlatform (WHATSAPP | INSTAGRAM)
 
   isEnabled         Boolean @default(true)
   sendOnceIn24Hours Boolean @default(true)
@@ -1577,16 +1584,18 @@ enum WaAutomationProgressStatus {
 }
 
 model WaAutomatedReplyMessage {
-  id                 String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  phone              String
-  currentNode        String?
-  response           Json?
-  status             WaAutomationProgressStatus @default(inProgress)
-  createdAt          DateTime                   @default(now())
-  waAutomatedReplyId String?                    @db.Uuid
-  waAutomatedReply   WaAutomatedReply?          @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
-  orgId              String                     @db.Uuid
-  org                Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  id          String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone       String
+  currentNode String?
+  response    Json?
+  status      WaAutomationProgressStatus @default(inProgress)
+
+  createdAt DateTime @default(now())
+
+  waAutomatedReplyId String?           @db.Uuid
+  waAutomatedReply   WaAutomatedReply? @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
+  orgId              String            @db.Uuid
+  org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
   ticket             Ticket[]
   ticketCards        TicketCard[]
 }
@@ -1696,116 +1705,500 @@ model WaMessageSchedule {
   org             Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
   surveyTeamMapId String?        @db.Uuid
   surveyTeamMap   SurveyTeamMap? @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
+  teamId          String?        @db.Uuid
+  team            Team?          @relation(fields: [teamId], references: [id], onDelete: SetNull)
 }
 
-model LoyaltyAction {
-  id                            String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type                          String // enum LoyaltyActionType
-  name                          String
-  points                        Int
-  refereePoints                 Int?
-  isAmountBased                 Boolean                    @default(false)
-  isAmountBasedForReferee       Boolean                    @default(false)
-  amount                        Float                      @default(0)
-  maxPoints                     Int? //Max points per transaction   
-  maxPointsForReferee           Int?
-  startDate                     DateTime
-  endDate                       DateTime
-  createdAt                     DateTime                   @default(now())
-  orgId                         String                     @db.Uuid
-  org                           Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  customers                     LoyaltyActionCustomerMap[]
-  waTemplateId                  String?                    @db.Uuid
-  waTemplate                    WaTemplate?                @relation("customer_relation", fields: [waTemplateId], references: [id])
-  referralCodes                 LoyaltyReferralCode[]
-  refereeWaTemplateId           String?                    @db.Uuid
-  refereeWaTemplate             WaTemplate?                @relation("referee_relation", fields: [refereeWaTemplateId], references: [id])
-  isExistingUserReferralAllowed Boolean?                   @default(false)
-  active                        Boolean                    @default(true)
-  description                   String?
-  message                       Json?
-  action_id                     String?
-  rewardId                      String?                    @db.Uuid
-  reward                        LoyaltyReward?             @relation("referrer_reward", fields: [rewardId], references: [id], onDelete: Cascade)
-  refereeRewardId               String?                    @db.Uuid
-  refereeReward                 LoyaltyReward?             @relation("referee_reward", fields: [refereeRewardId], references: [id], onDelete: Cascade)
-  loyaltyWaCommand              LoyaltyWaCommand?
-  flowId                        String?                    @unique @db.Uuid
-  waFlow                        WaFlow?                    @relation(fields: [flowId], references: [dbFlowId], onDelete: Cascade)
-  loyaltyApiSettings            LoyaltyApiSettings?
+// ============================================================================
+// LOYALTY PROGRAM SYSTEM - Complete Rewrite
+// ============================================================================
+// This is a comprehensive loyalty program system supporting:
+// - Multiple earning rules with time/customer/purchase conditions
+// - Flexible rewards with complex redemption rules
+// - Customer tier system with automatic progression
+// - Referral system with bonuses
+// - WhatsApp-native customer interactions
+// - API-first design for POS/e-commerce integration
+// ============================================================================
 
-  @@unique([action_id, orgId], name: "action_id_org_id_unique")
+// Main loyalty program - ONE per organization
+model LoyaltyProgram {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId String @unique @db.Uuid
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  // Program Identity
+  name   String
+  status String @default("draft") // 'draft', 'active', 'paused'
+
+  // Currency Configuration
+  currencyName       String @default("Points") // Points, Stars, Beans, etc.
+  currencyCode       String @default("INR") // AED, USD, EUR, GBP, SAR, INR
+  currencySymbol     String @default("₹") // د.إ, $, €, £, ﷼, ₹
+  defaultCountryCode String @default("IN")
+
+  // Fixed Bonuses
+  signupBonus   Int @default(0)
+  referralBonus Int @default(0) // For referrer
+  refereeBonus  Int @default(0) // For new customer
+
+  // Tier Configuration
+  tiersEnabled    Boolean @default(true)
+  tierResetPeriod String? // 'never', 'yearly', 'monthly'
+
+  // WhatsApp Business Account / Number
+  whatsappSettingsId String?
+
+  // Settings
+  pointsActivityAlerts   Boolean @default(true)
+  autoApproveAdjustments Boolean @default(false)
+  emailNotifications     Boolean @default(true)
+  whatsappNotifications  Boolean @default(true)
+  enablePointsExpiration Boolean @default(false)
+  pointsExpirationMonths Int     @default(12)
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tiers         LoyaltyTier[]
+  earningRules  LoyaltyEarningRule[]
+  rewards       LoyaltyReward[]
+  customers     CustomerLoyaltyAccount[]
+  transactions  LoyaltyTransaction[]
+  referrals     LoyaltyReferral[]
+  eventTriggers LoyaltyEventTrigger[]
+
+  @@index([orgId])
+  @@index([status])
 }
 
+// Customer tier definitions with progression thresholds
+model LoyaltyTier {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  programId String         @db.Uuid
+  program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  // Tier Identity
+  name             String
+  threshold        Int     @default(0) // Lifetime points required
+  pointsMultiplier Decimal @default(1.00) @db.Decimal(4, 2) // 1.0, 1.25, 1.5, 2.0
+
+  // Display
+  color               String  @default("#999999")
+  benefitsDescription String?
+  priority            Int     @default(0) // For sorting/ordering
+
+  // Metadata
+  createdAt DateTime @default(now())
+
+  // Relations
+  customers CustomerLoyaltyAccount[]
+
+  @@unique([programId, name])
+  @@unique([programId, threshold])
+  @@index([programId])
+  @@index([programId, threshold])
+}
+
+// Configurable earning rules with time-based conditions
+model LoyaltyEarningRule {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  programId String         @db.Uuid
+  program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  // Rule Identity
+  name        String
+  description String?
+  status      String  @default("active") // 'active', 'inactive', 'scheduled', 'expired'
+  priority    Int     @default(0) // Higher priority = applied first
+
+  // Earning Rate
+  pointsPerUnit Decimal @default(1.00) @db.Decimal(10, 2) // Points per currency unit spent
+  multiplier    Decimal @default(1.00) @db.Decimal(4, 2) // Additional multiplier (e.g., 2.0 for double points)
+  bonusPoints   Int?    @default(0) // Flat bonus points per transaction
+
+  // Time Conditions (all optional)
+  validFrom         DateTime?
+  validUntil        DateTime?
+  allowedDays       String[] // ['monday', 'tuesday', 'saturday']
+  /// [LoyaltyEarningRuleTimeRanges]
+  allowedTimeRanges Json? // [{"start": "14:00", "end": "17:00"}]
+
+  // Customer Conditions
+  applicableToTiers String[] // NULL = all tiers, or array of tier IDs
+  minPurchaseAmount Decimal? @db.Decimal(10, 2)
+  maxPurchaseAmount Decimal? @db.Decimal(10, 2)
+
+  // Usage Limits
+  maxUsesPerCustomer Int? // NULL = unlimited
+  maxTotalUses       Int? // NULL = unlimited
+  currentTotalUses   Int  @default(0)
+
+  // Additional Conditions (flexible for location, products, payment, etc.)
+  /// [LoyaltyEarningRuleConditions]
+  conditions Json? @default("{}")
+
+  // Metadata
+  isDefault Boolean  @default(false) // Default rule for regular earning
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?  @db.Uuid
+
+  // Relations
+  transactions LoyaltyTransaction[]
+
+  // @@unique([programId, isDefault], map: "one_default_rule_per_program")
+  @@index([programId])
+  @@index([status])
+  @@index([programId, priority(sort: Desc)])
+  @@index([validFrom, validUntil])
+  @@index([programId, isDefault])
+}
+
+// Rewards catalog - what customers can redeem
 model LoyaltyReward {
-  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                  String
-  points                Int
-  description           String
-  tnc                   String
-  maxPerUser            Int
-  expireAt              DateTime?
-  createdAt             DateTime            @default(now())
-  orgId                 String              @db.Uuid
-  org                   Org                 @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  redeems               LoyaltyRedeem[]
-  waTemplateId          String?             @db.Uuid
-  waTemplate            WaTemplate?         @relation(fields: [waTemplateId], references: [id])
-  rewardType            String?
-  rewardValue           Json?
-  reward_id             String?
-  actions               LoyaltyAction[]     @relation("referrer_reward")
-  loyaltyRefereeActions LoyaltyAction[]     @relation("referee_reward")
-  loyaltyApiSettings    LoyaltyApiSettings?
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  programId String         @db.Uuid
+  program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
 
-  @@unique([reward_id, orgId], name: "reward_id_org_id_unique")
+  // Reward Identity
+  name        String
+  description String?
+  status      String  @default("active") // 'active', 'inactive', 'out_of_stock'
+
+  // Reward Value
+  pointsCost  Int
+  rewardType  String // 'point', 'coupon', 'assigned'
+  /// [LoyaltyRewardValue]
+  rewardValue Json // Type-specific value data (e.g. { type: 'discount_fixed', amount: 10, ... })
+
+  // Stock Management (optional)
+  stockQuantity Int? // NULL = unlimited
+  stockRedeemed Int  @default(0)
+
+  waTemplateId String?     @db.Uuid
+  waTemplate   WaTemplate? @relation(fields: [waTemplateId], references: [id])
+
+  // Redemption Rules (flexible JSONB)
+  /// [LoyaltyRedemptionRules]
+  redemptionRules Json @default("{}")
+
+  // Availability
+  availableForTiers String[] // NULL = all tiers, or array of tier IDs
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  redemptions         LoyaltyRedemption[]
+  loyaltyTransactions LoyaltyTransaction[]
+  assignedRewards     CustomerReward[]
+  eventTriggers       LoyaltyEventTrigger[]
+
+  @@index([programId])
+  @@index([status])
+  @@index([pointsCost])
 }
 
-model LoyaltyCustomer {
-  id                 String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId              String                     @db.Uuid
-  org                Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  totalEarnedPoints  Int                        @default(0)
-  redeemedPoints     Int                        @default(0)
-  createdAt          DateTime                   @default(now())
-  redeems            LoyaltyRedeem[]
-  actions            LoyaltyActionCustomerMap[]
-  referralCodes      LoyaltyReferralCode[]
-  contactId          String                     @unique @db.Uuid
-  Contact            Contact                    @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  LoyaltyCustomerMap LoyaltyCustomerMap[]
-  active             Boolean?                   @default(true)
+// Individual customer accounts within a loyalty program
+model CustomerLoyaltyAccount {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  programId String         @db.Uuid
+  program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  // Customer Identity
+  contactId String  @db.Uuid
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  // Points Balance
+  currentPoints  Int @default(0) // Available for redemption
+  lifetimePoints Int @default(0) // Total earned ever (for tier progression)
+
+  // Tier
+  currentTierId String?      @db.Uuid
+  currentTier   LoyaltyTier? @relation(fields: [currentTierId], references: [id])
+
+  // Referral System
+  referralCode String                   @unique // Unique code for this customer
+  referredById String?                  @db.Uuid
+  referredBy   CustomerLoyaltyAccount?  @relation("Referrals", fields: [referredById], references: [id])
+  referrals    CustomerLoyaltyAccount[] @relation("Referrals")
+
+  // Status
+  status String @default("active") // 'active', 'suspended', 'closed'
+
+  // Metadata
+  createdAt      DateTime @default(now())
+  lastActivityAt DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  transactions        LoyaltyTransaction[]
+  redemptions         LoyaltyRedemption[]
+  assignedRewards     CustomerReward[]
+  referralsAsReferrer LoyaltyReferral[]    @relation("ReferrerAccount")
+  referralsAsReferee  LoyaltyReferral[]    @relation("RefereeAccount")
+  approvalRequests    ApprovalRequest[]
+
+  @@unique([programId, contactId])
+  @@index([programId])
+  @@index([programId, contactId])
+  @@index([contactId])
+  @@index([referralCode])
+  @@index([currentTierId])
+  @@index([referredById])
 }
 
-model LoyaltyCustomerMap {
-  loyaltyCustomer   LoyaltyCustomer @relation(fields: [loyaltyCustomerId], references: [id], onDelete: Cascade)
-  loyaltyCustomerId String          @db.Uuid
-  contactGroup      ContactGroup    @relation(fields: [contactGroupId], references: [id], onDelete: Cascade)
-  contactGroupId    String          @db.Uuid
+model CustomerReward {
+  id         String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  shortCode  String                 @unique
+  status     CustomerRewardStatus   @default(ISSUED)
+  rewardId   String                 @db.Uuid
+  reward     LoyaltyReward          @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  accountId  String                 @db.Uuid
+  account    CustomerLoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  assignedAt DateTime               @default(now())
 
-  @@id([loyaltyCustomerId, contactGroupId])
+  @@unique([rewardId, accountId])
+  @@index([accountId])
 }
 
-model LoyaltyRedeem {
-  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rewardId   String          @db.Uuid
-  reward     LoyaltyReward   @relation(fields: [rewardId], references: [id], onDelete: Cascade)
-  status     String
-  createdAt  DateTime        @default(now())
-  customerId String          @db.Uuid
-  customer   LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  code       String?         @unique
+// Complete ledger of all point movements
+model LoyaltyTransaction {
+  id        String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId String                 @db.Uuid
+  account   CustomerLoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  // Transaction Details
+  transactionType String // 'earn', 'redeem', 'adjust', 'expire', 'refund'
+  points          Int // Positive for earn, negative for redeem
+  balanceAfter    Int // Balance after this transaction
+
+  // Source/Context
+  source      String // 'purchase', 'signup_bonus', 'referral', 'reward_redemption', 'manual'
+  referenceId String? // External reference (order_id, etc.)
+  description String?
+  /// [LoyaltyTransactionMetadata]
+  metadata    Json?   @default("{}")
+
+  // Earning Rule Applied (for 'earn' transactions)
+  earningRuleId         String?             @db.Uuid
+  earningRule           LoyaltyEarningRule? @relation(fields: [earningRuleId], references: [id])
+  earningRuleMultiplier Decimal?            @db.Decimal(4, 2)
+  basePoints            Int?
+
+  // Related Records
+  rewardId String?        @db.Uuid
+  reward   LoyaltyReward? @relation(fields: [rewardId], references: [id])
+
+  // Program reference for easier querying
+  programId String         @db.Uuid
+  program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  // Metadata
+  createdAt          DateTime            @default(now())
+  createdBy          String?             @db.Uuid
+  loyaltyRedemptions LoyaltyRedemption[]
+  approvalRequest    ApprovalRequest?
+
+  @@index([accountId])
+  @@index([accountId, createdAt(sort: Desc)])
+  @@index([transactionType])
+  @@index([referenceId])
+  @@index([createdAt(sort: Desc)])
+  @@index([earningRuleId])
+  @@index([programId])
 }
 
-model LoyaltyActionCustomerMap {
-  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  customerId   String          @db.Uuid
-  customer     LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  actionId     String          @db.Uuid
-  action       LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
-  refereePhone String?
-  amount       Float? //amount spent on action
-  createdAt    DateTime        @default(now())
+// Tracks reward redemption lifecycle
+model LoyaltyRedemption {
+  id        String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId String                 @db.Uuid
+  account   CustomerLoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  rewardId  String                 @db.Uuid
+  reward    LoyaltyReward          @relation(fields: [rewardId], references: [id])
+
+  // Transaction link (set when approved)
+  transactionId String?             @unique @db.Uuid
+  transaction   LoyaltyTransaction? @relation(fields: [transactionId], references: [id])
+
+  // Redemption code for POS verification
+  redemptionCode String @unique @db.VarChar(20)
+
+  // Status workflow
+  status RedemptionStatus @default(PENDING)
+
+  // Usage tracking
+  expiresAt   DateTime?
+  usedAt      DateTime?
+  usedContext Json?     @default("{}") // POS details when used
+
+  // Rule validation snapshot (at creation time)
+  rulesValidatedAt      DateTime @default(now())
+  rulesValidationPassed Boolean  @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation to approval
+  approvalRequest ApprovalRequest?
+
+  @@index([accountId])
+  @@index([status])
+  @@index([redemptionCode])
+  @@map("loyalty_redemptions")
+}
+
+enum RedemptionStatus {
+  PENDING // Awaiting approval
+  APPROVED // Approved, code active
+  USED // Used at POS
+  REJECTED // Rejected (via approval system)
+  CANCELLED // Cancelled after approval
+  EXPIRED // Expired before use
+}
+
+model ApprovalRequest {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  // What needs approval
+  requestType ApprovalRequestType
+  status      ApprovalStatus      @default(PENDING)
+
+  // Customer context
+  accountId String                 @db.Uuid
+  account   CustomerLoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  // Request details
+  points      Int? // For point adjustments (positive or negative)
+  reason      String @db.Text
+  requestData Json   @default("{}") // Type-specific additional data
+
+  // Who requested
+  requestedBy     String?         @db.Uuid // Staff/Admin user ID
+  requestedByType RequestedByType @default(CUSTOMER)
+  requestedByName String?         @db.VarChar(255)
+
+  // Approval/Rejection details
+  reviewedBy     String?   @db.Uuid
+  reviewedByName String?   @db.VarChar(255)
+  reviewedAt     DateTime?
+  reviewNotes    String?   @db.Text
+
+  // Related records (only one will be set based on type)
+  redemptionId String?            @unique @db.Uuid
+  redemption   LoyaltyRedemption? @relation(fields: [redemptionId], references: [id])
+
+  transactionId String?             @unique @db.Uuid
+  transaction   LoyaltyTransaction? @relation(fields: [transactionId], references: [id])
+
+  // Auto-expiration
+  expiresAt DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([status])
+  @@index([requestType])
+  @@index([createdAt])
+  @@index([expiresAt], map: "idx_approval_expires") // Only for pending requests
+  @@map("approval_requests")
+}
+
+enum ApprovalRequestType {
+  REWARD_REDEMPTION // Customer redeeming a reward
+  POINTS_ADJUSTMENT // Staff adjusting points (add or deduct)
+  TIER_OVERRIDE // Staff manually changing customer tier
+  ACCOUNT_SUSPENSION // Staff suspending an account
+  ACCOUNT_REACTIVATION // Staff reactivating suspended account
+  BULK_OPERATION // Bulk point adjustment or other mass action
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+enum RequestedByType {
+  CUSTOMER // Customer-initiated (e.g., redemption)
+  STAFF // Staff-initiated (e.g., manual adjustment)
+  SYSTEM // System-initiated (e.g., auto-flagged)
+}
+
+// Tracks referral relationships and bonuses
+model LoyaltyReferral {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  programId String         @db.Uuid
+  program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  // Referral Relationship
+  referrerAccountId String                  @db.Uuid
+  referrerAccount   CustomerLoyaltyAccount  @relation("ReferrerAccount", fields: [referrerAccountId], references: [id])
+  refereeContactId  String                  @db.Uuid // New customer's contact ID
+  refereeAccountId  String?                 @db.Uuid
+  refereeAccount    CustomerLoyaltyAccount? @relation("RefereeAccount", fields: [refereeAccountId], references: [id])
+
+  // Status
+  status String @default("pending") // 'pending', 'completed', 'expired'
+
+  // Bonus Transactions (created after first purchase)
+  referrerTransactionId String? @db.Uuid
+  refereeTransactionId  String? @db.Uuid
+
+  // Metadata
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@unique([referrerAccountId, refereeContactId])
+  @@index([programId])
+  @@index([referrerAccountId])
+  @@index([refereeAccountId])
+  @@index([status])
+}
+
+enum LoyaltyEventType {
+  POINTS_ISSUED
+  POINTS_ADJUSTED
+  REWARD_ISSUED
+  REWARD_REDEEMED
+  TIER_UPGRADED
+  BIRTHDAY
+  INACTIVITY_REMINDER
+}
+
+model LoyaltyEventTrigger {
+  id        String         @id @default(uuid()) @db.Uuid
+  programId String         @db.Uuid
+  program   LoyaltyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  eventType LoyaltyEventType
+  enabled   Boolean          @default(true)
+
+  // For inactivity reminders
+  triggerDays Int?
+
+  // WhatsApp Template
+  waTemplateId String?     @db.Uuid
+  waTemplate   WaTemplate? @relation(fields: [waTemplateId], references: [id], onDelete: SetNull)
+
+  // Optional reward to auto-issue
+  rewardId String?        @db.Uuid
+  reward   LoyaltyReward? @relation(fields: [rewardId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([programId])
+  @@index([eventType])
 }
 
 model LoyaltyWaCommand {
@@ -1819,23 +2212,10 @@ model LoyaltyWaCommand {
   createdAt               DateTime          @default(now())
   content                 Json?
   responseType            String            @default("Template") // enum WaAutomatedReplyResponseType
-  actionId                String?           @unique @db.Uuid
-  action                  LoyaltyAction?    @relation(fields: [actionId], references: [id], onDelete: Cascade)
   WhatsappSettings        WhatsappSettings? @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
   whatsappSettingsPhoneId String?
 
   @@unique([requestMessage, orgId], name: "request_message_org_unique")
-}
-
-model LoyaltyReferralCode {
-  referralCode String @unique
-  customerId   String @db.Uuid
-
-  customer LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  actionId String          @db.Uuid
-  action   LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
-
-  @@unique([customerId, actionId], name: "customer_action_unique")
 }
 
 model WhatsappQuickReply {
@@ -1850,19 +2230,16 @@ model WhatsappQuickReply {
 }
 
 model LoyaltyApiSettings {
-  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId     String         @db.Uuid
-  org       Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId     String  @db.Uuid
+  org       Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   feature   String //enum LoyaltyApiFeature
   phoneKey  String
   amountKey String
-  actionId  String?        @unique @db.Uuid
-  action    LoyaltyAction? @relation(fields: [actionId], references: [id], onDelete: Cascade)
-  rewardId  String?        @unique @db.Uuid
-  reward    LoyaltyReward? @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  actionId  String? @unique @db.Uuid
   rules     Json
   priority  Int
-  active    Boolean        @default(true)
+  active    Boolean @default(true)
 
   @@unique([orgId, priority])
   @@index([orgId, feature])
@@ -1884,15 +2261,18 @@ model ExpoPushToken {
 }
 
 model WhatsappCatalog {
-  catalogId           String              @unique
-  orgId               String              @db.Uuid
-  org                 Org                 @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  catalogId           String               @unique
+  orgId               String               @db.Uuid
+  org                 Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
   vertical            String
   name                String?
   products            WaCatalogProduct[]
   orders              WaCatalogOrder[]
   connectedWaPhoneIds CatalogPhoneIdMap[]
   productSets         WhatsappProductSet[]
+
+  autoCheckoutEnabled Boolean @default(false)
+  checkoutMessage     String?
 
   @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
 }
@@ -1921,7 +2301,6 @@ model WhatsappProductSet {
   @@unique([orgId, productSetId], name: "org_id_product_set_id_unique")
   @@index([catalogId])
 }
-
 
 model WaCatalogProduct {
   productDbId       String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -1954,6 +2333,9 @@ model WaCatalogOrder {
   status        String          @default("PENDING")
   transactionId String?
   createdAt     DateTime        @default(now())
+
+  shopifyDraftOrderId String?
+  shopifyInvoiceUrl   String?
 }
 
 model MetaAssets {
@@ -2073,4 +2455,31 @@ model Conversation {
   @@index([contactId])
   @@index([firstRespondedAt])
   @@index([createdAt])
+}
+
+enum WaMessageOrgTeamType {
+  TEMPLATE
+  CAMPAIGN
+  INBOX
+  FLOW
+  AUTOMATED
+}
+
+model WaMessageOrgTeamMap {
+  id               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt        DateTime             @default(now())
+  teamId           String?              @db.Uuid
+  team             Team?                @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  messageId        String               @db.Uuid
+  waMessage        WaMessage            @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  orgId            String               @db.Uuid
+  org              Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  isAutomedMessage Boolean              @default(false)
+  type             WaMessageOrgTeamType
+  externalApi      Boolean              @default(false)
+
+  @@index([orgId])
+  @@index([teamId])
+  @@index([type])
+  @@index([externalApi])
 }

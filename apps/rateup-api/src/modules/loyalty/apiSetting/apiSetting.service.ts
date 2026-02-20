@@ -4,20 +4,6 @@ import { LApiSettingInput } from "./apiSetting.schema.js";
 export async function getLoyaltyApiSettings(orgId: string) {
   return await prisma.loyaltyApiSettings.findMany({
     where: { orgId },
-    include: {
-      action: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      reward: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
   });
 }
 
@@ -26,20 +12,6 @@ export async function getLoyaltyApiSettingById(id: string, orgId: string) {
     where: {
       id,
       orgId,
-    },
-    include: {
-      action: {
-        select: {
-          name: true,
-          id: true,
-        },
-      },
-      reward: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
     },
   });
 }

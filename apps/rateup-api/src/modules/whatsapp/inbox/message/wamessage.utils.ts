@@ -58,3 +58,10 @@ export async function returnAppropriateTimeStamp(
 export const isSessionExpired = (userInitiatedFinalTimeStamp: Date) =>
   userInitiatedFinalTimeStamp &&
   dayjs().diff(userInitiatedFinalTimeStamp, "D") >= 1;
+
+export function extractMentions(text: string): string[] {
+  return (
+    text.match(/(?<!\S)@[a-zA-Z0-9_.]+/g)?.map((mention) => mention.slice(1)) ??
+    []
+  );
+}

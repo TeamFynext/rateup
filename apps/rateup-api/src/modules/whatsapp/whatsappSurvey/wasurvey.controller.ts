@@ -16,6 +16,7 @@ import {
   parseResponse,
   parseStartMessage,
   parseToWhatsAppFormat,
+  parseWaJoinMessage,
   validateSession,
 } from "./wasurvey.utils.js";
 import {
@@ -44,6 +45,7 @@ import {
   SubscriptionFeaturePathName,
   WaTemplateSupportedFormats,
   CampaignStatus,
+  WhatsappSettingsStatus,
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import {
@@ -54,6 +56,7 @@ import {
 import {
   getWaSettingsByPhoneId,
   MetaAsset,
+  updateWaSettingsStatusByWabaId,
 } from "../settings/wa_settings.service.js";
 import {
   WaMessageBody,
@@ -137,6 +140,12 @@ import {
 import { getUserIdsByTeamId } from "../../user/user.service.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
 import { verifyTemplateMessageLimit } from "../messageTemplates/wa_templates.auth.js";
+import {
+  createCustomerAccount,
+  getCustomerAccountByPhone,
+} from "../../loyalty/accounts/account.service.js";
+import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
+import { pausedAutomationQueue } from "../../../utils/redisConnection.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -205,6 +214,13 @@ export async function whatsappEventHandler(
 
       case WaEvent.LEADGEN:
         await handleLeadGen(body);
+        break;
+      case WaEvent.ACCOUNT_UPDATE:
+        await handleAccountUpdateEvent(body);
+        break;
+
+      case WaEvent.SMBMessageEchoes:
+        await handleSMBMessageEchoes(body);
         break;
 
       default:
@@ -281,6 +297,49 @@ async function handleMessageEvent(body: WaMessageBody) {
   }
 }
 
+// Handler: Manage SMB Message Echoes
+async function handleSMBMessageEchoes(body: WaMessageBody) {
+  log.trace("handleSMBMessageEchoes => %o", body);
+
+  for (const entry of body.entry || []) {
+    for (const change of entry.changes || []) {
+      const value = change.value as WaReceiveMessageBody;
+      const phoneId = value?.metadata?.phone_number_id;
+
+      if (!phoneId) continue;
+
+      const waSettings = await getWaSettingsByPhoneId(phoneId);
+      if (!waSettings) {
+        log.error("WaSettings not found for phone_id: %s", phoneId);
+        continue;
+      }
+
+      if (value.message_echoes) {
+        for (const message of value.message_echoes) {
+          try {
+            await handleWaMessages(
+              "send",
+              message,
+              message.to,
+              waSettings.orgId,
+              PlatformType.WHATSAPP,
+              message.to,
+              undefined,
+              message.id,
+            );
+          } catch (error) {
+            log.error(
+              "Error processing SMB Message Echo for message_id %s: %o",
+              message.id,
+              error,
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
 // Handler: Manage template status changes
 async function handleTemplateStatusChange(body: WaMessageBody) {
   const promises = (body.entry || []).flatMap((entry) =>
@@ -341,6 +400,31 @@ async function handleMessageStatusEvent(
   );
 
   await Promise.all(promises);
+}
+
+async function handleAccountUpdateEvent(body: WaMessageBody) {
+  const wabaId = body.entry?.[0]?.id;
+  const changes = body.entry?.[0]?.changes?.[0];
+  const value = (changes?.value as any) || {};
+
+  log.info(`Handling Account Update Event for WABA ID: ${wabaId}`);
+
+  // Disconnect if banned or restricted
+  if (
+    value.ban_info?.ban_status === "BANNED" ||
+    (value.restriction_info && value.restriction_info.length > 0)
+  ) {
+    log.warn(
+      `WABA ID ${wabaId} account restricted or banned. Marking as DISCONNECTED.`,
+    );
+    await updateWaSettingsStatusByWabaId(
+      wabaId,
+      WhatsappSettingsStatus.DISCONNECTED,
+    );
+  } else {
+    // Other account updates might not imply disconnection, but we log them.
+    log.info(`Account update received for WABA ID ${wabaId}: %o`, value);
+  }
 }
 
 interface changeValue {
@@ -462,10 +546,26 @@ async function whatsappMessageHandler(
     type === "text" || type === "interactive"
       ? message?.trim()?.toLocaleLowerCase()
       : "";
-
+  const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(
+    orgId,
+    message,
+  );
   // Handle button click interactions first
-  if (parsedMessage?.buttonId) {
+  if (parsedMessage?.buttonId && !loyaltyWaCommand) {
     await handleButtonClickInteraction(from, parsedMessage, orgId);
+    return;
+  }
+
+  const joinPayload = parseWaJoinMessage(message);
+
+  if (joinPayload?.isJoin) {
+    await handleWaJoinRegistration({
+      orgId,
+      from,
+      userName,
+      joinPayload,
+      sourceIdentifier,
+    });
     return;
   }
 
@@ -520,12 +620,9 @@ async function whatsappMessageHandler(
       );
     }
   }
-  const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(
-    orgId,
-    message,
-  );
+
   if (loyaltyWaCommand) {
-    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand);
+    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand, orgId);
   } else if (!!parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
   } else if (parsedMessage.type === "nfm_reply") {
@@ -547,6 +644,63 @@ async function whatsappMessageHandler(
 
     await handleAutomatedReply(orgId, waMessage, parsedMessage, from, message);
   }
+}
+
+export async function handleWaJoinRegistration({
+  orgId,
+  from,
+  userName,
+  joinPayload,
+  sourceIdentifier,
+}: {
+  orgId: string;
+  from: string;
+  userName?: string;
+  joinPayload: { source?: string; referralCode?: string };
+  sourceIdentifier: string;
+}) {
+  const program = await getLoyaltyProgramByOrg(orgId);
+  if (!program) {
+    log.error("Loyalty program not found for orgId: %s", orgId);
+    await sendTextMessage(
+      { phone: from, orgId },
+      null,
+      "Sorry, our loyalty program is currently unavailable.",
+    );
+    return;
+  }
+  // 1. Check if already registered
+  const existingCustomer = await prisma.customerLoyaltyAccount.findFirst({
+    where: {
+      contact: {
+        phone: from,
+        orgId,
+      },
+      programId: program.id,
+      status: "active",
+    },
+  });
+
+  if (existingCustomer) {
+    await sendTextMessage(
+      { phone: from, orgId },
+      null,
+      "✅ You are already registered in our loyalty program.",
+    );
+    return;
+  }
+  // 2. Create or update customer
+  await createCustomerAccount(
+    {
+      phone: from,
+      name: userName,
+      referCode: joinPayload.referralCode,
+      source: joinPayload.source || "WHATSAPP",
+    },
+    program.id,
+    orgId,
+    sourceIdentifier,
+  );
 }
 
 const pendingConfirmationMap = new Map<string, boolean>();
@@ -1019,9 +1173,51 @@ export async function processNextNode(
           orgId,
         });
         break;
-      case "delayNode":
-        await wait((node?.data as NodeTypeMap["delayNode"])?.delayTime * 1000);
-        break;
+
+      case "pauseNode": {
+        const pauseData = node.data as NodeTypeMap["pauseNode"];
+        let ms = 0;
+        const duration = pauseData.duration || 0;
+        const unit = pauseData.unit || "seconds";
+
+        if (unit === "seconds") ms = duration * 1000;
+        else if (unit === "minutes") ms = duration * 60 * 1000;
+        else if (unit === "hours") ms = duration * 60 * 60 * 1000;
+
+        // Add delayed job to BullMQ
+        const job = await pausedAutomationQueue.add(
+          "resume-automation",
+          {
+            automationMessageId,
+            phone: userPhone,
+            orgId,
+            currentNode: nodeId,
+            automationId: automation.id,
+          },
+          {
+            delay: ms,
+            attempts: 3,
+            backoff: {
+              type: "exponential",
+              delay: 2000,
+            },
+          },
+        );
+
+        // Update database with paused status and job ID
+        await prisma.waAutomatedReplyMessage.update({
+          where: { id: automationMessageId },
+          data: {
+            status: "paused" as any,
+          },
+        });
+
+        log.info(
+          `Paused automation ${automationMessageId} for ${duration} ${unit}, job ID: ${job.id}`,
+        );
+        return;
+      }
+
       case "assignNode": {
         const assignData = node?.data as NodeTypeMap["assignNode"];
         const { contact } = await getOrCreateContactByPhone(
@@ -2069,7 +2265,19 @@ async function _sendCampaignToParticipants(
 
     updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppTemplate, orgId);
     await wait(50); // wait 50ms (throughput will be ~20 messages per second)
-    sendMessage(orgId, templateMessage, null, userId)
+    sendMessage(
+      orgId,
+      templateMessage,
+      null,
+      userId,
+      undefined,
+      undefined,
+      undefined,
+      teamId,
+      "CAMPAIGN",
+      false,
+      true,
+    )
       .then(sendCampaignCallback)
       .catch((e) => {
         log.error("Could not send campaign to %s", contact.phone);

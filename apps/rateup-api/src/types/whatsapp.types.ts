@@ -81,6 +81,42 @@ export interface WaReceiveMessageBody {
       };
     },
   ];
+  message_echoes?: [
+    {
+      from: string;
+      to: string;
+      id: string;
+      timestamp: string;
+      type: WaMessageTypes;
+      text: {
+        body: string;
+      };
+      image?: {
+        id: string;
+        mime_type: string;
+        sha256: string;
+        link?: string;
+        caption?: string;
+      };
+      location?: {
+        latitude: number;
+        longitude: number;
+        name?: string;
+        address?: string;
+      };
+      contacts?: {
+        name: {
+          first_name: string;
+          formatted_name: string;
+        };
+        phones: {
+          phone: string;
+          wai_id: string;
+          type: string;
+        }[];
+      }[];
+    },
+  ];
   statuses: [
     {
       id: string;
@@ -102,6 +138,39 @@ export interface WaReceiveMessageBody {
   ];
 }
 
+export interface WaMessageEchoBody {
+  object: string;
+  entry: [
+    {
+      id: string;
+      changes: [
+        {
+          value: {
+            messaging_product: "whatsapp";
+            metadata: {
+              display_phone_number: string;
+              phone_number_id: string;
+            };
+            message_echoes: [
+              {
+                from: string;
+                to: string;
+                id: string;
+                timestamp: string;
+                type: WaMessageTypes;
+                text: {
+                  body: string;
+                };
+              },
+            ];
+          };
+          field: "smb_message_echoes";
+        },
+      ];
+    },
+  ];
+}
+
 export interface LeadGenBody {
   leadgen_id: string;
   page_id: string;
@@ -110,6 +179,42 @@ export interface LeadGenBody {
   ad_id: string;
   created_time: string;
 }
+
+export interface WaInternalMessageBody {
+  messaging_product?: "whatsapp";
+  recipient_type?: "individual";
+  type?: "text";
+  text: {
+    body: string;
+  };
+  triggeredByUser: {
+    id: string;
+    name: string;
+  };
+  assignStatus?: string;
+  assignedUsers?: {
+    id: string;
+    name: string;
+  }[];
+}
+
+export interface WaPrivateMessageBody {
+  messaging_product?: "whatsapp";
+  recipient_type?: "individual";
+  type?: "text";
+  text: {
+    body: string;
+  };
+  triggeredByUser: {
+    id: string;
+    name: string;
+  };
+  mentionedUser?: {
+    id: string;
+    name: string;
+  }[];
+}
+
 export interface WaSendMessageBody {
   messaging_product: "whatsapp";
   recipient_type?: "individual";

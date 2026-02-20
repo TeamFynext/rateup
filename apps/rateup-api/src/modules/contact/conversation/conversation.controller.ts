@@ -201,6 +201,7 @@ export async function getTeamOverviewHandler(
 export async function getTeamDetailedMetricsHandler(
   request: FastifyRequest<{
     Params: TeamIdParamsSchema;
+    Querystring: StatsQuerySchema;
   }>,
   reply: FastifyReply,
 ) {
@@ -208,6 +209,7 @@ export async function getTeamDetailedMetricsHandler(
     const res = await getTeamDetailedMetrics(
       request.params.teamId,
       request.user.orgId,
+      request.query.days,
     );
     reply.send(res);
   } catch (e) {

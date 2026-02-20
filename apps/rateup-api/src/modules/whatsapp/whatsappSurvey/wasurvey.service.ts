@@ -11,6 +11,7 @@ import {
   QuestionType2,
   SubscriptionFeaturePathName,
   WaQuestions,
+  WaTemplateCategory,
 } from "../../../types/enums.js";
 import {
   LeadGenBody,
@@ -67,7 +68,6 @@ import {
 } from "./automation-logger.utils.js";
 import { processNextNode } from "./wasurvey.controller.js";
 import { LeadgenNodeData } from "./node-types.js";
-import { LoyaltyActionType } from "../../loyalty/actions/actions.schema.js";
 import { hasFeature } from "../../subscription/subscription.service.js";
 import {
   addZapierTriggerToQueue,
@@ -95,6 +95,16 @@ export async function sendMessage(
   userId?: string,
   whatsappSettingsPhoneId?: string,
   platform: PlatformType = PlatformType.WHATSAPP,
+  category?: WaTemplateCategory,
+  teamId: string | null = null,
+  messageType:
+    | "INBOX"
+    | "TEMPLATE"
+    | "CAMPAIGN"
+    | "AUTOMATED"
+    | "FLOW" = "INBOX",
+  isAutomated?: boolean,
+  externalApi?: boolean,
 ) {
   let waSettings: Omit<WhatsappSettings, "accessToken_iv">;
   let to: string;
@@ -114,13 +124,17 @@ export async function sendMessage(
     accessToken = waSettings.accessToken;
     sourceIdentifier = waSettings.phone;
   }
+  let messageUrl = "messages";
+  if (category === WaTemplateCategory.MARKETING) {
+    messageUrl = "marketing_messages";
+  }
 
   log.trace(`sending message to %s \n%o`, to, messageData);
   try {
     let res;
     if (platform !== PlatformType.WEBCHAT) {
       res = await callWhatsappApi(
-        `/${configId}/messages`,
+        `/${configId}/${messageUrl}`,
         "POST",
         platform === PlatformType.INSTAGRAM ? null : accessToken,
         messageData,
@@ -149,6 +163,11 @@ export async function sendMessage(
       userName,
       messageId,
       userId,
+      false,
+      teamId ?? null,
+      messageType,
+      isAutomated,
+      externalApi,
     );
     return { status: true, message: messageId };
   } catch (e: any) {
@@ -168,6 +187,10 @@ export async function sendMessage(
       null,
       userId,
       true,
+      teamId ?? null,
+      messageType,
+      isAutomated,
+      externalApi,
     );
     await prisma.waLogs.create({
       data: {
@@ -744,15 +767,16 @@ export async function saveResponses(session: WaSessionWithRelations) {
     columnId,
   );
   await updateResponse(res.id, { ip: session.ip, location: undefined });
-  const loyalty = await prisma.loyaltyAction.findFirst({
-    where: {
-      flowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
-      type: LoyaltyActionType.FeedBack,
-    },
-  });
-  if (loyalty) {
-    await handleLoyaltyFeedback(session.phone, loyalty);
-  }
+  // TODO: CHECK LOYALTY FEATURE
+  // const loyalty = await prisma.loyaltyAction.findFirst({
+  //   where: {
+  //     flowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
+  //     type: LoyaltyActionType.FeedBack,
+  //   },
+  // });
+  // if (loyalty) {
+  //   await handleLoyaltyFeedback(session.phone, loyalty);
+  // }
   log.info("Responses saved \n%o\n", surveyResponse);
   const { surveyTeamMapId, responses, language, createdAt, Contact, tag } = res;
   await saveResponseToGoogleSheet({
@@ -839,7 +863,19 @@ export async function sendTextMessage(
   description: any = "",
 ) {
   const messageData = createTextMessage(to.phone, title, description);
-  await sendMessage(to.orgId, messageData);
+  await sendMessage(
+    to.orgId,
+    messageData,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "AUTOMATED",
+    true,
+    false,
+  );
 }
 interface sendSurveyToParticipantParams {
   campaignParticipantId: string;

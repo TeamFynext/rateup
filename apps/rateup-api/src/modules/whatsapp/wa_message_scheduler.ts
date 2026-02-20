@@ -21,6 +21,7 @@ import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { createMessageTemplate } from "../../utils/email/emailWeeklyStatsReport.js";
 import { FRONTEND_URL } from "../../utils/constants/constants.js";
 import { enqueueCampaignMessage } from "../campaign/campaign.service.js";
+import { processNextNode } from "./whatsappSurvey/wasurvey.controller.js";
 
 interface waMessageScheduleProps {
   phone: string;
@@ -30,6 +31,7 @@ interface waMessageScheduleProps {
   surveyTeamMapId?: string;
   timeDelay: number;
   source: waMessageScheduleSource;
+  teamId?: string;
 }
 
 export async function createWaMessageSchedule({
@@ -40,7 +42,9 @@ export async function createWaMessageSchedule({
   surveyTeamMapId,
   timeDelay,
   source,
+  teamId,
 }: waMessageScheduleProps) {
+  const teamID = teamId && teamId.trim() !== "" ? teamId : null;
   const res = await prisma.waMessageSchedule.create({
     data: {
       phone,
@@ -50,6 +54,7 @@ export async function createWaMessageSchedule({
       messageBody: messageBody as any,
       surveyTeamMapId,
       source,
+      teamId: teamID,
     },
   });
   return res;
@@ -69,6 +74,12 @@ export async function sendSchedulesWaMessages() {
       },
       include: {
         waTemplate: true,
+        team: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         surveyTeamMap: {
           select: {
             survey: {
@@ -121,9 +132,20 @@ export async function sendSchedulesWaMessages() {
           });
           log.trace("Session created successfully");
         }
+        const externalApi =
+          schedule.source === waMessageScheduleSource.ExternalApi;
         const res = await sendMessage(
           schedule.orgId,
           schedule.messageBody as unknown as WaSendMessageBody,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          schedule.teamId ?? null,
+          "TEMPLATE",
+          false,
+          externalApi,
         );
         await prisma.waMessageSchedule.update({
           where: {

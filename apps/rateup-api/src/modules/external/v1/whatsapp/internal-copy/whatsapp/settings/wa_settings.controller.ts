@@ -13,7 +13,10 @@ import {
   updateWaSettings,
   upsertWaSettings,
 } from "./wa_settings.service.js";
-import { WaConfigType } from "../../../../../../../types/enums.js";
+import {
+  WaConfigType,
+  WhatsappSettingsStatus,
+} from "../../../../../../../types/enums.js";
 import { log } from "../../../../../../../utils/logger.js";
 
 export async function createWaSettingsHandler(
@@ -25,6 +28,7 @@ export async function createWaSettingsHandler(
     accessToken: req.body.accessToken,
     wabaId: req.body.wabaId,
     phoneId: req.body.phoneId,
+    status: WhatsappSettingsStatus.ACTIVE,
     appId: req.body.appId,
     type: WaConfigType.Manual,
     paymentMethod: "NATIVE",

@@ -1,189 +1,154 @@
 import prisma from "../../../utils/prisma.js";
+import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 
-interface SummaryData {
-  title: string;
-  id: number;
-  value: number;
-}
+export const getLoyaltyDashboardStats = async (orgId: string) => {
+  const program = await getLoyaltyProgramByOrg(orgId);
 
-interface OverallActionsData {
-  name: string;
-  totalActions: number;
-}
+  if (!program) {
+    return {
+      programExists: false,
+      programId: null,
+      currencySymbol: null,
+      summary: {
+        totalCustomers: 0,
+        pointsIssued: 0,
+        pointsRedeemed: 0,
+      },
+      analytics: {
+        pointsEarnedVsRedeemed: [],
+        customerGrowthOverTime: [],
+      },
+      defaultCountryCode: "IN",
+      tierBreakdown: [],
+      popularRewards: [],
+    };
+  }
 
-interface ActionName {
-  title: string;
-  type: string;
-}
+  const [
+    totalCustomers,
+    pointsIssued,
+    pointsRedeemed,
+    tierBreakdown,
+    popularRewards,
+    rawAnalytics,
+    rawCustomerGrowth,
+  ] = await Promise.all([
+    // 1. Total Customers
+    prisma.customerLoyaltyAccount.count({
+      where: { programId: program.id },
+    }),
 
-interface TopActionsData {
-  name: ActionName;
-  participants: number;
-  points: number;
-}
+    // 2. Points Issued
+    prisma.loyaltyTransaction.aggregate({
+      _sum: { points: true },
+      where: { programId: program.id, transactionType: "earn" },
+    }),
 
-interface TopPerformersData {
-  name: string;
-  total_actions: number;
-  recent_actions: number;
-}
+    // 3. Points Redeemed
+    prisma.loyaltyTransaction.aggregate({
+      _sum: { points: true },
+      where: { programId: program.id, transactionType: "redeem" },
+    }),
 
-interface TopRedeemedRewardsData {
-  name: string;
-  times_redeemed: number;
-  required_points: number;
-}
+    // 4. Breakdown of customers by tier level
+    prisma.customerLoyaltyAccount.groupBy({
+      by: ["currentTierId"],
+      _count: true,
+      where: { programId: program.id },
+    }),
 
-interface LoyaltyDashboardStats {
-  summaryData: SummaryData[];
-  overallActionsData: OverallActionsData[];
-  topActionsData: TopActionsData[];
-  topPerformersData: TopPerformersData[];
-  topRedeemedRewardsData: TopRedeemedRewardsData[];
-}
+    // 5. Most popular redeemed rewards
+    prisma.loyaltyRedemption.groupBy({
+      by: ["rewardId"],
+      _count: { rewardId: true },
+      where: { reward: { programId: program.id } },
+      orderBy: { _count: { rewardId: "desc" } },
+      take: 5,
+    }),
 
-export const getLoyaltyDashboardStats = async (
-  orgId: string,
-): Promise<LoyaltyDashboardStats> => {
-  const results = await prisma.$queryRaw<
-    {
-      data1: number;
-      data2: number;
-      data3: number;
-      data4: number;
-      data5: number;
-    }[]
-  >`SELECT 
-    (SELECT COUNT(*) FROM "LoyaltyCustomer" WHERE "orgId" = ${orgId}::uuid) AS data1,
-    (SELECT SUM("totalEarnedPoints") FROM "LoyaltyCustomer" lc WHERE lc."orgId" = ${orgId}::uuid) AS data2,
-    (SELECT COUNT(*) FROM "LoyaltyRedeem" WHERE "status" != 'FAILED' AND "customerId" IN (SELECT id FROM "LoyaltyCustomer" WHERE "orgId" = ${orgId}::uuid)) AS data3,
-    (SELECT COUNT(*) FROM "LoyaltyRedeem" WHERE "status" = 'CLAIMED' AND "customerId" IN (SELECT id FROM "LoyaltyCustomer" WHERE "orgId" = ${orgId}::uuid)) AS data4,
-    (SELECT SUM("redeemedPoints") FROM "LoyaltyCustomer" lc WHERE lc."orgId" = ${orgId}::uuid) AS data5
-    `;
+    // 6. Analytics: points earned vs redeemed (Time Series)
+    prisma.$queryRaw`
+      SELECT 
+        DATE_TRUNC('day', "createdAt") as date,
+        SUM(CASE WHEN "transactionType" = 'earn' THEN "points" ELSE 0 END) as earned,
+        SUM(CASE WHEN "transactionType" = 'redeem' THEN ABS("points") ELSE 0 END) as redeemed
+      FROM "LoyaltyTransaction"
+      WHERE "programId" = ${program.id}::uuid
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `,
 
-  const { data1, data2, data3, data4, data5 } = results?.[0];
+    // 7. Total customers over time (Daily Growth)
+    prisma.$queryRaw`
+      SELECT 
+        DATE_TRUNC('day', "createdAt") as date,
+        COUNT(*) as count
+      FROM "CustomerLoyaltyAccount"
+      WHERE "programId" = ${program.id}::uuid
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `,
+  ]);
 
-  const summaryData = [
-    { title: "Total Customers", id: 2, value: Number(data1) || 0 },
-    { title: "Point Issued", id: 5, value: Number(data2) || 0 },
-    { title: "Point Redeemed", id: 7, value: Number(data5) || 0 },
-    { title: "Reward Redeems", id: 4, value: Number(data3) || 0 },
-    { title: "Reward Claimed", id: 6, value: Number(data4) || 0 },
-  ];
+  // Process Tier Breakdown
+  const tierStats = tierBreakdown.map((t) => {
+    const tier = program.tiers.find((pt) => pt.id === t.currentTierId);
+    return {
+      tierId: t.currentTierId,
+      name: tier?.name || "No Tier",
+      count: t._count,
+    };
+  });
 
-  const overallActionsResult = await prisma.$queryRaw<
-    { date: string; totalactions: number; type: string }[]
-  >`SELECT 
-    DATE_TRUNC('day', lacm."createdAt") AS date,
-    COUNT(lacm."actionId") AS totalactions,
-    la.type AS type
-FROM 
-    "LoyaltyActionCustomerMap" lacm
-JOIN 
-    "LoyaltyCustomer" lc ON lacm."customerId" = lc.id
-JOIN 
-    "LoyaltyAction" la ON lacm."actionId" = la.id
-WHERE 
-    lc."orgId" = ${orgId}::uuid
-GROUP BY 
-    DATE_TRUNC('day', lacm."createdAt"), la.type
-ORDER BY 
-    date`;
+  // Process Popular Rewards - Fetch details
+  const rewardIds = popularRewards.map((r) => r.rewardId);
+  const rewardsDetails = await prisma.loyaltyReward.findMany({
+    where: { id: { in: rewardIds } },
+  });
 
-  const overallActionsData = overallActionsResult.map((item) => ({
-    name: item.date,
-    totalActions: Number(item.totalactions),
-    type: item.type,
-  }));
+  const popularRewardsWithDetails = popularRewards.map((r) => {
+    const details = rewardsDetails.find((d) => d.id === r.rewardId);
+    return {
+      id: r.rewardId,
+      name: details?.name || "Unknown Reward",
+      pointsCost: details?.pointsCost || 0,
+      count: r._count.rewardId,
+    };
+  });
 
-  const topActionsResult = await prisma.$queryRaw<
-    { name: string; type: string; points: number; participants: bigint }[]
-  >`SELECT 
-    la.name AS name,
-    la.type AS type,
-    la.points AS points,
-    COUNT(lacm."customerId") AS participants
-FROM 
-    "LoyaltyAction" la
-JOIN 
-    "LoyaltyActionCustomerMap" lacm ON la.id = lacm."actionId"
-WHERE 
-    la."orgId" = ${orgId}::uuid
-GROUP BY 
-    la.id, la.name, la.type, la.points
-ORDER BY 
-    participants DESC
-LIMIT 10`;
+  // Process Customer Growth to be Cumulative
+  let cumulativeCustomers = 0;
+  const customerGrowth = (rawCustomerGrowth as any[]).map((entry: any) => {
+    cumulativeCustomers += Number(entry.count);
+    return {
+      date: entry.date,
+      newCustomers: Number(entry.count),
+      totalCustomers: cumulativeCustomers,
+    };
+  });
 
-  const topActionsData = topActionsResult.map((item) => ({
-    name: {
-      title: item.name,
-      type: item.type,
-    },
-    participants: Number(item.participants),
-    points: Number(item.points),
-  }));
-
-  const result = await prisma.$queryRaw<
-    { name: string; total_actions: bigint; recent_actions: bigint }[]
-  >`SELECT 
-co.name AS name,
-COUNT(lacm."actionId") AS total_actions,
-COUNT(CASE 
-        WHEN lacm."createdAt" >= NOW() - INTERVAL '7 days' 
-        THEN lacm."actionId" 
-        END) AS recent_actions
-FROM 
-"LoyaltyActionCustomerMap" lacm
-JOIN 
-"LoyaltyCustomer" c ON lacm."customerId" = c.id
-JOIN
-"Contact" co on c."contactId" = co.id
-WHERE 
-c."orgId" = ${orgId}::uuid
-GROUP BY 
-c.id, co.name
-ORDER BY 
-total_actions DESC
-LIMIT 10`;
-
-  const topPerformersData = result.map((item) => ({
-    name: item.name,
-    total_actions: Number(item.total_actions),
-    recent_actions: Number(item.recent_actions),
-  }));
-
-  const rewardResult = await prisma.$queryRaw<
-    { name: string; required_points: bigint; times_redeemed: bigint }[]
-  >`SELECT 
-    lrew.name AS name,
-    lrew.points AS required_points,
-    COUNT(lr.id) AS times_redeemed
-FROM 
-    "LoyaltyRedeem" lr
-JOIN 
-    "LoyaltyReward" lrew ON lr."rewardId" = lrew.id
-JOIN 
-    "LoyaltyCustomer" lc ON lr."customerId" = lc.id
-WHERE 
-    lc."orgId" = ${orgId}::uuid
-GROUP BY 
-    lrew.id, lrew.name
-ORDER BY 
-    times_redeemed DESC
-LIMIT 10`;
-
-  const topRedeemedRewardsData = rewardResult.map((item) => ({
-    name: item.name,
-    times_redeemed: Number(item.times_redeemed),
-    required_points: Number(item.required_points),
+  // Process Analytics to be friendly
+  const analytics = (rawAnalytics as any[]).map((entry: any) => ({
+    date: entry.date,
+    earned: Number(entry.earned || 0),
+    redeemed: Number(entry.redeemed || 0),
   }));
 
   return {
-    summaryData,
-    overallActionsData,
-    topActionsData,
-    topPerformersData,
-    topRedeemedRewardsData,
+    programExists: true,
+    programId: program.id,
+    currencySymbol: program.currencySymbol,
+    summary: {
+      totalCustomers,
+      pointsIssued: pointsIssued._sum.points || 0,
+      pointsRedeemed: Math.abs(pointsRedeemed._sum.points || 0),
+    },
+    analytics: {
+      pointsEarnedVsRedeemed: analytics,
+      customerGrowthOverTime: customerGrowth,
+    },
+    tierBreakdown: tierStats,
+    popularRewards: popularRewardsWithDetails,
+    defaultCountryCode: program.defaultCountryCode,
   };
 };

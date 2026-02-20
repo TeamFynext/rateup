@@ -12,7 +12,10 @@ import {
   createWaSettings,
   deleteWaSettings,
 } from "../settings/wa_settings.service.js";
-import { WaConfigType } from "../../../../../../../types/enums.js";
+import {
+  WaConfigType,
+  WhatsappSettingsStatus,
+} from "../../../../../../../types/enums.js";
 import { log } from "../../../../../../../utils/logger.js";
 
 export async function registerBusinessClientHandler(
@@ -63,6 +66,7 @@ export async function registerBusinessClientHandler(
       phoneId: phone.id,
       accessToken,
       type: WaConfigType.Automated,
+      status: WhatsappSettingsStatus.ACTIVE,
       appId: process.env.wa_app_id,
       paymentMethod: "NATIVE",
     });

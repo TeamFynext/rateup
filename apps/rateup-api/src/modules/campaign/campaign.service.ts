@@ -303,6 +303,7 @@ export async function createCampaign(data: CreateCampaignInput) {
       waTemplateId: data.waTemplateId ?? undefined,
       flowId: flowId,
       whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
+      dynamicTags: data.dynamicTags ?? [],
     },
   });
   await prisma.campaignDripStage.createMany({
@@ -836,6 +837,20 @@ export const updateCampaignMessageQueueRetryCount = (campaignId) => {
     },
     data: {
       retryCount: 0,
+    },
+  });
+};
+
+export const getCampaignParticipantCountByStatuses = (
+  campaignId: string,
+  status: Array<CampaignParticipantStatus>,
+): Promise<number> => {
+  return prisma.campaignParticipant.count({
+    where: {
+      campaignId,
+      status: {
+        in: status,
+      },
     },
   });
 };

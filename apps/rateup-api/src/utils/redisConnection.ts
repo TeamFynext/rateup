@@ -26,4 +26,8 @@ export const userStatusQueue = new Queue("user-availability", { connection });
 
 export const sendMessageQueue = new Queue("sendMessageQueue", { connection });
 
+export const pausedAutomationQueue = new Queue("pausedAutomationQueue", {
+  connection,
+});
+
 export default connection;

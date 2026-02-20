@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import prisma from "../../../utils/prisma.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema.js";
 import { getUsageStat } from "../../stats/stats.service.js";
 import { getSubscription } from "../../subscription/subscription.service.js";
@@ -20,6 +21,7 @@ export async function getAutomatedRepliesByOrgId(orgId: string) {
   const automatedReplies = await prisma.waAutomatedReply.findMany({
     where: {
       orgId,
+      platform: PlatformType.WHATSAPP,
     },
     orderBy: {
       createdAt: "desc",
@@ -31,6 +33,7 @@ export async function getAutomatedRepliesByOrgId(orgId: string) {
       matchData: true,
       orgId: true,
       whatsappSettingsPhoneId: true,
+      platform: true,
     },
   });
   return automatedReplies;
@@ -120,6 +123,11 @@ export async function createAutomatedReply(
       matchType: "",
       matchData: data?.matchData,
       whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
+      platform: data.platform
+        ? data.platform === "instagram"
+          ? PlatformType.INSTAGRAM
+          : PlatformType.WHATSAPP
+        : PlatformType.WHATSAPP,
     },
   });
   if (automatedReply)
@@ -144,6 +152,11 @@ export async function updateAutomatedReply(
       name: data.name,
       matchData: data?.matchData,
       whatsappSettingsPhoneId: data?.whatsappSettingsPhoneId,
+      platform: data.platform
+        ? data.platform === "instagram"
+          ? PlatformType.INSTAGRAM
+          : PlatformType.WHATSAPP
+        : undefined,
     },
   });
   return updatedAutomatedReply;

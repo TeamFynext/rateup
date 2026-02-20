@@ -24,11 +24,11 @@ import { contactLabelSchemas } from "./contactLabel/contactLabel.schema.js";
 import { checkSession } from "../../utils/checkSession.js";
 import fastifyMultipart from "@fastify/multipart";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
-import { verifyLCustomerMaxCountRestrictionHandler } from "../loyalty/customer/customer.controller.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { $LifecycleRef } from "../lifecycle/lifecycle.schema.js";
 import { conversationRoutes } from "./conversation/conversation.route.js";
 import { conversationSchemas } from "./conversation/conversation.schema.js";
+import { verifyLCustomerMaxCountRestrictionHandler } from "./contact.utils.js";
 
 export async function contactRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

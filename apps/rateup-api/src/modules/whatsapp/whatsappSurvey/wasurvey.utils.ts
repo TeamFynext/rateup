@@ -8,6 +8,7 @@ import {
 } from "../../../types/enums.js";
 import {
   WaMessageBody,
+  WaMessageEchoBody,
   WaMessageTypes,
   WaReceiveMessageBody,
   WaSendMessageBody,
@@ -62,12 +63,20 @@ export function getEventType(data: WaMessageBody) {
   if (data.object === "whatsapp_business_account") {
     if (data.entry[0].changes[0].field === WaEvent.TemplateStatusChange) {
       return WaEvent.TemplateStatusChange;
+    } else if (data.entry[0].changes[0].field === WaEvent.ACCOUNT_UPDATE) {
+      return WaEvent.ACCOUNT_UPDATE;
     } else if (
       data.entry[0].changes[0].field === WaEvent.Message &&
       (data.entry[0].changes[0].value as WaReceiveMessageBody).messages
         ?.length > 0
     ) {
       return WaEvent.Message;
+    } else if (
+      data.entry[0].changes[0].field === WaEvent.SMBMessageEchoes &&
+      (data as unknown as WaMessageEchoBody).entry[0].changes[0].value
+        .message_echoes?.length > 0
+    ) {
+      return WaEvent.SMBMessageEchoes;
     } else if (
       (data.entry[0].changes[0].value as WaReceiveMessageBody).statuses?.[0]
         ?.status === "captured" &&
@@ -1667,3 +1676,44 @@ export const assignChat = async (
 
   return assignedMember;
 };
+
+export function parseWaJoinMessage(message: string) {
+  const lower = message.toLowerCase();
+
+  if (!lower.includes("join") || !lower.includes("loyalty")) {
+    return null;
+  }
+
+  const refMatch = new RegExp(/referral\s+([a-z0-9-]+)/i).exec(message);
+
+  return {
+    isJoin: true,
+    referralCode: refMatch?.[1],
+    source: "REF",
+  };
+}
+
+type WaLinkOptions = {
+  waNumber: string;
+  referralCode?: string;
+  source?: string;
+};
+
+export function generateWhatsAppJoinLink({
+  waNumber,
+  referralCode,
+  source = "REF",
+}: WaLinkOptions): string {
+  let message = "Join the loyalty program";
+
+  if (referralCode) {
+    message += ` using referral ${referralCode}`;
+  }
+
+  // // Optional source tagging (hidden but parsable if needed)
+  // message += ` [${source}]`;
+
+  const encodedMessage = encodeURIComponent(message);
+
+  return `https://wa.me/${waNumber}?text=${encodedMessage}`;
+}

@@ -1,31 +1,23 @@
 import {
   LoyaltyTemplateTypes,
-  SubscriptionFeaturePathName,
   WaAutomatedReplyResponseType,
 } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
-import { LoyaltyTemplateInput } from "./settings.schema.js";
 import {
-  createCustomerAction,
-  createLoyaltyReferralCode,
-  getLCustomerByPhone,
-  handleCustomerRemovalFromLoyalty,
-  handleLoyaltyRegister,
-  handleSendTemplate,
-  updateLCustomer,
-  updateLCustomerPoint,
-} from "../customer/customer.service.js";
-import { getLoyaltyActionById } from "../actions/actions.service.js";
+  LoyaltyTemplateInput,
+  EventTriggerInput,
+  UpdateEventTriggerInput,
+} from "./settings.schema.js";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
-import { updateMonthlyStat } from "../../stats/stats.service.js";
-import { log } from "../../../utils/logger.js";
 import { LoyaltyWaCommand } from "../../../../generated/prisma/client.js";
-import {
-  createRedeem,
-  handleIssuedRewardsCommand,
-  RedeemStatus,
-} from "../redeems/redeem.service.js";
 import dayjs from "dayjs";
+import {
+  getLCustomerByPhone,
+  updateCustomerAccount,
+} from "../accounts/account.service.js";
+import { handleSendTemplate } from "../../contact/contact.utils.js";
+import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
+import { convertNodeToWhatsAppMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 
 export async function createLoyaltyWaCommand(
   data: LoyaltyTemplateInput & { orgId: string },
@@ -36,7 +28,6 @@ export async function createLoyaltyWaCommand(
       waTemplateId: data.waTemplateId?.length ? data.waTemplateId : undefined,
       orgId: data.orgId,
       requestMessage: data.requestMessage,
-      actionId: data.actionId?.length ? data.actionId : undefined,
       content: data.content,
       responseType: data.responseType,
       whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
@@ -93,22 +84,30 @@ export async function handleLoyaltyWaCommand(
   phone,
   name,
   loyaltyWaCommand: LoyaltyWaCommand,
+  orgId,
 ) {
   switch (loyaltyWaCommand.type) {
     case LoyaltyTemplateTypes.CustomerRegistration:
-      await handleLoyaltyRegister(phone, name, loyaltyWaCommand);
+      await handleWaJoinRegistration({
+        orgId,
+        from: phone,
+        userName: name,
+        joinPayload: {},
+        sourceIdentifier: "loyalty",
+      });
       break;
     case LoyaltyTemplateTypes.PointInformation:
       await handleLoyaltyPointsCommand(phone, loyaltyWaCommand);
       break;
     case LoyaltyTemplateTypes.Referral:
-      await handleReferralCommand(phone, loyaltyWaCommand);
+      // await handleReferralCommand(phone, loyaltyWaCommand);
       break;
     case LoyaltyTemplateTypes.CustomerRemoval:
       await handleCustomerRemovalFromLoyalty(phone, loyaltyWaCommand);
       break;
     case LoyaltyTemplateTypes.RewardsIssued:
       await handleIssuedRewardsCommand(phone, loyaltyWaCommand);
+      break;
   }
 }
 
@@ -119,69 +118,23 @@ export async function getAllLoyaltyWaCommands(orgId) {
     },
   });
 }
-
-export async function handleReferralCommand(phone, loyaltyWaCommand) {
-  try {
-    const { orgId, actionId } = loyaltyWaCommand;
-    const customer = await getLCustomerByPhone(phone, orgId);
-    if (!customer || !customer.active) {
-      const message = `You are not an active member of our loyalty programme`;
-      await sendTextMessage({ phone, orgId }, null, message);
-      return;
-    }
-    // const res = await getReferralLoyaltyAction(orgId);
-    const action = await getLoyaltyActionById(actionId);
-    if (!action) {
-      const message = `Thank you for reaching out. Unfortunately, there is no referral program yet`;
-      await sendTextMessage({ phone, orgId }, null, message);
-      return;
-    }
-    const { message } = action as unknown as {
-      message: LoyaltyActionMessage;
-    };
-    const { referralCode } = await getReferralCodeByActionAndCustomer(
-      actionId,
-      customer.id,
-    );
-
-    for (const para of message.forwardMessage) {
-      const contents = para.content;
-      if (contents) {
-        for (const content of contents) {
-          if (content.text) {
-            content.text = content.text.replace("{{code}}", referralCode);
-          }
-        }
-      }
-    }
-
-    await sendTextMessage({ phone, orgId }, null, message.message);
-    await sendTextMessage(
-      {
-        phone,
-        orgId,
-      },
-      null,
-      message.forwardMessage,
-    );
-  } catch (e) {
-    log.error(e);
-    throw e;
-  }
+async function handleIssuedRewardsCommand(phone, loyaltyWaCommand) {
+  // const node=""
+  // convertNodeToWhatsAppMessage(node,phone);
 }
 
 export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
   const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
   const customer = await getLCustomerByPhone(phone, orgId);
-  if (!customer || !customer.active) {
+  if (!customer || customer.status !== "active") {
     const message = `You are not an active member of our loyalty programme`;
     await sendTextMessage({ phone, orgId }, null, message);
     return;
   }
   const dynamicVariables = [
-    customer.totalEarnedPoints - customer.redeemedPoints,
-    customer.redeemedPoints,
-    customer.totalEarnedPoints,
+    customer.currentPoints,
+    customer.lifetimePoints - customer.currentPoints,
+    customer.lifetimePoints,
   ];
 
   if (responseType === WaAutomatedReplyResponseType.Template)
@@ -211,48 +164,48 @@ export async function handleLoyaltyFeedback(phone, action) {
     await sendTextMessage({ phone, orgId }, null, message);
     return;
   }
-  if (!customer.active) await updateLCustomer(phone, orgId, { active: true });
-  const existing = await prisma.loyaltyActionCustomerMap.findFirst({
-    where: {
-      customerId: customer.id,
-      actionId: action.id,
-    },
-  });
-  if (existing) {
-    const message = `You have already given feedback for this action`;
-    await sendTextMessage({ phone, orgId }, null, message);
-    return;
-  }
+  // if (customer.status !== "active") await updateLCustomer(phone, orgId, { status: "active" });
+  // const existing = await prisma.loyaltyActionCustomerMap.findFirst({
+  //   where: {
+  //     customerId: customer.id,
+  //     actionId: action.id,
+  //   },
+  // });
+  // if (existing) {
+  //   const message = `You have already given feedback for this action`;
+  //   await sendTextMessage({ phone, orgId }, null, message);
+  //   return;
+  // }
 
   //handling referrer/customer action having reward
   if (action.rewardId) {
-    const { redeem, message } = await createRedeem(
-      customer.id,
-      action.rewardId,
-      true,
-    );
-    if (redeem.status === RedeemStatus.FAILED) {
-      return {
-        success: false,
-        message,
-      };
-    }
-    await createCustomerAction({
-      customerId: customer.id,
-      actionId: action.id,
-      refereePhone: "",
-      amount: action.points,
-    });
+    // const { redeem, message } = await createRedeem(
+    //   customer.id,
+    //   action.rewardId,
+    //   true
+    // );
+    // if (redeem.status === RedeemStatus.FAILED) {
+    //   return {
+    //     success: false,
+    //     message,
+    //   };
+    // }
+    // await createCustomerAction({
+    //   customerId: customer.id,
+    //   actionId: action.id,
+    //   refereePhone: "",
+    //   amount: action.points,
+    // });
   } else {
     //handling referrer/customer action having points
     let customerPoints = action.points;
-    await createCustomerAction({
-      customerId: customer.id,
-      actionId: action.id,
-      refereePhone: "",
-      amount: action.points,
-    });
-    await updateLCustomerPoint(customer.id, customerPoints);
+    // await createCustomerAction({
+    //   customerId: customer.id,
+    //   actionId: action.id,
+    //   refereePhone: "",
+    //   amount: action.points,
+    // });
+    // await updateLCustomerPoint(customer.id, customerPoints);
   }
 
   await handleSendTemplate(waTemplateId, orgId, phone, []);
@@ -276,24 +229,92 @@ export function replacedContentByDynamicVariable(content, dynamicVariables) {
   return contentCopy;
 }
 
-export async function getReferralCodeByActionAndCustomer(actionId, customerId) {
-  let allReferralCodes = await prisma.loyaltyReferralCode.findMany();
-  let referralByCustomerAction = allReferralCodes.find(
-    (r) => r.customerId === customerId && r.actionId === actionId,
-  );
-  if (!referralByCustomerAction)
-    referralByCustomerAction = await createLoyaltyReferralCode(
-      actionId,
-      customerId,
-      allReferralCodes.map((r) => r.referralCode),
-    );
-  return referralByCustomerAction;
-}
-
 export async function deleteLoyaltyWaCommandById(id) {
   return await prisma.loyaltyWaCommand.delete({
     where: {
       id,
     },
+  });
+}
+
+export async function handleCustomerRemovalFromLoyalty(
+  phone: string,
+  loyaltyWaCommand: LoyaltyWaCommand,
+) {
+  const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
+  const customer = await getLCustomerByPhone(phone, orgId);
+  if (!customer || customer.status !== "active") {
+    const message = `You are not an active member of our loyalty programme`;
+    await sendTextMessage({ phone, orgId }, null, message);
+    return;
+  }
+  await updateCustomerAccount(customer.id, { status: "inactive" });
+  if (responseType === WaAutomatedReplyResponseType.Template) {
+    await handleSendTemplate(waTemplateId, orgId, phone, []);
+  } else if (responseType === WaAutomatedReplyResponseType.Text) {
+    await sendTextMessage({ phone, orgId }, null, content);
+  }
+}
+
+// Event Trigger CRUD Services
+export async function createEventTrigger(data: EventTriggerInput) {
+  return await prisma.loyaltyEventTrigger.create({
+    data: {
+      programId: data.programId,
+      eventType: data.eventType,
+      enabled: data.enabled ?? true,
+      triggerDays: data.triggerDays,
+      waTemplateId: data.waTemplateId ? data.waTemplateId : undefined,
+      rewardId: data.rewardId || undefined,
+    },
+    include: {
+      waTemplate: true,
+      reward: true,
+    },
+  });
+}
+
+export async function updateEventTrigger(
+  id: string,
+  data: UpdateEventTriggerInput,
+) {
+  return await prisma.loyaltyEventTrigger.update({
+    where: { id },
+    data,
+    include: {
+      waTemplate: true,
+      reward: true,
+    },
+  });
+}
+
+export async function getEventTrigger(id: string) {
+  return await prisma.loyaltyEventTrigger.findUnique({
+    where: { id },
+    include: {
+      waTemplate: true,
+      reward: true,
+      program: true,
+    },
+  });
+}
+
+export async function getAllEventTriggers(programId?: string) {
+  return await prisma.loyaltyEventTrigger.findMany({
+    where: programId ? { programId } : undefined,
+    include: {
+      waTemplate: true,
+      reward: true,
+      program: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+export async function deleteEventTrigger(id: string) {
+  return await prisma.loyaltyEventTrigger.delete({
+    where: { id },
   });
 }

@@ -9,6 +9,7 @@ import {
   WaMessageAssignBody,
   BlockUserBody,
   GenerateInboxResponseBody,
+  PrivateWaMessageBody,
 } from "./wamessage.schema.js";
 import {
   addNewWaMessage,
@@ -26,6 +27,8 @@ import {
   sendLocationMessage,
   generateChatAnalytics,
   generateInboxResponse,
+  createInternalWaMessage,
+  createWaMessageOrgTeamMap,
 } from "./wamessage.service.js";
 import {
   ByContactIdParams,
@@ -46,6 +49,7 @@ import {
   unblockWhatsappUser,
 } from "../../whatsappSurvey/wasurvey.service.js";
 import {
+  extractMentions,
   handleWaReceivedImages,
   isSessionExpired,
   returnAppropriateTimeStamp,
@@ -92,6 +96,15 @@ export async function handleWaMessages(
   messageId?: string,
   userId?: string,
   failed: boolean = false,
+  teamId: string | null = null,
+  messageType:
+    | "INBOX"
+    | "TEMPLATE"
+    | "CAMPAIGN"
+    | "AUTOMATED"
+    | "FLOW" = "INBOX",
+  isAutomated: boolean = false,
+  externalApi: boolean = false,
 ) {
   try {
     // Prepare message body
@@ -228,6 +241,21 @@ export async function handleWaMessages(
       userId,
       failed,
     );
+
+    const teamID = teamId && teamId.trim() !== "" ? teamId : null;
+
+    // add to wamessageorgteammap
+    if (type === "send") {
+      await createWaMessageOrgTeamMap({
+        teamId: teamID,
+        messageId: waMessage.id,
+        orgId,
+        isAutomedMessage: isAutomated,
+        type: messageType,
+        externalApi,
+      });
+    }
+
     if (type === "send" && conversation) {
       const isFirstSendMessage = await checkIfFirstSendMessageInConversation(
         conversation.id,
@@ -293,8 +321,14 @@ export async function sendNewWaMessageHandler(
 ) {
   try {
     const { contactId } = request.params;
-    const { type, contacts, location, whatsappSettingsPhoneId, platform } =
-      request.body;
+    const {
+      type,
+      contacts,
+      location,
+      whatsappSettingsPhoneId,
+      platform,
+      teamId,
+    } = request.body;
     const { orgId, userId } = request.user;
     const contact = await getContactById(contactId);
     let to;
@@ -325,8 +359,10 @@ export async function sendNewWaMessageHandler(
             contact.phone,
             orgId,
             userId,
+            platform as PlatformType,
             caption,
             whatsappSettingsPhoneId,
+            teamId,
           );
           break;
         }
@@ -343,6 +379,11 @@ export async function sendNewWaMessageHandler(
           userId,
           whatsappSettingsPhoneId,
           platform as PlatformType,
+          undefined,
+          teamId,
+          "INBOX",
+          false,
+          false,
         );
         break;
       }
@@ -362,6 +403,11 @@ export async function sendNewWaMessageHandler(
           userId,
           whatsappSettingsPhoneId,
           platform as PlatformType,
+          undefined,
+          teamId,
+          "INBOX",
+          false,
+          false,
         );
         break;
       }
@@ -375,6 +421,7 @@ export async function sendNewWaMessageHandler(
             platform as PlatformType,
             "",
             whatsappSettingsPhoneId,
+            teamId,
           );
         break;
       case "contact": {
@@ -384,6 +431,7 @@ export async function sendNewWaMessageHandler(
           orgId,
           userId,
           whatsappSettingsPhoneId,
+          teamId,
         );
         break;
       }
@@ -394,6 +442,7 @@ export async function sendNewWaMessageHandler(
           orgId,
           userId,
           whatsappSettingsPhoneId,
+          teamId,
         );
         break;
     }
@@ -651,6 +700,42 @@ export async function generateInboxResponseHandler(
     // Generate response logic here
   } catch (error) {
     log.error("Error in generateInboxResponseHandler: %o", error);
+    reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function createPrivateMessageHandler(
+  request: FastifyRequest<{
+    Body: PrivateWaMessageBody;
+    Params: ByContactIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId, userId } = request.user;
+    const { contactId } = request.params;
+    const body = request.body;
+    let text = "";
+    if (typeof body.text?.body === "string") {
+      text = body.text.body;
+    } else if (body.text?.body?.type === "doc") {
+      text = parseToWhatsAppFormat(body.text.body);
+    } else {
+      throw new Error("Invalid text.body format");
+    }
+    const mentionedUsers = extractMentions(text);
+    const res = await createInternalWaMessage({
+      contactId: contactId,
+      privateMessageText: text,
+      trigerredByUser: userId,
+      orgId: orgId,
+      exchangeProcess: "privateNote",
+      mentionedUsers: mentionedUsers,
+      messageId: body.messageId,
+    });
+    reply.code(200).send(res);
+  } catch (error) {
+    log.error("Error in creating private note: %o", error);
     reply.status(500).send("Internal Server Error");
   }
 }

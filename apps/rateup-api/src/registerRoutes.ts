@@ -34,12 +34,14 @@ import { campaignParticipantsSchemas } from "./modules/campaign/campaignParticip
 import { emailSchema } from "./modules/email/email.schema.js";
 import { generateQrSchemas } from "./modules/generateQr/generateQr.schema.js";
 import { integrationSchemas } from "./modules/integrations/integrations.schema.js";
-import { loyaltyActionSchemas } from "./modules/loyalty/actions/actions.schema.js";
-import { loyaltyRewardSchemas } from "./modules/loyalty/rewards/rewards.schema.js";
-import { loyaltyCustomerSchemas } from "./modules/loyalty/customer/customer.schema.js";
-import { loyaltyRedeemSchemas } from "./modules/loyalty/redeems/redeem.schema.js";
 import { loyaltySettingSchemas } from "./modules/loyalty/settings/settings.schema.js";
-import { customerGroupSchemas } from "./modules/loyalty/customer/customerGroup/customerGroup.schema.js";
+// New Loyalty System Schemas
+import { loyaltyProgramSchemas } from "./modules/loyalty/program/program.schema.js";
+import { loyaltyTierSchemas } from "./modules/loyalty/tiers/tier.schema.js";
+import { loyaltyEarningRuleSchemas } from "./modules/loyalty/earningRules/earningRule.schema.js";
+import { customerLoyaltyAccountSchemas } from "./modules/loyalty/accounts/account.schema.js";
+import { redemptionSchemas } from "./modules/loyalty/redemptions/redemption.schema.js";
+import { referralSchemas } from "./modules/loyalty/referrals/referral.schema.js";
 import { boardSchemas } from "./modules/ticket/ticketBoard/board.schema.js";
 import { columnSchemas } from "./modules/ticket/ticketColumn/column.schema.js";
 import { cardSchemas } from "./modules/ticket/ticketCard/card.schema.js";
@@ -100,7 +102,6 @@ import { servicePublicRoutes } from "./modules/services/services.public.route.js
 import generateQrRoutes from "./modules/generateQr/generateQr.routes.js";
 import { integrationsRoutes } from "./modules/integrations/integrations.route.js";
 import { integrationPublicRoutes } from "./modules/integrations/integration.public.route.js";
-import { loyaltyPublicRoutes } from "./modules/loyalty/loyalty.public.route.js";
 import { mobileNotificationRoutes } from "./modules/mobileNotification/mobile.route.js";
 import { dashboardRoutes } from "./modules/dashboard/dashboard.route.js";
 import { notificationRoutes } from "./modules/notification/notification.route.js";
@@ -110,6 +111,10 @@ import { bookDemoRoutes } from "./modules/BookDemo/bookDemo.route.js";
 import { supportUserWebhookRoutes } from "./modules/whatsapp/support-user/suport-user.webhook.route.js";
 import { externalIntegrationRoutes } from "./modules/integrations/external/external.route.js";
 import healthRoutes from "./routes/health.js";
+import { approvalSchemas } from "./modules/loyalty/approvals/approval.schema.js";
+import { customerAccountPublicRoutes } from "./modules/loyalty/accounts/account.public.route.js";
+import { apiAnalyticsSchemas } from "./modules/apiAnalytics/apianalytics.schema.js";
+import { apiAnalyticsRoutes } from "./modules/apiAnalytics/apianalytics.routes.js";
 
 // Schema collections
 const schemaModules = [
@@ -145,12 +150,15 @@ const schemaModules = [
   emailSchema,
   generateQrSchemas,
   integrationSchemas,
-  loyaltyActionSchemas,
-  loyaltyRewardSchemas,
-  loyaltyCustomerSchemas,
-  loyaltyRedeemSchemas,
   loyaltySettingSchemas,
-  customerGroupSchemas,
+  // New Loyalty System Schemas
+  loyaltyProgramSchemas,
+  loyaltyTierSchemas,
+  loyaltyEarningRuleSchemas,
+  customerLoyaltyAccountSchemas,
+  redemptionSchemas,
+  referralSchemas,
+  approvalSchemas,
   boardSchemas,
   columnSchemas,
   cardSchemas,
@@ -161,6 +169,7 @@ const schemaModules = [
   bookDemoSchemas,
   zapierSchemas,
   businessHourSchemas,
+  apiAnalyticsSchemas,
 ];
 
 // Route configurations
@@ -181,8 +190,11 @@ const routeConfigs = [
   { plugin: testimonialPublicRoutes, prefix: "/api/public/testimonials" },
   { plugin: chatbotPublicRoute, prefix: "/api/public/chatbot" },
   { plugin: integrationPublicRoutes, prefix: "/api/public/integrations" },
-  { plugin: loyaltyPublicRoutes, prefix: "/api/public/loyalty" },
   { plugin: userPublicRoutes, prefix: "/api/public/user" },
+  {
+    plugin: customerAccountPublicRoutes,
+    prefix: "/api/public/loyalty/accounts",
+  },
 
   // Protected routes
   { plugin: surveyRoutes, prefix: "/api/survey" },
@@ -230,6 +242,7 @@ const routeConfigs = [
   { plugin: lifecycleRoutes, prefix: "/api/lifecycles" },
   { plugin: bookDemoRoutes, prefix: "/api/bookdemo" },
   { plugin: externalIntegrationRoutes, prefix: "/api/integration/external" },
+  { plugin: apiAnalyticsRoutes, prefix: "/api/apianalytics" },
 ];
 
 async function registerSchemas(server: FastifyInstance): Promise<void> {

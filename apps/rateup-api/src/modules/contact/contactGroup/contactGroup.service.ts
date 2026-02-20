@@ -29,7 +29,6 @@ export async function getContactGroupById(contactGroupId: string) {
       _count: {
         select: {
           contacts: true,
-          LoyaltyCustomerMap: true,
         },
       },
     },
@@ -57,30 +56,7 @@ export async function getContactGroupsByTeamId(teamId: string) {
     },
   });
 
-  const loyaltyCustomerCounts: Array<{
-    id: string;
-    createdAt: Date;
-    name: string;
-    icon: string;
-    teamId: string;
-    type: string;
-    loyaltyCustomerCount: number;
-  }> = await prisma.$queryRaw`
-    SELECT "ContactGroup".*, COUNT("LoyaltyCustomerMap".*) as "loyaltyCustomerCount"
-    FROM "LoyaltyCustomerMap"
-    LEFT JOIN "ContactGroup" ON "LoyaltyCustomerMap"."contactGroupId" = "ContactGroup"."id"
-    GROUP BY "ContactGroup"."id"
-  `;
-  let loyaltyCustomer = loyaltyCustomerCounts.map(
-    ({ loyaltyCustomerCount, ...rest }) => ({
-      ...rest,
-      _count: {
-        contacts: Number(loyaltyCustomerCount),
-      },
-    }),
-  );
-
-  return [...contactGroups, ...loyaltyCustomer];
+  return contactGroups;
 }
 //also used in zapier controller
 export async function getContactGroupsByOrgId(
@@ -103,7 +79,6 @@ export async function getContactGroupsByOrgId(
       _count: {
         select: {
           contacts: true,
-          LoyaltyCustomerMap: true,
         },
       },
     },
@@ -237,20 +212,6 @@ export async function getContactsByContactGroupIdWithPagination(
       id: contactGroupId,
     },
     include: {
-      LoyaltyCustomerMap: {
-        include: {
-          loyaltyCustomer: {
-            include: {
-              Contact: {
-                select: {
-                  name: true,
-                  phone: true,
-                },
-              },
-            },
-          },
-        },
-      },
       contacts: {
         include: {
           contact: {
@@ -285,7 +246,6 @@ export async function getContactsByContactGroupIdWithPagination(
   return {
     group: group.contacts.map((c) => c.contact),
     totalCount,
-    loyaltyCustomers: group.LoyaltyCustomerMap.map((c) => c.loyaltyCustomer),
   };
 }
 
@@ -353,29 +313,19 @@ export async function addExistingContactsToGroup(
   }
   // TODO: check if contactIds belong to the same team?
   // FIXME:
-  if (isCustomer) {
-    await prisma.loyaltyCustomerMap.createMany({
-      skipDuplicates: true,
-      data: contactIds.map((contactId) => ({
-        loyaltyCustomerId: contactId,
-        contactGroupId,
-      })),
-    });
-  } else {
-    const newMembers = await prisma.contactGroupMap.createManyAndReturn({
-      skipDuplicates: true,
-      data: contactIds.map((contactId) => ({
-        contactId,
-        contactGroupId,
-      })),
-    });
-    for (const contact of newMembers) {
-      await addZapierTriggerToQueue(
-        ZapierTriggers.CONTACT_ADDED_TO_GROUP,
-        { [ZapierTriggers.CONTACT_ADDED_TO_GROUP]: contact },
-        orgId,
-      );
-    }
+  const newMembers = await prisma.contactGroupMap.createManyAndReturn({
+    skipDuplicates: true,
+    data: contactIds.map((contactId) => ({
+      contactId,
+      contactGroupId,
+    })),
+  });
+  for (const contact of newMembers) {
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONTACT_ADDED_TO_GROUP,
+      { [ZapierTriggers.CONTACT_ADDED_TO_GROUP]: contact },
+      orgId,
+    );
   }
 }
 
@@ -468,14 +418,6 @@ export async function getContactGroupByNameAndTeam(
         name,
         teamId,
       },
-    },
-  });
-}
-
-export async function getLoyaltyCustomersFromGroup(contactGroupId) {
-  return await prisma.loyaltyCustomerMap.findMany({
-    where: {
-      contactGroupId,
     },
   });
 }

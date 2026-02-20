@@ -14,6 +14,7 @@ import {
   getCampaginStatsById,
   getCampaignById,
   getCampaignFilterForFlows,
+  getCampaignParticipantCountByStatuses,
   getCampaignsByOrgId,
   getCampaignsByTeamId,
   getResponseByCampaignById,
@@ -28,6 +29,7 @@ import {
   SentCampaignEnum,
 } from "../../types/enums.js";
 import { log } from "../../utils/logger.js";
+import prisma from "../../utils/prisma.js";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
@@ -130,6 +132,16 @@ export async function sendCampaignHandler(
       return reply.status(400).send({
         message: `Campaign ${campaign.status} is in progress, so no action can be performed at this time.`,
         code: "CAMPAIGN_ENQUEUE_DEQUEUE_IN_PROGRESS",
+      });
+    }
+    const count = await getCampaignParticipantCountByStatuses(
+      campaignId,
+      sendToStatuses,
+    );
+    if (count === 0) {
+      return reply.status(400).send({
+        message: `No participants with the specified statuses to send the campaign to.`,
+        code: "NO_PARTICIPANTS_FOR_CAMPAIGN",
       });
     }
 
