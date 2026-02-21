@@ -35,6 +35,7 @@ export function CardView({
   onDelete,
 }: Readonly<CardViewProps>) {
   const [deleteDialogOpened, setDeleteDialogOpened] = useState(false);
+  const [ruleToDelete, setRuleToDelete] = useState<string | null>(null);
   const translations = useTranslations();
 
   const containerClass =
@@ -43,26 +44,29 @@ export function CardView({
       : "space-y-3";
 
   return (
-    <div className={containerClass}>
-      {data.length === 0 ? (
-        <div className="col-span-full">
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <IconFolderCode />
-              </EmptyMedia>
-              <EmptyTitle>No Automation Yet</EmptyTitle>
-              <EmptyDescription>
-                You haven&apos;t created any automation yet. Get started by
-                creating your first automation.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button asChild>
-                <Link href="/dashboard/automation/new">Create Automation</Link>
-              </Button>
-            </EmptyContent>
-            {/* <Button
+    <>
+      <div className={containerClass}>
+        {data.length === 0 ? (
+          <div className="col-span-full">
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <IconFolderCode />
+                </EmptyMedia>
+                <EmptyTitle>No Automation Yet</EmptyTitle>
+                <EmptyDescription>
+                  You haven&apos;t created any automation yet. Get started by
+                  creating your first automation.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button asChild>
+                  <Link href="/dashboard/automation/new">
+                    Create Automation
+                  </Link>
+                </Button>
+              </EmptyContent>
+              {/* <Button
               variant="link"
               asChild
               className="text-muted-foreground"
@@ -73,40 +77,46 @@ export function CardView({
                 Learn More <ArrowUpRightIcon />
               </Link>
             </Button> */}
-          </Empty>
-        </div>
-      ) : (
-        data.map((item) => (
-          <Link href={`/dashboard/automation/${item.id}`} key={item.id}>
-            <RuleCard
-              item={item}
-              viewMode={viewMode}
-              onToggleActive={(e) => {
-                onToggleActive(item);
-              }}
-              onDelete={(e) => {
-                e.preventDefault();
-                setDeleteDialogOpened(true);
-              }}
-            />
-
-            <ConfirmationModal
-              forDeleteFunctionality
-              opened={deleteDialogOpened}
-              onClose={() => setDeleteDialogOpened(false)}
-              headerLabel={translations(
-                "Are you sure you want to delete this Rule?",
-              )}
-              headerTitle={translations("Delete Rule")}
-              confirmLabel={translations("Delete")}
-              onConfirm={() => {
-                onDelete(item.id);
-                setDeleteDialogOpened(false);
-              }}
-            />
-          </Link>
-        ))
-      )}
-    </div>
+            </Empty>
+          </div>
+        ) : (
+          data.map((item) => (
+            <Link href={`/dashboard/automation/${item.id}`} key={item.id}>
+              <RuleCard
+                item={item}
+                viewMode={viewMode}
+                onToggleActive={(isActive) => {
+                  // Prevent link navigation is handled in RuleCard's onClick
+                  onToggleActive(item);
+                }}
+                onDelete={(e) => {
+                  e.preventDefault();
+                  setRuleToDelete(item.id);
+                  setDeleteDialogOpened(true);
+                }}
+              />
+            </Link>
+          ))
+        )}
+      </div>
+      <ConfirmationModal
+        forDeleteFunctionality
+        opened={deleteDialogOpened}
+        onClose={() => {
+          setDeleteDialogOpened(false);
+          setRuleToDelete(null);
+        }}
+        headerLabel={translations("Are you sure you want to delete this Rule?")}
+        headerTitle={translations("Delete Rule")}
+        confirmLabel={translations("Delete")}
+        onConfirm={() => {
+          if (ruleToDelete) {
+            onDelete(ruleToDelete);
+            setDeleteDialogOpened(false);
+            setRuleToDelete(null);
+          }
+        }}
+      />
+    </>
   );
 }
