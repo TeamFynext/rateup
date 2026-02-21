@@ -2384,7 +2384,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
     localStorage.setItem("waSettingsId", waSetting.id);
     localStorage.setItem("automationId", flowbotId);
 
-    const url = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/fb`)}&config_id=${process.env.NEXT_PUBLIC_META_USER_CONFIG_ID}`;
+    const url = `https://www.facebook.com/v25.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/fb`)}&config_id=${process.env.NEXT_PUBLIC_META_USER_CONFIG_ID}`;
     if (url) {
       router.push(url);
     }
