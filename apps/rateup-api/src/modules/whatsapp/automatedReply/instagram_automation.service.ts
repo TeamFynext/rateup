@@ -12,6 +12,7 @@ import {
   logInstagramAutomationAction,
   wasInstagramAutomationSentRecently,
 } from "./instagram_automatedReply.service.js";
+import { parseToWhatsAppFormat } from "../whatsappSurvey/wasurvey.utils.js";
 import {
   sendInstagramGenericTemplate,
   sendInstagramQuickReply,
@@ -352,7 +353,8 @@ async function handleInstagramTextNode(
   ibaId: string,
 ): Promise<void> {
   try {
-    const text = node.data?.body || node.data?.text || "Hello!";
+    const rawText = node.data?.body || node.data?.text || "Hello!";
+    const text = parseToWhatsAppFormat(rawText) || "Hello!";
     await sendInstagramTextMessage(igsId, text, orgId, ibaId);
   } catch (error) {
     log.error(
@@ -373,7 +375,7 @@ async function handleInstagramImageNode(
 ): Promise<void> {
   try {
     const imageUrl = node.data?.imageUrl || node.data?.url;
-    const caption = node.data?.caption || "";
+    const caption = parseToWhatsAppFormat(node.data?.caption) || "";
 
     if (!imageUrl) {
       log.warn(`[Instagram Automation] Image node ${node.id} has no image URL`);
@@ -437,7 +439,7 @@ async function handleInstagramQuickReplyNode(
   ibaId: string,
 ): Promise<void> {
   try {
-    const text = node.data?.text || "Choose an option:";
+    const text = parseToWhatsAppFormat(node.data?.text) || "Choose an option:";
     const quickReplies = (
       node.data?.quick_replies ||
       node.data?.quickReplies ||
@@ -532,10 +534,10 @@ async function handleInstagramPauseNode(
           `[Instagram Automation] Resuming automation ${automation.id} after pause`,
         );
 
-        // Update status back to active
+        // Update status back to inProgress
         await prisma.waAutomatedReplyMessage.update({
           where: { id: automationMessageId },
-          data: { status: "active" as any },
+          data: { status: "inProgress" as any },
         });
 
         // Continue to next node

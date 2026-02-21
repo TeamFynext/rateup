@@ -8,7 +8,8 @@ export async function instagramWebhookEventHandler(
 ) {
   try {
     log.trace(`recieved instgram webhook => %o`, request.body);
-    if ((request.body as any).object !== "instagram") {
+    const obj = (request.body as any).object;
+    if (obj !== "instagram" && obj !== "page") {
       return reply.code(200).send();
     }
     reply.code(200).send();
