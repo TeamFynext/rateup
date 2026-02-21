@@ -852,203 +852,226 @@ export async function assignWaMessageToUser(
   orgId: string,
   userId?: string,
 ) {
-  const existingUsers = await prisma.waInboxAssign.findMany({
-    where: {
-      contactId: data.contactId,
-    },
-  });
-  const assignIfOnline = data.assignIfOnline ?? true;
-  const newUsers = [];
-  const existingUserIds = existingUsers.map((u) => u.assignedUserId);
+  try {
+    const existingUsers = await prisma.waInboxAssign.findMany({
+      where: {
+        contactId: data.contactId,
+      },
+    });
+    const assignIfOnline = data.assignIfOnline ?? true;
+    const newUsers = [];
+    const existingUserIds = existingUsers.map((u) => u.assignedUserId);
 
-  const incomingUserIds = data.assignees.map((a) => a.userId);
+    const incomingUserIds = data.assignees.map((a) => a.userId);
 
-  const addedUsers = data.assignees.filter(
-    (a) => !existingUserIds.includes(a.userId),
-  );
-
-  const revokedUsers = existingUsers.filter(
-    (u) => !incomingUserIds.includes(u.assignedUserId),
-  );
-
-  const isReassignment = revokedUsers.length > 0 && addedUsers.length > 0;
-
-  for (const assignee of data.assignees) {
-    let updateCount = false;
-    const existingUser = existingUsers.find(
-      (existingUser) => existingUser.assignedUserId === assignee.userId,
+    const addedUsers = data.assignees.filter(
+      (a) => !existingUserIds.includes(a.userId),
     );
-    if (!existingUser) {
-      if (assignIfOnline) {
-        const user = await prisma.orgMember.findUnique({
+
+    const revokedUsers = existingUsers.filter(
+      (u) => !incomingUserIds.includes(u.assignedUserId),
+    );
+
+    const isReassignment = revokedUsers.length > 0 && addedUsers.length > 0;
+
+    for (const assignee of data.assignees) {
+      let updateCount = false;
+      const existingUser =
+        existingUsers?.length > 0
+          ? existingUsers.find(
+              (user) => user.assignedUserId === assignee.userId,
+            )
+          : false;
+      if (!existingUser) {
+        if (assignIfOnline) {
+          const user = await prisma.orgMember.findUnique({
+            where: {
+              userId_orgId: {
+                userId: assignee.userId,
+                orgId,
+              },
+            },
+          });
+          if (
+            [
+              UserAvailabilityStatus.busy,
+              UserAvailabilityStatus.online,
+            ].includes(user?.status as UserAvailabilityStatus)
+          ) {
+            newUsers.push(assignee);
+            updateCount = true;
+          } else {
+            const error: any = new Error(
+              `User is offline and cannot be assigned`,
+            );
+            error.statusCode = 400;
+            throw error;
+          }
+        } else {
+          newUsers.push(assignee);
+          newUsers.push(assignee);
+          updateCount = true;
+        }
+      } else if (existingUser.teamId !== assignee.teamId) {
+        await prisma.waInboxAssign.update({
           where: {
-            userId_orgId: {
+            contact_id_assigned_user_id_unique: {
+              contactId: data.contactId,
+              assignedUserId: existingUser.assignedUserId,
+            },
+          },
+          data: {
+            teamId: assignee.teamId,
+          },
+        });
+      }
+      if (updateCount)
+        await prisma.userAssignedCount.upsert({
+          where: {
+            user_org_unique: {
               userId: assignee.userId,
               orgId,
             },
           },
-        });
-        if (
-          [UserAvailabilityStatus.busy, UserAvailabilityStatus.online].includes(
-            user?.status as UserAvailabilityStatus,
-          )
-        ) {
-          newUsers.push(assignee);
-          updateCount = true;
-        }
-      } else {
-        newUsers.push(assignee);
-        updateCount = true;
-      }
-    } else if (existingUser.teamId !== assignee.teamId) {
-      await prisma.waInboxAssign.update({
-        where: {
-          contact_id_assigned_user_id_unique: {
-            contactId: data.contactId,
-            assignedUserId: existingUser.assignedUserId,
+          update: {
+            assignCount: {
+              increment: 1,
+            },
           },
-        },
-        data: {
-          teamId: assignee.teamId,
-        },
-      });
-    }
-    if (updateCount)
-      await prisma.userAssignedCount.upsert({
-        where: {
-          user_org_unique: {
+          create: {
             userId: assignee.userId,
             orgId,
+            assignCount: 1,
           },
-        },
-        update: {
-          assignCount: {
-            increment: 1,
-          },
-        },
-        create: {
-          userId: assignee.userId,
-          orgId,
-          assignCount: 1,
-        },
-      });
-  }
+        });
+    }
 
-  const res = await prisma.waInboxAssign.createMany({
-    data: newUsers.map((user) => ({
-      contactId: data.contactId,
-      assignedUserId: user.userId,
-      teamId: user.teamId,
-    })),
-    skipDuplicates: true,
-  });
-
-  if (isReassignment) {
-    await createInternalWaMessage({
-      contactId: data.contactId,
-      waMessageAssignStatus: "REASSIGNED",
-      assignedUsers: {
-        removed: revokedUsers.map((u) => ({
-          userId: u.assignedUserId,
-          teamId: u.teamId,
-        })),
-        added: addedUsers.map((u) => ({
-          userId: u.userId,
-          teamId: u.teamId,
-        })),
-      },
-      trigerredByUser: userId,
-      messageId: data.messageId,
+    const res = await prisma.waInboxAssign.createMany({
+      data: newUsers.map((user) => ({
+        contactId: data.contactId,
+        assignedUserId: user.userId,
+        teamId: user.teamId,
+      })),
+      skipDuplicates: true,
     });
-  } else {
-    if (newUsers.length) {
+
+    if (isReassignment) {
       await createInternalWaMessage({
         contactId: data.contactId,
-        waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
-        assignedUsers: newUsers,
-        trigerredByUser: userId,
-        messageId: data.messageId,
-      });
-    }
-
-    if (revokedUsers.length) {
-      await createInternalWaMessage({
-        contactId: data.contactId,
-        waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
-        assignedUsers: revokedUsers.map((u) => ({
-          userId: u.assignedUserId,
-          teamId: u.teamId,
-        })),
-        trigerredByUser: userId,
-        messageId: data.messageId,
-      });
-    }
-  }
-
-  const contact = await prisma.waInboxAssign.deleteMany({
-    where: {
-      contactId: data.contactId,
-      assignedUserId: {
-        notIn: data.assignees.map((assignee) => assignee.userId),
-      },
-    },
-  });
-
-  const updatedContact = await updateContactById(data.contactId, {
-    waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
-  });
-  const conversation = await getLastCreatedConversationForContact(
-    updatedContact.id,
-  );
-  if (conversation) {
-    const updatedAssignees = [
-      ...newUsers,
-      ...data.assignees.filter(
-        (t) =>
-          !newUsers.find((n) => n.userId === t.userId && n.teamId === t.teamId),
-      ),
-    ];
-    await updateConversationAssignees(
-      conversation.id,
-      { assignees: updatedAssignees },
-      userId,
-    );
-  }
-
-  for (const user of newUsers) {
-    const notificationSetting = await getNotificationSettings(
-      user.userId,
-      updatedContact.orgId,
-    );
-    if (
-      notificationSetting &&
-      notificationSetting.waMessageAssignNotification
-    ) {
-      await createNotification(
-        user.userId,
-        updatedContact.orgId,
-        "whatsapp",
-        "chat-assigned",
-        {
-          contactId: updatedContact.id,
-          contactName: updatedContact.name,
+        waMessageAssignStatus: "REASSIGNED",
+        assignedUsers: {
+          removed: revokedUsers.map((u) => ({
+            userId: u.assignedUserId,
+            teamId: u.teamId,
+          })),
+          added: addedUsers.map((u) => ({
+            userId: u.userId,
+            teamId: u.teamId,
+          })),
         },
+        trigerredByUser: userId,
+        messageId: data.messageId,
+      });
+    } else {
+      if (newUsers.length) {
+        await createInternalWaMessage({
+          contactId: data.contactId,
+          waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+          assignedUsers: newUsers,
+          trigerredByUser: userId,
+          messageId: data.messageId,
+        });
+      }
+
+      if (revokedUsers.length) {
+        await createInternalWaMessage({
+          contactId: data.contactId,
+          waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
+          assignedUsers: revokedUsers.map((u) => ({
+            userId: u.assignedUserId,
+            teamId: u.teamId,
+          })),
+          trigerredByUser: userId,
+          messageId: data.messageId,
+        });
+      }
+    }
+
+    const contact = await prisma.waInboxAssign.deleteMany({
+      where: {
+        contactId: data.contactId,
+        assignedUserId: {
+          notIn: data.assignees.map((assignee) => assignee.userId),
+        },
+      },
+    });
+
+    const updatedContact = await updateContactById(data.contactId, {
+      waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+    });
+    const conversation = await getLastCreatedConversationForContact(
+      updatedContact.id,
+    );
+    if (conversation) {
+      const updatedAssignees = [
+        ...newUsers,
+        ...data.assignees.filter(
+          (t) =>
+            !newUsers.find(
+              (n) => n.userId === t.userId && n.teamId === t.teamId,
+            ),
+        ),
+      ];
+      await updateConversationAssignees(
+        conversation.id,
+        { assignees: updatedAssignees },
+        userId,
       );
     }
-  }
 
-  //Change zapier schema
-  await addZapierTriggerToQueue(
-    ZapierTriggers.CONTACT_ASSIGN,
-    {
-      [ZapierTriggers.CONTACT_ASSIGN]: {
-        contact: updatedContact,
-        newAssignees: newUsers,
+    for (const user of newUsers) {
+      const notificationSetting = await getNotificationSettings(
+        user.userId,
+        updatedContact.orgId,
+      );
+      if (
+        notificationSetting &&
+        notificationSetting.waMessageAssignNotification
+      ) {
+        await createNotification(
+          user.userId,
+          updatedContact.orgId,
+          "whatsapp",
+          "chat-assigned",
+          {
+            contactId: updatedContact.id,
+            contactName: updatedContact.name,
+          },
+        );
+      }
+    }
+
+    //Change zapier schema
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONTACT_ASSIGN,
+      {
+        [ZapierTriggers.CONTACT_ASSIGN]: {
+          contact: updatedContact,
+          newAssignees: newUsers,
+        },
       },
-    },
-    orgId,
-  );
-  return data.assignees;
+      orgId,
+    );
+    return data.assignees;
+  } catch (e) {
+    if (e) {
+      throw e;
+    } else {
+      const error: any = new Error(`Internal error`);
+      error.statusCode = 500;
+      throw error;
+    }
+  }
 }
 
 export async function getAssignedUserForContact(contactId) {
