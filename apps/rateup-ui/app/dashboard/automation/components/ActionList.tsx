@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import {
@@ -14,6 +14,7 @@ import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { useAllInstagramAutomations } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -35,12 +36,22 @@ const ActionValueInput = ({
   valueField: any;
 }) => {
   const { control } = useFormContext<CreateRuleInput>();
-  const { data } = useAllWaAutomatedReplies();
+  const { data: waData } = useAllWaAutomatedReplies();
+  const { data: igData } = useAllInstagramAutomations();
   const { data: labelsData } = useContactLabels();
   const { data: lifecyclesData } = useLifeCyclesQuery();
   const { data: teamMembers } = useTeamsMembersOfOrg();
   const { data: teamsData } = useTeamsByUser();
   const { data: flowsData } = useWaFlowsFromDb();
+
+  // Combine both WhatsApp and Instagram automations
+  const allAutomations = useMemo(() => {
+    return [...(waData || []), ...(igData || [])].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [waData, igData]);
+
   const actionType: ActionType = useWatch({
     control,
     name: `actions.${index}.type`,
@@ -142,7 +153,7 @@ const ActionValueInput = ({
           <SelectValue placeholder="Select automation" />
         </SelectTrigger>
         <SelectContent>
-          {data?.map((t) => (
+          {allAutomations?.map((t) => (
             <SelectItem key={t.id} value={t.id}>
               {t.name}
             </SelectItem>
