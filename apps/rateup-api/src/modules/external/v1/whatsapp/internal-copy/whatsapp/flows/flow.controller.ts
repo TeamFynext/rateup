@@ -258,7 +258,7 @@ export async function saveFlowJsonToWhatsappHandler(
 
     res.status(200).send();
   } catch (error) {
-    log.error("Error saving flow json to whatsapp", error);
+    log.error({ err: error }, "Error saving flow json to whatsapp");
     res.status(500).send(error.message);
   }
 }
@@ -288,7 +288,7 @@ export async function updateFlowMetaDataHandler(
     }
     res.status(204).send();
   } catch (error) {
-    log.error("Error Updating flow meta data", error);
+    log.error({ err: error }, "Error Updating flow meta data");
     res.status(500).send(error);
   }
 }
@@ -314,6 +314,7 @@ export async function cloneAndDeprecateFlowHandler(
     await updateFlowIdAndStatusInDb(dbFlowId, flowId, previousFlow.surveyId);
     res.status(204).send();
   } catch (error) {
+    log.error({ err: error }, "Error cloning and deprecating flow");
     res.status(500).send(error.message);
   }
 }
@@ -342,6 +343,7 @@ export async function cloneFlowHandler(
     }
     return res.status(201).send();
   } catch (error) {
+    log.error({ err: error }, "Error cloning flow");
     res.status(500).send(error.message);
   }
 }

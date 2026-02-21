@@ -16,7 +16,11 @@ import {
 import { log } from "../../../utils/logger.js";
 import { QuestionType as Q } from "../../../types/enums.js";
 import { callWhatsappApi } from "../wa_axios.js";
-import { getWaSettings } from "../settings/wa_settings.service.js";
+import {
+  getWaSettings,
+  getWaSettingsByPhone,
+  getWaSettingsByPhoneId,
+} from "../settings/wa_settings.service.js";
 import {
   getFileUrlFromKey,
   uploadFile,
@@ -384,6 +388,43 @@ export async function convertNodeToWhatsAppMessage(
         if (typedData.thumbnailProductId?.length) {
           parameters.thumbnail_product_retailer_id =
             typedData.thumbnailProductId;
+        }
+
+        const settings = await getWaSettingsByPhone(recipient);
+        const waSettings = await getWaSettingsByPhoneId(settings?.phoneId);
+
+        if (waSettings?.paymentMethod === "SHOPIFY_LINK") {
+          // TODO: Fetch variant ID from catalog/product ID if needed, or assume productRetailerId is the variant ID
+          // For a general catalog message, we might redirect to the store's collections page or similar if no specific product is linked in a simple "view catalog" action.
+          // However, catalogNode usually implies sending the catalog.
+          // If the user wants to use Shopify Checkout, they likely want to send a link to the product.
+          // BUT, `CatalogMessages.Catalog` is just "View Catalog".
+
+          // If it's a specific product (SingleProduct), we can generate a cart link.
+          // For "Catalog" type, it's generic.
+
+          log.trace({ parameters }, "Catalog message parameters");
+          return {
+            ...baseMessage,
+            type: "interactive",
+            interactive: {
+              type: "catalog_message",
+              body: {
+                text:
+                  parseToWhatsAppFormat(typedData?.body) || "Default message",
+              },
+              action: {
+                name: "catalog_message",
+                parameters:
+                  Object.keys(parameters).length > 0 ? parameters : undefined,
+              },
+              footer: typedData.footer
+                ? {
+                    text: parseToWhatsAppFormat(typedData.footer),
+                  }
+                : undefined,
+            },
+          };
         }
 
         log.trace({ parameters }, "Catalog message parameters");
@@ -1266,7 +1307,7 @@ export async function generateMessageDataFromQuestion(
 ): Promise<WaSendMessageBody> {
   const to = session.phone;
   if (!session.language) {
-    log.error("No language found for session", session);
+    log.error({ session }, "No language found for session");
     throw new Error("No language found for session");
   }
   const lang = session.language;
@@ -1381,7 +1422,7 @@ export function isValidResponse(
     case Q.WaButtons:
     case Q.CustomNPS:
       if (!question.choices) {
-        log.fatal("No choices found for question", question);
+        log.fatal({ question }, "No choices found for question");
         throw new Error("No choices found for question");
       }
       return question.choices[lang]?.includes(response);
@@ -1459,7 +1500,7 @@ export async function parseResponse(
           (c) => c.value === message,
         );
         if (!choice) {
-          log.error("Couldn't find choice for message", message);
+          log.error({ message, question }, "Couldn't find choice for message");
           return false;
         } else {
           return choice;

@@ -68,6 +68,7 @@ export async function registerBusinessClientHandler(
       type: WaConfigType.Automated,
       status: WhatsappSettingsStatus.ACTIVE,
       appId: process.env.wa_app_id,
+      paymentMethod: "NATIVE",
     });
 
     log.info("Business client registered successfully");

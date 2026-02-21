@@ -194,7 +194,7 @@ export async function getContactTagHandler(
     reply.code(200).send(data ?? { contactTags: [] });
   } catch (error) {
     console.log("🚀 ~ getContactTagHandler ~ error:", error);
-    log.error("Error while getting contact tags", error);
+    log.error({ err: error }, "Error while getting contact tags");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -210,7 +210,7 @@ export async function updateContactTagHandler(
     await updateContactTag(orgId, request.body);
     reply.code(204).send();
   } catch (error) {
-    log.error("Error while updating contact tags", error);
+    log.error({ err: error }, "Error while updating contact tags");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -226,7 +226,7 @@ export async function getWaLogsHandler(
     const data = await getWaLogs(orgId, request.query);
     reply.code(200).send(data);
   } catch (error) {
-    log.error("Error while getting wa logs", error);
+    log.error({ err: error }, "Error while getting wa logs");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }

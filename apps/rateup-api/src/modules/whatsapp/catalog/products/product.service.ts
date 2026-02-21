@@ -1,4 +1,5 @@
 import prisma from "../../../../utils/prisma.js";
+import { log } from "../../../../utils/logger.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
 import { callWhatsappApi } from "../../wa_axios.js";
 import { getWaCatalog } from "../catalog.service.js";
@@ -178,6 +179,10 @@ export async function syncCatalogProducts(
   };
 
   const res = await callWhatsappApi(`${url}`, "GET", null, null, { params });
+  if (!res.data?.data) {
+    log.warn("No products data returned from Meta for catalog %s", catalogId);
+    return;
+  }
   const { vertical } = catalogInfo;
   for (const product of res.data.data) {
     if (vertical === "commerce") {

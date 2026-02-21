@@ -15,16 +15,17 @@ export async function sendInstagramTextMessage(
   igsId: string,
   text: string,
   orgId: string,
+  ibaId: string,
 ): Promise<any> {
   try {
     // Get settings for this organization
-    const waSettings = await getWaSettingsByIbaId(igsId);
+    const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { ibaId, pageAccessToken } = waSettings;
+    const { pageAccessToken } = waSettings;
 
     // Prepare the message payload
     const payload = {
@@ -66,9 +67,10 @@ export async function sendInstagramImage(
   imageUrl: string,
   caption?: string,
   orgId?: string,
+  ibaId?: string,
 ): Promise<any> {
   try {
-    const waSettings = await getWaSettingsByIbaId(igsId);
+    const waSettings = await getWaSettingsByIbaId(ibaId!);
 
     if (!waSettings) {
       throw new Error(
@@ -76,7 +78,7 @@ export async function sendInstagramImage(
       );
     }
 
-    const { ibaId, pageAccessToken } = waSettings;
+    const { pageAccessToken } = waSettings;
 
     const payload: any = {
       recipient: {
@@ -105,7 +107,7 @@ export async function sendInstagramImage(
 
     // If caption is provided, send it as a separate text message
     if (caption) {
-      await sendInstagramTextMessage(igsId, caption, orgId!);
+      await sendInstagramTextMessage(igsId, caption, orgId!, ibaId!);
     }
 
     return response.data;
@@ -135,15 +137,16 @@ export async function sendInstagramGenericTemplate(
     }>;
   }>,
   orgId: string,
+  ibaId: string,
 ): Promise<any> {
   try {
-    const waSettings = await getWaSettingsByIbaId(igsId);
+    const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { ibaId, pageAccessToken } = waSettings;
+    const { pageAccessToken } = waSettings;
 
     const payload = {
       recipient: {
@@ -204,15 +207,16 @@ export async function sendInstagramQuickReply(
     image_url?: string;
   }>,
   orgId: string,
+  ibaId: string,
 ): Promise<any> {
   try {
-    const waSettings = await getWaSettingsByIbaId(igsId);
+    const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { ibaId, pageAccessToken } = waSettings;
+    const { pageAccessToken } = waSettings;
 
     const payload = {
       recipient: {
@@ -266,15 +270,16 @@ export async function sendInstagramProductTemplate(
     }>;
   },
   orgId: string,
+  ibaId: string,
 ): Promise<any> {
   try {
-    const waSettings = await getWaSettingsByIbaId(igsId);
+    const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { ibaId, pageAccessToken } = waSettings;
+    const { pageAccessToken } = waSettings;
 
     const payload = {
       recipient: {
@@ -332,15 +337,16 @@ export async function sendInstagramStoryReply(
   storyId: string,
   text: string,
   orgId: string,
+  ibaId: string,
 ): Promise<any> {
   try {
-    const waSettings = await getWaSettingsByIbaId(igsId);
+    const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { ibaId, pageAccessToken } = waSettings;
+    const { pageAccessToken } = waSettings;
 
     const payload = {
       recipient: {
@@ -433,15 +439,16 @@ export async function sendInstagramVideo(
   igsId: string,
   videoUrl: string,
   orgId: string,
+  ibaId: string,
 ): Promise<any> {
   try {
-    const waSettings = await getWaSettingsByIbaId(igsId);
+    const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { ibaId, pageAccessToken } = waSettings;
+    const { pageAccessToken } = waSettings;
 
     const payload = {
       recipient: {
@@ -483,15 +490,16 @@ export async function sendInstagramFile(
   igsId: string,
   fileUrl: string,
   orgId: string,
+  ibaId: string,
 ): Promise<any> {
   try {
-    const waSettings = await getWaSettingsByIbaId(igsId);
+    const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
       throw new Error(`No Instagram settings found for organization ${orgId}`);
     }
 
-    const { ibaId, pageAccessToken } = waSettings;
+    const { pageAccessToken } = waSettings;
 
     const payload = {
       recipient: {

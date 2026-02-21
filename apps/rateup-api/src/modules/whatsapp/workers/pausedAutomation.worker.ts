@@ -92,8 +92,8 @@ export const pausedAutomationWorker = new Worker(
       }
     } catch (error) {
       log.error(
+        { error },
         `Error processing paused automation ${automationMessageId}: ${error.message}`,
-        error,
       );
       throw error; // Re-throw to trigger BullMQ retry
     }

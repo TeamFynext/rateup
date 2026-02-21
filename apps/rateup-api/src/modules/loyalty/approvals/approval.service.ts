@@ -50,7 +50,7 @@ export async function createApprovalRequest(data: CreateApprovalRequestInput) {
     );
     return approval;
   } catch (error) {
-    log.error("Error creating approval request:", error);
+    log.error({ err: error }, "Error creating approval request:");
     throw error;
   }
 }
@@ -137,7 +137,7 @@ export async function getApprovalRequests(
       },
     };
   } catch (error) {
-    log.error("Error getting approval requests:", error);
+    log.error({ err: error }, "Error getting approval requests:");
     throw error;
   }
 }
@@ -171,7 +171,7 @@ export async function getApprovalRequestById(approvalId: string) {
 
     return approval;
   } catch (error) {
-    log.error("Error getting approval request:", error);
+    log.error({ err: error }, "Error getting approval request:");
     throw error;
   }
 }
@@ -215,7 +215,7 @@ export async function approveApprovalRequest(data: ApproveRequestInput) {
     }
   } catch (error) {
     console.log("🚀 ~ approveApprovalRequest ~ error:", error);
-    log.error("Error approving request: %c", error);
+    log.error({ err: error }, "Error approving request:");
     throw error;
   }
 }
@@ -273,7 +273,7 @@ export async function rejectApprovalRequest(data: RejectRequestInput) {
       return updatedApproval;
     });
   } catch (error) {
-    log.error("Error rejecting request:", error);
+    log.error({ err: error }, "Error rejecting request:");
     throw error;
   }
 }
@@ -322,7 +322,7 @@ export async function cancelApprovalRequest(data: CancelRequestInput) {
       return updatedApproval;
     });
   } catch (error) {
-    log.error("Error cancelling request:", error);
+    log.error({ err: error }, "Error cancelling request:");
     throw error;
   }
 }
@@ -796,7 +796,7 @@ export async function expirePendingRequests() {
 
     return result;
   } catch (error) {
-    log.error("Error expiring pending requests:", error);
+    log.error({ err: error }, "Error expiring pending requests:");
     throw error;
   }
 }

@@ -199,7 +199,7 @@ export async function sendMessage(
         logs: [e?.error],
       },
     });
-    log.error("Error sending message", e);
+    log.error({ error: e }, "Error sending message");
     let errorMessage = `Failed to send message`;
     if (e instanceof GraphApiError) {
       errorMessage = getGraphApiErrorMessage(e);
@@ -272,7 +272,7 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
     return { success: false };
   } catch (e) {
     console.error(e);
-    log.error(e);
+    log.error({ error: e }, "Error blocking WhatsApp user");
     return { success: false, error: e };
   }
 }
@@ -735,7 +735,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
         }
       }
     } catch (error) {
-      log.error("Error occurred while processing media file:", error);
+      log.error({ err: error }, "Error occurred while processing media file:");
     }
   }
   // TODO: save name
@@ -969,7 +969,7 @@ export async function startTestimonialQuestion(
   session: WaSessionWithRelations,
 ) {
   if (!session.language) {
-    log.error("No language found for session", session);
+    log.error({ session }, "No language found for session");
     throw new Error("No language found for session");
   }
   const title = question.title[session.language];

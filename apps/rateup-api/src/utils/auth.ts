@@ -93,9 +93,8 @@ export async function verifyRole(
     }
   } catch (err) {
     log.fatal(
+      { err, user: request.user },
       "Error verifying role\n%o\nrequest.user => %o",
-      err,
-      request.user,
     );
     reply.code(403).send({ message: "Not authorized" });
   }
@@ -134,9 +133,9 @@ export function getVerifySubscriptionHandler(
         ["POST", "PUT"].includes(request.method)
       ) {
         log.error(
+          { subscription, user: request.user },
+
           "Subscription expired\n%o\nrequest.user => %o",
-          subscription,
-          request.user,
         );
         reply.code(403).send({
           message: "Subscription expired",
@@ -156,9 +155,8 @@ export function getVerifySubscriptionHandler(
       );
       if (missingFeatures.length > 0) {
         log.error(
+          { missingFeatures, user: request.user },
           "Subscription missing features\n%o\nrequest.user => %o",
-          missingFeatures,
-          request.user,
         );
         reply.code(403).send({
           message: "This feature is not included in your subscription",
@@ -169,9 +167,8 @@ export function getVerifySubscriptionHandler(
     } catch (err) {
       console.log(err); // TODO: find out why error is not getting printed in log.fatal
       log.fatal(
+        { err, user: request.user },
         "Error verifying subscription\nerr => %o\nrequest.user => %o",
-        err,
-        request.user,
       );
       reply.code(403).send({ message: "Error while verifying subscription" });
     }
@@ -212,9 +209,8 @@ export function getVerifySubscriptionForPublicHandler(
         ["POST", "PUT"].includes(request.method)
       ) {
         log.error(
+          { subscription, orgId: request.body.orgId },
           "Subscription expired\n%o\nrequest.body => %o",
-          subscription,
-          request.body,
         );
         reply.code(403).send({
           message: "Subscription expired",
@@ -227,9 +223,8 @@ export function getVerifySubscriptionForPublicHandler(
       );
       if (missingFeatures.length > 0) {
         log.error(
+          { missingFeatures, orgId: request.body.orgId },
           "Subscription missing features\n%o\nrequest.body => %o",
-          missingFeatures,
-          request.body,
         );
         reply.code(403).send({
           message: "This feature is not included in your subscription",
@@ -252,18 +247,14 @@ export async function verifySubscription(orgId, featurePathNames) {
     return false;
   }
   if (dayjs(subscription.expiresAt).isBefore(dayjs())) {
-    log.error("Subscription expired\n%o\norgId => %s", subscription, orgId);
+    log.error({ subscription, orgId }, "Subscription expired");
     return false;
   }
   const missingFeatures = featurePathNames.filter(
     (feature) => !getNestedProperty(subscription.features, feature).active,
   );
   if (missingFeatures.length > 0) {
-    log.error(
-      "Subscription missing features\n%o\norgId => %s",
-      missingFeatures,
-      orgId,
-    );
+    log.error({ missingFeatures, orgId }, "Subscription missing features");
     return false;
   }
   return subscription;

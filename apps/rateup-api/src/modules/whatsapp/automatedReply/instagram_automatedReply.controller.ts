@@ -247,6 +247,7 @@ export async function initiateInstagramAutomationHandler(
     Params: { id: string };
     Body: {
       igsId: string; // Instagram Scoped ID
+      ibaId: string; // Instagram Business Account ID
     };
   }>,
   reply: FastifyReply,
@@ -254,7 +255,7 @@ export async function initiateInstagramAutomationHandler(
   try {
     const { orgId } = request.user as any;
     const { id } = request.params;
-    const { igsId } = request.body;
+    const { igsId, ibaId } = request.body;
 
     // Get automation
     const automation = await getInstagramAutomatedReplyById(id);
@@ -280,7 +281,7 @@ export async function initiateInstagramAutomationHandler(
     }
 
     // Start the automation flow
-    await startInstagramAutomationFlow(igsId, automation as any, orgId);
+    await startInstagramAutomationFlow(igsId, automation as any, orgId, ibaId);
 
     log.info(
       `[Instagram Automation Controller] Manually triggered automation ${id} for igsId ${igsId}`,

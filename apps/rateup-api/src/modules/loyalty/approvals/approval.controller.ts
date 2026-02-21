@@ -35,7 +35,7 @@ export async function createApprovalRequestHandler(
     const result = await createApprovalRequest(request.body);
     reply.code(201).send(result);
   } catch (e: any) {
-    log.error("Error creating approval request:", e);
+    log.error({ err: e }, "Error creating approval request:");
     reply.code(500).send({ error: e.message });
   }
 }
@@ -57,7 +57,7 @@ export async function getApprovalRequestsHandler(
     const result = await getApprovalRequests(program.id, request.query);
     reply.code(200).send(result);
   } catch (e: any) {
-    log.error("Error getting approval requests:", e);
+    log.error({ err: e }, "Error getting approval requests:");
     reply.code(500).send({ error: e.message });
   }
 }
@@ -74,7 +74,7 @@ export async function getApprovalRequestByIdHandler(
     const result = await getApprovalRequestById(request.params.approvalId);
     reply.code(200).send(result);
   } catch (e: any) {
-    log.error("Error getting approval request:", e);
+    log.error({ err: e }, "Error getting approval request:");
     if (e.message === "Approval request not found") {
       return reply.code(404).send({ error: e.message });
     }
@@ -104,7 +104,7 @@ export async function approveApprovalRequestHandler(
     const result = await approveApprovalRequest(data);
     reply.code(200).send(result);
   } catch (e: any) {
-    log.error("Error approving request:", e);
+    log.error({ err: e }, "Error approving request:");
     reply.code(500).send({ error: e.message });
   }
 }
@@ -131,7 +131,7 @@ export async function rejectApprovalRequestHandler(
     const result = await rejectApprovalRequest(data);
     reply.code(200).send(result);
   } catch (e: any) {
-    log.error("Error rejecting request:", e);
+    log.error({ err: e }, "Error rejecting request:");
     reply.code(500).send({ error: e.message });
   }
 }
@@ -156,7 +156,7 @@ export async function cancelApprovalRequestHandler(
     const result = await cancelApprovalRequest(data);
     reply.code(200).send(result);
   } catch (e: any) {
-    log.error("Error cancelling request:", e);
+    log.error({ err: e }, "Error cancelling request:");
     reply.code(500).send({ error: e.message });
   }
 }

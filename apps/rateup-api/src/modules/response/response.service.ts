@@ -735,7 +735,11 @@ export async function createResponse(
       select: { id: true },
     });
     if (!contact)
-      log.error("no contact found", phone, surveyTeamMap?.team?.orgId);
+      log.error({
+        message: "no contact found",
+        phone,
+        orgId: surveyTeamMap?.team?.orgId,
+      });
     contactId = contact?.id;
   }
   const surveyResponse = await prisma.surveyResponse.create({

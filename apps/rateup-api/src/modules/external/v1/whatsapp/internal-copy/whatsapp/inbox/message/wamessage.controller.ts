@@ -112,7 +112,7 @@ export async function handleWaMessages(
       },
     });
   } catch (error) {
-    log.error("Error in handleWaMessages: ", error);
+    log.error({ err: error }, "Error in handleWaMessages:");
   }
 }
 

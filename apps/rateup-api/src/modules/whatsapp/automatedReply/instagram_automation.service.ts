@@ -65,6 +65,7 @@ export async function startInstagramAutomationFlow(
   igsId: string,
   automation: InstagramAutomation,
   orgId: string,
+  ibaId: string,
 ): Promise<void> {
   try {
     log.info(
@@ -127,6 +128,7 @@ export async function startInstagramAutomationFlow(
       startNode.id,
       orgId,
       automationMessage.id,
+      ibaId,
     );
   } catch (error) {
     log.error(
@@ -146,6 +148,7 @@ export async function processNextInstagramNode(
   nodeId: string,
   orgId: string,
   automationMessageId: string,
+  ibaId: string,
 ): Promise<void> {
   try {
     if (!nodeId || !automation?.matchData?.json?.nodes) {
@@ -187,6 +190,7 @@ export async function processNextInstagramNode(
             nextEdge.target,
             orgId,
             automationMessageId,
+            ibaId,
           );
         }
       } else if (node.type === "endNode") {
@@ -209,27 +213,27 @@ export async function processNextInstagramNode(
 
     switch (node.type) {
       case "textNode":
-        await handleInstagramTextNode(node, igsId, orgId);
+        await handleInstagramTextNode(node, igsId, orgId, ibaId);
         messageSent = true;
         break;
 
       case "imageNode":
-        await handleInstagramImageNode(node, igsId, orgId);
+        await handleInstagramImageNode(node, igsId, orgId, ibaId);
         messageSent = true;
         break;
 
       case "instagramGenericTemplateNode":
-        await handleInstagramGenericTemplateNode(node, igsId, orgId);
+        await handleInstagramGenericTemplateNode(node, igsId, orgId, ibaId);
         messageSent = true;
         break;
 
       case "instagramQuickReplyNode":
-        await handleInstagramQuickReplyNode(node, igsId, orgId);
+        await handleInstagramQuickReplyNode(node, igsId, orgId, ibaId);
         messageSent = true;
         break;
 
       case "instagramProductTemplateNode":
-        await handleInstagramProductTemplateNode(node, igsId, orgId);
+        await handleInstagramProductTemplateNode(node, igsId, orgId, ibaId);
         messageSent = true;
         break;
 
@@ -256,6 +260,7 @@ export async function processNextInstagramNode(
           orgId,
           automation,
           automationMessageId,
+          ibaId,
         );
         return; // Pause node returns early
 
@@ -313,6 +318,7 @@ export async function processNextInstagramNode(
             nextEdge.target,
             orgId,
             automationMessageId,
+            ibaId,
           );
         }
       }
@@ -343,10 +349,11 @@ async function handleInstagramTextNode(
   node: InstagramNode,
   igsId: string,
   orgId: string,
+  ibaId: string,
 ): Promise<void> {
   try {
     const text = node.data?.body || node.data?.text || "Hello!";
-    await sendInstagramTextMessage(igsId, text, orgId);
+    await sendInstagramTextMessage(igsId, text, orgId, ibaId);
   } catch (error) {
     log.error(
       `[Instagram Automation] Error handling text node ${node.id}: %o`,
@@ -362,6 +369,7 @@ async function handleInstagramImageNode(
   node: InstagramNode,
   igsId: string,
   orgId: string,
+  ibaId: string,
 ): Promise<void> {
   try {
     const imageUrl = node.data?.imageUrl || node.data?.url;
@@ -372,7 +380,7 @@ async function handleInstagramImageNode(
       return;
     }
 
-    await sendInstagramImage(igsId, imageUrl, caption, orgId);
+    await sendInstagramImage(igsId, imageUrl, caption, orgId, ibaId);
   } catch (error) {
     log.error(
       `[Instagram Automation] Error handling image node ${node.id}: %o`,
@@ -388,6 +396,7 @@ async function handleInstagramGenericTemplateNode(
   node: InstagramNode,
   igsId: string,
   orgId: string,
+  ibaId: string,
 ): Promise<void> {
   try {
     const elements = (node.data?.elements || []).map((el: any) => ({
@@ -409,7 +418,7 @@ async function handleInstagramGenericTemplateNode(
       return;
     }
 
-    await sendInstagramGenericTemplate(igsId, elements, orgId);
+    await sendInstagramGenericTemplate(igsId, elements, orgId, ibaId);
   } catch (error) {
     log.error(
       `[Instagram Automation] Error handling generic template node ${node.id}: %o`,
@@ -425,6 +434,7 @@ async function handleInstagramQuickReplyNode(
   node: InstagramNode,
   igsId: string,
   orgId: string,
+  ibaId: string,
 ): Promise<void> {
   try {
     const text = node.data?.text || "Choose an option:";
@@ -443,11 +453,11 @@ async function handleInstagramQuickReplyNode(
         `[Instagram Automation] Quick reply node ${node.id} has no quick replies`,
       );
       // Send text only
-      await sendInstagramTextMessage(igsId, text, orgId);
+      await sendInstagramTextMessage(igsId, text, orgId, ibaId);
       return;
     }
 
-    await sendInstagramQuickReply(igsId, text, quickReplies, orgId);
+    await sendInstagramQuickReply(igsId, text, quickReplies, orgId, ibaId);
   } catch (error) {
     log.error(
       `[Instagram Automation] Error handling quick reply node ${node.id}: %o`,
@@ -463,6 +473,7 @@ async function handleInstagramProductTemplateNode(
   node: InstagramNode,
   igsId: string,
   orgId: string,
+  ibaId: string,
 ): Promise<void> {
   try {
     const product = node.data?.product || {};
@@ -474,7 +485,7 @@ async function handleInstagramProductTemplateNode(
       return;
     }
 
-    await sendInstagramProductTemplate(igsId, product, orgId);
+    await sendInstagramProductTemplate(igsId, product, orgId, ibaId);
   } catch (error) {
     log.error(
       `[Instagram Automation] Error handling product template node ${node.id}: %o`,
@@ -492,6 +503,7 @@ async function handleInstagramPauseNode(
   orgId: string,
   automation: InstagramAutomation,
   automationMessageId: string,
+  ibaId: string,
 ): Promise<void> {
   try {
     const duration = node.data?.duration || 0;
@@ -539,6 +551,7 @@ async function handleInstagramPauseNode(
               nextEdge.target,
               orgId,
               automationMessageId,
+              ibaId,
             );
           }
         }
@@ -564,6 +577,7 @@ export async function handleInstagramUserResponse(
   igsId: string,
   message: string,
   orgId: string,
+  ibaId: string,
   buttonPayload?: string,
 ): Promise<boolean> {
   try {
@@ -631,6 +645,7 @@ export async function handleInstagramUserResponse(
         currentNodeId,
         orgId,
         recentAutomation.id,
+        ibaId,
       );
 
       return true;
@@ -660,6 +675,7 @@ export async function handleInstagramUserResponse(
             nextEdge.target,
             orgId,
             recentAutomation.id,
+            ibaId,
           );
         }
 

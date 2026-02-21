@@ -116,22 +116,22 @@ export async function checkBirthdayEventTriggers() {
             );
           } catch (error) {
             log.error(
+              { err: error },
               `Birthday Event Trigger - Error sending to customer ${customer.id}:`,
-              error,
             );
           }
         }
       } catch (error) {
         log.error(
+          { err: error },
           `Birthday Event Trigger - Error processing program ${trigger.programId}:`,
-          error,
         );
       }
     }
 
     log.info("Birthday Event Trigger Cron - Completed");
   } catch (error) {
-    log.error("Birthday Event Trigger Cron - Fatal error:", error);
+    log.error({ err: error }, "Birthday Event Trigger Cron - Fatal error:");
   }
 }
 
@@ -252,22 +252,22 @@ export async function checkInactivityEventTriggers() {
             );
           } catch (error) {
             log.error(
+              { err: error },
               `Inactivity Event Trigger - Error sending to customer ${customer.id}:`,
-              error,
             );
           }
         }
       } catch (error) {
         log.error(
+          { err: error },
           `Inactivity Event Trigger - Error processing program ${trigger.programId}:`,
-          error,
         );
       }
     }
 
     log.info("Inactivity Event Trigger Cron - Completed");
   } catch (error) {
-    log.error("Inactivity Event Trigger Cron - Fatal error:", error);
+    log.error({ err: error }, "Inactivity Event Trigger Cron - Fatal error:");
   }
 }
 
@@ -303,8 +303,8 @@ async function issueRewardToCustomer(accountId: string, rewardId: string) {
     );
   } catch (error) {
     log.error(
+      { err: error },
       `Error issuing reward ${rewardId} to customer ${accountId}:`,
-      error,
     );
   }
 }
@@ -485,8 +485,8 @@ export async function checkPointsExpiration() {
             );
           } catch (error) {
             log.error(
+              { err: error },
               `Points Expiration - Error processing account ${account.id}:`,
-              error,
             );
           }
         }
@@ -494,8 +494,8 @@ export async function checkPointsExpiration() {
         log.info(`Points Expiration - Program ${program.name}: Completed`);
       } catch (error) {
         log.error(
+          { err: error },
           `Points Expiration - Error processing program ${program.id}:`,
-          error,
         );
       }
     }
@@ -504,6 +504,6 @@ export async function checkPointsExpiration() {
       `Points Expiration Cron - Completed: ${totalPointsExpired} points expired for ${totalCustomersAffected} customers`,
     );
   } catch (error) {
-    log.error("Points Expiration Cron - Fatal error:", error);
+    log.error({ err: error }, "Points Expiration Cron - Fatal error:");
   }
 }

@@ -31,6 +31,7 @@ export async function createWaSettingsHandler(
     status: WhatsappSettingsStatus.ACTIVE,
     appId: req.body.appId,
     type: WaConfigType.Manual,
+    paymentMethod: "NATIVE",
   });
   return res.status(200).send(waSettings);
 }
@@ -84,7 +85,7 @@ export async function getContactTagHandler(
     const data = await getContactTag(orgId);
     reply.code(200).send(data ?? { contactTags: [] });
   } catch (error) {
-    log.error("Error while getting contact tags", error);
+    log.error({ err: error }, "Error while getting contact tags");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
@@ -100,7 +101,7 @@ export async function updateContactTagHandler(
     await updateContactTag(orgId, request.body.tags);
     reply.code(204).send();
   } catch (error) {
-    log.error("Error while updating contact tags", error);
+    log.error({ err: error }, "Error while updating contact tags");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }

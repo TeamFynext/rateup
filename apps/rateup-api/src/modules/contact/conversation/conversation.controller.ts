@@ -31,8 +31,8 @@ export async function updateConversationHandler(
     const { conversationId } = request.params;
     const res = await updateConversation(conversationId, request.body);
     reply.send(res);
-  } catch (e) {
-    log.error("Error updating conversation:", e);
+  } catch (error) {
+    log.error({ err: error }, "Error updating conversation:");
     reply
       .status(500)
       .send({ error: "An error occurred while updating the conversation." });
@@ -49,8 +49,8 @@ export async function getConversationOverviewHandler(
     const dateRange = request.query.dateRange?.split(",") || [];
     const stats = await getConversationOverview(request.user.orgId, dateRange);
     reply.send(stats);
-  } catch (e) {
-    log.error("Error fetching conversation overview: %o", e);
+  } catch (error) {
+    log.error({ err: error }, "Error fetching conversation overview:");
     reply.status(500).send({
       error: "An error occurred while fetching the conversation overview.",
     });
@@ -71,8 +71,11 @@ export async function getResolvedConversationStatsHandler(
       dateRange,
     );
     reply.send(response);
-  } catch (e) {
-    log.error("Error fetching resolved conversation resolved stats: %o", e);
+  } catch (error) {
+    log.error(
+      { err: error },
+      "Error fetching resolved conversation resolved stats:",
+    );
     reply.status(500).send({
       error:
         "An error occurred while fetching the resolved conversation resolved stats.",
