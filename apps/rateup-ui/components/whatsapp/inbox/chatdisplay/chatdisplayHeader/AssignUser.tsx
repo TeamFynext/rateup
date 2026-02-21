@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import lodash from "lodash";
 import {
   Check,
@@ -58,6 +59,7 @@ const AssignUser = ({
     isError,
     error,
   } = useTeamsByUser();
+  const queryClient = useQueryClient();
   const { filterData } = useContactStore();
   const translations = useTranslations();
   const prevAssignedRef = useRef<{ userId: string; teamId: string }[]>([]);
@@ -219,12 +221,16 @@ const AssignUser = ({
         messageId: id,
       };
       prevAssignedRef.current = assignees;
-      messagesStore.addMessage(`${contactId}_all`, newMessage as any);
-      messagesStore.addMessage(`${contactId}_internal`, newMessage as any);
       assignMut.mutate(
         { contactId, assignees, messageId: id },
         {
           onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+            messagesStore.addMessage(`${contactId}_all`, newMessage as any);
+            messagesStore.addMessage(
+              `${contactId}_internal`,
+              newMessage as any,
+            );
             updateContactById(contactId, (contact) => ({
               ...contact,
               waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
@@ -234,9 +240,23 @@ const AssignUser = ({
               }),
             }));
           },
-          onError: () => {
-            messagesStore.removeMessage(`${contactId}_all`, id);
-            messagesStore.removeMessage(`${contactId}_internal`, id);
+          onError: async (error: any) => {
+            setAssignedStaff(
+              prevAssignedRef.current.map((a) => ({
+                userId: a.userId,
+                teamId: a.teamId,
+                contactId,
+              })),
+            );
+
+            await queryClient.refetchQueries({
+              queryKey: ["assignedInboxUser", contactId],
+              exact: true,
+            });
+
+            await queryClient.refetchQueries({
+              queryKey: ["teamsDataUserQuery"],
+            });
           },
         },
       );
