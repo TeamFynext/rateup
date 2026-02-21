@@ -969,7 +969,7 @@ export async function assignWaMessageToUser(
             teamId: u.teamId,
           })),
         },
-        trigerredByUser: userId,
+        trigerredByUser: userId ?? "RateUp",
         messageId: data.messageId,
       });
     } else {
@@ -978,7 +978,7 @@ export async function assignWaMessageToUser(
           contactId: data.contactId,
           waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
           assignedUsers: newUsers,
-          trigerredByUser: userId,
+          trigerredByUser: userId ?? "RateUp",
           messageId: data.messageId,
         });
       }
@@ -991,7 +991,7 @@ export async function assignWaMessageToUser(
             userId: u.assignedUserId,
             teamId: u.teamId,
           })),
-          trigerredByUser: userId,
+          trigerredByUser: userId ?? "RateUp",
           messageId: data.messageId,
         });
       }
@@ -1596,11 +1596,12 @@ export async function createInternalWaMessage({
   privateMessageText?: string;
   messageId: string;
 }) {
+  console.log("triggered", trigerredByUser);
   const conversation = await getLastCreatedConversationForContact(contactId);
 
   let triggeredByUserDetails: { id: string; name: string } | null = null;
 
-  if (trigerredByUser) {
+  if (trigerredByUser && trigerredByUser !== "RateUp") {
     const user = await prisma.user.findUnique({
       where: { id: trigerredByUser },
       select: { id: true, name: true },
@@ -1609,6 +1610,9 @@ export async function createInternalWaMessage({
     if (user?.name) {
       triggeredByUserDetails = { id: user.id, name: user.name };
     }
+  }
+  if (trigerredByUser === "RateUp") {
+    triggeredByUserDetails = { id: null, name: "RateUp" };
   }
   let addedUsers: { userId: string; teamId: string }[] = [];
   let removedUsers: { userId: string; teamId: string }[] = [];

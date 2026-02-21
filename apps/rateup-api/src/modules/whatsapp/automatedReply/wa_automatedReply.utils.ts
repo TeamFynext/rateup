@@ -1009,7 +1009,7 @@ async function executeAssignUserAction(
     {
       assignees: [{ userId, teamId: teams[0] }],
       contactId: contact?.contact?.id,
-      assignIfOnline: false,
+      assignIfOnline: true,
     },
     context.orgId,
   );
@@ -1035,7 +1035,7 @@ async function executeAssignTeamAction(
     {
       assignees: [{ userId: assigned, teamId }],
       contactId: contact?.contact?.id,
-      assignIfOnline: false,
+      assignIfOnline: true,
     },
     context.orgId,
   );
