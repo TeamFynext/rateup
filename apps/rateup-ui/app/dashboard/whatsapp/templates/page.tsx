@@ -15,6 +15,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { TemplateType } from "@/types/enums";
@@ -30,8 +31,10 @@ import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import RefreshButton from "@/components/Button/RefreshButton";
 import { sortData } from "@/components/Dashboard/SortDropDown";
 import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
+import useDebounce from "@/components/menu/hook/useDebounce";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { Input } from "@/components/ui/input";
 import styles from "@/components/WelcomeTour/components/Tour.module.css";
 import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps";
 import WelcomeTour from "@/components/WelcomeTour/WelcomeTour";
@@ -47,6 +50,8 @@ export default function Template() {
   const [deleteDialogOpened, { toggle, close }] = useDisclosure();
   const { data } = useWaSettings();
   const translations = useTranslations();
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search.trim(), 200);
   const [filters, setFilters] = useState({
     status: "all",
     category: "all",
@@ -66,26 +71,27 @@ export default function Template() {
       label: formatLabel(type),
     })),
   ];
-
-  const sortedTemplates = useMemo(() => {
-    const filtered = (templates ?? []).filter((template) => {
+  const filteredTemplates = useMemo(() => {
+    if (!templates) return [];
+    const searchValue = debouncedSearch?.toLowerCase() || "";
+    const filtered = templates.filter((template) => {
       const status = template?.data?.status;
       const category = template?.data?.category;
       const type = template?.templateType;
-
+      const name = template?.data?.name?.toLowerCase() || "";
+      const matchSearch = !searchValue || name.includes(searchValue);
       const matchStatus = filters.status === "all" || status === filters.status;
-
       const matchCategory =
         filters.category === "all" || category === filters.category;
 
       const matchTemplateType =
         filters.templateType === "all" || type === filters.templateType;
 
-      return matchStatus && matchCategory && matchTemplateType;
+      return matchSearch && matchStatus && matchCategory && matchTemplateType;
     });
 
     return sortData(filtered, sortOption);
-  }, [templates, filters, sortOption]);
+  }, [templates, filters, sortOption, debouncedSearch]);
 
   const templateDeleteMutation = useDeleteWaTemplateMutation(
     () => {
@@ -152,6 +158,15 @@ export default function Template() {
           direction="row"
           wrap="wrap"
         >
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search templates..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
           <TemplateFilterSort
             filters={filters}
             setFilters={setFilters}
@@ -159,7 +174,6 @@ export default function Template() {
             setSortOption={setSortOption}
             templateTypeOptions={templateTypeOptions}
           />
-
           <Tooltip
             label={translations(
               "Connect a WhatsApp number in settings to sync Template",
@@ -172,13 +186,14 @@ export default function Template() {
           </Tooltip>
         </Flex>
       </Flex>
+
       <TemplateCardList
         handleEditClick={handleEditClick}
         isError={isError}
         isPending={isPending}
         refetch={refetch}
         setSelectedTemplate={setSelectedTemplate}
-        sortedTemplates={sortedTemplates}
+        sortedTemplates={filteredTemplates}
         toggle={toggle}
       />
       <ConfirmationModal
@@ -219,6 +234,15 @@ const TemplateCardList = ({
 }) => {
   if (isPending) return <TemplatesCardListSkeleton />;
   if (isError) return <ErrorComponent refetch={refetch} />;
+  if (!sortedTemplates?.length) {
+    return (
+      <Box p="md">
+        <Text ta="center" c="dimmed">
+          No templates found.
+        </Text>
+      </Box>
+    );
+  }
 
   return (
     <Box
