@@ -597,17 +597,13 @@ export async function assignWaMessageHandler(
   request: FastifyRequest<{ Body: WaMessageAssignBody }>,
   reply: FastifyReply,
 ) {
-  try {
-    const res = await assignWaMessageToUser(
-      request.body,
-      request.user.orgId,
-      request.user.userId,
-    );
-    reply.code(200).send(res);
-  } catch (e) {
-    log.error(e);
-    reply.code(500).send(e);
-  }
+  const res = await assignWaMessageToUser(
+    request.body,
+    request.user.orgId,
+    request.user.userId,
+  );
+
+  return reply.send(res);
 }
 
 export async function getAssignedUserForContactHandler(
