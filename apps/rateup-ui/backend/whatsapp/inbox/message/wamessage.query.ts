@@ -146,7 +146,7 @@ export const useAssignInboxToUer = (contactId, filterData) => {
       showSuccessToast("Assigned successfully");
     },
     onError: (e) => {
-      showWarnToast("Something went wrong" + JSON.stringify(e));
+      showWarnToast(e?.message || "Something went wrong");
     },
   });
 };
