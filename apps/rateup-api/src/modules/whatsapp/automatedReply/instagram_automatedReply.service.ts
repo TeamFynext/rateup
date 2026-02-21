@@ -231,7 +231,7 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
   automationId: string;
   orgId: string;
   currentNode: string;
-  status?: "active" | "completed" | "paused";
+  status?: string;
 }) {
   try {
     // Check if automation message already exists
@@ -243,12 +243,14 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
       },
     });
 
+    const statusValue = params.status || "inProgress";
+
     if (existing) {
       return await prisma.waAutomatedReplyMessage.update({
         where: { id: existing.id },
         data: {
           currentNode: params.currentNode,
-          status: params.status || ("inProgress" as any),
+          status: statusValue as any,
         },
       });
     } else {
@@ -258,7 +260,7 @@ export async function createOrUpdateInstagramAutomationMessage(params: {
           waAutomatedReplyId: params.automationId,
           orgId: params.orgId,
           currentNode: params.currentNode,
-          status: params.status || ("inProgress" as any),
+          status: statusValue as any,
         },
       });
     }
