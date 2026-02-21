@@ -106,7 +106,7 @@ export async function startInstagramAutomationFlow(
       automationId: automation.id,
       orgId,
       currentNode: startNode.id,
-      status: "active",
+      status: "inProgress",
     });
 
     // Log the action
