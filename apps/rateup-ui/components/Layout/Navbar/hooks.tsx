@@ -25,7 +25,6 @@ import {
   IconRobotFace,
   IconSettings,
   IconSitemap,
-  IconSpeakerphone,
   IconTemplate,
   IconTerminal2,
   IconTicket,
@@ -47,6 +46,7 @@ import {
   FileText,
   Folder,
   Inbox,
+  Send,
   Settings,
   ShoppingCart,
   Sparkles,
@@ -267,7 +267,7 @@ export function useNavMain({
             {
               title: t("Campaign"),
               url: "/dashboard/campaign",
-              icon: IconSpeakerphone,
+              icon: Send,
             },
           ]
         : []),
@@ -319,6 +319,11 @@ export function useNavMain({
                   title: t("Settings"),
                   url: "/dashboard/whatsapp/settings",
                   icon: IconSettings,
+                },
+                {
+                  title: "Orders and Payments",
+                  url: "/dashboard/whatsapp/orders-and-payments",
+                  icon: IconBrandWhatsapp, // Or a more specific icon like IconCreditCard if available, or just keep it simple. Using IconBrandWhatsapp as placeholder or reuse IconSettings
                 },
               ],
             },

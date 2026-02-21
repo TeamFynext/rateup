@@ -133,8 +133,14 @@ function WhatsAppManualConfiguration({ waSettings }) {
   const upsertMutation = useUpsertWaSettingsMutation();
   const deleteMutation = useDeleteWaSettingsMutation();
   const handleSubmit = (values: any) => {
-    const { teams, ...rest } = waSettings;
-    upsertMutation.mutate(rest);
+    let payload = { ...values };
+    if (waSettings) {
+      payload = { ...waSettings, ...values };
+    }
+    if ("teams" in payload) {
+      delete payload.teams;
+    }
+    upsertMutation.mutate(payload);
   };
   const handleDelete = () => {
     deleteMutation.mutate(waSettings?.phoneId);
@@ -652,7 +658,7 @@ function ConnectMetaAccountButton() {
 
 export default function WhatsAppSettingsPage() {
   const { data: waSettings, isLoading } = useWaSettings();
-  const [tab, setTab] = useState<WaConfigType>(WaConfigType.Automated);
+  const [tab, setTab] = useState<string>(WaConfigType.Automated);
   const translations = useTranslations();
   useEffect(() => {
     if (waSettings) {

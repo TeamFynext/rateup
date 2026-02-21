@@ -48,6 +48,7 @@ export default function MainSidebar({ children }) {
     if (!isFetched || isLoadingUserInfo) return;
 
     if (
+      userQueryData &&
       userQueryData["data"] &&
       userQueryData["data"]?.onboardingCompleted === false
     ) {
