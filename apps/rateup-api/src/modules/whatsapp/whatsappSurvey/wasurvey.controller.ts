@@ -1281,7 +1281,7 @@ export async function processNextNode(
             {
               assignees: assignedUserIds.map((userId) => ({ userId, teamId })),
               contactId: contact.id,
-              assignIfOnline: assignData?.assign?.assignIfOnline ?? false,
+              assignIfOnline: assignData?.assign?.assignIfOnline ?? true,
             },
             orgId,
           );
