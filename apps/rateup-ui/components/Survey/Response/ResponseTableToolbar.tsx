@@ -37,7 +37,7 @@ interface ResponseTableToolbarProps<TData> {
   isSyncing: boolean;
   refetchResponse: () => void;
   handleSyncGoogleSheet: () => void;
-  handleExcelDownload: () => void;
+  handleExcelDownload: (columns: string[]) => void;
   alertModalOpen: () => void;
   responseCount: number;
 }
@@ -142,7 +142,14 @@ export function ResponseTableToolbar<TData>({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
-                    handleExcelDownload();
+                    const columns = table
+                      .getAllColumns()
+                      .map((col) =>
+                        typeof col.columnDef?.header === "string"
+                          ? col.columnDef?.header
+                          : col?.id,
+                      );
+                    handleExcelDownload(columns);
                     toggle();
                   }}
                 >

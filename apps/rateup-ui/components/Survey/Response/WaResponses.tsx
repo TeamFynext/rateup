@@ -216,31 +216,32 @@ const WaResponses = ({
     exportContactMutation.mutate();
   }, [exportContactMutation, translations]);
 
-  const handleExcelDownload = useCallback(() => {
-    downloadExcelResponse.mutate({
+  const handleExcelDownload = useCallback(
+    (columns) => {
+      downloadExcelResponse.mutate({
+        defaultLanguage,
+        surveyId,
+        visibleColumn: columns,
+        title: survey?.title,
+        tz: dayjs.tz.guess(),
+        filterTeams,
+        campaignIds: campaignIds,
+        dbFlowId,
+        columnFilters: [],
+        ranges: ranges?.[0],
+      });
+    },
+    [
+      downloadExcelResponse,
       defaultLanguage,
       surveyId,
-      visibleColumn: Array.from(
-        new Set(useVisibleColumnStore.getState().visibleColumn),
-      ),
-      title: survey?.title,
-      tz: dayjs.tz.guess(),
+      survey?.title,
       filterTeams,
-      campaignIds: campaignIds,
+      campaignIds,
       dbFlowId,
-      columnFilters: [],
-      ranges: ranges?.[0],
-    });
-  }, [
-    downloadExcelResponse,
-    defaultLanguage,
-    surveyId,
-    survey?.title,
-    filterTeams,
-    campaignIds,
-    dbFlowId,
-    ranges,
-  ]);
+      ranges,
+    ],
+  );
 
   useEffect(() => {
     if (selectedResponseId && responseTeamId) openTicketModal();
@@ -506,7 +507,7 @@ const WaResponses = ({
         surveyResponseId={selectedResponseId}
       />
 
-      <div className="flex-1 overflow-hidden px-6 pb-2">
+      <div className="h-full px-6 pb-2">
         <DataTable
           data={data ?? []}
           columns={
