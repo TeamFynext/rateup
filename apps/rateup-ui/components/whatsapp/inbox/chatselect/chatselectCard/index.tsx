@@ -76,6 +76,7 @@ export default function WaInboxChatSelectCard({
       key={contact?.id}
       onClick={() => {
         setSelectedContact(contact);
+        setIsChatDisplayOpen(true);
       }}
       className={`p-3 cursor-pointer transition-all hover:bg-accent/50 ${selectedContact?.id === contact?.id && "bg-accent border-l-2 border-b-1 border-blue-600"} ${contact?.unReadMessageCount > 0 && "bg-blue-50/30"}`}
     >
