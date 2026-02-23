@@ -580,10 +580,10 @@ export async function downloadExcelResponseV2(
     const responseTag = "tag";
     const whatsappRespondentNumber = "Respondent Mobile";
 
-    if (visibleColumn.includes("createdAt")) {
-      headerArray.unshift(createdAt);
-      filteredQuestions.unshift({ label: createdAt });
-    }
+    // if (visibleColumn.includes("createdAt")) {
+    headerArray.unshift(createdAt);
+    filteredQuestions.unshift({ label: createdAt });
+    // }
 
     if (visibleColumn.includes(whatsappRespondentNumber)) {
       headerArray.push(whatsappRespondentNumber);
