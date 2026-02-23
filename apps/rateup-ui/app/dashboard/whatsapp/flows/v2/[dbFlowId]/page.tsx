@@ -177,7 +177,10 @@ const Flow = () => {
                   surveyId={survey.id}
                 />
               </TabsContent>
-              <TabsContent value={FlowTabEnum.Responses} className="mt-0">
+              <TabsContent
+                value={FlowTabEnum.Responses}
+                className="mt-0 relative h-full"
+              >
                 <Result
                   encryptionpassword={""}
                   setEncryptionPassword={() => {}}
