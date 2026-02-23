@@ -162,7 +162,7 @@ export const LifecycleSelector = ({
         <SelectTrigger className={className}>
           <TriggerComponent />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent side="right" align="start">
           {allItems.map((lifecycle) => (
             <SelectItem
               value={lifecycle.value}
@@ -182,7 +182,7 @@ export const LifecycleSelector = ({
       <SelectTrigger className={className}>
         <TriggerComponent />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent side="right" align="start">
         {inboxLabels.map((group) => (
           <SelectGroup key={group.group}>
             <SelectLabel>{group.group}</SelectLabel>

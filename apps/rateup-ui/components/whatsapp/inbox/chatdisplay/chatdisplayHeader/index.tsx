@@ -6,12 +6,15 @@ import { Group, Radio, RadioGroup, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconBrandWhatsappFilled, IconWebhook } from "@tabler/icons-react";
 import {
+  Activity,
   ArrowLeft,
   Ban,
   BellOff,
   Bot,
   CircleCheckBig,
+  Folder,
   InstagramIcon,
+  Settings2,
   Tag,
   Ticket,
 } from "lucide-react";
@@ -59,6 +62,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Select, SelectContent, SelectTrigger } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useUser } from "@/context/UserContext";
 import { useChatbotStore } from "@/store/chatbot.store";
@@ -71,6 +75,7 @@ import {
   generateInternalMessageId,
   getSoucePlatformIconAndColor,
 } from "../../util";
+import AddtoContactGroup from "./AddtoContactGroup";
 import AssignUser from "./AssignUser";
 import WaInboxCountdownTimer from "./countDown";
 
@@ -211,27 +216,54 @@ export default function WaInboxChatDisplayHeader({
                   />
                 )}
               </div>
-              <LifecycleSelector
-                value={contact.lifecycleId}
-                customTrigger={
-                  <span className="text-sm font-medium">
-                    {contact.lifecycleName}
-                  </span>
-                }
-                className="border-none hover:bg-gray-100"
-                onChange={handleLifecycleChange}
-                placeholder="Lifecycle"
-              />
-              <ContactLabel
-                contactLabel={contactLabels}
-                contact={contact}
-                labelPending={isPending}
-              />
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Settings2 className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+
+            <PopoverContent className="p-1 w-40">
+              <div className="flex flex-col gap-1">
+                {/* Lifecycle */}
+                <div className="flex items-center gap-1 px-2 rounded-md">
+                  <Activity className="h-4 w-4 text-muted-foreground shrink-0" />
+
+                  <LifecycleSelector
+                    value={contact.lifecycleId}
+                    customTrigger={
+                      <span className="text-sm font-medium truncate">
+                        {contact.lifecycleName}
+                      </span>
+                    }
+                    className="border-none shadow-none p-0 h-auto w-full bg-transparent"
+                    onChange={handleLifecycleChange}
+                    placeholder="Lifecycle"
+                  />
+                </div>
+
+                {/* Labels */}
+                <div className="flex items-center gap-1 px-2 rounded-md">
+                  <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
+
+                  <ContactLabel
+                    contactLabel={contactLabels}
+                    contact={contact}
+                    labelPending={isPending}
+                  />
+                </div>
+                <div className="flex items-center gap-1 px-2 rounded-md">
+                  <Folder className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <AddtoContactGroup selectedContactIds={[contact.id]} />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           {hasAIFeature &&
             chatbot?.enableWaChat &&
             chatbot?.enableAllWaChat && (
@@ -528,18 +560,19 @@ export const AssignInboxContent = ({
 
 function ContactLabel({ contactLabel, labelPending, contact }) {
   const activeLabels = contact?.contactLabels || [];
-  const { updateContactById, setSelectedContact } = useContactsStore();
+  const { updateContactById } = useContactsStore();
   const assign = useAssignContactLabelsToContactId();
 
-  const isActive = (labelId: string) =>
-    activeLabels.some((l) => l.id === labelId);
+  const activeIds = activeLabels.map((l) => l.id);
 
-  function handleToggleLabel(labelId: string, checked: boolean) {
+  const isActive = (labelId: string) => activeIds.includes(labelId);
+
+  function handleToggleLabel(labelId: string) {
     if (!contact?.id) return;
 
-    const nextLabelIds = checked
-      ? [...new Set([...activeLabels.map((l) => l.id), labelId])]
-      : activeLabels.filter((l) => l.id !== labelId).map((l) => l.id);
+    const nextLabelIds = isActive(labelId)
+      ? activeIds.filter((id) => id !== labelId)
+      : [...activeIds, labelId];
 
     const updatedLabels = contactLabel.filter((label) =>
       nextLabelIds.includes(label.id),
@@ -556,53 +589,55 @@ function ContactLabel({ contactLabel, labelPending, contact }) {
             ...c,
             contactLabels: updatedLabels,
           }));
-          toast.success("Labels updated");
-        },
-        onError: () => {
-          toast.error("Error updating labels");
         },
       },
     );
   }
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="ml-auto hidden h-8 lg:flex text-purple-600"
-        >
-          <Tag />
-          <span className="font-medium text-sm">Labels</span>
-        </Button>
-      </DropdownMenuTrigger>
+  const selectedCount = activeLabels.length;
 
-      <DropdownMenuContent align="end" className="w-[150px]">
+  return (
+    <Select open={undefined}>
+      <SelectTrigger className="border-none shadow-none p-0 h-auto w-full bg-transparent text-sm font-medium">
+        {selectedCount
+          ? `${selectedCount} Label${selectedCount > 1 ? "s" : ""}`
+          : "Labels"}
+      </SelectTrigger>
+
+      <SelectContent side="right" align="start">
         {contactLabel?.length ? (
-          contactLabel?.map((label) => (
-            <DropdownMenuCheckboxItem
-              key={label.id}
-              checked={isActive(label.id)}
-              onCheckedChange={(checked) =>
-                handleToggleLabel(label.id, checked)
-              }
-              disabled={labelPending}
-              className="flex items-center gap-2"
-            >
-              <span
-                style={{ backgroundColor: label.color }}
-                className="h-3 w-3 rounded-full"
-              />
-              <span>{label.name}</span>
-            </DropdownMenuCheckboxItem>
-          ))
+          contactLabel.map((label) => {
+            const active = isActive(label.id);
+
+            return (
+              <div
+                key={label.id}
+                onClick={() => handleToggleLabel(label.id)}
+                className={`
+                  flex items-center gap-2 px-2 py-1.5 cursor-pointer rounded-sm
+                  ${active ? "bg-accent text-accent-foreground" : "hover:bg-accent"}
+                  ${labelPending ? "pointer-events-none opacity-50" : ""}
+                `}
+              >
+                {/* color dot */}
+                <span
+                  style={{ backgroundColor: label.color }}
+                  className="h-3 w-3 rounded-full"
+                />
+
+                <span className="text-sm flex-1">{label.name}</span>
+
+                {/* check indicator */}
+                {active && <span className="text-xs">✓</span>}
+              </div>
+            );
+          })
         ) : (
-          <span className="flex items-center justify-center text-muted-foreground">
+          <div className="px-2 py-2 text-sm text-muted-foreground">
             No labels found
-          </span>
+          </div>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </SelectContent>
+    </Select>
   );
 }
