@@ -401,7 +401,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.TextInput:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "TextInput" },
+        type: { type: "hidden", value: WaQuestions.TextInput },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -454,7 +454,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.TextArea:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "TextArea" },
+        type: { type: "hidden", value: WaQuestions.TextArea },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -498,7 +498,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.CheckboxGroup:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "CheckboxGroup" },
+        type: { type: "hidden", value: WaQuestions.CheckboxGroup },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -558,7 +558,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.YN:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "RadioButtonsGroup" },
+        type: { type: "hidden", value: WaQuestions.RadioButtonsGroup },
         header: {
           type: "richText",
           value: "",
@@ -615,7 +615,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.Footer:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "Footer" },
+        type: { type: "hidden", value: WaQuestions.Footer },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -644,7 +644,7 @@ export const getInitialValues = (type: QuestionType2) => {
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        type: { type: "hidden", value: "OptIn" },
+        type: { type: "hidden", value: WaQuestions.OptIn },
         label: {
           type: "text",
           value: "",
@@ -674,7 +674,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.Opinion:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "Dropdown" },
+        type: { type: "hidden", value: WaQuestions.Dropdown },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -716,7 +716,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.DatePicker:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "DatePicker" },
+        type: { type: "hidden", value: WaQuestions.DatePicker },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -780,7 +780,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.Image:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "Image" },
+        type: { type: "hidden", value: WaQuestions.Image },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -805,7 +805,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.ImageCarousel:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "ImageCarousel" },
+        type: { type: "hidden", value: WaQuestions.ImageCarousel },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -836,7 +836,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.PhotoPicker:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "PhotoPicker" },
+        type: { type: "hidden", value: WaQuestions.PhotoPicker },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -889,7 +889,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.DocumentPicker:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "DocumentPicker" },
+        type: { type: "hidden", value: WaQuestions.DocumentPicker },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -964,7 +964,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.TextBody:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "TextBody" },
+        type: { type: "hidden", value: WaQuestions.TextBody },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -993,7 +993,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.TextCaption:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "TextCaption" },
+        type: { type: "hidden", value: WaQuestions.TextCaption },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -1021,7 +1021,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.TextHeading:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "TextHeading" },
+        type: { type: "hidden", value: WaQuestions.TextHeading },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -1048,7 +1048,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.TextSubheading:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "TextSubheading" },
+        type: { type: "hidden", value: WaQuestions.TextSubheading },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -1075,7 +1075,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.RichText:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "RichText" },
+        type: { type: "hidden", value: WaQuestions.RichText },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -1097,7 +1097,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.EmbeddedLink:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "EmbeddedLink" },
+        type: { type: "hidden", value: WaQuestions.EmbeddedLink },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
@@ -1124,7 +1124,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.ChipsSelector:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: "ChipsSelector" },
+        type: { type: "hidden", value: WaQuestions.ChipsSelector },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(

@@ -201,10 +201,13 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
 
     // Create new element with a unique ID
     const id = crypto.randomUUID().replace(/-/g, "_");
+    const metaType = Object.keys(QuestionType2).find(
+      (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+    );
     const newElement: any = {
       id,
       type,
-      metaType: type,
+      metaType,
       // Only add name/required to interactive (form) types
       ...(!NO_NAME_TYPES.has(type) && { name: id, required: false }),
       // Only add visible to types that support it (Footer and Image types excluded)
