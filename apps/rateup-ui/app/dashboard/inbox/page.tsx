@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { useMediaQuery } from "@mantine/hooks";
+
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import {
@@ -45,21 +47,34 @@ export default function WhatsAppInbox() {
 }
 
 const ResizeableChat = () => {
-  const isChatDisplayOpen = useIsChatDisplayOpen();
   const { data, isPending } = useWaSettings();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isChatDisplayOpen = useIsChatDisplayOpen();
+
   if (isPending) return <RateupLoader />;
-  return (
-    <ResizablePanelGroup direction="horizontal" className="h-full">
-      <ResizablePanel defaultSize={26} minSize={26} maxSize={60}>
-        <div>
+
+  // Mobile: show either chat list or chat display (full width, no resize)
+  if (isMobile) {
+    return (
+      <div className="h-full w-full">
+        {isChatDisplayOpen ? (
+          <WaInboxChatDisplay waSettings={data} smallScreen />
+        ) : (
           <WaInboxChatSelect />
-        </div>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop: resizable two-panel layout
+  return (
+    <ResizablePanelGroup orientation="horizontal" className="h-full">
+      <ResizablePanel defaultSize={"28%"} minSize={"22%"} maxSize={"40%"}>
+        <WaInboxChatSelect />
       </ResizablePanel>
       <ResizableHandle />
-      <ResizablePanel defaultSize={74} minSize={40} maxSize={74}>
-        <div className="h-full">
-          <WaInboxChatDisplay waSettings={data} />
-        </div>
+      <ResizablePanel defaultSize={"72%"} minSize={"60%"} maxSize={"78%"}>
+        <WaInboxChatDisplay waSettings={data} />
       </ResizablePanel>
     </ResizablePanelGroup>
   );

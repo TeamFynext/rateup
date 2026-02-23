@@ -6,6 +6,7 @@ import { Group, Radio, RadioGroup, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconBrandWhatsappFilled, IconWebhook } from "@tabler/icons-react";
 import {
+  ArrowLeft,
   Ban,
   BellOff,
   Bot,
@@ -156,6 +157,15 @@ export default function WaInboxChatDisplayHeader({
     <div className="p-2.5 border-b shrink-0 bg-background">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 shrink">
+          {isMobile && (
+            <button
+              onClick={() => setIsChatDisplayOpen(false)}
+              className="shrink-0 p-1.5 rounded-md hover:bg-accent transition-colors"
+              aria-label="Back to chat list"
+            >
+              <ArrowLeft className="size-5" />
+            </button>
+          )}
           <div className="relative shrink-0">
             <CreativeAvatar
               name={contact?.name || contact?.whatsappUserName || ""}
