@@ -1774,7 +1774,7 @@ export function markdownToPlainText(markdown) {
 }
 
 const getCellData = (response, question) => {
-  switch (question.metaType) {
+  switch (question?.type || question?.metaType) {
     case WaQuestions.LD:
       return LDResponseMap[response] || "";
     case WaQuestions.YN:
