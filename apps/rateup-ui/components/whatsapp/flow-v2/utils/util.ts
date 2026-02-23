@@ -10,26 +10,6 @@ import {
   YNResponse,
 } from "@/types/enums";
 
-/**
- * Generate a mapping from QuestionType2 display names to WaQuestions type names
- * This dynamically creates the mapping from the existing enums to avoid hardcoding
- * @returns Record mapping display names (e.g., "Text Heading") to type names (e.g., "TextHeading")
- */
-export function getQuestionTypeMapping(): Record<string, string> {
-  const mapping: Record<string, string> = {};
-
-  // Generate mapping from QuestionType2 display names to WaQuestions type names
-  Object.keys(QuestionType2).forEach((key) => {
-    const displayName = QuestionType2[key as keyof typeof QuestionType2];
-    const typeName = WaQuestions[key as keyof typeof WaQuestions];
-    if (displayName && typeName) {
-      mapping[displayName] = typeName;
-    }
-  });
-
-  return mapping;
-}
-
 export const getValidationSchema = (type: QuestionType2) => {
   let schema = {};
   switch (type) {
@@ -664,7 +644,7 @@ export const getInitialValues = (type: QuestionType2) => {
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        type: { type: "hidden", value: WaQuestions.OptIn },
+        type: { type: "hidden", value: "OptIn" },
         label: {
           type: "text",
           value: "",
@@ -1117,14 +1097,13 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.EmbeddedLink:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: WaQuestions.EmbeddedLink },
+        type: { type: "hidden", value: "EmbeddedLink" },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(
             (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
           ),
         },
-        name: { type: "hidden", value: generateId },
         text: { type: "text", value: "", extra: { required: true, max: 25 } },
         url: {
           type: "text",
@@ -1145,7 +1124,7 @@ export const getInitialValues = (type: QuestionType2) => {
     case QuestionType2.ChipsSelector:
       initialValues = {
         id: { type: "hidden", value: generateId },
-        type: { type: "hidden", value: WaQuestions.ChipsSelector },
+        type: { type: "hidden", value: "ChipsSelector" },
         metaType: {
           type: "hidden",
           value: Object.keys(QuestionType2).find(

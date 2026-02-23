@@ -120,6 +120,7 @@ export enum WaQuestions {
   RichText = "RichText",
   EmbeddedLink = "EmbeddedLink",
   ChipsSelector = "ChipsSelector",
+  ImageCarousel = "ImageCarousel",
   // If = "If",
   // Switch = "Switch",
 }
