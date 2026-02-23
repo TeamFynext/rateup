@@ -12,6 +12,8 @@ import {
   addExistingContactsToMultipleGroupsHandler,
   deleteManyContactGroupsHandler,
   addNewContactsfromCSVToGroupHandler,
+  getContactGroupsByContactIdHandler,
+  updateContactGroupsForContactHandler,
 } from "./contactGroup.controller.js";
 import fastifyMultipart from "@fastify/multipart";
 
@@ -138,5 +140,26 @@ export async function contactGroupRoutes(server: FastifyInstance) {
       },
     },
     deleteManyContactGroupsHandler,
+  );
+
+  server.get(
+    "/contact/:contactId",
+    {
+      schema: {
+        params: $contactGroupRef("contactGroupByContactId"),
+      },
+    },
+    getContactGroupsByContactIdHandler,
+  );
+
+  server.post(
+    "/contact/:contactId/groups",
+    {
+      schema: {
+        params: $contactGroupRef("contactGroupByContactId"),
+        body: $contactGroupRef("contactGroupByContactIdBody"),
+      },
+    },
+    updateContactGroupsForContactHandler,
   );
 }
