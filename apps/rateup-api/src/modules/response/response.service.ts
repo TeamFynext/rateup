@@ -566,9 +566,10 @@ export async function downloadExcelResponseV2(
 ) {
   const responses = allResponses?.flatMap((data) => data?.responses) || [];
 
-  const filteredQuestions = questions.filter((item) =>
-    visibleColumn.includes(item?.label || ""),
-  );
+  const filteredQuestions = questions;
+  // .filter((item) =>
+  //   visibleColumn.includes(item?.label || ""),
+  // );
 
   if (filteredQuestions && responses.length) {
     const headerArray = filteredQuestions.map((question) =>
@@ -579,10 +580,10 @@ export async function downloadExcelResponseV2(
     const responseTag = "tag";
     const whatsappRespondentNumber = "Respondent Mobile";
 
-    if (visibleColumn.includes("createdAt")) {
-      headerArray.unshift(createdAt);
-      filteredQuestions.unshift({ label: createdAt });
-    }
+    // if (visibleColumn.includes("createdAt")) {
+    headerArray.unshift(createdAt);
+    filteredQuestions.unshift({ label: createdAt });
+    // }
 
     if (visibleColumn.includes(whatsappRespondentNumber)) {
       headerArray.push(whatsappRespondentNumber);
@@ -1773,7 +1774,7 @@ export function markdownToPlainText(markdown) {
 }
 
 const getCellData = (response, question) => {
-  switch (question.metaType) {
+  switch (question?.type || question?.metaType) {
     case WaQuestions.LD:
       return LDResponseMap[response] || "";
     case WaQuestions.YN:
