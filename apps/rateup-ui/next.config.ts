@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
           removeConsole: true,
         }
       : {},
-  reactCompiler: true,
+  // reactCompiler: true,
   experimental: {
     // optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
   },
