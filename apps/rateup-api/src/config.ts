@@ -115,7 +115,10 @@ export const SuperTokensConfig: TypeInput = {
               response.user.loginMethods.length === 1 &&
               input.session === undefined
             ) {
-              const formFields = input.formFields;
+              const formFields = input.formFields as Array<{
+                id: string;
+                value: string;
+              }>;
               const name = getValueByKey(formFields, "name");
               const orgName = getValueByKey(formFields, "orgName");
               const phoneNumber = getValueByKey(formFields, "phoneNumber");
