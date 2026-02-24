@@ -296,6 +296,7 @@ export async function handleWaOrderfromCatalog(
       contactId: messageObj.contactId,
       products: productsWithDetails,
       createdAt: messageObj.waCreatedAt,
+      paymentMethod: waSettings?.paymentMethod ?? "NATIVE",
     },
   });
   log.info("Order placed => %o", newOrder);

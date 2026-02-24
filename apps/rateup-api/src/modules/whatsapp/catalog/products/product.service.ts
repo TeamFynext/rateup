@@ -639,6 +639,181 @@ export async function getShopifyProductsForCatalog(
   return catalogItems;
 }
 
+// Syncs already-imported Shopify products: compares Shopify data against DB,
+// updates mismatched fields in DB + pushes changes to Meta catalog.
+export async function syncShopifyProductsToCatalog(
+  orgId: string,
+  catalogId: string,
+): Promise<{ updated: number; unchanged: number; notFound: number }> {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo?.credential?.session) {
+    throw new Error("No Shopify integration found for this org");
+  }
+
+  const session = shopifyInfo.credential.session;
+  const client = new shopify.clients.Graphql({ session });
+
+  const shopData = await client.request(`{ shop { currencyCode } }`);
+  const currencyCode: string = shopData.data.shop?.currencyCode ?? "USD";
+  const shopDomain: string = session.shop;
+
+  // Paginate through all Shopify products
+  let hasNextPage = true;
+  let cursor: string | null = null;
+  const allProducts: any[] = [];
+
+  while (hasNextPage) {
+    const data: any = await client.request(
+      `query getFullProducts($cursor: String) {
+        products(first: 50, after: $cursor) {
+          edges {
+            node {
+              id
+              title
+              description
+              vendor
+              handle
+              onlineStoreUrl
+              images(first: 5) {
+                edges { node { url } }
+              }
+              variants(first: 100) {
+                edges {
+                  node {
+                    id
+                    price
+                    compareAtPrice
+                    availableForSale
+                    title
+                  }
+                }
+              }
+            }
+          }
+          pageInfo { hasNextPage endCursor }
+        }
+      }`,
+      { variables: { cursor } },
+    );
+    hasNextPage = data.data.products.pageInfo.hasNextPage;
+    cursor = data.data.products.pageInfo.endCursor;
+    allProducts.push(...data.data.products.edges.map((e) => e.node));
+  }
+
+  // Build a map: numericVariantId → { variant, product }
+  const variantMap = new Map<string, { variant: any; product: any }>();
+  for (const product of allProducts) {
+    for (const variantEdge of product.variants?.edges ?? []) {
+      const v = variantEdge.node;
+      const numericId: string = v.id.split("/").pop() ?? v.id;
+      variantMap.set(numericId, { variant: v, product });
+    }
+  }
+
+  // Get all PRODUCT_ITEM DB products that have a retailer_id (i.e., Shopify-imported)
+  const dbProducts = await prisma.waCatalogProduct.findMany({
+    where: {
+      catalogId,
+      type: CatalogProductTypes.PRODUCT_ITEM,
+      retailer_id: { not: null },
+    },
+  });
+
+  const toUpdate: any[] = [];
+  let unchanged = 0;
+  let notFound = 0;
+
+  for (const dbProd of dbProducts) {
+    const match = variantMap.get(dbProd.retailer_id!);
+    if (!match) {
+      notFound++; // variant deleted in Shopify — skip
+      continue;
+    }
+
+    const { variant: v, product } = match;
+    const images = (product.images?.edges ?? []).map((e: any) => ({
+      url: e.node.url,
+    }));
+    if (images.length === 0) continue;
+
+    const productLink: string =
+      product.onlineStoreUrl ??
+      `https://${shopDomain}/products/${product.handle}`;
+    const productGroupId: string = product.id.split("/").pop() ?? product.id;
+    const variantSuffix =
+      v.title && v.title !== "Default Title" ? ` - ${v.title}` : "";
+    const salePrice = parseFloat(v.price);
+    const originalPrice = v.compareAtPrice
+      ? parseFloat(v.compareAtPrice)
+      : salePrice;
+    const availability = v.availableForSale ? "in stock" : "out of stock";
+    const newTitle = `${product.title}${variantSuffix}`.substring(0, 100);
+    const newDescription = (product.description || product.title).substring(
+      0,
+      5000,
+    );
+    const newBrand: string = product.vendor || product.title;
+
+    // Compare against stored productProps (prices stored as "10.00 USD")
+    const props: any = dbProd.productProps ?? {};
+    const currentPrice = parseFloat(String(props.price ?? "0").split(" ")[0]);
+    const currentSalePrice = parseFloat(
+      String(props.sale_price ?? "0").split(" ")[0],
+    );
+
+    const hasChanged =
+      props.title !== newTitle ||
+      props.description !== newDescription ||
+      props.availability !== availability ||
+      props.brand !== newBrand ||
+      Math.abs(currentPrice - originalPrice) > 0.001 ||
+      Math.abs(currentSalePrice - salePrice) > 0.001 ||
+      (images[0]?.url && props.image_link !== images[0].url);
+
+    if (!hasChanged) {
+      unchanged++;
+      continue;
+    }
+
+    // Preserve user-managed internal_label (stored with quotes — strip before passing)
+    const rawLabels: string[] = (props.internal_label ?? []).map((l: string) =>
+      l.replace(/^'|'$/g, ""),
+    );
+
+    toUpdate.push({
+      retailer_id: dbProd.retailer_id,
+      title: newTitle,
+      description: newDescription,
+      condition: props.condition ?? "new",
+      image: images,
+      internal_label: rawLabels,
+      link: productLink,
+      price: originalPrice,
+      currencyCode,
+      availability,
+      brand: newBrand,
+      sale_price: salePrice.toFixed(2),
+      item_group_id: productGroupId,
+    });
+  }
+
+  if (toUpdate.length > 0) {
+    await updateCatalogProducts(
+      orgId,
+      catalogId,
+      toUpdate,
+      CatalogProductTypes.PRODUCT_ITEM,
+    );
+  }
+
+  log.info(
+    { orgId, catalogId, updated: toUpdate.length, unchanged, notFound },
+    "Shopify→Catalog sync complete",
+  );
+
+  return { updated: toUpdate.length, unchanged, notFound };
+}
+
 // Imports a pre-selected list of mapped catalog items into Meta + DB.
 export async function importSelectedShopifyProducts(
   orgId: string,

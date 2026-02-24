@@ -1290,20 +1290,53 @@ export async function buildShopifyCartUrl(
   // retailerId → numeric Shopify variant id
   const variantMap = new Map<string, string>();
 
-  // ── Step 0: Direct numeric fast-path ────────────────────────────────────
-  // When the catalog is synced FROM Shopify (via Shopify's Facebook channel),
-  // Shopify sets retailer_id = the numeric Shopify variant ID already.
-  // If retailer_id is all digits, skip all API lookups and use it directly.
-  const needsLookup: typeof products = [];
-  for (const product of products) {
-    if (/^\d+$/.test(product.retailerId)) {
-      log.trace(
-        "retailerId '%s' is numeric — using directly as Shopify variant ID",
-        product.retailerId,
+  // ── Step 0: Validate numeric IDs against Shopify ─────────────────────────
+  // If retailer_id is all digits it's likely a Shopify variant ID, but we
+  // must verify it still exists — the product may have been deleted/recreated
+  // giving it a new ID while the old ID stays in the Meta catalog.
+  const numericProducts = products.filter((p) => /^\d+$/.test(p.retailerId));
+  const needsLookup: typeof products = products.filter(
+    (p) => !/^\d+$/.test(p.retailerId),
+  );
+
+  if (numericProducts.length > 0) {
+    try {
+      const ids = numericProducts.map(
+        (p) => `gid://shopify/ProductVariant/${p.retailerId}`,
       );
-      variantMap.set(product.retailerId, product.retailerId);
-    } else {
-      needsLookup.push(product);
+      const nodesData = await client.request(
+        `query validateVariants($ids: [ID!]!) {
+          nodes(ids: $ids) {
+            id
+            ... on ProductVariant {
+              __typename
+            }
+          }
+        }`,
+        { variables: { ids } },
+      );
+      const nodes: any[] = (nodesData.data as any)?.nodes ?? [];
+      for (const product of numericProducts) {
+        const gid = `gid://shopify/ProductVariant/${product.retailerId}`;
+        const node = nodes.find((n: any) => n?.id === gid);
+        if (node?.__typename === "ProductVariant") {
+          // Still valid — use directly
+          variantMap.set(product.retailerId, product.retailerId);
+        } else {
+          // Stale ID — fall through to title-based lookup
+          log.warn(
+            "Numeric retailer_id '%s' no longer exists in Shopify — falling back to title lookup",
+            product.retailerId,
+          );
+          needsLookup.push(product);
+        }
+      }
+    } catch (e) {
+      log.warn("Variant validation failed, using numeric IDs as-is => %o", e);
+      // If validation itself fails, assume they're valid to avoid breaking the flow
+      for (const p of numericProducts) {
+        variantMap.set(p.retailerId, p.retailerId);
+      }
     }
   }
 
@@ -1559,4 +1592,115 @@ function validateAndParseCheckoutPhone(checkout) {
     return false;
   }
   return phone.number;
+}
+
+/**
+ * Creates a new product in the merchant's Shopify store.
+ * Uses the new productCreate (2024-01+) API with ProductCreateInput.
+ * Price is set via a follow-up productVariantsBulkUpdate since variants
+ * are auto-created in the new product model.
+ */
+export async function createShopifyProduct(
+  orgId: string,
+  data: {
+    title: string;
+    description: string;
+    brand: string;
+    price: number;
+    currencyCode: string;
+    imageUrl?: string;
+  },
+) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo?.active) {
+    throw new Error("Shopify integration not active for this org");
+  }
+
+  const client = new shopify.clients.Graphql({
+    session: shopifyInfo.credential.session,
+  });
+
+  // ── Step 1: Create the product ──────────────────────────────────────────
+  const createMutation = `
+    mutation productCreate($product: ProductCreateInput!, $media: [CreateMediaInput!]) {
+      productCreate(product: $product, media: $media) {
+        product {
+          id
+          title
+          variants(first: 1) {
+            nodes {
+              id
+              price
+            }
+          }
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const createVariables: Record<string, any> = {
+    product: {
+      title: data.title,
+      descriptionHtml: data.description,
+      vendor: data.brand,
+      status: "ACTIVE",
+    },
+  };
+
+  if (data.imageUrl) {
+    createVariables.media = [
+      {
+        originalSource: data.imageUrl,
+        mediaContentType: "IMAGE",
+      },
+    ];
+  }
+
+  const createResponse = await client.request(createMutation, {
+    variables: createVariables,
+  });
+  const createResult = (createResponse.data as any)?.productCreate;
+
+  if (createResult?.userErrors?.length > 0) {
+    throw new Error(createResult.userErrors[0].message);
+  }
+
+  const product = createResult?.product;
+  const variantId = product?.variants?.nodes?.[0]?.id;
+
+  // ── Step 2: Set the price on the default variant ───────────────────────
+  if (variantId) {
+    const priceMutation = `
+      mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+        productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+          productVariants {
+            id
+            price
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    await client.request(priceMutation, {
+      variables: {
+        productId: product.id,
+        variants: [
+          {
+            id: variantId,
+            price: String(parseFloat(String(data.price)).toFixed(2)),
+          },
+        ],
+      },
+    });
+  }
+
+  return product;
 }

@@ -7,8 +7,10 @@ import {
   getShopifyProductsForCatalog,
   importSelectedShopifyProducts,
   syncCatalogProducts,
+  syncShopifyProductsToCatalog,
   updateCatalogProducts,
 } from "./product.service.js";
+import { createShopifyProduct } from "../../../integrations/shopify/shopify.service.js";
 import {
   catalogItemBatchSchema,
   CatalogItemQueryFilter,
@@ -163,5 +165,52 @@ export async function importShopifyProductsHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
+  }
+}
+
+export async function createShopifyProductHandler(
+  request: FastifyRequest<{
+    Params: CatalogIdParam;
+    Body: {
+      title: string;
+      description: string;
+      brand: string;
+      price: number;
+      currencyCode: string;
+      imageUrl?: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const product = await createShopifyProduct(orgId, request.body);
+    reply.code(200).send(product);
+  } catch (e) {
+    log.error(e);
+    reply
+      .code(500)
+      .send({ message: e.message ?? "Failed to create Shopify product" });
+  }
+}
+
+export async function syncShopifyProductsFromShopifyHandler(
+  request: FastifyRequest<{ Params: CatalogIdParam }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { catalogId } = request.params;
+    const catalogInfo = await getWaCatalog(catalogId);
+    if (!catalogInfo) {
+      return reply.code(404).send("No catalog found");
+    }
+    const result = await syncShopifyProductsToCatalog(orgId, catalogId);
+    reply.code(200).send(result);
+  } catch (e) {
+    log.error(e);
+    reply
+      .code(500)
+      .send({ message: e.message ?? "Failed to sync from Shopify" });
   }
 }
