@@ -182,6 +182,30 @@ export async function createScheduleOnShopifyEvent({
     return;
   }
 
+  // Cross-event dedup: Shopify fires both orders/create and orders/paid for the
+  // same order. If another survey (different event) already scheduled the same
+  // template for the same order ID + customer phone, skip this one.
+  const orderId = body?.id;
+  if (orderId && shopifySurvey.waTemplateId) {
+    const phoneWithoutPlusTemp =
+      phone.countryCallingCode + phone.nationalNumber;
+    const isDuplicateAcrossEvents = shopifyInfo.credential.shopifySurveys?.some(
+      (survey) =>
+        survey.event !== event &&
+        survey.waTemplateId === shopifySurvey.waTemplateId &&
+        survey.schedules?.some(
+          (sch) =>
+            sch.body?.id === orderId && sch.phone === phoneWithoutPlusTemp,
+        ),
+    );
+    if (isDuplicateAcrossEvents) {
+      log.trace(
+        `Order ${orderId} already scheduled with template ${shopifySurvey.waTemplateId} for ${customerPhone} via a different event. Skipping duplicate ${event}...`,
+      );
+      return;
+    }
+  }
+
   if (
     shopifySurvey.isProductSpecific &&
     !productIds.includes(shopifySurvey.productId)
