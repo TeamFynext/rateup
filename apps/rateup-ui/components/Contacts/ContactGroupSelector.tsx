@@ -1,4 +1,4 @@
-import React from "react";
+import { useEffect, useState } from "react";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 
@@ -58,3 +58,104 @@ const ContactGroupSelector = ({
 };
 
 export default ContactGroupSelector;
+
+export const ContactGroupsSelector = ({
+  contactId,
+  value = [],
+  onChange,
+  className = "",
+  contactgroups,
+  contactGroupsLoading,
+}) => {
+  const { data: groups, isLoading: groupsLoading } = useContactGroup();
+
+  // Local state to avoid mutation on initial load
+  const [selectedIds, setSelectedIds] = useState<string[]>(value);
+  const [initialized, setInitialized] = useState(false);
+
+  // Initialize from API once
+  useEffect(() => {
+    if (!initialized && contactgroups) {
+      const existingIds = contactgroups.map((g) => g.id);
+      setSelectedIds(existingIds);
+      setInitialized(true);
+    }
+  }, [contactgroups, initialized]);
+
+  const toggleGroup = (groupId: string) => {
+    const prev = selectedIds;
+
+    const next = prev.includes(groupId)
+      ? prev.filter((id) => id !== groupId)
+      : [...prev, groupId];
+
+    // Calculate diff
+    const addGroupIds = next.filter((id) => !prev.includes(id));
+    const removeGroupIds = prev.filter((id) => !next.includes(id));
+
+    setSelectedIds(next);
+
+    // Send diff to parent
+    onChange({
+      nextIds: next,
+      addGroupIds,
+      removeGroupIds,
+    });
+  };
+
+  const selectedCount = selectedIds.length;
+
+  // Loading state
+  if (groupsLoading || contactGroupsLoading) {
+    return (
+      <div className="w-40">
+        <Skeleton className="h-8 w-full rounded-md" />
+      </div>
+    );
+  }
+
+  return (
+    <Select>
+      <SelectTrigger className={`border-none text-sm font-medium ${className}`}>
+        {selectedCount
+          ? `${selectedCount} Group${selectedCount > 1 ? "s" : ""}`
+          : "Add to groups"}
+      </SelectTrigger>
+
+      <SelectContent
+        position="popper"
+        side="right"
+        align="start"
+        className="w-48"
+      >
+        {groups?.length ? (
+          groups.map((group) => {
+            const active = selectedIds.includes(group.id);
+
+            return (
+              <div
+                key={group.id}
+                onClick={() => toggleGroup(group.id)}
+                className={`
+                  flex items-center px-2 py-1.5 cursor-pointer rounded-sm
+                  ${
+                    active
+                      ? "bg-accent text-accent-foreground"
+                      : "hover:bg-accent"
+                  }
+                `}
+              >
+                <span className="text-sm flex-1">{group.name}</span>
+                {active && <span className="text-xs">✓</span>}
+              </div>
+            );
+          })
+        ) : (
+          <div className="px-2 py-2 text-sm text-muted-foreground">
+            No groups found
+          </div>
+        )}
+      </SelectContent>
+    </Select>
+  );
+};
