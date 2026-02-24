@@ -29,9 +29,16 @@ export async function updateCatalogProducts(catalogId, data) {
   return (await axiosClient.put(`${baseUrl}/${catalogId}`, data)).data;
 }
 
+export async function getShopifyAvailableProducts(catalogId: string) {
+  return (await axiosClient.get(`${baseUrl}/shopify-available/${catalogId}`))
+    .data as any[];
+}
+
 export async function importShopifyProducts(
   catalogId: string,
+  items: any[],
 ): Promise<{ imported: number }> {
-  return (await axiosClient.post(`${baseUrl}/import-shopify/${catalogId}`))
-    .data;
+  return (
+    await axiosClient.post(`${baseUrl}/import-shopify/${catalogId}`, { items })
+  ).data;
 }

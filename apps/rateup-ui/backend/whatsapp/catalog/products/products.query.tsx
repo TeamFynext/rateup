@@ -4,6 +4,7 @@ import {
   createCatalogProductBatch,
   deleteCatalogProducts,
   getCatalogProducts,
+  getShopifyAvailableProducts,
   importShopifyProducts,
   syncCatalogProducts,
   updateCatalogProducts,
@@ -60,12 +61,28 @@ export const useUpdateCatalogProducts = (catalogId) => {
   });
 };
 
+export const useShopifyAvailableProducts = (
+  catalogId: string,
+  enabled: boolean,
+) => {
+  return useQuery({
+    queryFn: () => getShopifyAvailableProducts(catalogId),
+    queryKey: ["shopify_available_products", catalogId],
+    enabled: !!catalogId && enabled,
+    staleTime: 0,
+    gcTime: 0,
+  });
+};
+
 export const useImportShopifyProducts = (catalogId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => importShopifyProducts(catalogId),
+    mutationFn: (items: any[]) => importShopifyProducts(catalogId, items),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
+      qc.invalidateQueries({
+        queryKey: ["shopify_available_products", catalogId],
+      });
     },
   });
 };
