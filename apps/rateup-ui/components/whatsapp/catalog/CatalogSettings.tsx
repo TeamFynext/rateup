@@ -2,13 +2,24 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import { ActionIcon, Badge, Group, Loader, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Divider,
+  Group,
+  Loader,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconCheck,
+  IconCloudDownload,
   IconLinkPlus,
   IconLogin2,
   IconRefresh,
+  IconShoppingBag,
+  IconX,
 } from "@tabler/icons-react";
 
 import { MetaLoginAssets, WaConfigType } from "@/types/enums";
@@ -30,6 +41,7 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import { ImportFromShopifyModal } from "@/components/whatsapp/catalog/products/ImportFromShopifyModal";
 import { showErrorToast } from "@/utils/notifications";
 
 const CatalogSettings = ({ catalogData }) => {
@@ -191,7 +203,59 @@ const CatalogSettings = ({ catalogData }) => {
         closeAfterOnConfirm={false}
       />
 
+      <Divider mt="md" />
+      <ProductManagementSection catalogData={catalogData} />
+
+      <Divider mt="md" />
       <ProductSetsSection catalogId={catalogData?.catalogId} />
+    </Stack>
+  );
+};
+
+const ProductManagementSection = ({ catalogData }) => {
+  const catalogId = catalogData?.catalogId;
+  const [
+    shopifyImportOpened,
+    { open: openShopifyImport, close: closeShopifyImport },
+  ] = useDisclosure(false);
+
+  return (
+    <Stack gap="xs" mt="md">
+      <Text fw={600}>Product Management</Text>
+
+      {/* Import from Shopify */}
+      <Group
+        justify="space-between"
+        p="sm"
+        style={{
+          border: "1px solid #e0e0e0",
+          borderRadius: "8px",
+          backgroundColor: "#f9f9f9",
+        }}
+      >
+        <Stack gap={2}>
+          <Text fw={500} size="sm">
+            Import from Shopify
+          </Text>
+          <Text size="xs" c="dimmed">
+            Browse your Shopify products and selectively add new ones to this
+            catalog.
+          </Text>
+        </Stack>
+        <RateupButtonBlue
+          leftIcon={<IconShoppingBag size={16} />}
+          onClick={openShopifyImport}
+          title="Import from Shopify"
+          w="fit-content"
+          disabled={!catalogId}
+        />
+      </Group>
+
+      <ImportFromShopifyModal
+        catalogId={catalogId}
+        opened={shopifyImportOpened}
+        onClose={closeShopifyImport}
+      />
     </Stack>
   );
 };

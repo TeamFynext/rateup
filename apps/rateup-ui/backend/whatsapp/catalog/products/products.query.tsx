@@ -2,11 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   createCatalogProductBatch,
+  createShopifyProduct,
   deleteCatalogProducts,
   getCatalogProducts,
   getShopifyAvailableProducts,
   importShopifyProducts,
   syncCatalogProducts,
+  syncShopifyProductsWithCatalog,
   updateCatalogProducts,
 } from "./products.api";
 
@@ -83,6 +85,29 @@ export const useImportShopifyProducts = (catalogId: string) => {
       qc.invalidateQueries({
         queryKey: ["shopify_available_products", catalogId],
       });
+    },
+  });
+};
+
+export const useCreateShopifyProduct = (catalogId: string) => {
+  return useMutation({
+    mutationFn: (data: {
+      title: string;
+      description: string;
+      brand: string;
+      price: number;
+      currencyCode: string;
+      imageUrl?: string;
+    }) => createShopifyProduct(catalogId, data),
+  });
+};
+
+export const useSyncShopifyWithCatalog = (catalogId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => syncShopifyProductsWithCatalog(catalogId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
   });
 };

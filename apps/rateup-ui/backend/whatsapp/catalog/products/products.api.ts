@@ -42,3 +42,26 @@ export async function importShopifyProducts(
     await axiosClient.post(`${baseUrl}/import-shopify/${catalogId}`, { items })
   ).data;
 }
+
+export async function createShopifyProduct(
+  catalogId: string,
+  data: {
+    title: string;
+    description: string;
+    brand: string;
+    price: number;
+    currencyCode: string;
+    imageUrl?: string;
+  },
+) {
+  return (
+    await axiosClient.post(`${baseUrl}/shopify-create/${catalogId}`, data)
+  ).data;
+}
+
+export async function syncShopifyProductsWithCatalog(
+  catalogId: string,
+): Promise<{ updated: number; unchanged: number; notFound: number }> {
+  return (await axiosClient.post(`${baseUrl}/shopify-sync/${catalogId}`, {}))
+    .data;
+}
