@@ -4,6 +4,7 @@ import {
   createCatalogProductsBatch,
   deleteCatalogProducts,
   getCatalogProducts,
+  importShopifyProductsToCatalog,
   syncCatalogProducts,
   updateCatalogProducts,
 } from "./product.service.js";
@@ -116,6 +117,25 @@ export async function updateCatalogProductsHandler(
       type,
     );
     reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function importShopifyProductsHandler(
+  request: FastifyRequest<{ Params: CatalogIdParam }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { catalogId } = request.params;
+    const catalogInfo = await getWaCatalog(catalogId);
+    if (!catalogInfo) {
+      return reply.code(404).send("No catalog found");
+    }
+    const result = await importShopifyProductsToCatalog(orgId, catalogId);
+    reply.code(200).send(result);
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

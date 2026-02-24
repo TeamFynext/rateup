@@ -3,6 +3,7 @@ import {
   createCatalogProductsBatchHandler,
   deleteCatalogProductsHandler,
   getCatalogProductsHandler,
+  importShopifyProductsHandler,
   syncCatalogProductsHandler,
   updateCatalogProductsHandler,
 } from "./product.controller.js";
@@ -58,5 +59,11 @@ export async function waCatalogProductRoutes(server: FastifyInstance) {
       },
     },
     updateCatalogProductsHandler,
+  );
+
+  server.post(
+    "/import-shopify/:catalogId",
+    { schema: { params: $WC("catalogIdParams") } },
+    importShopifyProductsHandler,
   );
 }

@@ -1258,6 +1258,210 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
   }
 }
 
+/**
+ * Resolves WhatsApp catalog retailer_ids (used as Shopify SKUs) to numeric
+ * Shopify variant IDs and builds a valid cart permalink URL.
+ * Format: https://<shop>/cart/<variantId1>:<qty1>,<variantId2>:<qty2>
+ *
+ * Lookup strategy:
+ *   1. Primary:  match by Shopify variant SKU == retailerId
+ *   2. Fallback: match by Shopify product title (case-insensitive) == title field
+ */
+export async function buildShopifyCartUrl(
+  orgId: string,
+  products: { retailerId: string; quantity: number; title?: string }[],
+): Promise<string | null> {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    log.warn("Shopify integration not active for orgId %s", orgId);
+    return null;
+  }
+
+  const shop = shopifyInfo.credential?.session?.shop;
+  if (!shop) {
+    log.warn("Shopify shop domain not found for orgId %s", orgId);
+    return null;
+  }
+
+  const client = new shopify.clients.Graphql({
+    session: shopifyInfo.credential.session,
+  });
+
+  // retailerId → numeric Shopify variant id
+  const variantMap = new Map<string, string>();
+
+  // ── Step 0: Direct numeric fast-path ────────────────────────────────────
+  // When the catalog is synced FROM Shopify (via Shopify's Facebook channel),
+  // Shopify sets retailer_id = the numeric Shopify variant ID already.
+  // If retailer_id is all digits, skip all API lookups and use it directly.
+  const needsLookup: typeof products = [];
+  for (const product of products) {
+    if (/^\d+$/.test(product.retailerId)) {
+      log.trace(
+        "retailerId '%s' is numeric — using directly as Shopify variant ID",
+        product.retailerId,
+      );
+      variantMap.set(product.retailerId, product.retailerId);
+    } else {
+      needsLookup.push(product);
+    }
+  }
+
+  // ── Step 1: SKU-based lookup (non-numeric retailer_ids only) ─────────────
+  const lookupSkus = needsLookup.map((p) => p.retailerId).filter(Boolean);
+  if (lookupSkus.length > 0) {
+    // Wrap each SKU in quotes to handle spaces and special characters
+    const skuQuery = lookupSkus.map((sku) => `sku:"${sku}"`).join(" OR ");
+    try {
+      const variantsData = await client.request(
+        `query getVariantsBySkus($query: String!) {
+          productVariants(first: 250, query: $query) {
+            edges {
+              node {
+                id
+                sku
+              }
+            }
+          }
+        }`,
+        { variables: { query: skuQuery } },
+      );
+      const skuEdges = variantsData.data.productVariants.edges;
+      skuEdges.forEach((edge: any) => {
+        // GID format: gid://shopify/ProductVariant/12345678
+        const numericId = edge.node.id.split("/").pop();
+        variantMap.set(edge.node.sku, numericId);
+      });
+    } catch (e) {
+      log.error("Error fetching Shopify variants by SKU => %o", e);
+      return null;
+    }
+  }
+
+  // ── Step 2: Title-based fallback for any product not matched by SKU ──────
+  const notFoundBySku = needsLookup.filter(
+    (p) => !variantMap.has(p.retailerId) && p.title,
+  );
+  if (notFoundBySku.length > 0) {
+    const titleQuery = notFoundBySku
+      .map((p) => `title:"${p.title}"`)
+      .join(" OR ");
+    try {
+      const productsData = await client.request(
+        `query getProductsByTitle($query: String!) {
+          products(first: 50, query: $query) {
+            edges {
+              node {
+                title
+                variants(first: 1) {
+                  edges {
+                    node { id sku }
+                  }
+                }
+              }
+            }
+          }
+        }`,
+        { variables: { query: titleQuery } },
+      );
+      const titleEdges = productsData.data.products.edges;
+      titleEdges.forEach((edge: any) => {
+        const shopifyTitle: string = edge.node.title?.toLowerCase().trim();
+        const numericId: string | undefined =
+          edge.node.variants.edges[0]?.node?.id?.split("/").pop();
+        if (!numericId) return;
+        // Find the local product whose title or retailerId matches
+        const matched = notFoundBySku.find(
+          (p) =>
+            p.title?.toLowerCase().trim() === shopifyTitle ||
+            p.retailerId?.toLowerCase().trim() === shopifyTitle,
+        );
+        if (matched) {
+          log.trace(
+            "Matched Shopify product '%s' via title fallback for retailerId '%s'",
+            edge.node.title,
+            matched.retailerId,
+          );
+          variantMap.set(matched.retailerId, numericId);
+        }
+      });
+    } catch (e) {
+      log.warn("Title-based Shopify product lookup failed => %o", e);
+    }
+  }
+
+  // ── Step 3: Broad partial-word search as last resort ─────────────────────
+  // Steps 1 & 2 use exact matches. Step 3 uses the first 3 significant words
+  // of the title as unquoted keywords (Shopify "contains all words" search),
+  // which handles apostrophe/encoding differences or slight title mismatches.
+  const notFoundAfterTitle = needsLookup.filter(
+    (p) => !variantMap.has(p.retailerId),
+  );
+  if (notFoundAfterTitle.length > 0) {
+    for (const product of notFoundAfterTitle) {
+      const words = (product.title ?? product.retailerId)
+        .replace(/['"]/g, "") // strip apostrophes/quotes that break query
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 3)
+        .join(" ");
+      try {
+        const broadData = await client.request(
+          `query broadSearch($query: String!) {
+            products(first: 10, query: $query) {
+              edges {
+                node {
+                  title
+                  handle
+                  variants(first: 5) {
+                    edges {
+                      node { id sku }
+                    }
+                  }
+                }
+              }
+            }
+          }`,
+          { variables: { query: words } },
+        );
+        const broadEdges = broadData.data.products.edges;
+        if (broadEdges.length > 0) {
+          // Take the first variant of the best-matching product
+          const firstVariantId: string | undefined =
+            broadEdges[0]?.node?.variants?.edges[0]?.node?.id?.split("/").pop();
+          if (firstVariantId) {
+            variantMap.set(product.retailerId, firstVariantId);
+          }
+        }
+      } catch (e) {
+        log.warn("Broad Shopify product search failed => %o", e);
+      }
+    }
+  }
+
+  // ── Build cart URL ────────────────────────────────────────────────────────
+  const cartParts: string[] = [];
+  for (const product of products) {
+    const numericVariantId = variantMap.get(product.retailerId);
+    if (numericVariantId) {
+      cartParts.push(`${numericVariantId}:${product.quantity}`);
+    } else {
+      log.warn(
+        "Shopify variant not found for retailerId '%s' (title: '%s') — skipping",
+        product.retailerId,
+        product.title ?? "N/A",
+      );
+    }
+  }
+
+  if (cartParts.length === 0) {
+    log.warn("No Shopify variants matched for orgId %s", orgId);
+    return null;
+  }
+
+  return `https://${shop}/cart/${cartParts.join(",")}`;
+}
+
 export async function createShopifyDraftOrder(orgId: string, products: any[]) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {

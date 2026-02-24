@@ -3,6 +3,8 @@ import { log } from "../../../../utils/logger.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
 import { callWhatsappApi } from "../../wa_axios.js";
 import { getWaCatalog } from "../catalog.service.js";
+import { getShopifyInfo } from "../../../integrations/shopify/shopify.service.js";
+import shopify from "../../../integrations/shopify/shopify.config.js";
 import {
   catalogHotel,
   catalogHotelRoom,
@@ -37,7 +39,7 @@ export async function createCatalogProductsBatch(
       input = {
         ...rest,
         id: retailer_id,
-        price: `${price} ${currencyCode}`,
+        price: `${parseFloat(String(price)).toFixed(2)} ${currencyCode}`,
         sale_price: `${sale_price} ${currencyCode}`,
         internal_label: internal_label.map((label) => `'${label}'`),
       };
@@ -137,6 +139,7 @@ export async function sendProducts(
     null,
     { "Content-Type": "application/json" },
   );
+
   return res.data;
 }
 
@@ -512,4 +515,152 @@ function getCatalogProdutType(vertical) {
     case "hotel_room":
       return CatalogProductTypes.HOTEL_ROOM;
   }
+}
+
+export async function importShopifyProductsToCatalog(
+  orgId: string,
+  catalogId: string,
+) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo?.credential?.session) {
+    throw new Error("No Shopify integration found for this org");
+  }
+
+  const session = shopifyInfo.credential.session;
+  const client = new shopify.clients.Graphql({ session });
+
+  // Fetch shop currency
+  const shopData = await client.request(`{ shop { currencyCode } }`);
+  const currencyCode: string = shopData.data.shop?.currencyCode ?? "USD";
+  const shopDomain: string = session.shop;
+
+  log.info(
+    { orgId, catalogId, shopDomain, currencyCode },
+    "Starting Shopify→Catalog import",
+  );
+
+  // Paginate through all Shopify products
+  let hasNextPage = true;
+  let cursor: string | null = null;
+  const allProducts: any[] = [];
+
+  while (hasNextPage) {
+    const data: any = await client.request(
+      `query getFullProducts($cursor: String) {
+        products(first: 50, after: $cursor) {
+          edges {
+            node {
+              id
+              title
+              description
+              vendor
+              handle
+              onlineStoreUrl
+              images(first: 5) {
+                edges { node { url } }
+              }
+              variants(first: 100) {
+                edges {
+                  node {
+                    id
+                    sku
+                    price
+                    compareAtPrice
+                    availableForSale
+                    inventoryQuantity
+                    title
+                  }
+                }
+              }
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }`,
+      { variables: { cursor } },
+    );
+    hasNextPage = data.data.products.pageInfo.hasNextPage;
+    cursor = data.data.products.pageInfo.endCursor;
+    allProducts.push(...data.data.products.edges.map((e) => e.node));
+  }
+
+  log.info(
+    { orgId, catalogId, productCount: allProducts.length },
+    "Fetched Shopify products for import",
+  );
+
+  // Map each variant to a catalogProductCore item
+  const catalogItems: any[] = [];
+  for (const product of allProducts) {
+    const images = (product.images?.edges ?? []).map((e) => ({
+      url: e.node.url,
+    }));
+    const productLink: string =
+      product.onlineStoreUrl ??
+      `https://${shopDomain}/products/${product.handle}`;
+    const productGroupId: string = product.id.split("/").pop() ?? product.id;
+
+    // Skip products with no images — Meta will reject them
+    if (images.length === 0) {
+      log.warn(
+        { productTitle: product.title },
+        "Skipping Shopify product with no images",
+      );
+      continue;
+    }
+
+    for (const variantEdge of product.variants?.edges ?? []) {
+      const v = variantEdge.node;
+      // Extract numeric ID from GID: "gid://shopify/ProductVariant/12345" → "12345"
+      const numericId: string = v.id.split("/").pop() ?? v.id;
+      const variantSuffix =
+        v.title && v.title !== "Default Title" ? ` - ${v.title}` : "";
+
+      // Shopify: compareAtPrice = original (crossed-out), price = current (sale)
+      // Meta: price = regular, sale_price = discounted
+      // Use toFixed(2) to ensure consistent "X.XX CCY" format (e.g. "600.00 USD")
+      const salePrice = parseFloat(v.price);
+      const originalPrice = v.compareAtPrice
+        ? parseFloat(v.compareAtPrice)
+        : salePrice;
+
+      catalogItems.push({
+        retailer_id: numericId,
+        title: `${product.title}${variantSuffix}`.substring(0, 100),
+        description: (product.description || product.title).substring(0, 5000),
+        condition: "new",
+        image: images,
+        internal_label: [],
+        link: productLink,
+        price: originalPrice,
+        currencyCode,
+        availability: v.availableForSale ? "in stock" : "out of stock",
+        brand: product.vendor || product.title,
+        sale_price: salePrice.toFixed(2),
+        item_group_id: productGroupId,
+      });
+    }
+  }
+
+  if (catalogItems.length === 0) {
+    log.warn({ orgId, catalogId }, "No Shopify variants found to import");
+    return { imported: 0 };
+  }
+
+  await createCatalogProductsBatch(
+    orgId,
+    "PRODUCT_ITEM",
+    catalogItems,
+    catalogId,
+  );
+
+  log.info(
+    { orgId, catalogId, imported: catalogItems.length },
+    "Shopify→Catalog import complete",
+  );
+
+  return { imported: catalogItems.length };
 }
