@@ -652,7 +652,7 @@ export async function importShopifyProductsToCatalog(
 
   await createCatalogProductsBatch(
     orgId,
-    "PRODUCT_ITEM",
+    CatalogProductTypes.PRODUCT_ITEM,
     catalogItems,
     catalogId,
   );
