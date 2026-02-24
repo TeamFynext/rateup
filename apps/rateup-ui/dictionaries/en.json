@@ -3410,7 +3410,7 @@
         "months": "Months"
       },
       "broadcast": {
-        "description": "Choose a template for your campaign"
+        "description": "Choose an approved template or create one"
       },
       "dynamicVariables": {
         "title": "Dynamic Variables",
