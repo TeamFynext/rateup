@@ -517,7 +517,9 @@ function getCatalogProdutType(vertical) {
   }
 }
 
-export async function importShopifyProductsToCatalog(
+// Fetches all Shopify products, maps them to catalogProductCore format,
+// and filters out any variants already imported into this catalog.
+export async function getShopifyProductsForCatalog(
   orgId: string,
   catalogId: string,
 ) {
@@ -529,15 +531,9 @@ export async function importShopifyProductsToCatalog(
   const session = shopifyInfo.credential.session;
   const client = new shopify.clients.Graphql({ session });
 
-  // Fetch shop currency
   const shopData = await client.request(`{ shop { currencyCode } }`);
   const currencyCode: string = shopData.data.shop?.currencyCode ?? "USD";
   const shopDomain: string = session.shop;
-
-  log.info(
-    { orgId, catalogId, shopDomain, currencyCode },
-    "Starting Shopify→Catalog import",
-  );
 
   // Paginate through all Shopify products
   let hasNextPage = true;
@@ -587,41 +583,36 @@ export async function importShopifyProductsToCatalog(
     allProducts.push(...data.data.products.edges.map((e) => e.node));
   }
 
-  log.info(
-    { orgId, catalogId, productCount: allProducts.length },
-    "Fetched Shopify products for import",
+  // Get already-imported retailer_ids for this catalog
+  const existing = await prisma.waCatalogProduct.findMany({
+    where: { catalogId },
+    select: { retailer_id: true },
+  });
+  const existingIds = new Set(
+    existing.map((p) => p.retailer_id).filter(Boolean),
   );
 
-  // Map each variant to a catalogProductCore item
+  // Map each unimported variant to a catalogProductCore item
   const catalogItems: any[] = [];
   for (const product of allProducts) {
     const images = (product.images?.edges ?? []).map((e) => ({
       url: e.node.url,
     }));
+    if (images.length === 0) continue; // Meta requires at least one image
+
     const productLink: string =
       product.onlineStoreUrl ??
       `https://${shopDomain}/products/${product.handle}`;
     const productGroupId: string = product.id.split("/").pop() ?? product.id;
 
-    // Skip products with no images — Meta will reject them
-    if (images.length === 0) {
-      log.warn(
-        { productTitle: product.title },
-        "Skipping Shopify product with no images",
-      );
-      continue;
-    }
-
     for (const variantEdge of product.variants?.edges ?? []) {
       const v = variantEdge.node;
-      // Extract numeric ID from GID: "gid://shopify/ProductVariant/12345" → "12345"
       const numericId: string = v.id.split("/").pop() ?? v.id;
+
+      if (existingIds.has(numericId)) continue; // skip already imported
+
       const variantSuffix =
         v.title && v.title !== "Default Title" ? ` - ${v.title}` : "";
-
-      // Shopify: compareAtPrice = original (crossed-out), price = current (sale)
-      // Meta: price = regular, sale_price = discounted
-      // Use toFixed(2) to ensure consistent "X.XX CCY" format (e.g. "600.00 USD")
       const salePrice = parseFloat(v.price);
       const originalPrice = v.compareAtPrice
         ? parseFloat(v.compareAtPrice)
@@ -645,22 +636,28 @@ export async function importShopifyProductsToCatalog(
     }
   }
 
-  if (catalogItems.length === 0) {
-    log.warn({ orgId, catalogId }, "No Shopify variants found to import");
-    return { imported: 0 };
-  }
+  return catalogItems;
+}
+
+// Imports a pre-selected list of mapped catalog items into Meta + DB.
+export async function importSelectedShopifyProducts(
+  orgId: string,
+  catalogId: string,
+  items: any[],
+) {
+  if (items.length === 0) return { imported: 0 };
 
   await createCatalogProductsBatch(
     orgId,
     CatalogProductTypes.PRODUCT_ITEM,
-    catalogItems,
+    items,
     catalogId,
   );
 
   log.info(
-    { orgId, catalogId, imported: catalogItems.length },
+    { orgId, catalogId, imported: items.length },
     "Shopify→Catalog import complete",
   );
 
-  return { imported: catalogItems.length };
+  return { imported: items.length };
 }

@@ -3,6 +3,7 @@ import {
   createCatalogProductsBatchHandler,
   deleteCatalogProductsHandler,
   getCatalogProductsHandler,
+  getShopifyAvailableProductsHandler,
   importShopifyProductsHandler,
   syncCatalogProductsHandler,
   updateCatalogProductsHandler,
@@ -59,6 +60,12 @@ export async function waCatalogProductRoutes(server: FastifyInstance) {
       },
     },
     updateCatalogProductsHandler,
+  );
+
+  server.get(
+    "/shopify-available/:catalogId",
+    { schema: { params: $WC("catalogIdParams") } },
+    getShopifyAvailableProductsHandler,
   );
 
   server.post(

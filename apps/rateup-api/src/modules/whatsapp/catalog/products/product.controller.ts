@@ -4,7 +4,8 @@ import {
   createCatalogProductsBatch,
   deleteCatalogProducts,
   getCatalogProducts,
-  importShopifyProductsToCatalog,
+  getShopifyProductsForCatalog,
+  importSelectedShopifyProducts,
   syncCatalogProducts,
   updateCatalogProducts,
 } from "./product.service.js";
@@ -123,7 +124,7 @@ export async function updateCatalogProductsHandler(
   }
 }
 
-export async function importShopifyProductsHandler(
+export async function getShopifyAvailableProductsHandler(
   request: FastifyRequest<{ Params: CatalogIdParam }>,
   reply: FastifyReply,
 ) {
@@ -134,7 +135,30 @@ export async function importShopifyProductsHandler(
     if (!catalogInfo) {
       return reply.code(404).send("No catalog found");
     }
-    const result = await importShopifyProductsToCatalog(orgId, catalogId);
+    const items = await getShopifyProductsForCatalog(orgId, catalogId);
+    reply.code(200).send(items);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function importShopifyProductsHandler(
+  request: FastifyRequest<{ Params: CatalogIdParam; Body: { items: any[] } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { catalogId } = request.params;
+    const catalogInfo = await getWaCatalog(catalogId);
+    if (!catalogInfo) {
+      return reply.code(404).send("No catalog found");
+    }
+    const result = await importSelectedShopifyProducts(
+      orgId,
+      catalogId,
+      request.body?.items ?? [],
+    );
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
