@@ -5,7 +5,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   reactStrictMode: false,
-  // typedRoutes: false,
+  // typedRoutes: true,
   images: {
     remotePatterns: [
       {
@@ -31,9 +31,9 @@ const nextConfig: NextConfig = {
           removeConsole: true,
         }
       : {},
+  // reactCompiler: true,
   experimental: {
     // optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
-    // reactCompiler: true,
   },
   async redirects() {
     return [

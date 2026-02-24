@@ -6,12 +6,17 @@ import {
   IconBrandFacebook,
   IconBrandWhatsapp,
   IconCopy,
+  IconDeviceFloppy,
   IconMail,
   IconUpload,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 
-import { usePushToWaMutation } from "@/backend/whatsapp/flow/flow.query";
+import {
+  usePushToWaMutation,
+  useUpdateFlowMutation,
+  useWaFlowFromDb,
+} from "@/backend/whatsapp/flow/flow.query";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +47,8 @@ export default function FlowShare({
 }: FlowShareProps) {
   // Share Survey state
   const pushToWaMutation = usePushToWaMutation();
+  const updateFlowMutation = useUpdateFlowMutation();
+  const { data: flowData } = useWaFlowFromDb(flowDbId);
   const [selectedTeam, setSelectedTeam] = useState(
     survey?.teams?.[0]?.code || "",
   );
@@ -57,6 +64,17 @@ export default function FlowShare({
     "Send this message to start survey.",
   );
   const [startMessageSuffix, setStartMessageSuffix] = useState("");
+
+  // Load start message values from DB
+  useEffect(() => {
+    if (flowData?.startMessageConfig) {
+      setStartMessageBody(
+        flowData.startMessageConfig.prefix ||
+          "Send this message to start survey.",
+      );
+      setStartMessageSuffix(flowData.startMessageConfig.suffix || "");
+    }
+  }, [flowData]);
 
   // Template Message state
   const [templateBody, setTemplateBody] = useState(
@@ -114,6 +132,18 @@ export default function FlowShare({
 
   const handleSaveToWhatsapp = () => {
     pushToWaMutation.mutate(flowDbId);
+  };
+
+  const handleSaveStartMessage = () => {
+    updateFlowMutation.mutate({
+      dbFlowId: flowDbId,
+      data: {
+        startMessageConfig: {
+          prefix: startMessageBody,
+          suffix: startMessageSuffix,
+        },
+      },
+    });
   };
 
   return (
@@ -220,9 +250,15 @@ export default function FlowShare({
         <ShareSection
           title="Edit Start Message"
           badge={
-            <div className="bg-green-100 dark:bg-emerald-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded text-[10px] font-medium">
-              Saved
-            </div>
+            updateFlowMutation.isPending ? (
+              <div className="bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded text-[10px] font-medium">
+                Saving...
+              </div>
+            ) : (
+              <div className="bg-green-100 dark:bg-emerald-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded text-[10px] font-medium">
+                Saved
+              </div>
+            )
           }
           leftContent={
             <div className="flex flex-col gap-2">
@@ -249,6 +285,17 @@ export default function FlowShare({
                 <span className="absolute bottom-1 right-2 text-[10px] text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-950 px-1 py-0.5 rounded pointer-events-none">
                   {startMessageSuffix.length} / 1024
                 </span>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  size="sm"
+                  onClick={handleSaveStartMessage}
+                  disabled={updateFlowMutation.isPending}
+                  className="h-8 text-xs"
+                >
+                  <IconDeviceFloppy size={14} className="mr-1.5" />
+                  {updateFlowMutation.isPending ? "Saving..." : "Save"}
+                </Button>
               </div>
             </div>
           }

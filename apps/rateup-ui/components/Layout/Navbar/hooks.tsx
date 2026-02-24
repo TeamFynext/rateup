@@ -93,11 +93,6 @@ export function useNavMain({
                   url: "/dashboard/inbox?tab=New",
                   icon: Sparkles,
                 },
-                // {
-                //   title: t("All"),
-                //   url: "/dashboard/inbox?tab=All",
-                //   icon: Inbox,
-                // },
                 {
                   title: t("Assigned"),
                   url: "/dashboard/inbox?tab=Assigned",
@@ -113,6 +108,11 @@ export function useNavMain({
                   title: t("Closed"),
                   url: "/dashboard/inbox?tab=Addressed",
                   icon: CircleCheckBig,
+                },
+                {
+                  title: t("All"),
+                  url: "/dashboard/inbox?tab=All",
+                  icon: Inbox,
                 },
                 {
                   group: "Filter",

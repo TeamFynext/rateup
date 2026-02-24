@@ -15,9 +15,11 @@ import {
   deleteManyContactGroups,
   getContactGroupById,
   getContactGroupList,
+  getContactGroupsByContactId,
   getContactGroupsByTeamId,
   removeContactsFromGroup,
   updateContactGroup,
+  updateContactGroupsForContact,
 } from "./contactGroup.api";
 
 export const useContactGroup = (
@@ -55,6 +57,14 @@ export const useContactGroupsByTeamId = (teamId: string) => {
   });
 };
 
+export const useContactGroupsByContactId = (contactId: string) => {
+  return useQuery({
+    queryKey: ["contactGroupsDataByContactId", contactId],
+    queryFn: () => getContactGroupsByContactId(contactId),
+    enabled: !!contactId,
+  });
+};
+
 export const useCreateContactGroupMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -86,15 +96,20 @@ export const useAddNewContactMutation = (groupId: string) => {
   return useMutation({
     mutationFn: (data) => addNewContact({ data, groupId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({
+      (queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       }),
         queryClient.invalidateQueries({ queryKey: ["contacts"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["contactGroupsDataByContactId"],
+          exact: false,
+          refetchType: "all",
+        }),
         showSuccessToast(
           "Added new member successfully.",
           "contact-group-add-member",
           <IconCheck />,
-        );
+        ));
     },
     onError: (error: any) => {
       showErrorToast(
@@ -111,7 +126,7 @@ export const useAddNewContactFromCSVMutation = (groupId: string) => {
   return useMutation({
     mutationFn: (data) => addNewContactFromCSV({ data, groupId }),
     onSettled: () => {
-      queryClient.invalidateQueries({
+      (queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       }),
         queryClient.invalidateQueries({ queryKey: ["contacts"] }),
@@ -119,7 +134,7 @@ export const useAddNewContactFromCSVMutation = (groupId: string) => {
           "Added new member successfully.",
           "contact-group-add-member",
           <IconCheck />,
-        );
+        ));
     },
     onError: (error: any) => {
       showErrorToast(
@@ -138,6 +153,11 @@ export const useDeleteGroupMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["contactGroupsDataByContactId"],
+        exact: false,
+        refetchType: "all",
       });
       showSuccessToast(
         "Contact Group Deleted successfully",
@@ -199,6 +219,11 @@ export const useAddExistingContactMutation = (groupId: string) => {
       queryClient.invalidateQueries({
         queryKey: ["contacts"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["contactGroupsDataByContactId"],
+        exact: false,
+        refetchType: "all",
+      });
       showSuccessToast(
         "Members added to  group successfully.",
         "contact-group-add-existing",
@@ -234,6 +259,11 @@ export const useRemoveContactsFromGroup = (groupId) => {
       });
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["contactGroupsDataByContactId"],
+        exact: false,
+        refetchType: "all",
       });
     },
     onError(error: any) {
@@ -305,6 +335,33 @@ export const useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
         <IconX />,
         true,
       );
+    },
+  });
+};
+
+export const useUpdateContactGroupsForContactMutation = (contactId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      contactId,
+      addGroupIds,
+      removeGroupIds,
+    }: {
+      contactId: string;
+      addGroupIds: string[];
+      removeGroupIds: string[];
+    }) => updateContactGroupsForContact(contactId, addGroupIds, removeGroupIds),
+
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["contacts"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["contactGroupsDataByContactId", contactId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["campaignContactGroupsData"],
+      });
     },
   });
 };

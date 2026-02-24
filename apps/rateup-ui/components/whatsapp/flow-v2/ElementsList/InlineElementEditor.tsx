@@ -326,9 +326,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
                   </Label>
                 </div>
               )}
-              {WaNPSQuestions2.includes(
-                formValues.metaType as QuestionType2,
-              ) && (
+              {WaNPSQuestions2.includes(elementType) && (
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="enableNpsAnalytics"

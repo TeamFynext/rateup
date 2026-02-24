@@ -146,3 +146,25 @@ export const deleteManyContactGroups = async (contactGroupIds: string[]) => {
     data: { contactGroupIds },
   });
 };
+
+export const getContactGroupsByContactId = async (contactId: string) => {
+  const res = await axiosClient.get(
+    `${CONTACT_GROUP_BASE_URL}/contact/${contactId}`,
+  );
+  return res.data;
+};
+
+export const updateContactGroupsForContact = async (
+  contactId: string,
+  addGroupIds: string[],
+  removeGroupIds: string[],
+) => {
+  const res = await axiosClient.post(
+    `${CONTACT_GROUP_BASE_URL}/contact/${contactId}/groups`,
+    {
+      addGroupIds,
+      removeGroupIds,
+    },
+  );
+  return res;
+};
