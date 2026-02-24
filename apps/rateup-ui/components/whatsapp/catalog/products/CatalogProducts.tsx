@@ -4,9 +4,18 @@ import React from "react";
 
 import { Group, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconPlus, IconRefresh, IconX } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconPlus,
+  IconRefresh,
+  IconShoppingBag,
+  IconX,
+} from "@tabler/icons-react";
 
-import { useSyncCatalogProducts } from "@/backend/whatsapp/catalog/products/products.query";
+import {
+  useImportShopifyProducts,
+  useSyncCatalogProducts,
+} from "@/backend/whatsapp/catalog/products/products.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import {
   showErrorToast,
@@ -20,6 +29,7 @@ import ProductItems from "./ProductItems";
 const CatalogProducts = ({ catalogData }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const syncProductsMut = useSyncCatalogProducts(catalogData?.catalogId);
+  const importShopifyMut = useImportShopifyProducts(catalogData?.catalogId);
 
   function syncProducts(data = null) {
     showLoadingToast(
@@ -53,6 +63,35 @@ const CatalogProducts = ({ catalogData }) => {
     });
   }
 
+  function importFromShopify() {
+    showLoadingToast(
+      "Importing products from Shopify...",
+      "import-shopify-products",
+      true,
+      "",
+      "",
+      false,
+    );
+    importShopifyMut.mutate(undefined, {
+      onSuccess: (data) => {
+        showSuccessToast(
+          `Imported ${data.imported} product${data.imported !== 1 ? "s" : ""} from Shopify`,
+          "import-shopify-products",
+          <IconCheck />,
+          true,
+        );
+      },
+      onError: () => {
+        showErrorToast(
+          "Import from Shopify failed. Make sure Shopify is connected.",
+          "import-shopify-products",
+          <IconX />,
+          true,
+        );
+      },
+    });
+  }
+
   return (
     <Stack>
       <Group justify="space-between">
@@ -63,6 +102,12 @@ const CatalogProducts = ({ catalogData }) => {
             disabled={!catalogData}
             onClick={open}
             leftIcon={<IconPlus size={15} />}
+          />
+          <RateupButtonPrimary
+            title="Import from Shopify"
+            disabled={!catalogData || importShopifyMut.isPending}
+            onClick={importFromShopify}
+            leftIcon={<IconShoppingBag size={15} />}
           />
         </Group>
         <RateupButtonPrimary

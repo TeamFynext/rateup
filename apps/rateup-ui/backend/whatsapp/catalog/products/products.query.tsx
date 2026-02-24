@@ -4,6 +4,7 @@ import {
   createCatalogProductBatch,
   deleteCatalogProducts,
   getCatalogProducts,
+  importShopifyProducts,
   syncCatalogProducts,
   updateCatalogProducts,
 } from "./products.api";
@@ -53,6 +54,16 @@ export const useUpdateCatalogProducts = (catalogId) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => updateCatalogProducts(catalogId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
+    },
+  });
+};
+
+export const useImportShopifyProducts = (catalogId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => importShopifyProducts(catalogId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },

@@ -28,3 +28,10 @@ export async function deleteCatalogProducts(catalogId, data) {
 export async function updateCatalogProducts(catalogId, data) {
   return (await axiosClient.put(`${baseUrl}/${catalogId}`, data)).data;
 }
+
+export async function importShopifyProducts(
+  catalogId: string,
+): Promise<{ imported: number }> {
+  return (await axiosClient.post(`${baseUrl}/import-shopify/${catalogId}`))
+    .data;
+}
