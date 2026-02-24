@@ -4,7 +4,12 @@ import { immer } from "zustand/middleware/immer";
 import { QuestionType2, WaQuestions } from "@/types/enums";
 import { FlowLogicJump } from "@/types/global";
 
-import { getQuestionTypeMapping } from "./util";
+import {
+  getQuestionTypeMapping,
+  NO_NAME_TYPES,
+  NO_VISIBLE_TYPES,
+  REQUIRES_NAME_TYPES,
+} from "./typeConstants";
 
 export interface Screen {
   id: string;
@@ -104,23 +109,7 @@ const useFlowStoreV3 = create<StoreState>()(
     googleReview: null,
     logicJumps: {},
     getScreens: () => {
-      // Type mapping from UI display names to WhatsApp API format
       const typeMapping = getQuestionTypeMapping();
-
-      // Elements that require a 'name' field for WhatsApp API
-      const requiresName = [
-        "EmbeddedLink",
-        "OptIn",
-        "ChipsSelector",
-        "TextInput",
-        "TextArea",
-        "DatePicker",
-        "Dropdown",
-        "CheckboxGroup",
-        "RadioButtonsGroup",
-        "PhotoPicker",
-        "DocumentPicker",
-      ];
 
       return get().screens.map((screen) => ({
         ...screen,
@@ -132,17 +121,38 @@ const useFlowStoreV3 = create<StoreState>()(
                 ? typeMapping[child.type as string]
                 : child.type;
 
+            const isNonInteractive =
+              NO_NAME_TYPES.has(mappedType as string) ||
+              NO_NAME_TYPES.has(child.type as string);
+
+            const isNoVisible =
+              NO_VISIBLE_TYPES.has(mappedType as string) ||
+              NO_VISIBLE_TYPES.has(child.type as string);
+
             // Auto-generate name if required and missing
             const name =
-              requiresName.includes(mappedType as string) && !child.name
+              REQUIRES_NAME_TYPES.includes(mappedType as string) && !child.name
                 ? `field_${Math.random().toString(36).substring(2, 10)}`
                 : child.name;
 
-            return {
+            const result: any = {
               ...child,
               type: mappedType as QuestionType2,
-              ...(name && { name }),
-            } as FormElement;
+              ...(name && !isNonInteractive && { name }),
+            };
+
+            // Strip 'visible' and 'required' from types that don't support them
+            if (isNoVisible) {
+              delete result.visible;
+              delete result.required;
+            }
+
+            // Strip 'required' from all non-interactive types defensively
+            if (isNonInteractive) {
+              delete result.required;
+            }
+
+            return result as FormElement;
           }),
         },
       })) as Screen[];

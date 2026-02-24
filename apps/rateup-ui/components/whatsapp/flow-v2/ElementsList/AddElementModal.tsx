@@ -21,9 +21,14 @@ import {
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
-import { QuestionType2, LDResponse2, YNResponse, SmileyResponse2, RatingScale } from "@/types/enums";
-import { FlowQuestionTypes2 } from "@/utils/constants";
-import { showErrorToast } from "@/utils/notifications";
+import {
+  LDResponse2,
+  QuestionType2,
+  RatingScale,
+  SmileyResponse2,
+  YNResponse,
+} from "@/types/enums";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -32,9 +37,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
+import { FlowQuestionTypes2 } from "@/utils/constants";
+import { showErrorToast } from "@/utils/notifications";
 
 import useFlowStoreV3 from "../utils/store";
+import { NO_NAME_TYPES, NO_VISIBLE_TYPES } from "../utils/typeConstants";
 import styles from "./AddElementModal.module.css";
 
 // Icon mapping for question types
@@ -71,7 +78,8 @@ interface AddElementModalProps {
 // Modal for adding new elements to the flow
 function AddElementModal({ opened, close }: AddElementModalProps) {
   const translations = useTranslations();
-  const { getCurrentScreen, getScreens, addComponentToScreen } = useFlowStoreV3();
+  const { getCurrentScreen, getScreens, addComponentToScreen } =
+    useFlowStoreV3();
 
   const getLabel = (type: QuestionType2) => {
     switch (type) {
@@ -93,11 +101,13 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
 
     switch (type) {
       case QuestionType2.Rating:
-        return Object.entries(RatingScale).map(([description, title], index) => ({
-          id: (index + 1).toString(),
-          title,
-          description,
-        }));
+        return Object.entries(RatingScale).map(
+          ([description, title], index) => ({
+            id: (index + 1).toString(),
+            title,
+            description,
+          }),
+        );
       case QuestionType2.Smiley:
         return mapEnumToDataSource(SmileyResponse2);
       case QuestionType2.LD:
@@ -133,7 +143,9 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
     }
 
     if (
-      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(type) &&
+      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(
+        type,
+      ) &&
       formElementChildren.find((c) => c.type === type)
     ) {
       showErrorToast(
@@ -144,7 +156,9 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
     }
 
     if (
-      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(type) &&
+      [QuestionType2.DocumentPicker, QuestionType2.PhotoPicker].includes(
+        type,
+      ) &&
       formElementChildren.some((child) =>
         ["DocumentPicker", "PhotoPicker"].includes(child.type),
       )
@@ -164,7 +178,9 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
         .length >= 2
     ) {
       showErrorToast(
-        translations("Maximum of 2 ImageCarousel components allowed per screen"),
+        translations(
+          "Maximum of 2 ImageCarousel components allowed per screen",
+        ),
         "error-max-screen-elements",
       );
       return;
@@ -184,32 +200,35 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
     }
 
     // Create new element with a unique ID
+    const id = crypto.randomUUID().replace(/-/g, "_");
+    const metaType = Object.keys(QuestionType2).find(
+      (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+    );
     const newElement: any = {
-      id: crypto.randomUUID().replace(/-/g, "_"),
+      id,
       type,
-      metaType: type,
-      required: false,
-      visible: true,
+      metaType,
+      // Only add name/required to interactive (form) types
+      ...(!NO_NAME_TYPES.has(type) && { name: id, required: false }),
+      // Only add visible to types that support it (Footer and Image types excluded)
+      ...(!NO_VISIBLE_TYPES.has(type) && { visible: true }),
     };
 
     // Add default values based on type
     switch (type) {
       case QuestionType2.TextInput:
         newElement.label = "";
-        newElement.name = `text_input_${Date.now()}`;
         newElement["input-type"] = "text";
         break;
       case QuestionType2.CheckboxGroup:
       case QuestionType2.RadioButtonsGroup:
         newElement.label = "";
-        newElement.name = `choice_${Date.now()}`;
         newElement["data-source"] = [];
         break;
       case QuestionType2.LD:
       case QuestionType2.YN:
         newElement.type = "RadioButtonsGroup";
         newElement.label = "";
-        newElement.name = `choice_${Date.now()}`;
         newElement["data-source"] = getDefaultDataSource(type);
         newElement.required = true;
         break;
@@ -224,7 +243,6 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
         break;
       case QuestionType2.TextArea:
         newElement.label = "";
-        newElement.name = `textarea_${Date.now()}`;
         newElement["max-length"] = 600;
         break;
       case QuestionType2.Footer:
@@ -268,8 +286,13 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
                       <Button
                         key={type}
                         variant="outline"
-                        className={styles["element-type-button"] + " h-auto py-4 flex flex-col items-center gap-2"}
-                        onClick={() => handleTypeSelection(type as QuestionType2)}
+                        className={
+                          styles["element-type-button"] +
+                          " h-auto py-4 flex flex-col items-center gap-2"
+                        }
+                        onClick={() =>
+                          handleTypeSelection(type as QuestionType2)
+                        }
                       >
                         {Icon && <Icon size={20} />}
                         <span className="text-sm font-medium">
