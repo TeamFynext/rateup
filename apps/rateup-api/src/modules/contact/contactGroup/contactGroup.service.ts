@@ -421,3 +421,78 @@ export async function getContactGroupByNameAndTeam(
     },
   });
 }
+
+export async function getContactGroupsByContactId(
+  contactId: string,
+  orgId: string,
+) {
+  const mappings = await prisma.contactGroupMap.findMany({
+    where: {
+      contactId,
+      contact: {
+        orgId,
+      },
+    },
+    include: {
+      contactGroup: true,
+    },
+  });
+
+  return mappings.map((m) => m.contactGroup);
+}
+
+export async function updateContactGroupsForContact(
+  contactId: string,
+  addGroupIds: string[] = [],
+  removeGroupIds: string[] = [],
+  orgId: string,
+) {
+  const contact = await prisma.contact.findUnique({
+    where: { id: contactId },
+    select: { orgId: true },
+  });
+  if (!contact || contact.orgId !== orgId) return { added: [], removed: [] };
+
+  const result: { added: any[]; removed: any[] } = { added: [], removed: [] };
+
+  if (removeGroupIds?.length) {
+    const toRemove = await prisma.contactGroupMap.findMany({
+      where: {
+        contactId,
+        contactGroupId: { in: removeGroupIds },
+      },
+      include: { contactGroup: true },
+    });
+
+    if (toRemove.length) {
+      await prisma.contactGroupMap.deleteMany({
+        where: {
+          contactId,
+          contactGroupId: { in: removeGroupIds },
+        },
+      });
+      result.removed = toRemove.map((r) => r.contactGroup);
+    }
+  }
+
+  if (addGroupIds?.length) {
+    let validGroupIds = addGroupIds;
+    if (orgId) {
+      const validGroups = await prisma.contactGroup.findMany({
+        where: { id: { in: addGroupIds }, team: { orgId } },
+        select: { id: true },
+      });
+      validGroupIds = validGroups.map((g) => g.id);
+    }
+
+    if (validGroupIds.length) {
+      const created = await prisma.contactGroupMap.createManyAndReturn({
+        skipDuplicates: true,
+        data: validGroupIds.map((gid) => ({ contactId, contactGroupId: gid })),
+      });
+      result.added = created;
+    }
+  }
+
+  return result;
+}

@@ -74,6 +74,15 @@ const contactGroupResponseSchema = coreContactGroupSchema.extend({
   teamId: z.string(),
 });
 
+const contactGroupByContactId = z.object({
+  contactId: z.string(),
+});
+
+const contactGroupByContactIdBody = z.object({
+  addGroupIds: z.array(z.string()).optional(),
+  removeGroupIds: z.array(z.string()).optional(),
+});
+
 export const { schemas: contactGroupSchemas, $ref: $contactGroupRef } =
   buildJsonSchemas(
     {
@@ -90,6 +99,8 @@ export const { schemas: contactGroupSchemas, $ref: $contactGroupRef } =
       byContactGroupIdWithOrgIdParamsSchema,
       extAddNewContactsToGroupInputSchema,
       paginationQuery,
+      contactGroupByContactId,
+      contactGroupByContactIdBody,
     },
     {
       $id: "contactGroupSchema",
@@ -120,3 +131,7 @@ export type RemoveGroupContactsSchema = z.infer<
 >;
 export type DeleteManyGroupsInput = z.infer<typeof deleteManyGroupSchema>;
 export type PaginationQuery = z.infer<typeof paginationQuery>;
+export type contactGroupByContactId = z.infer<typeof contactGroupByContactId>;
+export type ContactGroupByContactIdBody = z.infer<
+  typeof contactGroupByContactIdBody
+>;

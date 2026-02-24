@@ -858,7 +858,7 @@ export async function assignWaMessageToUser(
         contactId: data.contactId,
       },
     });
-    const assignIfOnline = data.assignIfOnline ?? true;
+    const assignIfOnline = data.assignIfOnline ?? false;
     const newUsers = [];
     const existingUserIds = existingUsers.map((u) => u.assignedUserId);
 
@@ -908,7 +908,6 @@ export async function assignWaMessageToUser(
             throw error;
           }
         } else {
-          newUsers.push(assignee);
           newUsers.push(assignee);
           updateCount = true;
         }

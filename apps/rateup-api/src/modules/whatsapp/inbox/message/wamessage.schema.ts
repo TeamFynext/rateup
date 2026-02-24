@@ -122,7 +122,7 @@ const waChatExportQuerySchema = z.object({
 const waMessageAssignBody = z.object({
   contactId: z.string(),
   assignees: z.array(z.object({ userId: z.string(), teamId: z.string() })),
-  assignIfOnline: z.boolean().default(true),
+  assignIfOnline: z.boolean().default(false),
   messageId: z.string().optional(), // for internal message
 });
 

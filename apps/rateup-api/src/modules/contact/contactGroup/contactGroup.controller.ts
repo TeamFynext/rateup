@@ -5,6 +5,8 @@ import {
   AddExistingContactsToMultipleGroupsInput,
   AddNewContactsToGroupInput,
   ByContactGroupIdParams,
+  contactGroupByContactId,
+  ContactGroupByContactIdBody,
   ContactGroupType,
   CreateContactGroupInput,
   DeleteManyGroupsInput,
@@ -26,6 +28,8 @@ import {
   addExistingContactsToMultipleGroups,
   deleteManyContactGroups,
   getContactsByContactGroupIdWithPagination,
+  getContactGroupsByContactId,
+  updateContactGroupsForContact,
 } from "./contactGroup.service.js";
 import { verifyRole } from "../../../utils/auth.js";
 import { Prisma, Role } from "../../../../generated/prisma/client.js";
@@ -277,5 +281,45 @@ export async function addNewContactsfromCSVToGroupHandler(
   } catch (err) {
     log.error(err);
     reply.code(500).send({ error: err?.message || "Something went wrong" });
+  }
+}
+
+export async function getContactGroupsByContactIdHandler(
+  request: FastifyRequest<{
+    Params: contactGroupByContactId;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const contactGroups = await getContactGroupsByContactId(
+      request.params.contactId,
+      request.user.orgId,
+    );
+    reply.code(200).send(contactGroups);
+  } catch (error) {
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function updateContactGroupsForContactHandler(
+  request: FastifyRequest<{
+    Params: contactGroupByContactId;
+    Body: ContactGroupByContactIdBody;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { addGroupIds = [], removeGroupIds = [] } = request.body || {};
+    const res = await updateContactGroupsForContact(
+      request.params.contactId,
+      addGroupIds,
+      removeGroupIds,
+      request.user.orgId,
+    );
+    reply.code(200).send(res);
+  } catch (error) {
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
   }
 }
