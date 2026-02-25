@@ -1,9 +1,13 @@
 import { FastifyInstance } from "fastify";
 import {
   createCatalogProductsBatchHandler,
+  createShopifyProductHandler,
   deleteCatalogProductsHandler,
   getCatalogProductsHandler,
+  getShopifyAvailableProductsHandler,
+  importShopifyProductsHandler,
   syncCatalogProductsHandler,
+  syncShopifyProductsFromShopifyHandler,
   updateCatalogProductsHandler,
 } from "./product.controller.js";
 import { $wCp } from "./product.schema.js";
@@ -58,5 +62,29 @@ export async function waCatalogProductRoutes(server: FastifyInstance) {
       },
     },
     updateCatalogProductsHandler,
+  );
+
+  server.get(
+    "/shopify-available/:catalogId",
+    { schema: { params: $WC("catalogIdParams") } },
+    getShopifyAvailableProductsHandler,
+  );
+
+  server.post(
+    "/import-shopify/:catalogId",
+    { schema: { params: $WC("catalogIdParams") } },
+    importShopifyProductsHandler,
+  );
+
+  server.post(
+    "/shopify-create/:catalogId",
+    { schema: { params: $WC("catalogIdParams") } },
+    createShopifyProductHandler,
+  );
+
+  server.post(
+    "/shopify-sync/:catalogId",
+    { schema: { params: $WC("catalogIdParams") } },
+    syncShopifyProductsFromShopifyHandler,
   );
 }

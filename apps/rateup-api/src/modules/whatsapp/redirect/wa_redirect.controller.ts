@@ -70,9 +70,9 @@ export async function getWaShareMessageFromSTMIdHandler(
   phone = phone.replace("+", "").replace(/\s/g, "");
 
   let message = "";
-  message = res.startMessageConfig.prefix;
+  message = res.startMessageConfig?.prefix;
   message += `\n\`#${res.survey.title} @${teamCode}\`\n`;
-  message += res.startMessageConfig.suffix;
+  message += res.startMessageConfig?.suffix || "";
 
   reply.send({
     shareUrl: generateWaMessageUrl(phone, message),

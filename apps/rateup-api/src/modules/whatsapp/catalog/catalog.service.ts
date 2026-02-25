@@ -22,6 +22,7 @@ import { MetaLoginAssets, WaConfigType } from "../../../types/enums.js";
 import { createNativePaymentMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import { generateOrderReferenceId } from "../automatedReply/wa_automatedReply.utils.js";
 import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
+import { buildShopifyCartUrl } from "../../integrations/shopify/shopify.service.js";
 
 export async function updateWaCatalog(
   catalogId: string,
@@ -295,53 +296,57 @@ export async function handleWaOrderfromCatalog(
       contactId: messageObj.contactId,
       products: productsWithDetails,
       createdAt: messageObj.waCreatedAt,
+      paymentMethod: waSettings?.paymentMethod ?? "NATIVE",
     },
   });
   log.info("Order placed => %o", newOrder);
 
-  log.info("Order placed => %o", newOrder);
-
   if (waSettings?.paymentMethod === "SHOPIFY_LINK") {
     try {
-      const integration = await prisma.integration.findFirst({
-        where: {
-          orgId: catalog.orgId,
-          name: "shopify",
-        },
-      });
-
-      if (integration && integration.credential) {
-        const shop = (integration.credential as any).session?.shop;
-        if (shop) {
-          // Construct checkout URL: https://<shop>/cart/<variant_id>:<quantity>,...
-          const cartItems = newOrder.products
-            .map((p: any) => `${p.retailerId}:${p.quantity}`)
-            .join(",");
-
-          // Shopify handles guest checkout based on store settings.
-          // Permalinks redirect to checkout.
-          const checkoutUrl = `https://${shop}/cart/${cartItems}`;
-
-          await sendMessage(catalog.orgId, {
-            messaging_product: "whatsapp",
-            recipient_type: "individual",
-            to: (messageObj as any).from || data.messages[0].from, // Ensure we have the phone
-            type: "text",
-            text: {
-              body: `Please complete your purchase securely using the link below:\n\n${checkoutUrl}`,
-              preview_url: true,
-            },
-          });
-          return;
-        }
-      }
-      log.warn(
-        "Shopify integration or shop domain not found for org %s",
+      // Resolve retailer_ids (Shopify SKUs / product titles) → numeric variant IDs → cart URL
+      const checkoutUrl = await buildShopifyCartUrl(
         catalog.orgId,
+        (newOrder.products as any[]).map((p) => ({
+          retailerId: p.retailerId,
+          quantity: p.quantity,
+          title: p.title, // passed for title-based fallback lookup
+        })),
       );
+
+      if (checkoutUrl) {
+        const products = newOrder.products as any[];
+        const productLines = products
+          .map((p) => {
+            const qty = p.quantity > 1 ? ` ×${p.quantity}` : "";
+            const price =
+              p.price !== undefined
+                ? ` - ${p.currency ?? ""}${parseFloat(p.price).toFixed(2)}`
+                : "";
+            return `• ${p.title}${qty}${price}`;
+          })
+          .join("\n");
+
+        await sendMessage(catalog.orgId, {
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: (messageObj as any).from || data.messages[0].from,
+          type: "text",
+          text: {
+            body: `🛍️ *Order Summary*\n${productLines}\n\nPlease complete your purchase securely using the link below:\n\n${checkoutUrl}`,
+            preview_url: true,
+          },
+        });
+      } else {
+        log.warn(
+          "Could not build Shopify cart URL for org %s — no message sent to customer",
+          catalog.orgId,
+        );
+      }
     } catch (e) {
       log.error("Error generating Shopify checkout link => %o", e);
     }
+    // Always return for SHOPIFY_LINK — do NOT fall through to native payment
+    return;
   }
 
   // Trigger Native Payment if configured

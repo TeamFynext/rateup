@@ -2312,6 +2312,7 @@ model WaCatalogProduct {
   hotel_room_id     String?
   hotel_ratailer_id String?
   productMetaId     String?
+  shopifyVariantId  String?
   productProps      Json?
   hotelProps        Json?
   hotelRoomProps    Json?
