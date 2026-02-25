@@ -3,10 +3,9 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import { Tabs, TabsList } from "@mantine/core";
-
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CatalogSettings from "@/components/whatsapp/catalog/CatalogSettings";
 import CatalogOrders from "@/components/whatsapp/catalog/orders/CatalogOrders";
 import CatalogProducts from "@/components/whatsapp/catalog/products/CatalogProducts";
@@ -19,21 +18,21 @@ const CatalogID = () => {
   if (isPending) return <RateupLoader />;
   return (
     <>
-      <Tabs defaultValue="products">
+      <Tabs defaultValue="products" className="w-full">
         <TabsList>
-          <Tabs.Tab value="products">Products</Tabs.Tab>
-          <Tabs.Tab value="orders">Orders</Tabs.Tab>
-          <Tabs.Tab value="settings">Settings</Tabs.Tab>
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
-        <Tabs.Panel value="products" p={"xl"}>
+        <TabsContent value="products" className="p-6">
           <CatalogProducts catalogData={catalogInfo} />
-        </Tabs.Panel>
-        <Tabs.Panel value="orders" p={"xl"}>
+        </TabsContent>
+        <TabsContent value="orders" className="p-6">
           <CatalogOrders catalogId={catalogInfo?.catalogId} />
-        </Tabs.Panel>
-        <Tabs.Panel value="settings" p={"xl"}>
+        </TabsContent>
+        <TabsContent value="settings" className="p-6">
           <CatalogSettings catalogData={catalogInfo} />
-        </Tabs.Panel>
+        </TabsContent>
       </Tabs>
     </>
   );
