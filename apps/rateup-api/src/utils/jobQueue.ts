@@ -5,8 +5,11 @@ import prisma from "./prisma.js";
 import EventEmitter from "node:events";
 export const eventEmitter = new EventEmitter();
 
+let isProcessing = false;
+
 eventEmitter.on("queue", async function () {
   log.info("queue event triggered");
+  if (isProcessing) return;
   await processQueue();
 });
 
@@ -40,6 +43,7 @@ export async function addToQueue(data: jobData) {
 
 export async function processQueue() {
   try {
+    isProcessing = true;
     await deleteAllExpiredJobs();
     const jobs = await prisma.jobQueue.findMany({
       where: {
@@ -49,7 +53,10 @@ export async function processQueue() {
         createdAt: "asc",
       },
     });
-    if (!jobs.length) return;
+    if (!jobs.length) {
+      isProcessing = false;
+      return;
+    }
     for (const job of jobs) {
       await prisma.jobQueue.update({
         where: {
@@ -70,6 +77,8 @@ export async function processQueue() {
     }
   } catch (e) {
     log.error(e);
+  } finally {
+    isProcessing = false;
   }
   processQueue();
 }
