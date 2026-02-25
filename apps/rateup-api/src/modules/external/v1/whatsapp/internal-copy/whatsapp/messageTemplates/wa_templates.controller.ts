@@ -482,6 +482,8 @@ export async function sendTemplateByNameToPhoneWithFileHandler(
       from,
       buttonVariable,
     } = req.body;
+    const bodyVariables = JSON.parse(body_variables?.[0] || "[]");
+
     const orgId = req.user.orgId;
     if (!orgId)
       return rep.code(400).send({
@@ -560,13 +562,13 @@ export async function sendTemplateByNameToPhoneWithFileHandler(
         ],
       });
     }
-    if (body_variables?.length > 0) {
+    if (bodyVariables?.length > 0) {
       header.push({
         type: WaTemplateComponentType.BODY,
-        parameters: body_variables.map((variable) => {
+        parameters: bodyVariables.map((variable) => {
           return {
             type: "text",
-            text: variable,
+            text: variable?.toString(),
           };
         }),
       });
