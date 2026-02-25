@@ -84,115 +84,6 @@ import { PAGE_SIZE } from "@/utils/constants";
 
 import { StatusBadge } from "../../../../components/Campaign/statusBadge";
 
-const getParticipantColumns = (
-  selectedIds: string[],
-  toggleSelectOne: (id: string) => void,
-  t: any,
-  participants: any[] = [],
-  onSelectAll?: (checked: boolean) => void,
-  onSendIndividual?: (participantId: string) => void,
-  sendingParticipantId?: string | null,
-): ColumnDef<any>[] => [
-  {
-    id: "select",
-    size: 50,
-    header: ({ table }: { table: any }) => {
-      const allSelected =
-        participants.length > 0 && selectedIds.length === participants.length;
-      return (
-        <Checkbox
-          checked={allSelected}
-          onCheckedChange={(checked) => {
-            if (onSelectAll) {
-              onSelectAll(checked === true);
-            }
-          }}
-          className="rounded border-slate-300 dark:border-slate-600"
-        />
-      );
-    },
-    cell: ({ row }: { row: any }) => (
-      <Checkbox
-        checked={selectedIds.includes(row.original.id)}
-        onCheckedChange={() => toggleSelectOne(row.original.id)}
-        className="rounded border-slate-300 dark:border-slate-600"
-      />
-    ),
-  },
-  {
-    accessorKey: "contact.name",
-    header: () => (
-      <div className="font-medium">{t("participants.table.name")}</div>
-    ),
-    cell: ({ row }: { row: any }) => (
-      <div className="font-medium dark:text-slate-200">
-        {row.original.contact?.name}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "contact.phone",
-    header: () => (
-      <div className="font-medium">{t("participants.table.phone")}</div>
-    ),
-    cell: ({ row }: { row: any }) => (
-      <div className="text-slate-600 dark:text-slate-400 font-mono text-sm">
-        {row.original.contact?.phone}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "status",
-    header: () => (
-      <div className="font-medium">{t("participants.table.status")}</div>
-    ),
-    cell: ({ row }: { row: any }) => (
-      <StatusBadge status={row.original.status} />
-    ),
-  },
-  {
-    accessorKey: "contact.consent",
-    header: () => (
-      <div className="text-center font-medium">
-        {t("participants.table.consent")}
-      </div>
-    ),
-    cell: ({ row }: { row: any }) =>
-      row.original.contact?.consent ? (
-        <div className="flex justify-center">
-          <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30">
-            <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-          </div>
-        </div>
-      ) : null,
-  },
-  {
-    id: "actions",
-    size: 80,
-    header: () => <div className="font-medium text-center">Actions</div>,
-    cell: ({ row }: { row: any }) => (
-      <div className="flex justify-center">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => onSendIndividual?.(row.original.id)}
-          disabled={!!sendingParticipantId}
-          className="hover:bg-blue-50 dark:hover:bg-blue-900/20 gap-2"
-          title="resend message"
-        >
-          {sendingParticipantId === row.original.id ? (
-            <>
-              <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            </>
-          ) : (
-            <Send className="w-4 h-4" />
-          )}
-        </Button>
-      </div>
-    ),
-  },
-];
-
 export default function CampaignDetails() {
   const [activeTab, setActiveTab] = useState("info");
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -249,21 +140,6 @@ export default function CampaignDetails() {
     campaignId ?? "",
     campaignQuery.data?.teamId ?? "",
   );
-
-  const removeMulitpleGroupParticipants = useRemoveMulitpleGroupParticipants(
-    campaignId,
-    () => {
-      setSelectedIds([]);
-      setOpenDeleteModal(false);
-    },
-  );
-
-  useEffect(() => {
-    if (campaignQuery.data) {
-      update({ campaignId: campaignQuery.data.name });
-    }
-  }, [campaignQuery.data, update]);
-
   const toggleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(participants.map((p) => p.id));
@@ -277,6 +153,124 @@ export default function CampaignDetails() {
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
+
+  const columns = useMemo<ColumnDef<any>[]>(
+    () => [
+      // ───────────── Select Column ─────────────
+      {
+        id: "select",
+        size: 50,
+        header: () => {
+          const allSelected =
+            participants.length > 0 &&
+            selectedIds.length === participants.length;
+
+          return (
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={(checked) => toggleSelectAll(checked === true)}
+            />
+          );
+        },
+        cell: ({ row }) => (
+          <Checkbox
+            checked={selectedIds.includes(row.original.id)}
+            onCheckedChange={() => toggleSelectOne(row.original.id)}
+          />
+        ),
+      },
+
+      // ───────────── Name ─────────────
+      {
+        accessorKey: "contact.name",
+        header: t("participants.table.name"),
+        cell: ({ row }) => (
+          <div className="font-medium dark:text-slate-200">
+            {row.original.contact?.name}
+          </div>
+        ),
+      },
+
+      // ───────────── Phone ─────────────
+      {
+        accessorKey: "contact.phone",
+        header: t("participants.table.phone"),
+        cell: ({ row }) => (
+          <div className="text-slate-600 dark:text-slate-400 font-mono text-sm">
+            {row.original.contact?.phone}
+          </div>
+        ),
+      },
+
+      // ───────────── Status ─────────────
+      {
+        accessorKey: "status",
+        header: t("participants.table.status"),
+        cell: ({ row }) => (
+          <StatusBadge
+            status={row.original.status}
+            errorMessage={row.original.errorMessage}
+          />
+        ),
+      },
+
+      // ───────────── Consent ─────────────
+      {
+        accessorKey: "contact.consent",
+        header: () => (
+          <div className="text-center font-medium">
+            {t("participants.table.consent")}
+          </div>
+        ),
+        cell: ({ row }) =>
+          row.original.contact?.consent ? (
+            <div className="flex justify-center">
+              <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30">
+                <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+          ) : null,
+      },
+
+      // ───────────── Actions ─────────────
+      {
+        id: "actions",
+        size: 80,
+        header: () => <div className="text-center font-medium">Actions</div>,
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleSendIndividual(row.original.id)}
+              disabled={!!sendingParticipantId}
+              className="hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            >
+              {sendingParticipantId === row.original.id ? (
+                <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [participants.length, selectedIds, sendingParticipantId, t],
+  );
+  const removeMulitpleGroupParticipants = useRemoveMulitpleGroupParticipants(
+    campaignId,
+    () => {
+      setSelectedIds([]);
+      setOpenDeleteModal(false);
+    },
+  );
+
+  useEffect(() => {
+    if (campaignQuery.data) {
+      update({ campaignId: campaignQuery.data.name });
+    }
+  }, [campaignQuery.data, update]);
 
   if (
     !campaignId ||
@@ -785,15 +779,7 @@ export default function CampaignDetails() {
             </Card>
             <div className="flex-1 min-h-0 overflow-hidden">
               <DataTable
-                columns={getParticipantColumns(
-                  selectedIds,
-                  toggleSelectOne,
-                  t,
-                  participantsQuery.data?.participants || [],
-                  toggleSelectAll,
-                  handleSendIndividual,
-                  sendingParticipantId,
-                )}
+                columns={columns}
                 data={participantsQuery.data?.participants || []}
                 isPending={participantsQuery.isPending}
                 manualPagination={{

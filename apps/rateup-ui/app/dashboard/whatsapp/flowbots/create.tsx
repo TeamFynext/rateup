@@ -176,13 +176,13 @@ export function AutomatedReplyForm({
         <CardHeader>
           <CardTitle>Basic Information</CardTitle>
           <CardDescription>
-            Configure the basic settings for your automation
+            Configure the basic settings for your Chatbot
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <ContainedTextField
             label="Name"
-            placeholder="Enter automation name"
+            placeholder="Enter chatbot name"
             required
             {...rootForm.getInputProps("name")}
           />
@@ -264,7 +264,7 @@ export function AutomatedReplyForm({
               <span className="animate-spin">⏳</span>
             </>
           ) : (
-            "Save Automation"
+            "Save Chatbot"
           )}
         </Button>
       </div>
