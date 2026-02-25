@@ -27,6 +27,8 @@ export async function createCatalogProductsBatch(
   const newProducts = [];
   for (const data of dataList) {
     let input;
+    const shopifyVariantId: string | undefined =
+      data.shopifyVariantId ?? undefined;
     if (type === "PRODUCT_ITEM") {
       const {
         price,
@@ -34,8 +36,11 @@ export async function createCatalogProductsBatch(
         internal_label,
         sale_price,
         retailer_id,
+        shopifyVariantId: _svid, // strip from Meta payload
         ...rest
-      } = data as catalogItemSchema["PRODUCT_ITEM"];
+      } = data as catalogItemSchema["PRODUCT_ITEM"] & {
+        shopifyVariantId?: string;
+      };
       input = {
         ...rest,
         id: retailer_id,
@@ -91,6 +96,7 @@ export async function createCatalogProductsBatch(
       hotel_id,
       hotel_retailer_id,
       hotel_room_id,
+      shopifyVariantId: shopifyVariantId ?? undefined,
       ...(type === "PRODUCT_ITEM"
         ? {
             productProps: props,
@@ -822,10 +828,16 @@ export async function importSelectedShopifyProducts(
 ) {
   if (items.length === 0) return { imported: 0 };
 
+  // Tag every item so the DB knows it came from Shopify
+  const taggedItems = items.map((item) => ({
+    ...item,
+    shopifyVariantId: item.retailer_id,
+  }));
+
   await createCatalogProductsBatch(
     orgId,
     CatalogProductTypes.PRODUCT_ITEM,
-    items,
+    taggedItems,
     catalogId,
   );
 

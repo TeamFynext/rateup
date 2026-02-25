@@ -184,8 +184,44 @@ export async function createShopifyProductHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const product = await createShopifyProduct(orgId, request.body);
-    reply.code(200).send(product);
+    const { catalogId } = request.params;
+    const { title, description, brand, price, currencyCode, imageUrl } =
+      request.body;
+
+    // Step 1: Create the product in Shopify
+    const shopifyProduct = await createShopifyProduct(orgId, request.body);
+
+    // Step 2: Auto-import into the catalog so it appears with the Shopify badge
+    const variantGid: string | undefined =
+      shopifyProduct?.variants?.nodes?.[0]?.id;
+    if (variantGid && catalogId) {
+      const numericVariantId = variantGid.split("/").pop() ?? variantGid;
+      const productGid: string = shopifyProduct?.id ?? "";
+      const productGroupId = productGid.split("/").pop() ?? productGid;
+
+      const catalogItem = {
+        retailer_id: numericVariantId,
+        title: title.substring(0, 100),
+        description: (description || title).substring(0, 5000),
+        condition: "new",
+        image: imageUrl ? [{ url: imageUrl }] : [],
+        internal_label: [],
+        link: "",
+        price,
+        currencyCode,
+        availability: "in stock",
+        brand,
+        sale_price: parseFloat(String(price)).toFixed(2),
+        item_group_id: productGroupId,
+      };
+
+      // Only import if we have at least one image (Meta requires it)
+      if (catalogItem.image.length > 0) {
+        await importSelectedShopifyProducts(orgId, catalogId, [catalogItem]);
+      }
+    }
+
+    reply.code(200).send(shopifyProduct);
   } catch (e) {
     log.error(e);
     reply
