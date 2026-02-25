@@ -13,7 +13,8 @@ import {
   IconX,
 } from "@tabler/icons-react";
 
-import { MetaLoginAssets, WaConfigType } from "@/types/enums";
+import { IntegratedApps, MetaLoginAssets, WaConfigType } from "@/types/enums";
+import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import {
   useDisconnectCatalogFromWa,
   useUpateCatalog,
@@ -207,27 +208,37 @@ const ProductManagementSection = ({ catalogData }) => {
     shopifyImportOpened,
     { open: openShopifyImport, close: closeShopifyImport },
   ] = useDisclosure(false);
+  const { data: shopifyIntegration, isLoading: shopifyLoading } =
+    useIntegrationByType(IntegratedApps.shopify);
 
   return (
     <div className="flex flex-col gap-2 mt-4">
       <p className="font-semibold">Product Management</p>
 
       {/* Import from Shopify */}
-      <div className="flex justify-between items-center p-3 border border-gray-300 rounded-lg bg-gray-50">
-        <div className="flex flex-col gap-1">
-          <p className="font-medium text-sm">Import from Shopify</p>
-          <p className="text-xs text-gray-500">
-            Browse your Shopify products and selectively add new ones to this
-            catalog.
-          </p>
+      <div className="flex flex-col gap-1">
+        <div className="flex justify-between items-center p-3 border border-gray-300 rounded-lg bg-gray-50">
+          <div className="flex flex-col gap-1">
+            <p className="font-medium text-sm">Import from Shopify</p>
+            <p className="text-xs text-gray-500">
+              Browse your Shopify products and selectively add new ones to this
+              catalog.
+            </p>
+          </div>
+          <RateupButtonBlue
+            leftIcon={<IconShoppingBag size={16} />}
+            onClick={openShopifyImport}
+            title="Import from Shopify"
+            w="fit-content"
+            disabled={!catalogId || !shopifyIntegration || shopifyLoading}
+          />
         </div>
-        <RateupButtonBlue
-          leftIcon={<IconShoppingBag size={16} />}
-          onClick={openShopifyImport}
-          title="Import from Shopify"
-          w="fit-content"
-          disabled={!catalogId}
-        />
+        {!shopifyLoading && !shopifyIntegration && (
+          <p className="text-xs text-red-500 italic mt-1 ml-1">
+            Shopify is not connected. Connect your store from Apps & Services to
+            enable imports.
+          </p>
+        )}
       </div>
 
       <ImportFromShopifyModal

@@ -175,11 +175,11 @@ const ShopifySettings = ({
           <Stack>
             <Title order={4}>{translations("Connected Store")}</Title>
             <ContainedTextField value={session?.shop} disabled />
-            {/* <Group justify="flex-end">
+            <Group justify="flex-end">
               <RateupButtonPrimary
                 color="red"
                 leftIcon={<IconTrash size={"1rem"} />}
-                title="Delete connection"
+                title={translations("Delete connection")}
                 onClick={() => {
                   setDeleteCase(
                     getLabelsforConfirmModal("session", handleDeleteSession),
@@ -187,7 +187,7 @@ const ShopifySettings = ({
                   openConfirm();
                 }}
               />
-            </Group> */}
+            </Group>
           </Stack>
         </PaperLayout>
         <PaperLayout>
