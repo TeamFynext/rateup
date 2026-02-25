@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   IconCheck,
@@ -103,6 +104,7 @@ const CreateCampaignModal = ({
   const [activeTab, setActiveTab] = useState<"basic" | "templates">("basic");
   const t = useTranslations("campaign.create");
   const { customFields } = useCustomFieldsContext();
+  const router = useRouter();
   const submitRef = useRef<() => void>(() => {});
 
   const form = useForm<FormValues>({
@@ -610,36 +612,50 @@ const CreateCampaignModal = ({
                                   <Label className="text-xs">
                                     {t("fields.template")}
                                   </Label>
-                                  <Select
-                                    value={stage.templateId}
-                                    onValueChange={(val) =>
-                                      updateDripStage(idx, "templateId", val)
-                                    }
-                                    disabled={templatesData.length === 0}
-                                  >
-                                    <SelectTrigger
-                                      className={`h-9 ${!stage.templateId ? "border-destructive" : ""}`}
+                                  <div className="flex items-center gap-2">
+                                    <Select
+                                      value={stage.templateId}
+                                      onValueChange={(val) =>
+                                        updateDripStage(idx, "templateId", val)
+                                      }
+                                      disabled={templatesData.length === 0}
                                     >
-                                      <SelectValue
-                                        placeholder={
-                                          templatesData.length === 0
-                                            ? t("placeholders.noTemplates")
-                                            : t("placeholders.selectTemplate")
-                                        }
-                                      />
-                                    </SelectTrigger>
+                                      <SelectTrigger
+                                        className={`h-9 ${!stage.templateId ? "border-destructive" : ""}`}
+                                      >
+                                        <SelectValue
+                                          placeholder={
+                                            templatesData.length === 0
+                                              ? t("placeholders.noTemplates")
+                                              : t("placeholders.selectTemplate")
+                                          }
+                                        />
+                                      </SelectTrigger>
 
-                                    <SelectContent>
-                                      {templatesData.map((template) => (
-                                        <SelectItem
-                                          key={template.value}
-                                          value={template.value}
-                                        >
-                                          {template.label}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                      <SelectContent>
+                                        {templatesData.map((template) => (
+                                          <SelectItem
+                                            key={template.value}
+                                            value={template.value}
+                                          >
+                                            {template.label}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <div className="flex items-center gap-2">
+                                      Or
+                                      <Button
+                                        onClick={() =>
+                                          router.push(
+                                            "/dashboard/whatsapp/templates/create",
+                                          )
+                                        }
+                                      >
+                                        Create Template
+                                      </Button>
+                                    </div>
+                                  </div>
                                   {!stage.templateId && (
                                     <p className="text-xs text-destructive">
                                       {t("validation.templateRequired")}
@@ -735,7 +751,7 @@ const CreateCampaignModal = ({
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm py-2">
                         {t("broadcast.description")}
                       </p>
 
@@ -744,34 +760,47 @@ const CreateCampaignModal = ({
                         name="waTemplateId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t("fields.template")}</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              value={field.value}
-                              disabled={templatesData.length === 0}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue
-                                    placeholder={
-                                      templatesData.length === 0
-                                        ? t("placeholders.noTemplates")
-                                        : t("placeholders.selectTemplate")
-                                    }
-                                  />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {templatesData.map((template) => (
-                                  <SelectItem
-                                    key={template.value}
-                                    value={template.value}
-                                  >
-                                    {template.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-2">
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                disabled={templatesData.length === 0}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue
+                                      placeholder={
+                                        templatesData.length === 0
+                                          ? t("placeholders.noTemplates")
+                                          : t("placeholders.selectTemplate")
+                                      }
+                                    />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {templatesData.map((template) => (
+                                    <SelectItem
+                                      key={template.value}
+                                      value={template.value}
+                                    >
+                                      {template.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <div className="flex items-center gap-2">
+                                Or
+                                <Button
+                                  onClick={() =>
+                                    router.push(
+                                      "/dashboard/whatsapp/templates/create",
+                                    )
+                                  }
+                                >
+                                  Create Template
+                                </Button>
+                              </div>
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}

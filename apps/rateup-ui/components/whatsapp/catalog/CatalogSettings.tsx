@@ -2,13 +2,15 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import { ActionIcon, Badge, Group, Loader, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconCheck,
+  IconCloudDownload,
   IconLinkPlus,
   IconLogin2,
   IconRefresh,
+  IconShoppingBag,
+  IconX,
 } from "@tabler/icons-react";
 
 import { MetaLoginAssets, WaConfigType } from "@/types/enums";
@@ -30,6 +32,7 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import { ImportFromShopifyModal } from "@/components/whatsapp/catalog/products/ImportFromShopifyModal";
 import { showErrorToast } from "@/utils/notifications";
 
 const CatalogSettings = ({ catalogData }) => {
@@ -99,7 +102,7 @@ const CatalogSettings = ({ catalogData }) => {
   }
   if (isLoading) return <RateupLoader />;
   return (
-    <Stack>
+    <div className="flex flex-col gap-4">
       <ContainedTextField
         value={catalogData.catalogId}
         disabled
@@ -115,8 +118,8 @@ const CatalogSettings = ({ catalogData }) => {
         disabled
         label={"Catalog vertical"}
       />
-      <Group justify="space-between">
-        <Group>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div className="w-full sm:w-1/2">
           <ContainedSelection
             allowDeselect={false}
             label={"Connected Whatsapp Business Account ID"}
@@ -128,7 +131,7 @@ const CatalogSettings = ({ catalogData }) => {
               openConnect();
             }}
           />
-        </Group>
+        </div>
         <RateupButtonBlue
           leftIcon={<IconLogin2 />}
           color="red"
@@ -137,11 +140,9 @@ const CatalogSettings = ({ catalogData }) => {
           title="Disconnect Whatsapp Business Account"
           loading={disconnect.isPending}
         />
-      </Group>
+      </div>
 
-      <Text fw={600} mt="md">
-        Shopify Checkout Automation
-      </Text>
+      <p className="font-semibold mt-4">Shopify Checkout Automation</p>
       <ContainedSwitchInput
         label="Auto-generate Shopify Checkout Link"
         description="Automatically send a Shopify checkout link when a customer sends a cart."
@@ -191,8 +192,50 @@ const CatalogSettings = ({ catalogData }) => {
         closeAfterOnConfirm={false}
       />
 
+      <div className="h-px bg-gray-200 w-full mt-4" />
+      <ProductManagementSection catalogData={catalogData} />
+
+      <div className="h-px bg-gray-200 w-full mt-4" />
       <ProductSetsSection catalogId={catalogData?.catalogId} />
-    </Stack>
+    </div>
+  );
+};
+
+const ProductManagementSection = ({ catalogData }) => {
+  const catalogId = catalogData?.catalogId;
+  const [
+    shopifyImportOpened,
+    { open: openShopifyImport, close: closeShopifyImport },
+  ] = useDisclosure(false);
+
+  return (
+    <div className="flex flex-col gap-2 mt-4">
+      <p className="font-semibold">Product Management</p>
+
+      {/* Import from Shopify */}
+      <div className="flex justify-between items-center p-3 border border-gray-300 rounded-lg bg-gray-50">
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-sm">Import from Shopify</p>
+          <p className="text-xs text-gray-500">
+            Browse your Shopify products and selectively add new ones to this
+            catalog.
+          </p>
+        </div>
+        <RateupButtonBlue
+          leftIcon={<IconShoppingBag size={16} />}
+          onClick={openShopifyImport}
+          title="Import from Shopify"
+          w="fit-content"
+          disabled={!catalogId}
+        />
+      </div>
+
+      <ImportFromShopifyModal
+        catalogId={catalogId}
+        opened={shopifyImportOpened}
+        onClose={closeShopifyImport}
+      />
+    </div>
   );
 };
 
@@ -201,14 +244,14 @@ const ProductSetsSection = ({ catalogId }) => {
   const { data: productSets, isLoading } = useProductSetsByCatalog(catalogId);
 
   return (
-    <Stack gap="xs" mt="md">
-      <Group justify="space-between">
-        <Stack gap={0}>
-          <Text fw={600}>Product Sets</Text>
-          <Text size="sm" c="dimmed">
+    <div className="flex flex-col gap-2 mt-4">
+      <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-0">
+          <p className="font-semibold">Product Sets</p>
+          <p className="text-sm text-gray-500">
             Curated collections synced from your Meta Catalog
-          </Text>
-        </Stack>
+          </p>
+        </div>
         <RateupButtonBlue
           leftIcon={<IconRefresh size={16} />}
           onClick={() => syncProductSetsMut.mutate(catalogId)}
@@ -216,43 +259,33 @@ const ProductSetsSection = ({ catalogId }) => {
           title="Sync from Meta"
           w="fit-content"
         />
-      </Group>
+      </div>
 
       {isLoading ? (
-        <Loader size="sm" />
+        <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
       ) : productSets && productSets.length > 0 ? (
-        <Stack gap="xs" mt="xs">
+        <div className="flex flex-col gap-3 mt-2">
           {productSets.map((set: any) => (
-            <Group
+            <div
               key={set.productSetId}
-              justify="space-between"
-              p="sm"
-              style={{
-                border: "1px solid #e0e0e0",
-                borderRadius: "8px",
-                backgroundColor: "#f9f9f9",
-              }}
+              className="flex justify-between items-center p-3 border border-gray-300 rounded-lg bg-gray-50"
             >
-              <Stack gap={2}>
-                <Text fw={500} size="sm">
-                  {set.name}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  ID: {set.productSetId}
-                </Text>
-              </Stack>
-              <Badge color="blue" variant="light">
+              <div className="flex flex-col gap-1">
+                <p className="font-medium text-sm">{set.name}</p>
+                <p className="text-xs text-gray-500">ID: {set.productSetId}</p>
+              </div>
+              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
                 {set.productIds?.length || 0} Products
-              </Badge>
-            </Group>
+              </span>
+            </div>
           ))}
-        </Stack>
+        </div>
       ) : (
-        <Text size="sm" c="dimmed" fs="italic">
+        <p className="text-sm text-gray-500 italic">
           No product sets synced yet.
-        </Text>
+        </p>
       )}
-    </Stack>
+    </div>
   );
 };
 

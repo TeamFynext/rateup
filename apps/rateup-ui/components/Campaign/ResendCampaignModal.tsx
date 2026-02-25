@@ -59,7 +59,7 @@ const STATUS_OPTIONS = [
   {
     value: CampaignParticipantStatus.PENDING,
     labelKey: "statuses.PENDING",
-    color: "text-yellow-600",
+    color: "text-yellow-500",
   },
   {
     value: CampaignParticipantStatus.SENT,
@@ -242,7 +242,11 @@ export const ResendCampaignModal = ({
                       key={opt.value}
                       onClick={() => toggleStatus(opt.value)}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-all cursor-pointer
-              ${isSelected ? "border-transparent bg-muted shadow-sm" : "border-border bg-transparent opacity-50 hover:opacity-80"}`}
+              ${
+                isSelected
+                  ? "border-border bg-muted shadow-sm ring-1 ring-primary/40"
+                  : "border-border bg-transparent opacity-50 hover:opacity-80"
+              }`}
                     >
                       <span
                         className={`w-2 h-2 rounded-full ${opt.color.replace("text-", "bg-")}`}

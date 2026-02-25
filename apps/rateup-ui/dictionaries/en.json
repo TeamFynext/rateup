@@ -3410,7 +3410,7 @@
         "months": "Months"
       },
       "broadcast": {
-        "description": "Choose a template for your campaign"
+        "description": "Choose an approved template or create one"
       },
       "dynamicVariables": {
         "title": "Dynamic Variables",
@@ -3464,5 +3464,6 @@
   },
   "Team Performance": "Team Performance",
   "Message Analytics": "Message Analytics",
-  "Team Activity": "Team Activity"
+  "Team Activity": "Team Activity",
+  "Lower-case letters and underscores only": "Lower-case letters and underscores only"
 }

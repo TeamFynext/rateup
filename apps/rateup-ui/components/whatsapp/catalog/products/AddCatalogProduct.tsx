@@ -5,11 +5,11 @@ import React, { useEffect, useState } from "react";
 import {
   FileInput,
   Group,
-  Modal,
   Radio,
   RadioGroup,
   SimpleGrid,
   Stack,
+  Switch,
   TagsInput,
   Text,
 } from "@mantine/core";
@@ -19,6 +19,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { CatalogProductType } from "@/types/enums";
 import {
   useCreateBatchCatalogProducts,
+  useCreateShopifyProduct,
   useUpdateCatalogProducts,
 } from "@/backend/whatsapp/catalog/products/products.query";
 import {
@@ -34,6 +35,12 @@ import {
   ContainedTextArea,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   CATALOG_PRODUCT_AVAILABILITY,
   CATALOG_PRODUCT_CONDITIONS,
@@ -192,13 +199,89 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
 
   const createBatch = useCreateBatchCatalogProducts(catalogData?.catalogId);
   const updateProducts = useUpdateCatalogProducts(catalogData?.catalogId);
+  const createShopifyMut = useCreateShopifyProduct(catalogData?.catalogId);
 
+  const [addToShopify, setAddToShopify] = useState(false);
   const [imageUpload, setImageUpload] = useState("upload");
   const [image, setImage] = useState(null);
   const [videoUpload, setVideoUpload] = useState("upload");
   const [video, setVideo] = useState(null);
 
   async function handleSave() {
+    // ── Shopify mode ──────────────────────────────────────────────────────
+    if (
+      addToShopify &&
+      form.getValues().type === CatalogProductType.PRODUCT_ITEM
+    ) {
+      const values = form.getValues() as any;
+
+      // Minimal validation for Shopify-required fields
+      form.setErrors({});
+      const errs: Record<string, string> = {};
+      if (!values.title?.length) errs.title = "required";
+      if (!values.description?.length) errs.description = "required";
+      if (!values.brand?.length) errs.brand = "required";
+      if (values.price < 0) errs.price = "required";
+      if (!values.currencyCode?.length) errs.currencyCode = "required";
+      if (Object.keys(errs).length > 0) {
+        form.setErrors(errs);
+        return;
+      }
+
+      let imageUrl: string | undefined;
+
+      try {
+        if (imageUpload === "upload" && image) {
+          const key = await uploadFile(image);
+          imageUrl = getFileUrlFromKey(key);
+        } else if (values.image?.[0]?.url) {
+          imageUrl = values.image[0].url;
+        }
+      } catch (e) {}
+
+      showLoadingToast(
+        "Adding product to Shopify...",
+        "catalog-product",
+        true,
+        "",
+        "",
+        false,
+      );
+
+      createShopifyMut.mutate(
+        {
+          title: values.title,
+          description: values.description,
+          brand: values.brand,
+          price: values.price,
+          currencyCode: values.currencyCode,
+          imageUrl,
+        },
+        {
+          onSuccess: () => {
+            showSuccessToast(
+              "Product added to Shopify and imported to catalog!",
+              "catalog-product",
+              <IconCheck />,
+              true,
+            );
+            cancel();
+          },
+          onError: (err: any) => {
+            showErrorToast(
+              err?.response?.data?.message ??
+                "Failed to add product to Shopify",
+              "catalog-product",
+              <IconX />,
+              true,
+            );
+          },
+        },
+      );
+      return;
+    }
+
+    // ── Meta catalog mode ─────────────────────────────────────────────────
     if (form.validate().hasErrors) return;
     let loadinggMessage = productData
       ? "Updating Product"
@@ -272,18 +355,36 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
   }
   return (
     <Stack>
-      <Group justify="flex-end">
-        <RateupButtonSecondary
-          title="Cancel"
-          variant="light"
-          onClick={cancel}
-        />
-        <RateupButtonPrimary
-          type={"submit"}
-          title="Save"
-          onClick={handleSave}
-          loading={createBatch.isPending || updateProducts.isPending}
-        />
+      <Group justify="space-between">
+        <Group>
+          {form.getValues().type === CatalogProductType.PRODUCT_ITEM &&
+            !productData && (
+              <Switch
+                label="Add to Shopify"
+                description="Create this product in your Shopify store instead of Meta catalog"
+                checked={addToShopify}
+                onChange={(e) => setAddToShopify(e.currentTarget.checked)}
+                color="green"
+              />
+            )}
+        </Group>
+        <Group>
+          <RateupButtonSecondary
+            title="Cancel"
+            variant="light"
+            onClick={cancel}
+          />
+          <RateupButtonPrimary
+            type={"submit"}
+            title={addToShopify ? "Add to Shopify" : "Save"}
+            onClick={handleSave}
+            loading={
+              createBatch.isPending ||
+              updateProducts.isPending ||
+              createShopifyMut.isPending
+            }
+          />
+        </Group>
       </Group>
       <ContainedSelection
         data={Object.values(CatalogProductType)}
@@ -293,13 +394,15 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
       />
       {form.getValues().type === "PRODUCT_ITEM" && (
         <SimpleGrid cols={2}>
-          <ContainedTextField
-            {...form.getInputProps("retailer_id")}
-            label={"Product Retailer ID"}
-            required
-            withAsterisk
-            disabled={!!productData}
-          />
+          {!addToShopify && (
+            <ContainedTextField
+              {...form.getInputProps("retailer_id")}
+              label={"Product Retailer ID"}
+              required
+              withAsterisk
+              disabled={!!productData}
+            />
+          )}
           <ContainedTextField
             {...form.getInputProps("title")}
             label={"Product Title"}
@@ -315,35 +418,43 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
             required
             withAsterisk
           />
-          <ContainedTagInput
-            {...form.getInputProps("internal_label")}
-            maxTags={5}
-            label={"Internal Labels"}
-          />
-          <ContainedSelection
-            data={CATALOG_PRODUCT_CONDITIONS}
-            {...form.getInputProps("condition")}
-            label={"Product Condition"}
-            required
-            withAsterisk
-          />
-          <ContainedSelection
-            data={CATALOG_PRODUCT_AVAILABILITY}
-            {...form.getInputProps("availability")}
-            label={"Availability"}
-            required
-            withAsterisk
-          />
+          {!addToShopify && (
+            <ContainedTagInput
+              {...form.getInputProps("internal_label")}
+              maxTags={5}
+              label={"Internal Labels"}
+            />
+          )}
+          {!addToShopify && (
+            <ContainedSelection
+              data={CATALOG_PRODUCT_CONDITIONS}
+              {...form.getInputProps("condition")}
+              label={"Product Condition"}
+              required
+              withAsterisk
+            />
+          )}
+          {!addToShopify && (
+            <ContainedSelection
+              data={CATALOG_PRODUCT_AVAILABILITY}
+              {...form.getInputProps("availability")}
+              label={"Availability"}
+              required
+              withAsterisk
+            />
+          )}
           <ContainedTextField
             {...form.getInputProps("brand")}
             label={"Brand"}
             required
             withAsterisk
           />
-          <ContainedTextField
-            {...form.getInputProps("link")}
-            label={"Website Url"}
-          />
+          {!addToShopify && (
+            <ContainedTextField
+              {...form.getInputProps("link")}
+              label={"Website Url"}
+            />
+          )}
           <Group gap={"xs"}>
             <ContainedNumberInput
               allowNegative={false}
@@ -354,15 +465,17 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               required
               withAsterisk
             />
-            <ContainedNumberInput
-              allowNegative={false}
-              allowLeadingZeros={false}
-              {...form.getInputProps("sale_price")}
-              label={"Sale Price"}
-              w={150}
-              required
-              withAsterisk
-            />
+            {!addToShopify && (
+              <ContainedNumberInput
+                allowNegative={false}
+                allowLeadingZeros={false}
+                {...form.getInputProps("sale_price")}
+                label={"Sale Price"}
+                w={150}
+                required
+                withAsterisk
+              />
+            )}
           </Group>
           <ContainedSelection
             data={CURRENCY_CODES}
@@ -403,41 +516,47 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               />
             )}
           </Stack>
-          <ContainedTagInput
-            {...form.getInputProps("image.0.tag")}
-            label={"Image Tags"}
-          />
-          <Stack gap={2}>
-            <Group gap={"lg"}>
-              <Text fw={500}>Video</Text>
-              <RadioGroup
-                size="xs"
-                value={videoUpload}
-                onChange={setVideoUpload}
-              >
-                <Group>
-                  <Radio size="xs" value="upload" label="Upload" />
-                  <Radio size="xs" value={"url"} label="Link" />
-                </Group>
-              </RadioGroup>
-            </Group>
-            {videoUpload === "upload" ? (
-              <ContainedFileInput
-                placeholder="Choose video"
-                value={video}
-                onChange={setVideo}
-              />
-            ) : (
-              <ContainedTextField
-                {...form.getInputProps("video.0.url")}
-                placeholder={"Enter Link"}
-              />
-            )}
-          </Stack>
-          <ContainedTagInput
-            {...form.getInputProps("video.0.tag")}
-            label={"Video Tags"}
-          />
+          {!addToShopify && (
+            <ContainedTagInput
+              {...form.getInputProps("image.0.tag")}
+              label={"Image Tags"}
+            />
+          )}
+          {!addToShopify && (
+            <Stack gap={2}>
+              <Group gap={"lg"}>
+                <Text fw={500}>Video</Text>
+                <RadioGroup
+                  size="xs"
+                  value={videoUpload}
+                  onChange={setVideoUpload}
+                >
+                  <Group>
+                    <Radio size="xs" value="upload" label="Upload" />
+                    <Radio size="xs" value={"url"} label="Link" />
+                  </Group>
+                </RadioGroup>
+              </Group>
+              {videoUpload === "upload" ? (
+                <ContainedFileInput
+                  placeholder="Choose video"
+                  value={video}
+                  onChange={setVideo}
+                />
+              ) : (
+                <ContainedTextField
+                  {...form.getInputProps("video.0.url")}
+                  placeholder={"Enter Link"}
+                />
+              )}
+            </Stack>
+          )}
+          {!addToShopify && (
+            <ContainedTagInput
+              {...form.getInputProps("video.0.tag")}
+              label={"Video Tags"}
+            />
+          )}
         </SimpleGrid>
       )}
       {form.getValues().type === "HOTEL" && (
@@ -572,18 +691,17 @@ export const AddCatalogProductModal = ({
   productData = null,
 }) => {
   return (
-    <Modal
-      opened={opened}
-      title="Add Item"
-      onClose={close}
-      size={"xl"}
-      centered
-    >
-      <AddCatalogProduct
-        catalogData={catalogData}
-        onCancel={close}
-        productData={productData}
-      />
-    </Modal>
+    <Dialog open={opened} onOpenChange={(val) => !val && close()}>
+      <DialogContent className="max-w-[700px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add Item</DialogTitle>
+        </DialogHeader>
+        <AddCatalogProduct
+          catalogData={catalogData}
+          onCancel={close}
+          productData={productData}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };

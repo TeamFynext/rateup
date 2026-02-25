@@ -3,17 +3,14 @@
 import React, { useState } from "react";
 
 import {
-  ActionIcon,
-  Card,
-  Group,
-  Image,
-  SimpleGrid,
-  Spoiler,
-  Stack,
-  Text,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconEdit, IconTrash, IconX } from "@tabler/icons-react";
+  IconCheck,
+  IconChevronDown,
+  IconChevronUp,
+  IconEdit,
+  IconShoppingBag,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import {
@@ -22,6 +19,7 @@ import {
 } from "@/backend/whatsapp/catalog/products/products.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import NothingFound from "@/components/NothingFound/NothingFound";
+import { Button } from "@/components/ui/button";
 import { fallbackImage } from "@/utils/constants";
 import {
   showErrorToast,
@@ -35,8 +33,16 @@ const ProductItems = ({ catalogId }) => {
   const deleteProducts = useDeletCatalogProducts(catalogId);
   const { data: catalog, isPending } = useWaCatalog(catalogId);
   const { data: products, isLoading } = useWaCatalogProducts(catalogId);
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, setOpened] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
+    {},
+  );
+
+  const toggleExpand = (id: string) => {
+    setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   if (isLoading || isPending) return <RateupLoader />;
   if (!products || !products.length) {
     return <NothingFound text="No products found" />;
@@ -50,6 +56,7 @@ const ProductItems = ({ catalogId }) => {
     { key: "gender", label: " Gender" },
     { key: "age_group", label: "Age Group" },
   ];
+
   function handleOpenEdit(product) {
     const {
       currency,
@@ -88,7 +95,7 @@ const ProductItems = ({ catalogId }) => {
       ...rest,
     };
     setSelectedProduct({ ...product, ...formattedProduct });
-    open();
+    setOpened(true);
   }
   const { vertical } = catalog;
   function handleDelete(product) {
@@ -137,102 +144,154 @@ const ProductItems = ({ catalogId }) => {
     );
   }
   return (
-    <SimpleGrid cols={{ base: 2, sm: 2, md: 3, lg: 4, xl: 4, xs: 1 }}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
       {products.map((product) => {
         const { productProps } = product;
+        const itemId = product.id ?? product.retailer_id;
+        const isExpanded = expandedItems[itemId];
+
         return (
-          <Card
-            key={product.id ?? product.retailer_id}
-            shadow="sm"
-            withBorder
-            radius={"sm"}
+          <div
+            key={itemId}
+            className="rounded-lg border shadow-sm bg-white overflow-hidden flex flex-col"
           >
             {vertical == "commerce" ? (
               <>
-                <Card.Section withBorder inheritPadding py="xs">
-                  <Group justify="flex-end" gap={"xs"}>
-                    <ActionIcon
-                      variant="subtle"
-                      onClick={() => handleOpenEdit(product)}
-                    >
-                      <IconEdit size={20} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      onClick={() => handleDelete(product)}
-                      disabled={deleteProducts.isPending}
-                    >
-                      <IconTrash size={20} />
-                    </ActionIcon>
-                  </Group>
-                </Card.Section>
-                <Card.Section>
-                  <Image
-                    fallbackSrc={fallbackImage}
-                    src={
-                      productProps.image_link || productProps.image?.[0]?.url
-                    }
-                    h={200}
-                  />
-                </Card.Section>
-                <Spoiler
-                  maxHeight={100}
-                  showLabel="See more.."
-                  hideLabel="See less"
-                >
-                  <Text fw={500} truncate>
-                    {productProps.title ?? productProps.name}
-                  </Text>
-                  <Text c={"dimmed"} truncate>
-                    {productProps.description}
-                  </Text>
-                  <Text size="lg">
-                    {productProps.sale_price ?? productProps.price}
-                  </Text>
-                  {productProps.sale_price &&
-                    productProps.sale_price !== productProps.price && (
-                      <Text size="sm" td={"line-through"} c="dimmed">
-                        M.R.P.: {productProps.price}
-                      </Text>
-                    )}
-                  <Stack gap={2}>
-                    {extraProps.map((pp) => (
-                      <Group justify="space-between" key={pp.key}>
-                        <Text size="sm" fw={500}>
-                          {pp.label}
-                        </Text>
-                        <Text size="sm" c={"dimmed"}>
-                          {productProps[pp.key]}
-                        </Text>
-                      </Group>
-                    ))}
-                  </Stack>
-                  {productProps.url && (
-                    <>
-                      <Text fw={400} size="sm">
-                        Website Link
-                      </Text>
-                      <Text size="sm" c={"dimmed"}>
-                        {productProps.url}
-                      </Text>
-                    </>
+                <div className="border-b px-3 py-2 flex justify-end gap-2 bg-gray-50/50">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="hover:bg-gray-200"
+                    onClick={() => handleOpenEdit(product)}
+                  >
+                    <IconEdit size={16} className="text-gray-600" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="hover:bg-red-100"
+                    onClick={() => handleDelete(product)}
+                    disabled={deleteProducts.isPending}
+                  >
+                    <IconTrash size={16} className="text-red-500" />
+                  </Button>
+                </div>
+
+                <div className="w-full h-[200px] border-b flex justify-center items-center overflow-hidden bg-gray-100 relative">
+                  {product.shopifyVariantId && (
+                    <span className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-[#96bf48] text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow">
+                      <IconShoppingBag size={11} />
+                      Shopify
+                    </span>
                   )}
-                </Spoiler>
+                  <img
+                    alt={productProps.title ?? productProps.name}
+                    src={
+                      productProps.image_link ||
+                      productProps.image?.[0]?.url ||
+                      fallbackImage
+                    }
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = fallbackImage;
+                    }}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+
+                <div className="p-4 flex flex-col gap-2">
+                  <div
+                    className={`relative ${!isExpanded ? "max-h-[100px] overflow-hidden" : ""}`}
+                  >
+                    <h4
+                      className="font-semibold truncate"
+                      title={productProps.title ?? productProps.name}
+                    >
+                      {productProps.title ?? productProps.name}
+                    </h4>
+                    <p
+                      className="text-gray-500 text-sm truncate"
+                      title={productProps.description}
+                    >
+                      {productProps.description}
+                    </p>
+                    <p className="text-lg font-medium mt-1">
+                      {productProps.sale_price ?? productProps.price}
+                    </p>
+                    {productProps.sale_price &&
+                      productProps.sale_price !== productProps.price && (
+                        <p className="text-sm line-through text-gray-400">
+                          M.R.P.: {productProps.price}
+                        </p>
+                      )}
+
+                    <div className="flex flex-col gap-1 mt-3">
+                      {extraProps.map((pp) => (
+                        <div
+                          className="flex justify-between items-center"
+                          key={pp.key}
+                        >
+                          <span className="text-sm font-medium">
+                            {pp.label}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {productProps[pp.key]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {productProps.url && (
+                      <div className="mt-3">
+                        <span className="font-medium text-sm block">
+                          Website Link
+                        </span>
+                        <a
+                          href={productProps.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm text-blue-500 hover:underline truncate block"
+                        >
+                          {productProps.url}
+                        </a>
+                      </div>
+                    )}
+
+                    {!isExpanded && (
+                      <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-white to-transparent" />
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => toggleExpand(itemId)}
+                    className="text-sm text-blue-600 hover:underline flex items-center gap-1 self-start mt-1 font-medium"
+                  >
+                    {isExpanded ? (
+                      <>
+                        See less <IconChevronUp size={14} />
+                      </>
+                    ) : (
+                      <>
+                        See more <IconChevronDown size={14} />
+                      </>
+                    )}
+                  </button>
+                </div>
               </>
             ) : (
-              <Text>{vertical} item not supported yet.</Text>
+              <p className="p-4 text-gray-500">
+                {vertical} item not supported yet.
+              </p>
             )}
-          </Card>
+          </div>
         );
       })}
       <AddCatalogProductModal
         catalogData={{ catalogId, vertical }}
         opened={opened}
-        close={close}
+        close={() => setOpened(false)}
         productData={selectedProduct}
       />
-    </SimpleGrid>
+    </div>
   );
 };
 

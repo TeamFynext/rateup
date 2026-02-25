@@ -732,9 +732,19 @@ export default function WhatsappTemplateById() {
                   <ReadonlyOverlay />
                   <ContainedTextField
                     label={
-                      <Text fz={14} fw={500}>
-                        {translations("Template Name")} {requiredIcon}
-                      </Text>
+                      <Group gap={4} wrap="nowrap">
+                        <Text fz={14} fw={500}>
+                          {translations("Template Name")}
+                        </Text>
+                        {requiredIcon}
+                        <Text c="blue" size="xs">
+                          (
+                          {translations(
+                            "Lower-case letters and underscores only",
+                          )}
+                          )
+                        </Text>
+                      </Group>
                     }
                     placeholder={translations("Name")}
                     {...form.getInputProps("name")}
@@ -749,9 +759,12 @@ export default function WhatsappTemplateById() {
                   />
                   <ContainedSelection
                     label={
-                      <Text fz={14} fw={500}>
-                        TemplateType {requiredIcon}
-                      </Text>
+                      <Group gap={4} wrap="nowrap">
+                        <Text fz={14} fw={500}>
+                          TemplateType
+                        </Text>
+                        {requiredIcon}
+                      </Group>
                     }
                     placeholder={translations("TemplateType")}
                     {...form.getInputProps("templateType")}
@@ -763,9 +776,12 @@ export default function WhatsappTemplateById() {
                     form.getValues().templateType !== TemplateType.CAROUSEL && (
                       <ContainedSelection
                         label={
-                          <Text fz={14} fw={500}>
-                            Category {requiredIcon}
-                          </Text>
+                          <Group gap={4} wrap="nowrap">
+                            <Text fz={14} fw={500}>
+                              Category
+                            </Text>
+                            {requiredIcon}
+                          </Group>
                         }
                         placeholder={translations("Category")}
                         {...form.getInputProps("category")}
@@ -783,9 +799,12 @@ export default function WhatsappTemplateById() {
 
                   <ContainedSelection
                     label={
-                      <Text fz={14} fw={500}>
-                        {translations("Language")} {requiredIcon}
-                      </Text>
+                      <Group gap={4} wrap="nowrap">
+                        <Text fz={14} fw={500}>
+                          {translations("Language")}
+                        </Text>
+                        {requiredIcon}
+                      </Group>
                     }
                     placeholder={translations("Language")}
                     {...form.getInputProps("language")}
@@ -804,10 +823,12 @@ export default function WhatsappTemplateById() {
                         <ContainedSelection
                           label={
                             <>
-                              <Text fz={14} fw={500} w={"max-content"}>
-                                {translations("Broadcast header")}{" "}
+                              <Group gap={4} wrap="nowrap">
+                                <Text fz={14} fw={500} w={"max-content"}>
+                                  {translations("Broadcast header")}{" "}
+                                </Text>
                                 {requiredIcon}
-                              </Text>
+                              </Group>
                               <Text fz={13}>
                                 {translations(
                                   "Highlight your brand here, use images or videos, to stand out",
@@ -865,9 +886,12 @@ export default function WhatsappTemplateById() {
                   {form.values?.category !==
                     WaTemplateCategory.AUTHENTICATION && (
                     <>
-                      <Text fz={14} fw={500}>
-                        {translations("Body")} {requiredIcon}
-                      </Text>
+                      <Group gap={4} wrap="nowrap">
+                        <Text fz={14} fw={500}>
+                          {translations("Body")}
+                        </Text>
+                        {requiredIcon}
+                      </Group>
                       <Text fz={13}>
                         {translations(
                           "Make your messages personal using variables and get more replies!",
@@ -993,23 +1017,32 @@ export default function WhatsappTemplateById() {
                         )}
                         {isOrderCreate && (
                           <>
-                            <Text fz={14} fw={500}>
-                              {translations("Config")} {requiredIcon}
-                            </Text>
+                            <Group gap={4} wrap="nowrap">
+                              <Text fz={14} fw={500}>
+                                {translations("Config")}
+                              </Text>
+                              {requiredIcon}
+                            </Group>
                             <ContainedTextField
                               label={
-                                <Text fz={14} fw={500}>
-                                  {translations("Name")} {requiredIcon}
-                                </Text>
+                                <Group gap={4} wrap="nowrap">
+                                  <Text fz={14} fw={500}>
+                                    {translations("Name")}
+                                  </Text>
+                                  {requiredIcon}
+                                </Group>
                               }
                               placeholder={"name"}
                               {...configForm.getInputProps("name")}
                             />
                             <ContainedNumberInput
                               label={
-                                <Text fz={14} fw={500}>
-                                  {translations("Price")} {requiredIcon}
-                                </Text>
+                                <Group gap={4} wrap="nowrap">
+                                  <Text fz={14} fw={500}>
+                                    {translations("Price")}
+                                  </Text>
+                                  {requiredIcon}
+                                </Group>
                               }
                               placeholder={translations("price")}
                               min={0}
@@ -1017,9 +1050,12 @@ export default function WhatsappTemplateById() {
                             />
                             <ContainedNumberInput
                               label={
-                                <Text fz={14} fw={500}>
-                                  {translations("Tax")} {requiredIcon}
-                                </Text>
+                                <Group gap={4} wrap="nowrap">
+                                  <Text fz={14} fw={500}>
+                                    {translations("Tax")}
+                                  </Text>
+                                  {requiredIcon}
+                                </Group>
                               }
                               placeholder={translations("tax")}
                               min={0}
