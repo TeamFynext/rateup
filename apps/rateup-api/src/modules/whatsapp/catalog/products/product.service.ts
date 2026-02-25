@@ -3,6 +3,8 @@ import { log } from "../../../../utils/logger.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
 import { callWhatsappApi } from "../../wa_axios.js";
 import { getWaCatalog } from "../catalog.service.js";
+import { getShopifyInfo } from "../../../integrations/shopify/shopify.service.js";
+import shopify from "../../../integrations/shopify/shopify.config.js";
 import {
   catalogHotel,
   catalogHotelRoom,
@@ -25,6 +27,8 @@ export async function createCatalogProductsBatch(
   const newProducts = [];
   for (const data of dataList) {
     let input;
+    const shopifyVariantId: string | undefined =
+      data.shopifyVariantId ?? undefined;
     if (type === "PRODUCT_ITEM") {
       const {
         price,
@@ -32,12 +36,15 @@ export async function createCatalogProductsBatch(
         internal_label,
         sale_price,
         retailer_id,
+        shopifyVariantId: _svid, // strip from Meta payload
         ...rest
-      } = data as catalogItemSchema["PRODUCT_ITEM"];
+      } = data as catalogItemSchema["PRODUCT_ITEM"] & {
+        shopifyVariantId?: string;
+      };
       input = {
         ...rest,
         id: retailer_id,
-        price: `${price} ${currencyCode}`,
+        price: `${parseFloat(String(price)).toFixed(2)} ${currencyCode}`,
         sale_price: `${sale_price} ${currencyCode}`,
         internal_label: internal_label.map((label) => `'${label}'`),
       };
@@ -89,6 +96,7 @@ export async function createCatalogProductsBatch(
       hotel_id,
       hotel_retailer_id,
       hotel_room_id,
+      shopifyVariantId: shopifyVariantId ?? undefined,
       ...(type === "PRODUCT_ITEM"
         ? {
             productProps: props,
@@ -137,6 +145,7 @@ export async function sendProducts(
     null,
     { "Content-Type": "application/json" },
   );
+
   return res.data;
 }
 
@@ -512,4 +521,330 @@ function getCatalogProdutType(vertical) {
     case "hotel_room":
       return CatalogProductTypes.HOTEL_ROOM;
   }
+}
+
+// Fetches all Shopify products, maps them to catalogProductCore format,
+// and filters out any variants already imported into this catalog.
+export async function getShopifyProductsForCatalog(
+  orgId: string,
+  catalogId: string,
+) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo?.credential?.session) {
+    throw new Error("No Shopify integration found for this org");
+  }
+
+  const session = shopifyInfo.credential.session;
+  const client = new shopify.clients.Graphql({ session });
+
+  const shopData = await client.request(`{ shop { currencyCode } }`);
+  const currencyCode: string = shopData.data.shop?.currencyCode ?? "USD";
+  const shopDomain: string = session.shop;
+
+  // Paginate through all Shopify products
+  let hasNextPage = true;
+  let cursor: string | null = null;
+  const allProducts: any[] = [];
+
+  while (hasNextPage) {
+    const data: any = await client.request(
+      `query getFullProducts($cursor: String) {
+        products(first: 50, after: $cursor) {
+          edges {
+            node {
+              id
+              title
+              description
+              vendor
+              handle
+              onlineStoreUrl
+              images(first: 5) {
+                edges { node { url } }
+              }
+              variants(first: 100) {
+                edges {
+                  node {
+                    id
+                    sku
+                    price
+                    compareAtPrice
+                    availableForSale
+                    inventoryQuantity
+                    title
+                  }
+                }
+              }
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }`,
+      { variables: { cursor } },
+    );
+    hasNextPage = data.data.products.pageInfo.hasNextPage;
+    cursor = data.data.products.pageInfo.endCursor;
+    allProducts.push(...data.data.products.edges.map((e) => e.node));
+  }
+
+  // Get already-imported retailer_ids for this catalog
+  const existing = await prisma.waCatalogProduct.findMany({
+    where: { catalogId },
+    select: { retailer_id: true },
+  });
+  const existingIds = new Set(
+    existing.map((p) => p.retailer_id).filter(Boolean),
+  );
+
+  // Map each unimported variant to a catalogProductCore item
+  const catalogItems: any[] = [];
+  for (const product of allProducts) {
+    const images = (product.images?.edges ?? []).map((e) => ({
+      url: e.node.url,
+    }));
+    if (images.length === 0) continue; // Meta requires at least one image
+
+    const productLink: string =
+      product.onlineStoreUrl ??
+      `https://${shopDomain}/products/${product.handle}`;
+    const productGroupId: string = product.id.split("/").pop() ?? product.id;
+
+    for (const variantEdge of product.variants?.edges ?? []) {
+      const v = variantEdge.node;
+      const numericId: string = v.id.split("/").pop() ?? v.id;
+
+      if (existingIds.has(numericId)) continue; // skip already imported
+
+      const variantSuffix =
+        v.title && v.title !== "Default Title" ? ` - ${v.title}` : "";
+      const salePrice = parseFloat(v.price);
+      const originalPrice = v.compareAtPrice
+        ? parseFloat(v.compareAtPrice)
+        : salePrice;
+
+      catalogItems.push({
+        retailer_id: numericId,
+        title: `${product.title}${variantSuffix}`.substring(0, 100),
+        description: (product.description || product.title).substring(0, 5000),
+        condition: "new",
+        image: images,
+        internal_label: [],
+        link: productLink,
+        price: originalPrice,
+        currencyCode,
+        availability: v.availableForSale ? "in stock" : "out of stock",
+        brand: product.vendor || product.title,
+        sale_price: salePrice.toFixed(2),
+        item_group_id: productGroupId,
+      });
+    }
+  }
+
+  return catalogItems;
+}
+
+// Syncs already-imported Shopify products: compares Shopify data against DB,
+// updates mismatched fields in DB + pushes changes to Meta catalog.
+export async function syncShopifyProductsToCatalog(
+  orgId: string,
+  catalogId: string,
+): Promise<{ updated: number; unchanged: number; notFound: number }> {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo?.credential?.session) {
+    throw new Error("No Shopify integration found for this org");
+  }
+
+  const session = shopifyInfo.credential.session;
+  const client = new shopify.clients.Graphql({ session });
+
+  const shopData = await client.request(`{ shop { currencyCode } }`);
+  const currencyCode: string = shopData.data.shop?.currencyCode ?? "USD";
+  const shopDomain: string = session.shop;
+
+  // Paginate through all Shopify products
+  let hasNextPage = true;
+  let cursor: string | null = null;
+  const allProducts: any[] = [];
+
+  while (hasNextPage) {
+    const data: any = await client.request(
+      `query getFullProducts($cursor: String) {
+        products(first: 50, after: $cursor) {
+          edges {
+            node {
+              id
+              title
+              description
+              vendor
+              handle
+              onlineStoreUrl
+              images(first: 5) {
+                edges { node { url } }
+              }
+              variants(first: 100) {
+                edges {
+                  node {
+                    id
+                    price
+                    compareAtPrice
+                    availableForSale
+                    title
+                  }
+                }
+              }
+            }
+          }
+          pageInfo { hasNextPage endCursor }
+        }
+      }`,
+      { variables: { cursor } },
+    );
+    hasNextPage = data.data.products.pageInfo.hasNextPage;
+    cursor = data.data.products.pageInfo.endCursor;
+    allProducts.push(...data.data.products.edges.map((e) => e.node));
+  }
+
+  // Build a map: numericVariantId → { variant, product }
+  const variantMap = new Map<string, { variant: any; product: any }>();
+  for (const product of allProducts) {
+    for (const variantEdge of product.variants?.edges ?? []) {
+      const v = variantEdge.node;
+      const numericId: string = v.id.split("/").pop() ?? v.id;
+      variantMap.set(numericId, { variant: v, product });
+    }
+  }
+
+  // Get all PRODUCT_ITEM DB products that have a retailer_id (i.e., Shopify-imported)
+  const dbProducts = await prisma.waCatalogProduct.findMany({
+    where: {
+      catalogId,
+      type: CatalogProductTypes.PRODUCT_ITEM,
+      retailer_id: { not: null },
+    },
+  });
+
+  const toUpdate: any[] = [];
+  let unchanged = 0;
+  let notFound = 0;
+
+  for (const dbProd of dbProducts) {
+    const match = variantMap.get(dbProd.retailer_id!);
+    if (!match) {
+      notFound++; // variant deleted in Shopify — skip
+      continue;
+    }
+
+    const { variant: v, product } = match;
+    const images = (product.images?.edges ?? []).map((e: any) => ({
+      url: e.node.url,
+    }));
+    if (images.length === 0) continue;
+
+    const productLink: string =
+      product.onlineStoreUrl ??
+      `https://${shopDomain}/products/${product.handle}`;
+    const productGroupId: string = product.id.split("/").pop() ?? product.id;
+    const variantSuffix =
+      v.title && v.title !== "Default Title" ? ` - ${v.title}` : "";
+    const salePrice = parseFloat(v.price);
+    const originalPrice = v.compareAtPrice
+      ? parseFloat(v.compareAtPrice)
+      : salePrice;
+    const availability = v.availableForSale ? "in stock" : "out of stock";
+    const newTitle = `${product.title}${variantSuffix}`.substring(0, 100);
+    const newDescription = (product.description || product.title).substring(
+      0,
+      5000,
+    );
+    const newBrand: string = product.vendor || product.title;
+
+    // Compare against stored productProps (prices stored as "10.00 USD")
+    const props: any = dbProd.productProps ?? {};
+    const currentPrice = parseFloat(String(props.price ?? "0").split(" ")[0]);
+    const currentSalePrice = parseFloat(
+      String(props.sale_price ?? "0").split(" ")[0],
+    );
+
+    const hasChanged =
+      props.title !== newTitle ||
+      props.description !== newDescription ||
+      props.availability !== availability ||
+      props.brand !== newBrand ||
+      Math.abs(currentPrice - originalPrice) > 0.001 ||
+      Math.abs(currentSalePrice - salePrice) > 0.001 ||
+      (images[0]?.url && props.image_link !== images[0].url);
+
+    if (!hasChanged) {
+      unchanged++;
+      continue;
+    }
+
+    // Preserve user-managed internal_label (stored with quotes — strip before passing)
+    const rawLabels: string[] = (props.internal_label ?? []).map((l: string) =>
+      l.replace(/^'|'$/g, ""),
+    );
+
+    toUpdate.push({
+      retailer_id: dbProd.retailer_id,
+      title: newTitle,
+      description: newDescription,
+      condition: props.condition ?? "new",
+      image: images,
+      internal_label: rawLabels,
+      link: productLink,
+      price: originalPrice,
+      currencyCode,
+      availability,
+      brand: newBrand,
+      sale_price: salePrice.toFixed(2),
+      item_group_id: productGroupId,
+    });
+  }
+
+  if (toUpdate.length > 0) {
+    await updateCatalogProducts(
+      orgId,
+      catalogId,
+      toUpdate,
+      CatalogProductTypes.PRODUCT_ITEM,
+    );
+  }
+
+  log.info(
+    { orgId, catalogId, updated: toUpdate.length, unchanged, notFound },
+    "Shopify→Catalog sync complete",
+  );
+
+  return { updated: toUpdate.length, unchanged, notFound };
+}
+
+// Imports a pre-selected list of mapped catalog items into Meta + DB.
+export async function importSelectedShopifyProducts(
+  orgId: string,
+  catalogId: string,
+  items: any[],
+) {
+  if (items.length === 0) return { imported: 0 };
+
+  // Tag every item so the DB knows it came from Shopify
+  const taggedItems = items.map((item) => ({
+    ...item,
+    shopifyVariantId: item.retailer_id,
+  }));
+
+  await createCatalogProductsBatch(
+    orgId,
+    CatalogProductTypes.PRODUCT_ITEM,
+    taggedItems,
+    catalogId,
+  );
+
+  log.info(
+    { orgId, catalogId, imported: items.length },
+    "Shopify→Catalog import complete",
+  );
+
+  return { imported: items.length };
 }
