@@ -178,7 +178,7 @@ export async function getWaSettingsByPhoneId(phoneId: string) {
       createdAt: "asc",
     },
   });
-  return res;
+  return res ? getWaSettingsWithAccessTokenDecrypted(res) : null;
 }
 
 export async function getWaSettingsByIbaId(ibaId: string) {
