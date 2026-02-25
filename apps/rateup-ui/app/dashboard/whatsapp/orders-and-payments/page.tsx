@@ -18,6 +18,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import OrdersTable from "./components/OrdersTable";
@@ -25,7 +32,18 @@ import OrdersTable from "./components/OrdersTable";
 export default function OrdersAndPaymentsPage() {
   const queryClient = useQueryClient();
   const { data: waSettings, isLoading: isLoadingSettings } = useWaSettings();
-  const currentSettingId = waSettings?.[0]?.id;
+
+  const [currentSettingId, setCurrentSettingId] = useState<string>("");
+
+  useEffect(() => {
+    if (waSettings && waSettings.length > 0 && !currentSettingId) {
+      setCurrentSettingId(waSettings[0].id);
+    }
+  }, [waSettings, currentSettingId]);
+
+  const currentSetting =
+    waSettings?.find((s) => s.id === currentSettingId) || waSettings?.[0];
+
   const { mutateAsync: updateWaSettings } =
     useUpdateWaSettingsMutation(currentSettingId);
 
@@ -37,10 +55,12 @@ export default function OrdersAndPaymentsPage() {
   const [paymentMethod, setPaymentMethod] = useState<string>("NATIVE");
 
   useEffect(() => {
-    if (waSettings?.[0]?.paymentMethod) {
-      setPaymentMethod(waSettings[0].paymentMethod);
+    if (currentSetting?.paymentMethod) {
+      setPaymentMethod(currentSetting.paymentMethod);
+    } else {
+      setPaymentMethod("NATIVE");
     }
-  }, [waSettings]);
+  }, [currentSetting]);
 
   const handlePaymentMethodChange = async (value: string) => {
     setPaymentMethod(value);
@@ -54,7 +74,7 @@ export default function OrdersAndPaymentsPage() {
       } catch (error) {
         toast.error("Failed to update payment method");
         // Revert on error
-        setPaymentMethod(waSettings?.[0]?.paymentMethod || "NATIVE");
+        setPaymentMethod(currentSetting?.paymentMethod || "NATIVE");
       }
     }
   };
@@ -81,15 +101,40 @@ export default function OrdersAndPaymentsPage() {
     );
   }
 
-  const currentSetting = waSettings?.[0];
-
   if (!currentSetting) {
     return <div className="p-6">WhatsApp settings not found.</div>;
   }
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Orders and Payments</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Orders and Payments
+        </h1>
+
+        {waSettings && waSettings.length > 0 && (
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="wa-selector">WhatsApp Number</Label>
+            <Select
+              value={currentSettingId}
+              onValueChange={setCurrentSettingId}
+            >
+              <SelectTrigger id="wa-selector" className="w-[250px]">
+                <SelectValue placeholder="Select a WhatsApp number" />
+              </SelectTrigger>
+              <SelectContent>
+                {waSettings.map((setting) => (
+                  <SelectItem key={setting.id} value={setting.id}>
+                    {setting.phoneDisplayName ||
+                      setting.phone ||
+                      "Unknown Number"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
 
       <Card>
         <CardHeader>
