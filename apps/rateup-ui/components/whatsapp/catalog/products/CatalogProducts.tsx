@@ -2,13 +2,13 @@
 
 import React from "react";
 
-import { ActionIcon, Group, Menu, Stack, Title } from "@mantine/core";
+import { Group, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconBrandMeta,
   IconCheck,
-  IconDotsVertical,
   IconPlus,
+  IconRefresh,
   IconShoppingBag,
   IconX,
 } from "@tabler/icons-react";
@@ -18,6 +18,14 @@ import {
   useSyncShopifyWithCatalog,
 } from "@/backend/whatsapp/catalog/products/products.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   showErrorToast,
   showLoadingToast,
@@ -95,8 +103,8 @@ const CatalogProducts = ({ catalogData }) => {
 
   return (
     <Stack>
-      <Group justify="space-between">
-        <Group gap={"xs"}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <Title order={3}>Products</Title>
           <RateupButtonPrimary
             title="Add Product"
@@ -104,40 +112,38 @@ const CatalogProducts = ({ catalogData }) => {
             onClick={openAdd}
             leftIcon={<IconPlus size={15} />}
           />
-        </Group>
-        <Menu shadow="md" width={220} position="bottom-end">
-          <Menu.Target>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              size="lg"
-              disabled={!catalogData}
-              aria-label="More actions"
-            >
-              <IconDotsVertical size={18} />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Label>Sync</Menu.Label>
-            <Menu.Item
-              color="green"
-              leftSection={<IconShoppingBag size={16} />}
-              onClick={handleSyncFromShopify}
-              disabled={syncFromShopifyMut.isPending}
-            >
-              Sync from Shopify
-            </Menu.Item>
-            <Menu.Item
-              color="blue"
-              leftSection={<IconBrandMeta size={16} />}
-              onClick={() => handleSyncFromMeta()}
-              disabled={syncFromMetaMut.isPending}
-            >
-              Sync from Meta
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-      </Group>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={!catalogData}
+                aria-label="Sync products"
+              >
+                <IconRefresh size={16} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[220px]">
+              <DropdownMenuItem
+                className="text-green-600 focus:text-green-700 focus:bg-green-50"
+                onClick={handleSyncFromShopify}
+                disabled={syncFromShopifyMut.isPending}
+              >
+                <IconShoppingBag size={16} className="mr-2" />
+                Sync from Shopify
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-blue-600 focus:text-blue-700 focus:bg-blue-50"
+                onClick={() => handleSyncFromMeta()}
+                disabled={syncFromMetaMut.isPending}
+              >
+                <IconBrandMeta size={16} className="mr-2" />
+                Sync from Meta
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
       {catalogData?.vertical === "commerce" && (
         <ProductItems catalogId={catalogData?.catalogId} />
       )}

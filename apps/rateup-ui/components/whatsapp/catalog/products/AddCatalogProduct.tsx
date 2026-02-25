@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import {
   FileInput,
   Group,
-  Modal,
   Radio,
   RadioGroup,
   SimpleGrid,
@@ -36,6 +35,12 @@ import {
   ContainedTextArea,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   CATALOG_PRODUCT_AVAILABILITY,
   CATALOG_PRODUCT_CONDITIONS,
@@ -255,7 +260,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
         {
           onSuccess: () => {
             showSuccessToast(
-              "Product added to Shopify! You can now import it to the catalog.",
+              "Product added to Shopify and imported to catalog!",
               "catalog-product",
               <IconCheck />,
               true,
@@ -686,18 +691,17 @@ export const AddCatalogProductModal = ({
   productData = null,
 }) => {
   return (
-    <Modal
-      opened={opened}
-      title="Add Item"
-      onClose={close}
-      size={"xl"}
-      centered
-    >
-      <AddCatalogProduct
-        catalogData={catalogData}
-        onCancel={close}
-        productData={productData}
-      />
-    </Modal>
+    <Dialog open={opened} onOpenChange={(val) => !val && close()}>
+      <DialogContent className="max-w-[700px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add Item</DialogTitle>
+        </DialogHeader>
+        <AddCatalogProduct
+          catalogData={catalogData}
+          onCancel={close}
+          productData={productData}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };
