@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Gift, Loader2, Plus, Save, Tag, UserPlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -28,6 +29,7 @@ import ErrorComponent from "@/components/404/ErrorComponent";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { RewardCard } from "@/components/LoyaltyComponents/RewardCard";
 import { RewardFormContainer } from "@/components/LoyaltyComponents/RewardFormContainer";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,17 +59,21 @@ export default function RewardsPage() {
     loyaltyProgram?.id || "",
   );
   const createRewardMutation = useCreateLoyaltyRewardMutation(() => {
-    toast.success("Reward created successfully");
     setRewardsViewMode("list");
     resetForm();
   });
   const [editingRewardId, setEditingRewardId] = useState<string | null>(null);
+  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
+  const [editingGiftId, setEditingGiftId] = useState<string | null>(null);
+  const activeEditingRewardId =
+    editingRewardId || editingCouponId || editingGiftId || "";
   const updateRewardMutation = useUpdateLoyaltyRewardMutation(
-    editingRewardId || "",
+    activeEditingRewardId,
     () => {
-      toast.success("Reward updated successfully");
       setRewardsViewMode("list");
       setEditingRewardId(null);
+      setEditingCouponId(null);
+      setEditingGiftId(null);
       resetForm();
     },
   );
@@ -128,10 +134,13 @@ export default function RewardsPage() {
   const [rewardsViewMode, setRewardsViewMode] = useState("list");
   const [selectedRewardCategory, setSelectedRewardCategory] =
     useState("point-rewards");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [pendingDeleteReward, setPendingDeleteReward] = useState<{
+    id: string;
+    name?: string | null;
+  } | null>(null);
 
   // Form states
-  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
-  const [editingGiftId, setEditingGiftId] = useState<string | null>(null);
   const [rewardFormCategory, setRewardFormCategory] = useState("point-rewards");
   const [rewardTierRestriction, setRewardTierRestriction] = useState(false);
 
@@ -140,9 +149,31 @@ export default function RewardsPage() {
   const [refereeBonus, setRefereeBonus] = useState(0);
 
   // Form field states
-  const { data: editingReward } = useLoyaltyRewardById(
-    editingRewardId || editingCouponId || editingGiftId || "",
-  );
+  const { data: editingReward } = useLoyaltyRewardById(activeEditingRewardId);
+  const translations = useTranslations();
+  const startEditingReward = (
+    id: string,
+    category: "point-rewards" | "coupons" | "free-gifts",
+  ) => {
+    setEditingRewardId(category === "point-rewards" ? id : null);
+    setEditingCouponId(category === "coupons" ? id : null);
+    setEditingGiftId(category === "free-gifts" ? id : null);
+  };
+
+  const cancelEditingReward = (
+    category: "point-rewards" | "coupons" | "free-gifts",
+  ) => {
+    if (category === "point-rewards") {
+      setEditingRewardId(null);
+    }
+    if (category === "coupons") {
+      setEditingCouponId(null);
+    }
+    if (category === "free-gifts") {
+      setEditingGiftId(null);
+    }
+    setRewardTierRestriction(false);
+  };
 
   useEffect(() => {
     if (loyaltyProgram) {
@@ -218,10 +249,22 @@ export default function RewardsPage() {
     }
   };
 
-  const handleDeleteReward = (rewardId: string) => {
-    if (confirm("Are you sure you want to delete this reward?")) {
-      deleteRewardMutation.mutate(rewardId);
+  const handleDeleteReward = (rewardId: string, rewardName?: string | null) => {
+    setPendingDeleteReward({ id: rewardId, name: rewardName });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteReward = () => {
+    if (!pendingDeleteReward?.id) {
+      return;
     }
+
+    deleteRewardMutation.mutate(pendingDeleteReward.id, {
+      onSettled: () => {
+        setDeleteDialogOpen(false);
+        setPendingDeleteReward(null);
+      },
+    });
   };
 
   const onSubmitPointReward = (data: z.infer<typeof pointRewardSchema>) => {
@@ -317,13 +360,7 @@ export default function RewardsPage() {
   );
 
   // Filter rewards by category
-  const rewardsList =
-    rewards?.filter((r) => {
-      if (selectedRewardCategory === "point-rewards") {
-        return r.rewardType === "point";
-      }
-      return false;
-    }) || [];
+  const rewardsList = rewards?.filter((r) => r.rewardType === "point") || [];
 
   const couponsList = rewards?.filter((r) => r.rewardType === "coupon") || [];
 
@@ -445,12 +482,16 @@ export default function RewardsPage() {
                       reward={reward}
                       category="point-rewards"
                       isEditing={editingRewardId === reward.id}
-                      onEditStart={() => setEditingRewardId(reward.id)}
-                      onEditCancel={() => setEditingRewardId(null)}
+                      onEditStart={() =>
+                        startEditingReward(reward.id, "point-rewards")
+                      }
+                      onEditCancel={() => cancelEditingReward("point-rewards")}
                       onEditSave={pointRewardForm.handleSubmit(
                         onSubmitPointReward,
                       )}
-                      onDelete={() => handleDeleteReward(reward.id)}
+                      onDelete={() =>
+                        handleDeleteReward(reward.id, reward.name)
+                      }
                       isPending={deleteRewardMutation.isPending}
                       onToggleStatus={(checked) => {
                         const newStatus = checked
@@ -499,10 +540,14 @@ export default function RewardsPage() {
                       reward={coupon}
                       category="coupons"
                       isEditing={editingCouponId === coupon.id}
-                      onEditStart={() => setEditingCouponId(coupon.id)}
-                      onEditCancel={() => setEditingCouponId(null)}
+                      onEditStart={() =>
+                        startEditingReward(coupon.id, "coupons")
+                      }
+                      onEditCancel={() => cancelEditingReward("coupons")}
                       onEditSave={couponForm.handleSubmit(onSubmitCoupon)}
-                      onDelete={() => handleDeleteReward(coupon.id)}
+                      onDelete={() =>
+                        handleDeleteReward(coupon.id, coupon.name)
+                      }
                       isPending={deleteRewardMutation.isPending}
                       onToggleStatus={(checked) => {
                         const newStatus = checked
@@ -551,10 +596,12 @@ export default function RewardsPage() {
                       reward={gift}
                       category="free-gifts"
                       isEditing={editingGiftId === gift.id}
-                      onEditStart={() => setEditingGiftId(gift.id)}
-                      onEditCancel={() => setEditingGiftId(null)}
+                      onEditStart={() =>
+                        startEditingReward(gift.id, "free-gifts")
+                      }
+                      onEditCancel={() => cancelEditingReward("free-gifts")}
                       onEditSave={giftForm.handleSubmit(onSubmitGift)}
-                      onDelete={() => handleDeleteReward(gift.id)}
+                      onDelete={() => handleDeleteReward(gift.id, gift.name)}
                       isPending={deleteRewardMutation.isPending}
                       onToggleStatus={(checked) => {
                         const newStatus = checked
@@ -749,6 +796,23 @@ export default function RewardsPage() {
             loyaltyTemplates={loyaltyTemplates}
           />
         )}
+        <ConfirmationModal
+          opened={deleteDialogOpen}
+          onClose={() => {
+            if (deleteRewardMutation.isPending) {
+              return;
+            }
+            setDeleteDialogOpen(false);
+          }}
+          forDeleteFunctionality
+          confirmLabel={translations("Delete")}
+          headerTitle={translations("Delete Reward?")}
+          onConfirm={() => {
+            handleConfirmDeleteReward();
+          }}
+          headerLabel={translations("Are you sure to delete this reward?")}
+          closeLabel={translations("cancel")}
+        />
       </div>
     </div>
   );

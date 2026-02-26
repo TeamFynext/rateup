@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
   CheckCircle2,
@@ -27,7 +28,10 @@ import {
   useAssignRewardMutation,
   useAwardPointsMutation,
 } from "@/backend/loyalty/customer/customer.query";
-import { useRedeemReward } from "@/backend/loyalty/redeems/redeems.query";
+import {
+  useRedeemReward,
+  useRedeemRewardByShortCode,
+} from "@/backend/loyalty/redeems/redeems.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
 import { useLoyaltyTiers } from "@/backend/loyalty/tier.query";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +56,10 @@ import {
 } from "@/components/ui/tooltip";
 
 export default function CashierPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [phoneSearch, setPhoneSearch] = useState("");
   const [selectedPhone, setSelectedPhone] = useState("");
 
@@ -84,10 +92,8 @@ export default function CashierPage() {
   // const claimReward = useClaimReward();
   const redeemRewardMutation = useRedeemReward(selectedPhone);
   const useRedemption = useUseRedemption(selectedPhone);
-  const assignReward = useAssignRewardMutation(() => {
-    // Refresh customer data after assigning reward
-    // Query will auto-refresh due to invalidation in the mutation
-  });
+  const assignReward = useAssignRewardMutation();
+  const redeemRewardByShortCode = useRedeemRewardByShortCode();
 
   const customer = customerData?.customer;
   const availableRewards = customerData?.availableRewards || [];
@@ -100,6 +106,43 @@ export default function CashierPage() {
       (r) => r.status === "approved" || r.status === "pending",
     );
   }, [redeemedRewards]);
+
+  const normalizePhone = (phone: string) => phone.replaceAll("+", "");
+  const isPhoneSearchValid = phoneSearch.length >= 10;
+
+  useEffect(() => {
+    const phoneFromQuery = searchParams.get("phone") || "";
+    setPhoneSearch(phoneFromQuery);
+    setSelectedPhone(phoneFromQuery ? normalizePhone(phoneFromQuery) : "");
+  }, [searchParams]);
+
+  const updatePhoneQueryParam = (phone: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (phone) {
+      params.set("phone", phone);
+    } else {
+      params.delete("phone");
+    }
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname);
+  };
+
+  const handleSearchCustomer = () => {
+    if (!isPhoneSearchValid) {
+      return;
+    }
+
+    updatePhoneQueryParam(phoneSearch);
+    setSelectedPhone(normalizePhone(phoneSearch));
+  };
+
+  const handleClearCustomerSearch = () => {
+    setSelectedPhone("");
+    setPhoneSearch("");
+    updatePhoneQueryParam("");
+  };
 
   const handleIssuePoints = async () => {
     if (!customer?.contactId || !pointsAmount) {
@@ -214,8 +257,7 @@ export default function CashierPage() {
       return;
     }
 
-    // This is a placeholder - implement actual coupon redemption API
-    // toast.info("Coupon redemption feature coming soon");
+    redeemRewardByShortCode.mutate(couponCode);
     setRedeemCouponOpen(false);
     setCouponCode("");
   };
@@ -246,17 +288,15 @@ export default function CashierPage() {
                   value={phoneSearch}
                   onChange={(e) => setPhoneSearch(e)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && phoneSearch.length >= 10) {
-                      setSelectedPhone(phoneSearch);
+                    if (e.key === "Enter" && isPhoneSearchValid) {
+                      handleSearchCustomer();
                     }
                   }}
                 />
               </div>
-              {phoneSearch.length >= 10 && (
+              {isPhoneSearchValid && (
                 <Button
-                  onClick={() =>
-                    setSelectedPhone(phoneSearch?.replaceAll("+", ""))
-                  }
+                  onClick={handleSearchCustomer}
                   className="mt-2 w-full"
                   disabled={isLoadingCustomer}
                 >
@@ -273,7 +313,7 @@ export default function CashierPage() {
             </div>
 
             {/* Info message */}
-            {phoneSearch && phoneSearch.length < 10 && (
+            {phoneSearch && !isPhoneSearchValid && (
               <p className="text-xs text-muted-foreground">
                 Please enter at least 10 digits
               </p>
@@ -310,10 +350,7 @@ export default function CashierPage() {
                     <Button
                       variant="destructive"
                       size="icon-sm"
-                      onClick={() => {
-                        setSelectedPhone("");
-                        setPhoneSearch("");
-                      }}
+                      onClick={handleClearCustomerSearch}
                     >
                       <X className="w-4 h-4" />
                     </Button>
