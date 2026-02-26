@@ -104,6 +104,7 @@ import {
 } from "../../campaign/campaign.service.js";
 import {
   getLoyaltyWaCommandByRequestMessage,
+  handleLoyaltyRedeemInteraction,
   handleLoyaltyWaCommand,
 } from "../../loyalty/settings/settings.service.js";
 import {
@@ -550,6 +551,16 @@ async function whatsappMessageHandler(
     orgId,
     message,
   );
+  if (parsedMessage?.buttonId) {
+    const handledLoyaltyRedeem = await handleLoyaltyRedeemInteraction(
+      from,
+      parsedMessage,
+      orgId,
+    );
+    if (handledLoyaltyRedeem) {
+      return;
+    }
+  }
   // Handle button click interactions first
   if (parsedMessage?.buttonId && !loyaltyWaCommand) {
     await handleButtonClickInteraction(from, parsedMessage, orgId);

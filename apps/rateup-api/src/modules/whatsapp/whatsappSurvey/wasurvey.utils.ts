@@ -988,8 +988,6 @@ export function createListMessage(
   buttonTitle: string,
   choices: any,
 ): WaSendMessageBody {
-  console.log(parseToWhatsAppFormat(questionDescription));
-
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
