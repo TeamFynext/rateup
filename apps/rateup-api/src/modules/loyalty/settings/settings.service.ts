@@ -8,16 +8,30 @@ import {
   EventTriggerInput,
   UpdateEventTriggerInput,
 } from "./settings.schema.js";
-import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
+import {
+  sendMessage,
+  sendTextMessage,
+} from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { LoyaltyWaCommand } from "../../../../generated/prisma/client.js";
 import dayjs from "dayjs";
 import {
+  assignRewardToCustomer,
   getLCustomerByPhone,
   updateCustomerAccount,
 } from "../accounts/account.service.js";
 import { handleSendTemplate } from "../../contact/contact.utils.js";
 import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
-import { convertNodeToWhatsAppMessage } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+import {
+  createListMessage,
+  createReplyButtonsMessage,
+} from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
+import { redeemReward } from "../redemptions/redemption.service.js";
+import { validateRedemption } from "../redemptionValidator.js";
+
+const REWARD_BUTTON_PREFIX = "loyalty_reward:";
+const REWARD_CONFIRM_PREFIX = "loyalty_reward_confirm:";
+const REWARD_CANCEL_PREFIX = "loyalty_reward_cancel:";
 
 export async function createLoyaltyWaCommand(
   data: LoyaltyTemplateInput & { orgId: string },
@@ -106,7 +120,7 @@ export async function handleLoyaltyWaCommand(
       await handleCustomerRemovalFromLoyalty(phone, loyaltyWaCommand);
       break;
     case LoyaltyTemplateTypes.RewardsIssued:
-      await handleIssuedRewardsCommand(phone, loyaltyWaCommand);
+      await handleIssuedRewardsCommand(phone, orgId, loyaltyWaCommand);
       break;
   }
 }
@@ -118,11 +132,219 @@ export async function getAllLoyaltyWaCommands(orgId) {
     },
   });
 }
-async function handleIssuedRewardsCommand(phone, loyaltyWaCommand) {
-  // const node=""
-  // convertNodeToWhatsAppMessage(node,phone);
+async function handleIssuedRewardsCommand(phone, orgId, loyaltyWaCommand) {
+  const customer = await getLCustomerByPhone(phone, orgId);
+
+  if (!customer || customer.status !== "active") {
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      "You are not an active member of our loyalty programme",
+    );
+    return;
+  }
+
+  const rewards = await getActiveLoyaltyRewards(customer.programId);
+  const eligibleRewards = rewards
+    .filter((reward) => {
+      const inStock =
+        reward.stockQuantity === null ||
+        reward.stockRedeemed < reward.stockQuantity;
+      const hasPoints =
+        reward.rewardType === "assigned" ||
+        customer.currentPoints >= reward.pointsCost;
+      return inStock && hasPoints;
+    })
+    .slice(0, 10);
+
+  if (!eligibleRewards.length) {
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      "No rewards are available for your current points right now.",
+    );
+    return;
+  }
+
+  const choices = eligibleRewards.map((reward) => ({
+    id: `${REWARD_BUTTON_PREFIX}${reward.id}`,
+    value: `${reward.name}`.slice(0, 24),
+  }));
+
+  const listMessage = createListMessage(
+    phone,
+    "Rewards",
+    `You have ${customer.currentPoints} points. Select a reward to continue.`,
+    "View rewards",
+    choices,
+  );
+
+  await sendMessage(orgId, listMessage);
 }
 
+export async function handleLoyaltyRedeemInteraction(
+  phone: string,
+  parsedMessage: { buttonId?: string; message?: string },
+  orgId: string,
+) {
+  const sendLoyaltyText = async (text: string) => {
+    await sendTextMessage({ phone, orgId }, null, text);
+  };
+
+  const getActiveCustomer = async () => {
+    const customer = await getLCustomerByPhone(phone, orgId);
+    if (!customer || customer.status !== "active") {
+      await sendLoyaltyText(
+        "You are not an active member of our loyalty programme",
+      );
+      return null;
+    }
+    return customer;
+  };
+
+  const buttonId = parsedMessage?.buttonId;
+  if (!buttonId) return false;
+
+  if (buttonId.startsWith(REWARD_BUTTON_PREFIX)) {
+    await handleRewardSelection(buttonId, getActiveCustomer, orgId, phone);
+    return true;
+  }
+
+  if (buttonId.startsWith(REWARD_CANCEL_PREFIX)) {
+    await sendLoyaltyText("Reward redemption cancelled.");
+    return true;
+  }
+
+  if (buttonId.startsWith(REWARD_CONFIRM_PREFIX)) {
+    await handleRewardConfirmation(
+      buttonId,
+      getActiveCustomer,
+      sendLoyaltyText,
+    );
+    return true;
+  }
+
+  return false;
+}
+
+async function handleRewardSelection(
+  buttonId: string,
+  getActiveCustomer: () => Promise<any>,
+  orgId: string,
+  phone: string,
+): Promise<void> {
+  const rewardId = buttonId.slice(REWARD_BUTTON_PREFIX.length);
+  const customer = await getActiveCustomer();
+  if (!customer) return;
+
+  const reward = await prisma.loyaltyReward.findUnique({
+    where: { id: rewardId },
+  });
+
+  if (reward?.programId !== customer.programId) {
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      "Selected reward is invalid.",
+    );
+    return;
+  }
+
+  const inStock =
+    reward.stockQuantity === null ||
+    reward.stockRedeemed < reward.stockQuantity;
+  const hasPoints =
+    reward.rewardType === "assigned" ||
+    customer.currentPoints >= reward.pointsCost;
+
+  if (!inStock || !hasPoints) {
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      "This reward is no longer available or you do not have enough points.",
+    );
+    return;
+  }
+
+  const confirmationMessage = createReplyButtonsMessage(
+    phone,
+    "Confirm redemption",
+    `Redeem ${reward.name} for ${reward.pointsCost} points?`,
+    [
+      { id: `${REWARD_CONFIRM_PREFIX}${reward.id}`, value: "Confirm" },
+      { id: `${REWARD_CANCEL_PREFIX}${reward.id}`, value: "Cancel" },
+    ],
+  );
+
+  await sendMessage(orgId, confirmationMessage);
+}
+
+async function handleRewardConfirmation(
+  buttonId: string,
+  getActiveCustomer: () => Promise<any>,
+  sendLoyaltyText: (text: string) => Promise<void>,
+): Promise<void> {
+  const rewardId = buttonId.slice(REWARD_CONFIRM_PREFIX.length);
+  const customer = await getActiveCustomer();
+  if (!customer) return;
+
+  try {
+    const validation = await validateRedemption(customer.id, rewardId, {});
+    if (!validation.valid) {
+      await sendLoyaltyText(
+        validation.message || "Unable to redeem reward right now.",
+      );
+      return;
+    }
+    const result = await assignRewardToCustomer(
+      customer.id,
+      rewardId,
+      "WhatsApp redeem flow",
+    );
+    if (result.id) {
+      await handleDeduction(result?.reward, customer, result.reward?.programId);
+    }
+
+    const codeText = result?.shortCode
+      ? `\nRedemption code: ${result.shortCode}`
+      : "";
+
+    await sendLoyaltyText(`${"Reward redeemed successfully."}${codeText}`);
+  } catch (error) {
+    await sendLoyaltyText(
+      error?.message || "Unable to redeem reward right now.",
+    );
+  }
+}
+async function handleDeduction(reward, customer, programId) {
+  // Deduct redemption cost
+  await prisma.loyaltyTransaction.create({
+    data: {
+      accountId: customer.id,
+      programId,
+      transactionType: "redeem",
+      source: "reward_redemption",
+      points: -reward.pointsCost,
+      balanceAfter: customer.currentPoints - reward.pointsCost,
+      description: `Redeemed: ${reward.name} (Cost: ${reward.pointsCost})`,
+      metadata: {
+        rewardId: reward.id,
+        rewardName: reward.name,
+        redemptionType: "point",
+      },
+    },
+  });
+
+  // Update customer balance
+  await prisma.customerLoyaltyAccount.update({
+    where: { id: customer.id },
+    data: {
+      currentPoints: {
+        decrement: reward.pointsCost,
+      },
+    },
+  });
+}
 export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
   const { orgId, responseType, waTemplateId, content } = loyaltyWaCommand;
   const customer = await getLCustomerByPhone(phone, orgId);

@@ -247,6 +247,11 @@ export async function checkInactivityEventTriggers() {
               await issueRewardToCustomer(customer.id, trigger.rewardId);
             }
 
+            await prisma.customerLoyaltyAccount.update({
+              where: { id: customer.id },
+              data: { lastActivityAt: new Date() },
+            });
+
             log.info(
               `Inactivity Event Trigger - Sent reminder to customer ${customer.id} (${daysSinceActivity} days inactive)`,
             );

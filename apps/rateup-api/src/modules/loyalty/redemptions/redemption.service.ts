@@ -80,24 +80,6 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
       },
     });
 
-    // Credit bonus points
-    await prisma.loyaltyTransaction.create({
-      data: {
-        accountId: customer.id,
-        programId,
-        transactionType: "earn",
-        source: "reward_redemption",
-        points: pointsToAdd,
-        balanceAfter: customer.currentPoints - reward.pointsCost + pointsToAdd,
-        description: `Bonus points from reward: ${reward.name}`,
-        metadata: {
-          rewardId: reward.id,
-          rewardName: reward.name,
-          redemptionType: "point",
-        },
-      },
-    });
-
     // Update customer balance
     await prisma.customerLoyaltyAccount.update({
       where: { id: customer.id },
