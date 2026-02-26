@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { Folder } from "lucide-react";
+
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 
 import { Card } from "../ui/card";
@@ -116,10 +118,13 @@ export const ContactGroupsSelector = ({
 
   return (
     <Select>
-      <SelectTrigger className={`border-none text-sm font-medium ${className}`}>
+      <SelectTrigger
+        className={`border-none text-sm font-medium flex items-center text-foreground! justify-start ${className}`}
+      >
+        <Folder className="h-4 w-4 shrink-0 text-foreground" />
         {selectedCount
           ? `${selectedCount} Group${selectedCount > 1 ? "s" : ""}`
-          : "Add to groups"}
+          : "Groups"}
       </SelectTrigger>
 
       <SelectContent
