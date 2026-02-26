@@ -1,7 +1,7 @@
 import "@shopify/shopify-api/adapters/node";
 import { DeliveryMethod, WebhookHandler } from "@shopify/shopify-api";
 import { log } from "../../../utils/logger.js";
-import { addToQueue, QueueType } from "../../../utils/jobQueue.js";
+import { webhookQueue } from "../../../utils/redisConnection.js";
 
 //callbackhandlers only working if added in same file. find out why?
 async function draftOrderCreateHandler(
@@ -20,7 +20,7 @@ async function draftOrderCreateHandler(
     body: webhookRequestBodyJson,
     shop,
   };
-  await addToQueue({ type: QueueType.webhookQueue, data: webhook });
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 
 export async function orderCreateHandler(
@@ -39,7 +39,7 @@ export async function orderCreateHandler(
     body: webhookRequestBodyJson,
     shop,
   };
-  await addToQueue({ type: QueueType.webhookQueue, data: webhook });
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 
 export async function appUninstalledHandler(
@@ -58,7 +58,7 @@ export async function appUninstalledHandler(
     body: webhookRequestBodyJson,
     shop,
   };
-  await addToQueue({ type: QueueType.webhookQueue, data: webhook });
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 
 export async function orderCancelledHandler(
@@ -77,7 +77,7 @@ export async function orderCancelledHandler(
     body: webhookRequestBodyJson,
     shop,
   };
-  await addToQueue({ type: QueueType.webhookQueue, data: webhook });
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 
 export async function orderFulFilledHandler(
@@ -96,7 +96,7 @@ export async function orderFulFilledHandler(
     body: webhookRequestBodyJson,
     shop,
   };
-  await addToQueue({ type: QueueType.webhookQueue, data: webhook });
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 
 export async function orderPaidHandler(
@@ -115,7 +115,7 @@ export async function orderPaidHandler(
     body: webhookRequestBodyJson,
     shop,
   };
-  await addToQueue({ type: QueueType.webhookQueue, data: webhook });
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 export async function orderPartiallyFulfilledHandler(
   topic: string,
@@ -133,7 +133,7 @@ export async function orderPartiallyFulfilledHandler(
     body: webhookRequestBodyJson,
     shop,
   };
-  await addToQueue({ type: QueueType.webhookQueue, data: webhook });
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 export async function fulfillmentOrderCancelledHandler(
   topic: string,
@@ -151,7 +151,7 @@ export async function fulfillmentOrderCancelledHandler(
     body: webhookRequestBodyJson,
     shop,
   };
-  await addToQueue({ type: QueueType.webhookQueue, data: webhook });
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 
 export async function customersDataRequestHandler(
@@ -202,7 +202,7 @@ export async function appSubscriptionUpdateHandler(
     body: webhookRequestBodyJson,
     shop,
   };
-  await addToQueue({ type: QueueType.webhookQueue, data: webhook });
+  await webhookQueue.add("process-webhook", webhook, { jobId: webhookId });
 }
 
 //callbackroutes

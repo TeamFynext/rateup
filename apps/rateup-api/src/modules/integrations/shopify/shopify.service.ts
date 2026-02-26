@@ -2,6 +2,7 @@ import prisma from "../../../utils/prisma.js";
 import shopify from "./shopify.config.js";
 import { GraphqlClient, Session } from "@shopify/shopify-api";
 import isEmpty from "lodash/isEmpty.js";
+import baseRedis from "../../../utils/redisConnection.js";
 import _get from "lodash/get.js";
 import { log } from "../../../utils/logger.js";
 import {
@@ -184,23 +185,54 @@ export async function createScheduleOnShopifyEvent({
   // same order. If another survey (different event) already scheduled the same
   // template for the same order ID + customer phone, skip this one.
   const orderId = body?.id;
+
+  let lockKey: string | null = null;
   if (orderId && shopifySurvey.waTemplateId) {
-    const phoneWithoutPlusTemp =
-      phone.countryCallingCode + phone.nationalNumber;
-    const isDuplicateAcrossEvents = shopifyInfo.credential.shopifySurveys?.some(
-      (survey) =>
-        survey.event !== event &&
-        survey.waTemplateId === shopifySurvey.waTemplateId &&
-        survey.schedules?.some(
-          (sch) =>
-            sch.body?.id === orderId && sch.phone === phoneWithoutPlusTemp,
-        ),
-    );
-    if (isDuplicateAcrossEvents) {
-      log.trace(
-        `Order ${orderId} already scheduled with template ${shopifySurvey.waTemplateId} for ${customerPhone} via a different event. Skipping duplicate ${event}...`,
+    lockKey = `shopify_order_lock:${orderId}`;
+    /**
+     * If two webhooks fire simultaneously from Shopify across two server instances,
+     * they would both read that no duplicate exists and write dual messages to the DB.
+     * We grab a 15-second Redis lock to force the second webhook to back-off and RETRY
+     * later, so its dedup check will effectively see the DB write from the first one.
+     */
+    const acquired = await baseRedis.set(lockKey, "1", "EX", 15, "NX");
+    if (!acquired) {
+      log.info(
+        `Concurrency lock active for order ${orderId}, pushing back to queue for retry...`,
       );
-      return;
+      throw new Error(
+        `Concurrency lock active for order ${orderId}, retry via BullMQ`,
+      );
+    }
+
+    try {
+      const phoneWithoutPlusTemp =
+        phone.countryCallingCode + phone.nationalNumber;
+
+      // We must reload shopifyInfo fresh from the DB to see if the other worker created a history
+      const freshShopifyInfo = await prisma.integration.findUnique({
+        where: { id: shopifyInfo.id },
+      });
+      const freshSurveys =
+        (freshShopifyInfo?.credential as any)?.shopifySurveys ?? [];
+
+      const isDuplicateAcrossEvents = freshSurveys.some(
+        (survey: any) =>
+          survey.event !== event &&
+          survey.waTemplateId === shopifySurvey.waTemplateId &&
+          survey.schedules?.some(
+            (sch: any) =>
+              sch.body?.id === orderId && sch.phone === phoneWithoutPlusTemp,
+          ),
+      );
+      if (isDuplicateAcrossEvents) {
+        log.trace(
+          `Order ${orderId} already scheduled with template ${shopifySurvey.waTemplateId} for ${customerPhone} via a different event. Skipping duplicate ${event}...`,
+        );
+        return;
+      }
+    } catch (err) {
+      throw err; // Redis catch-all will unlock below if not returning early
     }
   }
 
@@ -276,6 +308,10 @@ export async function createScheduleOnShopifyEvent({
       shopifySurveys: newShopifySurveys,
     },
   });
+
+  if (lockKey) {
+    await baseRedis.del(lockKey);
+  }
 }
 
 export async function sendShopifySurveyCronAction() {
