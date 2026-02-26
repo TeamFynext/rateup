@@ -16,7 +16,7 @@
     "start": "node dist/src/index.js",
     "dev": "tsx watch src/index.ts",
     "test": "vitest --silent",
-    "prepare": "husky install",
+    "prepare": "husky",
     "postinstall": "prisma generate"
   },
   "dependencies": {
