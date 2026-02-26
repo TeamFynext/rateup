@@ -19,13 +19,8 @@ export const useGetLoyaltyRedeems = () => {
 };
 
 export const useGetRewardByShortCode = () => {
-  const qc = useQueryClient();
   return useMutation({
     mutationFn: getRewardByShortCode,
-    onError: (e: any) => {
-      // Don't show toast on query, handle in UI
-      console.error(e);
-    },
   });
 };
 
@@ -36,12 +31,10 @@ export const useRedeemRewardByShortCode = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
-      showSuccessToast("Reward redeemed successfully using short code");
+      toast.success("Reward redeemed successfully using short code");
     },
-    onError: (e: any) => {
-      showErrorToast(
-        `Redemption failed: ${e?.response?.data?.message ?? "Unknown error"}`,
-      );
+    onError: (e) => {
+      toast.error(`Redemption failed: ${e?.message ?? "Unknown error"}`);
     },
   });
 };
@@ -59,9 +52,9 @@ export const useRedeemReward = (selectedPhone: string) => {
       });
       toast.success("Reward claimed successfully");
     },
-    onError: (e: any) => {
+    onError: (e) => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
-      showErrorToast(`Reward redeem failed: ${e?.response?.data ?? ""}`);
+      toast.error(`Reward redeem failed: ${e?.message ?? ""}`);
     },
   });
 };
@@ -74,11 +67,11 @@ export const useUpdateRedeem = () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Redeem updated successfully");
+      toast.success("Redeem updated successfully");
     },
-    onError: (e: any) => {
+    onError: (e) => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
-      showErrorToast(`Redeem updation failed: ${e?.response?.data ?? ""}`);
+      toast.error(`Redeem updation failed: ${e?.message ?? ""}`);
     },
   });
 };

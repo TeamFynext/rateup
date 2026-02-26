@@ -56,7 +56,7 @@ export default function Home() {
   };
 
   return (
-    <main className="container space-y-4">
+    <main className="container space-y-4 h-full flex flex-col">
       <ToolBar
         title="Automation"
         viewMode={viewMode}
