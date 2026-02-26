@@ -507,7 +507,7 @@ export async function assignRewardToCustomer(
   }
 
   // Check if reward is already assigned
-  const existing = await (prisma as any).customerReward.findUnique({
+  const existing = await prisma.customerReward.findUnique({
     where: {
       rewardId_accountId: {
         rewardId,
@@ -523,7 +523,7 @@ export async function assignRewardToCustomer(
   let shortCode = generateRewardShortCode();
   let unique = false;
   while (!unique) {
-    const exists = await (prisma as any).customerReward.findUnique({
+    const exists = await prisma.customerReward.findUnique({
       where: { shortCode },
     });
     if (exists) {
@@ -534,7 +534,7 @@ export async function assignRewardToCustomer(
   }
 
   // Assign reward
-  const assignment = await (prisma as any).customerReward.create({
+  const assignment = await prisma.customerReward.create({
     data: {
       rewardId,
       accountId: customerId,
@@ -566,7 +566,7 @@ export async function assignRewardToCustomer(
 }
 
 export async function getRewardByShortCode(shortCode: string, orgId?: string) {
-  const reward = await (prisma as any).customerReward.findUnique({
+  const reward = await prisma.customerReward.findUnique({
     where: { shortCode },
     include: {
       account: {
@@ -597,7 +597,7 @@ export async function markRewardAsRedeemed(shortCode: string, orgId?: string) {
     throw new Error("Reward is already redeemed");
   }
 
-  const updated = await (prisma as any).customerReward.update({
+  const updated = await prisma.customerReward.update({
     where: { id: reward.id },
     data: {
       status: "REDEEMED",
