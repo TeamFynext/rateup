@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { getErrorMessage } from "../../utils";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
@@ -45,12 +46,12 @@ export const useCreateLoyaltyRewardMutation = (
     mutationFn: (rewardData: LoyaltyRewardInput) =>
       createLoyaltyReward(rewardData),
     onSuccess: () => {
-      showSuccessToast("Loyalty reward created successfully");
+      toast.success("Loyalty reward created successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
       onSuccess?.();
     },
     onError: (error: any) => {
-      showErrorToast(
+      toast.error(
         getErrorMessage(error?.response, "Error creating loyalty reward!"),
       );
       onError?.();
@@ -72,13 +73,13 @@ export const useUpdateLoyaltyRewardMutation = (
     mutationFn: (rewardData: LoyaltyRewardUpdateInput) =>
       updateLoyaltyReward(rewardId, rewardData),
     onSuccess: () => {
-      showSuccessToast("Loyalty reward updated successfully");
+      toast.success("Loyalty reward updated successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
       queryClient.invalidateQueries({ queryKey: ["loyalty-reward", rewardId] });
       onSuccess?.();
     },
     onError: (error: any) => {
-      showErrorToast(
+      toast.error(
         getErrorMessage(error?.response, "Error updating loyalty reward!"),
       );
       onError?.();
