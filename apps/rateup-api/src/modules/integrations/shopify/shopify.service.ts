@@ -56,8 +56,6 @@ import { pauseOrg } from "../../org/org.services.js";
 import { WEBHOOK_API_ROUTE } from "./shopify.handler.js";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
 import { getScheduleTime } from "../../../utils/date.js";
-import { processActionWebhook } from "../../external/v1/loyalty/action/internal-copy/actions/actions.service.js";
-import { processRedeemWebhook } from "../../external/v1/loyalty/redeem/internal-copy/redeems/redeem.service.js";
 import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { getLCustomerByPhone } from "../../loyalty/accounts/account.service.js";
@@ -241,11 +239,12 @@ export async function createScheduleOnShopifyEvent({
   }
   let apiStatus = null;
   if (shopifySurvey.loyaltyApiFeature) {
-    if (shopifySurvey.loyaltyApiFeature === "action") {
-      apiStatus = await processActionWebhook(body, shopifyInfo.orgId);
-    } else {
-      apiStatus = await processRedeemWebhook(body, shopifyInfo.orgId);
-    }
+    // TODO: FIX: This is a temporary implementation to process action and redeem webhooks. We need to move this logic to respective modules and call those functions here.
+    // if (shopifySurvey.loyaltyApiFeature === "action") {
+    //   apiStatus = await processActionWebhook(body, shopifyInfo.orgId);
+    // } else {
+    //   apiStatus = await processRedeemWebhook(body, shopifyInfo.orgId);
+    // }
   }
 
   const schedules = [...shopifySurvey.schedules];

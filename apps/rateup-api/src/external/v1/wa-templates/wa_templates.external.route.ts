@@ -1,0 +1,195 @@
+import { FastifyInstance } from "fastify";
+import {
+  getErrorLogsExternalController,
+  getMessageStatusByIdExternalController,
+  getTemplatesExternalController,
+  sendTemplateByNameToPhoneExternalController,
+  sendTemplateByNameToPhoneWithFileExternalController,
+} from "./wa_templates.external.controller.js";
+import fastifyMultipart from "@fastify/multipart";
+import { waTemplateSchemas } from "./wa_templates.schema.js";
+import {
+  $waTemplateExternalRef,
+  waTemplateExternalSchemas,
+} from "./wa_templates.external.schema.js";
+import { sendTemplatesToContactsHandler } from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
+
+async function onFile(part) {
+  const buff = await part.toBuffer();
+  part.value = {
+    filename: part.filename,
+    encoding: part.encoding,
+    mimetype: part.mimetype,
+    size: part?.file?.bytesRead,
+    data: buff,
+  };
+}
+
+export async function externalWaTemplateRoutes(server: FastifyInstance) {
+  for (const schema of waTemplateExternalSchemas) {
+    server.addSchema(schema);
+  }
+  for (const schema of waTemplateSchemas) {
+    server.addSchema(schema);
+  }
+
+  server.register(fastifyMultipart, {
+    limits: {
+      fileSize: 1048576 * 100,
+    },
+    throwFileSizeLimit: true,
+    attachFieldsToBody: "keyValues",
+    onFile,
+  });
+
+  server.get(
+    "/",
+    {
+      schema: {
+        tags: ["WhatsApp/Template"],
+        description: "Get all templates",
+        summary: "Get all templates",
+        response: {
+          200: {
+            type: "array",
+            items: $waTemplateExternalRef("dbTemplateResponse"),
+          },
+        },
+      },
+    },
+    getTemplatesExternalController,
+  );
+
+  server.post(
+    "/send",
+    {
+      schema: {
+        body: $waTemplateExternalRef("sendTemplateByNameToPhone"),
+        tags: ["WhatsApp/Template"],
+        description:
+          "Send a template to a phone number. Phone number should contain country code",
+        summary: "Send a template to a phone number",
+      },
+    },
+    sendTemplateByNameToPhoneExternalController,
+  );
+
+  server.post(
+    "/send-with-file",
+    {
+      schema: {
+        consumes: ["multipart/form-data"],
+        body: {
+          type: "object",
+          required: ["templateName", "phone"],
+          properties: {
+            timeDelay: {
+              type: "integer",
+              minimum: 15,
+            },
+            templateName: {
+              type: "string",
+            },
+            phone: {
+              type: "number",
+            },
+            body_variables: {
+              type: "array",
+              items: { type: "string" },
+            },
+            teamId: {
+              type: "string",
+            },
+            tag: {
+              type: "string",
+            },
+            headerType: {
+              type: "string",
+            },
+            filename: {
+              type: "string",
+            },
+            file: {
+              oneOf: [
+                {
+                  format: "binary",
+                  type: "string",
+                },
+                {
+                  type: "object",
+                },
+              ],
+            },
+            buttonVariable: {
+              type: "string",
+            },
+            from: {
+              type: "string",
+              description:
+                "WhatsApp phone number with country code (e.g. 1234567890)",
+            },
+          },
+        },
+        tags: ["WhatsApp/Template"],
+        description:
+          "Send a template to a phone number. Phone number should contain country code",
+        summary: "Send a template to a phone number",
+      },
+    },
+    sendTemplateByNameToPhoneWithFileExternalController,
+  );
+
+  // server.post(
+  //   "/:templateId/send/contact/:contactId",
+  //   {
+  //     schema: {
+  //       params: $waTemplateExternalRef("sendTemplateToContactParamsWithOrgId"),
+  //       body: $waTemplateExternalRef("sendTemplateToContact"),
+  //       tags: ["WhatsApp/Template"],
+  //       description: "Send a template to a contact. Supports variables in body",
+  //       summary: "Send a template to a contact",
+  //     },
+  //   },
+  //   sendTemplatesToContactsHandler,
+  // );
+
+  server.post(
+    "/:templateId/send/contacts",
+    {
+      schema: {
+        params: $waTemplateExternalRef("sendTemplateToContactsParamsWithOrgId"),
+        body: $waTemplateExternalRef("sendTemplatesToContacts"),
+        tags: ["WhatsApp/Template"],
+        description: "Send a template to contacts",
+        summary: "Send a template to contacts",
+      },
+    },
+    sendTemplatesToContactsHandler,
+  );
+
+  server.get(
+    "/errors",
+    {
+      schema: {
+        querystring: $waTemplateExternalRef("errorLogsQuery"),
+        tags: ["WhatsApp/Template"],
+        description: "Get all error logs with optional date filtering",
+        summary: "Get error logs",
+      },
+    },
+    getErrorLogsExternalController,
+  );
+
+  server.get(
+    "/message/:messageId/status",
+    {
+      schema: {
+        params: $waTemplateExternalRef("messageStatusParams"),
+        tags: ["WhatsApp/Template"],
+        description: "Get status of a message by messageId",
+        summary: "Get message status",
+      },
+    },
+    getMessageStatusByIdExternalController,
+  );
+}

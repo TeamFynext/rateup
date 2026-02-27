@@ -14,6 +14,7 @@ import xlsx from "node-xlsx";
 import { MultipartFile } from "@fastify/multipart";
 import {
   addExistingContactsToGroup,
+  addExistingContactsToMultipleGroups,
   addNewContactsToGroup,
   removeContactsFromGroup,
 } from "./contactGroup/contactGroup.service.js";
@@ -35,7 +36,6 @@ import {
   addZapierTriggerToQueue,
   ZapierTriggers,
 } from "../integrations/external/zapier/zapier.service.js";
-import { addExistingContactsToMultipleGroups } from "../external/v1/contact/internal-copy/contact/contactGroup/contactGroup.service.js";
 import {
   createConversation,
   getLastCreatedConversationForContact,
