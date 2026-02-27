@@ -48,10 +48,6 @@ import {
 import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import prisma from "../../../utils/prisma.js";
-import {
-  SendTemplateToContacts,
-  SendTemplateToContactGroups,
-} from "../../external/v1/whatsapp/template/wa_templates.external.schema.js";
 import { GraphApiError } from "../wa_axios.js";
 import {
   getGraphApiErrorMessage,
@@ -70,6 +66,11 @@ import { isEmptyString } from "../../../utils/commonUtils.js";
 import { getConnectedWaCatalog } from "../catalog/catalog.service.js";
 import dayjs from "dayjs";
 import { validateFile } from "../../../utils/upload/validate.js";
+import {
+  ErrorLogsQuery,
+  SendTemplateToContactGroups,
+  SendTemplateToContacts,
+} from "../../../external/v1/wa-templates/wa_templates.external.schema.js";
 
 export async function getTemplatesHandler(
   request: FastifyRequest<{
@@ -1280,47 +1281,76 @@ export async function sendTemplatesToContactsHandler(
   }
 }
 
-export async function sendTemplatesToContactGroupsHandler(
-  req: FastifyRequest<{
-    Body: SendTemplateToContactGroups;
-    Params: ByTemplateIdParamsSchema;
+const getLatestStatus = (statusObj) => {
+  if (statusObj?.read) return "read";
+  if (statusObj?.delivered) return "delivered";
+  if (statusObj?.failed) return "failed";
+  if (statusObj?.sent) return "sent";
+  return "pending";
+};
+export async function getMessageStatusByIdHandler(
+  request: FastifyRequest<{
+    Params: { messageId: string };
   }>,
-  res: FastifyReply,
+  reply: FastifyReply,
 ) {
   try {
-    const { templateId } = req.params;
-    const orgId = req.user.orgId;
-    const userId = req.userId;
-
-    const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
-    // TODO: can we optimize this query?
-    const contacts = await prisma.contact.findMany({
-      where: {
-        contactGroups: {
-          some: {
-            contactGroupId: {
-              in: req.body.contactGroupIds,
-            },
-          },
-        },
-      },
+    const { messageId } = request.params;
+    const messageStatus = await prisma.waMessage.findFirst({
+      where: { messageId },
       select: {
-        phone: true,
+        messageId: true,
+        stats: true,
+        errorMessage: true,
       },
     });
+    if (!messageStatus)
+      return reply.code(404).send({ message: "Message not found" });
+    let status = getLatestStatus(messageStatus.stats);
+    let response = {
+      messageId: messageStatus.messageId,
+      status,
+      ...(status === "failed"
+        ? { errorMessage: messageStatus.errorMessage }
+        : {}),
+    };
 
-    for (const contact of contacts) {
-      await sendTemplateToPhone({
-        orgId,
-        phone: contact.phone,
-        dbTemplate,
-        teamId: req.body.teamId,
-        header: req.body.header,
-        userId,
-      });
-    }
+    reply.code(200).send(response);
   } catch (error) {
-    log.error("Error sending template to contactGroups \n%o", error);
-    res.code(500).send(error);
+    log.error("Error getting message status by id \n%o", error);
+    reply.code(500).send(error);
+  }
+}
+
+export async function getErrorLogsHandler(
+  request: FastifyRequest<{
+    Querystring: ErrorLogsQuery;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const data = await prisma.waLogs.findMany({
+      where: {
+        orgId: request.user.orgId,
+        createdAt: {
+          ...(request.query.endDate
+            ? { lte: new Date(request.query.endDate) }
+            : {}),
+          ...(request.query.startDate
+            ? { gte: new Date(request.query.startDate) }
+            : {}),
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      omit: {
+        orgId: true,
+      },
+    });
+    return reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error getting error logs \n%o", error);
+    reply.code(500).send({ message: "Error getting error logs" });
   }
 }

@@ -8,22 +8,18 @@ import {
   WaMessageScheduleStatus,
 } from "../../types/enums.js";
 import { log } from "../../utils/logger.js";
-import { sendMessage } from "./whatsappSurvey/wasurvey.service.js";
-import { getFlowIdFromTemplateComponents } from "../external/v1/whatsapp/internal-copy/whatsapp/messageTemplates/wa_templates.utils.js";
 import {
   createSession,
   deleteSession,
-} from "../external/v1/whatsapp/internal-copy/whatsapp/whatsappSurvey/wasurvey.service.js";
-import { getFlowWithSurveyTeamMapIds } from "../external/v1/whatsapp/internal-copy/whatsapp/flows/flow.service.js";
+  sendMessage,
+} from "./whatsappSurvey/wasurvey.service.js";
 import { getScheduleTime } from "../../utils/date.js";
 import { updateMonthlyStat } from "../stats/stats.service.js";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
-import { createMessageTemplate } from "../../utils/email/emailWeeklyStatsReport.js";
-import { FRONTEND_URL } from "../../utils/constants/constants.js";
 import { enqueueCampaignMessage } from "../campaign/campaign.service.js";
-import { processNextNode } from "./whatsappSurvey/wasurvey.controller.js";
+import { getFlowIdFromTemplateComponents } from "./messageTemplates/wa_templates.utils.js";
+import { getFlowWithSurveyTeamMapIds } from "./flows/flow.service.js";
 
-interface waMessageScheduleProps {
+interface WaMessageScheduleProps {
   phone: string;
   messageBody: WaSendMessageBody;
   orgId: string;
@@ -43,7 +39,7 @@ export async function createWaMessageSchedule({
   timeDelay,
   source,
   teamId,
-}: waMessageScheduleProps) {
+}: WaMessageScheduleProps) {
   const teamID = teamId && teamId.trim() !== "" ? teamId : null;
   const res = await prisma.waMessageSchedule.create({
     data: {
@@ -136,7 +132,7 @@ export async function sendSchedulesWaMessages() {
           schedule.source === waMessageScheduleSource.ExternalApi;
         const res = await sendMessage(
           schedule.orgId,
-          schedule.messageBody as unknown as WaSendMessageBody,
+          schedule.messageBody as WaSendMessageBody,
           undefined,
           undefined,
           undefined,
