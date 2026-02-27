@@ -188,7 +188,6 @@ export default function Inbox({
         }
       }}
       onEndReachedThreshold={0.3}
-      estimatedItemSize={100}
       ListFooterComponent={
         isFetchingNextPage ? (
           <ActivityIndicator size="small" className="py-4" />

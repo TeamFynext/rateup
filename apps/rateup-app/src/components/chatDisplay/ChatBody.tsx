@@ -4,6 +4,7 @@ import {
   Text,
   Dimensions,
   TouchableOpacity,
+  FlatList,
 } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import React, { useRef, useCallback, useMemo } from "react";
@@ -15,7 +16,6 @@ import { useMarkMessageAsRead } from "@/src/api/inbox/contacts/contacts.query";
 import { useAuth } from "@/src/context/AuthContext";
 import { ViewToken } from "react-native";
 import { useGetMessagesByContactId } from "@/src/api/inbox/messages/message.query";
-import { FlashList } from "@shopify/flash-list";
 import { ChevronDown } from "lucide-react-native";
 import { useWsData } from "@/src/context/UserContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -58,7 +58,7 @@ const ChatBody = ({ id }: { id: string }) => {
       wsData.inbox?.contact.id === id // only for current chat
     ) {
       const isDuplicate = messageList.some(
-        (msg) => msg.id === wsData.inbox?.message.id
+        (msg) => msg.id === wsData.inbox?.message.id,
       );
       if (!isDuplicate) {
         queryClient.setQueryData(["wa-messages", id], (oldData: any) => {
@@ -96,7 +96,7 @@ const ChatBody = ({ id }: { id: string }) => {
           markedAsRead.current.add(item.id);
         }
       });
-    }
+    },
   ).current;
 
   const renderItem = useCallback(
@@ -133,7 +133,7 @@ const ChatBody = ({ id }: { id: string }) => {
         </View>
       );
     },
-    [messageList]
+    [messageList],
   );
 
   const dynamicPaddingBottom = screenHeight > 800 ? 8 : 10;
@@ -158,7 +158,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-slate-800">
-      <FlashList
+      <FlatList
         inverted
         data={messageList}
         ref={listRef}
@@ -169,19 +169,16 @@ const ChatBody = ({ id }: { id: string }) => {
         viewabilityConfig={viewabilityConfig}
         onScroll={(event) => {
           const offsetY = event.nativeEvent.contentOffset.y;
-          const isAtBottom = offsetY <= 50;
+          const isAtBottom = offsetY < 20; // smaller threshold
           setShowScrollToBottom(!isAtBottom);
         }}
         //@ts-ignore
-        getItemLayout={(_, index) => ({
-          length: 80,
-          offset: 80 * index,
-          index,
-        })}
-        //@ts-ignore
         onScrollToIndexFailed={({ index }) => {
           setTimeout(() => {
-            listRef.current?.scrollToIndex({ index, animated: false });
+            listRef.current?.scrollToOffset({
+              offset: 0,
+              animated: true,
+            });
           }, 100);
         }}
         onEndReached={() => {
@@ -200,10 +197,7 @@ const ChatBody = ({ id }: { id: string }) => {
         contentContainerStyle={{
           paddingBottom: dynamicPaddingBottom,
         }}
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
         updateCellsBatchingPeriod={100}
-        estimatedItemSize={80}
       />
       {showScrollToBottom && (
         <Animated.View
@@ -218,8 +212,8 @@ const ChatBody = ({ id }: { id: string }) => {
         >
           <TouchableOpacity
             onPress={() => {
-              listRef.current?.scrollToIndex({
-                index: 0,
+              listRef.current?.scrollToOffset({
+                offset: 0,
                 animated: true,
               });
               setShowScrollToBottom(false);

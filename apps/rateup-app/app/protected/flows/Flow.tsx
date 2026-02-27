@@ -141,7 +141,6 @@ const Flow = () => {
         <FlashList
           data={filteredAndSortedFlows}
           renderItem={renderItem}
-          estimatedItemSize={70}
           keyExtractor={(item) => item.dbFlowId}
           contentContainerStyle={{ paddingBottom: 20 }}
         />

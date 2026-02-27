@@ -1,22 +1,14 @@
 import {
   View,
-  Animated,
-  Easing,
   TouchableOpacity,
   Text,
   Pressable,
   useColorScheme,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  EllipsisVertical,
-  Filter,
-  RefreshCcw,
-  UserPlus,
-  UserPlus2,
-} from "lucide-react-native";
+import { EllipsisVertical, Filter, RefreshCcw } from "lucide-react-native";
 import { colors } from "@/src/constants/constants";
 
 const InboxButtons = ({
@@ -29,31 +21,10 @@ const InboxButtons = ({
   const isDark = colorScheme === "dark";
   const textColor = isDark ? "white" : colors["slate-950"];
   const queryClient = useQueryClient();
-  const rotation = useRef(new Animated.Value(0)).current;
-  const [isRotating, setIsRotating] = useState(false);
   const [open, setOpen] = useState(false);
   const handleRefresh = () => {
-    if (isRotating) return;
-    setIsRotating(true);
     queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
-    Animated.loop(
-      Animated.timing(rotation, {
-        toValue: 1,
-        duration: 1000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-    setTimeout(() => {
-      rotation.stopAnimation(() => rotation.setValue(0));
-      setIsRotating(false);
-    }, 3000);
   };
-
-  const rotate = rotation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -85,18 +56,6 @@ const InboxButtons = ({
       {/* MENU */}
       {open && (
         <View className="absolute right-0 top-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg py-2 w-48 z-50">
-          {/* ADD CONTACT */}
-          {/* <Pressable
-            className="flex-row items-center gap-3 px-4 py-3"
-            onPress={() => {
-              setOpen(false);
-              router.push("/protected/inbox/AddContact");
-            }}
-          >
-            <UserPlus2 color={textColor} size={18} />
-            <Text className="dark:text-white text-sm">Add contact</Text>
-          </Pressable> */}
-
           {/* FILTERS */}
           <Pressable
             className="flex-row items-center gap-3 px-4 py-3"
@@ -126,9 +85,9 @@ const InboxButtons = ({
               handleRefresh();
             }}
           >
-            <Animated.View style={{ transform: [{ rotate }] }}>
+            <View>
               <RefreshCcw color={textColor} size={18} />
-            </Animated.View>
+            </View>
             <Text className="dark:text-white text-sm">Refresh</Text>
           </Pressable>
         </View>
