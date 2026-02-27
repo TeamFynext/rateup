@@ -1,5 +1,8 @@
-
-export function emailBodyContactForm(name: string, email: string, message: string) {
+export function emailBodyContactForm(
+  name: string,
+  email: string,
+  message: string,
+) {
   const body = `
     <html>
     <head>

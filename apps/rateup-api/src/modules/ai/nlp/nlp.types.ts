@@ -1,55 +1,53 @@
 export interface AnnotatedTextResult {
-    sentences:            RawSentence[];
-    tokens:               any[];
-    entities:             RawEntity[];
-    documentSentiment:    RawSentiment;
-    language:             string;
+  sentences: RawSentence[];
+  tokens: any[];
+  entities: RawEntity[];
+  documentSentiment: RawSentiment;
+  language: string;
 }
 
-
 interface RawSentiment {
-    magnitude: number;
-    score:     number;
+  magnitude: number;
+  score: number;
 }
 
 interface RawEntity {
-    mentions:  Mention[];
-    metadata:  Metadata;
-    name:      string;
-    type:      string;
-    salience:  number;
-    sentiment: RawSentiment;
+  mentions: Mention[];
+  metadata: Metadata;
+  name: string;
+  type: string;
+  salience: number;
+  sentiment: RawSentiment;
 }
 
 export interface Entity {
-    name: string,
-    score: number,
+  name: string;
+  score: number;
 }
 export interface Sentence {
-    text: string,
-    score: number,
+  text: string;
+  score: number;
 }
 
 interface Mention {
-    text:      Text;
-    type:      Type;
-    sentiment: RawSentiment;
+  text: Text;
+  type: Type;
+  sentiment: RawSentiment;
 }
 
 interface Text {
-    content:     string;
-    beginOffset: number;
+  content: string;
+  beginOffset: number;
 }
 
 enum Type {
-    Common = "COMMON",
-    Proper = "PROPER",
+  Common = "COMMON",
+  Proper = "PROPER",
 }
 
-interface Metadata {
-}
+interface Metadata {}
 
 export interface RawSentence {
-    text:      Text;
-    sentiment: RawSentiment;
+  text: Text;
+  sentiment: RawSentiment;
 }

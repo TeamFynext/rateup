@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import fp from "fastify-plugin";
 
 // Import all schemas
 import { orgSchemas } from "./modules/org/org.schema.js";
@@ -253,7 +252,7 @@ async function registerSchemas(server: FastifyInstance): Promise<void> {
   }
 }
 
-async function routes(server: FastifyInstance): Promise<void> {
+export async function registerRoutes(server: FastifyInstance): Promise<void> {
   // Register all schemas first
   await registerSchemas(server);
 
@@ -262,9 +261,3 @@ async function routes(server: FastifyInstance): Promise<void> {
     await server.register(plugin, { prefix });
   }
 }
-
-export const registerRoutes = fp(routes, {
-  name: "routes",
-});
-
-export default registerRoutes;

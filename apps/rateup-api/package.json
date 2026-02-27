@@ -28,7 +28,6 @@
     "@fastify/formbody": "^8.0.2",
     "@fastify/multipart": "^9.4.0",
     "@fastify/swagger": "^9.7.0",
-    "@fastify/swagger-ui": "^5.2.5",
     "@fastify/websocket": "^11.2.0",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@google-cloud/language": "^7.2.1",
@@ -85,13 +84,12 @@
     "prettier": "^3.8.1",
     "prisma": "^7.4.1",
     "prisma-json-types-generator": "^4.1.1",
-    "supertest": "^7.2.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
   "lint-staged": {
-    "*.{ts,js,md}": "prettier --write"
+    "*.{ts,js,md,json}": "prettier --write"
   },
   "overrides": {
     "fastify-zod": {

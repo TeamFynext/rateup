@@ -19,7 +19,6 @@ import {
   WaFlowFormElementType,
   IntegratedApps,
 } from "./enums.js";
-import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
 import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service.js";
 import prisma from "../utils/prisma.js";
 import {

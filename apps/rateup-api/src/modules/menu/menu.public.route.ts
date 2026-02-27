@@ -15,26 +15,26 @@ export async function menuPublicRoutes(server: FastifyInstance) {
       },
     },
     getMenuByIdHandler,
-  ),
-    server.get(
-      "/full/:menuId",
-      {
-        schema: {
-          params: $Mref("ByMenuIdParamsSchema"),
-          response: {
-            200: $Mref("fullMenuPublicResponseSchema"),
-          },
+  );
+  server.get(
+    "/full/:menuId",
+    {
+      schema: {
+        params: $Mref("ByMenuIdParamsSchema"),
+        response: {
+          200: $Mref("fullMenuPublicResponseSchema"),
         },
       },
-      getFullMenuByIdHandler,
-    ),
-    server.post(
-      "/:menuId/visited",
-      {
-        schema: {
-          params: $Mref("ByMenuIdParamsSchema"),
-        },
+    },
+    getFullMenuByIdHandler,
+  );
+  server.post(
+    "/:menuId/visited",
+    {
+      schema: {
+        params: $Mref("ByMenuIdParamsSchema"),
       },
-      visitedMenuLandingHandler,
-    );
+    },
+    visitedMenuLandingHandler,
+  );
 }
