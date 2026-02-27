@@ -11,7 +11,12 @@ import {
   ActivityIndicator,
   useColorScheme,
 } from "react-native";
-import { MenuIcon } from "lucide-react-native";
+import {
+  MessageCircleMore,
+  PanelsTopLeft,
+  Activity,
+  MenuIcon,
+} from "lucide-react-native";
 import InboxLayoutComponent from "./inbox/InboxTabs";
 import MenuBar from "@/src/components/home/Menu";
 import AccountBar from "@/src/components/home/Account";
@@ -23,6 +28,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Flow from "./flows/Flow";
 import WebForm from "./webForms/WebForm";
 import { colors } from "@/src/constants/constants";
+import CashierPortal from "@/src/components/loyalty/CashierPortal";
+import { IconGift } from "@tabler/icons-react-native";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -31,14 +38,36 @@ const PANEL_HEIGHT = screenHeight * PANEL_HEIGHT_PERCENTAGE;
 
 const InboxLayout = memo(InboxLayoutComponent);
 
+const MENU_ITEMS = [
+  {
+    key: "inbox",
+    label: "Inbox",
+    Icon: MessageCircleMore,
+    iconColor: colors["primary-blue"],
+  },
+  {
+    key: "flow",
+    label: "Flow",
+    Icon: Activity,
+    iconColor: "#004F98",
+  },
+  {
+    key: "webform",
+    label: "Web Forms",
+    Icon: PanelsTopLeft,
+    iconColor: "#004F98",
+  },
+  {
+    key: "loyalty",
+    label: "Loyalty",
+    Icon: IconGift,
+    iconColor: "#004F98",
+  },
+];
+
 export default function Home() {
   const insets = useSafeAreaInsets();
-  const [selectedItem, setSelectedItem] = useState<"menu" | "account" | null>(
-    null
-  );
-  const [lastOpenedItem, setLastOpenedItem] = useState<
-    "menu" | "account" | null
-  >(null);
+  const [selectedItem, setSelectedItem] = useState<"account" | null>(null);
   const [shouldRenderOverlay, setShouldRenderOverlay] = useState(false);
   const [selectedInterface, setSelectedInterface] =
     useState<HomeInterface>("inbox");
@@ -52,12 +81,7 @@ export default function Home() {
   const isDark = colorScheme === "dark";
   const bgColor = isDark ? colors["gray-900"] : "white";
 
-  const {
-    data: userData,
-    isLoading: loading,
-    isError,
-    refetch,
-  } = useLoggedInUser();
+  const { data: userData, isLoading: loading } = useLoggedInUser();
 
   const renderedInterface = useMemo(() => {
     switch (selectedInterface) {
@@ -67,12 +91,13 @@ export default function Home() {
         return <Flow />;
       case "webform":
         return <WebForm />;
+      case "loyalty":
+        return <CashierPortal/>;
     }
   }, [selectedInterface]);
 
   useEffect(() => {
     if (open) {
-      setLastOpenedItem(selectedItem);
       setShouldRenderOverlay(true);
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -104,7 +129,6 @@ export default function Home() {
         }),
       ]).start(() => {
         setShouldRenderOverlay(false);
-        setLastOpenedItem(null);
       });
     }
   }, [selectedItem]);
@@ -177,77 +201,56 @@ export default function Home() {
             paddingHorizontal: 24,
           }}
         >
-          {lastOpenedItem === "menu" ? (
-            <MenuBar
-              onSendValue={(val: HomeInterface) => setSelectedInterface(val)}
-              selected={selectedInterface}
-            />
-          ) : (
-            <AccountBar
-              email={email}
-              orgName={orgName}
-              profilePhoto={profilePhoto}
-              role={role}
-              orgPhone={orgPhone}
-              userName={userName}
-            />
-          )}
+          <AccountBar
+            email={email}
+            orgName={orgName}
+            profilePhoto={profilePhoto}
+            role={role}
+            orgPhone={orgPhone}
+            userName={userName}
+          />
         </Animated.View>
       )}
 
       {/* Bottom bar */}
       <View
-        className="flex-row justify-center gap-4 items-center border-t border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950 py-4 w-full z-30"
+        className="flex-row justify-between px-8 gap-4 items-center border-t border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950 py-4 w-full z-30"
         style={{ paddingBottom: insets.bottom }}
       >
-        {/* Menu Button */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() =>
-            selectedItem === "menu"
-              ? setSelectedItem(null)
-              : setSelectedItem("menu")
-          }
-        >
-          <View
-            className={`flex-row justify-center items-center p-2 min-w-12 h-12 rounded-full ${
-              selectedItem === "menu" ? "bg-primaryBlue" : "bg-primaryBlue/40"
-            }`}
-          >
-            <MenuIcon color={selectedItem === "menu" ? "white" : colors["primary-blue"]} />
-            {selectedItem === "menu" && (
-              <Text className="text-white font-semibold px-2">Menu</Text>
-            )}
-          </View>
-        </TouchableOpacity>
+        {MENU_ITEMS.map(({ key, label, Icon }) => {
+          const isSelected = selectedInterface === key;
+          const textColor = isSelected
+            ? colors["primary-blue"]
+            : isDark
+              ? colors["light-blue"]
+              : colors["gray-700"];
+          return (
+            <Pressable
+              key={key}
+              className={`p-2 rounded-md mb-2 flex-row justify-start items-center gap-1`}
+              onPress={() => setSelectedInterface(key)}
+            >
+              <Icon color={textColor} width={24} height={24} />
+            </Pressable>
+          );
+        })}
 
         {/* Account Button */}
         <TouchableOpacity activeOpacity={0.8} onPress={handleAccountPress}>
-          <View
-            className={`flex-row justify-center items-center min-w-12 h-12 rounded-full ${
-              selectedItem === "account" ? "bg-primaryBlue pl-2" : "bg-primaryBlue/40"
-            }`}
-          >
-            {selectedItem === "account" && (
-              <Text className="text-white font-semibold px-2">Account</Text>
+          <View className="min-w-12 h-12 bg-chatAvatarBlue rounded-full flex justify-center items-center">
+            {profilePhoto ? (
+              <Image
+                source={{
+                  uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}`,
+                }}
+                className="h-full w-full rounded-full"
+                style={{ resizeMode: "cover" }}
+              />
+            ) : (
+              <Text className={`font-bold text-[20px] text-white`}>
+                {namePreview(userName)}
+              </Text>
             )}
-            <View className="min-w-12 h-12 bg-chatAvatarBlue rounded-full flex justify-center items-center">
-              {profilePhoto ? (
-                <Image
-                  source={{
-                    uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}`,
-                  }}
-                  className="h-full w-full rounded-full"
-                  style={{ resizeMode: "cover" }}
-                />
-              ) : (
-                <Text
-                  className={`font-bold text-[20px] text-white`}
-                >
-                  {namePreview(userName)}
-                </Text>
-              )}
-            </View>
           </View>
         </TouchableOpacity>
       </View>

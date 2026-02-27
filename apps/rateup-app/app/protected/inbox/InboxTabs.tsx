@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  SafeAreaView,
   Platform,
   KeyboardAvoidingView,
   useColorScheme,
@@ -14,7 +13,6 @@ import {
   Sparkles,
   User,
   CircleCheckBig,
-  Menu,
 } from "lucide-react-native";
 import { useContactCounts } from "@/src/api/inbox/contacts/contacts.query";
 import InboxButtons from "@/src/components/inbox/InboxButtons";
@@ -124,7 +122,7 @@ export default function InboxLayout() {
   const tabBg = isDark ? colors["slate-950"] : "white";
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-slate-950">
+    <View className="flex-1 bg-white dark:bg-slate-950">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -251,6 +249,6 @@ export default function InboxLayout() {
           />
         </Tab.Navigator>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
