@@ -27,7 +27,6 @@ export async function getTemplatesExternalController(
   }>,
   reply: FastifyReply,
 ) {
-  console.log("hee");
   const { orgId } = request.user;
   const templates = await getTemplatesByOrgIdAndTemplateType(
     orgId,
