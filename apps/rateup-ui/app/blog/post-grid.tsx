@@ -31,7 +31,7 @@ export default function PostGrid({
           A collection of {posts?.length ?? 0} posts
         </div>
       )}
-      {posts.length === 0 ? (
+      {posts?.length === 0 ? (
         <div className="py-10 text-center text-slate-600">
           No posts found for the selected tag.
         </div>

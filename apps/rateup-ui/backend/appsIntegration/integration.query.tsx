@@ -30,7 +30,6 @@ export const useIntegrationByType = (type: IntegratedApps) => {
 
 export const useWaPaymentConfigurations = () => {
   return useQuery({
-    enabled: false,
     queryKey: ["waPaymentConfigurations"],
     queryFn: getWaPaymentConfigurations,
   });

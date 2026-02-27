@@ -58,7 +58,7 @@ function AddtoContactGroup({ selectedContactIds }) {
       contactgroups={contactgroups}
       contactGroupsLoading={contactGroupsLoading}
       onChange={handleChange}
-      className="w-full border-none shadow-none p-0"
+      className="w-full border-none"
     />
   );
 }

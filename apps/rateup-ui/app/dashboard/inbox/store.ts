@@ -327,11 +327,9 @@ export const useContactsStore = create<ContactsStoreState>()(
                 (currentFilterKey?.includes("waMessageAssignStatus:New") &&
                   !isUnassigned));
             const shouldFilterOut = assignStatusChanged && filterExcludesAll;
-
-            messageUpdated =
-              updatedContact.lastMessage &&
-              updatedContact.lastMessage.waCreatedAt >
-                contact.lastMessage.waCreatedAt;
+            const prevWaCreated = contact.lastMessage?.waCreatedAt ?? 0;
+            const newWaCreated = updatedContact.lastMessage?.waCreatedAt ?? 0;
+            messageUpdated = newWaCreated > prevWaCreated;
             if (!contactIncluded) {
               const isNewFilter = currentFilterKey?.includes(
                 "waMessageAssignStatus:New",

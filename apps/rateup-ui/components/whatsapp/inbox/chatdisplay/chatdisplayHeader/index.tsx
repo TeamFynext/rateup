@@ -4,21 +4,21 @@ import { useMemo } from "react";
 
 import { Group, Radio, RadioGroup, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { IconBrandWhatsappFilled, IconWebhook } from "@tabler/icons-react";
 import {
-  Activity,
+  IconBrandWhatsappFilled,
+  IconCategoryPlus,
+  IconWebhook,
+} from "@tabler/icons-react";
+import {
   ArrowLeft,
   Ban,
   BellOff,
   Bot,
   CircleCheckBig,
-  Folder,
   InstagramIcon,
-  Settings2,
   Tag,
   Ticket,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import {
   MessagePlatform,
@@ -220,20 +220,18 @@ export default function WaInboxChatDisplayHeader({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Settings2 className="h-4 w-4" />
-              </Button>
+              <button className="flex items-center justify-center h-8 w-8 cursor-pointer rounded-md hover:bg-accent transition-colors">
+                <IconCategoryPlus className="h-5 w-5" strokeWidth={1.5} />
+              </button>
             </PopoverTrigger>
 
-            <PopoverContent className="p-1 w-40">
+            <PopoverContent className="p-1 w-fit min-w-36">
               <div className="flex flex-col gap-1">
                 {/* Lifecycle */}
-                <div className="flex items-center gap-1 px-2 rounded-md">
-                  <Activity className="h-4 w-4 text-muted-foreground shrink-0" />
-
+                <div className="flex items-center gap-1">
                   <LifecycleSelector
                     value={contact.lifecycleId}
                     customTrigger={
@@ -241,24 +239,21 @@ export default function WaInboxChatDisplayHeader({
                         {contact.lifecycleName}
                       </span>
                     }
-                    className="border-none shadow-none p-0 h-auto w-full bg-transparent"
+                    className="border-none h-auto w-full"
                     onChange={handleLifecycleChange}
                     placeholder="Lifecycle"
                   />
                 </div>
 
                 {/* Labels */}
-                <div className="flex items-center gap-1 px-2 rounded-md">
-                  <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
-
+                <div className="flex items-center gap-1">
                   <ContactLabel
                     contactLabel={contactLabels}
                     contact={contact}
                     labelPending={isPending}
                   />
                 </div>
-                <div className="flex items-center gap-1 px-2 rounded-md">
-                  <Folder className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex items-center gap-1">
                   <AddtoContactGroup selectedContactIds={[contact.id]} />
                 </div>
               </div>
@@ -598,7 +593,9 @@ function ContactLabel({ contactLabel, labelPending, contact }) {
 
   return (
     <Select open={undefined}>
-      <SelectTrigger className="border-none shadow-none p-0 h-auto w-full bg-transparent text-sm font-medium">
+      <SelectTrigger className="text-foreground! border-none flex items-center justify-start h-auto w-full bg-transparent text-sm font-medium">
+        <Tag className="h-4 w-4 shrink-0 text-foreground" />
+
         {selectedCount
           ? `${selectedCount} Label${selectedCount > 1 ? "s" : ""}`
           : "Labels"}

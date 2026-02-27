@@ -14,8 +14,12 @@ const interceptorErrorHandler = (error) => {
   /* ----------------------------------
        Subscription / 403 side effects
     -----------------------------------*/
-  if (response?.status === 403 && response.data?.displayMessageInClient) {
-    toast.error(response.data.message ?? "Forbidden");
+  if (
+    typeof window !== "undefined" &&
+    response?.status === 403 &&
+    response.data?.displayMessageInClient
+  ) {
+    toast.error(response?.data?.message ?? "Forbidden");
   }
   let message = "Something went wrong";
 

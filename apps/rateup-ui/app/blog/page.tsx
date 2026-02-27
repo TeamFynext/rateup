@@ -158,7 +158,7 @@ export default async function BlogIndex({
               >
                 All
               </Link>
-              {authors.map((author) => (
+              {authors?.map((author) => (
                 <Link
                   key={author.id}
                   href={`/blog/author/${encodeURIComponent(author.slug)}`}
