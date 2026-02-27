@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 
-import { Infinity } from "lucide-react";
+import { Activity, Infinity } from "lucide-react";
 
 import { useLifecycleContext } from "@/context/LifecycleContext";
 
@@ -159,7 +159,10 @@ export const LifecycleSelector = ({
   if (all) {
     return (
       <Select value={value} onValueChange={handleSubmit} defaultValue={"all"}>
-        <SelectTrigger className={className}>
+        <SelectTrigger
+          className={`${className} flex items-center text-foreground! justify-start w-full`}
+        >
+          <Activity className="h-4 w-4 shrink-0 text-foreground" />
           <TriggerComponent />
         </SelectTrigger>
         <SelectContent side="right" align="start">
@@ -179,7 +182,10 @@ export const LifecycleSelector = ({
   }
   return (
     <Select value={value} onValueChange={handleSubmit}>
-      <SelectTrigger className={className}>
+      <SelectTrigger
+        className={`${className} flex items-center justify-start text-foreground!`}
+      >
+        <Activity className="h-4 w-4 shrink-0 text-foreground" />
         <TriggerComponent />
       </SelectTrigger>
       <SelectContent side="right" align="start">
