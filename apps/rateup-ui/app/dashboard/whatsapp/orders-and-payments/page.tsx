@@ -81,11 +81,9 @@ export default function OrdersAndPaymentsPage() {
 
   const isNativeAvailable =
     waPaymentConfig &&
-    waPaymentConfig.some(
-      (config: any) =>
-        config.payment_configurations &&
-        config.payment_configurations.some((c: any) => c.status === "ACTIVE"),
-    );
+    waPaymentConfig.credential &&
+    Array.isArray(waPaymentConfig.credential) &&
+    waPaymentConfig.credential.some((c: any) => c.status === "ACTIVE");
 
   const isShopifyAvailable =
     shopifyIntegration &&
