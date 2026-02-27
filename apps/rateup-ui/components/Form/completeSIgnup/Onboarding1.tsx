@@ -98,7 +98,7 @@ export default function OnboardingStep1({
             <Card
               className={`p-3 cursor-pointer transition-all duration-300 hover:shadow-md border-2 ${
                 data.services.includes(service.id)
-                  ? "border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
+                  ? "border-blue-400 bg-linear-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
                   : "border-gray-200 hover:border-blue-300 bg-white"
               }`}
               onClick={() => handleServiceToggle(service.id)}
@@ -115,7 +115,7 @@ export default function OnboardingStep1({
                       {service.name}
                     </span>
                     {service.recommended && (
-                      <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white px-2 py-0.5 rounded-full shadow-sm text-sm">
+                      <span className="bg-linear-to-r from-orange-400 to-pink-400 text-white px-2 py-0.5 rounded-full shadow-sm text-sm">
                         Recommended
                       </span>
                     )}
@@ -141,7 +141,7 @@ export default function OnboardingStep1({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-300/60 rounded-lg p-2.5 mt-3 shadow-sm backdrop-blur-sm"
+          className="bg-linear-to-r from-blue-100 to-indigo-100 border border-blue-300/60 rounded-lg p-2.5 mt-3 shadow-sm backdrop-blur-sm"
         >
           <div className="flex items-center space-x-2.5">
             <CheckCircle className="w-4 h-4 text-blue-600" />

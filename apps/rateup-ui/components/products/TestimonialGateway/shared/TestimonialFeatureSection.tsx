@@ -39,7 +39,7 @@ const TestimonialTemplate: React.FC<{
         );
       case "minimal":
         return (
-          <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/10 space-y-2">
+          <div className="p-4 rounded-xl bg-linear-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/10 space-y-2">
             <p className="text-sm">
               "Collecting testimonials has been a game-changer for our
               business."
@@ -90,7 +90,7 @@ const TestimonialTemplate: React.FC<{
         );
       case "video":
         return (
-          <div className="p-4 rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-900/20 dark:to-amber-800/20 border border-amber-300 dark:border-amber-700 shadow-lg space-y-3">
+          <div className="p-4 rounded-xl bg-linear-to-r from-amber-100 to-amber-200 dark:from-amber-900/20 dark:to-amber-800/20 border border-amber-300 dark:border-amber-700 shadow-lg space-y-3">
             <div className="relative bg-black/10 rounded-md p-6 flex items-center justify-center">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
@@ -132,7 +132,7 @@ export const TestimonialFeatureSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="text-3xl font-bold text-center pb-12 bg-gradient-to-r from-[#01446b] to-[#0041a8] bg-clip-text text-transparent"
+          className="text-3xl font-bold text-center pb-12 bg-linear-to-r from-[#01446b] to-[#0041a8] bg-clip-text text-transparent"
         >
           Showcase testimonials your way
         </motion.h3>

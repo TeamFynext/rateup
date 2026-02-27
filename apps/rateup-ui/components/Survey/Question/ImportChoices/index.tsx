@@ -14,7 +14,7 @@ import {
 import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { useTranslations } from "next-intl";
-import readXlsxFile from "read-excel-file";
+import readXlsxFile from "read-excel-file/browser";
 
 import { showErrorToast } from "../../../../utils/notifications";
 import styles from "./ImportChoices.module.css";

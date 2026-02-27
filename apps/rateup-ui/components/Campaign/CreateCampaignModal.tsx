@@ -80,17 +80,21 @@ interface DripStage {
 }
 
 const formSchema = z.object({
-  teamId: z.string().min(1, { message: "Must select a team" }),
-  name: z.string().trim().min(1, { message: "Name cannot be empty" }),
+  teamId: z.string().min(1, {
+    error: "Must select a team",
+  }),
+  name: z.string().trim().min(1, {
+    error: "Name cannot be empty",
+  }),
   waTemplateId: z.string().optional(),
-  type: z.nativeEnum(CampaignType),
+  type: z.enum(CampaignType),
   surveyTeamMapId: z.string().optional(),
   flowId: z.string().optional(),
   dynamicTags: z.array(z.string()).optional(),
   useUserConsent: z.boolean(),
-  whatsappSettingsPhoneId: z
-    .string()
-    .min(1, { message: "Must select a phone number" }),
+  whatsappSettingsPhoneId: z.string().min(1, {
+    error: "Must select a phone number",
+  }),
 });
 
 type FormValues = z.infer<typeof formSchema>;

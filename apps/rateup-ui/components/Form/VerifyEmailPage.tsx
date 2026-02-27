@@ -52,7 +52,7 @@ function VerifyEmailPage({ sendEmail }) {
       <Card className="p-4 sm:p-5 shadow-xl border border-gray-100 bg-white mb-8 max-w-md">
         <div className="space-y-3">
           <div className="flex justify-center py-2">
-            <div className="relative w-16 h-16 bg-gradient-to-r from-blue-100 to-orange-100 rounded-xl flex items-center justify-center">
+            <div className="relative w-16 h-16 bg-linear-to-r from-blue-100 to-orange-100 rounded-xl flex items-center justify-center">
               <Mail className="w-8 h-8 text-rateup-blue" strokeWidth={1.5} />
 
               {emailSent && (
@@ -100,9 +100,9 @@ function VerifyEmailPage({ sendEmail }) {
             </Button>
           </div>
 
-          <div className="bg-gradient-to-r from-orange-50 to-blue-50 border border-orange-200 rounded-lg p-3 mt-3">
+          <div className="bg-linear-to-r from-orange-50 to-blue-50 border border-orange-200 rounded-lg p-3 mt-3">
             <div className="flex items-start gap-2.5">
-              <HelpCircle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+              <HelpCircle className="w-4 h-4 text-orange-600 mt-0.5 shrink-0" />
               <div className="flex-1">
                 <p className="text-xs text-gray-700 leading-relaxed">
                   Didn't receive the email? Check your spam folder or wait a few

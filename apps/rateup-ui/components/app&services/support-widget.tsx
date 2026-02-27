@@ -414,7 +414,7 @@ export default function SupportWidget({
                             >
                               {message.messageBody?.exchangeProcess ===
                                 "send" && (
-                                <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 animate-pop-in">
+                                <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shrink-0 animate-pop-in">
                                   <div className="h-3 w-3 bg-white rounded-sm"></div>
                                 </div>
                               )}

@@ -55,10 +55,7 @@ const ResetPasswordForm = ({ mode }) => {
     }
   }, [mode, token, rid, requestStatus, router]);
   const emailSchema = z.object({
-    email: z
-      .string()
-      .min(1, "Email is required")
-      .email("Enter a valid email address"),
+    email: z.email("Enter a valid email address").min(1, "Email is required"),
     password: z.string().optional(), // optional if not used in this form
   });
 

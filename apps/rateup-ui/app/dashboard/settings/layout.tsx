@@ -218,7 +218,7 @@ const SettingsLayout = ({ children }) => {
                     }`}
                   >
                     <div
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
                         activeSection === item.id ? "bg-primary" : "bg-muted"
                       }`}
                     >
@@ -243,7 +243,7 @@ const SettingsLayout = ({ children }) => {
                     </div>
 
                     {/* keep space reserved so presence/absence of chevron doesn't change layout width */}
-                    <div className="w-4 flex-shrink-0 flex items-center justify-center">
+                    <div className="w-4 shrink-0 flex items-center justify-center">
                       {activeSection === item.id && (
                         <ChevronRight className="w-4 h-4 text-rateup-blue" />
                       )}

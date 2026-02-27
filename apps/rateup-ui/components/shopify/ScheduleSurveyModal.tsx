@@ -71,9 +71,9 @@ const formSchema = z.object({
   isProductSpecific: z.boolean().default(false),
   productId: z.string().optional(),
   teamId: z.string().min(1, "Team is required"),
-  timeDelay: z.coerce.number().min(0, "Delay must be positive"),
+  timeDelay: z.number().min(0, "Delay must be positive"),
   repeatInterval: z.object({
-    value: z.coerce.number().min(0),
+    value: z.number().min(0),
     unit: z.enum(["hour", "day"]).default("hour"),
   }),
   variableMapping: z
@@ -89,7 +89,7 @@ const formSchema = z.object({
   loyaltyApiFeature: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.input<typeof formSchema>;
 
 const ScheduleSurveyModal = ({
   opened,
@@ -241,7 +241,7 @@ const ScheduleSurveyModal = ({
   return (
     <Dialog open={opened} onOpenChange={(open) => !open && close()}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0 overflow-hidden rounded-xl border-none shadow-2xl flex flex-col bg-[#f5f6fa]">
-        <div className="bg-gradient-to-r from-primary/10 via-background to-background p-6 border-b shrink-0">
+        <div className="bg-linear-to-r from-primary/10 via-background to-background p-6 border-b shrink-0">
           <DialogHeader>
             <div className="flex items-center gap-2 mb-2">
               <div className="p-2 bg-primary/20 rounded-lg text-primary">

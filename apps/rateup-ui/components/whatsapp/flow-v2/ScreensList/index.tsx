@@ -2,23 +2,23 @@
 
 import { useState } from "react";
 
-import {
-  IconGripVertical,
-  IconPlus,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { FlowMaxScreens } from "../../whatsappConfig";
 import useFlowStoreV3 from "../utils/store";
 import CreateScreenModal from "./CreateScreenModal";
 import styles from "./ScreensList.module.css";
-
 
 const cx = classNames.bind(styles);
 
@@ -44,7 +44,12 @@ function ScreensList() {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button onClick={handleAddScreen} variant="ghost" size="icon" className="h-8 w-8">
+              <Button
+                onClick={handleAddScreen}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+              >
                 <IconPlus size={16} />
               </Button>
             </TooltipTrigger>
@@ -54,7 +59,7 @@ function ScreensList() {
           </Tooltip>
         </TooltipProvider>
       </div>
-      
+
       <p className="text-xs text-muted-foreground ">
         {translations("Build your flow step by step")}
       </p>
@@ -72,9 +77,9 @@ function ScreensList() {
         ))}
       </div>
 
-      <CreateScreenModal 
-        opened={createModalOpened} 
-        close={() => setCreateModalOpened(false)} 
+      <CreateScreenModal
+        opened={createModalOpened}
+        close={() => setCreateModalOpened(false)}
       />
     </div>
   );
@@ -125,7 +130,7 @@ function ScreenCard({
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 w-8 flex-shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="h-8 w-8 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={(e) => {
               e.stopPropagation();
               setDeleteModalOpened(true);

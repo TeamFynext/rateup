@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { IBusinessHour } from "@/backend/org/business-hours/business-hours.api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,12 +26,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { BusinessHoursItem } from "./schema";
-
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  list: BusinessHoursItem[];
+  list: IBusinessHour[];
   onAdd: () => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;

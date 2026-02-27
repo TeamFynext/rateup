@@ -40,7 +40,7 @@ function OnboardingStep4({
             key={integration.id}
             className={`p-3 border-2 transition-all duration-300 hover:shadow-md ${
               data.integrationsSelected.includes(integration.id)
-                ? "border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
+                ? "border-blue-400 bg-linear-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
                 : "border-gray-200 bg-white hover:border-blue-300"
             }`}
           >
@@ -64,7 +64,7 @@ function OnboardingStep4({
                       <span className="text-gray-900">{integration.name}</span>
                       <div className="hidden sm:block">
                         {integration.required && (
-                          <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white px-2 py-0.5 rounded-full shadow-sm">
+                          <span className="bg-linear-to-r from-orange-400 to-pink-400 text-white px-2 py-0.5 rounded-full shadow-sm">
                             Recommended
                           </span>
                         )}
@@ -89,7 +89,7 @@ function OnboardingStep4({
           </Card>
         ))}
 
-        <div className="bg-gradient-to-r from-green-100 to-emerald-100 border border-green-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm">
+        <div className="bg-linear-to-r from-green-100 to-emerald-100 border border-green-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm">
           <div className="text-center">
             <Zap className="w-4 h-4 text-green-600 mx-auto mb-2" />
             <p className="text-green-700">No worries if you skip this step!</p>

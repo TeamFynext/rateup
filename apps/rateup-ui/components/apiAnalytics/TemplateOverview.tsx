@@ -70,7 +70,7 @@ function TemplateOverview({
                       {/* Template Info */}
                       <div className="flex-1">
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-blue-50 dark:bg-transparent border rounded-lg flex items-center justify-center flex-shrink-0">
+                          <div className="w-10 h-10 bg-blue-50 dark:bg-transparent border rounded-lg flex items-center justify-center shrink-0">
                             <FileText className="w-5 h-5 text-primary" />
                           </div>
                           <div className="flex-1 min-w-0">

@@ -136,7 +136,7 @@ export function BookDemoComponent() {
           </div>
           <Button
             onClick={() => router.push("/")}
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 w-full"
+            className="bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 w-full"
           >
             {translations("Return to Homepage")}
           </Button>
@@ -167,7 +167,7 @@ export function BookDemoComponent() {
 
               <div className="space-y-6">
                 <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-rateup-blue/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-rateup-blue/10 rounded-lg flex items-center justify-center shrink-0">
                     <Calendar className="w-4 h-4 text-rateup-blue" />
                   </div>
                   <div>
@@ -181,7 +181,7 @@ export function BookDemoComponent() {
                 </div>
 
                 <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-rateup-orange/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-rateup-orange/10 rounded-lg flex items-center justify-center shrink-0">
                     <Target className="w-4 h-4 text-rateup-orange" />
                   </div>
                   <div>
@@ -197,7 +197,7 @@ export function BookDemoComponent() {
                 </div>
 
                 <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
                     <Zap className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
@@ -213,7 +213,7 @@ export function BookDemoComponent() {
                 </div>
               </div>
 
-              <div className="mt-8 p-4 bg-gradient-to-r from-rateup-blue/5 to-rateup-orange/5 rounded-lg">
+              <div className="mt-8 p-4 bg-linear-to-r from-rateup-blue/5 to-rateup-orange/5 rounded-lg">
                 <p className="text-sm text-gray-700">
                   <strong>{translations("What to expect")}:</strong>{" "}
                   {translations(
@@ -418,7 +418,7 @@ export function BookDemoComponent() {
                   <Button
                     type="submit"
                     size="lg"
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="w-full bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     disabled={isPending}
                   >
                     <Calendar className="w-4 h-4 mr-2" />

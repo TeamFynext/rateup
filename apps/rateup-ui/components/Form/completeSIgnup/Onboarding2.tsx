@@ -90,7 +90,7 @@ export default function OnboardingStep2({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-orange-100 to-pink-100 border border-orange-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm"
+            className="bg-linear-to-r from-orange-100 to-pink-100 border border-orange-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm"
           >
             <div className="flex items-start space-x-3">
               <Sparkles className="w-3 h-3 text-orange-600" />

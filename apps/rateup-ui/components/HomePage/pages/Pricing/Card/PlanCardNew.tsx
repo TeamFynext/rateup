@@ -60,7 +60,7 @@ const PlanCardNew = ({ plan, currencySymbol, onButtonClick }) => {
           <ul className="space-y-3 text-gray-700 text-sm mt-6">
             {plan?.description?.map((item, index) => (
               <li key={index} className="flex items-center gap-2">
-                <CheckCircle2 className="text-green-500 w-5 h-5 flex-shrink-0" />
+                <CheckCircle2 className="text-green-500 w-5 h-5 shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
