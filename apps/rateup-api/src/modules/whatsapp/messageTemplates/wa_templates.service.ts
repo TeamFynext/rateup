@@ -21,9 +21,9 @@ import {
 } from "../../../types/enums.js";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils.js";
-import { SendTemplateHeaderComponent } from "../../external/v1/whatsapp/template/wa_templates.external.schema.js";
 import { WaTemplateComponent } from "../../../types/whatsapp.types.js";
 import { $Enums, TemplateType } from "../../../../generated/prisma/client.js";
+import { SendTemplateHeaderComponent } from "../../../external/v1/wa-templates/wa_templates.external.schema.js";
 
 /**
  * fetches templates from WhatsApp Business API

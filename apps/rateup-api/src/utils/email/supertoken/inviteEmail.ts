@@ -1,5 +1,5 @@
-export function createEmailBody(invite_link : string, email_id : string) {
-    return `
+export function createEmailBody(invite_link: string, email_id: string) {
+  return `
     <!DOCTYPE html>
     <html lang="en">
       <head>

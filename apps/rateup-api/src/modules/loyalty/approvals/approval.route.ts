@@ -16,8 +16,6 @@ export async function approvalRoutes(server: FastifyInstance) {
     {
       schema: {
         body: $approvalRef("createApprovalRequestSchema"),
-        description: "Create a new approval request",
-        tags: ["Approval Requests"],
       },
     },
     createApprovalRequestHandler,
@@ -29,8 +27,6 @@ export async function approvalRoutes(server: FastifyInstance) {
     {
       schema: {
         querystring: $approvalRef("getApprovalRequestsSchema"),
-        description: "Get approval requests with filters",
-        tags: ["Approval Requests"],
       },
     },
     getApprovalRequestsHandler,
@@ -42,8 +38,6 @@ export async function approvalRoutes(server: FastifyInstance) {
     {
       schema: {
         params: $approvalRef("approvalIdParamSchema"),
-        description: "Get a single approval request by ID",
-        tags: ["Approval Requests"],
       },
     },
     getApprovalRequestByIdHandler,
@@ -64,8 +58,6 @@ export async function approvalRoutes(server: FastifyInstance) {
           },
           required: ["reviewerId", "reviewerName"],
         },
-        description: "Approve an approval request",
-        tags: ["Approval Requests"],
       },
     },
     approveApprovalRequestHandler,
@@ -86,8 +78,6 @@ export async function approvalRoutes(server: FastifyInstance) {
           },
           required: ["reviewerId", "reviewerName", "reason"],
         },
-        description: "Reject an approval request",
-        tags: ["Approval Requests"],
       },
     },
     rejectApprovalRequestHandler,
@@ -106,8 +96,6 @@ export async function approvalRoutes(server: FastifyInstance) {
           },
           required: ["reason"],
         },
-        description: "Cancel an approval request",
-        tags: ["Approval Requests"],
       },
     },
     cancelApprovalRequestHandler,

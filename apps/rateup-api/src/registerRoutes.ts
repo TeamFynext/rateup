@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import fp from "fastify-plugin";
 
 // Import all schemas
 import { orgSchemas } from "./modules/org/org.schema.js";
@@ -93,7 +92,7 @@ import { chatbotRoutes } from "./modules/chatbot/chatbot.rout.js";
 import { chatbotPublicRoute } from "./modules/chatbot/chatbot.public.route.js";
 import { paymentStripeRoutes } from "./modules/payment/stripe/stripe.route.js";
 import { apiAccessTokenRoutes } from "./modules/apiAccessToken/apiAccessToken.route.js";
-import { externalRoutes } from "./modules/external/external.route.js";
+import { externalV1Routes } from "./external/v1/index.js";
 import { orgWsRoutes } from "./modules/org/ws/org.ws.routes.js";
 import { stripePublicRoutes } from "./modules/payment/stripe/stripe.public.route.js";
 import { emailPublicRoutes } from "./modules/email/email.public.route.js";
@@ -230,7 +229,7 @@ const routeConfigs = [
   { plugin: chatbotRoutes, prefix: "/api/chatbot" },
   { plugin: orgWsRoutes, prefix: "/api/org/ws" },
   { plugin: apiAccessTokenRoutes, prefix: "/api/api-access-token" },
-  { plugin: externalRoutes, prefix: "/api/external" },
+  { plugin: externalV1Routes, prefix: "/api/external/v1/:orgId" },
   { plugin: emailPublicRoutes, prefix: "/api/email" },
   { plugin: generateQrRoutes, prefix: "/api/generateQr" },
   { plugin: integrationsRoutes, prefix: "/api/integrations" },
@@ -253,7 +252,7 @@ async function registerSchemas(server: FastifyInstance): Promise<void> {
   }
 }
 
-async function routes(server: FastifyInstance): Promise<void> {
+export async function registerRoutes(server: FastifyInstance): Promise<void> {
   // Register all schemas first
   await registerSchemas(server);
 
@@ -262,9 +261,3 @@ async function routes(server: FastifyInstance): Promise<void> {
     await server.register(plugin, { prefix });
   }
 }
-
-export const registerRoutes = fp(routes, {
-  name: "routes",
-});
-
-export default registerRoutes;

@@ -1,6 +1,5 @@
 import { FastifyInstance } from "fastify";
 import { Kafka, Partitioners, Producer } from "kafkajs";
-import fp from "fastify-plugin";
 import { log } from "../utils/logger.js";
 
 declare module "fastify" {
@@ -16,7 +15,7 @@ export const producer: Producer = kafka.producer({
   createPartitioner: Partitioners.DefaultPartitioner,
 });
 
-async function kafkaPlugin(server: FastifyInstance) {
+export async function registerKafka(server: FastifyInstance) {
   try {
     await producer.connect();
   } catch (error) {
@@ -29,5 +28,3 @@ async function kafkaPlugin(server: FastifyInstance) {
     await producer.disconnect();
   });
 }
-
-export const registerKafka = fp(kafkaPlugin);

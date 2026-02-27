@@ -8,9 +8,13 @@ const createContactMessageInputSchema = z.object({
   address: z.string().optional(),
 });
 
-export const { schemas: contactFormSchemas, $ref: $Cref } = buildJsonSchemas({
-    createContactMessageInputSchema
-},
-{ $id: "contactFormSchema" });
+export const { schemas: contactFormSchemas, $ref: $Cref } = buildJsonSchemas(
+  {
+    createContactMessageInputSchema,
+  },
+  { $id: "contactFormSchema" },
+);
 
-export type CreateContactMessageInput = z.infer<typeof createContactMessageInputSchema>;
+export type CreateContactMessageInput = z.infer<
+  typeof createContactMessageInputSchema
+>;

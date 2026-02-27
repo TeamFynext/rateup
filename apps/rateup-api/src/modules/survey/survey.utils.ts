@@ -56,12 +56,12 @@ export async function createSurveyDefaultVariableForQuestion(
         name: `Q${position + 1}_phone_response`,
         value: question?.id,
         type: SurveyVariableType.DEFAULT,
-      }),
-        variables.push({
-          name: `Q${position + 1}_email_response`,
-          value: question?.id,
-          type: SurveyVariableType.DEFAULT,
-        });
+      });
+      variables.push({
+        name: `Q${position + 1}_email_response`,
+        value: question?.id,
+        type: SurveyVariableType.DEFAULT,
+      });
       break;
     case QuestionType.Testimonial:
       variables.push({
