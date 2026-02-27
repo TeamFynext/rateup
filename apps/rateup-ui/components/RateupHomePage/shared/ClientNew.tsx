@@ -63,13 +63,13 @@ export default function Clients() {
             </div>
             <div className="flex items-center justify-between px-12 py-6">
               <div className="flex flex-col items-center justify-center">
-                <span className="font-bold text-5xl bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] bg-clip-text text-transparent">
+                <span className="font-bold text-5xl bg-linear-to-r from-[#66D7FF] to-[#2D74E0] bg-clip-text text-transparent">
                   {client.leads}%
                 </span>
                 <span className="text-lg text-[#E2E5ED]">Growth In Leads</span>
               </div>
               <div className="flex flex-col items-center justify-center">
-                <span className="font-bold text-5xl bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] bg-clip-text text-transparent">
+                <span className="font-bold text-5xl bg-linear-to-r from-[#66D7FF] to-[#2D74E0] bg-clip-text text-transparent">
                   {client.generation}%
                 </span>
                 <span className="text-lg text-[#E2E5ED]">
@@ -77,7 +77,7 @@ export default function Clients() {
                 </span>
               </div>
               <div className="flex flex-col items-center justify-center">
-                <span className="font-bold text-5xl bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] bg-clip-text text-transparent">
+                <span className="font-bold text-5xl bg-linear-to-r from-[#66D7FF] to-[#2D74E0] bg-clip-text text-transparent">
                   {client.productivity}%
                 </span>
                 <span className="text-lg text-[#E2E5ED]">

@@ -18,7 +18,7 @@ const LoyaltySteps = () => {
       <div className="text-center mb-16">
         <h2 className="text-4xl  text-white mb-4">
           <span
-            className="font-bold bg-gradient-to-r from-[#009987] to-[#008273] 
+            className="font-bold bg-linear-to-r from-[#009987] to-[#008273] 
           bg-clip-text text-transparent"
           >
             Loyalty on WhatsApp

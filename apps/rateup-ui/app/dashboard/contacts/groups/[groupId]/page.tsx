@@ -207,10 +207,10 @@ const ContactGroup = () => {
 
   return (
     <div className="flex flex-col gap-3 h-full">
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-white to-blue-50/30 flex-shrink-0 p-4">
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-white to-blue-50/30 shrink-0 p-4">
         <div className="flex items-center justify-between gap-8">
           <div className="relative flex items-center gap-5 flex-1">
-            <div className="relative flex-shrink-0 group">
+            <div className="relative shrink-0 group">
               <div
                 className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 cursor-pointer overflow-hidden relative transition-all hover:ring-rateup-blue"
                 onClick={() => setShowEditIconDialog(true)}
@@ -254,7 +254,7 @@ const ContactGroup = () => {
                       <Button
                         size="sm"
                         onClick={handleSaveGroupName}
-                        className="h-9 w-9 p-0 bg-gradient-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700"
+                        className="h-9 w-9 p-0 bg-linear-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700"
                       >
                         {editContactGroupMutation.isPending ? (
                           <Spinner className="w-4 h-4" />
@@ -273,7 +273,7 @@ const ContactGroup = () => {
                     </div>
                   ) : (
                     <>
-                      <h1 className="text-2xl bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                      <h1 className="text-2xl bg-linear-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                         {groupDetails?.name}
                       </h1>
                       <Button
@@ -304,8 +304,8 @@ const ContactGroup = () => {
               </div>
 
               {!isEditingName && (
-                <div className="flex flex-col items-center justify-center px-5 py-2 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex-shrink-0 ml-auto">
-                  <div className="text-3xl bg-gradient-to-r from-rateup-blue to-indigo-600 bg-clip-text text-transparent">
+                <div className="flex flex-col items-center justify-center px-5 py-2 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 shrink-0 ml-auto">
+                  <div className="text-3xl bg-linear-to-r from-rateup-blue to-indigo-600 bg-clip-text text-transparent">
                     {groupDetails?._count?.contacts || 0}
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">
@@ -317,7 +317,7 @@ const ContactGroup = () => {
           </div>
 
           {!isEditingName && (
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex gap-2 shrink-0">
               <Button
                 variant="outline"
                 size="sm"
@@ -465,7 +465,7 @@ const ContactGroupIconEditDialog = ({ opened, setOpened, group }) => {
             />
             <Button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full h-12 gap-3 bg-gradient-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700"
+              className="w-full h-12 gap-3 bg-linear-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700"
             >
               <Upload className="w-5 h-5" />
               Upload New Icon

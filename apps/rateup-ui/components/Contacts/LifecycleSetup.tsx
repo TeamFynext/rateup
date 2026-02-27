@@ -343,12 +343,12 @@ const LifeCycleStageCard = ({
         <div className="flex items-center justify-between gap-3 group py-2 px-2 rounded-md hover:bg-gray-50 transition-colors">
           <div {...provided.dragHandleProps}>
             <GripVertical
-              className={`w-4 h-4 ${isMovable ? "text-gray-400 " : "text-gray-300"} flex-shrink-0 ${isMovable ? "cursor-grab" : ""}`}
+              className={`w-4 h-4 ${isMovable ? "text-gray-400 " : "text-gray-300"} shrink-0 ${isMovable ? "cursor-grab" : ""}`}
             />
           </div>
           <div
             style={{ backgroundColor: stage.color }}
-            className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm`}
+            className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 shadow-sm`}
           >
             <span>{stage.emoji}</span>
           </div>

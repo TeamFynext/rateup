@@ -81,7 +81,7 @@ export default function WaInboxChatSelectCard({
       className={`p-3 cursor-pointer transition-all hover:bg-accent/50 ${selectedContact?.id === contact?.id && "bg-accent border-l-2 border-b-1 border-blue-600"} ${contact?.unReadMessageCount > 0 && "bg-blue-50/30"}`}
     >
       <div className="flex items-start space-x-2">
-        <div className="relative flex-shrink-0">
+        <div className="relative shrink-0">
           <CreativeAvatar
             name={
               contact?.name ||
@@ -127,7 +127,7 @@ export default function WaInboxChatSelectCard({
                 <BadgeCheck size={12} color="blue" />
               )}
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
                 {contact?.lastMessage &&
                   formatToRelativeTime(contact?.lastMessage?.waCreatedAt, true)}
@@ -147,7 +147,7 @@ export default function WaInboxChatSelectCard({
             </p>
             {contact?.unReadMessageCount > 0 && (
               <Badge
-                className={`text-white text-[10px] h-4 min-w-[20px] px-1.5 rounded-full flex-shrink-0 ${
+                className={`text-white text-[10px] h-4 min-w-[20px] px-1.5 rounded-full shrink-0 ${
                   platform === MessagePlatform.WHATSAPP
                     ? "bg-green-600"
                     : platform === MessagePlatform.INSTAGRAM

@@ -67,7 +67,7 @@ const PricingTier: React.FC<PricingTierProps> = ({
           <ul className="space-y-3">
             {features.map((feature, i) => (
               <li key={i} className="flex items-start">
-                <div className="mr-3 mt-1 flex-shrink-0 text-[#1c518e]">
+                <div className="mr-3 mt-1 shrink-0 text-[#1c518e]">
                   <Check size={16} />
                 </div>
                 <span className="text-sm text-[#013553]">{feature}</span>

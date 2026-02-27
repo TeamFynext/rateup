@@ -10,7 +10,7 @@ const TestimonialFeaturesGrid = () => {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-semibold text-gray-800 leading-snug">
-            <span className="bg-gradient-to-r from-[#01446b] to-[#0041a8] text-transparent bg-clip-text">
+            <span className="bg-linear-to-r from-[#01446b] to-[#0041a8] text-transparent bg-clip-text">
               Collect, manage and showcase
             </span>{" "}
             testimonials

@@ -6,7 +6,7 @@ const StepsSection = () => {
       {steps.map((step, index) => (
         <div key={index} className="flex gap-5 items-start">
           <div
-            className={`w-12 h-12 rounded-full bg-[#1c518e] text-white flex items-center justify-center flex-shrink-0 mt-1`}
+            className={`w-12 h-12 rounded-full bg-[#1c518e] text-white flex items-center justify-center shrink-0 mt-1`}
           >
             <step.icon className="w-6 h-6" />
           </div>

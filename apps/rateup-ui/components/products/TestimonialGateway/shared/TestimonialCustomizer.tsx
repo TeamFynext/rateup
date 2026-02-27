@@ -162,7 +162,7 @@ export default function TestimonialCustomizer() {
               <div
                 className={`p-6 rounded-lg ${
                   customTheme === "colorful"
-                    ? "bg-gradient-to-r from-green-400 to-blue-400 text-white"
+                    ? "bg-linear-to-r from-green-400 to-blue-400 text-white"
                     : "bg-gray-100 dark:bg-gray-800"
                 }`}
               >

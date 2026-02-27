@@ -67,30 +67,30 @@ import { Textarea } from "@/components/ui/textarea";
 const tierSchema = z.object({
   name: z.string().min(1, "Tier name is required"),
   color: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid color format"),
-  pointsMultiplier: z.coerce.number().min(0, "Must be a positive number"),
-  threshold: z.coerce.number().min(0, "Must be a positive number"),
+  pointsMultiplier: z.number().min(0, "Must be a positive number"),
+  threshold: z.number().min(0, "Must be a positive number"),
 });
 
 const earningRuleSchema = z.object({
   name: z.string().min(1, "Rule name is required"),
   description: z.string().optional(),
-  priority: z.coerce.number().min(0).default(10),
+  priority: z.number().min(0).default(10),
   status: z
     .enum(["active", "inactive", "scheduled", "expired"])
     .default("active"),
-  pointsPerUnit: z.coerce.number().min(0).default(1.0),
-  multiplier: z.coerce.number().min(0).default(1.0),
-  bonusPoints: z.coerce.number().min(0).default(0),
-  minPurchaseAmount: z.coerce.number().min(0).nullable().optional(),
-  maxPurchaseAmount: z.coerce.number().min(0).nullable().optional(),
+  pointsPerUnit: z.number().min(0).default(1.0),
+  multiplier: z.number().min(0).default(1.0),
+  bonusPoints: z.number().min(0).default(0),
+  minPurchaseAmount: z.number().min(0).nullable().optional(),
+  maxPurchaseAmount: z.number().min(0).nullable().optional(),
   // UI supports these (and backend may accept them); keep permissive for date input values.
   validFrom: z.string().nullable().optional(),
   validUntil: z.string().nullable().optional(),
   isDefault: z.boolean().default(false),
 });
 
-type TierFormValues = z.infer<typeof tierSchema>;
-type EarningRuleFormValues = z.infer<typeof earningRuleSchema>;
+type TierFormValues = z.input<typeof tierSchema>;
+type EarningRuleFormValues = z.input<typeof earningRuleSchema>;
 
 function toDateInputValue(value?: string | null) {
   if (!value) return "";

@@ -98,7 +98,7 @@ const ChatselectPanelHeader = ({
   }, [filter, tab]);
 
   return (
-    <div className="p-3 border-b space-y-3 flex-shrink-0 relative">
+    <div className="p-3 border-b space-y-3 shrink-0 relative">
       {showSearchBar && (
         <div className="absolute inset-0 bg-card z-50 flex items-center px-3 animate-in fade-in duration-200">
           <div className="relative flex-1">

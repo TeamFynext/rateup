@@ -165,7 +165,7 @@ export function EditTeam({
                 <button
                   key={index}
                   type="button"
-                  className={`w-12 h-12 flex-shrink-0 rounded-lg border-2 ${
+                  className={`w-12 h-12 shrink-0 rounded-lg border-2 ${
                     isSelected ? "border-black scale-105" : "border-transparent"
                   } transition-all hover:scale-105`}
                   style={{
@@ -417,7 +417,7 @@ export function TeamMember({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-0">
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <Avatar className="w-9 h-9 flex-shrink-0">
+        <Avatar className="w-9 h-9 shrink-0">
           <AvatarImage src={getFileUrlFromKey(member?.profilePhoto)} />
           <AvatarFallback className="bg-primary text-white text-xs sm:text-sm">
             {member?.name?.toUpperCase().slice(0, 2)}
@@ -426,7 +426,7 @@ export function TeamMember({
         <div className="flex-1 flex-col min-w-0">
           <div className="flex gap-1">
             <p className="text-sm sm:text-base truncate">{member?.name}</p>
-            <div className="flex items-center flex-shrink-0 ">
+            <div className="flex items-center shrink-0 ">
               {member?.status === "PENDING" ? (
                 ""
               ) : (
@@ -569,7 +569,7 @@ export function DeleteTeam({
 
       <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
         <div className="flex items-start gap-3">
-          <Trash2 className="w-5 h-5 text-red-600 flex-shrink-0" />
+          <Trash2 className="w-5 h-5 text-red-600 shrink-0" />
           <div className="flex flex-col gap-2 items-start">
             <div>
               <h4 className="text-sm font-medium text-red-700">Delete Team</h4>

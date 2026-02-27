@@ -192,7 +192,7 @@ export default function OnboardingWizard() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center flex flex-col gap-1 items-center justify-center"
           >
-            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-100 to-purple-100 border border-blue-200/60 rounded-full px-3 py-1 shadow-sm backdrop-blur-sm mb-2">
+            <div className="inline-flex items-center space-x-2 bg-linear-to-r from-blue-100 to-purple-100 border border-blue-200/60 rounded-full px-3 py-1 shadow-sm backdrop-blur-sm mb-2">
               <Sparkles className="w-3.5 h-3.5 text-blue-600" />
               <span className="text-blue-700 text-sm">Setup Guide</span>
             </div>
@@ -242,9 +242,9 @@ export default function OnboardingWizard() {
                           <div
                             className={`relative w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
                               isActive
-                                ? "bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg"
+                                ? "bg-linear-to-r from-blue-500 to-indigo-600 shadow-lg"
                                 : isCompleted
-                                  ? "bg-gradient-to-r from-green-500 to-emerald-500 shadow-md"
+                                  ? "bg-linear-to-r from-green-500 to-emerald-500 shadow-md"
                                   : "bg-gradient-to-br from-gray-300 to-gray-400"
                             }`}
                           >
@@ -304,7 +304,7 @@ export default function OnboardingWizard() {
                       <div
                         className={`h-0.5 flex-1 transition-all duration-500 ${
                           completedSteps.includes(step.id)
-                            ? "bg-gradient-to-r from-green-400 to-emerald-400"
+                            ? "bg-linear-to-r from-green-400 to-emerald-400"
                             : "bg-gray-300/60"
                         }`}
                       />
@@ -331,7 +331,7 @@ export default function OnboardingWizard() {
             </div>
             <div className="w-full bg-gray-200/60 rounded-full h-1.5 overflow-hidden shadow-inner backdrop-blur-sm border border-gray-300/60">
               <motion.div
-                className="h-full bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 rounded-full transition-all duration-500 ease-out shadow-sm"
+                className="h-full bg-linear-to-r from-blue-400 via-indigo-500 to-purple-500 rounded-full transition-all duration-500 ease-out shadow-sm"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
               />

@@ -176,7 +176,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
             <div className="flex items-center space-x-2 sm:space-x-3">
               <Checkbox
                 id="remember"
-                className="border-2 border-gray-300 h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0"
+                className="border-2 border-gray-300 h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0"
               />
               <Label
                 htmlFor="remember"
@@ -197,7 +197,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full cursor-pointer h-9 sm:h-10 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+            className="w-full cursor-pointer h-9 sm:h-10 bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
           >
             {isLoading ? <Loader /> : "Sign In"}
           </Button>

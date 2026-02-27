@@ -29,7 +29,7 @@ const FeaturesWhatsApp = () => {
   return (
     <section
       id="features"
-      className="py-20 bg-gradient-to-r from-[#ebf4ee] to-[#ecfaf4]"
+      className="py-20 bg-linear-to-r from-[#ebf4ee] to-[#ecfaf4]"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         {/* Heading */}

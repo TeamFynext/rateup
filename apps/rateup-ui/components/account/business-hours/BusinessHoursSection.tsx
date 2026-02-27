@@ -54,7 +54,8 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
             timezone: editingItem.timezone,
             channels: editingItem.channels,
             description: editingItem.description,
-            schedule: editingItem.schedule,
+            schedule:
+              editingItem.schedule as BusinessHoursFormValues["schedule"],
           }
         : {
             name: "",

@@ -310,7 +310,7 @@ export default function WaInboxContactDetails({
   if (editable) {
     return (
       <motion.div
-        className="p-3.5 border flex-shrink-0 min-w-[25vw] max-w-[25vw] flex flex-col max-h-screen"
+        className="p-3.5 border shrink-0 min-w-[25vw] max-w-[25vw] flex flex-col max-h-screen"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 20 }}
@@ -318,7 +318,7 @@ export default function WaInboxContactDetails({
         key="edit-mode"
       >
         <motion.div
-          className="flex items-center justify-between mb-2.5 flex-shrink-0"
+          className="flex items-center justify-between mb-2.5 shrink-0"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
@@ -346,7 +346,7 @@ export default function WaInboxContactDetails({
         </motion.div>
 
         <motion.div
-          className="text-center flex-shrink-0"
+          className="text-center shrink-0"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
@@ -565,7 +565,7 @@ export default function WaInboxContactDetails({
   }
   return (
     <motion.div
-      className="p-3.5 border flex-shrink-0 min-w-[25vw] max-w-[25vw]"
+      className="p-3.5 border shrink-0 min-w-[25vw] max-w-[25vw]"
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
@@ -685,7 +685,7 @@ export default function WaInboxContactDetails({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                        className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                         onClick={() => {
                           navigator.clipboard.writeText(contact.email || "");
                         }}
@@ -714,7 +714,7 @@ export default function WaInboxContactDetails({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                        className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                         onClick={() => {
                           navigator.clipboard.writeText(
                             contact.whatsappUserName || "",
