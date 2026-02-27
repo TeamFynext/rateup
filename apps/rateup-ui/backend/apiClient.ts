@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
+import { toast } from "sonner";
 
 const axiosClient = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api`,
@@ -18,9 +19,7 @@ const interceptorErrorHandler = (error) => {
     response?.status === 403 &&
     response.data?.displayMessageInClient
   ) {
-    import("sonner").then(({ toast }) => {
-      toast.error(response?.data?.message ?? "Forbidden");
-    });
+    toast.error(response?.data?.message ?? "Forbidden");
   }
   let message = "Something went wrong";
 
