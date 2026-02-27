@@ -51,7 +51,7 @@ export default function FeatureCards2() {
           Powerful Features For
         </span>
         <div className="relative inline-block pointer-events-auto">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-rateup-darkblue to-rateup-blue text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold">
+          <span className="bg-clip-text text-transparent bg-linear-to-r from-rateup-darkblue to-rateup-blue text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold">
             Modern Businesses
           </span>
           {/* animated underline... */}
@@ -59,7 +59,7 @@ export default function FeatureCards2() {
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="absolute bottom-0 left-0 right-0 h-[4px] sm:h-[6px] bg-gradient-to-r from-rateup-blue-3 to-rateup-blue-2 rounded-full origin-left"
+            className="absolute bottom-0 left-0 right-0 h-[4px] sm:h-[6px] bg-linear-to-r from-rateup-blue-3 to-rateup-blue-2 rounded-full origin-left"
           />
         </div>
       </div>

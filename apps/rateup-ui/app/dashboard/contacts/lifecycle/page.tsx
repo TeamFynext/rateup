@@ -218,7 +218,7 @@ const LifecycleStageAnalyticCard = ({
       <div className="flex items-start justify-between mb-3">
         <div
           style={{ backgroundColor: stage.color }}
-          className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm`}
+          className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 shadow-sm`}
         >
           <p>{stage.emoji}</p>
         </div>

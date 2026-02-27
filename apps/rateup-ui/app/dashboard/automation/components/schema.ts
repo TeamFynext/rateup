@@ -80,7 +80,9 @@ export const ruleGroupSchema = z.object({
       }
       return true;
     },
-    { message: "Duplicate conditions are not allowed" },
+    {
+      error: "Duplicate conditions are not allowed",
+    },
   ),
 });
 
@@ -123,7 +125,9 @@ const createRuleBaseSchema = z.object({
         }
         return true;
       },
-      { message: "Duplicate actions are not allowed" },
+      {
+        error: "Duplicate actions are not allowed",
+      },
     ),
   options: ruleOptionsSchema.optional().default({
     sendOncePerDay: false,
@@ -145,12 +149,12 @@ export const createRuleSchema = createRuleBaseSchema.refine(
     return true;
   },
   {
-    message: "At least one condition is required for Message Received trigger",
     path: ["groups"],
+    error: "At least one condition is required for Message Received trigger",
   },
 );
 
-export type CreateRuleInput = z.infer<typeof createRuleSchema>;
+export type CreateRuleInput = z.input<typeof createRuleSchema>;
 
 const updateRuleSchema = createRuleBaseSchema.partial();
 

@@ -63,7 +63,7 @@ function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
             <div className="rounded-xl">
               <div className="flex items-center gap-2 border-t p-2">
                 <div className="flex-1 flex items-center gap-2 min-w-0 px-2.5">
-                  <LinkIcon className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                  <LinkIcon className="w-3 h-3 text-gray-400 shrink-0" />
                   <span
                     className={`text-xs text-gray-500 truncate ${v?.isPublished ? "opacity-100" : "opacity-50 cursor-not-allowed"}`}
                   >
@@ -74,7 +74,7 @@ function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
                   variant="ghost"
                   disabled={!v?.isPublished}
                   size="icon"
-                  className="h-8 w-8 flex-shrink-0 hover:text-primary border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-auto"
+                  className="h-8 w-8 shrink-0 hover:text-primary border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-auto"
                   onClick={(e) => {
                     e.stopPropagation();
                     !v?.isPublished && e.preventDefault();

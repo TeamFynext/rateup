@@ -139,14 +139,14 @@ function CreateLandingPageModal({
 
               {form.formState.errors.name?.message && (
                 <p className="text-xs text-red-600 mt-1">
-                  {form.formState.errors.name.message}
+                  {form.formState.errors.name.message?.toString()}
                 </p>
               )}
             </div>
 
             {/* Info Box */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-rateup-darkblue dark:to-transparent border-l-4 border-primary rounded-r-lg p-3.5 flex gap-3">
-              <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="bg-linear-to-r from-blue-50 to-indigo-50 dark:from-rateup-darkblue dark:to-transparent border-l-4 border-primary rounded-r-lg p-3.5 flex gap-3">
+              <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5">
                 <Info className="w-3 h-3 text-white" />
               </div>
               <p className="text-xs leading-relaxed">

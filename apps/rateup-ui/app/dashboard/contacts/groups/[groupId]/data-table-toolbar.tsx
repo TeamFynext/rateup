@@ -55,7 +55,7 @@ export function DataTableToolbar<TData, TValue>({
     );
   }
   return (
-    <div className="flex-shrink-0 p-3 bg-gradient-to-r from-gray-50 to-white border-b shadow-sm">
+    <div className="shrink-0 p-3 bg-linear-to-r from-gray-50 to-white border-b shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg">Group Members</h2>
@@ -95,7 +95,7 @@ export function DataTableToolbar<TData, TValue>({
             <Button
               size="sm"
               onClick={() => setIsOpenedAddModal(true)}
-              className="gap-2 h-8 bg-gradient-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700 shadow-md"
+              className="gap-2 h-8 bg-linear-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700 shadow-md"
             >
               <Plus className="w-3.5 h-3.5" />
               <span className="text-sm">Add Members</span>

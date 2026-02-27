@@ -110,7 +110,7 @@ export default function OnboardingStep3({
             <Card
               className={`p-3 cursor-pointer transition-all duration-300 hover:shadow-md border-2 ${
                 data.selectedTemplate === template.id
-                  ? "border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
+                  ? "border-blue-400 bg-linear-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
                   : "border-gray-200 hover:border-blue-300 bg-white"
               }`}
               onClick={() => handleTemplateSelect(template.id)}
@@ -119,7 +119,7 @@ export default function OnboardingStep3({
                 <div
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors shadow-md ${
                     data.selectedTemplate === template.id
-                      ? `bg-gradient-to-r ${template.color}`
+                      ? `bg-linear-to-r ${template.color}`
                       : "bg-gradient-to-br from-gray-200 to-gray-300"
                   }`}
                 >
@@ -164,7 +164,7 @@ export default function OnboardingStep3({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-purple-100 to-pink-100 border border-purple-300/60 rounded-lg p-3 shadow-sm backdrop-blur-sm"
+          className="bg-linear-to-r from-purple-100 to-pink-100 border border-purple-300/60 rounded-lg p-3 shadow-sm backdrop-blur-sm"
         >
           <div className="flex items-start space-x-3">
             <Sparkles className="w-3 h-3 text-purple-600 mt-0.5" />
@@ -193,7 +193,7 @@ export default function OnboardingStep3({
           <Button
             onClick={handleNext}
             disabled={!canProceed()}
-            className={`flex items-center px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`flex items-center px-6 py-2 bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
               canProceed() ? "hover:scale-105" : ""
             }`}
           >

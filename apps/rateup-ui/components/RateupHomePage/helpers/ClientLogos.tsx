@@ -52,7 +52,7 @@ const ClientLogos = () => {
           <span className="text-rateup-lightgraytext text-sm sm:text-base font-semibold">
             Trusted By
           </span>
-          <span className="bg-gradient-to-r from-rateup-blue to-rateup-darkblue bg-clip-text text-transparent font-bold text-base sm:text-lg lg:text-xl">
+          <span className="bg-linear-to-r from-rateup-blue to-rateup-darkblue bg-clip-text text-transparent font-bold text-base sm:text-lg lg:text-xl">
             100+ Clients
           </span>
         </div>

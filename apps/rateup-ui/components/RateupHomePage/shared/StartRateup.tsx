@@ -76,7 +76,7 @@ export default function StartRateupHero() {
             </h1>
 
             <div className="flex flex-col items-center justify-center gap-2">
-              <span className="font-semibold block bg-gradient-to-r from-rateup-blue-3 to-rateup-blue-2 bg-clip-text text-transparent text-3xl sm:text-4xl md:text-5xl">
+              <span className="font-semibold block bg-linear-to-r from-rateup-blue-3 to-rateup-blue-2 bg-clip-text text-transparent text-3xl sm:text-4xl md:text-5xl">
                 with RateUp
               </span>
 

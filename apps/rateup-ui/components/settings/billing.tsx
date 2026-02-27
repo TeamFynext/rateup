@@ -263,7 +263,7 @@ export const Billing = ({
       <div className="space-y-6">
         {/* Processing Plan Alert */}
         {isProcessingPlan && (
-          <Alert className="border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100/50">
+          <Alert className="border-blue-200 bg-linear-to-r from-blue-50 to-blue-100/50">
             <Info className="h-5 w-5 text-blue-600" />
             <AlertDescription>
               <div className="flex items-center justify-between gap-4 ml-2">

@@ -263,7 +263,7 @@ export default function BillingPage() {
             <div className="py-6">
               <div className="flex flex-col md:flex-row justify-between gap-8">
                 {/* Plan Details Section */}
-                <div className="space-y-4 flex-shrink-0">
+                <div className="space-y-4 shrink-0">
                   {cart?.period === "yearly" && (
                     <div className="flex items-center space-x-2">
                       <Switch

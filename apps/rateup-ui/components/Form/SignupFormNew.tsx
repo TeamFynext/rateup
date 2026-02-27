@@ -221,7 +221,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1 sm:h-1.5 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-linear-to-r from-blue-400 via-indigo-500 to-purple-500 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -350,9 +350,9 @@ export function Step1({ formData, handleNext, translations, google }) {
         </p>
       </div>
       {google ? (
-        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-2 sm:p-2.5">
+        <div className="bg-linear-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-2 sm:p-2.5">
           <div className="flex items-center space-x-2 sm:space-x-2.5">
-            <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+            <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600 shrink-0" />
             <div>
               <p className="text-xs sm:text-sm text-green-800">
                 Account connected successfully!
@@ -432,7 +432,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 flex-shrink-0"
+                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -516,7 +516,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 flex-shrink-0"
+                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -547,7 +547,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 flex-shrink-0"
+                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -619,7 +619,7 @@ export function Step1({ formData, handleNext, translations, google }) {
           id="terms"
           checked={agreesToTerms}
           onCheckedChange={(checked) => setAgreesToTerms(checked as boolean)}
-          className="border-2 border-gray-300 h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0"
+          className="border-2 border-gray-300 h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0"
         />
         <Label
           htmlFor="terms"
@@ -669,7 +669,7 @@ export function Step1({ formData, handleNext, translations, google }) {
         <Button
           onClick={handleClick}
           disabled={!isFormComplete}
-          className="min-w-24 sm:min-w-30 flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-w-24 sm:min-w-30 flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? <Loader /> : translations("Continue")}
           <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
@@ -789,7 +789,7 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-orange-100 to-pink-100 border border-orange-300/60 rounded-lg p-2 sm:p-3 mt-3 sm:mt-4 shadow-sm backdrop-blur-sm">
+      <div className="bg-linear-to-r from-orange-100 to-pink-100 border border-orange-300/60 rounded-lg p-2 sm:p-3 mt-3 sm:mt-4 shadow-sm backdrop-blur-sm">
         <div className="flex flex-col items-start gap-0.5 sm:gap-1">
           <div className="flex gap-1 items-start justify-center">
             <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 mt-0.5" />
@@ -818,7 +818,7 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         <Button
           onClick={handleNext}
           disabled={!isFormComplete}
-          className="flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {translations("Continue")}
           <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
@@ -914,7 +914,7 @@ export function Step3({
               <Card
                 className={`p-1.5 sm:p-2 cursor-pointer rounded-lg transition-all duration-300 hover:shadow-md border-2 ${
                   formData.values.goals.includes(goal.id)
-                    ? "border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
+                    ? "border-blue-400 bg-linear-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
                     : "border-gray-200 hover:border-blue-300 bg-white"
                 }`}
                 onClick={() => handleGoalToggle(goal.id)}
@@ -923,7 +923,7 @@ export function Step3({
                   <div
                     className={`w-5 h-5 sm:w-6 sm:h-6 rounded-sm flex items-center justify-center transition-colors shadow-md ${
                       formData.values.goals.includes(goal.id)
-                        ? `bg-gradient-to-r ${goal.color}`
+                        ? `bg-linear-to-r ${goal.color}`
                         : "bg-gradient-to-br from-gray-200 to-gray-300"
                     }`}
                   >
@@ -962,10 +962,10 @@ export function Step3({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-300/60 rounded-lg p-1 sm:p-1.5 shadow-sm backdrop-blur-sm"
+            className="bg-linear-to-r from-blue-100 to-indigo-100 border border-blue-300/60 rounded-lg p-1 sm:p-1.5 shadow-sm backdrop-blur-sm"
           >
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
+              <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 shrink-0" />
               <div>
                 <p className="text-blue-700 text-xs">
                   {translations("Great")}! {translations("You've selected")}{" "}
@@ -995,7 +995,7 @@ export function Step3({
         <Button
           onClick={handleSubmit}
           disabled={isLoading}
-          className="min-w-24 sm:min-w-30 flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-w-24 sm:min-w-30 flex items-center px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? <Loader /> : translations("Continue")}
           <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1.5 sm:ml-2" />
@@ -1023,7 +1023,7 @@ export function Step4({ formData }) {
   return (
     <div className="w-full">
       <div className="text-center mb-4 sm:mb-5">
-        <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-gradient-to-r from-orange-100 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
+        <div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-linear-to-r from-orange-100 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
           <Zap className="w-5 h-5 sm:w-5.5 sm:h-5.5 md:w-6 md:h-6 text-orange-600" />
         </div>
         <h2 className="text-base sm:text-lg text-gray-900 mb-0.5 sm:mb-1">
@@ -1064,7 +1064,7 @@ export function Step4({ formData }) {
                       {integration.name}
                     </span>
                     {integration.required && (
-                      <span className="text-[10px] sm:text-xs bg-gradient-to-r from-orange-500 to-blue-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] sm:text-xs bg-linear-to-r from-orange-500 to-blue-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full">
                         Recommended
                       </span>
                     )}
@@ -1085,7 +1085,7 @@ export function Step4({ formData }) {
           </Card>
         ))}
 
-        <div className="bg-gradient-to-r from-orange-50 to-blue-50 border border-orange-200 rounded-lg p-2 sm:p-2.5 mt-2 sm:mt-3">
+        <div className="bg-linear-to-r from-orange-50 to-blue-50 border border-orange-200 rounded-lg p-2 sm:p-2.5 mt-2 sm:mt-3">
           <div className="text-center">
             <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-600 mx-auto mb-0.5 sm:mb-1" />
             <p className="text-xs sm:text-sm text-orange-800">

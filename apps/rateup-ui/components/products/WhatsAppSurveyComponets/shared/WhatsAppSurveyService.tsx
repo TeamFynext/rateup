@@ -23,7 +23,7 @@ export default function WhatsAppSurveyService() {
             key={index}
             className="flex items-start p-6 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition"
           >
-            <div className="flex-shrink-0 w-14 h-14 mr-6 bg-blue-100 text-[#009987] rounded-full flex items-center justify-center">
+            <div className="shrink-0 w-14 h-14 mr-6 bg-blue-100 text-[#009987] rounded-full flex items-center justify-center">
               <feature.icon className="w-6 h-6" />
             </div>
             <div>

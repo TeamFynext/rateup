@@ -139,7 +139,7 @@ export function PremiumAvatar({
 
         {/* Shimmer Effect on Hover */}
         <div className="absolute inset-0 opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover/avatar:translate-x-full transition-transform duration-1000 ease-out" />
+          <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover/avatar:translate-x-full transition-transform duration-1000 ease-out" />
         </div>
 
         {/* Ripple Effect */}

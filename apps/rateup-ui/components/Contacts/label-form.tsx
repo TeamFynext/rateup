@@ -38,10 +38,10 @@ export const CustomFieldForm = ({
     slug: z.string().min(1, t("Slug is required")),
     description: z.string().optional(),
     type: z.enum(["multivalue", "number", "text", "email"], {
-      required_error: t("Type is required"),
+      error: t("Invalid type selected"),
     }),
     visibility: z.boolean({
-      required_error: t("Visibility is required"),
+      error: t("Invalid visibility value"),
     }),
     listValues: z.array(z.string()).optional(),
   });
