@@ -10,6 +10,12 @@ import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { EllipsisVertical, Filter, RefreshCcw } from "lucide-react-native";
 import { colors } from "@/src/constants/constants";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 const InboxButtons = ({
   activeFilterCount = 0,
@@ -17,6 +23,7 @@ const InboxButtons = ({
   activeFilterCount?: number;
 }) => {
   const router = useRouter();
+  const refreshRotation = useSharedValue(0);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const textColor = isDark ? "white" : colors["slate-950"];
@@ -24,6 +31,11 @@ const InboxButtons = ({
   const [open, setOpen] = useState(false);
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
+    refreshRotation.value = 0;
+    refreshRotation.value = withTiming(720, {
+      duration: 2000,
+      easing: Easing.linear,
+    });
   };
 
   useEffect(() => {
@@ -33,6 +45,16 @@ const InboxButtons = ({
 
     return () => clearTimeout(timer);
   }, []);
+
+  const refreshAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          rotate: `${refreshRotation.value}deg`,
+        },
+      ],
+    };
+  });
 
   return (
     <View className="relative ml-2">
@@ -85,9 +107,9 @@ const InboxButtons = ({
               handleRefresh();
             }}
           >
-            <View>
+            <Animated.View style={refreshAnimatedStyle}>
               <RefreshCcw color={textColor} size={18} />
-            </View>
+            </Animated.View>
             <Text className="dark:text-white text-sm">Refresh</Text>
           </Pressable>
         </View>
