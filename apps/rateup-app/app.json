@@ -8,7 +8,12 @@
     "scheme": "RateUp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rateupapp.rateup",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Allow RateUp to access microphone."
+      } 
     },
     "android": {
       "permissions": [

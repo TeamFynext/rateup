@@ -103,6 +103,7 @@ export default function Inbox({
     let ChatBoxComponent = ChatBox;
 
     if (!ChatBoxComponent) return null;
+    
     const parsedMessage = parseWaMessage_(item.lastMessage);
 
     const messagePreview = returnMessageContentBasedOnParsedMessage(

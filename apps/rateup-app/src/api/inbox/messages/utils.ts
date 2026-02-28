@@ -11,6 +11,15 @@ export type ParsedWaMessageReturn = {
 };
 
 export function parseWaMessage_(message: any): ParsedWaMessageReturn {
+  if (!message || !message.messageBody) {
+    return {
+      timeStamp: "",
+      messageType: "text",
+      messageContent: "No messages yet",
+      interactive: {} as any,
+      template: {} as any,
+    };
+  }
   const { messageBody, waCreatedAt } = message;
   let timeStamp: string = waCreatedAt ?? new Date().toLocaleTimeString();
   let messageType: string = "text";
@@ -164,7 +173,7 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
     if (messageBody?.exchangeProcess === "internal") {
       const { internal } = messageBody;
       const isClosedType = WaMessageClosedStatus.includes(
-        internal?.assignStatus as WaMessageAssignStatus
+        internal?.assignStatus as WaMessageAssignStatus,
       );
       if (isClosedType) {
         messageContent = `${internal?.triggeredByUser?.name} ${internal.text.body} `;
@@ -178,7 +187,7 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
 
 export function returnMessageContentBasedOnParsedMessage(
   parsedMessage: ParsedWaMessageReturn,
-  exchangeProcess: "send" | "receive"
+  exchangeProcess: "send" | "receive",
 ) {
   if (parsedMessage.messageType === "text") {
     return parsedMessage.messageContent;

@@ -13,11 +13,17 @@ import {
   useAudioRecorder,
   RecordingPresets,
   requestRecordingPermissionsAsync,
+  setAudioModeAsync,
 } from "expo-audio";
-
 
 const requestPermission = async () => {
   const { granted } = await requestRecordingPermissionsAsync();
+  if (granted) {
+    await setAudioModeAsync({
+      playsInSilentMode: true,
+      allowsRecording: true,
+    });
+  }
   return granted;
 };
 
@@ -81,12 +87,12 @@ const VoiceRecorder = ({
     setIsRecording(true);
   };
 
-   const stopRecording = async () => {
+  const stopRecording = async () => {
     await audioRecorder.stop();
-    const result = audioRecorder.uri
-        setIsRecording(false);
-
-    const name = `voice-${Date.now()}.mp4`;
+    const result = audioRecorder.uri;
+    console.log("result",result);
+    setIsRecording(false);
+    const name = `voice-${Date.now()}.m4a`;
     setIsUploading(true);
     try {
       //@ts-ignore

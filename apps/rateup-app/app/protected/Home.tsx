@@ -32,8 +32,6 @@ import { IconGift } from "@tabler/icons-react-native";
 
 const { height: screenHeight } = Dimensions.get("window");
 
-const PANEL_HEIGHT_PERCENTAGE = 0.6;
-const PANEL_HEIGHT = screenHeight * PANEL_HEIGHT_PERCENTAGE;
 
 const InboxLayout = memo(InboxLayoutComponent);
 
@@ -67,19 +65,12 @@ const MENU_ITEMS = [
 export default function Home() {
   const insets = useSafeAreaInsets();
   const [showAccountModal, setShowAccountModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<"account" | null>(null);
-  const [shouldRenderOverlay, setShouldRenderOverlay] = useState(false);
   const [selectedInterface, setSelectedInterface] =
     useState<HomeInterface>("inbox");
 
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  const open = selectedItem !== null;
   const queryClient = useQueryClient();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const bgColor = isDark ? colors["gray-900"] : "white";
 
   const { data: userData, isLoading: loading } = useLoggedInUser();
 
@@ -96,52 +87,10 @@ export default function Home() {
     }
   }, [selectedInterface]);
 
-  useEffect(() => {
-    if (open) {
-      setShouldRenderOverlay(true);
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 180,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 1,
-          duration: 180,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 200,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 200,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setShouldRenderOverlay(false);
-      });
-    }
-  }, [selectedItem]);
-
   const handleAccountPress = () => {
     setShowAccountModal(true);
     queryClient.invalidateQueries({ queryKey: ["loggedUser"] });
   };
-
-  const translateY = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [PANEL_HEIGHT, 0],
-  });
 
   if (loading) {
     return (
