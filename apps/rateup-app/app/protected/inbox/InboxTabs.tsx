@@ -16,13 +16,15 @@ import Inbox from "@/src/components/inbox/inbox";
 import SearchBar from "@/src/components/inbox/inboxSearchBar";
 import { colors } from "@/src/constants/constants";
 
+type IconType = React.ComponentType<any>;
+
 function TabIcon({
   Icon,
   focused,
   count,
   label,
 }: {
-  Icon: any;
+  Icon: IconType;
   focused: boolean;
   count?: number;
   label: string;
@@ -40,21 +42,17 @@ function TabIcon({
       className="relative px-4 py-1.5 rounded-full flex flex-row items-center gap-1"
       style={{ backgroundColor }}
     >
-      {" "}
-      <Icon color={textColor} size={16} />{" "}
+      <Icon color={textColor} size={16} />
       <View className="flex flex-row items-center gap-1">
-        {" "}
         <Text style={{ color: textColor }} className="font-semibold text-sm">
-          {" "}
-          {label}{" "}
-        </Text>{" "}
-        {count && count > 0 && (
-          <Text style={{ color: textColor }} className="font-semibold text-sm">
-            {" "}
-            ({count}){" "}
-          </Text>
-        )}{" "}
-      </View>{" "}
+          {label}
+        </Text>
+        <Text style={{ color: textColor }} className="font-semibold text-sm">
+          {count && count > 0 && (
+            `(${count})`
+          )}
+        </Text>
+      </View>
     </View>
   );
 }
