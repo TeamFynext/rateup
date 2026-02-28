@@ -8,7 +8,13 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
-import { UserCheck, Sparkles, User, CircleCheckBig } from "lucide-react-native";
+import {
+  UserCheck,
+  Sparkles,
+  User,
+  CircleCheckBig,
+  InboxIcon,
+} from "lucide-react-native";
 import { useContactCounts } from "@/src/api/inbox/contacts/contacts.query";
 import InboxButtons from "@/src/components/inbox/InboxButtons";
 import { useChatFilterStore } from "@/src/utils/store";
@@ -48,9 +54,7 @@ function TabIcon({
           {label}
         </Text>
         <Text style={{ color: textColor }} className="font-semibold text-sm">
-          {count && count > 0 && (
-            `(${count})`
-          )}
+          {count && count > 0 && `(${count})`}
         </Text>
       </View>
     </View>
@@ -60,7 +64,7 @@ function TabIcon({
 export default function InboxLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<
-    "New" | "Assigned" | "Mine" | "Closed"
+    "New" | "Assigned" | "Mine" | "Closed" | "All"
   >("New");
   const renderInboxContent = () => {
     switch (activeTab) {
@@ -96,6 +100,15 @@ export default function InboxLayout() {
           <Inbox
             messageType="usermessages"
             waMessageAssignStatus="Addressed"
+            searchTerm={searchTerm}
+          />
+        );
+
+      case "All":
+        return (
+          <Inbox
+            messageType="usermessages"
+            waMessageAssignStatus={null}
             searchTerm={searchTerm}
           />
         );
@@ -188,6 +201,14 @@ export default function InboxLayout() {
                 Icon={CircleCheckBig}
                 focused={activeTab === "Closed"}
                 label="Closed"
+              />
+            </Pressable>
+
+            <Pressable onPress={() => setActiveTab("All")}>
+              <TabIcon
+                Icon={InboxIcon}
+                focused={activeTab === "All"}
+                label="All"
               />
             </Pressable>
           </ScrollView>

@@ -18,7 +18,7 @@ import ChatBox from "../chatBox/ChatBox";
 type InboxProps = {
   messageType: string;
   searchTerm?: string;
-  waMessageAssignStatus?: string;
+  waMessageAssignStatus?: string | null;
 };
 
 export default function Inbox({
