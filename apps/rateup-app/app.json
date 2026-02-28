@@ -12,7 +12,14 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.rateupapp.rateup",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Allow RateUp to access microphone."
+        "NSMicrophoneUsageDescription": "Allow RateUp to access microphone.",
+        "CFBundleURLTypes": [
+      {
+        "CFBundleURLSchemes": [
+          "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
+        ]
+      }
+    ]
       } 
     },
     "android": {
