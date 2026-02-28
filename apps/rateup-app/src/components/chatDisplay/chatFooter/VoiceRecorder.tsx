@@ -1,10 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  View,
-  TouchableOpacity,
-  Animated,
-  ActivityIndicator,
-} from "react-native";
+import { View, ActivityIndicator, Pressable } from "react-native";
 import { Mic, CircleStop } from "lucide-react-native";
 import { uploadFile, getFileUrlFromKey } from "@/src/utils/fileUpload";
 import { create } from "zustand";
@@ -15,6 +10,15 @@ import {
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
 } from "expo-audio";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
+import { colors } from "@/src/constants/constants";
 
 const requestPermission = async () => {
   const { granted } = await requestRecordingPermissionsAsync();
@@ -27,40 +31,51 @@ const requestPermission = async () => {
   return granted;
 };
 
-const VoiceVisualizer = () => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+const WaveBar = ({ delay }: { delay: number }) => {
+  const height = useSharedValue(4);
 
   useEffect(() => {
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.4,
-          duration: 300,
-          useNativeDriver: true,
+    height.value = withDelay(
+      delay,
+      withRepeat(
+        withTiming(20, {
+          duration: 400,
+          easing: Easing.inOut(Easing.ease),
         }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]),
+        -1,
+        true,
+      ),
     );
-    pulse.start();
-
-    return () => pulse.stop();
   }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    height: height.value,
+  }));
 
   return (
     <Animated.View
-      style={{
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-        backgroundColor: "red",
-        transform: [{ scale: scaleAnim }],
-        marginRight: 10,
-      }}
+      style={[
+        {
+          width: 4,
+          backgroundColor: colors["primary-blue"],
+          borderRadius: 2,
+          marginHorizontal: 2,
+        },
+        animatedStyle,
+      ]}
     />
+  );
+};
+
+const VoiceWave = () => {
+  return (
+    <View
+      style={{ flexDirection: "row", alignItems: "flex-end", marginRight: 10 }}
+    >
+      {[0, 100, 200, 300, 400].map((delay, index) => (
+        <WaveBar key={index} delay={delay} />
+      ))}
+    </View>
   );
 };
 
@@ -90,7 +105,6 @@ const VoiceRecorder = ({
   const stopRecording = async () => {
     await audioRecorder.stop();
     const result = audioRecorder.uri;
-    console.log("result",result);
     setIsRecording(false);
     const name = `voice-${Date.now()}.m4a`;
     setIsUploading(true);
@@ -109,11 +123,11 @@ const VoiceRecorder = ({
 
   return (
     <View className="flex-row items-center gap-2 mb-3">
-      {isRecording && <VoiceVisualizer />}
+      {isRecording && <VoiceWave />}
       {isUploading ? (
         <ActivityIndicator size="small" color="gray" />
       ) : (
-        <TouchableOpacity
+        <Pressable
           onPress={isRecording ? stopRecording : startRecording}
         >
           {isRecording ? (
@@ -121,7 +135,7 @@ const VoiceRecorder = ({
           ) : (
             <Mic size={30} color={iconColor} strokeWidth={1.5} />
           )}
-        </TouchableOpacity>
+        </Pressable>
       )}
     </View>
   );

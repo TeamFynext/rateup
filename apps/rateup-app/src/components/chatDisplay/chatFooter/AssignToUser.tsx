@@ -182,7 +182,7 @@ export default function AssignToUser({
                     );
 
                     return (
-                      <TouchableOpacity
+                      <Pressable
                         key={member.id}
                         className="flex-row items-center justify-between"
                         onPress={() => {
@@ -225,7 +225,7 @@ export default function AssignToUser({
                         {isSelected && (
                           <Check size={18} color={isDark ? "white" : "black"} />
                         )}
-                      </TouchableOpacity>
+                      </Pressable>
                     );
                   })}
                 </View>
