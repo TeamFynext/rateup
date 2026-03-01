@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTeamsByUser } from "@/src/api/teams/teams.query";
 import { useFlowFilterStore } from "@/src/utils/store";
 import { useRouter } from "expo-router";
-import { BackIcon } from "@/src/constants/imageExports";
+import { ArrowLeft } from "lucide-react-native";
 
 const Button = ({
   label,
@@ -68,7 +68,7 @@ const FlowFilter = () => {
       <View className="flex-row items-center mb-8 gap-2 justify-between">
         <View className="flex-row gap-1 items-center justify-center">
           <Pressable onPress={() => router.back()}>
-            <BackIcon height={25} width={25} />
+            <ArrowLeft />
           </Pressable>
           <Text className="text-black text-2xl font-bold">Filter</Text>
         </View>

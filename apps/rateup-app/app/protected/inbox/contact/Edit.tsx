@@ -10,9 +10,8 @@ import {
   useWindowDimensions,
 } from "react-native";
 import ToggleSwitch from "toggle-switch-react-native";
-import { ChevronDown, ChevronUp } from "lucide-react-native";
+import { ArrowLeft, ChevronDown, ChevronUp, User } from "lucide-react-native";
 import { countries } from "@/src/constants/countries";
-import { BackIcon, UsernameIcon } from "@/src/constants/imageExports";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   editContactById,
@@ -73,12 +72,12 @@ export default function EditContacts() {
       setIsAiChatActive(res.aiWaChat);
 
       const numbers = convertFullPhoneNumToCoutryCodeAndNationalNum(
-        `+${res.phone}`
+        `+${res.phone}`,
       );
       setPhone(numbers.national_number);
 
       const matchingCountry = countries.find(
-        (country) => country.dial_code === `+${numbers.country_code}`
+        (country) => country.dial_code === `+${numbers.country_code}`,
       );
 
       if (matchingCountry) {
@@ -121,7 +120,7 @@ export default function EditContacts() {
           {/* Header */}
           <View className="flex-row items-center mb-8 gap-2">
             <Pressable onPress={() => router.back()}>
-              <BackIcon height={25} width={25} />
+              <ArrowLeft />
             </Pressable>
             <Text className="text-black text-2xl font-bold">Edit</Text>
           </View>
@@ -148,7 +147,7 @@ export default function EditContacts() {
               Name <Text className="text-[#CC292C]">*</Text>
             </Text>
             <View className="border border-[#E2E5ED] rounded-lg px-4 py-4 flex-row gap-2 items-center">
-              <UsernameIcon />
+              <User size={16} />
               <TextInput
                 className="text-black text-base flex-1"
                 placeholder="Enter contact name"

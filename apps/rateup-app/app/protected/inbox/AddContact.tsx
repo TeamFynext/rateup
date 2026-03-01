@@ -12,13 +12,8 @@ import {
   useWindowDimensions,
   useColorScheme,
 } from "react-native";
-import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react-native";
+import { ArrowLeft, ChevronDown, ChevronUp, Mail, User } from "lucide-react-native";
 import { countries } from "@/src/constants/countries";
-import {
-  BackIcon,
-  EmailIcon,
-  UsernameIcon,
-} from "@/src/constants/imageExports";
 import { useRouter } from "expo-router";
 import { createContact } from "@/src/api/inbox/contacts/contacts.api";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -88,7 +83,9 @@ export default function AddContactScreen() {
     >
       <Text className="text-black dark:text-white mr-2">{item.flag}</Text>
       <Text className="text-black dark:text-white mr-2">{item.name}</Text>
-      <Text className="text-black dark:text-white text-sm">{item.dial_code}</Text>
+      <Text className="text-black dark:text-white text-sm">
+        {item.dial_code}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -134,7 +131,7 @@ export default function AddContactScreen() {
                 Name <Text className="text-[#CC292C]">*</Text>
               </Text>
               <View className="border border-[#E2E5ED] rounded-lg px-4 py-4 flex-row gap-2 items-center">
-                <UsernameIcon />
+                <User size={16} />
                 <TextInput
                   className="dark:text-white text-base flex-1"
                   placeholder="Enter contact name"
@@ -207,7 +204,7 @@ export default function AddContactScreen() {
                 Email Id <Text className="text-[#CC292C]">*</Text>
               </Text>
               <View className="border border-[#E2E5ED] rounded-lg px-4 py-4 flex-row gap-2 items-center">
-                <EmailIcon />
+                <Mail size={16} />
                 <TextInput
                   className="dark:text-white text-base flex-1"
                   placeholder="Enter contact email"

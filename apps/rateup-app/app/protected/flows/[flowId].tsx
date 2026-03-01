@@ -7,6 +7,7 @@ import {
   Text,
   View,
   TouchableOpacity,
+  useColorScheme,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
@@ -15,7 +16,6 @@ import { useWaFlowFromDb } from "@/src/api/whatsapp/flow/flow.query";
 import { ContactCard } from "@/src/components/flow/FlowResponseCard";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { BackIcon } from "@/src/constants/imageExports";
 import {
   useResponseAnalytics,
   useResponsesBySurvey,
@@ -27,6 +27,8 @@ import HappyIndex from "@/src/components/webform/HappyIndex";
 import NpsOverview from "@/src/components/webform/NpsOverview";
 import HappinessJourney from "@/src/components/webform/HappinessJourney";
 import SurveyQuestions from "@/src/components/flow/SurveyQuestions";
+import { colors } from "@/src/constants/constants";
+import { ArrowLeft } from "lucide-react-native";
 
 dayjs.extend(relativeTime);
 
@@ -284,7 +286,6 @@ const FlowPage = () => {
   const router = useRouter();
   const screenWidth = Dimensions.get("window").width;
   const sw = Math.floor(screenWidth * 0.45);
-
   const { flowId, flowName } = useMemo(() => {
     const id = params?.flowId;
     const name = params?.flowName;
@@ -309,7 +310,7 @@ const FlowPage = () => {
       {/* Header */}
       <View className="flex-row items-center mt-4 mb-4 gap-2">
         <Pressable onPress={() => router.back()}>
-          <BackIcon height={25} width={25} />
+          <ArrowLeft />
         </Pressable>
         <Text className="text-black text-2xl font-bold">{flowName}</Text>
       </View>

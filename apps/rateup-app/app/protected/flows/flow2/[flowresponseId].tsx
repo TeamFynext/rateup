@@ -6,7 +6,6 @@ import {
 } from "react-native";
 import React, { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BackIcon } from "@/src/constants/imageExports";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFlowDataStore, useFlowResponseDataStore } from "@/src/utils/store";
 import { QuestionType2, WaQuestions } from "@/src/components/flow/enum";
@@ -20,6 +19,7 @@ import {
 import { useToast } from "react-native-toast-notifications";
 import DocumentResponse from "@/src/components/flow/DocumentResponse";
 import ImageResponse from "@/src/components/flow/ImageResponse";
+import { ArrowLeft } from "lucide-react-native";
 
 const Flow2Response = () => {
   const { respondent } = useLocalSearchParams();
@@ -67,7 +67,7 @@ const Flow2Response = () => {
           onPress={() => router.back()}
           className="flex-row items-center space-x-3 mb-4"
         >
-          <BackIcon height={25} width={25} color="black" />
+          <ArrowLeft />
         </TouchableOpacity>
 
         <View className="flex-row items-center space-x-4 mb-6 gap-3">

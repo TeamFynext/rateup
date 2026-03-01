@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFlowResponseDataStore } from "@/src/utils/store";
 import { useQuestions } from "@/src/api/question/question.query";
-import { BackIcon } from "@/src/constants/imageExports";
+import { ArrowLeft } from "lucide-react-native";
 
 const ResponseId = () => {
   const { flowresponseId, surveyId, respondent } = useLocalSearchParams();
@@ -38,7 +38,7 @@ const ResponseId = () => {
           onPress={() => router.back()}
           className="flex-row items-center space-x-3 mb-4"
         >
-          <BackIcon height={25} width={25} color="black" />
+          <ArrowLeft />
         </TouchableOpacity>
 
         {/* Avatar + Name */}
@@ -68,12 +68,12 @@ const ResponseId = () => {
             typeof value === "string"
               ? value
               : Array.isArray(value)
-              ? value
-                  .map((v) => (typeof v === "string" ? v : v?.value || ""))
-                  .join(", ")
-              : typeof value === "object" && value?.value
-              ? value.value
-              : JSON.stringify(value);
+                ? value
+                    .map((v) => (typeof v === "string" ? v : v?.value || ""))
+                    .join(", ")
+                : typeof value === "object" && value?.value
+                  ? value.value
+                  : JSON.stringify(value);
 
           return (
             <View className="flex justify-center mb-8">

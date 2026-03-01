@@ -6,13 +6,12 @@ import {
   Pressable,
   FlatList,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { IIcon } from "@/src/constants/imageExports";
+import React, { useState } from "react";
 import NotAssigned from "./chatFooter/NotAssigned";
 import MessageSendPanel from "./chatFooter/MessageSendPanel";
 import { useAuth } from "@/src/context/AuthContext";
 import { useChatAssignStatusStore } from "@/src/utils/store";
-import { UserCheck } from "lucide-react-native";
+import { Info, UserCheck } from "lucide-react-native";
 import { WaMessageClosedStatus } from "@/src/constants/constants";
 import { WaMessageAssignStatus } from "@/src/api/inbox/types";
 import { useGetAssignedUserForContact } from "@/src/api/inbox/messages/message.query";
@@ -78,7 +77,7 @@ const ChatFooter = ({ id }: { id: string }) => {
     return (
       <View>
         <View className="bg-black flex-row py-2 px-1 items-center justify-center gap-1">
-          <IIcon />
+          <Info color={"white"} size={16} />
           <Text className="text-white">Please assign to start the chat</Text>
         </View>
         <NotAssigned contactId={id} />
@@ -90,7 +89,7 @@ const ChatFooter = ({ id }: { id: string }) => {
     <View>
       {!currentUserAssignment && hasAssignedUsers && (
         <View className="bg-black flex-row py-3 px-1 items-center justify-center gap-1 flex-wrap">
-          <IIcon />
+          <Info color={"white"} size={16} />
           <Text className="text-white">This chat is not assigned to you.</Text>
           {assignedUsers && (
             <TouchableOpacity onPress={toggleModal}>
