@@ -59,7 +59,6 @@ export async function createUserSignup({
   planId,
   location,
   website,
-  industry,
   goals,
   integrationsSelected,
 }: CreateUserSignupSchema) {
@@ -87,7 +86,6 @@ export async function createUserSignup({
           onboarding: {
             location: location || null,
             website: website || null,
-            industry: industry || null,
             goals: goals?.length ? goals : null,
             integrationsSelected: integrationsSelected?.length
               ? integrationsSelected
