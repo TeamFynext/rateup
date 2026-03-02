@@ -215,7 +215,7 @@ const ProductManagementSection = ({ catalogData }) => {
     <div className="flex flex-col gap-2 mt-4">
       <p className="font-semibold">Product Management</p>
 
-      {/* Import from Shopify */}
+      {/* Import from Shopify 
       <div className="flex flex-col gap-1">
         <div className="flex justify-between items-center p-3 border border-gray-300 rounded-lg bg-gray-50">
           <div className="flex flex-col gap-1">
@@ -240,6 +240,7 @@ const ProductManagementSection = ({ catalogData }) => {
           </p>
         )}
       </div>
+      */}
 
       <ImportFromShopifyModal
         catalogId={catalogId}
