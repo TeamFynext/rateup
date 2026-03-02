@@ -1,8 +1,8 @@
 import { Footer, Layout, Navbar } from "nextra-theme-docs";
 import { Head } from "nextra/components";
 import { getPageMap } from "nextra/page-map";
-import "nextra-theme-docs/style.css";
 import Image from "next/image";
+import "nextra-theme-docs/style.css";
 
 export const metadata = {
   title: {
@@ -10,10 +10,6 @@ export const metadata = {
     template: "RateUp Documentation", // will allow page-specific titles
   },
   description: "Welcome to the RateUp documentation",
-  viewport: {
-    width: "device-width",
-    initialScale: 1.0,
-  },
   openGraph: {
     title: "RateUp Documentation",
     description: "Welcome to the RateUp documentation",
@@ -22,6 +18,12 @@ export const metadata = {
     icon: "/favicon.png",
   },
 };
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 const navbar = (
   <Navbar
     logo={
@@ -47,35 +49,30 @@ const navbar = (
   />
 );
 const footer = (
-  <Footer>
-    <footer
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        width: "100%",
-      }}
-    >
-      <p>
-        Powered by{" "}
-        <Image
-          src={"/images/rateup-logo.svg"}
-          width={50}
-          height={50}
-          alt="rateup logo"
-        />
-      </p>
-      <p style={{ marginLeft: "auto" }}>
-        Copyright © {new Date().getFullYear()} RateUp Docs, Inc.
-      </p>
-    </footer>
+  <Footer className="flex">
+    <p>
+      Powered by{" "}
+      <Image
+        src={"/images/rateup-logo.svg"}
+        width={50}
+        height={50}
+        alt="rateup logo"
+      />
+    </p>
+    <p style={{ marginLeft: "auto" }}>
+      Copyright © {new Date().getFullYear()} RateUp Docs, Inc.
+    </p>
   </Footer>
 );
 
-export default async function RootLayout({ children }) {
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html>
+    <html lang="en" dir="ltr" suppressHydrationWarning>
+      <Head></Head>
       <body>
         <Layout
           navbar={navbar}
