@@ -65,7 +65,11 @@ const footer = (
   </Footer>
 );
 
-export default async function RootLayout({ children }) {
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <Head></Head>
