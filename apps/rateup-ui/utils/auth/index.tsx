@@ -248,6 +248,37 @@ export function useSignUp() {
       // if (phoneNumber) {
       //   await handleCreateCode(phoneNumber, router);
       // } else {
+      const optionalFormFields = [
+        {
+          id: "phoneNumber",
+          value: phoneNumber || null,
+        },
+        {
+          id: "planId",
+          value: planId || null,
+        },
+        {
+          id: "website",
+          value: website || null,
+        },
+        {
+          id: "industry",
+          value: industry || null,
+        },
+        {
+          id: "location",
+          value: location || null,
+        },
+        {
+          id: "goals",
+          value: goals || null,
+        },
+        {
+          id: "integrationsSelected",
+          value: integrationsSelected || null,
+        },
+      ].filter((field) => field.value !== null);
+
       let response = await signUp({
         formFields: [
           {
@@ -266,34 +297,7 @@ export function useSignUp() {
             id: "orgName",
             value: orgName,
           },
-          {
-            id: "phoneNumber",
-            value: phoneNumber || null,
-          },
-          {
-            id: "planId",
-            value: planId || null,
-          },
-          {
-            id: "website",
-            value: website || null,
-          },
-          {
-            id: "industry",
-            value: industry || null,
-          },
-          {
-            id: "location",
-            value: location || null,
-          },
-          {
-            id: "goals",
-            value: goals || null,
-          },
-          {
-            id: "integrationsSelected",
-            value: integrationsSelected || null,
-          },
+          ...optionalFormFields,
         ],
       });
 
