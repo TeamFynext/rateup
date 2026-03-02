@@ -680,25 +680,11 @@ export function Step1({ formData, handleNext, translations, google }) {
 }
 
 export function Step2({ formData, handleBack, handleNext, translations }) {
-  const industries = [
-    "E-commerce",
-    "Retail",
-    "Restaurant & Food",
-    "Healthcare",
-    "Education",
-    "Real Estate",
-    "Financial Services",
-    "Travel & Tourism",
-    "Technology",
-    "Other",
-  ];
-
   const countries = countryList().getData();
 
   const isFormComplete =
     formData.values.orgName.trim() !== "" &&
     formData.values.phoneNumber.trim() !== "" &&
-    formData.values.industry.trim() !== "" &&
     formData.values.location.trim() !== "";
 
   return (
@@ -755,24 +741,6 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
             onChange={(val) => formData.setFieldValue("phoneNumber", val || "")}
             className="border-2 border-gray-200 focus:border-rateup-blue focus-within:ring-2 focus-within:ring-rateup-blue/20 rounded-md px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-white [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full"
           />
-        </div>
-
-        <div className="space-y-0.5 sm:space-y-1">
-          <Select
-            value={formData.values.industry}
-            onValueChange={(val) => formData.setFieldValue("industry", val)}
-          >
-            <SelectTrigger className="w-full h-6 sm:h-7 border-2 border-gray-200 focus:border-orange-500 bg-white text-xs sm:text-sm">
-              <SelectValue placeholder={`${translations("Industry")} *`} />
-            </SelectTrigger>
-            <SelectContent side="bottom" align="start">
-              {industries.map((industry) => (
-                <SelectItem key={industry} value={industry}>
-                  {industry}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="space-y-0.5 sm:space-y-1">
