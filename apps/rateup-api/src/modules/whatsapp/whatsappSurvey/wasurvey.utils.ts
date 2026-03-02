@@ -668,8 +668,9 @@ export const handlePaymentConfirmation = async (
       type: "order_status",
       body: {
         text:
-          confirmation.data?.components?.find((data) => data.type === "body")
-            ?.text ||
+          confirmation?.data?.components?.find(
+            (data: any) => data.type === "body",
+          )?.text ||
           "Awesome! See you at the meetup. Let's make it a blast! 🎉🎉",
       },
       action: {

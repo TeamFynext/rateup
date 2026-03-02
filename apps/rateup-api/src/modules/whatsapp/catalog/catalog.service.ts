@@ -303,6 +303,7 @@ export async function handleWaOrderfromCatalog(
           quantity: p.quantity,
           title: p.title,
         })),
+        data.messages[0].from,
       );
       if (shopifyOrder && shopifyOrder.id) {
         shopifyDraftOrderId = shopifyOrder.id.toString();

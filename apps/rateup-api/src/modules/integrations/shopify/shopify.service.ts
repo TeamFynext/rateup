@@ -1052,7 +1052,8 @@ export async function handleShopifyOrderEvents(webhook) {
       body?.customer?.phone ||
       body?.customer?.default_address?.phone ||
       body?.billing_address?.phone ||
-      webhook.body?.shipping_address?.phone;
+      webhook.body?.shipping_address?.phone ||
+      body?.phone;
     productIds.push(
       ...body.line_items?.map(
         (product) => `gid://shopify/Product/${product.product_id}`,
@@ -1497,6 +1498,7 @@ export async function resolveShopifyVariants(
 export async function createShopifyPendingOrder(
   orgId: string,
   products: { retailerId: string; quantity: number; title?: string }[],
+  customerPhone?: string,
 ) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
@@ -1544,6 +1546,11 @@ export async function createShopifyPendingOrder(
         order: {
           line_items: lineItems,
           financial_status: "pending",
+          ...(customerPhone && {
+            phone: customerPhone.startsWith("+")
+              ? customerPhone
+              : `+${customerPhone}`,
+          }),
         },
       },
     });
@@ -1578,9 +1585,10 @@ export async function captureShopifyOrderPayment(
       type: DataType.JSON,
       data: {
         transaction: {
-          kind: "capture",
+          kind: "sale",
           status: "success",
           amount: (amount / 100).toFixed(2), // Assumes the amount is in smallest currency unit (paise)
+          source: "external",
         },
       },
     });
