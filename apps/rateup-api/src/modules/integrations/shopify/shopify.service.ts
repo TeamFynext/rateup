@@ -1,6 +1,6 @@
 import prisma from "../../../utils/prisma.js";
 import shopify from "./shopify.config.js";
-import { GraphqlClient, Session } from "@shopify/shopify-api";
+import { GraphqlClient, Session, DataType } from "@shopify/shopify-api";
 import isEmpty from "lodash/isEmpty.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import _get from "lodash/get.js";
@@ -1302,26 +1302,10 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
  *   1. Primary:  match by Shopify variant SKU == retailerId
  *   2. Fallback: match by Shopify product title (case-insensitive) == title field
  */
-export async function buildShopifyCartUrl(
-  orgId: string,
+export async function resolveShopifyVariants(
   products: { retailerId: string; quantity: number; title?: string }[],
-): Promise<string | null> {
-  const shopifyInfo = await getShopifyInfo(orgId);
-  if (!shopifyInfo || !shopifyInfo.active) {
-    log.warn("Shopify integration not active for orgId %s", orgId);
-    return null;
-  }
-
-  const shop = shopifyInfo.credential?.session?.shop;
-  if (!shop) {
-    log.warn("Shopify shop domain not found for orgId %s", orgId);
-    return null;
-  }
-
-  const client = new shopify.clients.Graphql({
-    session: shopifyInfo.credential.session,
-  });
-
+  client: any,
+): Promise<Map<string, string>> {
   // retailerId → numeric Shopify variant id
   const variantMap = new Map<string, string>();
 
@@ -1402,7 +1386,7 @@ export async function buildShopifyCartUrl(
       });
     } catch (e) {
       log.error("Error fetching Shopify variants by SKU => %o", e);
-      return null;
+      return variantMap;
     }
   }
 
@@ -1507,6 +1491,133 @@ export async function buildShopifyCartUrl(
     }
   }
 
+  return variantMap;
+}
+
+export async function createShopifyPendingOrder(
+  orgId: string,
+  products: { retailerId: string; quantity: number; title?: string }[],
+) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    log.trace(
+      "Shopify integration not active for orgId %s. Will not create an order.",
+      orgId,
+    );
+    return null;
+  }
+
+  const client = new shopify.clients.Graphql({
+    session: shopifyInfo.credential.session,
+  });
+
+  const variantMap = await resolveShopifyVariants(products, client);
+  const lineItems = [];
+  for (const product of products) {
+    const variantId = variantMap.get(product.retailerId);
+    if (variantId) {
+      lineItems.push({
+        variant_id: parseInt(variantId),
+        quantity: product.quantity,
+      });
+    } else {
+      log.warn(`Product SKU ${product.retailerId} not found in Shopify.`);
+    }
+  }
+
+  if (lineItems.length === 0) {
+    log.trace(
+      "No products matched in Shopify, skipping Shopify order creation.",
+    );
+    return null;
+  }
+
+  const restClient = new shopify.clients.Rest({
+    session: shopifyInfo.credential.session,
+  });
+
+  try {
+    const response: any = await restClient.post({
+      path: "orders",
+      type: DataType.JSON,
+      data: {
+        order: {
+          line_items: lineItems,
+          financial_status: "pending",
+        },
+      },
+    });
+    return response.body.order;
+  } catch (error: any) {
+    log.error(
+      "Failed to create pending order in Shopify => %o",
+      error.response?.body || error,
+    );
+    return null;
+  }
+}
+
+export async function captureShopifyOrderPayment(
+  orgId: string,
+  orderId: string,
+  amount: number,
+) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    log.trace("Shopify integration not active. Cannot capture payment.");
+    return false;
+  }
+
+  const restClient = new shopify.clients.Rest({
+    session: shopifyInfo.credential.session,
+  });
+
+  try {
+    const response: any = await restClient.post({
+      path: `orders/${orderId}/transactions`,
+      type: DataType.JSON,
+      data: {
+        transaction: {
+          kind: "capture",
+          status: "success",
+          amount: (amount / 100).toFixed(2), // Assumes the amount is in smallest currency unit (paise)
+        },
+      },
+    });
+    log.info("Successfully captured payment for Shopify Order %s", orderId);
+    return response.body.transaction;
+  } catch (error: any) {
+    log.error(
+      "Failed to capture payment for Shopify Order %s => %o",
+      orderId,
+      error.response?.body || error,
+    );
+    return false;
+  }
+}
+
+export async function buildShopifyCartUrl(
+  orgId: string,
+  products: { retailerId: string; quantity: number; title?: string }[],
+): Promise<string | null> {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    log.warn("Shopify integration not active for orgId %s", orgId);
+    return null;
+  }
+
+  const shop = shopifyInfo.credential?.session?.shop;
+  if (!shop) {
+    log.warn("Shopify shop domain not found for orgId %s", orgId);
+    return null;
+  }
+
+  const client = new shopify.clients.Graphql({
+    session: shopifyInfo.credential.session,
+  });
+
+  const variantMap = await resolveShopifyVariants(products, client);
+
   // ── Build cart URL ────────────────────────────────────────────────────────
   const cartParts: string[] = [];
   for (const product of products) {
@@ -1529,7 +1640,6 @@ export async function buildShopifyCartUrl(
 
   return `https://${shop}/cart/${cartParts.join(",")}`;
 }
-
 export async function createShopifyDraftOrder(orgId: string, products: any[]) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
