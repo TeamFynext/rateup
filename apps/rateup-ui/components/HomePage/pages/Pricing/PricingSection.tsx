@@ -37,15 +37,24 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
   const rateupPlans = useMemo(
     () =>
       plans
-        ? plans.filter(
-            (plan) =>
-              plan.name === "FREE PLAN" ||
-              (plan.paymentPlan &&
-                plan?.paymentPlan?.currency === currency &&
-                plan.paymentPlan.period === period),
-          )
+        ? plans
+            .filter(
+              (plan) =>
+                plan.name === "FREE PLAN" ||
+                (plan.paymentPlan &&
+                  plan?.paymentPlan?.currency === currency &&
+                  plan.paymentPlan.period === period),
+            )
+            .filter((plan) => {
+              if (!isMiddleEast) return true;
+
+              const planName = `${plan?.name ?? ""} ${plan?.displayName ?? ""}`
+                .trim()
+                .toLowerCase();
+              return !planName.includes("Starter");
+            })
         : [],
-    [plans, currency, period],
+    [plans, currency, period, isMiddleEast],
   );
   const { updateRouteAndCart } = useRouteAndCartStore();
   const sendMail = useSendMailPlanSelectDetails();
@@ -150,15 +159,14 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        {!isMiddleEast &&
-          rateupPlans.map((plan) => (
-            <PlanCardNew
-              key={plan.id}
-              plan={plan}
-              onButtonClick={() => handlePlanSelection(plan)}
-              currencySymbol={currencySymbol}
-            />
-          ))}
+        {rateupPlans.map((plan) => (
+          <PlanCardNew
+            key={plan.id}
+            plan={plan}
+            onButtonClick={() => handlePlanSelection(plan)}
+            currencySymbol={currencySymbol}
+          />
+        ))}
       </motion.div>
       <div
         className="flex flex-col text-center  bg-white shadow-lg transition-all 
