@@ -9,7 +9,10 @@ import {
 } from "./integrations.schema.js";
 import { callWhatsappApi } from "../whatsapp/wa_axios.js";
 import { log } from "../../utils/logger.js";
-import { getWaSettings } from "../whatsapp/settings/wa_settings.service.js";
+import {
+  getWaSettings,
+  getWaSettingsById,
+} from "../whatsapp/settings/wa_settings.service.js";
 import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service.js";
 import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils.js";
 import { getScheduleTime } from "../../utils/date.js";
@@ -43,8 +46,17 @@ export async function getAllIntegrations() {
 export const getWaPaymentConfigurations = async (
   orgId: string,
   noDbSave = false,
+  whatsappSettingsId?: string,
 ) => {
-  const waSettings = await getWaSettings(orgId);
+  // If a specific WA account is requested, use it. Otherwise fall back to the first account.
+  const waSettings = whatsappSettingsId
+    ? await getWaSettingsById(whatsappSettingsId)
+    : await getWaSettings(orgId);
+
+  if (!waSettings) {
+    throw new Error("WhatsApp settings not found");
+  }
+
   const res = await callWhatsappApi(
     `/${waSettings.wabaId}/payment_configurations`,
     "GET",

@@ -22,7 +22,10 @@ import { MetaLoginAssets, WaConfigType } from "../../../types/enums.js";
 import { createNativePaymentMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import { generateOrderReferenceId } from "../automatedReply/wa_automatedReply.utils.js";
 import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
-import { buildShopifyCartUrl } from "../../integrations/shopify/shopify.service.js";
+import {
+  buildShopifyCartUrl,
+  createShopifyPendingOrder,
+} from "../../integrations/shopify/shopify.service.js";
 
 export async function updateWaCatalog(
   catalogId: string,
@@ -290,6 +293,34 @@ export async function handleWaOrderfromCatalog(
     };
   });
 
+  let shopifyDraftOrderId = null;
+  if ((waSettings?.paymentMethod ?? "NATIVE") === "NATIVE") {
+    try {
+      const shopifyOrder = await createShopifyPendingOrder(
+        catalog.orgId,
+        productsWithDetails.map((p) => ({
+          retailerId: p.retailerId,
+          quantity: p.quantity,
+          title: p.title,
+        })),
+        data.messages[0].from,
+      );
+      if (shopifyOrder && shopifyOrder.id) {
+        shopifyDraftOrderId = shopifyOrder.id.toString();
+        log.info(
+          "Created Shopify pending order %s for orgId %s",
+          shopifyDraftOrderId,
+          catalog.orgId,
+        );
+      }
+    } catch (e) {
+      log.error(
+        "Failed to create pending order in Shopify during WA checkout => %o",
+        e,
+      );
+    }
+  }
+
   const newOrder = await prisma.waCatalogOrder.create({
     data: {
       catalogId: order.catalog_id,
@@ -297,6 +328,7 @@ export async function handleWaOrderfromCatalog(
       products: productsWithDetails,
       createdAt: messageObj.waCreatedAt,
       paymentMethod: waSettings?.paymentMethod ?? "NATIVE",
+      shopifyDraftOrderId,
     },
   });
   log.info("Order placed => %o", newOrder);
@@ -362,6 +394,7 @@ export async function handleWaOrderfromCatalog(
         order.catalog_id,
         newOrder.products as any,
         waSettings,
+        newOrder.id,
       );
     }
   } catch (e) {
@@ -380,6 +413,7 @@ export async function handleWaOrderNativePayment(
     currency: string;
   }[],
   waSettings: Omit<WhatsappSettings, "accessToken_iv">,
+  catalogOrderId?: string,
 ) {
   try {
     const waSetting = waSettings;
@@ -439,6 +473,13 @@ export async function handleWaOrderNativePayment(
     });
 
     const referenceId = generateOrderReferenceId();
+
+    if (catalogOrderId) {
+      await prisma.waCatalogOrder.update({
+        where: { id: catalogOrderId },
+        data: { transactionId: referenceId },
+      });
+    }
 
     const message = createNativePaymentMessage(
       contactPhone,

@@ -1682,13 +1682,7 @@ model Integration {
   @@unique([orgId, name], name: "orgid_integration_name_unique")
 }
 
-model jobQueue {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type      String
-  data      Json
-  status    String   @default("pending")
-  createdAt DateTime @default(now())
-}
+
 
 model WaMessageSchedule {
   id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
