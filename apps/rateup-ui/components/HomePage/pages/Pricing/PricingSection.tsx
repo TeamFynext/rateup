@@ -48,10 +48,8 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
             .filter((plan) => {
               if (!isMiddleEast) return true;
 
-              const planName = `${plan?.name ?? ""} ${plan?.displayName ?? ""}`
-                .trim()
-                .toLowerCase();
-              return !planName.includes("Starter");
+              const planName = plan?.displayName?.trim()?.toLowerCase();
+              return !planName.includes("starter");
             })
         : [],
     [plans, currency, period, isMiddleEast],
