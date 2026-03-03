@@ -124,14 +124,14 @@ const CatalogProducts = ({ catalogData }) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[220px]">
-              <DropdownMenuItem
+              {/* <DropdownMenuItem
                 className="text-green-600 focus:text-green-700 focus:bg-green-50"
                 onClick={handleSyncFromShopify}
                 disabled={syncFromShopifyMut.isPending}
               >
                 <IconShoppingBag size={16} className="mr-2" />
                 Sync from Shopify
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuItem
                 className="text-blue-600 focus:text-blue-700 focus:bg-blue-50"
                 onClick={() => handleSyncFromMeta()}

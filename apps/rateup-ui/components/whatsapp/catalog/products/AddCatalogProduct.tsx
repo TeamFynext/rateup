@@ -357,7 +357,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
     <Stack>
       <Group justify="space-between">
         <Group>
-          {form.getValues().type === CatalogProductType.PRODUCT_ITEM &&
+          {/* form.getValues().type === CatalogProductType.PRODUCT_ITEM &&
             !productData && (
               <Switch
                 label="Add to Shopify"
@@ -366,7 +366,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                 onChange={(e) => setAddToShopify(e.currentTarget.checked)}
                 color="green"
               />
-            )}
+            ) */}
         </Group>
         <Group>
           <RateupButtonSecondary

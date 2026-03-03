@@ -48,7 +48,7 @@ export default function OrdersAndPaymentsPage() {
     useUpdateWaSettingsMutation(currentSettingId);
 
   const { data: waPaymentConfig, isLoading: isLoadingWaPayment } =
-    useWaPaymentConfigurations();
+    useWaPaymentConfigurations(currentSettingId);
   const { data: shopifyIntegration, isLoading: isLoadingShopify } =
     useIntegrationByType(IntegratedApps.shopify);
 
@@ -79,11 +79,17 @@ export default function OrdersAndPaymentsPage() {
     }
   };
 
-  const isNativeAvailable =
-    waPaymentConfig &&
-    waPaymentConfig.credential &&
-    Array.isArray(waPaymentConfig.credential) &&
-    waPaymentConfig.credential.some((c: any) => c.status === "ACTIVE");
+  // waPaymentConfig is the full Integration DB row; its `credential` is a flat
+  // array of payment_configuration objects returned from the Meta API.
+  // Each item has a `status` field that can be "ACTIVE" when fully configured.
+  const paymentCredentials = Array.isArray(waPaymentConfig?.credential)
+    ? waPaymentConfig.credential
+    : Array.isArray(waPaymentConfig)
+      ? waPaymentConfig
+      : [];
+  const isNativeAvailable = paymentCredentials.some(
+    (c: any) => c.status?.toLowerCase() === "active",
+  );
 
   const isShopifyAvailable =
     shopifyIntegration &&
