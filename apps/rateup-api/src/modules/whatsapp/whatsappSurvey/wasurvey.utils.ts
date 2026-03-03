@@ -33,6 +33,7 @@ import {
   WaSession,
 } from "../../../../generated/prisma/client.js";
 import { sendMessage } from "./wasurvey.service.js";
+import { captureShopifyOrderPayment } from "../../integrations/shopify/shopify.service.js";
 import prisma from "../../../utils/prisma.js";
 import {
   ButtonOption,
@@ -621,6 +622,37 @@ export const handlePaymentConfirmation = async (
   refrenceId: string,
 ) => {
   let orgId = process.env.ROOT_ORG;
+
+  const order = await prisma.waCatalogOrder.findFirst({
+    where: { transactionId: refrenceId },
+    include: { catalog: true },
+  });
+
+  if (order) {
+    orgId = order.catalog.orgId;
+    await prisma.waCatalogOrder.update({
+      where: { id: order.id },
+      data: { paymentStatus: "PAID" },
+    });
+
+    if (order.shopifyDraftOrderId) {
+      try {
+        const orderTotal = (order.products as any[]).reduce(
+          (sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 1),
+          0,
+        );
+        // We multiply by 100 because captureShopifyOrderPayment divides by 100
+        await captureShopifyOrderPayment(
+          orgId,
+          order.shopifyDraftOrderId,
+          orderTotal * 100,
+        );
+      } catch (e) {
+        log.error("Failed to capture Shopify payment => %o", e);
+      }
+    }
+  }
+
   const confirmation = await prisma.waTemplate.findFirst({
     where: {
       orgId,
@@ -636,9 +668,9 @@ export const handlePaymentConfirmation = async (
       type: "order_status",
       body: {
         text:
-          confirmation.data?.components?.find((data) => data.type === "body")
-            ?.text ||
-          "Awesome! See you at the meetup. Let's make it a blast! 🎉🎉",
+          confirmation?.data?.components?.find(
+            (data: any) => data.type === "body",
+          )?.text || "Awesome! 🎉🎉",
       },
       action: {
         name: "review_order",

@@ -75,12 +75,17 @@ export async function getAllIntegrationsHandler(
 }
 
 export const getWaPaymentConfigurationsHandler = async (
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: { whatsappSettingsId?: string } }>,
   reply: FastifyReply,
 ) => {
   try {
     const { orgId } = request.user;
-    const data = await getWaPaymentConfigurations(orgId);
+    const { whatsappSettingsId } = request.query;
+    const data = await getWaPaymentConfigurations(
+      orgId,
+      false,
+      whatsappSettingsId,
+    );
     reply.code(200).send(data);
   } catch (error) {
     log.error("Error fetching integration by name");

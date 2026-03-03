@@ -41,7 +41,6 @@ export async function registerCronJobs(
             publishSurveyCronAction(),
             endSurveyCronAction(),
             sendCampaignCronAction(),
-            sendShopifySurveyCronAction(),
             sendSchedulesWaMessages(),
           ]);
         },
