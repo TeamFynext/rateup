@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { format } from "date-fns";
 import {
   Award,
   Clock,
@@ -97,12 +98,13 @@ export default function LoyaltyPrograms() {
     }
     return <LoyaltyOnboarding onComplete={handleOnboardingComplete} />;
   }
+  const dateLabelFormatter = (date) => format(date, "dd/MM/yyyy");
 
   return (
     <div className="flex h-full">
       {/* Main Content Area */}
       <div className="flex-1 overflow-auto ">
-        <div className="space-y-6 p-6">
+        <div className="space-y-6">
           <div className="space-y-6">
             {/* Header */}
             <div>
@@ -325,15 +327,10 @@ export default function LoyaltyPrograms() {
                       <XAxis
                         dataKey="date"
                         tick={{ fill: "#666", fontSize: 12 }}
+                        tickFormatter={dateLabelFormatter}
                       />
                       <YAxis tick={{ fill: "#666", fontSize: 12 }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "white",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "8px",
-                        }}
-                      />
+                      <Tooltip labelFormatter={dateLabelFormatter} />
                       <Legend />
                       <Bar
                         dataKey="earned"
@@ -387,15 +384,10 @@ export default function LoyaltyPrograms() {
                       <XAxis
                         dataKey="date"
                         tick={{ fill: "#666", fontSize: 12 }}
+                        tickFormatter={dateLabelFormatter}
                       />
                       <YAxis tick={{ fill: "#666", fontSize: 12 }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "white",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "8px",
-                        }}
-                      />
+                      <Tooltip labelFormatter={dateLabelFormatter} />
                       <Area
                         type="monotone"
                         dataKey="customers"
@@ -479,13 +471,7 @@ export default function LoyaltyPrograms() {
                           tick={{ fill: "#666", fontSize: 12 }}
                           width={120}
                         />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "white",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: "8px",
-                          }}
-                        />
+                        <Tooltip labelFormatter={dateLabelFormatter} />
                         <Bar
                           dataKey="redemptions"
                           fill="#1873E8"

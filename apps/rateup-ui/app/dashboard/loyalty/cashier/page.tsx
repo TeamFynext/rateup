@@ -274,8 +274,8 @@ export default function CashierPage() {
 
       {/* Search Customer */}
       <Card>
-        <CardContent className="p-6">
-          <div className="space-y-4">
+        <CardContent>
+          <div>
             <div>
               <Label htmlFor="cashier-search">Search Customer by Phone</Label>
               <div className="relative mt-2">
@@ -327,7 +327,7 @@ export default function CashierPage() {
         <div className="space-y-4">
           {/* Customer Info Card */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent>
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">

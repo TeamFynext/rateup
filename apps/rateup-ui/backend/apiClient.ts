@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios from "axios";
 import { toast } from "sonner";
 
 const axiosClient = axios.create({
@@ -8,19 +8,29 @@ const axiosClient = axios.create({
     Accept: "application/json",
   },
 });
+
+const shouldSkipLocalErrorToast = (error: any) =>
+  !!error?.response?.data?.displayMessageInClient;
+
 const interceptorErrorHandler = (error) => {
   const { response, request } = error;
+
+  if (globalThis.window !== undefined && shouldSkipLocalErrorToast(error)) {
+    const message =
+      response?.data?.message ??
+      response?.data?.error ??
+      "Something went wrong";
+    toast.error(message, { id: "api-error" });
+
+    return Promise.reject({
+      ...error,
+      message,
+    });
+  }
 
   /* ----------------------------------
        Subscription / 403 side effects
     -----------------------------------*/
-  if (
-    typeof window !== "undefined" &&
-    response?.status === 403 &&
-    response.data?.displayMessageInClient
-  ) {
-    toast.error(response?.data?.message ?? "Forbidden");
-  }
   let message = "Something went wrong";
 
   if (response?.data) {
@@ -61,4 +71,9 @@ const razorpayClient = axios.create({
   },
 });
 
-export { axiosClient, axiosClientIP, razorpayClient };
+export {
+  axiosClient,
+  axiosClientIP,
+  razorpayClient,
+  shouldSkipLocalErrorToast,
+};

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ExternalLink, TriangleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -15,7 +15,9 @@ import {
 import { UserSelector } from "@/components/Contacts/CreateContactModal";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import NotificationBellIcon from "@/components/Layout/Notification";
+import { checkExpiry } from "@/components/Premium/ExpiryComponent";
 import { ModeToggle } from "@/components/theme/ModeToggle";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Collapsible,
@@ -106,6 +108,9 @@ export default function AppSidebar({
     return true;
   };
   const { user } = useUser();
+  const isSubscriptionExpired = Boolean(
+    subscription?.expiresAt && checkExpiry(subscription.expiresAt),
+  );
   function handleFilter(label, value) {
     switch (label) {
       case "label":
@@ -177,6 +182,14 @@ export default function AppSidebar({
   // Find active item based on pathname and filters
   const [activeItem, setActiveItem] = useState(navMain[0]);
   const lastActiveTitleRef = useRef(activeItem?.title);
+  const hasShownExpiredSubscriptionToast = useRef(false);
+
+  useEffect(() => {
+    if (isSubscriptionExpired && !hasShownExpiredSubscriptionToast.current) {
+      toast.error("Your subscription has expired. Please renew your plan.");
+      hasShownExpiredSubscriptionToast.current = true;
+    }
+  }, [isSubscriptionExpired]);
 
   useEffect(() => {
     const active = navMain.find((item) => {
@@ -272,7 +285,7 @@ export default function AppSidebar({
       <div className="flex w-full h-screen">
         {/* Sidebar: Icons Only */}
         <Sidebar
-          className="w-[var(--sidebar-width-icon)] border-r"
+          className="w-(--sidebar-width-icon) border-r"
           collapsible="none"
         >
           <SidebarHeader>
@@ -627,6 +640,25 @@ export default function AppSidebar({
                 </SidebarGroupContent>
               </SidebarGroup>
             </SidebarContent>
+            {isSubscriptionExpired && !isCollapsed && (
+              <SidebarFooter className="flex-col gap-2">
+                <Alert variant="destructive" className="px-3 py-2">
+                  <TriangleAlert className="size-4" />
+                  <AlertTitle className="text-xs">
+                    Subscription expired
+                  </AlertTitle>
+                  <AlertDescription className="text-xs">
+                    Please renew from{" "}
+                    <Link
+                      href="/dashboard/settings/billing"
+                      className="flex gap-1"
+                    >
+                      Billing <ExternalLink className="size-3.5" />
+                    </Link>
+                  </AlertDescription>
+                </Alert>
+              </SidebarFooter>
+            )}
           </Sidebar>
         )}
       </div>
