@@ -41,7 +41,7 @@ import {
 } from "@/backend/loyalty/tiers.query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -115,16 +115,9 @@ export default function EarningRulesPage() {
   const [earningRulesViewMode, setEarningRulesViewMode] = useState<
     "list" | "create"
   >("list");
-  const [earningRulesSubTab, setEarningRulesSubTab] = useState<
-    "rules" | "settings"
-  >("rules");
 
   const [editingTierId, setEditingTierId] = useState<string | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
-
-  // Settings tab (UI-only)
-  const [pointExpirationEnabled, setPointExpirationEnabled] = useState(false);
-  const [pointExpirationDays, setPointExpirationDays] = useState("365");
 
   // Create view (UI-only extras to match design)
   const [ruleIcon, setRuleIcon] = useState("");
@@ -261,7 +254,7 @@ export default function EarningRulesPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {earningRulesViewMode === "list" && (
         <div className="space-y-5">
           {/* Header */}
@@ -273,259 +266,125 @@ export default function EarningRulesPage() {
               </p>
             </div>
 
-            {earningRulesSubTab === "rules" && (
-              <Button
-                className="bg-[#1873E8] hover:bg-[#1873E8]/90"
-                onClick={() => {
-                  setEditingRuleId(null);
-                  setEditingTierId(null);
-                  resetCreateForm();
-                  setEarningRulesViewMode("create");
-                }}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {t("addRule")}
-              </Button>
-            )}
+            <Button
+              className="bg-[#1873E8] hover:bg-[#1873E8]/90"
+              onClick={() => {
+                setEditingRuleId(null);
+                setEditingTierId(null);
+                resetCreateForm();
+                setEarningRulesViewMode("create");
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {t("addRule")}
+            </Button>
           </div>
 
-          {/* Sub-tabs */}
-          <div className="flex items-center gap-2 border-b">
-            <button
-              type="button"
-              onClick={() => setEarningRulesSubTab("rules")}
-              className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-                earningRulesSubTab === "rules"
-                  ? "border-[#1873E8] text-[#1873E8]"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Rules
-            </button>
-            <button
-              type="button"
-              onClick={() => setEarningRulesSubTab("settings")}
-              className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-                earningRulesSubTab === "settings"
-                  ? "border-[#1873E8] text-[#1873E8]"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Settings
-            </button>
-          </div>
-
-          {/* Rules Tab Content */}
-          {earningRulesSubTab === "rules" && (
-            <div className="space-y-6">
-              {/* Tier-Based Earning Rates */}
-              <div>
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold">{t("tierBasedRates")}</h3>
-                    <Badge variant="outline" className="text-xs">
-                      {loyaltyTiers.length} {t("tiers")}
-                    </Badge>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-[#1873E8] text-[#1873E8] hover:bg-blue-50"
-                    onClick={handleAddTier}
-                    disabled={createTierMutation.isPending}
-                  >
-                    {createTierMutation.isPending ? (
-                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Plus className="mr-1.5 h-4 w-4" />
-                    )}
-                    {t("addTier")}
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  {loyaltyTiers
-                    .slice()
-                    .sort((a, b) => a.threshold - b.threshold)
-                    .map((tier, index) => (
-                      <TierCard
-                        key={tier.id}
-                        tier={tier}
-                        index={index}
-                        isEditing={editingTierId === tier.id}
-                        onStartEdit={() => {
-                          setEditingRuleId(null);
-                          setEditingTierId(tier.id);
-                        }}
-                        onCancelEdit={() => setEditingTierId(null)}
-                        onDelete={(id, name) => {
-                          handleTierDelete(id, name);
-                          setEditingTierId(null);
-                        }}
-                        t={t}
-                      />
-                    ))}
-                </div>
-              </div>
-
-              {/* Additional Earning Rules */}
-              <div>
-                <div className="mb-3 flex items-center gap-2">
-                  <h3 className="font-semibold">{t("additionalRules")}</h3>
+          <div className="space-y-6">
+            {/* Tier-Based Earning Rates */}
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold">{t("tierBasedRates")}</h3>
                   <Badge variant="outline" className="text-xs">
-                    {additionalRules.length} {t("rules")}
+                    {loyaltyTiers.length} {t("tiers")}
                   </Badge>
                 </div>
 
-                <div className="space-y-2">
-                  {additionalRules.map((rule) => (
-                    <RuleCard
-                      key={rule.id}
-                      rule={rule}
-                      isEditing={editingRuleId === rule.id}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-[#1873E8] text-[#1873E8] hover:bg-blue-50"
+                  onClick={handleAddTier}
+                  disabled={createTierMutation.isPending}
+                >
+                  {createTierMutation.isPending ? (
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="mr-1.5 h-4 w-4" />
+                  )}
+                  {t("addTier")}
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {loyaltyTiers
+                  .slice()
+                  .sort((a, b) => a.threshold - b.threshold)
+                  .map((tier, index) => (
+                    <TierCard
+                      key={tier.id}
+                      tier={tier}
+                      index={index}
+                      isEditing={editingTierId === tier.id}
                       onStartEdit={() => {
-                        setEditingTierId(null);
-                        setEditingRuleId(rule.id || null);
+                        setEditingRuleId(null);
+                        setEditingTierId(tier.id);
                       }}
-                      onCancelEdit={() => setEditingRuleId(null)}
-                      onDelete={() => rule.id && handleDeleteRule(rule.id)}
-                      isDeleting={deleteRuleMutation.isPending}
+                      onCancelEdit={() => setEditingTierId(null)}
+                      onDelete={(id, name) => {
+                        handleTierDelete(id, name);
+                        setEditingTierId(null);
+                      }}
                       t={t}
                     />
                   ))}
-
-                  {additionalRules.length === 0 && (
-                    <Card className="border-2 border-dashed border-gray-300">
-                      <CardContent className="p-8 text-center">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                          <Plus className="h-6 w-6 text-gray-400" />
-                        </div>
-                        <h4 className="mb-1 font-semibold">
-                          {t("noRulesYet")}
-                        </h4>
-                        <p className="mb-4 text-sm text-muted-foreground">
-                          {t("noRulesDescription")}
-                        </p>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            resetCreateForm();
-                            setEarningRulesViewMode("create");
-                          }}
-                          className="border-[#1873E8] text-[#1873E8] hover:bg-blue-50"
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          {t("createFirstRule")}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
               </div>
             </div>
-          )}
 
-          {/* Settings Tab Content */}
-          {earningRulesSubTab === "settings" && (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <Card className="border shadow-sm bg-white">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Point Expiration</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between rounded-lg border bg-gray-50/50 p-3">
-                    <div>
-                      <p className="text-sm font-medium">
-                        Enable Point Expiration
+            {/* Additional Earning Rules */}
+            <div>
+              <div className="mb-3 flex items-center gap-2">
+                <h3 className="font-semibold">{t("additionalRules")}</h3>
+                <Badge variant="outline" className="text-xs">
+                  {additionalRules.length} {t("rules")}
+                </Badge>
+              </div>
+
+              <div className="space-y-2">
+                {additionalRules.map((rule) => (
+                  <RuleCard
+                    key={rule.id}
+                    rule={rule}
+                    isEditing={editingRuleId === rule.id}
+                    onStartEdit={() => {
+                      setEditingTierId(null);
+                      setEditingRuleId(rule.id || null);
+                    }}
+                    onCancelEdit={() => setEditingRuleId(null)}
+                    onDelete={() => rule.id && handleDeleteRule(rule.id)}
+                    isDeleting={deleteRuleMutation.isPending}
+                    t={t}
+                  />
+                ))}
+
+                {additionalRules.length === 0 && (
+                  <Card className="border-2 border-dashed border-gray-300">
+                    <CardContent className="p-8 text-center">
+                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                        <Plus className="h-6 w-6 text-gray-400" />
+                      </div>
+                      <h4 className="mb-1 font-semibold">{t("noRulesYet")}</h4>
+                      <p className="mb-4 text-sm text-muted-foreground">
+                        {t("noRulesDescription")}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        Points expire after inactivity period
-                      </p>
-                    </div>
-                    <Switch
-                      checked={pointExpirationEnabled}
-                      onCheckedChange={setPointExpirationEnabled}
-                      className="data-[state=checked]:bg-[#1873E8]"
-                    />
-                  </div>
-
-                  {pointExpirationEnabled && (
-                    <div className="space-y-2">
-                      <Label htmlFor="expiration-days" className="text-sm">
-                        Inactivity Period (Days)
-                      </Label>
-                      <Input
-                        id="expiration-days"
-                        type="number"
-                        value={pointExpirationDays}
-                        onChange={(e) => setPointExpirationDays(e.target.value)}
-                        placeholder="365"
-                        min="1"
-                        className="h-10"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Points will expire after {pointExpirationDays || "0"}{" "}
-                        days of customer inactivity
-                      </p>
-                    </div>
-                  )}
-
-                  <Button
-                    size="sm"
-                    className="w-full bg-[#1873E8] hover:bg-[#1873E8]/90 mt-4"
-                    onClick={() =>
-                      toast.success("Point expiration settings saved")
-                    }
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Settings
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border shadow-sm bg-white">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Expiration Info</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-                    <div className="flex items-start gap-2">
-                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-                      <div>
-                        <p className="text-sm font-medium text-blue-900">
-                          How it works
-                        </p>
-                        <p className="mt-1 text-xs text-blue-700">
-                          Inactivity is measured from the last time a customer
-                          earned or redeemed points. This encourages regular
-                          engagement with your loyalty program.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium">Common Settings:</h4>
-                    <div className="space-y-1.5 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-gray-400" />
-                        <span>90 days - For high-frequency businesses</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-gray-400" />
-                        <span>180 days - For moderate engagement</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-gray-400" />
-                        <span>365 days - For annual retention</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          resetCreateForm();
+                          setEarningRulesViewMode("create");
+                        }}
+                        className="border-[#1873E8] text-[#1873E8] hover:bg-blue-50"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        {t("createFirstRule")}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -590,7 +449,7 @@ export default function EarningRulesPage() {
                         <FormControl>
                           <Textarea
                             {...field}
-                            className="min-h-[80px] resize-none"
+                            className="min-h-20 resize-none"
                             placeholder={t("descriptionPlaceholder")}
                           />
                         </FormControl>
@@ -856,7 +715,7 @@ function TierCard({
   onCancelEdit,
   onDelete,
   t,
-}: {
+}: Readonly<{
   tier: {
     id: string;
     name: string;
@@ -870,7 +729,7 @@ function TierCard({
   onCancelEdit: () => void;
   onDelete: (id: string, name: string) => void;
   t: any;
-}) {
+}>) {
   const tierForm = useForm<TierFormValues>({
     resolver: zodResolver(tierSchema),
     defaultValues: {
@@ -1104,7 +963,7 @@ function RuleCard({
   onDelete,
   isDeleting,
   t,
-}: {
+}: Readonly<{
   rule: LoyaltyEarningRule;
   isEditing: boolean;
   onStartEdit: () => void;
@@ -1112,7 +971,7 @@ function RuleCard({
   onDelete: () => void;
   isDeleting: boolean;
   t: any;
-}) {
+}>) {
   const ruleForm = useForm<EarningRuleFormValues>({
     resolver: zodResolver(earningRuleSchema),
     defaultValues: {
@@ -1143,10 +1002,6 @@ function RuleCard({
   );
 
   const isEnabled = rule.status === "active";
-
-  const cardClassName = `border shadow-sm transition-all ${
-    !isEnabled ? "bg-gray-50 border-gray-300 opacity-60" : "bg-white"
-  }`;
 
   const onSave = (values: EarningRuleFormValues) => {
     updateRuleMutation.mutate(values as LoyaltyEarningRuleInput, {
