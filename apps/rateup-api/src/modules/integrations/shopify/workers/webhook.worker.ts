@@ -1,7 +1,11 @@
 import { Worker, Job } from "bullmq";
 import { log } from "../../../../utils/logger.js";
 import baseRedis from "../../../../utils/redisConnection.js";
-import { handleWebhook } from "../shopify.service.js";
+import {
+  handleWebhook,
+  processShopifySurveySchedule,
+} from "../shopify.service.js";
+import { ShopifyEvents } from "../../../../types/enums.js";
 
 interface WebhookJobData {
   topic: string;
@@ -47,3 +51,48 @@ shopifyWebhookWorker.on("error", (err) => {
 });
 
 log.info("Shopify webhook worker initialized");
+
+interface SurveyJobData {
+  orgId: string;
+  integrationId: string;
+  event: ShopifyEvents;
+  scheduleId: string;
+}
+
+export const shopifySurveyWorker = new Worker(
+  "shopifySurveyQueue",
+  async (job: Job<SurveyJobData>) => {
+    const surveyData = job.data;
+    log.info(`Processing survey job ${job.id} for event: ${surveyData.event}`);
+
+    try {
+      await processShopifySurveySchedule(surveyData);
+    } catch (error) {
+      log.error(
+        { error },
+        `Error processing survey schedule ${surveyData.scheduleId}: ${error.message}`,
+      );
+      throw error; // Trigger a BullMQ retry if failure is unexpected
+    }
+  },
+  {
+    connection: baseRedis,
+    concurrency: 5,
+    removeOnComplete: { count: 1000 },
+    removeOnFail: { count: 5000 },
+  },
+);
+
+shopifySurveyWorker.on("completed", (job) => {
+  log.info(`Survey job ${job.id} completed successfully`);
+});
+
+shopifySurveyWorker.on("failed", (job, err) => {
+  log.error(`Survey job ${job?.id} failed: ${err.message}`);
+});
+
+shopifySurveyWorker.on("error", (err) => {
+  log.error(`Survey worker error: ${err.message}`);
+});
+
+log.info("Shopify survey worker initialized");
