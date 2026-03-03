@@ -74,10 +74,7 @@ export async function updateConversationAssignees(
       );
 
       const assigneesToAdd = assignees.filter(
-        (a) =>
-          !existingAssignees.find(
-            (ea) => ea.userId === a.userId && ea.teamId === a.teamId,
-          ),
+        (a) => !existingAssignees.find((ea) => ea.userId === a.userId),
       );
       for (const assignee of assigneesToRemove) {
         await tx.conversationAssignedUserTeamMap.update({
