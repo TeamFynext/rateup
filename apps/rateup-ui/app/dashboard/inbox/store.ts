@@ -227,6 +227,11 @@ export const useContactsStore = create<ContactsStoreState>()(
                 return false;
               if (
                 !isAssigned &&
+                currentFilterKey?.includes("waMessageAssignStatus:Assigned")
+              )
+                return false;
+              if (
+                !isAssigned &&
                 currentFilterKey?.includes("waMessageAssignStatus:mine")
               )
                 return false;
