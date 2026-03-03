@@ -53,9 +53,12 @@ export async function createGoogleSheetAuthToken(data) {
   return res.data;
 }
 
-export const getWaPaymentConfigurations = async () => {
+export const getWaPaymentConfigurations = async (
+  whatsappSettingsId?: string,
+) => {
   const response = await axiosClient.get(
     `${ROUTE_URL}wa_payment_configurations`,
+    { params: whatsappSettingsId ? { whatsappSettingsId } : undefined },
   );
   return response.data;
 };

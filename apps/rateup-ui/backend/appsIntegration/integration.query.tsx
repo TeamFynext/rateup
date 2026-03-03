@@ -28,10 +28,11 @@ export const useIntegrationByType = (type: IntegratedApps) => {
   });
 };
 
-export const useWaPaymentConfigurations = () => {
+export const useWaPaymentConfigurations = (whatsappSettingsId?: string) => {
   return useQuery({
-    queryKey: ["waPaymentConfigurations"],
-    queryFn: getWaPaymentConfigurations,
+    queryKey: ["waPaymentConfigurations", whatsappSettingsId],
+    queryFn: () => getWaPaymentConfigurations(whatsappSettingsId),
+    enabled: !!whatsappSettingsId,
   });
 };
 

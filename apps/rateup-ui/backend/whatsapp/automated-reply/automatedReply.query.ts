@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { shouldSkipLocalErrorToast } from "@/backend/apiClient";
+
 import {
   createWaAutomatedReply,
   deleteWaAutomatedReply,
@@ -47,9 +49,9 @@ export const useCreateWaAutomatedReplyMutation = () => {
       qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
       toast.success("Automated Reply Created Successfully");
     },
-    onError: (error: any) => {
-      if (!(error?.response?.data?.displayMessageInClient ?? false))
-        toast.error(error?.response?.data || "Error Creating Automated Reply");
+    onError: (error) => {
+      if (!shouldSkipLocalErrorToast(error))
+        toast.error(error?.message || "Error Creating Automated Reply");
     },
   });
 };
@@ -69,8 +71,10 @@ export const useDeleteWaAutomatedReplyMutation = () => {
 export const useUpdateWaAutomatedReplyMutation = () => {
   return useMutation({
     mutationFn: ({ id, ...data }: any) => updateWaAutomatedReply(id, data),
-    onError: (error: any) => {
-      toast.error(error?.response?.data ?? "Error Updating Automated Reply");
+    onError: (error) => {
+      if (!shouldSkipLocalErrorToast(error)) {
+        toast.error(error?.message ?? "Error Updating Automated Reply");
+      }
     },
   });
 };
@@ -82,8 +86,10 @@ export const useInitiateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
     onSuccess: (res) => {
       toast.success("Automation initiated Successfully");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data ?? "Error initiating Automated Reply");
+    onError: (error) => {
+      if (!shouldSkipLocalErrorToast(error)) {
+        toast.error(error?.message ?? "Error initiating Automated Reply");
+      }
     },
   });
 };
