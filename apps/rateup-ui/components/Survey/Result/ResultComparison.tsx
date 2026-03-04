@@ -95,14 +95,8 @@ export default function ResultComparison({
       <NothingFound text={translations("No responses found for comparison")} />
     );
   return (
-    <PaperLayout
-      p={5}
-      miw={300}
-      h={"100%"}
-      display={"flex"}
-      style={{ flexDirection: "column" }}
-    >
-      <Stack style={{ overflow: "auto", flex: 1 }} mt={"md"} p={10}>
+    <PaperLayout p={5} miw={300}>
+      <Stack mt={"md"} p={10}>
         <Heading subtitle={translations("Team Response Activity")} />
         <TeamResponseActivitySection data={data} />
         <Heading subtitle={translations("Team Question Activity")} />

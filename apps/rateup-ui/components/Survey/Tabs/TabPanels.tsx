@@ -133,7 +133,7 @@ function TabPanelsComp({
               questions={questions}
             />
           </TabsContent>
-          <TabsContent value="team-analytics">
+          <TabsContent value="team-analytics" className="overflow-y-auto">
             <ResultComparison
               surveyId={surveyId}
               version={1}
