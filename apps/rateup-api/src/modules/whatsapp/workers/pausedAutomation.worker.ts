@@ -4,6 +4,8 @@ import prisma from "../../../utils/prisma.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
 
+const workerConnection = baseRedis.duplicate();
+
 interface PausedAutomationJobData {
   automationMessageId: string;
   phone: string;
@@ -99,7 +101,7 @@ export const pausedAutomationWorker = new Worker(
     }
   },
   {
-    connection: baseRedis,
+    connection: workerConnection,
     concurrency: 2,
     removeOnComplete: { count: 0 },
     removeOnFail: { count: 1000 },
