@@ -1,23 +1,52 @@
-import { ActionIcon, Tooltip } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useState } from "react";
+
 import { IconCalendar } from "@tabler/icons-react";
 
 import { DateRangePickerModal } from "@/components/DateAndTime/DatePicker/DateRangePicker";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+const getButtonVariant = (
+  variant?: string,
+): "secondary" | "ghost" | "outline" => {
+  if (variant === "light") return "secondary";
+  if (variant === "subtle") return "ghost";
+  return "outline";
+};
 
 export const CalenderIconDateRangePicker = ({
   ranges,
   setRange,
   label = "Filter by Date",
-  variant = "light",
+  variant = "outline",
 }) => {
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, setOpened] = useState(false);
+
+  const open = () => setOpened(true);
+  const close = () => setOpened(false);
+
   return (
     <>
-      <Tooltip label={label}>
-        <ActionIcon onClick={open} variant={variant}>
-          <IconCalendar />
-        </ActionIcon>
-      </Tooltip>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={getButtonVariant(variant)}
+              size="icon-sm"
+              onClick={open}
+              aria-label={label}
+            >
+              <IconCalendar className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">{label}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <DateRangePickerModal
         opened={opened}
         ranges={ranges}

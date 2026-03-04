@@ -1,9 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useMemo } from "react";
 
-import { ScrollAreaAutosize } from "@mantine/core";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -19,16 +17,11 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
-
-import { PAGE_SIZE } from "@/utils/constants";
 
 import {
   TableBodySkeleton,
   TableHeadSkeleton,
 } from "../animation/skeleton/Table.Skeleton";
-import { Button } from "../ui/button";
-import { ScrollArea } from "../ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -145,67 +138,70 @@ export function DataTable<TData, TValue>({
     getRowId: (row: any) => row.id,
   });
 
+  const rows = table.getRowModel().rows;
+
+  let tableBodyContent: React.ReactNode;
+  if (isPending) {
+    tableBodyContent = <TableBodySkeleton />;
+  } else if (rows.length) {
+    tableBodyContent = rows.map((row) => (
+      <TableRow
+        key={row.id}
+        data-state={row.getIsSelected() && "selected"}
+        onClick={() => onRowClick?.(row.original)}
+      >
+        {row.getVisibleCells().map((cell) => (
+          <TableCell key={cell.id}>
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+    ));
+  } else {
+    tableBodyContent = (
+      <TableRow className="h-full">
+        <TableCell
+          colSpan={columns.length}
+          className="h-full text-center align-middle"
+        >
+          No results.
+        </TableCell>
+      </TableRow>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       {DataTableToolbar && <DataTableToolbar table={table} />}
-      <div className="overflow-auto rounded-md border h-full bg-card">
-        <ScrollAreaAutosize mah={"100%"}>
-          <Table>
-            <TableHeader>
-              {isPending ? (
-                <TableHeadSkeleton />
-              ) : (
-                table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                ))
-              )}
-            </TableHeader>
-            <TableBody>
-              {isPending ? (
-                <TableBodySkeleton />
-              ) : table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    onClick={() => onRowClick?.(row.original)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
+      <div className="flex-1 min-h-0 **:data-[slot=table-container]:h-full border bg-card rounded-md">
+        <Table>
+          <TableHeader>
+            {isPending ? (
+              <TableHeadSkeleton />
+            ) : (
+              table.getHeaderGroups().map((headerGroup) => (
+                <TableRow
+                  key={headerGroup.id}
+                  className="sticky top-0 bg-background z-10"
+                >
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id} colSpan={header.colSpan}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </ScrollAreaAutosize>
+              ))
+            )}
+          </TableHeader>
+          <TableBody>{tableBodyContent}</TableBody>
+        </Table>
       </div>
       <DataTablePagination table={table} />
     </div>

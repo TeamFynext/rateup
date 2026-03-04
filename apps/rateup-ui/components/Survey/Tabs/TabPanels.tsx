@@ -1,15 +1,8 @@
 "use client";
 
-import { Tabs, TabsPanel } from "@mantine/core";
-
 import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import {
-  Tabs as ShadTabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { hasFeature } from "@/utils/subscription/subscription";
 
 import { EditSurvey } from "../EditSurvey";
@@ -19,7 +12,6 @@ import ResultsOverviewWebForm from "../Result/ResultsOverviewWebForm";
 import SurveySettings from "../Settings";
 import ShareSurvey from "../ShareSurvey/ShareSurvey";
 import { TabEnum } from "../SurveyId";
-import styles from "./Tabs.module.css";
 
 function TabPanelsComp({
   value,
@@ -38,18 +30,8 @@ function TabPanelsComp({
   const { data: subscription } = useSubscription();
 
   return (
-    <Tabs
-      classNames={{
-        root: styles["tab-panel-root"],
-        panel: styles["tab-panel"],
-      }}
-      value={value}
-      keepMounted={false}
-    >
-      <TabsPanel
-        value={TabEnum.Edit}
-        style={{ background: "white", width: "100%", height: "100%" }}
-      >
+    <Tabs value={value} className="h-full min-h-0">
+      <TabsContent value={TabEnum.Edit}>
         <EditSurvey
           questions={questions}
           addQnTrigger={addQnTrigger}
@@ -60,8 +42,8 @@ function TabPanelsComp({
             setFunToRunBeforeSurveyIdPageHeaderTabsChange
           }
         />
-      </TabsPanel>
-      <TabsPanel value={TabEnum.Settings}>
+      </TabsContent>
+      <TabsContent value={TabEnum.Settings}>
         <SurveySettings
           surveyId={surveyId}
           survey={survey}
@@ -99,9 +81,9 @@ function TabPanelsComp({
                 ]
           }
         />
-      </TabsPanel>
-      <TabsPanel value={TabEnum.Result}>
-        <ShadTabs defaultValue="responses">
+      </TabsContent>
+      <TabsContent value={TabEnum.Result} className="min-h-0">
+        <Tabs defaultValue="responses" className="relative h-full min-h-0">
           <TabsList className="mx-auto mb-2 flex">
             <TabsTrigger value="responses">
               {translations("Responses")}
@@ -113,7 +95,7 @@ function TabPanelsComp({
               {translations("Team Analytics")}
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="responses">
+          <TabsContent value="responses" className="min-h-0">
             <Result
               survey={survey}
               encryptionpassword={encryptionpassword}
@@ -122,10 +104,10 @@ function TabPanelsComp({
               translations={translations}
             />
           </TabsContent>
-          <TabsContent value="analytics">
+          <TabsContent value="analytics" className="min-h-0">
             <ResultsOverviewWebForm
               surveyId={surveyId}
-              aiResponseSummary={(survey as any)?.aiResponseSummary}
+              aiResponseSummary={survey?.aiResponseSummary}
               survey={survey}
               flowId={null}
               version={1}
@@ -133,7 +115,7 @@ function TabPanelsComp({
               questions={questions}
             />
           </TabsContent>
-          <TabsContent value="team-analytics" className="overflow-y-auto">
+          <TabsContent value="team-analytics" className="min-h-0">
             <ResultComparison
               surveyId={surveyId}
               version={1}
@@ -141,11 +123,11 @@ function TabPanelsComp({
               questions={questions}
             />
           </TabsContent>
-        </ShadTabs>
-      </TabsPanel>
-      <TabsPanel value={TabEnum.Share}>
+        </Tabs>
+      </TabsContent>
+      <TabsContent value={TabEnum.Share}>
         <ShareSurvey survey={survey} setActiveTab={setActiveTab} />
-      </TabsPanel>
+      </TabsContent>
     </Tabs>
   );
 }

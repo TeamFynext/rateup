@@ -2,6 +2,16 @@
 
 import { useContext, useMemo, useState } from "react";
 
+import {
+  IconChevronDown,
+  IconEye,
+  IconTicket,
+  IconTrashXFilled,
+} from "@tabler/icons-react";
+import { ColumnDef } from "@tanstack/react-table";
+import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,17 +26,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  IconChevronDown,
-  IconEye,
-  IconTicket,
-  IconTrashXFilled,
-} from "@tabler/icons-react";
-import { ColumnDef } from "@tanstack/react-table";
-import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
-
-import SurveyContext from "@/context/SurveyContext";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionType } from "../../../types/enums";
@@ -38,7 +37,6 @@ import {
   getResponse,
   getResponseArrayByQuestionType,
 } from "../../../utils/response";
-import { RateupButtonBlue } from "../../Button/RateupButtons";
 import PreviewModal from "../../Modal/PreviewModal";
 import { HoverCardComponent } from "../HoverCard/HoverCard";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
@@ -60,173 +58,145 @@ export const useSurveyResponseColumns = ({
   const column: ColumnDef<any>[] = useMemo(
     () => [
       {
-        header: () => (
-          <span className="truncate font-semibold text-lg min-w-[200px] max-w-[200px] block">
-            {translations("Created At")}
-          </span>
-        ),
+        header: translations("Created At"),
         filterFn: fuzzyFilter,
         accessorKey: "createdAt",
-        cell: (info) => (
-          <div className="p-2.5 min-w-[200px]">
-            {dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A")}
-          </div>
-        ),
+        cell: (info) =>
+          dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
       },
       ...(questions?.length > 0
         ? questions?.map((q: any) => {
-          const content =
-            getReplacedTitleFromVariable({
-              title:
-                q?.title[
+            const content =
+              getReplacedTitleFromVariable({
+                title:
+                  q?.title[
+                    selectedLanguage ? selectedLanguage : defaultLanguage
+                  ],
+                surveyId,
+              }) ||
+              q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
+              q?.description[
                 selectedLanguage ? selectedLanguage : defaultLanguage
-                ],
-              surveyId,
-            }) ||
-            q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
-            q?.description[
-            selectedLanguage ? selectedLanguage : defaultLanguage
-            ] ||
-            q?.label?.[
-            selectedLanguage ? selectedLanguage : defaultLanguage
-            ] ||
-            "";
-          return {
-            ...(![
-              QuestionType.Rating,
-              QuestionType.Opinion,
-              QuestionType.Number,
-            ].includes(q?.type) && {
-              filterFn: fuzzyFilter,
-            }),
-            accessorFn: (row: any) => {
-              const response = row.responses
-                ?.filter((item: any) => item?.questionId === q.id)
-                ?.find((item: any) => item?.type === q.type)?.response[q.type];
-              if (
-                [
-                  QuestionType.Rating,
-                  QuestionType.Opinion,
-                  QuestionType.Number,
-                ].includes(q.type)
-              ) {
-                return Number(response);
-              }
+              ] ||
+              q?.label?.[
+                selectedLanguage ? selectedLanguage : defaultLanguage
+              ] ||
+              "";
+            return {
+              ...(![
+                QuestionType.Rating,
+                QuestionType.Opinion,
+                QuestionType.Number,
+              ].includes(q?.type) && {
+                filterFn: fuzzyFilter,
+              }),
+              accessorFn: (row: any) => {
+                const response = row.responses
+                  ?.filter((item: any) => item?.questionId === q.id)
+                  ?.find((item: any) => item?.type === q.type)?.response[
+                  q.type
+                ];
+                if (
+                  [
+                    QuestionType.Rating,
+                    QuestionType.Opinion,
+                    QuestionType.Number,
+                  ].includes(q.type)
+                ) {
+                  return Number(response);
+                }
 
-              return response;
-            },
-            id: content + "_,_" + q.type + "_,_" + q.id,
-            header: () => (
-              <HoverCardComponent content={content} fw={600} fz={"lg"} />
-            ),
-            enableColumnFilter: ![
-              QuestionType.DocumentPicker,
-              QuestionType.PhotoPicker,
-              QuestionType.Photo,
-              QuestionType.PCQ,
-            ].includes(q.type),
-            enableSorting: ![
-              QuestionType.Photo,
-              QuestionType.PCQ,
-              QuestionType.DocumentPicker,
-              QuestionType.PhotoPicker,
-            ].includes(q.type),
-            cell: (info) => {
-              return (
-                <BadgeorTextorPreview
-                  questionType={q?.type}
-                  response={getResponse(q, info.getValue())}
-                />
-              );
-            },
-          };
-        })
+                return response;
+              },
+              id: content + "_,_" + q.type + "_,_" + q.id,
+              header: content,
+              enableColumnFilter: ![
+                QuestionType.DocumentPicker,
+                QuestionType.PhotoPicker,
+                QuestionType.Photo,
+                QuestionType.PCQ,
+              ].includes(q.type),
+              enableSorting: ![
+                QuestionType.Photo,
+                QuestionType.PCQ,
+                QuestionType.DocumentPicker,
+                QuestionType.PhotoPicker,
+              ].includes(q.type),
+              cell: (info) => {
+                return (
+                  <BadgeorTextorPreview
+                    questionType={q?.type}
+                    response={getResponse(q, info.getValue())}
+                  />
+                );
+              },
+            };
+          })
         : []),
       {
-        header: () => (
-          <span className="truncate font-semibold text-lg min-w-[200px] max-w-[200px] block">
-            {translations("Tags")}
-          </span>
-        ),
+        header: translations("Tags"),
         accessorKey: "tag",
-        cell: (info) => (
-          <div className="p-2.5 min-w-[200px]">
-            {info.getValue() as string}
-          </div>
-        ),
+        cell: (info) => info.getValue(),
       },
       ...(typeWa
         ? [
-          {
-            header: () => (
-              <span className="truncate font-semibold text-lg min-w-[200px] max-w-[200px] block">
-                Respondent&apos;s Mobile Number
-              </span>
-            ),
-            filterFn: fuzzyFilter,
-            accessorFn: (row: any) => row?.phone,
-            id: "respondentsMobileNumber",
-            cell: (info) => (
-              <div className="p-2.5 min-w-[200px]">
-                {info.getValue()?.toString()}
-              </div>
-            ),
-          },
-        ]
+            {
+              header: "Respondent&apos;s Mobile Number",
+              filterFn: fuzzyFilter,
+              accessorFn: (row: any) => row?.phone,
+              id: "respondentsMobileNumber",
+              cell: (info) => info.getValue(),
+            },
+          ]
         : []),
       ...(enableTicket
         ? [
-          {
-            header: () => (
-              <span className="truncate font-semibold text-lg min-w-[70px] max-w-[70px] block">
-                {translations("Ticket")}
-              </span>
-            ),
-            enableColumnFilter: false,
-            enableSorting: false,
-            accessorKey: "ticket",
-            cell: (info) => {
-              let ticketData = info.row.original.Ticket;
-              let ticketExist = ticketData?.length > 0;
-              return (
-                <div
-                  className="flex items-center justify-center pr-20 cursor-pointer"
-                  onClick={() => {
-                    if (ticketExist) {
-                      let url = `/dashboard/tickets/${ticketData[0]?.id}`;
-                      window.open(url, "_blank");
-                    }
-                  }}
-                >
-                  {ticketExist && (
+            {
+              header: translations("Ticket"),
+              enableColumnFilter: false,
+              enableSorting: false,
+              accessorKey: "ticket",
+              cell: (info) => {
+                const ticketData = info.row.original.Ticket;
+                const ticket = ticketData?.[0];
+
+                if (!ticket) return null;
+
+                return (
+                  <div className="flex items-center justify-center pr-20">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div>
-                            <IconTicket
-                              color="orange"
-                              className="w-9 h-9"
-                            />
-                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={translations("View Ticket")}
+                            className="h-9 w-9 rounded focus-visible:ring-orange-500"
+                            onClick={() =>
+                              window.open(
+                                `/dashboard/tickets/${ticket.id}`,
+                                "_blank",
+                                "noopener,noreferrer",
+                              )
+                            }
+                          >
+                            <IconTicket color="orange" className="w-9 h-9" />
+                          </Button>
                         </TooltipTrigger>
                         <TooltipContent side="right">
                           {translations("View Ticket")}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  )}
-                </div>
-              );
+                  </div>
+                );
+              },
             },
-          },
-        ]
+          ]
         : []),
       {
-        header: () => (
-          <span className="truncate font-semibold text-lg min-w-[200px] max-w-[200px] block">
-            Action
-          </span>
-        ),
+        header: translations("Action"),
         enableColumnFilter: false,
         enableSorting: false,
         cell: (info) => {
@@ -246,7 +216,19 @@ export const useSurveyResponseColumns = ({
         accessorKey: "action",
       },
     ],
-    [questions, translations, enableTicket, selectedLanguage, surveyId, defaultLanguage, typeWa, open, setSelectedResponseId, setResponseTeamId, setSelectedRowId],
+    [
+      questions,
+      translations,
+      enableTicket,
+      selectedLanguage,
+      surveyId,
+      defaultLanguage,
+      typeWa,
+      open,
+      setSelectedResponseId,
+      setResponseTeamId,
+      setSelectedRowId,
+    ],
   );
   return column;
 };
@@ -274,13 +256,14 @@ function BadgeorTextorPreview({
   if (previewRequired.includes(questionType)) {
     return (
       <>
-        <RateupButtonBlue
-          title={translations("Preview")}
-          leftIcon={<IconEye />}
-          size="compact-xs"
+        <Button
           onClick={open}
           disabled={response === "" || !response}
-        />
+          className="flex gap-4 items-center"
+        >
+          <IconEye />
+          {translations("Preview")}
+        </Button>
         <PreviewModal
           headerTitle={translations("Preview")}
           onClose={close}
@@ -291,7 +274,7 @@ function BadgeorTextorPreview({
     );
   } else if (questionType === QuestionType.DocumentPicker) {
     return (
-      <div className="p-2.5 min-w-[200px]">
+      <div className="p-2.5 min-w-50">
         {response && (
           <a
             href={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${response}`}
@@ -306,13 +289,12 @@ function BadgeorTextorPreview({
   } else if (badgeRequired.includes(questionType)) {
     return (
       <Badge
-        className="text-lg font-semibold rounded-[10px] min-w-[100px]"
+        className="text-lg min-w-25 text-background"
         variant="secondary"
         style={{
-          backgroundColor:
-            getResponseArrayByQuestionType(questionType)?.find(
-              (res) => res.value === response,
-            )?.color,
+          backgroundColor: getResponseArrayByQuestionType(questionType)?.find(
+            (res) => res.value === response,
+          )?.color,
         }}
       >
         {response}
@@ -354,19 +336,19 @@ function BadgeorTextorPreview({
   } else if (questionType == QuestionType.File) {
     return response ? (
       <div className="flex gap-2 items-center">
-        <span
-          className="font-light text-md text-gray-700 dark:text-gray-300 w-[150px] break-words"
-        >
+        <span className="font-light text-md text-gray-700 dark:text-gray-300 w-37.5 break-words">
           {getFileNameFromKey(response)}
         </span>
-        <RateupButtonBlue
+        <Button
           onClick={() => {
             window.open(getFileUrlFromKey(response), "_blank");
           }}
-          title={translations("Preview")}
-          leftIcon={<IconEye size={"1rem"} />}
-          size="compact-xs"
-        />
+          size="sm"
+          className="h-7 px-2"
+        >
+          <IconEye className="mr-1 h-4 w-4" />
+          {translations("Preview")}
+        </Button>
       </div>
     ) : null;
   } else {

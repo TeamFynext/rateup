@@ -1,9 +1,0 @@
-/* TabPanels Styles */
-.tab-panel-root,
-.tab-panel {
-  height: 100%;
-}
-
-.tab-panel.stats-tab-panel {
-  padding: 0.625rem;
-}

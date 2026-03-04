@@ -1,13 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 
-import { ActionIcon, Tooltip } from "@mantine/core";
-import { IconCheck, IconRefresh } from "@tabler/icons-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
-import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const RefreshButton = ({
   queryKeys,
@@ -21,40 +27,42 @@ const RefreshButton = ({
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const translations = useTranslations();
+  const isRefreshing = loading || isLoading;
 
   const handleRefresh = async () => {
+    if (isRefreshing) return;
     setLoading(true);
-    showLoadingToast(
-      translations("Hold onData is refreshing"),
-      "refresh",
-      true,
-      translations("Refreshing"),
-    );
-    if (onClick) onClick();
-    else {
-      for (const queryKey of queryKeys)
+    toast.success(translations("Hold onData is refreshing"));
+    if (onClick) {
+      onClick();
+    } else if (queryKeys?.length) {
+      for (const queryKey of queryKeys) {
         await queryClient.invalidateQueries({ queryKey: [queryKey] });
+      }
     }
     setLoading(false);
-    showSuccessToast(
-      translations("Data Updated Successfully"),
-      "refresh",
-      <IconCheck />,
-      true,
-    );
+    toast.success(translations("Data Updated Successfully"));
   };
 
   return (
-    <Tooltip label={translations("Refresh data")} position="top" withArrow>
-      <ActionIcon
-        variant="light"
-        aria-label="Refresh"
-        onClick={handleRefresh}
-        loading={loading || isLoading}
-      >
-        <IconRefresh style={{ width: "90%", height: "90%" }} stroke={1.5} />
-      </ActionIcon>
-    </Tooltip>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label="Refresh"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <IconRefresh className={isRefreshing ? "animate-spin" : ""} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          {translations("Refresh data")}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
