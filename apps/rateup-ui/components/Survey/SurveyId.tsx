@@ -240,7 +240,7 @@ export default function SurveyID() {
           {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
           <div id="SurveyIssueAlert"> </div>
           {activeTab === TabEnum.Result && (
-            <Group pos={"absolute"} right={30}>
+            <Group justify="flex-end" px={30} mb={"xs"}>
               <MultiSelect
                 radius={"10px"}
                 searchable

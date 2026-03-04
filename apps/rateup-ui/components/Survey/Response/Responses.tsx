@@ -9,15 +9,6 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedState } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
@@ -29,7 +20,7 @@ import {
   IconTableExport,
   IconX,
 } from "@tabler/icons-react";
-import { ColumnFiltersState } from "@tanstack/react-table";
+import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useTranslations } from "next-intl";
@@ -38,6 +29,15 @@ import { Range } from "react-date-range";
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
 import {
@@ -73,17 +73,26 @@ import {
 } from "../../input/ContainedInput/ContainedInput";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import TanstackTable from "../../Table/TanstackTable";
+import { DataTable } from "../../Table/data-table";
+import { DataTableViewOptions } from "../../Table/data-table-view-option";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { useSurveyResponseColumns } from "./Columns";
 import styles from "./Responses.module.css";
 import { useResponseFilterStore } from "./store";
 
-const Responses = ({ survey, defaultLanguage, subscription, questions }: any) => {
+const Responses = ({
+  survey,
+  defaultLanguage,
+  subscription,
+  questions,
+}: any) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "createdAt", desc: true },
+  ]);
   const surveyId = survey?.id;
   const { filterTeams } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
@@ -132,6 +141,27 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
   useEffect(() => {
     setServerFilters({});
   }, [survey]);
+
+  useEffect(() => {
+    setServerFilters(
+      columnFilters?.reduce((acc: any, c) => {
+        if (c.id.includes("_,_")) {
+          const id = c.id.split("_,_").pop();
+          acc[id] = c.value;
+        } else if (["tag", "mobile"].includes(c.id)) {
+          acc[c.id] = c.value;
+        }
+        return acc;
+      }, {}),
+    );
+  }, [columnFilters]);
+
+  useEffect(() => {
+    const newfilter = { ...(serverFilters as any) };
+    newfilter["desc"] =
+      sorting?.find((s) => s.id === "createdAt")?.desc ?? true;
+    setServerFilters({ ...newfilter });
+  }, [sorting]);
 
   const {
     data: responseData,
@@ -250,7 +280,8 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
   const filteredQuestions = useMemo(
     () =>
       questions.filter(
-        (q: any) => q.type !== QuestionType.InfoMessage && !(q.type in PageType),
+        (q: any) =>
+          q.type !== QuestionType.InfoMessage && !(q.type in PageType),
       ),
     [questions],
   );
@@ -339,7 +370,8 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-medium text-gray-900 dark:text-gray-100">
-                    {translations("Total Responses :")} {responseData?.totalCount ?? 0}
+                    {translations("Total Responses :")}{" "}
+                    {responseData?.totalCount ?? 0}
                   </h2>
                   <RefreshButton onClick={() => refetchResponse()} />
                 </div>
@@ -356,9 +388,15 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
                       }))}
                     />
                   )}
-                  <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
+                  <CalenderIconDateRangePicker
+                    ranges={ranges}
+                    setRange={setRange}
+                  />
                   {!survey?.isEncrypted && (
-                    <DropdownMenu open={openedExport} onOpenChange={setOpenedExport}>
+                    <DropdownMenu
+                      open={openedExport}
+                      onOpenChange={setOpenedExport}
+                    >
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="default"
@@ -407,10 +445,17 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
 
               {/* Secondary Row: Filters & Fields */}
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="icon" className="h-9 w-9 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
+                >
                   <IconFilter className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" className="h-9 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-4">
+                <Button
+                  variant="outline"
+                  className="h-9 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-4"
+                >
                   {translations("Select Fields")}
                 </Button>
               </div>
@@ -440,25 +485,29 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
         }}
       />
 
-      <Card>
-        <CardContent className="p-6">
-          <TanstackTable
-            data={responseData ? responseData?.responses : []}
-            columns={
-              responseData?.responses?.every((row: any) => !row.tag)
-                ? columns?.filter((col: any) => col.accessorKey !== "tag")
-                : columns
-            }
-            columnFiltersE={columnFilters}
-            setColumnFiltersE={setColumnFilters}
-            pagination={pagination}
-            setPagination={setPagination}
-            totalCount={responseData?.totalCount}
-            isPending={isPending}
-            enableServerFilter={enableServerFilter}
-          />
-        </CardContent>
-      </Card>
+      <DataTable
+        data={responseData?.responses ?? []}
+        columns={
+          responseData?.responses?.every((row: any) => !row.tag)
+            ? columns?.filter((col: any) => col.accessorKey !== "tag")
+            : columns
+        }
+        isPending={isPending}
+        DataTableToolbar={({ table }) => (
+          <div className="flex items-center justify-end px-3 py-2 border-b">
+            <DataTableViewOptions table={table} />
+          </div>
+        )}
+        manualPagination={{
+          pagination,
+          onPaginationChange: setPagination,
+          rowCount: responseData?.totalCount ?? 0,
+          sorting,
+          onSortingChange: setSorting,
+          columnFilters,
+          onColumnFiltersChange: setColumnFilters,
+        }}
+      />
 
       <DeleteModal
         confirmDelete={confirmDelete}
