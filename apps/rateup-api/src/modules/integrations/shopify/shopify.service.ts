@@ -202,18 +202,19 @@ export async function createScheduleOnShopifyEvent({
 
     const isDuplicateMessage = freshSurveys.some(
       (survey: any) =>
+        survey.event === event &&
         survey.waTemplateId === shopifySurvey.waTemplateId &&
         survey.schedules?.some(
           (sch: any) =>
             sch.body?.id === orderId && sch.phone === phoneWithoutPlusTemp,
         ),
     );
-    if (isDuplicateMessage) {
-      log.trace(
-        `Order ${orderId} already scheduled with template ${shopifySurvey.waTemplateId} for ${customerPhone}. Skipping duplicate execution of ${event}...`,
-      );
-      return;
-    }
+    // if (isDuplicateMessage) {
+    //   log.trace(
+    //     `Order ${orderId} already scheduled with template ${shopifySurvey.waTemplateId} for ${customerPhone}. Skipping duplicate execution of ${event}...`,
+    //   );
+    //   return;
+    // }
   }
 
   if (
@@ -230,7 +231,7 @@ export async function createScheduleOnShopifyEvent({
     return;
   }
 
-  const schedules = [...shopifySurvey.schedules];
+  const schedules = [...(shopifySurvey.schedules || [])];
   let actionStatus = null;
   let apiStatus = null;
 
@@ -1171,7 +1172,7 @@ export async function handleShopifyOrderEvents(webhook) {
       body?.customer?.phone ||
       body?.customer?.default_address?.phone ||
       body?.billing_address?.phone ||
-      webhook.body?.shipping_address?.phone ||
+      body?.shipping_address?.phone ||
       body?.phone;
     productIds.push(
       ...body.line_items?.map(

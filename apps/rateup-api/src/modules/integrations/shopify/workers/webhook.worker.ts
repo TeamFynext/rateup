@@ -1,11 +1,24 @@
 import { Worker, Job } from "bullmq";
 import { log } from "../../../../utils/logger.js";
+import IORedis from "ioredis";
+import "dotenv/config";
 import baseRedis from "../../../../utils/redisConnection.js";
 import {
   handleWebhook,
   processShopifySurveySchedule,
 } from "../shopify.service.js";
 import { ShopifyEvents } from "../../../../types/enums.js";
+
+const redisURL = new URL(process.env.REDIS_URL as string);
+
+const workerConnection = new IORedis.default({
+  family: 0,
+  host: redisURL.hostname,
+  port: Number.parseInt(redisURL.port),
+  username: redisURL.username,
+  password: redisURL.password,
+  maxRetriesPerRequest: null,
+});
 
 interface WebhookJobData {
   topic: string;
@@ -31,7 +44,7 @@ export const shopifyWebhookWorker = new Worker(
     }
   },
   {
-    connection: baseRedis,
+    connection: workerConnection,
     concurrency: 5,
     removeOnComplete: { count: 1000 },
     removeOnFail: { count: 5000 },
@@ -59,6 +72,15 @@ interface SurveyJobData {
   scheduleId: string;
 }
 
+const workerConnectionSurvey = new IORedis.default({
+  family: 0,
+  host: redisURL.hostname,
+  port: Number.parseInt(redisURL.port),
+  username: redisURL.username,
+  password: redisURL.password,
+  maxRetriesPerRequest: null,
+});
+
 export const shopifySurveyWorker = new Worker(
   "shopifySurveyQueue",
   async (job: Job<SurveyJobData>) => {
@@ -76,7 +98,7 @@ export const shopifySurveyWorker = new Worker(
     }
   },
   {
-    connection: baseRedis,
+    connection: workerConnectionSurvey,
     concurrency: 5,
     removeOnComplete: { count: 1000 },
     removeOnFail: { count: 5000 },

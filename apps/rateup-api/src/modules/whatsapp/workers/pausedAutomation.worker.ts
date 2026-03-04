@@ -3,6 +3,19 @@ import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import baseRedis from "../../../utils/redisConnection.js";
 import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
+import IORedis from "ioredis";
+import "dotenv/config";
+
+const redisURL = new URL(process.env.REDIS_URL as string);
+
+const workerConnection = new IORedis.default({
+  family: 0,
+  host: redisURL.hostname,
+  port: Number.parseInt(redisURL.port),
+  username: redisURL.username,
+  password: redisURL.password,
+  maxRetriesPerRequest: null,
+});
 
 interface PausedAutomationJobData {
   automationMessageId: string;
@@ -99,7 +112,7 @@ export const pausedAutomationWorker = new Worker(
     }
   },
   {
-    connection: baseRedis,
+    connection: workerConnection,
     concurrency: 2,
     removeOnComplete: { count: 0 },
     removeOnFail: { count: 1000 },
