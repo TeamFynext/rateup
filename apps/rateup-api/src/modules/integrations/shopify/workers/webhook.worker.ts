@@ -7,6 +7,8 @@ import {
 } from "../shopify.service.js";
 import { ShopifyEvents } from "../../../../types/enums.js";
 
+const workerConnection = baseRedis.duplicate();
+
 interface WebhookJobData {
   topic: string;
   webhookId: string;
@@ -31,7 +33,7 @@ export const shopifyWebhookWorker = new Worker(
     }
   },
   {
-    connection: baseRedis,
+    connection: workerConnection,
     concurrency: 5,
     removeOnComplete: { count: 1000 },
     removeOnFail: { count: 5000 },
@@ -59,6 +61,8 @@ interface SurveyJobData {
   scheduleId: string;
 }
 
+const workerConnectionSurvey = baseRedis.duplicate();
+
 export const shopifySurveyWorker = new Worker(
   "shopifySurveyQueue",
   async (job: Job<SurveyJobData>) => {
@@ -76,7 +80,7 @@ export const shopifySurveyWorker = new Worker(
     }
   },
   {
-    connection: baseRedis,
+    connection: workerConnectionSurvey,
     concurrency: 5,
     removeOnComplete: { count: 1000 },
     removeOnFail: { count: 5000 },
