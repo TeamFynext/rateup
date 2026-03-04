@@ -1,7 +1,5 @@
 import { Worker, Job } from "bullmq";
 import { log } from "../../../../utils/logger.js";
-import IORedis from "ioredis";
-import "dotenv/config";
 import baseRedis from "../../../../utils/redisConnection.js";
 import {
   handleWebhook,
@@ -9,16 +7,7 @@ import {
 } from "../shopify.service.js";
 import { ShopifyEvents } from "../../../../types/enums.js";
 
-const redisURL = new URL(process.env.REDIS_URL as string);
-
-const workerConnection = new IORedis.default({
-  family: 0,
-  host: redisURL.hostname,
-  port: Number.parseInt(redisURL.port),
-  username: redisURL.username,
-  password: redisURL.password,
-  maxRetriesPerRequest: null,
-});
+const workerConnection = baseRedis.duplicate();
 
 interface WebhookJobData {
   topic: string;
@@ -72,14 +61,7 @@ interface SurveyJobData {
   scheduleId: string;
 }
 
-const workerConnectionSurvey = new IORedis.default({
-  family: 0,
-  host: redisURL.hostname,
-  port: Number.parseInt(redisURL.port),
-  username: redisURL.username,
-  password: redisURL.password,
-  maxRetriesPerRequest: null,
-});
+const workerConnectionSurvey = baseRedis.duplicate();
 
 export const shopifySurveyWorker = new Worker(
   "shopifySurveyQueue",
