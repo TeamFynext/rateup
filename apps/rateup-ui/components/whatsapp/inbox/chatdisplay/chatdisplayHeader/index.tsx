@@ -330,7 +330,7 @@ const ChatHeaderMenu = ({ contact }) => {
     );
   }
   function handleCloseChat(status) {
-    let message = `marked this chat as ${status}`;
+    let message = `marked this chat as ${getStatusLabel(status)}`;
     const id = generateInternalMessageId();
     const newMessage = {
       id: id,
@@ -637,4 +637,14 @@ function ContactLabel({ contactLabel, labelPending, contact }) {
       </SelectContent>
     </Select>
   );
+}
+
+function getStatusLabel(status: string): string | null {
+  const map: Record<string, string> = {
+    [WaMessageAssignStatus.CLOSED]: "closed",
+    [WaMessageAssignStatus.SPAM]: "spam",
+    [WaMessageAssignStatus.RESOLVED]: "resolved",
+    [WaMessageAssignStatus.UNRESOLVED]: "unresolved",
+  };
+  return map[status] ?? null;
 }

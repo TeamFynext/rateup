@@ -328,49 +328,49 @@ export default function WaInboxSingleMessageLayout(props: Props) {
                     WaMessageAssignStatus.ASSIGNED && (
                     <div className="flex items-center gap-1 text-indigo-600">
                       <UserCog className="w-4 h-4" />
-                      <span>ASSIGNED</span>
+                      <span>Assigned</span>
                     </div>
                   )}
                   {messageObject?.messageBody?.internal?.assignStatus ===
                     "REASSIGNED" && (
                     <div className="flex items-center gap-1 text-indigo-600">
                       <UserCog className="w-4 h-4" />
-                      <span>REASSIGNED</span>
+                      <span>Reassigned</span>
                     </div>
                   )}
                   {messageObject?.messageBody?.internal?.assignStatus ===
                     WaMessageAssignStatus.RESOLVED && (
                     <div className="flex items-center gap-1 text-green-600">
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>RESOLVED</span>
+                      <span>Resolved</span>
                     </div>
                   )}
                   {messageObject?.messageBody?.internal?.assignStatus ===
                     WaMessageAssignStatus.CLOSED && (
                     <div className="flex items-center gap-1 text-blue-600">
                       <Archive className="w-4 h-4" />
-                      <span>CLOSED</span>
+                      <span>Closed</span>
                     </div>
                   )}
                   {messageObject?.messageBody?.internal?.assignStatus ===
                     WaMessageAssignStatus.UNRESOLVED && (
                     <div className="flex items-center gap-1 text-orange-600">
                       <Circle className="w-4 h-4" />
-                      <span>UNRESOLVED</span>
+                      <span>Unresolved</span>
                     </div>
                   )}
                   {messageObject?.messageBody?.internal?.assignStatus ===
                     WaMessageAssignStatus.SPAM && (
                     <div className="flex items-center gap-1 text-red-600">
                       <AlertCircle className="w-4 h-4" />
-                      <span>SPAM</span>
+                      <span>Spam</span>
                     </div>
                   )}
                   {messageObject?.messageBody?.internal?.assignStatus ===
                     WaMessageAssignStatus.UNASSIGNED && (
                     <div className="flex items-center gap-1 text-indigo-600">
                       <UserCog className="w-4 h-4" />
-                      <span>UNASSIGNED</span>
+                      <span>Unassigned</span>
                     </div>
                   )}
                 </span>
