@@ -216,7 +216,10 @@ const Flow = () => {
                   questions={[]}
                 />
               </TabsContent>
-              <TabsContent value={FlowTabEnum.TeamAnalytics} className="mt-0">
+              <TabsContent
+                value={FlowTabEnum.TeamAnalytics}
+                className="h-full overflow-y-auto mt-0"
+              >
                 <ResultComparison
                   surveyId={survey.id}
                   version={flow.version}
