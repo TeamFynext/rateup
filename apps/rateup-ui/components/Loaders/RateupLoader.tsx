@@ -1,9 +1,13 @@
-import { Center, CenterProps, Loader } from "@mantine/core";
+"use client";
 
-export default function RateupLoader(props: CenterProps) {
+import { Center, CenterProps } from "@mantine/core";
+
+import { Spinner } from "../ui/spinner";
+
+export default function RateupLoader(props: Readonly<CenterProps>) {
   return (
     <Center h="100%" {...props}>
-      <Loader type="bars" />
+      <Spinner />
     </Center>
   );
 }
