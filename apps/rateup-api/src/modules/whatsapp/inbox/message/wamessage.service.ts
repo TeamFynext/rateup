@@ -1595,7 +1595,6 @@ export async function createInternalWaMessage({
   privateMessageText?: string;
   messageId: string;
 }) {
-  console.log("triggered", trigerredByUser);
   const conversation = await getLastCreatedConversationForContact(contactId);
 
   let triggeredByUserDetails: { id: string; name: string } | null = null;
@@ -1686,7 +1685,7 @@ export async function createInternalWaMessage({
         break;
 
       default:
-        messageText = `marked this chat as ${waMessageAssignStatus}`;
+        messageText = `marked this chat as ${getStatusLabel(waMessageAssignStatus)}`;
         assignStatus = waMessageAssignStatus;
     }
 
@@ -1782,6 +1781,16 @@ export async function createInternalWaMessage({
     }
     return wamessage;
   }
+}
+
+function getStatusLabel(status: string): string | null {
+  const map: Record<string, string> = {
+    [WaMessageAssignStatus.CLOSED]: "closed",
+    [WaMessageAssignStatus.SPAM]: "spam",
+    [WaMessageAssignStatus.RESOLVED]: "resolved",
+    [WaMessageAssignStatus.UNRESOLVED]: "unresolved",
+  };
+  return map[status] ?? null;
 }
 
 type CreateWaMessageOrgTeamMapInput = {
