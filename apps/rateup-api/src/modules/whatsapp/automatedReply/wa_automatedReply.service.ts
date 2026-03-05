@@ -139,6 +139,35 @@ export async function createAutomatedReply(
   return automatedReply;
 }
 
+export async function cloneAutomatedReply(
+  id: string,
+  orgId: string,
+  name?: string,
+) {
+  const source = await prisma.waAutomatedReply.findFirst({
+    where: {
+      id,
+      orgId,
+    },
+  });
+
+  if (!source) {
+    throw new Error("Automated reply not found");
+  }
+
+  const automatedReply = await prisma.waAutomatedReply.create({
+    data: {
+      orgId,
+      name: name || `${source.name} Copy`,
+      matchType: source.matchType,
+      matchData: source.matchData,
+      platform: source.platform,
+    },
+  });
+
+  return automatedReply;
+}
+
 export async function updateAutomatedReply(
   id: string,
   data: any,
