@@ -1,15 +1,19 @@
-import { Tabs, TabsList, TabsTab } from "@mantine/core";
+"use client";
 
-import styles from "../SurveyTheme/components/PageSelector/PageSelector.module.css";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function TabsListComp({ value, onChange, tabs }) {
   return (
-    <Tabs value={value} onChange={onChange} classNames={styles} variant="pills">
+    <Tabs value={value} onValueChange={onChange}>
       <TabsList>
         {tabs.map((tab) => (
-          <TabsTab value={tab} key={tab} tt={"capitalize"}>
+          <TabsTrigger
+            value={tab}
+            key={tab}
+            className="capitalize data-[state=active]:bg-primary data-[state=active]:text-background transition-colors"
+          >
             {tab}
-          </TabsTab>
+          </TabsTrigger>
         ))}
       </TabsList>
     </Tabs>

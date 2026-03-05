@@ -228,49 +228,51 @@ export default function SurveyID() {
             teams: teamOptions,
           }}
         >
-          {user?.role !== UserRole.MEMBER && (
-            <Center mb={"xs"}>
-              <TabsListComp
-                value={activeTab}
-                onChange={handleTabChange}
-                tabs={Object.values(TabEnum)}
-              />
-            </Center>
-          )}
-          {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
-          <div id="SurveyIssueAlert"> </div>
-          {activeTab === TabEnum.Result && (
-            <Group pos={"absolute"} right={30}>
-              <MultiSelect
-                radius={"10px"}
-                searchable
-                clearable
-                data={multiSelectOptions}
-                value={filterTeams}
-                onChange={setFilterTeams}
-                placeholder={
-                  filterTeams.length > 0 ? "" : translations("All Teams")
-                }
-              />
-            </Group>
-          )}
+          <div className="flex flex-col h-full">
+            {user?.role !== UserRole.MEMBER && (
+              <Center mb={"xs"}>
+                <TabsListComp
+                  value={activeTab}
+                  onChange={handleTabChange}
+                  tabs={Object.values(TabEnum)}
+                />
+              </Center>
+            )}
+            {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
+            <div id="SurveyIssueAlert"> </div>
+            {activeTab === TabEnum.Result && (
+              <Group pos={"absolute"} right={30}>
+                <MultiSelect
+                  radius={"10px"}
+                  searchable
+                  clearable
+                  data={multiSelectOptions}
+                  value={filterTeams}
+                  onChange={setFilterTeams}
+                  placeholder={
+                    filterTeams.length > 0 ? "" : translations("All Teams")
+                  }
+                />
+              </Group>
+            )}
 
-          <TabPanelsComp
-            value={activeTab}
-            survey={survey}
-            surveyId={surveyId}
-            questions={questions}
-            addQnTrigger={addQnTrigger}
-            setSelectedLanguage={setSelectedLanguage}
-            setFilterTags={setFilterTags}
-            encryptionpassword={encryptionpassword}
-            setEncryptionPassword={setEncryptionPassword}
-            translations={translations}
-            setActiveTab={setActiveTab}
-            setFunToRunBeforeSurveyIdPageHeaderTabsChange={
-              setFunToRunBeforeSurveyIdPageHeaderTabsChange
-            }
-          />
+            <TabPanelsComp
+              value={activeTab}
+              survey={survey}
+              surveyId={surveyId}
+              questions={questions}
+              addQnTrigger={addQnTrigger}
+              setSelectedLanguage={setSelectedLanguage}
+              setFilterTags={setFilterTags}
+              encryptionpassword={encryptionpassword}
+              setEncryptionPassword={setEncryptionPassword}
+              translations={translations}
+              setActiveTab={setActiveTab}
+              setFunToRunBeforeSurveyIdPageHeaderTabsChange={
+                setFunToRunBeforeSurveyIdPageHeaderTabsChange
+              }
+            />
+          </div>
         </SurveyContext.Provider>
       </SelectedLanguageContext.Provider>
     </SurveyContextProvider>

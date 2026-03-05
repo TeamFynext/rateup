@@ -37,8 +37,8 @@ export function RuleCard({
       <CardContent className="flex flex-col justify-between h-full gap-4">
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold text-lg  truncate" title={item.name}>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-lg truncate" title={item.name}>
                 {item.name}
               </h3>
               <p className="text-xs text-muted-foreground">

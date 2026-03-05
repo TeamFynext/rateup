@@ -498,7 +498,7 @@ const WaResponses = ({
   );
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+    <div className="flex flex-col h-full">
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
         closeTicketModal={closeTicketModal}
@@ -507,7 +507,7 @@ const WaResponses = ({
         surveyResponseId={selectedResponseId}
       />
 
-      <div className="h-full px-6 pb-2">
+      <div className="h-full px-6 p-2">
         <DataTable
           data={data ?? []}
           columns={

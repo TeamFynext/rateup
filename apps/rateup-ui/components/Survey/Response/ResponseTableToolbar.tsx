@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import {
+  IconDatabaseImport,
   IconFileDownload,
   IconRefresh,
   IconSearch,
@@ -11,6 +12,8 @@ import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
 
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
+import { DataTableViewOptions } from "@/components/Table/data-table-view-option";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -38,6 +41,8 @@ interface ResponseTableToolbarProps<TData> {
   refetchResponse: () => void;
   handleSyncGoogleSheet: () => void;
   handleExcelDownload: (columns: string[]) => void;
+  handleExportContacts?: () => void;
+  hasContactQuestion?: boolean;
   alertModalOpen: () => void;
   responseCount: number;
 }
@@ -54,12 +59,13 @@ export function ResponseTableToolbar<TData>({
   refetchResponse,
   handleSyncGoogleSheet,
   handleExcelDownload,
+  handleExportContacts,
+  hasContactQuestion = false,
   alertModalOpen,
   responseCount,
 }: Readonly<ResponseTableToolbarProps<TData>>) {
   const translations = useTranslations();
   const [openedExport, setOpenedExport] = useState(false);
-  const toggle = () => setOpenedExport(!openedExport);
   const { serverFilters, setServerFilters } = useResponseFilterStore();
   const filters = serverFilters as Record<string, any>; // Cast locally to avoid store change
   const [searchTerm, setSearchTerm] = useState(filters?.search || "");
@@ -80,29 +86,23 @@ export function ResponseTableToolbar<TData>({
   };
 
   return (
-    <div className="flex flex-col gap-4 px-6 py-4">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4 flex-1">
-          <h2 className="text-base font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {translations("Total Responses :")} {responseCount}
-          </h2>
-          <div className="relative w-full max-w-sm">
-            <IconSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
+    <div className="pb-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="relative w-full max-w-md">
+            <IconSearch className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
-              placeholder={translations("Search responses...")}
-              className="pl-9 w-full bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800"
+              placeholder={translations("Search...")}
+              className="h-9 pl-9"
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
-          <RefreshButton onClick={() => refetchResponse()} />
-        </div>
 
-        <div className="flex items-center gap-2">
           {CFData && CFData.length > 0 && (
             <ContainedMultiSelect
-              placeholder={translations("Filter By Campaign")}
+              placeholder={translations("Campaign")}
               value={campaignIds}
               onChange={setCampaignIds}
               data={CFData.map(({ id, name }) => ({
@@ -111,17 +111,17 @@ export function ResponseTableToolbar<TData>({
               }))}
             />
           )}
+        </div>
 
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
+          <RefreshButton onClick={() => refetchResponse()} />
+          <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
 
           {!survey?.isEncrypted && (
             <DropdownMenu open={openedExport} onOpenChange={setOpenedExport}>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2 h-8 text-xs px-3 rounded-md"
-                >
+                <Button variant="default" size="sm" className="gap-2">
                   <IconTableExport className="h-3.5 w-3.5" />
                   {translations("Export")}
                 </Button>
@@ -150,19 +150,22 @@ export function ResponseTableToolbar<TData>({
                           : col?.id,
                       );
                     handleExcelDownload(columns);
-                    toggle();
+                    setOpenedExport(false);
                   }}
                 >
                   <IconFileDownload className="mr-2 h-4 w-4" />
-                  {translations("Download Excel")}
+                  {translations("Download")}
                 </DropdownMenuItem>
+                {hasContactQuestion && handleExportContacts && (
+                  <DropdownMenuItem onClick={handleExportContacts}>
+                    <IconDatabaseImport className="mr-2 h-4 w-4" />
+                    {translations("Contacts")}
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-
-          <div className="text-gray-500 hover:bg-gray-100 rounded p-1 cursor-pointer">
-            <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
-          </div>
+          <DataTableViewOptions table={table} />
         </div>
       </div>
     </div>

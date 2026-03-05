@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 
 import { useDebouncedCallback, useHotkeys } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
 import { WaAutomatedReply } from "@/types/global";
@@ -84,7 +85,7 @@ function FlowEditorContent({
   const lastSavedFlowRef = useRef<string | null>(null);
   const isMountedRef = useRef(true);
   const isInitialLoadRef = useRef(true);
-
+  const qc = useQueryClient();
   const updateWaAutomatedReplyMutation = useUpdateWaAutomatedReplyMutation();
 
   // Initialize history manager
@@ -130,6 +131,16 @@ function FlowEditorContent({
         },
         {
           onSettled: () => {
+            qc.setQueryData(
+              ["waAutomatedReply", { waAutomatedReplyId: waAutomationData.id }],
+              (oldData: any) => ({
+                ...oldData,
+                matchData: {
+                  ...oldData.matchData,
+                  json: flow,
+                },
+              }),
+            );
             setHasUnsavedChanges(false);
           },
         },

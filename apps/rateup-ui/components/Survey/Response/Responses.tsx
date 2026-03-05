@@ -9,35 +9,16 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedState } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import {
-  IconCheck,
-  IconDatabaseImport,
-  IconFileDownload,
-  IconFilter,
-  IconRefresh,
-  IconTableExport,
-  IconX,
-} from "@tabler/icons-react";
-import { ColumnFiltersState } from "@tanstack/react-table";
+import { IconCheck, IconX } from "@tabler/icons-react";
+import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
 import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
-import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
 import {
@@ -56,7 +37,7 @@ import {
   SubscriptionFeaturePathName,
   SurveyType,
 } from "../../../types/enums";
-import { docsPath, PAGE_SIZE } from "../../../utils/constants";
+import { PAGE_SIZE } from "../../../utils/constants";
 import { TicketType } from "../../../utils/enums/ticket";
 import {
   showErrorToast,
@@ -64,26 +45,28 @@ import {
   showSuccessToast,
 } from "../../../utils/notifications";
 import { hasFeature } from "../../../utils/subscription/subscription";
-import InfoButton from "../../Button/InfoButton";
-import RefreshButton from "../../Button/RefreshButton";
-import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
-import {
-  ContainedMultiSelect,
-  ContainedTextField,
-} from "../../input/ContainedInput/ContainedInput";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import TanstackTable from "../../Table/TanstackTable";
+import { DataTable } from "../../Table/data-table";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { useSurveyResponseColumns } from "./Columns";
-import styles from "./Responses.module.css";
+import { ResponseTableToolbar } from "./ResponseTableToolbar";
 import { useResponseFilterStore } from "./store";
 
-const Responses = ({ survey, defaultLanguage, subscription, questions }: any) => {
+const Responses = ({
+  survey,
+  defaultLanguage,
+  subscription,
+  questions,
+}: any) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "createdAt", desc: true },
+  ]);
   const surveyId = survey?.id;
   const { filterTeams } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
@@ -112,9 +95,6 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
   const redirectModalOpen = () => setRedirectModalOpened(true);
   const redirectModalClose = () => setRedirectModalOpened(false);
 
-  const [openedExport, setOpenedExport] = useState(false);
-  const toggle = () => setOpenedExport(!openedExport);
-
   const [alertMsg, setAlertMsg] = useState("");
   const [ranges, setRange] = useState<Range[]>([
     {
@@ -126,8 +106,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
   const router = useRouter();
   const [campaignIds, setSelectedCampaignIds] = useState([]);
 
-  const { serverFilters, enableServerFilter, setServerFilters } =
-    useResponseFilterStore();
+  const { serverFilters, setServerFilters } = useResponseFilterStore();
 
   useEffect(() => {
     setServerFilters({});
@@ -159,11 +138,6 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
     }
   }, [ranges]);
 
-  const hasContactQuestion = useMemo(
-    () => questions.find((q: any) => q.type === QuestionType.Contact),
-    [questions],
-  );
-
   const deleteResponse = useDeleteResponse(
     surveyId,
     // @ts-ignore
@@ -173,48 +147,50 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
   );
   const translations = useTranslations();
   if (Array.isArray(surveyId)) {
-    throw new Error(translations("surveyId is an array"));
+    throw new TypeError(translations("surveyId is an array"));
   }
 
+  const { data: CFData, isLoading: CFLoading } =
+    useCampaignFilterForFlows(surveyId);
+  const hasContactQuestion = useMemo(
+    () => questions.find((q: any) => q.type === QuestionType.Contact),
+    [questions],
+  );
   const exportContactMutation = useExportContactResponses(surveyId);
-  const {
-    data: CFData,
-    error: CFError,
-    isLoading: CFLoading,
-  } = useCampaignFilterForFlows(surveyId);
-  const downloadExcelResponse = useDownloadExcelResponse();
-  function handleExportContacts() {
+  const handleExportContacts = useCallback(() => {
     showLoadingToast(
       translations("Exporting Contact responses to Contacts"),
       "export-contacts",
       true,
     );
     exportContactMutation.mutate();
-  }
-  const handleExcelDownload = useCallback(() => {
-    downloadExcelResponse.mutate({
+  }, [exportContactMutation, translations]);
+
+  const downloadExcelResponse = useDownloadExcelResponse();
+  const handleExcelDownload = useCallback(
+    (columns: string[]) => {
+      downloadExcelResponse.mutate({
+        defaultLanguage,
+        surveyId,
+        visibleColumn: columns,
+        title: survey?.title,
+        tz: dayjs.tz.guess(),
+        filterTeams,
+        campaignIds,
+        columnFilters: [],
+        ranges: ranges?.[0],
+      });
+    },
+    [
       defaultLanguage,
-      surveyId,
-      visibleColumn: Array.from(
-        new Set(useVisibleColumnStore.getState().visibleColumn),
-      ),
-      title: survey?.title,
-      tz: dayjs.tz.guess(),
+      downloadExcelResponse,
       filterTeams,
+      ranges,
+      survey?.title,
+      surveyId,
       campaignIds,
-      columnFilters,
-      ranges: ranges?.[0],
-    });
-  }, [
-    columnFilters,
-    defaultLanguage,
-    downloadExcelResponse,
-    filterTeams,
-    ranges,
-    survey?.title,
-    surveyId,
-    campaignIds,
-  ]);
+    ],
+  );
 
   useEffect(() => {
     selectedResponseId && responseTeamId && openTicketModal();
@@ -250,12 +226,11 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
   const filteredQuestions = useMemo(
     () =>
       questions.filter(
-        (q: any) => q.type !== QuestionType.InfoMessage && !(q.type in PageType),
+        (q: any) =>
+          q.type !== QuestionType.InfoMessage && !(q.type in PageType),
       ),
     [questions],
   );
-
-  const { surveyTeamMapId } = useContext(SurveyContext); // Re-accessing surveyTeamMapId if needed by deleteResponse
 
   const columns = useSurveyResponseColumns({
     questions: filteredQuestions,
@@ -275,13 +250,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
 
   const handleSyncGoogleSheet = () => {
     setIsSyncing(true);
-    if (!googleAccessToken) {
-      setIsSyncing(false);
-      setAlertMsg(
-        translations("Please sync your Google account in the App & Services"),
-      );
-      redirectModalOpen();
-    } else {
+    if (googleAccessToken) {
       syncResponseToGoogleSheet.mutate(
         { surveyId },
         {
@@ -292,7 +261,6 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
               "success",
               <IconCheck />,
             );
-            toggle();
           },
           onError: (error: any) => {
             setIsSyncing(false);
@@ -305,15 +273,58 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
               );
               redirectModalOpen();
             } else {
-              toggle();
               showErrorToast(translations("Error in syncing response"));
             }
           },
         },
       );
+      return;
     }
+
+    setIsSyncing(false);
+    setAlertMsg(
+      translations("Please sync your Google account in the App & Services"),
+    );
+    redirectModalOpen();
   };
   const isPending = isLoading || CFLoading || isRefetching;
+  const responseCount = responseData?.totalCount;
+
+  const Toolbar = useCallback(
+    (props) => (
+      <ResponseTableToolbar
+        {...props}
+        CFData={CFData}
+        campaignIds={campaignIds}
+        setCampaignIds={setSelectedCampaignIds}
+        ranges={ranges}
+        setRange={setRange}
+        survey={survey}
+        isSyncing={isSyncing}
+        refetchResponse={refetchResponse}
+        handleSyncGoogleSheet={handleSyncGoogleSheet}
+        handleExcelDownload={handleExcelDownload}
+        handleExportContacts={handleExportContacts}
+        hasContactQuestion={!!hasContactQuestion}
+        alertModalOpen={alertModalOpen}
+        responseCount={responseCount}
+      />
+    ),
+    [
+      CFData,
+      campaignIds,
+      ranges,
+      survey,
+      isSyncing,
+      refetchResponse,
+      handleSyncGoogleSheet,
+      handleExcelDownload,
+      handleExportContacts,
+      hasContactQuestion,
+      alertModalOpen,
+      responseCount,
+    ],
+  );
 
   if (error)
     return (
@@ -321,7 +332,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
     );
 
   return (
-    <div className="flex flex-col gap-6 w-full h-full p-4">
+    <>
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
         closeTicketModal={closeTicketModal}
@@ -329,95 +340,6 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
       />
-      <Card>
-        <CardContent className="p-6">
-          {isPending ? (
-            <Skeleton className="h-[70px] w-full" />
-          ) : (
-            <div className="flex flex-col gap-4">
-              {/* Top Row: Title & Main Actions */}
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-medium text-gray-900 dark:text-gray-100">
-                    {translations("Total Responses :")} {responseData?.totalCount ?? 0}
-                  </h2>
-                  <RefreshButton onClick={() => refetchResponse()} />
-                </div>
-
-                <div className="flex items-center gap-3 flex-wrap">
-                  {CFData && CFData.length > 0 && (
-                    <ContainedMultiSelect
-                      placeholder={translations("Filter By Campaign")}
-                      value={campaignIds}
-                      onChange={setSelectedCampaignIds}
-                      data={CFData.map(({ name, id }: any) => ({
-                        value: id,
-                        label: name,
-                      }))}
-                    />
-                  )}
-                  <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
-                  {!survey?.isEncrypted && (
-                    <DropdownMenu open={openedExport} onOpenChange={setOpenedExport}>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="default"
-                          className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
-                          onClick={toggle}
-                        >
-                          <IconTableExport className="h-4 w-4" />
-                          {translations("Export")}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            if (survey.spreadSheetId) alertModalOpen();
-                            else handleSyncGoogleSheet();
-                          }}
-                        >
-                          <IconRefresh
-                            className={`mr-2 h-4 w-4 ${isSyncing ? styles.rotateInfinitely : ""}`}
-                          />
-                          {survey.spreadSheetId
-                            ? translations("Resync with Google Sheet")
-                            : translations("Sync with Google Sheet")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            handleExcelDownload();
-                            toggle();
-                          }}
-                        >
-                          <IconFileDownload className="mr-2 h-4 w-4" />
-                          {translations("Download Excel")}
-                        </DropdownMenuItem>
-                        {hasContactQuestion && (
-                          <DropdownMenuItem onClick={handleExportContacts}>
-                            <IconDatabaseImport className="mr-2 h-4 w-4" />
-                            {translations("Export Contacts")}
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                  <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
-                </div>
-              </div>
-
-              {/* Secondary Row: Filters & Fields */}
-              <div className="flex items-center gap-3">
-                <Button variant="outline" size="icon" className="h-9 w-9 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700">
-                  <IconFilter className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" className="h-9 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-4">
-                  {translations("Select Fields")}
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       <ConfirmationModal
         opened={alertModalOpened}
@@ -440,25 +362,25 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
         }}
       />
 
-      <Card>
-        <CardContent className="p-6">
-          <TanstackTable
-            data={responseData ? responseData?.responses : []}
-            columns={
-              responseData?.responses?.every((row: any) => !row.tag)
-                ? columns?.filter((col: any) => col.accessorKey !== "tag")
-                : columns
-            }
-            columnFiltersE={columnFilters}
-            setColumnFiltersE={setColumnFilters}
-            pagination={pagination}
-            setPagination={setPagination}
-            totalCount={responseData?.totalCount}
-            isPending={isPending}
-            enableServerFilter={enableServerFilter}
-          />
-        </CardContent>
-      </Card>
+      <DataTable
+        data={responseData ? responseData?.responses : []}
+        columns={
+          responseData?.responses?.every((row: any) => !row.tag)
+            ? columns?.filter((col: any) => col.accessorKey !== "tag")
+            : columns
+        }
+        manualPagination={{
+          pagination,
+          onPaginationChange: setPagination,
+          rowCount: responseData?.totalCount ?? 0,
+          sorting,
+          onSortingChange: setSorting,
+          columnFilters,
+          onColumnFiltersChange: setColumnFilters,
+        }}
+        isPending={isPending}
+        DataTableToolbar={Toolbar}
+      />
 
       <DeleteModal
         confirmDelete={confirmDelete}
@@ -466,7 +388,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
         opened={opened}
         close={close}
       />
-    </div>
+    </>
   );
 };
 
