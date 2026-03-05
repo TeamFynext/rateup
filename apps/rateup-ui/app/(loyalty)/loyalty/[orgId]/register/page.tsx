@@ -42,7 +42,7 @@ const formSchema = z.object({
     .refine((val) => !val || isValidPhoneNumber(val), {
       message: "Please enter a valid phone number",
     }),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  email: z.email("Invalid email address").optional().or(z.literal("")),
   dob: z.date(),
   referCode: z.string().optional(),
 });
