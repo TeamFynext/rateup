@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { shouldSkipLocalErrorToast } from "@/backend/apiClient";
 
 import {
+  cloneWaAutomatedReply,
   createWaAutomatedReply,
   deleteWaAutomatedReply,
   getAllWaAutomatedReplies,
@@ -64,6 +65,22 @@ export const useDeleteWaAutomatedReplyMutation = () => {
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
       toast.success("Automated Reply Deleted Successfully");
+    },
+  });
+};
+
+export const useCloneWaAutomatedReplyMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: cloneWaAutomatedReply,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
+      toast.success("Automation cloned");
+    },
+    onError: (error) => {
+      if (!shouldSkipLocalErrorToast(error)) {
+        toast.error(error?.message ?? "Error cloning automation");
+      }
     },
   });
 };
