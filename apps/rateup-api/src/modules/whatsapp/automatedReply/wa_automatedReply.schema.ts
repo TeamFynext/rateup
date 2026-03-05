@@ -12,8 +12,12 @@ const createAutomatedReplySchema = z.object({
   platform: z.string().optional(),
 });
 
-const byWaAutomatedReplyIdParams = z.object({
+export const byWaAutomatedReplyIdParams = z.object({
   waAutomatedReplyId: z.string(),
+});
+
+export const cloneAutomatedReplyBody = z.object({
+  name: z.string().min(1).optional(),
 });
 
 const initiateAutomatedReplyBody = z.object({
@@ -25,6 +29,7 @@ export const { schemas: waAutomatedReplySchemas, $ref: $waAutomatedReplyRef } =
     {
       createAutomatedReplySchema,
       byWaAutomatedReplyIdParams,
+      cloneAutomatedReplyBody,
       initiateAutomatedReplyBody,
     },
     {
@@ -38,6 +43,7 @@ export type CreateAutomatedReplySchema = z.infer<
 export type ByWaAutomatedReplyIdParams = z.infer<
   typeof byWaAutomatedReplyIdParams
 >;
+export type CloneAutomatedReplyBody = z.infer<typeof cloneAutomatedReplyBody>;
 export type InitiateAutomatedReplyBody = z.infer<
   typeof initiateAutomatedReplyBody
 >;

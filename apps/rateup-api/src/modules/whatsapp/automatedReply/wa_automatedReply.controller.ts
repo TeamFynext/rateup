@@ -1,12 +1,14 @@
 import { FastifyRequest } from "fastify/types/request.js";
 import {
   ByWaAutomatedReplyIdParams,
+  CloneAutomatedReplyBody,
   CreateAutomatedReplySchema,
   InitiateAutomatedReplyBody,
 } from "./wa_automatedReply.schema.js";
 import { FastifyReply } from "fastify";
 import {
   createAutomatedReply,
+  cloneAutomatedReply,
   deleteAutomatedReply,
   getAutomatedRepliesByOrgId,
   getAutomatedRepliesMessagId,
@@ -64,6 +66,30 @@ export async function createAutomatedReplyHandler(
       reply
         .code(500)
         .send(error?.message || "error in creating automatedReply");
+    }
+  }
+}
+
+export async function cloneAutomatedReplyHandler(
+  req: FastifyRequest<{
+    Params: ByWaAutomatedReplyIdParams;
+    Body: CloneAutomatedReplyBody;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const automatedReply = await cloneAutomatedReply(
+      req.params.waAutomatedReplyId,
+      req.user.orgId,
+      req.body?.name,
+    );
+    reply.code(201).send(automatedReply);
+  } catch (error) {
+    if (error?.message === "Automated reply not found") {
+      reply.code(404).send(error.message);
+    } else {
+      log.error(error);
+      reply.code(500).send(error?.message || "error in cloning automatedReply");
     }
   }
 }
