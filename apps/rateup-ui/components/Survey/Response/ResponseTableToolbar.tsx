@@ -443,7 +443,7 @@ export function ResponseTableToolbar<TData>({
                 <DropdownMenuItem
                   onClick={() => {
                     const columns = table
-                      .getAllColumns()
+                      .getVisibleFlatColumns()
                       .map((col) =>
                         typeof col.columnDef?.header === "string"
                           ? col.columnDef?.header
