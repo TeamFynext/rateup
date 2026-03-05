@@ -6,10 +6,13 @@ export const AvailableRewardsCard = ({
   availableRewards,
   customer,
   isDark,
-  setSelectedCouponCode,
+  redeemRewardByShortCode,
 }: any) => {
   const [selectedReward, setSelectedReward] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [redeemStatus, setRedeemStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
 
   const openReward = (reward: any) => {
     setSelectedReward(reward);
@@ -142,6 +145,18 @@ export const AvailableRewardsCard = ({
               </Text>
             </View>
 
+            {redeemStatus === "success" && (
+              <Text className="text-green-600 text-center mb-3">
+                Reward redeemed successfully 🎉
+              </Text>
+            )}
+
+            {redeemStatus === "error" && (
+              <Text className="text-red-500 text-center mb-3">
+                Failed to redeem reward
+              </Text>
+            )}
+
             {/* Buttons */}
             <View className="flex-row gap-3">
               <Pressable
@@ -156,10 +171,17 @@ export const AvailableRewardsCard = ({
               <Pressable
                 className="flex-1 py-3 rounded-xl bg-primaryBlue items-center active:opacity-80"
                 onPress={() => {
-                  setSelectedCouponCode(
+                  redeemRewardByShortCode.mutate(
                     (selectedReward.rewardValue as any)?.code,
+                    {
+                      onSuccess: () => {
+                        setRedeemStatus("success");
+                      },
+                      onError: () => {
+                        setRedeemStatus("error");
+                      },
+                    },
                   );
-                  closeModal();
                 }}
               >
                 <Text className="font-semibold text-white">Redeem</Text>

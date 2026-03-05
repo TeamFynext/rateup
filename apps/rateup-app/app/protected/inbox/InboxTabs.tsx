@@ -54,7 +54,7 @@ function TabIcon({
           {label}
         </Text>
         <Text style={{ color: textColor }} className="font-semibold text-sm">
-          {count && count > 0 && `(${count})`}
+          {count && count > 0 ? `(${count})`:""}
         </Text>
       </View>
     </View>
