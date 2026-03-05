@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify/types/instance.js";
 import {
   createAutomatedReplyHandler,
+  cloneAutomatedReplyHandler,
   updateAutomatedReplyHandler,
   deleteAutomatedReplyHandler,
   getAutomatedRepliesByIdHandler,
@@ -30,6 +31,10 @@ import {
   getRulesByAutomationIdQuerySchema,
 } from "./wa_rule.schema.js";
 import {
+  byWaAutomatedReplyIdParams,
+  cloneAutomatedReplyBody,
+} from "./wa_automatedReply.schema.js";
+import {
   serializerCompiler,
   validatorCompiler,
 } from "fastify-type-provider-zod";
@@ -52,6 +57,16 @@ export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
       preHandler: verifyAutomationLimit,
     },
     createAutomatedReplyHandler,
+  );
+  fastify.post(
+    "/clone/:waAutomatedReplyId",
+    {
+      schema: {
+        params: byWaAutomatedReplyIdParams,
+        body: cloneAutomatedReplyBody,
+      },
+    },
+    cloneAutomatedReplyHandler,
   );
   fastify.get("/:waAutomatedReplyId", getAutomatedRepliesByIdHandler);
   fastify.put("/:waAutomatedReplyId", updateAutomatedReplyHandler);
