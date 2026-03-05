@@ -1910,10 +1910,31 @@ export async function getSurveyResponseBySurveyId(
   }
 
   if (Object.keys(rest)?.length) {
+    const { createdAt: createdAtFilter, ...responseFilters } = rest as Record<
+      string,
+      string
+    >;
+
+    if (createdAtFilter?.length) {
+      const startDate = dayjs
+        .utc(createdAtFilter)
+        .startOf("day")
+        .toISOString()
+        .replaceAll("'", "''");
+      const endDate = dayjs
+        .utc(createdAtFilter)
+        .endOf("day")
+        .toISOString()
+        .replaceAll("'", "''");
+      filterQuery += ` AND sr."createdAt" >= '${startDate}' AND sr."createdAt" <= '${endDate}'`;
+    }
+
     let query = [];
-    Object.entries(rest).map(([questionId, search]) => {
-      let escapedSearch = search.replace(/'/g, "''");
-      const escapedQuestionId = questionId.replace(/'/g, "''");
+    Object.entries(responseFilters).forEach(([questionId, search]) => {
+      const rawSearch = (search || "").trim();
+      const isDateSearch = /^\d{4}-\d{2}-\d{2}$/.test(rawSearch);
+      let escapedSearch = rawSearch.replaceAll("'", "''");
+      const escapedQuestionId = questionId.replaceAll("'", "''");
       if (escapedSearch.includes(",")) {
         escapedSearch = escapedSearch
           .split(",")
@@ -1937,19 +1958,29 @@ export async function getSurveyResponseBySurveyId(
         WHERE
           responseobj->>'questionId' = '${escapedQuestionId}'
           AND (
-            (s."type" = '${SurveyType.WaFlow}' AND cast(responseobj->'response' AS text) LIKE '%${escapedSearch}%')
+            (s."type" = '${SurveyType.WaFlow}' AND ${
+              isDateSearch
+                ? `LEFT(responseobj->>'response', 10) = '${escapedSearch}'`
+                : `cast(responseobj->'response' AS text) LIKE '%${escapedSearch}%'`
+            })
             OR
-            responseobj->'response'->>(responseobj->>'type') LIKE '%${escapedSearch}%'
+            ${
+              isDateSearch
+                ? `LEFT(responseobj->'response'->>(responseobj->>'type'), 10) = '${escapedSearch}'`
+                : `responseobj->'response'->>(responseobj->>'type') LIKE '%${escapedSearch}%'`
+            }
           )
       )`);
       }
     });
-    filterQuery += ` AND EXISTS (
+    if (query.length) {
+      filterQuery += ` AND EXISTS (
         SELECT 1
         FROM jsonb_array_elements(to_jsonb(sr."responses")) AS responseobj
         WHERE
           ${query.join(` AND `)}
       )`;
+    }
   }
 
   const responses =
