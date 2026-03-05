@@ -308,8 +308,8 @@ const WaResponses = ({
         id: "mobile",
       },
       {
-        header: "Tag",
-        accessorKey: "tag",
+        header: "Tags",
+        accessorKey: "tags",
       },
       ...(enableTicket
         ? [
