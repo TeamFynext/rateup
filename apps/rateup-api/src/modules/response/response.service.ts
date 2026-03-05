@@ -267,8 +267,7 @@ export async function downloadExcelResponse(
   visibleColumn = [],
   tz = "Asia/Calcutta",
 ) {
-  const responses =
-    (allResponses && allResponses?.flatMap((data) => data?.responses)) || [];
+  const responses = allResponses?.flatMap((data) => data?.responses) || [];
 
   const platform = responses?.[0]?.platform;
   const filteredSecondArray = questions.filter((item) => {
@@ -286,47 +285,53 @@ export async function downloadExcelResponse(
 
   if (filteredSecondArray && responses) {
     const headerArray = filteredSecondArray.flatMap((question) => {
-      let qsTitle =
+      const qsTitle =
         question?.title[defaultLanguage] ||
         question?.description[defaultLanguage] ||
         question?.label?.[defaultLanguage] ||
         "";
-      return question.type === QuestionType.Contact
-        ? (Object.entries(question.features?.[defaultLanguage])
-            ?.filter((data: any) => data[1].isEnabled)
-            .map((data) => `${getContent(qsTitle)}: ${data[0]}`) ?? [])
-        : question.type === QuestionType.MCQGrid
-          ? (question.features?.[defaultLanguage]?.questions?.map(
-              (q) => `${getContent(qsTitle)}: ${q}`,
-            ) ?? [])
-          : question.type === QuestionType.MultiTextInput
-            ? (question.features?.[defaultLanguage]?.fields?.map(
-                (field) =>
-                  `${getContent(
-                    question.title[defaultLanguage],
-                  )}: ${field?.fieldKey}`,
-              ) ?? [])
-            : question.type === QuestionType.Testimonial
-              ? [
-                  `${getContent(question.title[defaultLanguage])}: name`,
-                  `${getContent(question.title[defaultLanguage])}: testimonial`,
-                  ...(question?.features?.[defaultLanguage]
-                    ? Object.entries(question.features?.[defaultLanguage])
-                        ?.filter(([key, value]) => value)
-                        .map(
-                          ([key, value]) =>
-                            `${getContent(question.title[defaultLanguage])}: ${key}`,
-                        )
-                    : []),
-                ]
-              : [getContent(qsTitle)];
+      let columnLabels: string[];
+
+      if (question.type === QuestionType.Contact) {
+        columnLabels = Object.entries(
+          question.features?.[defaultLanguage] ?? {},
+        )
+          .filter(([, value]: any) => value?.isEnabled)
+          .map(([key]) => `${getContent(qsTitle)}: ${key}`);
+      } else if (question.type === QuestionType.MCQGrid) {
+        columnLabels =
+          question.features?.[defaultLanguage]?.questions?.map(
+            (q) => `${getContent(qsTitle)}: ${q}`,
+          ) ?? [];
+      } else if (question.type === QuestionType.MultiTextInput) {
+        columnLabels =
+          question.features?.[defaultLanguage]?.fields?.map(
+            (field) =>
+              `${getContent(question.title[defaultLanguage])}: ${field?.fieldKey}`,
+          ) ?? [];
+      } else if (question.type === QuestionType.Testimonial) {
+        columnLabels = [
+          `${getContent(question.title[defaultLanguage])}: name`,
+          `${getContent(question.title[defaultLanguage])}: testimonial`,
+          ...Object.entries(question?.features?.[defaultLanguage] ?? {})
+            .filter(([, value]) => Boolean(value))
+            .map(
+              ([key]) =>
+                `${getContent(question.title[defaultLanguage])}: ${key}`,
+            ),
+        ];
+      } else {
+        columnLabels = [getContent(qsTitle)];
+      }
+
+      return columnLabels;
     });
 
     const createdAt = "Date";
-    const responseTag = "tag";
+    const responseTag = "Tags";
     let whatsappRespondentNumber = "Respondent's Mobile Number";
     const teamNameColumn = "Team Name";
-    if (visibleColumn.includes("createdAt")) {
+    if (visibleColumn.includes("Created At")) {
       headerArray.unshift(createdAt);
       filteredSecondArray.unshift(createdAt);
     }
@@ -566,10 +571,9 @@ export async function downloadExcelResponseV2(
 ) {
   const responses = allResponses?.flatMap((data) => data?.responses) || [];
 
-  const filteredQuestions = questions;
-  // .filter((item) =>
-  //   visibleColumn.includes(item?.label || ""),
-  // );
+  const filteredQuestions = questions.filter((item) =>
+    visibleColumn.includes(item?.label || ""),
+  );
 
   if (filteredQuestions && responses.length) {
     const headerArray = filteredQuestions.map((question) =>
@@ -577,13 +581,13 @@ export async function downloadExcelResponseV2(
     );
 
     const createdAt = "Date";
-    const responseTag = "tag";
+    const responseTag = "Tags";
     const whatsappRespondentNumber = "Respondent Mobile";
 
-    // if (visibleColumn.includes("createdAt")) {
-    headerArray.unshift(createdAt);
-    filteredQuestions.unshift({ label: createdAt });
-    // }
+    if (visibleColumn.includes("Created At")) {
+      headerArray.unshift(createdAt);
+      filteredQuestions.unshift({ label: createdAt });
+    }
 
     if (visibleColumn.includes(whatsappRespondentNumber)) {
       headerArray.push(whatsappRespondentNumber);
@@ -591,7 +595,7 @@ export async function downloadExcelResponseV2(
     }
 
     // Split tags into multiple columns if necessary
-    const tagColumns = [];
+    const tagColumns: any[] = [];
     if (visibleColumn.includes(responseTag)) {
       const maxTags = Math.max(
         ...responses.map(
@@ -1057,7 +1061,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
 
     // For each language, process responses in batches
     for (const lang of languages) {
-      const additionalColumns = ["Team", "Respondent's Mobile Number", "Tag"];
+      const additionalColumns = ["Team", "Respondent's Mobile Number", "Tags"];
       const headerRow = [
         "Created At",
         ...languageQuestionTitles[lang],
