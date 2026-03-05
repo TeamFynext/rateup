@@ -41,9 +41,9 @@ function AuthTypeSignupForm({
       .string()
       .min(4, "Organization name should be at least 4 characters long"),
 
-    email: z.string().email("Invalid email").optional(),
+    email: z.email("Invalid email").optional(),
 
-    website: z.string().url("Invalid website URL").optional(),
+    website: z.url("Invalid website URL").optional(),
 
     phoneNumber: z.string().optional(),
 

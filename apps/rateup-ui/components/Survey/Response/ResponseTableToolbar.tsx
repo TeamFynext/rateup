@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import {
   IconDatabaseImport,
@@ -8,13 +8,15 @@ import {
   IconTableExport,
 } from "@tabler/icons-react";
 import { Table } from "@tanstack/react-table";
+import { format, isValid, parse } from "date-fns";
 import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
+import { useForm } from "react-hook-form";
 
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +24,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { docsPath } from "@/utils/constants";
 
 import InfoButton from "../../Button/InfoButton";
@@ -68,36 +77,327 @@ export function ResponseTableToolbar<TData>({
   const [openedExport, setOpenedExport] = useState(false);
   const { serverFilters, setServerFilters } = useResponseFilterStore();
   const filters = serverFilters as Record<string, any>; // Cast locally to avoid store change
-  const [searchTerm, setSearchTerm] = useState(filters?.search || "");
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      const currentSearch = filters?.search || "";
-      if (currentSearch !== searchTerm) {
-        setServerFilters({ ...serverFilters, search: searchTerm });
+  const getBackendFilterKey = (columnId: string) => {
+    if (!columnId) return "";
+    const segments = columnId.split("_,_");
+    if (segments.length >= 3) {
+      return segments.at(-1) || columnId;
+    }
+    return columnId;
+  };
+
+  const filterableColumns = useMemo(
+    () =>
+      table
+        .getAllColumns()
+        .filter(
+          (column) =>
+            column.getCanFilter() &&
+            !["action", "Action", "ticket"].includes(column.id),
+        )
+        .map((column) => ({
+          id: column.id,
+          label:
+            typeof column.columnDef?.header === "string"
+              ? column.columnDef?.header
+              : column.id,
+        })),
+    [table],
+  );
+
+  const initialSearchState = useMemo(() => {
+    let searchByValue =
+      typeof filters?.searchBy === "string" ? filters.searchBy : "";
+
+    const isValidSearchBy =
+      !!searchByValue &&
+      filterableColumns.some((column) => column.id === searchByValue);
+
+    if (!isValidSearchBy) {
+      const matchedColumn = filterableColumns.find((column) => {
+        const backendKey = getBackendFilterKey(column.id);
+        return (
+          filters?.[column.id] !== undefined ||
+          filters?.[backendKey] !== undefined
+        );
+      });
+
+      searchByValue = matchedColumn?.id || filterableColumns[0]?.id || "";
+    }
+
+    let searchTermValue = "";
+
+    if (filters?.search !== undefined) {
+      searchTermValue = String(filters.search || "");
+    } else if (searchByValue) {
+      const backendKey = getBackendFilterKey(searchByValue);
+      if (filters?.[searchByValue] !== undefined) {
+        searchTermValue = String(filters[searchByValue] || "");
+      } else if (filters?.[backendKey] !== undefined) {
+        searchTermValue = String(filters[backendKey] || "");
       }
-    }, 500);
+    }
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, serverFilters, setServerFilters, filters?.search]);
+    return {
+      searchByValue,
+      searchTermValue,
+    };
+  }, [filterableColumns, filters]);
+
+  const form = useForm<{
+    searchTerm: string;
+    searchBy: string;
+  }>({
+    defaultValues: {
+      searchTerm: initialSearchState.searchTermValue,
+      searchBy: initialSearchState.searchByValue,
+    },
+  });
+
+  const searchTerm = form.watch("searchTerm") || "";
+  const rawSearchBy = form.watch("searchBy");
+
+  const searchBy = useMemo(() => {
+    if (
+      rawSearchBy &&
+      filterableColumns.some((column) => column.id === rawSearchBy)
+    ) {
+      return rawSearchBy;
+    }
+
+    return filterableColumns[0]?.id || "";
+  }, [filterableColumns, rawSearchBy]);
+
+  const getColumnFilterType = (columnId: string) => {
+    if (!columnId) return "text";
+    if (columnId === "createdAt") return "date";
+
+    const segments = columnId.split("_,_");
+    const metaType = (segments[1] || "").toLowerCase();
+
+    if (
+      ["number", "rating", "opinion"].includes(metaType) ||
+      ["rating", "opinion"].includes(columnId.toLowerCase())
+    ) {
+      return "number";
+    }
+
+    if (["date", "datepicker"].includes(metaType)) {
+      return "date";
+    }
+
+    return "text";
+  };
+
+  const getColumnMetaType = (columnId: string) => {
+    if (!columnId) return "";
+    const segments = columnId.split("_,_");
+    return (segments[1] || "").toLowerCase();
+  };
+
+  const activeColumnType = useMemo(
+    () => getColumnFilterType(searchBy),
+    [searchBy],
+  );
+
+  const activeColumnMetaType = useMemo(
+    () => getColumnMetaType(searchBy),
+    [searchBy],
+  );
+
+  const isRatingColumn = activeColumnMetaType === "rating";
+
+  const numericOptions = useMemo(() => {
+    if (!searchBy || activeColumnType !== "number") return [];
+
+    if (isRatingColumn) {
+      return ["1", "2", "3", "4", "5"];
+    }
+
+    const values = table
+      .getCoreRowModel()
+      .rows.map((row) => row.getValue(searchBy))
+      .filter((value) => value !== null && value !== undefined && value !== "")
+      .filter((value) => ["string", "number", "boolean"].includes(typeof value))
+      .map(String);
+
+    return Array.from(new Set(values)).sort((a, b) => Number(a) - Number(b));
+  }, [activeColumnType, isRatingColumn, searchBy, table]);
 
   const handleSearch = (value: string) => {
-    setSearchTerm(value);
+    form.setValue("searchTerm", value);
   };
+
+  const selectedDate = useMemo(() => {
+    if (!searchTerm) return undefined;
+    const parsedDate = parse(searchTerm, "yyyy-MM-dd", new Date());
+    return isValid(parsedDate) ? parsedDate : undefined;
+  }, [searchTerm]);
+
+  const renderSearchInput = () => {
+    if (activeColumnType === "date") {
+      return (
+        <div className="h-9">
+          <DatePicker
+            value={selectedDate}
+            onChange={(date) => {
+              form.setValue("searchTerm", format(date, "yyyy-MM-dd"));
+            }}
+            className="w-full"
+          />
+        </div>
+      );
+    }
+
+    if (activeColumnType === "number") {
+      return (
+        <Select
+          value={searchTerm || "__none__"}
+          onValueChange={(value) =>
+            form.setValue("searchTerm", value === "__none__" ? "" : value)
+          }
+        >
+          <SelectTrigger className="h-9 w-full pr-9">
+            <SelectValue placeholder={translations("Select value")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">
+              {translations("Select value")}
+            </SelectItem>
+            {numericOptions.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+
+    return (
+      <Input
+        type="search"
+        placeholder={translations("Search...")}
+        className="h-9 pr-9"
+        value={searchTerm}
+        onChange={(e) => handleSearch(e.target.value)}
+      />
+    );
+  };
+
+  const applySearch = () => {
+    const enteredSearchTerm = form.getValues("searchTerm") || "";
+    const selectedSearchBy =
+      form.getValues("searchBy") &&
+      filterableColumns.some(
+        (column) => column.id === form.getValues("searchBy"),
+      )
+        ? form.getValues("searchBy")
+        : searchBy;
+
+    const nextFilters = (serverFilters ? { ...serverFilters } : {}) as Record<
+      string,
+      any
+    >;
+
+    delete nextFilters.search;
+    delete nextFilters.searchMethod;
+
+    filterableColumns.forEach((column) => {
+      delete nextFilters[column.id];
+      delete nextFilters[getBackendFilterKey(column.id)];
+    });
+
+    if (enteredSearchTerm.trim()) {
+      if (selectedSearchBy) {
+        nextFilters[getBackendFilterKey(selectedSearchBy)] =
+          enteredSearchTerm.trim();
+      }
+    }
+
+    setServerFilters(nextFilters);
+  };
+
+  const resetSearch = () => {
+    const nextFilters = (serverFilters ? { ...serverFilters } : {}) as Record<
+      string,
+      any
+    >;
+
+    delete nextFilters.search;
+    delete nextFilters.searchMethod;
+
+    filterableColumns.forEach((column) => {
+      delete nextFilters[column.id];
+      delete nextFilters[getBackendFilterKey(column.id)];
+    });
+
+    form.setValue("searchTerm", "");
+    setServerFilters(nextFilters);
+  };
+
+  const hasActiveSearch = useMemo(() => {
+    if (searchTerm.trim()) return true;
+
+    return filterableColumns.some((column) => {
+      const backendKey = getBackendFilterKey(column.id);
+      return (
+        filters?.[column.id] !== undefined ||
+        filters?.[backendKey] !== undefined
+      );
+    });
+  }, [filterableColumns, filters, searchTerm]);
 
   return (
     <div className="pb-3">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <div className="relative w-full max-w-md">
-            <IconSearch className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder={translations("Search...")}
-              className="h-9 pl-9"
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-            />
+          {filterableColumns.length > 0 && (
+            <Select
+              value={searchBy}
+              onValueChange={(value) => {
+                form.setValue("searchBy", value);
+                form.setValue("searchTerm", "");
+              }}
+            >
+              <SelectTrigger className="h-9 w-45">
+                <SelectValue placeholder={translations("Column")} />
+              </SelectTrigger>
+              <SelectContent>
+                {filterableColumns.map((column) => (
+                  <SelectItem key={column.id} value={column.id}>
+                    {column.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          <div className="flex w-full max-w-md items-center gap-2">
+            <div className="relative flex-1">
+              {renderSearchInput()}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                onClick={applySearch}
+                aria-label={translations("Search")}
+              >
+                <IconSearch className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9"
+              onClick={resetSearch}
+              disabled={!hasActiveSearch}
+            >
+              {translations("Reset")}
+            </Button>
           </div>
 
           {CFData && CFData.length > 0 && (

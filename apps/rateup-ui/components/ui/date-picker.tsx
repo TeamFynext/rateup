@@ -13,7 +13,12 @@ import {
 export function DatePicker({
   value,
   onChange,
-}: Readonly<{ value?: any; onChange?: (date: Date) => void }>) {
+  className,
+}: Readonly<{
+  value?: Date;
+  onChange?: (date: Date) => void;
+  className?: string;
+}>) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -22,7 +27,7 @@ export function DatePicker({
         <Button
           variant="outline"
           id="date"
-          className="justify-start font-normal"
+          className={`justify-start font-normal ${className}`}
         >
           {value ? value.toLocaleDateString() : "Select date"}
         </Button>
