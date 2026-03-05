@@ -7,18 +7,32 @@ import {
   IconBrandInstagram,
   IconBrandWhatsapp,
   IconClock,
+  IconCopy,
   IconDots,
   IconMessageCircle,
   IconTrash,
 } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { WaAutomatedReply } from "@/types/global";
 import { useTimeSince } from "@/hooks/timeSince";
-import { useDeleteWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import {
+  useCloneWaAutomatedReplyMutation,
+  useDeleteWaAutomatedReplyMutation,
+  useUpdateWaAutomatedReplyMutation,
+} from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useDeleteInstagramAutomationMutation } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface WaAutomationCardsProps {
   data: any;
@@ -81,6 +95,7 @@ function AutomationCard({ automation }: Readonly<WaAutomationCardProps>) {
           </div>
           <DeleteButton
             automationId={automation.id}
+            automationName={automation.name}
             platform={automation.platform}
           />
         </div>
@@ -104,14 +119,48 @@ function AutomationCard({ automation }: Readonly<WaAutomationCardProps>) {
     </Card>
   );
 }
-function DeleteButton({ automationId, platform }) {
+function DeleteButton({ automationId, automationName, platform }) {
   const [deleteDialogOpened, setDeleteDialogOpened] = useState(false);
+  const [cloneDialogOpened, setCloneDialogOpened] = useState(false);
+  const [cloneName, setCloneName] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const deleteWaMutation = useDeleteWaAutomatedReplyMutation();
+  const cloneWaMutation = useCloneWaAutomatedReplyMutation();
+  const updateWaMutation = useUpdateWaAutomatedReplyMutation();
   const deleteIgMutation = useDeleteInstagramAutomationMutation();
   const translations = useTranslations();
 
   const isInstagram = platform === "instagram";
+  const isClonePending =
+    cloneWaMutation.isPending || updateWaMutation.isPending;
+
+  function handleOpenCloneDialog() {
+    if (isClonePending) return;
+    setMenuOpen(false);
+    setCloneName(`${translations("Copy of")} ${automationName}`);
+    setCloneDialogOpened(true);
+  }
+
+  function handleClone(e) {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (isClonePending) return;
+    const trimmedName = cloneName.trim();
+    if (!trimmedName) return;
+    cloneWaMutation.mutate(
+      { automationId, name: trimmedName },
+      {
+        onSuccess: (clonedAutomation) => {
+          if (!clonedAutomation?.id) {
+            setCloneDialogOpened(false);
+            return;
+          }
+          setCloneDialogOpened(false);
+          setCloneName("");
+        },
+      },
+    );
+  }
 
   function handleDelete() {
     if (isInstagram) {
@@ -138,14 +187,31 @@ function DeleteButton({ automationId, platform }) {
       </button>
       {menuOpen && (
         <>
-          <div
+          <button
+            type="button"
+            aria-label={translations("Close menu")}
             className="fixed inset-0 z-10"
             onClick={(e) => {
               e.stopPropagation();
               setMenuOpen(false);
             }}
           />
-          <div className="absolute right-0 top-8 z-20 bg-popover border border-border rounded-md shadow-lg overflow-hidden min-w-[120px]">
+          <div className="absolute right-0 top-8 z-20 bg-popover border border-border rounded-md shadow-lg overflow-hidden min-w-30">
+            {!isInstagram && (
+              <button
+                className="w-full px-3 py-2 text-xs text-left hover:bg-muted transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={isClonePending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenCloneDialog();
+                }}
+              >
+                <IconCopy className="h-3.5 w-3.5" />
+                {isClonePending
+                  ? translations("Cloning...")
+                  : translations("Clone")}
+              </button>
+            )}
             <button
               className="w-full px-3 py-2 text-xs text-left hover:bg-muted transition-colors flex items-center gap-2 text-destructive"
               onClick={(e) => {
@@ -171,6 +237,39 @@ function DeleteButton({ automationId, platform }) {
         confirmLabel={translations("Delete")}
         onConfirm={handleDelete}
       />
+
+      <Dialog open={cloneDialogOpened} onOpenChange={setCloneDialogOpened}>
+        <DialogContent className="sm:max-w-112.5">
+          <DialogHeader>
+            <DialogTitle>{translations("Clone chatbot")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              value={cloneName}
+              onChange={(e) => setCloneName(e.target.value)}
+              placeholder={translations("Enter name")}
+              disabled={isClonePending}
+            />
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setCloneDialogOpened(false)}
+                disabled={isClonePending}
+              >
+                {translations("Cancel")}
+              </Button>
+              <Button
+                onClick={handleClone}
+                disabled={isClonePending || !cloneName.trim()}
+              >
+                {isClonePending
+                  ? translations("Cloning...")
+                  : translations("Clone")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -47,6 +47,19 @@ export async function deleteWaAutomatedReply(waAutomatedReplyId: string) {
   return transformAutomation(res.data as WaAutomatedReply);
 }
 
+export async function cloneWaAutomatedReply({
+  automationId,
+  name,
+}: {
+  automationId: string;
+  name: string;
+}) {
+  const res = await axiosClient.post(`${base}/clone/${automationId}`, {
+    name,
+  });
+  return transformAutomation(res.data as WaAutomatedReply);
+}
+
 export async function getAutomatedRepliesMessageById(id: string) {
   const res = await axiosClient.get(`${base}/message/${id}`);
   return res.data;
