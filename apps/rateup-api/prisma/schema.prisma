@@ -2273,7 +2273,7 @@ model WhatsappCatalog {
 
 model CatalogPhoneIdMap {
   whatsappSettingsPhoneId String           @unique
-  WhatsappSettings        WhatsappSettings @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
+  WhatsappSettings        WhatsappSettings @relation(fields: [whatsappSettingsPhoneId], references: [phoneId], onDelete: Cascade)
   catalogId               String
   catalog                 WhatsappCatalog  @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
 
