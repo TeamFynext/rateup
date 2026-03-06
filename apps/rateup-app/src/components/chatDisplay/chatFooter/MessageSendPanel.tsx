@@ -1,10 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   TextInput,
   TouchableOpacity,
-  Animated,
-  Easing,
   Image,
   ActivityIndicator,
   Text,
@@ -12,6 +10,7 @@ import {
   ScrollView,
   useColorScheme,
   Switch,
+  Pressable,
 } from "react-native";
 import { useForm } from "react-hook-form";
 import * as DocumentPicker from "expo-document-picker";
@@ -40,6 +39,12 @@ import TemplateSending from "./TemplateSending";
 import { generateInternalMessageId } from "@/src/utils/chatbox_utils";
 import { create } from "zustand";
 import { colors } from "@/src/constants/constants";
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 type FormValues = {
   type: "text" | "media" | "contact" | "location";
@@ -113,8 +118,7 @@ const MessageSendPanel = () => {
     }
   }, [audioUrl]);
 
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const [panelVisible, setPanelVisible] = useState(false);
+  const rotateValue = useSharedValue(0);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [templateOptionsVisible, setTemplateOptionsVisible] = useState(false);
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
@@ -124,14 +128,14 @@ const MessageSendPanel = () => {
   //@ts-ignore
   const isUploading = media.some((m) => m.uploading);
 
-  const togglePanel = async () => {
-    Animated.timing(rotateAnim, {
-      toValue: panelVisible ? 0 : 1,
-      duration: 150,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: true,
-    }).start(() => setPanelVisible(!panelVisible));
-    setTemplateOptionsVisible((prev) => !prev);
+  const togglePanel = () => {
+    const next = !templateOptionsVisible;
+
+    rotateValue.value = withTiming(next ? 1 : 0, {
+      duration: 200,
+    });
+
+    setTemplateOptionsVisible(next);
   };
 
   const pickMedia = async (type: "image" | "video" | "audio" | "document") => {
@@ -141,10 +145,10 @@ const MessageSendPanel = () => {
           type === "image"
             ? "image/*"
             : type === "video"
-            ? "video/*"
-            : type === "audio"
-            ? "audio/*"
-            : "*/*",
+              ? "video/*"
+              : type === "audio"
+                ? "audio/*"
+                : "*/*",
         multiple: true,
         copyToCacheDirectory: false,
       });
@@ -207,16 +211,13 @@ const MessageSendPanel = () => {
     setAudioUrl(null);
   });
 
-  const rotateStyle = {
-    transform: [
-      {
-        rotate: rotateAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: ["0deg", "90deg"],
-        }),
-      },
-    ],
-  };
+  const animatedPlusStyle = useAnimatedStyle(() => {
+    const rotation = interpolate(rotateValue.value, [0, 1], [0, 45]);
+    return {
+      transform: [{ rotate: `${rotation}deg` }],
+    };
+  });
+
   return (
     <View className="bg-white dark:bg-slate-950 pt-3 px-3">
       {isSessionActive ? (
@@ -354,17 +355,28 @@ const MessageSendPanel = () => {
 
             <View className="flex-row items-center justify-center">
               <View className="relative flex-row items-center flex-1 bg-white border border-gray-200 rounded-full px-3 py-2 space-x-2">
-                <TouchableOpacity onPress={togglePanel}>
-                  <Animated.View style={rotateStyle}>
-                    <View className="bg-primaryBlue rounded-full p-1">
-                      <Plus color={"white"} />
-                    </View>
+                <Pressable
+                  onPress={togglePanel}
+                  style={({ pressed }) => ({
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Animated.View
+                    style={animatedPlusStyle}
+                    className="bg-primaryBlue rounded-full p-1"
+                  >
+                    <Plus color={"white"} />
                   </Animated.View>
-                </TouchableOpacity>
+                </Pressable>
 
                 {templateOptionsVisible && (
                   <View className="absolute bottom-12 rounded-xl shadow-xl p-2 z-50 bg-primaryBlue">
-                    <TouchableOpacity
+                    <Pressable
+                      style={({ pressed }) => [
+                        {
+                          opacity: pressed ? 0.6 : 1,
+                        },
+                      ]}
                       onPress={() => {
                         setTemplateModalVisible(true);
                         setTemplateOptionsVisible(false);
@@ -374,7 +386,7 @@ const MessageSendPanel = () => {
                       <Text className="text-white text-sm font-semibold">
                         Send Template
                       </Text>
-                    </TouchableOpacity>
+                    </Pressable>
                   </View>
                 )}
 
@@ -427,11 +439,11 @@ const MessageSendPanel = () => {
                   }
                 />
                 {!isPrivate && (
-                  <TouchableOpacity
+                  <Pressable
                     onPress={() => setMediaPanelVisible((prev) => !prev)}
                   >
                     <Paperclip color={"black"} strokeWidth={1} />
-                  </TouchableOpacity>
+                  </Pressable>
                 )}
               </View>
 
@@ -472,17 +484,28 @@ const MessageSendPanel = () => {
         <View>
           <View className="flex-row items-center justify-center">
             <View className="relative flex-row items-center flex-1 bg-white border border-gray-200 rounded-full px-3 py-2 space-x-2">
-              <TouchableOpacity onPress={togglePanel}>
-                <Animated.View style={rotateStyle}>
-                  <View className="bg-primaryBlue rounded-full p-1">
-                    <Plus color={"white"} />
-                  </View>
+              <Pressable
+                onPress={togglePanel}
+                style={({ pressed }) => ({
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Animated.View
+                  style={animatedPlusStyle}
+                  className="bg-primaryBlue rounded-full p-1"
+                >
+                  <Plus color={"white"} />
                 </Animated.View>
-              </TouchableOpacity>
+              </Pressable>
 
               {templateOptionsVisible && (
                 <View className="absolute bottom-12 rounded-xl shadow-xl p-2 z-50 bg-primaryBlue">
-                  <TouchableOpacity
+                  <Pressable
+                    style={({ pressed }) => [
+                      {
+                        opacity: pressed ? 0.6 : 1,
+                      },
+                    ]}
                     onPress={() => {
                       setTemplateModalVisible(true);
                       setTemplateOptionsVisible(false);
@@ -492,7 +515,7 @@ const MessageSendPanel = () => {
                     <Text className="text-white text-sm font-semibold">
                       Send Template
                     </Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               )}
 

@@ -1,6 +1,6 @@
 import { sendPasswordResetEmail } from "@/src/api/api";
-import { BackIcon, MessageIcon } from "@/src/constants/imageExports";
 import { useRouter } from "expo-router";
+import { ArrowLeft, Mail } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   View,
@@ -50,7 +50,7 @@ export default function ResetPasswordScreen() {
         className="flex-row items-center mb-6 justify-start"
         onPress={() => router.replace("/auth/SignIn")}
       >
-        <BackIcon height={25} width={25} />
+        <ArrowLeft />
         <Text className="text-xl font-bold ml-2">Reset Password</Text>
       </TouchableOpacity>
 
@@ -60,7 +60,7 @@ export default function ResetPasswordScreen() {
         style={{ height: height * 0.2 }}
       >
         <View className="bg-[#C4D7F5] p-4 rounded-lg h-[80px] w-[80px] flex items-center justify-center">
-          <MessageIcon />
+          <Mail />
         </View>
         <Text className="text-center text-[#7A8289] mt-4 mb-8 text-lg">
           Please check your email for{"\n"}password reset link.

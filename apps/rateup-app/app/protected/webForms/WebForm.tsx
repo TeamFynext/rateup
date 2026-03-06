@@ -9,8 +9,7 @@ import {
   useWebFormFilterStore,
 } from "@/src/utils/store";
 import WebFormSearchBar from "@/src/components/webform/WebSearchbar";
-import { useSurvey, useSurveys } from "@/src/api/survey/survey.query";
-import { useResponsesBySurvey } from "@/src/api/response/response.query";
+import { useSurveys } from "@/src/api/survey/survey.query";
 import { useRouter } from "expo-router";
 import { MoveRight } from "lucide-react-native";
 import { colors } from "@/src/constants/constants";
@@ -148,7 +147,6 @@ const WebForm = () => {
           data={filteredForms}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
-          estimatedItemSize={100}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View className="items-center mt-20">

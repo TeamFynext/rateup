@@ -4,7 +4,7 @@ import {
   Pressable,
   useColorScheme,
 } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Search, X } from "lucide-react-native";
 import { colors } from "@/src/constants/constants";
 
@@ -25,41 +25,12 @@ export default function SearchBar({
   const textColor = isDark ? "white" : colors["slate-950"];
   const bgColor = isDark ? "#0f172a" : "#f8fafc";
 
-  // Auto-focus when opened
-  useEffect(() => {
-    if (open) {
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
-      });
-    }
-  }, [open]);
-
-  const closeSearch = () => {
-    setSearchTerm("")
-    setOpen(false);
-  };
-
   return (
     <View className="relative">
       {/* SEARCH ICON */}
       <Pressable onPress={() => setOpen(true)} hitSlop={10}>
         <Search size={20} color={"white"} />
       </Pressable>
-
-      {/* BACKDROP (click outside) */}
-      {open && (
-        <Pressable
-          onPress={closeSearch}
-          style={{
-            position: "absolute",
-            top: -1000,
-            bottom: -1000,
-            left: -1000,
-            right: -1000,
-            zIndex: 40,
-          }}
-        />
-      )}
 
       {/* FLOATING SEARCH MODAL */}
       {open && (
@@ -79,7 +50,10 @@ export default function SearchBar({
               returnKeyType="search"
               clearButtonMode="while-editing"
             />
-            <Pressable onPress={()=>setSearchTerm("")} hitSlop={10}>
+            <Pressable onPress={()=>{
+              setSearchTerm("")
+              setOpen(false)
+            }} hitSlop={10}>
               <X size={20} color={textColor} />
             </Pressable>
           </View>

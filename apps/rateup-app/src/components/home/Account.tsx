@@ -37,8 +37,11 @@ const AccountBar = ({
 
   return (
     <ScrollView
-      className="flex-1 bg-white dark:bg-gray-900 px-6 pt-6"
-      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{
+        paddingHorizontal: 24,
+        paddingTop: 10,
+        paddingBottom: 40,
+      }}
       showsVerticalScrollIndicator={false}
     >
       {/* Heading */}

@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import React, { useCallback, useEffect, useState } from "react";
-import { BackIcon } from "@/src/constants/imageExports";
 import { useRouter } from "expo-router";
 import {
   ChatFilter,

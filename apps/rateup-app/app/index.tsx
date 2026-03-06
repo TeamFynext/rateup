@@ -25,7 +25,9 @@ const index = () => {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor:bgColor }}>
         <ActivityIndicator size="large" />
-        <Text className="dark:text-white">Just a moment</Text>
+        <View className="flex items-center justify-center gap-1">
+          <Text className="dark:text-white">RateUp is loading...</Text>
+        </View>
       </View>
     );
   }

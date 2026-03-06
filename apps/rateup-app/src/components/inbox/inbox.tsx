@@ -18,7 +18,7 @@ import ChatBox from "../chatBox/ChatBox";
 type InboxProps = {
   messageType: string;
   searchTerm?: string;
-  waMessageAssignStatus?: string;
+  waMessageAssignStatus?: string | null;
 };
 
 export default function Inbox({
@@ -103,6 +103,7 @@ export default function Inbox({
     let ChatBoxComponent = ChatBox;
 
     if (!ChatBoxComponent) return null;
+    
     const parsedMessage = parseWaMessage_(item.lastMessage);
 
     const messagePreview = returnMessageContentBasedOnParsedMessage(
@@ -188,7 +189,6 @@ export default function Inbox({
         }
       }}
       onEndReachedThreshold={0.3}
-      estimatedItemSize={100}
       ListFooterComponent={
         isFetchingNextPage ? (
           <ActivityIndicator size="small" className="py-4" />

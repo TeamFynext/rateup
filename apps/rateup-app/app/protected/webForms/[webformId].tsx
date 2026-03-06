@@ -19,13 +19,13 @@ import {
 import { ContactCard } from "@/src/components/flow/FlowResponseCard";
 import { useSurvey } from "@/src/api/survey/survey.query";
 import { useQuestions } from "@/src/api/question/question.query";
-import { BackIcon } from "@/src/constants/imageExports";
 import { useWebFormResponseDataStore } from "@/src/utils/store";
 import SurveyStatsWebForm from "@/src/components/webform/SurveyStats";
 import HappyIndex from "@/src/components/webform/HappyIndex";
 import NpsOverview from "@/src/components/webform/NpsOverview";
 import HappinessJourney from "@/src/components/webform/HappinessJourney";
 import SurveyQuestions from "@/src/components/flow/SurveyQuestions";
+import { ArrowLeft } from "lucide-react-native";
 
 const Tab = createMaterialTopTabNavigator();
 const SubTab = createMaterialTopTabNavigator();
@@ -196,7 +196,7 @@ const WebFormPage = () => {
     <SafeAreaView className="flex-1 bg-white p-2">
       <View className="flex-row items-center mt-4 mb-4 gap-2">
         <Pressable onPress={() => router.back()}>
-          <BackIcon height={25} width={25} />
+          <ArrowLeft />
         </Pressable>
         <Text className="text-black text-2xl font-bold">{webFormName}</Text>
       </View>

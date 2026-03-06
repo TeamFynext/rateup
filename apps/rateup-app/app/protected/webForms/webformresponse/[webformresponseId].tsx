@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useWebFormResponseDataStore } from "@/src/utils/store";
 import { useQuestions } from "@/src/api/question/question.query";
-import { BackIcon } from "@/src/constants/imageExports";
+import { ArrowLeft } from "lucide-react-native";
 
 const ResponseId = () => {
   const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
@@ -49,7 +49,7 @@ const ResponseId = () => {
           onPress={() => router.back()}
           className="flex-row items-center space-x-3 mb-4"
         >
-          <BackIcon height={25} width={25} color="black" />
+         <ArrowLeft />
         </TouchableOpacity>
 
         {/* Avatar + Name */}

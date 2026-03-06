@@ -5,6 +5,7 @@ import {
   getCustomerRewardsByPhone,
   getLoyaltyTiers,
   redeemReward,
+  redeemRewardByShortCode,
 } from "./loyalty.api";
 import { useToast } from "react-native-toast-notifications";
 import { AssignRewardRequest } from "./loyalty.type";
@@ -98,6 +99,26 @@ export const useAssignRewardMutation = (onSuccess?: () => void) => {
     onError: (error: any) => {
       console.error("Error assigning reward:", error);
       toast.show(error?.response?.data?.message || "Failed to assign reward", {
+        type: "danger",
+      });
+    },
+  });
+};
+
+export const useRedeemRewardByShortCode = () => {
+  const qc = useQueryClient();
+  const toast = useToast();
+  return useMutation({
+    mutationFn: redeemRewardByShortCode,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
+      qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      toast.show("Reward redeemed successfully using short code", {
+        type: "success",
+      });
+    },
+    onError: (e) => {
+      toast.show(`Redemption failed: ${e?.message ?? "Unknown error"}`, {
         type: "danger",
       });
     },

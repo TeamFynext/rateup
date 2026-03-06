@@ -54,3 +54,7 @@ export async function assignRewardToCustomer(
   );
   return res.data;
 }
+
+export async function redeemRewardByShortCode(shortCode: string) {
+  return (await axios.post(`${base}/rewards/${shortCode}/redeem`)).data;
+}

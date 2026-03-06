@@ -10,15 +10,14 @@ import {
   Dimensions,
   ActivityIndicator,
   useColorScheme,
+  Modal,
 } from "react-native";
 import {
   MessageCircleMore,
   PanelsTopLeft,
   Activity,
-  MenuIcon,
 } from "lucide-react-native";
 import InboxLayoutComponent from "./inbox/InboxTabs";
-import MenuBar from "@/src/components/home/Menu";
 import AccountBar from "@/src/components/home/Account";
 import { HomeInterface } from "@/src/api/inbox/types";
 import { namePreview } from "@/src/utils/chatbox_utils";
@@ -33,8 +32,6 @@ import { IconGift } from "@tabler/icons-react-native";
 
 const { height: screenHeight } = Dimensions.get("window");
 
-const PANEL_HEIGHT_PERCENTAGE = 0.6;
-const PANEL_HEIGHT = screenHeight * PANEL_HEIGHT_PERCENTAGE;
 
 const InboxLayout = memo(InboxLayoutComponent);
 
@@ -67,19 +64,13 @@ const MENU_ITEMS = [
 
 export default function Home() {
   const insets = useSafeAreaInsets();
-  const [selectedItem, setSelectedItem] = useState<"account" | null>(null);
-  const [shouldRenderOverlay, setShouldRenderOverlay] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
   const [selectedInterface, setSelectedInterface] =
     useState<HomeInterface>("inbox");
 
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  const open = selectedItem !== null;
   const queryClient = useQueryClient();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const bgColor = isDark ? colors["gray-900"] : "white";
 
   const { data: userData, isLoading: loading } = useLoggedInUser();
 
@@ -92,60 +83,14 @@ export default function Home() {
       case "webform":
         return <WebForm />;
       case "loyalty":
-        return <CashierPortal/>;
+        return <CashierPortal />;
     }
   }, [selectedInterface]);
 
-  useEffect(() => {
-    if (open) {
-      setShouldRenderOverlay(true);
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 180,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 1,
-          duration: 180,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 200,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 200,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setShouldRenderOverlay(false);
-      });
-    }
-  }, [selectedItem]);
-
   const handleAccountPress = () => {
-    if (selectedItem === "account") {
-      setSelectedItem(null);
-    } else {
-      setSelectedItem("account");
-      queryClient.invalidateQueries({ queryKey: ["loggedUser"] });
-    }
+    setShowAccountModal(true);
+    queryClient.invalidateQueries({ queryKey: ["loggedUser"] });
   };
-
-  const translateY = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [PANEL_HEIGHT, 0],
-  });
 
   if (loading) {
     return (
@@ -167,50 +112,44 @@ export default function Home() {
     >
       {renderedInterface}
 
-      {/* Dim background overlay */}
-      {shouldRenderOverlay && (
+      <Modal
+        visible={showAccountModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAccountModal(false)}
+      >
         <Pressable
-          className="absolute top-0 left-0 right-0 bottom-0 z-10"
-          onPress={() => setSelectedItem(null)}
+          className="flex-1 bg-black/40 justify-end"
+          onPress={() => setShowAccountModal(false)}
         >
-          <Animated.View
+          {/* Sheet */}
+          <Pressable
+            className="bg-white dark:bg-gray-900 rounded-t-3xl"
             style={{
-              backgroundColor: "rgba(0, 0, 0, 0.4)",
-              flex: 1,
-              opacity: fadeAnim,
+              minHeight: screenHeight * 0.5,
+              maxHeight: screenHeight * 0.7,
             }}
-          />
-        </Pressable>
-      )}
+            onPress={() => {}}
+          >
+            {/* Handle */}
+            <View className="items-center py-3">
+              <View className="w-10 h-1.5 bg-gray-400 rounded-full" />
+            </View>
 
-      {/* Slide-up panel */}
-      {shouldRenderOverlay && (
-        <Animated.View
-          style={{
-            transform: [{ translateY }],
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: PANEL_HEIGHT,
-            backgroundColor: bgColor,
-            zIndex: 20,
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            paddingVertical: 30,
-            paddingHorizontal: 24,
-          }}
-        >
-          <AccountBar
-            email={email}
-            orgName={orgName}
-            profilePhoto={profilePhoto}
-            role={role}
-            orgPhone={orgPhone}
-            userName={userName}
-          />
-        </Animated.View>
-      )}
+            {/* Important wrapper */}
+            <View style={{ flex: 1 }}>
+              <AccountBar
+                email={email}
+                orgName={orgName}
+                profilePhoto={profilePhoto}
+                role={role}
+                orgPhone={orgPhone}
+                userName={userName}
+              />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Bottom bar */}
       <View

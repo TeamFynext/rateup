@@ -30,6 +30,7 @@ import {
   useCustomerRewardsByPhone,
   useLoyaltyTiers,
   useRedeemReward,
+  useRedeemRewardByShortCode,
 } from "@/src/api/loyalty/loyalty.query";
 import { useToast } from "react-native-toast-notifications";
 import {
@@ -44,7 +45,6 @@ const CashierPortal = () => {
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const [showDropdown, setShowDropdown] = useState(false);
   const { height } = useWindowDimensions();
-  const [selectedCouponCode, setSelectedCouponCode] = useState("");
   const [couponCode, setCouponCode] = useState("");
 
   const [issuePointsOpen, setIssuePointsOpen] = useState(false);
@@ -58,6 +58,7 @@ const CashierPortal = () => {
   const awardPoints = useAwardPointsMutation();
   const redeemRewardMutation = useRedeemReward(fullPhoneNumber);
   const assignReward = useAssignRewardMutation(() => {});
+  const redeemRewardByShortCode = useRedeemRewardByShortCode();
 
   const [pointsAmount, setPointsAmount] = useState("");
   const [pointsNotes, setPointsNotes] = useState("");
@@ -144,9 +145,7 @@ const CashierPortal = () => {
       toast.show("Please enter a coupon code", { type: "danger" });
       return;
     }
-
-    // This is a placeholder - implement actual coupon redemption API
-    // toast.info("Coupon redemption feature coming soon");
+    redeemRewardByShortCode.mutate(couponCode);
     setRedeemCouponOpen(false);
     setCouponCode("");
   };
@@ -501,7 +500,7 @@ const CashierPortal = () => {
               availableRewards={availableRewards}
               customer={customer}
               isDark={isDark}
-              setSelectedCouponCode={setSelectedCouponCode}
+              redeemRewardByShortCode={redeemRewardByShortCode}
             />
             <PendingRedemptionsCard
               isDark={isDark}

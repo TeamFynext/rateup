@@ -93,17 +93,24 @@ export function WaInboxImage({ messageContent }: { messageContent: string }) {
         onRequestClose={closeModal}
       >
         <View className="flex-1 bg-black justify-center items-center">
-          <Pressable
-            className="absolute top-5 right-5 z-10"
-            onPress={closeModal}
-          >
-            <Text className="text-white text-3xl">✕</Text>
-          </Pressable>
           <Image
             source={{ uri: imageUrl }}
             className="w-full h-full"
             style={{ resizeMode: "contain" }}
           />
+          <TouchableOpacity
+            onPress={closeModal}
+            activeOpacity={0.8}
+            style={{
+              position: "absolute",
+              top: 50,
+              right: 20,
+              zIndex: 1000,
+              padding: 10,
+            }}
+          >
+            <Text style={{ color: "white", fontSize: 28 }}>✕</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
     </>
@@ -207,20 +214,30 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
         visible={isModalVisible}
         onRequestClose={closeModal}
       >
-        <View className="flex-1 justify-center items-center bg-black">
-          <TouchableOpacity
-            className="absolute top-5 right-5 z-10"
-            onPress={closeModal}
-          >
-            <Text className="text-white text-3xl">✕</Text>
-          </TouchableOpacity>
+        <View className="flex-1 bg-black">
+          {/* Video */}
           <Video
             source={{ uri: localPath ?? link! }}
             controls
             paused={false}
-            style={{ width: "90%", height: "90%" }}
+            style={{ width: "100%", height: "100%" }}
             resizeMode="contain"
           />
+
+          {/* Close button ABOVE video */}
+          <TouchableOpacity
+            onPress={closeModal}
+            activeOpacity={0.8}
+            style={{
+              position: "absolute",
+              top: 50,
+              right: 20,
+              zIndex: 1000,
+              padding: 10,
+            }}
+          >
+            <Text style={{ color: "white", fontSize: 28 }}>✕</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
     </View>
@@ -503,7 +520,7 @@ export function WaInboxDocument({
     if (localPath) {
       try {
         await FileViewer.open(localPath, {
-          showOpenWithDialog: true, 
+          showOpenWithDialog: true,
         });
       } catch (err) {
         console.error("Error opening file:", err);

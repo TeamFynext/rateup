@@ -2,14 +2,25 @@
   "expo": {
     "name": "RateUp",
     "slug": "rateup",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "RateUp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rateupapp.rateup",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Allow RateUp to access microphone.",
+        "CFBundleURLTypes": [
+      {
+        "CFBundleURLSchemes": [
+          "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
+        ]
+      }
+    ]
+      } 
     },
     "android": {
       "permissions": [
