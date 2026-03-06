@@ -166,7 +166,7 @@ export function submitSurvey({
     })
     .catch((e) => {
       console.error(e);
-      toast.loading("Something went wrong");
+      toast.error("Something went wrong while submitting the survey.");
       setIsSavingResponses(false);
       if (e?.response?.data === "ALREADY_RESPONDED") {
         throw new Error("ALREADY_RESPONDED");
