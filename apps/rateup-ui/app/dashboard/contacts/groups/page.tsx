@@ -93,8 +93,8 @@ const GroupPage = () => {
       onSuccess: () => {
         toast.success("Group deleted successfully");
       },
-      onError: () => {
-        toast.error("Error in deleting group");
+      onError: (error) => {
+        toast.error(error?.message || "Error in deleting group");
       },
     });
   }

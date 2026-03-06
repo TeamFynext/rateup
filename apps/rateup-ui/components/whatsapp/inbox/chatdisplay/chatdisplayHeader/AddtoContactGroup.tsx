@@ -44,8 +44,8 @@ function AddtoContactGroup({ selectedContactIds }) {
         removeGroupIds,
       },
       {
-        onError: () => {
-          toast.error("Error updating contact groups");
+        onError: (error) => {
+          toast.error(error?.message || "Error updating contact groups");
         },
       },
     );

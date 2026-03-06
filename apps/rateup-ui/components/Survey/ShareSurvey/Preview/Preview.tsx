@@ -6,10 +6,10 @@ import { IconDownload } from "@tabler/icons-react";
 import domtoimage from "dom-to-image-more";
 import { Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
-import { showErrorToast } from "../../../../utils/notifications";
 import CustomQRCode from "../components/CustomQrCode/CustomQrCode";
 import { getLogoSrc } from "../ShareQR/utils";
 import styles from "./Preview.module.css";
@@ -64,16 +64,20 @@ function Preview({
         link.click();
         setIsLogoDownloadProcessing(false);
       } catch (err) {
-        showErrorToast(
+        toast.error(
           translations("Unable to download QR, Please try again later"),
-          "download-qr",
+          {
+            id: "download-qr",
+          },
         );
         setIsLogoDownloadProcessing(false);
       }
     } else {
-      showErrorToast(
+      toast.error(
         translations("Unable to download QR, Please try again later"),
-        "download-qr",
+        {
+          id: "download-qr",
+        },
       );
     }
   };

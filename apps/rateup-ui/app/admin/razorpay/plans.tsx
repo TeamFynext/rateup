@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +43,6 @@ import RefreshButton from "../../../components/Button/RefreshButton";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import { PaymentPlanStatus } from "../../../types/enums";
-import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
 import { PlansDataTableToolbar } from "./plans-data-table-toolbar";
 
 interface PlanTableData {
@@ -85,11 +85,11 @@ const RazorpayPlans = () => {
       rateupPlans?.find((plan) => plan.paymentPlanId === planIdLocal);
 
     if (planInrateupPlans) {
-      showErrorToast(
+      toast.error(
         translations("Unable to delete.Plan is in use in rateup plan"),
-        "plan",
-        undefined,
-        true,
+        {
+          id: "plan",
+        },
       );
       return;
     }
@@ -311,7 +311,6 @@ const RazorpayPlans = () => {
           </div>
         </CardHeader>
       </Card>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -351,13 +350,11 @@ const RazorpayPlans = () => {
           </CardContent>
         </Card>
       </div>
-
       <DataTable
         columns={columns}
         data={tableData}
         DataTableToolbar={PlansDataTableToolbar}
       />
-
       <ConfirmationModal
         opened={openedDeleteModal}
         onClose={closeDeleteModal}
@@ -365,12 +362,9 @@ const RazorpayPlans = () => {
         confirmLabel={translations("Delete")}
         headerTitle={translations("Delete RazorPay Plan")}
         onConfirm={() => {
-          showLoadingToast(
-            translations("Hold onPlan is getting deleted"),
-            "plan",
-            true,
-            translations("Deleting Plan"),
-          );
+          toast.loading(translations("Hold onPlan is getting deleted"), {
+            id: "plan",
+          });
           handleDeleteClick();
         }}
         headerLabel={translations("Are you sure to delete this plan?")}

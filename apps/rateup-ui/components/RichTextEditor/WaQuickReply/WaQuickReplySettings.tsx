@@ -37,8 +37,8 @@ const WaQuickReplySettings = () => {
       onSuccess: () => {
         toast.success("Quick reply deleted successfully");
       },
-      onError: () => {
-        toast.error("Deletion failed");
+      onError: (error) => {
+        toast.error(error?.message || "Deletion failed");
       },
     });
   }

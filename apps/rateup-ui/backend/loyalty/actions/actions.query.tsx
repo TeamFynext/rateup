@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 import { LoyaltyActionType } from "@/types/enums";
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   bulkLoyaltyAction,
@@ -37,11 +37,12 @@ export const useCreateLoyaltyAction = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Loyalty Action created successfully");
+      toast.success("Loyalty Action created successfully");
     },
-    onError: (e: AxiosError) => {
-      showErrorToast(
-        "Error in creating loyalty action. " + (e?.response?.data ?? ""),
+    onError: (error) => {
+      toast.error(
+        error?.message ||
+          "Error in creating loyalty action. " + (error?.message ?? ""),
       );
     },
   });
@@ -73,11 +74,12 @@ export const useUpdateLoyaltyAction = (actionId) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions", actionId] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions"] });
-      showSuccessToast("Loyalty Action updated successfully");
+      toast.success("Loyalty Action updated successfully");
     },
-    onError: (e: AxiosError) => {
-      showErrorToast(
-        "Error in updating loyalty action. " + (e?.response?.data ?? ""),
+    onError: (error) => {
+      toast.error(
+        error?.message ||
+          "Error in updating loyalty action. " + (error?.message ?? ""),
       );
     },
   });
@@ -90,10 +92,10 @@ export const useDeleteLoyaltyAction = (actionId) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Loyalty Action deleted successfully");
+      toast.success("Loyalty Action deleted successfully");
     },
-    onError: (e: any) => {
-      showErrorToast(`Deletion Failed: ${e?.response?.data ?? "Try again"}`);
+    onError: (error: any) => {
+      toast.error(error?.message || `Deletion Failed`);
     },
   });
 };
@@ -105,12 +107,10 @@ export const useReferralLoyaltyAction = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
-      showSuccessToast("Refer successfull");
+      toast.success("Refer successfull");
     },
-    onError: (e: any) => {
-      showErrorToast(
-        `Refer failed: ${e?.response?.data?.message ?? e?.response?.data ?? ""}`,
-      );
+    onError: (error: any) => {
+      toast.error(error?.message || `Refer failed`);
     },
   });
 };
@@ -123,10 +123,8 @@ export const useBulkLoyaltyAction = () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
     },
-    onError: (e: any) => {
-      showErrorToast(
-        `failed: ${e?.response?.data?.message ?? e?.response?.data ?? ""}`,
-      );
+    onError: (error: any) => {
+      toast.error(error?.message || `failed`);
     },
   });
 };

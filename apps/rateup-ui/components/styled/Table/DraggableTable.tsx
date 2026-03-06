@@ -1,7 +1,9 @@
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import React from "react";
+
 import { ActionIcon, Group, ScrollAreaAutosize, Table } from "@mantine/core";
 import { IconEdit, IconGripVertical, IconTrash } from "@tabler/icons-react";
-import React from "react";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+
 import { reorder } from "../../../utils/questions";
 import classes from "./DraggableTableStyle.module.css";
 

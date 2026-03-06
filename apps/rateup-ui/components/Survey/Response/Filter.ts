@@ -1,6 +1,7 @@
-import { rankItem, rankings } from "@tanstack/match-sorter-utils";
+import { rankings, rankItem } from "@tanstack/match-sorter-utils";
 import { FilterFn } from "@tanstack/react-table";
 import dayjs from "dayjs";
+
 import { QuestionType } from "../../../types/enums";
 
 export const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {

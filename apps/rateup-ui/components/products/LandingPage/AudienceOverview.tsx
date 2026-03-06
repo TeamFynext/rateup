@@ -16,7 +16,7 @@ import { accordionItems } from "./Constants";
 
 export default function AudienceOverview() {
   return (
-    <section className="w-full bg-gradient-to-br from-[#F4F7F3] via-[#e8f1f887] to-[#F4F7F3] sm:pt-28 py-16 px-4 sm:px-8">
+    <section className="w-full bg-linear-to-br from-[#F4F7F3] via-[#e8f1f887] to-[#F4F7F3] sm:pt-28 py-16 px-4 sm:px-8">
       <div className="max-w-7xl mx-auto flex flex-col-reverse lg:flex-row items-center gap-16 lg:gap-20">
         {/* Left Content */}
         <motion.div

@@ -117,31 +117,31 @@ function MetricCard({
   const colorMap = {
     primary:
       "text-primary border-[#2E5BFF]/20 " +
-      "bg-gradient-to-br from-blue-50 to-white " +
+      "bg-linear-to-br from-blue-50 to-white " +
       "dark:from-blue-950/40 dark:to-background " +
       "hover:shadow-md transition-all group",
 
     green:
       "text-green-600 dark:text-green-400 border-green-200 dark:border-green-900 " +
-      "bg-gradient-to-br from-green-50 to-white " +
+      "bg-linear-to-br from-green-50 to-white " +
       "dark:from-green-950/40 dark:to-background " +
       "hover:shadow-md transition-all group",
 
     emerald:
       "text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900 " +
-      "bg-gradient-to-br from-emerald-50 to-white " +
+      "bg-linear-to-br from-emerald-50 to-white " +
       "dark:from-emerald-950/40 dark:to-background " +
       "hover:shadow-md transition-all group",
 
     amber:
       "text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900 " +
-      "bg-gradient-to-br from-amber-50 to-white " +
+      "bg-linear-to-br from-amber-50 to-white " +
       "dark:from-amber-950/40 dark:to-background " +
       "hover:shadow-md transition-all group",
 
     red:
       "text-red-600 dark:text-red-400 border-red-200 dark:border-red-900 " +
-      "bg-gradient-to-br from-red-50 to-white " +
+      "bg-linear-to-br from-red-50 to-white " +
       "dark:from-red-950/40 dark:to-background " +
       "hover:shadow-md transition-all group",
   };

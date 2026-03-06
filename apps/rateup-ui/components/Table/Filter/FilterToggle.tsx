@@ -16,6 +16,7 @@ import {
 } from "@mantine/core";
 import { IconChevronDown, IconDownload, IconFilter } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useResponseFilterStore } from "@/components/Survey/Response/store";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { showErrorToast } from "@/utils/notifications";
 
 import { extractText } from "../../../utils";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
@@ -54,9 +54,7 @@ const FilterToggles = ({
 
   const handleExport = (type: string) => {
     if (!leafColumns?.length) {
-      showErrorToast(
-        translations("Please select at least one field to export."),
-      );
+      toast.error(translations("Please select at least one field to export."));
       return;
     }
     onExport.mutate({

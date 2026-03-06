@@ -1,10 +1,12 @@
 import { Box } from "@mantine/core";
+
 import {
   WaTemplateComponent,
   WaTemplateFetchBody,
 } from "../../../../../../../types/global";
 import WaInboxTemplateComponents from "./components";
 import classes from "./styles.module.css";
+
 interface Props {
   templateBody: WaTemplateFetchBody;
   parameters: WaTemplateComponent[];

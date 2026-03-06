@@ -18,6 +18,7 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   useCreateMenuItemMutation,
@@ -34,7 +35,6 @@ import {
   getImageValue,
   uploadFile,
 } from "../../utils/file-upload/upload";
-import { showErrorToast } from "../../utils/notifications";
 import { CreditsCard } from "../Card/CreditsCard";
 import {
   ContainedTextArea,
@@ -232,12 +232,12 @@ export function CreateMenuItemModal({
         }
         createMenuItemMutation.mutate(values);
         for (const imageUploadError of errors) {
-          showErrorToast(imageUploadError.reason);
+          toast.error(imageUploadError.reason);
         }
         setImageLoading(false);
       }
       for (const imageUploadError of errors) {
-        showErrorToast(imageUploadError.reason);
+        toast.error(imageUploadError.reason);
       }
     } catch (error) {
       setImageLoading(false);
@@ -259,7 +259,7 @@ export function CreateMenuItemModal({
   const onChangePicture = (event: File | null) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {
-      showErrorToast(
+      toast.error(
         `${translations("Max file size is")} ${MAX_FILE_SIZE_IN_MB} MB`,
       );
       return;

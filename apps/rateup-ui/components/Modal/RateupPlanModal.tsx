@@ -4,9 +4,9 @@ import React, { useEffect, useState } from "react";
 
 import { Chip, Group, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { useRateupPaymentsPlanMutation } from "../../backend/payment/payment.query";
@@ -104,13 +104,8 @@ const RateupPlanModal = ({ opened, close, planList }) => {
 
   const handleSubmit = (values) => {
     rateupPaymentsPlanMutation.mutate(values);
-    notifications.show({
+    toast.loading(translations("Hold your data is getting created"), {
       id: "load-data",
-      color: "teal",
-      title: translations("Creating RateUp Plan"),
-      loading: true,
-      message: translations("Hold your data is getting created"),
-      autoClose: 2000,
     });
     setChecked(false);
   };

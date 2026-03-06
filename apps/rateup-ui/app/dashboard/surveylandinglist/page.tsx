@@ -24,7 +24,6 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import {
   IconChartBar,
   IconChevronDown,
@@ -40,6 +39,7 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   deleteSurvey,
@@ -336,9 +336,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
   const surveyDeleteMutation = useMutation({
     mutationFn: deleteSurvey,
     onSuccess: () => {
-      notifications.show({
-        message: "Deleted!",
-      });
+      toast.success("Deleted!");
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
       queryClient.invalidateQueries({ queryKey: ["surveysByTeam"] });
     },
@@ -347,10 +345,8 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
   const surveyUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(survey.id, data),
     onSuccess: () => {
-      notifications.show({
+      toast.success(translations("Survey status Updated!"), {
         id: "survey",
-        message: translations("Survey status Updated!"),
-        autoClose: true,
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
       queryClient.invalidateQueries({ queryKey: ["surveysByTeam"] });

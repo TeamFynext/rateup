@@ -1,8 +1,6 @@
-import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+import { toast } from "sonner";
 
 import { IUpdateTicketRequest, IUpdateTicketStatusRequest } from "./tickets";
 import {
@@ -49,29 +47,17 @@ export const useCreateTicketMutation = () => {
   return useMutation({
     mutationFn: createTicket,
     onSuccess: () => {
-      notifications.update({
+      toast.success("Ticket Created...!", {
         id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Success",
-        message: "Ticket Created...!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       queryClient.invalidateQueries({ queryKey: ["allresponses"] });
       queryClient.invalidateQueries({ queryKey: ["responses"] });
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
     },
-    onError: (error: any) => {
-      notifications.update({
+    onError: (error) => {
+      toast.error(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        loading: false,
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 6000,
       });
     },
   });
@@ -95,28 +81,16 @@ export const useUpdateTicketStatusMutation = (ticketId?: string) => {
       return updateTicketStatus(selectedTicketId, rest);
     },
     onSuccess: () => {
-      notifications.update({
+      toast.success("Ticket Status Updated...!", {
         id: "update-status",
-        color: "teal",
-        loading: false,
-        title: "Success",
-        message: "Ticket Status Updated...!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       queryClient.invalidateQueries({ queryKey: ["waTickets"] });
       queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
     },
-    onError: (error: any) => {
-      notifications.update({
+    onError: (error) => {
+      toast.error(error?.message, {
         id: "update-status",
-        color: "red",
-        title: "Failed",
-        loading: false,
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -130,28 +104,16 @@ export const useUpdateTicketMutation = (id) => {
       return updateTicket(id, data);
     },
     onSuccess: () => {
-      notifications.update({
+      toast.success("Ticket Updated...!", {
         id: "update-ticket",
-        color: "teal",
-        loading: false,
-        title: "Success",
-        message: "Ticket Updated...!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       queryClient.invalidateQueries({ queryKey: ["waTickets"] });
       queryClient.invalidateQueries({ queryKey: ["ticket", id] });
     },
-    onError: (error: any) => {
-      notifications.update({
+    onError: (error) => {
+      toast.error(error?.message, {
         id: "update-ticket",
-        color: "red",
-        title: "Failed",
-        loading: false,
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -168,26 +130,14 @@ export function useDeleteTicket() {
       queryClient.invalidateQueries({ queryKey: ["waTickets"] });
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
       queryClient.invalidateQueries({ queryKey: ["responses"] });
-      notifications.update({
+      toast.success("Deleted Ticket successfully", {
         id: "load-data",
-        loading: false,
-        color: "green",
-        title: "Success",
-        message: "Deleted Ticket successfully",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Deleting", error.message);
-      notifications.update({
+      toast.error(error.message, {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed Delete",
-        message: error.message,
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -199,21 +149,14 @@ export const useCreateCommentMutation = (id) => {
   return useMutation({
     mutationFn: createComment,
     onSuccess: () => {
-      showSuccessToast(
-        "Comment created successfully!",
-        "create-comment-success",
-      );
+      toast.success("Comment created successfully!", {
+        id: "create-comment-success",
+      });
       queryClient.invalidateQueries({ queryKey: ["card", id] });
     },
-    onError: (error: any) => {
-      notifications.update({
+    onError: (error) => {
+      toast.error(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        loading: false,
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -234,10 +177,14 @@ export function useUpdateBoardMutation() {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
       queryClient.invalidateQueries({ queryKey: ["notification"] });
       queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
-      showSuccessToast("Board updated successfully!", "update-board-success");
+      toast.success("Board updated successfully!", {
+        id: "update-board-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to update board.", "update-board-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to update board.", {
+        id: "update-board-error",
+      });
     },
   });
 }
@@ -255,10 +202,14 @@ export function useBoardQueries(enabled = true) {
     mutationFn: createBoard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      showSuccessToast("Board created successfully!", "create-board-success");
+      toast.success("Board created successfully!", {
+        id: "create-board-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to create board.", "create-board-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to create board.", {
+        id: "create-board-error",
+      });
     },
   });
 
@@ -266,10 +217,14 @@ export function useBoardQueries(enabled = true) {
     mutationFn: updateBoard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      showSuccessToast("Board updated successfully!", "update-board-success");
+      toast.success("Board updated successfully!", {
+        id: "update-board-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to update board.", "update-board-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to update board.", {
+        id: "update-board-error",
+      });
     },
   });
 
@@ -277,10 +232,14 @@ export function useBoardQueries(enabled = true) {
     mutationFn: deleteBoard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      showSuccessToast("Board deleted successfully!", "delete-board-success");
+      toast.success("Board deleted successfully!", {
+        id: "delete-board-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to delete board.", "delete-board-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to delete board.", {
+        id: "delete-board-error",
+      });
     },
   });
 
@@ -298,7 +257,9 @@ export const useUpdateCardMutation = () => {
   return useMutation({
     mutationFn: updateCard,
     onSuccess: () => {
-      showSuccessToast("Ticket updated successfully!", "update-ticket-success");
+      toast.success("Ticket updated successfully!", {
+        id: "update-ticket-success",
+      });
       queryClient.invalidateQueries({ queryKey: ["card"] });
     },
   });
@@ -317,10 +278,14 @@ export function useBoard(boardId: string) {
     mutationFn: createColumn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-      showSuccessToast("Column created successfully!", "create-column-success");
+      toast.success("Column created successfully!", {
+        id: "create-column-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to create column.", "create-column-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to create column.", {
+        id: "create-column-error",
+      });
     },
   });
 
@@ -328,10 +293,14 @@ export function useBoard(boardId: string) {
     mutationFn: updateColumn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-      showSuccessToast("Column updated successfully!", "update-column-success");
+      toast.success("Column updated successfully!", {
+        id: "update-column-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to update column.", "update-column-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to update column.", {
+        id: "update-column-error",
+      });
     },
   });
 
@@ -339,10 +308,14 @@ export function useBoard(boardId: string) {
     mutationFn: deleteColumn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-      showSuccessToast("Column deleted successfully!", "delete-column-success");
+      toast.success("Column deleted successfully!", {
+        id: "delete-column-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to delete column.", "delete-column-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to delete column.", {
+        id: "delete-column-error",
+      });
     },
   });
 
@@ -351,10 +324,14 @@ export function useBoard(boardId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      showSuccessToast("Column moved successfully!", "move-column-success");
+      toast.success("Column moved successfully!", {
+        id: "move-column-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to move column.", "move-column-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to move column.", {
+        id: "move-column-error",
+      });
     },
   });
 
@@ -362,10 +339,14 @@ export function useBoard(boardId: string) {
     mutationFn: createCard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-      showSuccessToast("Card created successfully!", "create-card-success");
+      toast.success("Card created successfully!", {
+        id: "create-card-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to create card.", "create-card-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to create card.", {
+        id: "create-card-error",
+      });
     },
   });
 
@@ -373,10 +354,14 @@ export function useBoard(boardId: string) {
     mutationFn: updateCard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-      showSuccessToast("Card updated successfully!", "update-card-success");
+      toast.success("Card updated successfully!", {
+        id: "update-card-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to update card.", "update-card-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to update card.", {
+        id: "update-card-error",
+      });
     },
   });
 
@@ -384,10 +369,14 @@ export function useBoard(boardId: string) {
     mutationFn: deleteCard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-      showSuccessToast("Card deleted successfully!", "delete-card-success");
+      toast.success("Card deleted successfully!", {
+        id: "delete-card-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to delete card.", "delete-card-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to delete card.", {
+        id: "delete-card-error",
+      });
     },
   });
 
@@ -469,16 +458,20 @@ export function useBoard(boardId: string) {
       return { previousBoard };
     },
     // If the mutation fails, restore the previous board state
-    onError: (_, __, context) => {
+    onError: (error, __, context) => {
       if (context?.previousBoard) {
         queryClient.setQueryData(["board", boardId], context.previousBoard);
-        showErrorToast("Failed to move card.", "move-card-error");
+        toast.error(error?.message || "Failed to move card.", {
+          id: "move-card-error",
+        });
       }
     },
     // Always refetch after error or success
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-      showSuccessToast("Card moved successfully!", "move-card-success");
+      toast.success("Card moved successfully!", {
+        id: "move-card-success",
+      });
     },
   });
 
@@ -523,16 +516,20 @@ export function useBoard(boardId: string) {
       return { previousBoard };
     },
     // If the mutation fails, restore the previous board state
-    onError: (_, __, context) => {
+    onError: (error, __, context) => {
       if (context?.previousBoard) {
         queryClient.setQueryData(["board", boardId], context.previousBoard);
-        showErrorToast("Failed to reorder cards.", "reorder-card-error");
+        toast.error(error?.message || "Failed to reorder cards.", {
+          id: "reorder-card-error",
+        });
       }
     },
     // Always refetch after error or success
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-      showSuccessToast("Cards reordered successfully!", "reorder-card-success");
+      toast.success("Cards reordered successfully!", {
+        id: "reorder-card-success",
+      });
     },
   });
 
@@ -571,19 +568,20 @@ export function useBoard(boardId: string) {
       return { previousBoard };
     },
     // If the mutation fails, restore the previous board state
-    onError: (_, __, context) => {
+    onError: (error, __, context) => {
       if (context?.previousBoard) {
         queryClient.setQueryData(["board", boardId], context.previousBoard);
-        showErrorToast("Failed to reorder columns.", "reorder-columns-error");
+        toast.error(error?.message || "Failed to reorder columns.", {
+          id: "reorder-columns-error",
+        });
       }
     },
     // Always refetch after error or success
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-      showSuccessToast(
-        "Columns reordered successfully!",
-        "reorder-columns-success",
-      );
+      toast.success("Columns reordered successfully!", {
+        id: "reorder-columns-success",
+      });
     },
   });
 
@@ -638,13 +636,14 @@ export function useDeleteCommentMutation(cardId: string) {
     mutationFn: deleteComment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["card", cardId] });
-      showSuccessToast(
-        "Comment deleted successfully!",
-        "delete-comment-success",
-      );
+      toast.success("Comment deleted successfully!", {
+        id: "delete-comment-success",
+      });
     },
-    onError: () => {
-      showErrorToast("Failed to delete comment.", "delete-comment-error");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to delete comment.", {
+        id: "delete-comment-error",
+      });
     },
   });
 }

@@ -1,10 +1,11 @@
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import {
   getShareSettings,
   upadateShareSettings,
 } from "./surveyShareSettings.api";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
 
 const useGetShareSettings = (queryKey, resourceName, id) => {
   return useQuery({
@@ -22,18 +23,17 @@ const useUpdateShareSettingsMutation = (queryKey, resourceName, id) => {
         queryClient.invalidateQueries({
           queryKey: [queryKey, { resourceName, id }],
         });
-        showSuccessToast(
-          "Settings Updated Successfully",
-          "survey-share-settings",
-          <IconCheck />,
-        );
+        toast.success("Settings Updated Successfully", {
+          id: "survey-share-settings",
+        });
       }
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Something went wrong, Please try again later`,
-        "campaign-create",
-        <IconX />,
+    onError: (error) => {
+      toast.error(
+        error?.message || `Something went wrong, Please try again later`,
+        {
+          id: "campaign-create",
+        },
       );
     },
   });

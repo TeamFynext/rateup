@@ -56,8 +56,8 @@ const ContactDetailedView = ({
         onSuccess: () => {
           toast.success("contact removed from group");
         },
-        onError: () => {
-          toast.error("something went wrong");
+        onError: (error) => {
+          toast.error(error?.message || "something went wrong");
         },
       },
     );
@@ -74,8 +74,8 @@ const ContactDetailedView = ({
           toast.success("notes saved");
           setEditNotes(false);
         },
-        onError: () => {
-          toast.error("Something went wrong");
+        onError: (error) => {
+          toast.error(error?.message || "Something went wrong");
         },
       },
     );

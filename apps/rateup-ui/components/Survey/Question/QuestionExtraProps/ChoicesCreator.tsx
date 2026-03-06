@@ -23,6 +23,7 @@ import { getHotkeyHandler, useDisclosure, useHover } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { NPSWeightage, QuestionType, SurveyType } from "@/types/enums";
@@ -52,7 +53,6 @@ import {
   MAX_METADATA_COUNT,
 } from "@/utils/constants";
 import { uploadFile } from "@/utils/file-upload/upload";
-import { showErrorToast } from "@/utils/notifications";
 
 import inputStyles from "../../../input/InputStyles.module.css";
 import { getNpsColor } from "../QuestionDetailedView";
@@ -201,7 +201,7 @@ export function ChoicesCreator({
   const onChangePicture = (event: File | null) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {
-      showErrorToast(
+      toast.error(
         `${translations("Max file size is")} ${MAX_FILE_SIZE_IN_MB} MB`,
       );
       return;
@@ -227,10 +227,9 @@ export function ChoicesCreator({
       const base64String = await FileConverter.fileToBase64(file);
       choiceForm.setFieldValue("image", base64String);
     } catch (error) {
-      showErrorToast(
-        "Error converting file to Base64:" + JSON.stringify(error),
-        "file-converting",
-      );
+      toast.error("Error converting file to Base64:" + JSON.stringify(error), {
+        id: "file-converting",
+      });
     }
   };
   const clearFile = () => {
@@ -548,7 +547,7 @@ function Choice({
   const onChangePicture = (event: File | null) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {
-      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      toast.error(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
       return;
     }
     close();
@@ -680,10 +679,12 @@ function Choice({
       const base64String = await FileConverter.fileToBase64(file);
       choiceForm.setFieldValue("image", base64String);
     } catch (error) {
-      showErrorToast(
+      toast.error(
         translations("Error converting file to Base64:") +
           JSON.stringify(error),
-        "file-converting",
+        {
+          id: "file-converting",
+        },
       );
     }
   };

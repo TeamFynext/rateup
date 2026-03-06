@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 
 import { useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Plus, Trash2, Users, X } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   useAddUsertoTeams,
@@ -336,7 +336,6 @@ export function AddMembers({ selectedTeam, refetchTeams, translations }) {
           </DialogContent>
         </Dialog>
       </div>
-
       {/* view members */}
       <ScrollArea className="h-[260px] pr-3">
         {isLoadingMembers ? (
@@ -520,13 +519,8 @@ export function DeleteTeam({
   }
   const handleDeleteTeam = async (deleteTeamId: string) => {
     setIsDeleting(true);
-    notifications.show({
+    toast.loading(translations("Hold on, Your team is getting deleted"), {
       id: "load-data",
-      loading: true,
-      title: translations("Deleting Team"),
-      message: translations("Hold on, Your team is getting deleted"),
-      autoClose: false,
-      withCloseButton: false,
     });
     deleteTeamMutation.mutate(deleteTeamId, {
       onSuccess: () => {

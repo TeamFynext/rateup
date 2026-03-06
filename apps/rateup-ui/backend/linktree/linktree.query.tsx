@@ -1,7 +1,7 @@
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createLinktree,
   deleteLinktree,
@@ -33,18 +33,17 @@ function useCreateLinktreeMutation() {
   return useMutation({
     mutationFn: createLinktree,
     onSuccess: () => {
-      showSuccessToast(
-        "Created linktree successfully.",
-        "CreateLinktree",
-        <IconCheck />,
-      );
+      toast.success("Created linktree successfully.", {
+        id: "CreateLinktree",
+      });
       queryClient.invalidateQueries({ queryKey: ["linktrees"] });
     },
-    onError: () => {
-      showErrorToast(
-        "Unable to create linktree, please try again later",
-        "CreateLinktree",
-        <IconX />,
+    onError: (error) => {
+      toast.error(
+        error?.message || "Unable to create linktree, please try again later",
+        {
+          id: "CreateLinktree",
+        },
       );
     },
   });
@@ -57,19 +56,19 @@ function useUpdateLinktreeMutation(shortUrlId) {
       return updateLinktree(data);
     },
     onSuccess: () => {
-      showSuccessToast(
-        "Updated linktree successfully.",
-        "UpdateLinktree",
-        <IconCheck />,
-      );
+      toast.success("Updated linktree successfully.", {
+        id: "UpdateLinktree",
+      });
       queryClient.invalidateQueries({ queryKey: ["linktrees"] });
       queryClient.invalidateQueries({ queryKey: ["linktree", shortUrlId] });
     },
-    onError: () => {
-      showErrorToast(
-        "Unable to update Landing Page, please try again later",
-        "CreateLinktree",
-        <IconX />,
+    onError: (error) => {
+      toast.error(
+        error?.message ||
+          "Unable to update Landing Page, please try again later",
+        {
+          id: "CreateLinktree",
+        },
       );
     },
   });
@@ -82,18 +81,17 @@ function useDeleteLinktreeMutation(id) {
       return deleteLinktree(id);
     },
     onSuccess: () => {
-      showSuccessToast(
-        "Deleted linktree successfully.",
-        "deleteLinktree",
-        <IconCheck />,
-      );
+      toast.success("Deleted linktree successfully.", {
+        id: "deleteLinktree",
+      });
       queryClient.invalidateQueries({ queryKey: ["linktrees"] });
     },
-    onError: () => {
-      showErrorToast(
-        "unable to delete linktree, please try again later",
-        "deleteLinktree",
-        <IconX />,
+    onError: (error) => {
+      toast.error(
+        error?.message || "unable to delete linktree, please try again later",
+        {
+          id: "deleteLinktree",
+        },
       );
     },
   });

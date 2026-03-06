@@ -22,6 +22,7 @@ import {
 } from "@tabler/icons-react";
 import styles from "components/Graph/graph.module.css";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { QuestionType } from "@/types/enums";
 import { useGenerateLargeTextResponseSummaryByAI } from "@/backend/surveys/response/response.query";
@@ -31,11 +32,6 @@ import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { FormElement } from "@/components/whatsapp/flow-v2/utils/store";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
 import SurveyContext from "@/context/SurveyContext";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "@/utils/notifications";
 
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
 
@@ -71,7 +67,9 @@ const LargeTextResponseSummary = ({
   const translations = useTranslations();
   const getResponseSummary = (questionId, teamId?) => {
     if (getSummary.isPending) return;
-    showLoadingToast("loading", "summary", true, "", "", false);
+    toast.loading("loading", {
+      id: "summary",
+    });
     getSummary.mutate(
       {
         surveyId,
@@ -79,20 +77,17 @@ const LargeTextResponseSummary = ({
       },
       {
         onSuccess: () => {
-          showSuccessToast(
-            translations("Summary generated successfully"),
-            "summary",
-            <IconCheck />,
-            true,
-          );
+          toast.success(translations("Summary generated successfully"), {
+            id: "summary",
+          });
         },
-        onError(error: any, variables, context) {
+        onError(error) {
           console.log(error);
-          showErrorToast(
-            ` ${translations("Summary generation failed:")} ${error?.response?.data ?? ""}`,
-            "summary",
-            <IconX />,
-            true,
+          toast.error(
+            error?.message || ` ${translations("Summary generation failed:")}`,
+            {
+              id: "summary",
+            },
           );
         },
       },

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { QuestionType2 } from "@/types/enums";
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
@@ -17,7 +18,6 @@ import SurveyContext from "../../../context/SurveyContext";
 import { useUser } from "../../../context/UserContext";
 import { decryptPrivateKey } from "../../../utils/encryption";
 import { pushToSessionStorage } from "../../../utils/essential";
-import { showErrorToast } from "../../../utils/notifications";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -151,7 +151,7 @@ function EncryptionPasswordModal({
       pushToSessionStorage(`${surveyId}_ete_passkey`, encryptionpassword);
       setPassword(encryptionpassword);
     } else {
-      showErrorToast(translations("Invalid Password"));
+      toast.error(translations("Invalid Password"));
     }
   }, [
     encryptionpassword,

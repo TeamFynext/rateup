@@ -10,12 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SliderCompatible from "@/components/ui/sliderCompatible";
 
 function LogoTabpanel({ state, dispatch }) {
-  const {
-    qrBgColor,
-    qrColor,
-    logoSize,
-    logoBorderRadius,
-  } = state;
+  const { qrBgColor, qrColor, logoSize, logoBorderRadius } = state;
 
   const translations = useTranslations();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -37,7 +32,9 @@ function LogoTabpanel({ state, dispatch }) {
     <div className="flex flex-col gap-4">
       {/* Logo Upload Section */}
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium dark:text-gray-200">Logo (Optional)</Label>
+        <Label className="text-sm font-medium dark:text-gray-200">
+          Logo (Optional)
+        </Label>
         <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors bg-gray-50 dark:bg-[#1a1a1a] dark:border-gray-600 dark:hover:border-primary">
           <Input
             ref={fileInputRef}
@@ -68,7 +65,9 @@ function LogoTabpanel({ state, dispatch }) {
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Drop or upload logo</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Drop or upload logo
+            </div>
             <div className="text-xs text-gray-500 dark:text-gray-500">
               SVG, PNG (max 300×300px)
             </div>
@@ -79,7 +78,9 @@ function LogoTabpanel({ state, dispatch }) {
       {/* Logo Size Slider */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium dark:text-gray-200">Logo Size</Label>
+          <Label className="text-sm font-medium dark:text-gray-200">
+            Logo Size
+          </Label>
           <span className="text-sm font-medium text-primary dark:text-blue-400">
             {displayLogoSize}px
           </span>
@@ -100,7 +101,9 @@ function LogoTabpanel({ state, dispatch }) {
       {/* Logo Border Radius Slider */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium dark:text-gray-200">Logo Border Radius</Label>
+          <Label className="text-sm font-medium dark:text-gray-200">
+            Logo Border Radius
+          </Label>
           <span className="text-sm font-medium text-primary dark:text-blue-400">
             {displayLogoRadius}px
           </span>
@@ -123,7 +126,9 @@ function LogoTabpanel({ state, dispatch }) {
 
       {/* Background Section */}
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium dark:text-gray-200">Background</Label>
+        <Label className="text-sm font-medium dark:text-gray-200">
+          Background
+        </Label>
         <RadioGroup
           value={qrBgColor.startsWith("#") ? "color" : "transparent"}
           onValueChange={(value) => {
@@ -202,7 +207,9 @@ function LogoTabpanel({ state, dispatch }) {
 
       {/* QR Code Color Section */}
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium dark:text-gray-200">QR Code Color</Label>
+        <Label className="text-sm font-medium dark:text-gray-200">
+          QR Code Color
+        </Label>
         <div className="flex gap-2">
           <div className="w-10 h-10 rounded border dark:border-gray-700 overflow-hidden">
             <Input

@@ -1,8 +1,7 @@
 //For New Migrations and Updations
 
 import { useMutation } from "@tanstack/react-query";
-
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+import { toast } from "sonner";
 
 import {
   automationSubscription,
@@ -22,10 +21,10 @@ export const useUpdateUsageStats = () => {
   return useMutation({
     mutationFn: updateUsageStats,
     onSuccess: () => {
-      showSuccessToast("Update Success");
+      toast.success("Update Success");
     },
-    onError: () => {
-      showErrorToast("Update Error");
+    onError: (error) => {
+      toast.error(error?.message || "Update Error");
     },
   });
 };
@@ -34,10 +33,10 @@ export const useAutomationSubscription = () => {
   return useMutation({
     mutationFn: automationSubscription,
     onSuccess: () => {
-      showSuccessToast("Automation Subscription Updated");
+      toast.success("Automation Subscription Updated");
     },
-    onError: () => {
-      showErrorToast("Automation Subscription Update Failed");
+    onError: (error) => {
+      toast.error(error?.message || "Automation Subscription Update Failed");
     },
   });
 };
@@ -46,10 +45,10 @@ export const useUpdateAutomationTriggerSubscription = () => {
   return useMutation({
     mutationFn: updationAutomationTriggerSubscription,
     onSuccess: () => {
-      showSuccessToast("Automation Subscription Updated");
+      toast.success("Automation Subscription Updated");
     },
-    onError: () => {
-      showErrorToast("Automation Subscription Update Failed");
+    onError: (error) => {
+      toast.error(error?.message || "Automation Subscription Update Failed");
     },
   });
 };
@@ -58,10 +57,10 @@ export const useUpdateAutomationUsageStats = () => {
   return useMutation({
     mutationFn: updationAutomationUsageStats,
     onSuccess: () => {
-      showSuccessToast("Automation usage stats Updated");
+      toast.success("Automation usage stats Updated");
     },
-    onError: () => {
-      showErrorToast("Automation usage stats Update Failed");
+    onError: (error) => {
+      toast.error(error?.message || "Automation usage stats Update Failed");
     },
   });
 };
@@ -70,10 +69,10 @@ export const useUpdateSubscriptionNewFeat = () => {
   return useMutation({
     mutationFn: updateSubscriptionNewFeat,
     onSuccess: () => {
-      showSuccessToast("success");
+      toast.success("success");
     },
-    onError: () => {
-      showErrorToast("Failed");
+    onError: (error) => {
+      toast.error(error?.message || "Failed");
     },
   });
 };
@@ -82,10 +81,10 @@ export const useUpdateFreePlanSubscriptionExpiry = () => {
   return useMutation({
     mutationFn: updateFreePlanSubscriptionExpiry,
     onSuccess: () => {
-      showSuccessToast("success");
+      toast.success("success");
     },
-    onError: () => {
-      showErrorToast("Failed");
+    onError: (error) => {
+      toast.error(error?.message || "Failed");
     },
   });
 };
@@ -95,10 +94,10 @@ export const useUpdateLifecycle = () => {
       return updateLifecycle();
     },
     onSuccess: () => {
-      showSuccessToast("Lifecycle added successfully");
+      toast.success("Lifecycle added successfully");
     },
-    onError: () => {
-      showErrorToast("Failed to add lifecycle");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to add lifecycle");
     },
   });
 };
@@ -109,10 +108,10 @@ export const useUpdateCustomField = () => {
       return updateCustomField();
     },
     onSuccess: () => {
-      showSuccessToast("Custom fields migrated successfully");
+      toast.success("Custom fields migrated successfully");
     },
-    onError: () => {
-      showErrorToast("Failed to migrate custom fields");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to migrate custom fields");
     },
   });
 };
@@ -123,10 +122,10 @@ export const useUpdateAutomationPhoneId = () => {
       return updateAutomationPhoneId();
     },
     onSuccess: () => {
-      showSuccessToast("Automation phoneId migrated successfully");
+      toast.success("Automation phoneId migrated successfully");
     },
-    onError: () => {
-      showErrorToast("Failed to migrate automation phoneId");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to migrate automation phoneId");
     },
   });
 };
@@ -135,11 +134,11 @@ export const useUpdateBackfillMessageData = () => {
   return useMutation({
     mutationFn: updateBackfillMessageData,
     onSuccess: () => {
-      showSuccessToast("Message data backfilled to contact successfully");
+      toast.success("Message data backfilled to contact successfully");
     },
-    onError: (e: any) => {
-      showErrorToast(
-        e?.response?.data || "Failed to backfill message data to contact",
+    onError: (error) => {
+      toast.error(
+        error?.message || "Failed to backfill message data to contact",
       );
     },
   });
@@ -149,12 +148,10 @@ export const useMigrateAutomationToRules = () => {
   return useMutation({
     mutationFn: migrateAutomationToRules,
     onSuccess: () => {
-      showSuccessToast("Automation migrated to rules successfully");
+      toast.success("Automation migrated to rules successfully");
     },
-    onError: (e: any) => {
-      showErrorToast(
-        e?.response?.data || "Failed to migrate automation to rules",
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Failed to migrate automation to rules");
     },
   });
 };

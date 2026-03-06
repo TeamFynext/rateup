@@ -13,8 +13,8 @@ const Signup = () => {
   useCheckSession();
   return (
     // <LoginSignupLayout>
-    <AuthForm mode={AuthMode.SIGNUP} authType={auth} />
     // </LoginSignupLayout>
+    <AuthForm mode={AuthMode.SIGNUP} authType={auth} />
   );
 };
 

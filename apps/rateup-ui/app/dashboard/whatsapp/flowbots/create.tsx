@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "@mantine/form";
 import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { AutomationPlatform } from "@/types/platform";
 import { AccountSelector } from "@/components/input/AccountSelector";
@@ -24,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { showSuccessToast } from "@/utils/notifications";
 
 import {
   useCreateWaAutomatedReplyMutation,
@@ -139,7 +139,7 @@ export function AutomatedReplyForm({
                 { automationId: waAutomatedReplyId },
               ],
             });
-            showSuccessToast("Instagram Automation Updated Successfully");
+            toast.success("Instagram Automation Updated Successfully");
           },
         });
       } else {
@@ -148,7 +148,7 @@ export function AutomatedReplyForm({
             qc.invalidateQueries({
               queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
             });
-            showSuccessToast("Automated Reply Updated Successfully");
+            toast.success("Automated Reply Updated Successfully");
           },
         });
       }

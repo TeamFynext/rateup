@@ -6,6 +6,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { ColumnDef } from "@tanstack/react-table";
 import { Building2, Calendar, ShoppingBag, Store, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums";
 import { ActiveStatusBadge } from "@/app/dashboard/apps&services/shopify/page";
@@ -17,7 +18,6 @@ import { createSortableHeader, DataTable } from "@/components/Table/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime";
-import { showLoadingToast } from "@/utils/notifications";
 
 import { DataTableToolbar } from "./data-table-toolbar";
 
@@ -125,7 +125,9 @@ const Shopify = () => {
     : [];
 
   const handleDelete = () => {
-    showLoadingToast("Deleting...", "integration");
+    toast.loading("Deleting...", {
+      id: "integration",
+    });
     deleteIntegration.mutate({ shop: selectedShop });
   };
 

@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+import { toast } from "sonner";
 
 import {
   createLoyaltyApiSettings,
@@ -21,10 +20,10 @@ export const useLoyaltyApiSettings = (id?: string) => {
     mutationFn: createLoyaltyApiSettings,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyApiSettings"] });
-      showSuccessToast("success");
+      toast.success("success");
     },
-    onError: () => {
-      showErrorToast("failed");
+    onError: (error) => {
+      toast.error(error?.message || "failed");
     },
   });
 
@@ -34,10 +33,10 @@ export const useLoyaltyApiSettings = (id?: string) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyApiSettings"] });
       qc.invalidateQueries({ queryKey: ["loyaltyApiSetting", id] });
-      showSuccessToast("success");
+      toast.success("success");
     },
-    onError: () => {
-      showErrorToast("failed");
+    onError: (error) => {
+      toast.error(error?.message || "failed");
     },
   });
 

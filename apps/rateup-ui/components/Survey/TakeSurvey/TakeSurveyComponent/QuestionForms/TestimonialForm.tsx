@@ -17,6 +17,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
@@ -26,7 +27,6 @@ import {
   getFileUrlFromKey,
   uploadFile,
 } from "../../../../../utils/file-upload/upload";
-import { showErrorToast } from "../../../../../utils/notifications";
 import { RateupButtonBlue } from "../../../../Button/RateupButtons";
 import WebcamCapture from "../../../../input/WebCamCapture";
 import FormModalLayout from "../../../../Modal/FormModalLayout";
@@ -88,7 +88,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         setIsUploading(false);
       })
       .catch((err) => {
-        showErrorToast(translations("Error uploading icon Please try again"));
+        toast.error(translations("Error uploading icon Please try again"));
         setIsUploading(false);
       });
   }, [file]);

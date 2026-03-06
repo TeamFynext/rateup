@@ -17,9 +17,9 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconMenu2, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { MenuItemPriceType } from "@/types/enums";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
@@ -40,7 +40,6 @@ import {
   getFileUrlFromKey,
   uploadFile,
 } from "@/utils/file-upload/upload";
-import { showErrorToast } from "@/utils/notifications";
 
 import { FoodLabelSelector } from "../combobox/foodLabelSelector";
 import { PriceSection } from "../item/PriceSection";
@@ -161,7 +160,7 @@ export const Slide = ({
   const onChangePicture = (event: File) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {
-      showErrorToast(
+      toast.error(
         `${translations("Max file size is")} ${MAX_FILE_SIZE_IN_MB} MB`,
       );
       return;
@@ -176,14 +175,12 @@ export const Slide = ({
 
   const handleDeleteMutation = () => {
     if (formValues?.id) {
-      notifications.show({
-        id: "menu-banner-delete",
-        loading: true,
-        title: translations("Deleting Menu Banner"),
-        message: translations("Hold on, Your Menu Banner Is Getting Deleted"),
-        autoClose: false,
-        withCloseButton: false,
-      });
+      toast.loading(
+        translations("Hold on, Your Menu Banner Is Getting Deleted"),
+        {
+          id: "menu-banner-delete",
+        },
+      );
       deleteMenuBannerMutation.mutate(formValues?.id);
     } else {
       closeDialog();

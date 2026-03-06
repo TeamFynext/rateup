@@ -17,9 +17,9 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconEdit, IconInfoCircle, IconX } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import useFlowStore, {
   EditorType,
@@ -130,13 +130,8 @@ const GoogleReviewEditor = ({
     const isChecked = event.currentTarget.checked;
     setEnableGoogleReview(isChecked);
     if (isChecked) {
-      notifications.show({
+      toast.error(translations("Enter condition and Google page URL"), {
         id: "load-data",
-        color: "var(--color-tertiary)",
-        title: translations("Configure Google Review"),
-        message: translations("Enter condition and Google page URL"),
-        icon: <IconInfoCircle size="3rem" />,
-        autoClose: 3000,
       });
     }
   };
@@ -156,23 +151,14 @@ const GoogleReviewEditor = ({
 
   const handleSave = async () => {
     if (teamsToDisplay.some((team) => !team.googleLink)) {
-      notifications.show({
-        color: "red",
-        title: "Failed",
-        message: translations("Please enter Google Review links for all teams"),
-        icon: <IconX size="1rem" />,
-        autoClose: 2000,
-      });
+      toast.error(
+        translations("Please enter Google Review links for all teams"),
+      );
       return;
     }
     if (!waFlowSave)
-      notifications.show({
+      toast.loading(translations("Hold on, your changes are getting updated"), {
         id: "load-data",
-        loading: true,
-        title: translations("Enabling google review"),
-        message: translations("Hold on, your changes are getting updated"),
-        autoClose: false,
-        withCloseButton: false,
       });
 
     try {
@@ -184,14 +170,12 @@ const GoogleReviewEditor = ({
 
   const handleError = (error) => {
     console.error("Failed to update", error);
-    notifications.show({
-      id: "load-data",
-      color: "red",
-      title: translations("Failed"),
-      message: `${translations("Failed to update try again Error:")} ${error.message}`,
-      icon: <IconX size="1rem" />,
-      autoClose: 2000,
-    });
+    toast.error(
+      `${translations("Failed to update try again Error:")} ${error.message}`,
+      {
+        id: "load-data",
+      },
+    );
   };
 
   useEffect(() => {

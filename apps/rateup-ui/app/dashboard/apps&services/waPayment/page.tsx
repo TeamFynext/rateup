@@ -25,6 +25,7 @@ import {
 import clsx from "clsx";
 import dayjs from "dayjs";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { IntegratedApps } from "@/types/enums";
@@ -47,7 +48,6 @@ import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import { showLoadingToast } from "@/utils/notifications";
 
 //TODO: re add create and get all wa payment config list
 enum Providers {
@@ -123,11 +123,9 @@ const WhatsappPayment = () => {
     // );
     // createWaPaymentConfigurationMutation.mutate(form.getValues());
     // form.reset();
-    showLoadingToast(
-      "getting whatsapp payment configuration...",
-      "waPaymentConfiguration-get-by-name",
-      true,
-    );
+    toast.loading("getting whatsapp payment configuration...", {
+      id: "waPaymentConfiguration-get-by-name",
+    });
     getWaPaymentConfigurationByNameMutation.mutate(getConfigForm.getValues());
     getConfigForm.reset();
     close();
@@ -320,12 +318,9 @@ function WhatsappPaymentCardMenu({ name, deleteMutation }) {
         headerTitle="Delete whatsapp payment config?"
         confirmLabel="Delete"
         onConfirm={(e) => {
-          showLoadingToast(
-            "Deleting config..",
-            "waPaymentConfigurations-delete",
-            true,
-            "Hold on, config is getting deleted..",
-          );
+          toast.loading("Deleting config..", {
+            id: "waPaymentConfigurations-delete",
+          });
           deleteMutation.mutate(name);
           closeDialog();
         }}

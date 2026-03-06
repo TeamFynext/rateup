@@ -18,6 +18,7 @@ import {
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { IconCircleCheck, IconRefresh } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useSurvey } from "../../../backend/surveys/surveys.query";
 import {
@@ -30,7 +31,6 @@ import {
   getFileUrlFromKey,
   uploadFile,
 } from "../../../utils/file-upload/upload";
-import { showErrorToast } from "../../../utils/notifications";
 import { generateWaSurveyIdentifier_byName } from "../../../utils/whatsapp/wa_url";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { LengthTracker, LengthTrackerProps } from "../../input/LengthTracker";
@@ -99,7 +99,7 @@ export function FlowShareTemplateEditor({
   const onImageUpload = (event: File) => {
     if (!event) return;
     if (event.size > max_mb * 1024 * 1024) {
-      showErrorToast(`Max file size is ${max_mb} MB`);
+      toast.error(`Max file size is ${max_mb} MB`);
       return;
     }
     setImageToUpload(event);

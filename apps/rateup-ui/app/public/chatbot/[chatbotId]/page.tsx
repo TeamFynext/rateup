@@ -50,9 +50,9 @@ const ChatbotId = () => {
         onSuccess: (data) => {
           handler.append({ content: data.message, source: ChatBotSource.AI });
         },
-        onError: (error: any) => {
+        onError: (error) => {
           handler.append({
-            content: error.response.data.message,
+            content: error?.message,
             source: ChatBotSource.AI,
           });
         },

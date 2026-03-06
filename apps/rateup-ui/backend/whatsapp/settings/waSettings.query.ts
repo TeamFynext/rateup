@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { showErrorToastFromError } from "../../../utils/query";
 import {
   createWaSettings,
   deleteWaSettings,
@@ -41,8 +40,8 @@ export const useCreateWaSettingsMutation = () => {
       queryClient.invalidateQueries({ queryKey: ["waSettings"] });
       toast.success("Updated Successfully");
     },
-    onError: (e) => {
-      showErrorToastFromError(e, "Error updating settings!");
+    onError: (error) => {
+      toast.error(error?.message || "Error updating settings!");
     },
   });
 
@@ -58,8 +57,8 @@ export const useUpsertWaSettingsMutation = () => {
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       toast.success("Updated Successfully");
     },
-    onError: (e) => {
-      showErrorToastFromError(e, "Error updating settings!");
+    onError: (error) => {
+      toast.error(error?.message || "Error updating settings!");
     },
   });
 
@@ -75,8 +74,8 @@ export const useUpdateUserAccessToken = () => {
       queryClient.invalidateQueries({ queryKey: ["waSettings"] });
       toast.success("Updated Successfully");
     },
-    onError: (e) => {
-      showErrorToastFromError(e, "Error updating settings!");
+    onError: (error) => {
+      toast.error(error?.message || "Error updating settings!");
     },
   });
 
@@ -92,8 +91,8 @@ export const useUpdateWaSettingsMutation = (settingId) => {
       queryClient.invalidateQueries({ queryKey: ["waSettings"] });
       toast.success("Updated Successfully");
     },
-    onError: (e) => {
-      showErrorToastFromError(e, "Error updating settings!");
+    onError: (error) => {
+      toast.error(error?.message || "Error updating settings!");
     },
   });
 
@@ -108,8 +107,8 @@ export const useDeleteWaSettingsMutation = () => {
       qc.invalidateQueries({ queryKey: ["waSettings"] });
       toast.success("Deleted Successfully");
     },
-    onError: (e) => {
-      showErrorToastFromError(e, "Error deleting settings!");
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting settings!");
     },
   });
 };
@@ -122,9 +121,9 @@ export const useRegisterBusinessClientMutation = (completionFunction) => {
       completionFunction?.();
       qc.invalidateQueries({ queryKey: ["waSettings"] });
     },
-    onError: (e) => {
+    onError: (error) => {
       completionFunction?.();
-      showErrorToastFromError(e, "Error registering business client!");
+      toast.error(error?.message || "Error registering business client!");
     },
   });
 };
@@ -136,8 +135,8 @@ export const useDeregisterBusinessClientMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["waSettings"] });
     },
-    onError: (e) => {
-      showErrorToastFromError(e, "Error deregistering business client!");
+    onError: (error) => {
+      toast.error(error?.message || "Error deregistering business client!");
     },
   });
 };
@@ -163,8 +162,8 @@ export const useSyncFbPages = (waSettingsId) => {
       qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
       toast.success("success");
     },
-    onError: (e) => {
-      showErrorToastFromError(e, "something went wrong");
+    onError: (error) => {
+      toast.error(error?.message || "something went wrong");
     },
   });
 };
@@ -177,8 +176,8 @@ export const useSyncMetaLeadgenForms = (waSettingsId) => {
       qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
       toast.success("success");
     },
-    onError: () => {
-      toast.error("error");
+    onError: (error) => {
+      toast.error(error?.message || "error");
     },
   });
 };
@@ -192,8 +191,8 @@ export const useSyncLeadgenFormQuestions = (formId, waSettingsId) => {
       qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
       toast.success("success");
     },
-    onError: () => {
-      toast.error("error");
+    onError: (error) => {
+      toast.error(error?.message || "error");
     },
   });
 };
@@ -206,8 +205,8 @@ export const useSyncAdaccounts = (waSettingsId) => {
       qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
       toast.success("success");
     },
-    onError: () => {
-      toast.error("error");
+    onError: (error) => {
+      toast.error(error?.message || "error");
     },
   });
 };
@@ -220,8 +219,8 @@ export const useSyncAdsByadAccounts = (adAccountId, waSettingsId) => {
       qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
       toast.success("success");
     },
-    onError: () => {
-      toast.error("error");
+    onError: (error) => {
+      toast.error(error?.message || "error");
     },
   });
 };
@@ -234,8 +233,8 @@ export const useSubscribeFieldToPage = (waSettingsId) => {
       qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
       toast.success("success");
     },
-    onError: () => {
-      toast.error("error");
+    onError: (error) => {
+      toast.error(error?.message || "error");
     },
   });
 };

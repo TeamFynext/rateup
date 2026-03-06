@@ -32,7 +32,7 @@ const OpenCreateMenu = ({
   return (
     <>
       <ContactImportErrorModal
-        body={importCSVContactMutation?.error?.response?.data}
+        body={importCSVContactMutation?.error?.message}
         isError={importCSVContactMutation.isError}
       />
       <RateupButtonBlue

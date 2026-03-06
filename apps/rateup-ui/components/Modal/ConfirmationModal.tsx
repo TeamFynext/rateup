@@ -5,9 +5,9 @@ import { useState } from "react";
 import { Blockquote, Group, Modal, Stack, Text } from "@mantine/core";
 import { IconAlertOctagon } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useUser } from "../../context/UserContext";
-import { showErrorToast } from "../../utils/notifications";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -54,7 +54,7 @@ export default function ConfirmationModal({
         onConfirm();
         if (closeAfterOnConfirm) onClose();
       } else {
-        showErrorToast(translations("Email entered is invalid"));
+        toast.error(translations("Email entered is invalid"));
       }
     } else {
       onConfirm();

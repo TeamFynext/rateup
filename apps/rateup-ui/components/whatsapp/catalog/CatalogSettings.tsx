@@ -12,6 +12,7 @@ import {
   IconShoppingBag,
   IconX,
 } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import { IntegratedApps, MetaLoginAssets, WaConfigType } from "@/types/enums";
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
@@ -34,7 +35,6 @@ import {
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { ImportFromShopifyModal } from "@/components/whatsapp/catalog/products/ImportFromShopifyModal";
-import { showErrorToast } from "@/utils/notifications";
 
 const CatalogSettings = ({ catalogData }) => {
   const update = useUpateCatalog(catalogData?.catalogId);
@@ -73,7 +73,7 @@ const CatalogSettings = ({ catalogData }) => {
   }, [catalogData, waSettings]);
   function handleDisconnect() {
     if (!wabaId) {
-      showErrorToast("Try again!");
+      toast.error("Try again!");
       return;
     }
     const settings = waSettings.find((s) =>

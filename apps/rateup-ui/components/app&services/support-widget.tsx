@@ -284,7 +284,7 @@ export default function SupportWidget({
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/90">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#66D7FF] to-[#2D74E0] flex items-center justify-center">
+                <div className="h-8 w-8 rounded-full bg-linear-to-br from-[#66D7FF] to-[#2D74E0] flex items-center justify-center">
                   <span className="text-white font-bold text-base">
                     {companyName[0]}
                   </span>
@@ -414,7 +414,7 @@ export default function SupportWidget({
                             >
                               {message.messageBody?.exchangeProcess ===
                                 "send" && (
-                                <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shrink-0 animate-pop-in">
+                                <div className="h-7 w-7 rounded-full bg-linear-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shrink-0 animate-pop-in">
                                   <div className="h-3 w-3 bg-white rounded-sm"></div>
                                 </div>
                               )}
@@ -422,7 +422,7 @@ export default function SupportWidget({
                                 className={`flex flex-col ${message.messageBody?.exchangeProcess === "receive" ? "ml-auto" : ""}`}
                               >
                                 <div
-                                  className={`px-3 py-2 rounded-2xl max-w-xs shadow transition-all duration-300 text-xs ${message.messageBody?.exchangeProcess === "receive" ? "bg-blue-600 text-white ml-auto animate-pop-in" : "bg-gradient-to-br from-muted via-background to-muted text-foreground animate-pop-in"}`}
+                                  className={`px-3 py-2 rounded-2xl max-w-xs shadow transition-all duration-300 text-xs ${message.messageBody?.exchangeProcess === "receive" ? "bg-blue-600 text-white ml-auto animate-pop-in" : "bg-linear-to-br from-muted via-background to-muted text-foreground animate-pop-in"}`}
                                 >
                                   <p className="leading-relaxed">
                                     {parseWhatsAppToReact(
@@ -508,7 +508,7 @@ export default function SupportWidget({
         <div className="flex justify-end">
           <button
             onClick={() => setIsOpen((prev) => !prev)}
-            className="bg-gradient-to-br from-[#66D7FF] to-[#2D74E0] hover:from-[#00bbff] hover:to-[#005de9] text-white rounded-full shadow-2xl w-16 h-16 flex items-center justify-center focus:outline-none transition-transform duration-300 hover:scale-105 animate-bounce-in border-2 border-background"
+            className="bg-linear-to-br from-[#66D7FF] to-[#2D74E0] hover:from-[#00bbff] hover:to-[#005de9] text-white rounded-full shadow-2xl w-16 h-16 flex items-center justify-center focus:outline-none transition-transform duration-300 hover:scale-105 animate-bounce-in border-2 border-background"
             aria-label="Open chat"
           >
             <MessageCircle className="h-8 w-8" />

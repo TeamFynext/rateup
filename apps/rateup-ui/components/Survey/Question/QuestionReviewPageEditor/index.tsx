@@ -15,7 +15,6 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { useTranslations } from "next-intl";
@@ -28,7 +27,6 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "@/components/Button/RateupButtons";
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import { QuestionTabsEnum } from "../../EditSurvey";
 import AddGoogleReviewLinkForTeamModal from "../AddGoogleReviewLinkForTeamModal";
@@ -194,7 +192,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
         (team) => !team?.["reviewPageLinks"]?.[reviewPagePlatformDDState],
       )
     ) {
-      showErrorToast("Please enter review page link for all teams.");
+      toast.error("Please enter review page link for all teams.");
       return;
     }
 
@@ -218,9 +216,9 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
         data,
       });
       setIsSwitchStateSaving(false);
-      showSuccessToast("Saved changes.");
+      toast.success("Saved changes.");
     } catch (err) {
-      showErrorToast("Something went wrong, please try again later.");
+      toast.error("Something went wrong, please try again later.");
     }
   };
 

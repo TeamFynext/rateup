@@ -10,12 +10,12 @@ import React, {
 import { useRouter } from "next/navigation";
 
 import { useDebouncedState } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
+import { toast } from "sonner";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
@@ -39,11 +39,6 @@ import {
 } from "../../../types/enums";
 import { PAGE_SIZE } from "../../../utils/constants";
 import { TicketType } from "../../../utils/enums/ticket";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "../../../utils/notifications";
 import { hasFeature } from "../../../utils/subscription/subscription";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
@@ -158,11 +153,9 @@ const Responses = ({
   );
   const exportContactMutation = useExportContactResponses(surveyId);
   const handleExportContacts = useCallback(() => {
-    showLoadingToast(
-      translations("Exporting Contact responses to Contacts"),
-      "export-contacts",
-      true,
-    );
+    toast.loading(translations("Exporting Contact responses to Contacts"), {
+      id: "export-contacts",
+    });
     exportContactMutation.mutate();
   }, [exportContactMutation, translations]);
 
@@ -202,24 +195,14 @@ const Responses = ({
 
   const confirmDelete = (verifyEmail: string) => {
     if (user?.email === verifyEmail) {
-      notifications.show({
+      toast.loading(translations("Hold on, response is getting deleted"), {
         id: "load-data",
-        loading: true,
-        title: translations("Deleting Response"),
-        message: translations("Hold on, response is getting deleted"),
-        autoClose: false,
-        withCloseButton: false,
       });
       setIsDeleting(true);
       deleteResponse.mutate(selectedRowId);
     } else {
-      notifications.show({
+      toast.error(translations("Incorrect email"), {
         id: "load-data",
-        color: "red",
-        title: translations("Error"),
-        message: translations("Incorrect email"),
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
     }
   };
@@ -256,10 +239,11 @@ const Responses = ({
         {
           onSuccess: () => {
             setIsSyncing(false);
-            showSuccessToast(
+            toast.success(
               translations("Response synced to Google sheet successfully"),
-              "success",
-              <IconCheck />,
+              {
+                id: "success",
+              },
             );
           },
           onError: (error: any) => {
@@ -273,7 +257,9 @@ const Responses = ({
               );
               redirectModalOpen();
             } else {
-              showErrorToast(translations("Error in syncing response"));
+              toast.error(
+                error?.message || translations("Error in syncing response"),
+              );
             }
           },
         },

@@ -40,9 +40,10 @@ export const useCreateEventTriggerMutation = (onSuccess?: () => void) => {
       });
       onSuccess?.();
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(
-        error?.response?.data?.message ||
+        error?.message ||
+          error?.message ||
           error.message ||
           "Error creating event trigger",
       );
@@ -66,9 +67,10 @@ export const useUpdateEventTriggerMutation = (
       queryClient.invalidateQueries({ queryKey: ["event-trigger", id] });
       onSuccess?.();
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(
-        error?.response?.data?.message ||
+        error?.message ||
+          error?.message ||
           error.message ||
           "Error updating event trigger",
       );
@@ -90,9 +92,10 @@ export const useDeleteEventTriggerMutation = (
       });
       onSuccess?.();
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(
-        error?.response?.data?.message ||
+        error?.message ||
+          error?.message ||
           error.message ||
           "Error deleting event trigger",
       );

@@ -12,6 +12,7 @@ import {
   IconShoppingBag,
   IconX,
 } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import {
   useSyncCatalogProducts,
@@ -26,11 +27,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "@/utils/notifications";
 
 import { AddCatalogProductModal } from "./AddCatalogProduct";
 import ProductItems from "./ProductItems";
@@ -41,62 +37,43 @@ const CatalogProducts = ({ catalogData }) => {
   const syncFromShopifyMut = useSyncShopifyWithCatalog(catalogData?.catalogId);
 
   function handleSyncFromMeta(data = null) {
-    showLoadingToast(
-      "Syncing products from Meta...",
-      "sync-catalog-products-meta",
-      true,
-      "",
-      "",
-      false,
-    );
+    toast.loading("Syncing products from Meta...", {
+      id: "sync-catalog-products-meta",
+    });
     syncFromMetaMut.mutate(data, {
       onSuccess: (res: any) => {
-        showSuccessToast(
-          "Products synced from Meta",
-          "sync-catalog-products-meta",
-          <IconCheck />,
-          true,
-        );
+        toast.success("Products synced from Meta", {
+          id: "sync-catalog-products-meta",
+        });
         if (res?.hasNextPage) {
           handleSyncFromMeta({ limit: 50, next: res.next });
         }
       },
-      onError: () => {
-        showErrorToast(
-          "Sync from Meta failed",
-          "sync-catalog-products-meta",
-          <IconX />,
-          true,
-        );
+      onError: (error) => {
+        toast.error(error?.message || "Sync from Meta failed", {
+          id: "sync-catalog-products-meta",
+        });
       },
     });
   }
 
   function handleSyncFromShopify() {
-    showLoadingToast(
-      "Syncing products from Shopify...",
-      "sync-catalog-products-shopify",
-      true,
-      "",
-      "",
-      false,
-    );
+    toast.loading("Syncing products from Shopify...", {
+      id: "sync-catalog-products-shopify",
+    });
     syncFromShopifyMut.mutate(undefined, {
       onSuccess: (data) => {
-        showSuccessToast(
+        toast.success(
           `Sync complete — ${data.updated} updated, ${data.unchanged} unchanged`,
-          "sync-catalog-products-shopify",
-          <IconCheck />,
-          true,
+          {
+            id: "sync-catalog-products-shopify",
+          },
         );
       },
-      onError: () => {
-        showErrorToast(
-          "Shopify sync failed",
-          "sync-catalog-products-shopify",
-          <IconX />,
-          true,
-        );
+      onError: (error) => {
+        toast.error(error?.message || "Shopify sync failed", {
+          id: "sync-catalog-products-shopify",
+        });
       },
     });
   }

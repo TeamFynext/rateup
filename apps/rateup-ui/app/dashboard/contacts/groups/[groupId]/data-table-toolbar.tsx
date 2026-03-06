@@ -48,8 +48,8 @@ export function DataTableToolbar<TData, TValue>({
           toast.success("contact removed successfully");
           table.setRowSelection({});
         },
-        onError: () => {
-          toast.error("Error removing contacts");
+        onError: (error) => {
+          toast.error(error?.message || "Error removing contacts");
         },
       },
     );

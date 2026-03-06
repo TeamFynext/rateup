@@ -91,8 +91,8 @@ const CreateOrEditQuickReply = ({
           onSettled: () => {
             form.reset();
           },
-          onError: () => {
-            toast.error("Updation failed");
+          onError: (error) => {
+            toast.error(error?.message || "Updation failed");
           },
         },
       );
@@ -111,8 +111,8 @@ const CreateOrEditQuickReply = ({
         onSettled: () => {
           form.reset();
         },
-        onError: () => {
-          toast.error("Error in adding quick reply");
+        onError: (error) => {
+          toast.error(error?.message || "Error in adding quick reply");
         },
       },
     );

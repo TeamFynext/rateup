@@ -115,7 +115,7 @@ export function PremiumAvatar({
           flex items-center justify-center
           relative
           overflow-hidden
-          ${variant === "blue" ? "bg-gradient-to-br from-[#2E5BFF] to-[#1E4FDF]" : "bg-gradient-to-br from-[#60A5FA] to-[#3B82F6]"}
+          ${variant === "blue" ? "bg-linear-to-br from-[#2E5BFF] to-[#1E4FDF]" : "bg-linear-to-br from-[#60A5FA] to-[#3B82F6]"}
           ${sizes.ring} ring-white
           shadow-lg shadow-blue-500/30
           transition-all duration-300 ease-out
@@ -175,7 +175,7 @@ export function PremiumAvatar({
                 block
                 w-full h-full
                 rounded-full 
-                ${isOnline ? "bg-gradient-to-br from-green-400 to-green-600" : "bg-gradient-to-br from-gray-400 to-gray-500"} 
+                ${isOnline ? "bg-linear-to-br from-green-400 to-green-600" : "bg-linear-to-br from-gray-400 to-gray-500"} 
                 ring-2 ring-white
                 shadow-lg
                 ${isOnline ? "shadow-green-500/40" : "shadow-gray-400/30"}
@@ -186,7 +186,7 @@ export function PremiumAvatar({
             />
 
             {/* Inner Highlight */}
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/40 to-transparent opacity-60" />
+            <div className="absolute inset-0 rounded-full bg-linear-to-br from-white/40 to-transparent opacity-60" />
 
             {/* Pulse Ring for Online */}
             {isOnline && (
@@ -205,7 +205,7 @@ export function PremiumAvatar({
           className={`
             absolute ${sizes.source} z-20
             rounded-full
-            bg-gradient-to-br from-[#25D366] to-[#1DA851]
+            bg-linear-to-br from-[#25D366] to-[#1DA851]
             ring-2 ring-white
             flex items-center justify-center
             shadow-lg shadow-green-500/30
@@ -215,7 +215,7 @@ export function PremiumAvatar({
           `}
         >
           {/* Inner Highlight */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 to-transparent opacity-60" />
+          <div className="absolute inset-0 rounded-full bg-linear-to-br from-white/30 to-transparent opacity-60" />
 
           <WhatsAppIcon
             className={`
@@ -239,7 +239,7 @@ export function PremiumAvatar({
           className={`
             absolute ${sizes.source} z-20
             rounded-full
-            bg-gradient-to-br from-[#E4405F] via-[#F77737] to-[#FCAF45]
+            bg-linear-to-br from-[#E4405F] via-[#F77737] to-[#FCAF45]
             ring-2 ring-white
             flex items-center justify-center
             shadow-lg shadow-pink-500/30
@@ -249,7 +249,7 @@ export function PremiumAvatar({
           `}
         >
           {/* Inner Highlight */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 to-transparent opacity-60" />
+          <div className="absolute inset-0 rounded-full bg-linear-to-br from-white/30 to-transparent opacity-60" />
 
           <Instagram
             className={`

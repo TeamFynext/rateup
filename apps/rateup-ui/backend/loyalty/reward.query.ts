@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { getErrorMessage } from "../../utils";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createLoyaltyReward,
   deleteLoyaltyReward,
@@ -50,10 +49,8 @@ export const useCreateLoyaltyRewardMutation = (
       queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      toast.error(
-        getErrorMessage(error?.response, "Error creating loyalty reward!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error creating loyalty reward!");
       onError?.();
     },
   });
@@ -78,10 +75,8 @@ export const useUpdateLoyaltyRewardMutation = (
       queryClient.invalidateQueries({ queryKey: ["loyalty-reward", rewardId] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      toast.error(
-        getErrorMessage(error?.response, "Error updating loyalty reward!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error updating loyalty reward!");
       onError?.();
     },
   });
@@ -99,22 +94,16 @@ export const useDeleteLoyaltyRewardMutation = (
   return useMutation({
     mutationFn: (rewardId: string) => deleteLoyaltyReward(rewardId),
     onSuccess: () => {
-      showSuccessToast(
-        "Loyalty reward deleted successfully",
-        "loyalty-reward-delete",
-        null,
-        true,
-      );
+      toast.success("Loyalty reward deleted successfully", {
+        id: "loyalty-reward-delete",
+      });
       queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error deleting loyalty reward!"),
-        "loyalty-reward-delete",
-        null,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting loyalty reward!", {
+        id: "loyalty-reward-delete",
+      });
       onError?.();
     },
   });
@@ -138,17 +127,15 @@ export const useToggleLoyaltyRewardStatusMutation = (
       status: LoyaltyRewardStatus;
     }) => updateLoyaltyReward(rewardId, { status }),
     onSuccess: (_, variables) => {
-      showSuccessToast("Reward status updated successfully");
+      toast.success("Reward status updated successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
       queryClient.invalidateQueries({
         queryKey: ["loyalty-reward", variables.rewardId],
       });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error updating reward status!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error updating reward status!");
       onError?.();
     },
   });

@@ -1,10 +1,10 @@
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { ContactGroupType } from "@/types/enums";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
 
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   addExistingContactsToGroup,
   addExistingContactsToMultipleGroups,
@@ -73,19 +73,13 @@ export const useCreateContactGroupMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
       });
-      // showSuccessToast(
-      //   "Contact Group created successfully.",
-      //   "contact-group-create",
-      //   <IconCheck />,
-      //   true,
-      // );
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error creating group: ${error?.response?.data?.error}`,
-        "contact-group-create",
-        <IconX />,
-        true,
+    onError: (error) => {
+      toast.error(
+        error?.message || `${error?.message || "Error creating group"}`,
+        {
+          id: "contact-group-create",
+        },
       );
     },
   });
@@ -105,18 +99,14 @@ export const useAddNewContactMutation = (groupId: string) => {
           exact: false,
           refetchType: "all",
         }),
-        showSuccessToast(
-          "Added new member successfully.",
-          "contact-group-add-member",
-          <IconCheck />,
-        ));
+        toast.success("Added new member successfully.", {
+          id: "contact-group-add-member",
+        }));
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error adding member: ${error?.response?.data?.error}`,
-        "contact-group-add-member",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error adding member`, {
+        id: "contact-group-add-member",
+      });
     },
   });
 };
@@ -130,18 +120,14 @@ export const useAddNewContactFromCSVMutation = (groupId: string) => {
         queryKey: ["contactGroupById", groupId],
       }),
         queryClient.invalidateQueries({ queryKey: ["contacts"] }),
-        showSuccessToast(
-          "Added new member successfully.",
-          "contact-group-add-member",
-          <IconCheck />,
-        ));
+        toast.success("Added new member successfully.", {
+          id: "contact-group-add-member",
+        }));
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error adding member: ${error?.response?.data?.error}`,
-        "contact-group-add-member",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error adding member`, {
+        id: "contact-group-add-member",
+      });
     },
   });
 };
@@ -159,19 +145,14 @@ export const useDeleteGroupMutation = () => {
         exact: false,
         refetchType: "all",
       });
-      showSuccessToast(
-        "Contact Group Deleted successfully",
-        "contact-group-delete",
-        <IconCheck />,
-      );
+      toast.success("Contact Group Deleted successfully", {
+        id: "contact-group-delete",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error deleting contact group: 
-        ${error?.response?.data?.error}`,
-        "contact-group-delete",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error deleting contact group`, {
+        id: "contact-group-delete",
+      });
     },
   });
 };
@@ -194,10 +175,10 @@ export const useEditContactGroupMutation = (groupId: string) => {
       //   <IconCheck />,
       // );
     },
-    onError: (error: any) => {
+    onError: (error) => {
       // showErrorToast(
       //   `Error updating contact group:
-      //   ${error?.response?.data?.error}`,
+      //   ${error?.message}`,
       //   "contact-group-update",
       //   <IconX />,
       // );
@@ -224,18 +205,14 @@ export const useAddExistingContactMutation = (groupId: string) => {
         exact: false,
         refetchType: "all",
       });
-      showSuccessToast(
-        "Members added to  group successfully.",
-        "contact-group-add-existing",
-        <IconCheck />,
-      );
+      toast.success("Members added to  group successfully.", {
+        id: "contact-group-add-existing",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error adding members to group: ${error?.response?.data?.error}`,
-        "contact-group-add-existing",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error adding members to group`, {
+        id: "contact-group-add-existing",
+      });
     },
   });
 };
@@ -245,12 +222,9 @@ export const useRemoveContactsFromGroup = (groupId) => {
   return useMutation({
     mutationFn: removeContactsFromGroup,
     onSuccess() {
-      showSuccessToast(
-        "Members removed from  group successfully.",
-        "contact-group-remove",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Members removed from  group successfully.", {
+        id: "contact-group-remove",
+      });
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       });
@@ -266,13 +240,10 @@ export const useRemoveContactsFromGroup = (groupId) => {
         refetchType: "all",
       });
     },
-    onError(error: any) {
-      showErrorToast(
-        `Error removing members from group: ${error?.response?.data?.error}`,
-        "contact-group-remove",
-        <IconX />,
-        true,
-      );
+    onError(error) {
+      toast.error(error?.message || `Error removing members from group`, {
+        id: "contact-group-remove",
+      });
     },
   });
 };
@@ -293,20 +264,18 @@ export const useAddExistingContactToMultipleGroupsMutation = (
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
       });
-      showSuccessToast(
-        "Contacts added to groups successfully.",
-        "contact-group-add-existing",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Contacts added to groups successfully.", {
+        id: "contact-group-add-existing",
+      });
       onSuccess();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error adding contacts to groups: ${error?.response?.data?.error}`,
-        "contact-group-add-existing",
-        <IconX />,
-        true,
+    onError: (error) => {
+      toast.error(
+        error?.message ||
+          `${error?.message || "Error adding contacts to groups"}`,
+        {
+          id: "contact-group-add-existing",
+        },
       );
     },
   });
@@ -320,21 +289,15 @@ export const useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
       });
-      showSuccessToast(
-        "Contact Groups Deleted successfully",
-        "contact-group-delete",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Contact Groups Deleted successfully", {
+        id: "contact-group-delete",
+      });
       onSucess();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error deleting contact groups: ${error?.response?.data?.error}`,
-        "contact-group-delete",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error deleting contact groups`, {
+        id: "contact-group-delete",
+      });
     },
   });
 };

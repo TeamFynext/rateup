@@ -33,6 +33,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { parseStringWithVariables } from "@/app/dashboard/whatsapp/templates/[templateId]/page";
@@ -54,7 +55,6 @@ import {
   WHATSAPP_BUTTON_TYPE,
   WHATSAPP_TEMPLATE_BROADCAST_TYPE,
 } from "@/utils/constants";
-import { showErrorToast } from "@/utils/notifications";
 
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector";
 import { QuickReplyButton } from "../../MessageComponents";
@@ -73,7 +73,7 @@ const CardCarousel = ({
 }) => {
   function handleMediaCarousel() {
     if (form.values.mediaCarousel.length === 10) {
-      showErrorToast("Only 10 cards are allowed");
+      toast.error("Only 10 cards are allowed");
       return;
     }
     const firstCard = form.values.mediaCarousel[0];
@@ -88,7 +88,7 @@ const CardCarousel = ({
 
   function handleProductCarousel() {
     if (form.values.productCarousel.length === 10) {
-      showErrorToast("Only 10 cards are allowed");
+      toast.error("Only 10 cards are allowed");
       return;
     }
     const firstCard = form.values.productCarousel[0];
@@ -159,13 +159,13 @@ const CardCarousel = ({
   function handleButtonSelect(btn, index) {
     let newObject = { type: btn, text: "" };
     if (btn === WHATSAPP_BUTTON_TYPE.WEBSURVEY) {
-      (newObject.type = "URL"), (newObject["example"] = []);
+      ((newObject.type = "URL"), (newObject["example"] = []));
     }
     const existing = form.values.mediaCarousel[index].buttons.find(
       (b) => b.type === newObject.type,
     );
     if (existing) {
-      showErrorToast(`Only one button allowed for this type`);
+      toast.error(`Only one button allowed for this type`);
       return;
     }
     form.insertListItem(`mediaCarousel.${index}.buttons`, newObject);

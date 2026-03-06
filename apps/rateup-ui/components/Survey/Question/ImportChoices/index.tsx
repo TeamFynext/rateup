@@ -15,8 +15,8 @@ import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { useTranslations } from "next-intl";
 import readXlsxFile from "read-excel-file/browser";
+import { toast } from "sonner";
 
-import { showErrorToast } from "../../../../utils/notifications";
 import styles from "./ImportChoices.module.css";
 
 const cx = classNames.bind(styles);
@@ -51,7 +51,7 @@ function ImportChoices({
         const areAllSurveyLangsColsPresent =
           areAllSurveyLanguagesColumnsPresent(headerRow);
         if (!areAllSurveyLangsColsPresent) {
-          showErrorToast(
+          toast.error(
             translations(
               "Please add all survey languages columns in excel file",
             ),

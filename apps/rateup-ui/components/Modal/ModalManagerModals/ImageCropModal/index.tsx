@@ -4,11 +4,8 @@ import { useCallback, useRef, useState } from "react";
 
 import { Box, Button, Group, LoadingOverlay, NumberInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import Cropper, { ReactCropperElement } from "react-cropper";
-
-import "cropperjs/dist/cropper.css";
-
 import { useTranslations } from "next-intl";
+import Cropper, { ReactCropperElement } from "react-cropper";
 
 import { mimeTypesForImage } from "../../../../utils/constants";
 import styles from "./ImageCropModal.module.css";

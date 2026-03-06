@@ -14,9 +14,9 @@ import {
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconAlertOctagon, IconEye } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import HTMLEditor from "@/components/RichTextEditor/HTMLEditor";
 
@@ -36,7 +36,6 @@ import {
 } from "../../../types/enums";
 import { SAVE_HOTKEY } from "../../../utils/constants";
 import { deleteUploadedFiles } from "../../../utils/file-upload/upload";
-import { showErrorToast } from "../../../utils/notifications";
 import {
   getInitialQuestionValues,
   validateAllLanguagesArePopulated,
@@ -151,13 +150,13 @@ export function QuestionDetailedView({
         !form.values.title[selectedLanguage] ||
         form.values.title[selectedLanguage] == ""
       ) {
-        showErrorToast(translations("Question title is missing"));
+        toast.error(translations("Question title is missing"));
         setIsSaved(false);
         return "error";
       } else {
         if (getIncompleteLanguages().length > 0) {
           setSelectedLanguage(getIncompleteLanguages()[0]);
-          showErrorToast(
+          toast.error(
             translations(
               "Please Enter heading and choices for all languages before saving",
             ),
@@ -184,14 +183,12 @@ export function QuestionDetailedView({
           });
         } else {
           // Updating existing question
-          notifications.show({
-            id: "load-data",
-            loading: true,
-            title: translations("updating question"),
-            message: translations("Hold on, your changes are getting updated"),
-            autoClose: false,
-            withCloseButton: false,
-          });
+          toast.loading(
+            translations("Hold on, your changes are getting updated"),
+            {
+              id: "load-data",
+            },
+          );
           questionUpdateMutation.mutate({
             qId: question.id,
             data: form.getValues(),

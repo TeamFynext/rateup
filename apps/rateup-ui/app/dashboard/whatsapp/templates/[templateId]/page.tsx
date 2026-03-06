@@ -28,6 +28,7 @@ import {
 } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import {
@@ -87,7 +88,6 @@ import {
   WHATSAPP_TEMPLATE_LANGUAGE,
 } from "@/utils/constants";
 import { uploadFile } from "@/utils/file-upload/upload";
-import { showErrorToast, showWarnToast } from "@/utils/notifications";
 import { hasFeature } from "@/utils/subscription/subscription";
 import { parseTemplate } from "@/utils/whatsapp/templates";
 
@@ -303,7 +303,7 @@ export default function WhatsappTemplateById() {
   async function handleSubmit(saveAsDraft: boolean = false) {
     const { hasErrors, errors } = form.validate();
     if (hasErrors) {
-      showErrorToast(
+      toast.error(
         (Object.values(errors)?.[0] as string) ?? "Error in Template",
       );
       return;
@@ -312,7 +312,7 @@ export default function WhatsappTemplateById() {
       const { hasErrors: configHasErrors, errors: configErrors } =
         configForm.validate();
       if (configHasErrors) {
-        showErrorToast(
+        toast.error(
           (Object.values(configErrors)?.[0] as string) ?? "Error in Template",
         );
         return;
@@ -322,14 +322,14 @@ export default function WhatsappTemplateById() {
 
     if (dynamicVariableArray?.length > 0) {
       if (!isArrayInCorrectOrder(dynamicVariableArray)) {
-        showErrorToast(
+        toast.error(
           translations("Dynamic variables name should is numberic order"),
         );
         return;
       } else if (
         form.values?.example?.length !== dynamicVariableArray?.length
       ) {
-        showErrorToast(
+        toast.error(
           translations("Dynamic variables example values should be given"),
         );
         return;
@@ -337,9 +337,7 @@ export default function WhatsappTemplateById() {
     }
     const values = form.values;
     if (values?.buttons?.length > 12) {
-      showErrorToast(
-        translations("Max number of button in buttons should be 12"),
-      );
+      toast.error(translations("Max number of button in buttons should be 12"));
       return;
     }
 
@@ -353,7 +351,7 @@ export default function WhatsappTemplateById() {
       });
 
       if (isCustomButtonInMiddle) {
-        showErrorToast(
+        toast.error(
           translations(
             "Custom buttons must be placed either at the beginning or at the end of the button list.",
           ),
@@ -366,12 +364,12 @@ export default function WhatsappTemplateById() {
         const dynamicVariableArr = parseStringWithVariables(card.body);
         if (dynamicVariableArr.length > 0) {
           if (!isArrayInCorrectOrder(dynamicVariableArr)) {
-            showErrorToast(
+            toast.error(
               translations("Dynamic variables name should is numberic order"),
             );
             return;
           } else if (card.example?.length !== dynamicVariableArr?.length) {
-            showErrorToast(
+            toast.error(
               translations("Dynamic variables example values should be given"),
             );
             return;
@@ -451,7 +449,7 @@ export default function WhatsappTemplateById() {
         : values;
       if (editingItem?.data?.id) {
         if (editingItem.data.status === WaTemplateStatus.PENDING) {
-          showWarnToast(
+          toast.warning(
             translations(
               "Cannot edit pending template Please wait for approval",
             ),
@@ -474,7 +472,7 @@ export default function WhatsappTemplateById() {
     } catch (error) {
       if (saveAsDraft) setIsSubmittingDraft(false);
       else setIsSubmitting(false);
-      showErrorToast(
+      toast.error(
         typeof error === "string"
           ? error
           : typeof error.message === "string"
@@ -542,7 +540,7 @@ export default function WhatsappTemplateById() {
         (data) => data.type === (e as WHATSAPP_BUTTON_TYPE),
       );
       if (btn?.length > 0) {
-        showErrorToast(`Only one button allowed for this type`);
+        toast.error(`Only one button allowed for this type`);
         return;
       }
     }
@@ -552,7 +550,7 @@ export default function WhatsappTemplateById() {
         (b) => b.type !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY,
       );
       if (otherBtns) {
-        showErrorToast(
+        toast.error(
           `Only quick reply buttons are allowed along with checkout button. Remove others to add checkout button`,
         );
         return;
@@ -707,12 +705,10 @@ export default function WhatsappTemplateById() {
                       : "none"
                   }
                 >
-                  {getErrorMessage(
-                    updateTemplateMutation.error?.response ||
-                      saveTemplateAsDraftMutation?.error?.response ||
-                      createTemplateMutation?.error?.response,
-                    "Error Saving Changes",
-                  )}
+                  {updateTemplateMutation.error?.message ||
+                    saveTemplateAsDraftMutation?.error?.message ||
+                    createTemplateMutation?.error?.message ||
+                    "Error Saving Changes"}
                 </Alert>
                 <Group justify="space-between" pos={"relative"}>
                   <WaTemplateStatusBadge status={form.values.status} />

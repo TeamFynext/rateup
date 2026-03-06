@@ -4,10 +4,10 @@ import React, { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Center, Stack, Text } from "@mantine/core";
+import { toast } from "sonner";
 
 import { useUpdateUserAccessToken } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import { showErrorToast } from "@/utils/notifications";
 
 export default function Page() {
   return (
@@ -56,7 +56,7 @@ function FbLoginRedirect({
       );
     }
     if (error) {
-      showErrorToast("Failed " + error);
+      toast.error("Failed " + error);
       localStorage.removeItem("waSettingsId");
       localStorage.removeItem("automationId");
       router.push(`/dashboard/whatsapp/flowbots/${automationId}`);

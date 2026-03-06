@@ -1,4 +1,5 @@
 import Script from "next/script";
+
 import { FB_PIXEL_ID } from "../../utils/fbpixel";
 
 const FacebookPixel = () => {

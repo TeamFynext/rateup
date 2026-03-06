@@ -20,7 +20,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
 import {
   IconBrandFacebookFilled,
   IconCheck,
@@ -35,6 +34,7 @@ import {
 import axios from "axios";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { useImmer } from "use-immer";
 
@@ -89,7 +89,6 @@ import {
   getFileUrlFromKey,
   uploadFile,
 } from "@/utils/file-upload/upload";
-import { showErrorToast } from "@/utils/notifications";
 import { hasFeature } from "@/utils/subscription/subscription";
 
 import { AssignInboxContent } from "../../inbox/chatdisplay/chatdisplayHeader";
@@ -167,11 +166,7 @@ export default function NodeEditor({
     // Validate the node data before closing
     const validationResult = validateNodeData({ ...node, data: nodeData });
     if (!validationResult.valid) {
-      notifications.show({
-        title: "Validation Error",
-        message: validationResult.message,
-        color: "red",
-      });
+      toast.error(validationResult.message);
       return;
     }
     onClose();
@@ -604,9 +599,11 @@ const MediaNodeEditor: React.FC<
     try {
       if (!file) return;
       if (file.size > getFileSizeLimit()) {
-        showErrorToast(
+        toast.error(
           `size warning: Max file size is ${getFileSizeLimitText()}`,
-          "file-size",
+          {
+            id: "file-size",
+          },
         );
         return setMediaError(`size warning: Max ${getFileSizeLimitText()}`);
       }
@@ -615,10 +612,12 @@ const MediaNodeEditor: React.FC<
       setMedia(base64String);
       setFile(file);
     } catch (error) {
-      showErrorToast(
+      toast.error(
         translations("Error converting file to Base64:") +
           JSON.stringify(error),
-        "file-converting",
+        {
+          id: "file-converting",
+        },
       );
     }
   };
@@ -634,14 +633,14 @@ const MediaNodeEditor: React.FC<
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      showErrorToast(
+      toast.error(
         typeof error === "string"
           ? error
           : translations("Error uploading file to server:") +
               JSON.stringify(error),
-        "upload-file",
-        null,
-        true,
+        {
+          id: "upload-file",
+        },
       );
     }
   };
@@ -2349,11 +2348,11 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
 
   function subscribeTolead() {
     if (!typedData?.fbPageId) {
-      showErrorToast("Select a page");
+      toast.error("Select a page");
       return;
     }
     if (!typedData?.pageAccessToken) {
-      showErrorToast("Failed! Try deselecting and selecting page");
+      toast.error("Failed! Try deselecting and selecting page");
       return;
     }
     subscribeFieldMut.mutate({

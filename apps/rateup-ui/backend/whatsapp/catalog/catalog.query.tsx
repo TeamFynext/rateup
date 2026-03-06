@@ -1,7 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
-import { showErrorToastFromError } from "@/utils/query";
+import { toast } from "sonner";
 
 import {
   disconnectCatalogFromWaba,
@@ -18,10 +16,10 @@ export const useSyncCatalogs = () => {
     mutationFn: syncWaCatalog,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
-      showSuccessToast("connected");
+      toast.success("connected");
     },
-    onError: (e) => {
-      showErrorToastFromError(e, "Connection failed");
+    onError: (error) => {
+      toast.error(error?.message || "Connection failed");
     },
   });
 };
@@ -31,13 +29,13 @@ export const useUpateCatalog = (catalogId) => {
   return useMutation({
     mutationFn: (data: any) => updateWaCatalog(catalogId, data),
     onSuccess: () => {
-      showSuccessToast("updated");
+      toast.success("updated");
       qc.invalidateQueries({ queryKey: ["WaCatalog", catalogId] });
       qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
       qc.invalidateQueries({ queryKey: ["waSettings"] });
     },
-    onError: (e) => {
-      showErrorToastFromError(e, "Connection failed");
+    onError: (error) => {
+      toast.error(error?.message || "Connection failed");
     },
   });
 };
@@ -50,10 +48,10 @@ export const useDisconnectCatalogFromWa = (catalogId) => {
       qc.invalidateQueries({ queryKey: ["WaCatalog", catalogId] });
       qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
       qc.invalidateQueries({ queryKey: ["waSettings"] });
-      showSuccessToast("disconnected");
+      toast.success("disconnected");
     },
-    onError: (e) => {
-      showErrorToastFromError(e, "Unable to disconnect");
+    onError: (error) => {
+      toast.error(error?.message || "Unable to disconnect");
     },
   });
 };

@@ -27,7 +27,7 @@ const TicketFeatureSection = () => {
             >
               {/* Floating Icon */}
               <div className="absolute -top-6 left-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#e6f0ff] to-[#d0e4ff] border border-white/40 shadow-lg flex items-center justify-center text-[#0041a8]">
+                <div className="w-16 h-16 rounded-full bg-linear-to-br from-[#e6f0ff] to-[#d0e4ff] border border-white/40 shadow-lg flex items-center justify-center text-[#0041a8]">
                   <step.icon className="w-6 h-6" />
                 </div>
               </div>
@@ -47,7 +47,7 @@ const TicketFeatureSection = () => {
       </div>
 
       {/* Background Gradient Orbs */}
-      <div className="absolute -top-24 -left-24 w-96 h-96 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-3xl opacity-30 z-0" />
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-linear-to-br from-white/10 to-transparent rounded-full blur-3xl opacity-30 z-0" />
       <div className="absolute bottom-0 -right-20 w-72 h-72 bg-gradient-to-tr from-[#3b82f6]/30 to-transparent rounded-full blur-2xl opacity-20 z-0" />
     </section>
   );

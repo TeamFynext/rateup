@@ -1,5 +1,7 @@
 import React from "react";
+
 import { Box, Flex, Stack, Text } from "@mantine/core";
+
 import PlanCard from "../Card/PlanCard";
 import { PlanCardWidth } from "../Utils/constants";
 

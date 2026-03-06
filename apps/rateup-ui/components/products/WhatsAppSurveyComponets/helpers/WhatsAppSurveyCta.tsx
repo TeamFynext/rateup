@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 
 export const WhatsAppSurveyCta = () => {
   return (
-    <section className="py-24 px-4 md:px-6 bg-gradient-to-br from-[#e0f2ffca] via-[#e0f2ffa5] to-[#cce4ff9c]">
+    <section className="py-24 px-4 md:px-6 bg-linear-to-br from-[#e0f2ffca] via-[#e0f2ffa5] to-[#cce4ff9c]">
       <div className="max-w-6xl mx-auto relative">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -17,7 +17,7 @@ export const WhatsAppSurveyCta = () => {
           transition={{ duration: 0.5 }}
           viewport={{ once: true, margin: "-100px" }}
           className="relative z-10 p-8 md:p-12 lg:p-16 rounded-3xl 
-          bg-gradient-to-br from-[#e0fff9ca] via-[#e0fff1a5] to-[#ccffef9c] text-center"
+          bg-linear-to-br from-[#e0fff9ca] via-[#e0fff1a5] to-[#ccffef9c] text-center"
         >
           <div className="max-w-3xl mx-auto space-y-6">
             <h2 className="text-3xl md:text-4xl font-semibold text-[#009987] leading-tight">

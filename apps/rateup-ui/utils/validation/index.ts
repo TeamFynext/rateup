@@ -1,4 +1,5 @@
 import { QuestionType } from "../../types/enums";
+
 export function validateLength(input, min, max) {
   if (input.toString().length < min || input.toString().length > max) {
     return false;

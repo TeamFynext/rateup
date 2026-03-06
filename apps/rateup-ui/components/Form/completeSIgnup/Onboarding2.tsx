@@ -51,7 +51,7 @@ export default function OnboardingStep2({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
-          className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30 mx-auto mb-1"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-linear-to-br from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30 mx-auto mb-1"
         >
           <Building className="w-5 h-5 text-white" />
         </motion.div>

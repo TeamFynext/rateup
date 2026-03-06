@@ -1,5 +1,7 @@
-import { Group, Pagination } from "@mantine/core";
 import React from "react";
+
+import { Group, Pagination } from "@mantine/core";
+
 import { PAGE_SIZE } from "../../utils/constants";
 import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
 

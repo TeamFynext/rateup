@@ -1,5 +1,7 @@
 import { Badge, Card, Group, Radio, Text } from "@mantine/core";
+
 import classes from "./styles.module.css";
+
 export default function WaInboxFlowSelectCard(props: DbFlow) {
   return (
     <Card className={classes.wrapper}>

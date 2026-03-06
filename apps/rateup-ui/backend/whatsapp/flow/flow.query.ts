@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   cloneAndDeprecateFlows,
   cloneFlows,
@@ -88,10 +87,10 @@ export const useImportFlowsMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["flow"] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      showSuccessToast("Flows Imported Successfully");
+      toast.success("Flows Imported Successfully");
     },
-    onError: () => {
-      showErrorToast("Error importing flows");
+    onError: (error) => {
+      toast.error(error?.message || "Error importing flows");
     },
   });
 };
@@ -103,15 +102,14 @@ export const useCloneAndDeprecateFlowsMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["flow"] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      showSuccessToast(
-        "Copy & Renew Flow Successfully",
-        "copy-renew",
-        "",
-        true,
-      );
+      toast.success("Copy & Renew Flow Successfully", {
+        id: "copy-renew",
+      });
     },
-    onError: () => {
-      showErrorToast("Error Copy & Renew Flow", "copy-renew", "", true);
+    onError: (error) => {
+      toast.error(error?.message || "Error Copy & Renew Flow", {
+        id: "copy-renew",
+      });
     },
   });
 };
@@ -125,10 +123,14 @@ export const useCloneFlowsMutation = (onSucess: () => void) => {
       onSucess();
       queryClient.invalidateQueries({ queryKey: ["flow"] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
-      showSuccessToast("Clone Flow Successfully", "copy", "", true);
+      toast.success("Clone Flow Successfully", {
+        id: "copy",
+      });
     },
-    onError: () => {
-      showErrorToast("Error Clone Flow", "copy", "", true);
+    onError: (error) => {
+      toast.error(error?.message || "Error Clone Flow", {
+        id: "copy",
+      });
     },
   });
 };
@@ -140,10 +142,10 @@ export const useCreateFlowMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["flow"] });
       qc.invalidateQueries({ queryKey: ["surveys"] });
-      showSuccessToast("Flow Created Successfully");
+      toast.success("Flow Created Successfully");
     },
-    onError: (error: any) => {
-      showErrorToast(error?.response?.data?.message ?? "Error creating flows");
+    onError: (error) => {
+      toast.error(error?.message || (error?.message ?? "Error creating flows"));
     },
   });
 };
@@ -155,12 +157,14 @@ export const useUpdateFlowMutation = () => {
       data: Partial<Omit<DbFlow, "dbFlowId">>;
     }) => updateFlow(data.dbFlowId, data.data),
     onSuccess: () => {
-      showSuccessToast("Saved Changes..", "flow-update", "", true);
+      toast.success("Saved Changes..", {
+        id: "flow-update",
+      });
       qc.invalidateQueries({ queryKey: ["flow"] });
       qc.invalidateQueries({ queryKey: ["surveys"] });
     },
-    onError: (e) => {
-      showErrorToast("Error saving flows");
+    onError: (error) => {
+      toast.error(error?.message || "Error saving flows");
     },
   });
 };
@@ -172,10 +176,10 @@ export const useDeleteFlowMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["flow"] });
       qc.invalidateQueries({ queryKey: ["surveys"] });
-      showSuccessToast("Flow Deleted Successfully");
+      toast.success("Flow Deleted Successfully");
     },
-    onError: () => {
-      showErrorToast("Error deleting flows");
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting flows");
     },
   });
 };
@@ -186,10 +190,10 @@ export const usePublishFlowMutation = () => {
     mutationFn: publishFlow,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["flow"] });
-      showSuccessToast("Flow Published Successfully");
+      toast.success("Flow Published Successfully");
     },
-    onError: () => {
-      showErrorToast("Error publishing flows");
+    onError: (error) => {
+      toast.error(error?.message || "Error publishing flows");
     },
   });
 };
@@ -200,10 +204,10 @@ export const useDeprecateFlowMutation = () => {
     mutationFn: deprecateFlow,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["flow"] });
-      showSuccessToast("Flow Deprecated Successfully");
+      toast.success("Flow Deprecated Successfully");
     },
-    onError: () => {
-      showErrorToast("Error deprecating flows");
+    onError: (error) => {
+      toast.error(error?.message || "Error deprecating flows");
     },
   });
 };
@@ -223,10 +227,10 @@ export const useSendFlowToUser = (phone: string) => {
       whatsappSettingsPhoneId: string;
     }) => sendFlow(dbFlowId, phone, teamId, flowId, whatsappSettingsPhoneId),
     onSuccess: () => {
-      showSuccessToast("Flow Sent Successfully");
+      toast.success("Flow Sent Successfully");
     },
-    onError: () => {
-      showErrorToast("Error sending flow");
+    onError: (error) => {
+      toast.error(error?.message || "Error sending flow");
     },
   });
 };
@@ -239,12 +243,14 @@ export const useUpdateFlowMetaDataMutation = () => {
       data: { name: string; anonymous: boolean };
     }) => updateFlowMetaData(data.dbFlowId, data.data),
     onSuccess: () => {
-      showSuccessToast("Saved Changes..", "flow-meta-data-update", "", true);
+      toast.success("Saved Changes..", {
+        id: "flow-meta-data-update",
+      });
       qc.invalidateQueries({ queryKey: ["flow"] });
       qc.invalidateQueries({ queryKey: ["surveys"] });
     },
-    onError: (e) => {
-      showErrorToast("Error saving flows");
+    onError: (error) => {
+      toast.error(error?.message || "Error saving flows");
     },
   });
 };

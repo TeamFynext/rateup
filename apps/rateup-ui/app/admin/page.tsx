@@ -89,7 +89,7 @@ export default function Page() {
             description="Manage all organizations and their settings"
             icon={Building2}
             onClick={() => router.push("/admin/orgs")}
-            gradient="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20"
+            gradient="bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20"
           />
 
           <NavigationCard
@@ -97,7 +97,7 @@ export default function Page() {
             description="View user analytics and manage user accounts"
             icon={BarChart3}
             onClick={() => router.push("/admin/userstats")}
-            gradient="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20"
+            gradient="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20"
           />
 
           <NavigationCard
@@ -105,7 +105,7 @@ export default function Page() {
             description="Control user subscriptions and access levels"
             icon={Users}
             onClick={() => router.push("/admin/subscriptions")}
-            gradient="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20"
+            gradient="bg-linear-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20"
           />
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function Page() {
             description="Configure Razorpay payment plans and subscriptions"
             icon={CreditCard}
             onClick={() => router.push("/admin/razorpay")}
-            gradient="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20"
+            gradient="bg-linear-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20"
           />
 
           <NavigationCard
@@ -130,7 +130,7 @@ export default function Page() {
             description="Manage Stripe products and subscriptions"
             icon={CreditCard}
             onClick={() => router.push("/admin/stripe")}
-            gradient="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20"
+            gradient="bg-linear-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20"
           />
 
           <NavigationCard
@@ -138,7 +138,7 @@ export default function Page() {
             description="View and manage all payment orders"
             icon={ShoppingCart}
             onClick={() => router.push("/admin/orders")}
-            gradient="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20"
+            gradient="bg-linear-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20"
           />
 
           <NavigationCard
@@ -146,7 +146,7 @@ export default function Page() {
             description="Configure internal RateUp subscription plans"
             icon={Zap}
             onClick={() => router.push("/admin/rateup")}
-            gradient="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/20 dark:to-amber-950/20"
+            gradient="bg-linear-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/20 dark:to-amber-950/20"
           />
         </div>
       </div>
@@ -163,7 +163,7 @@ export default function Page() {
             description="Manage system updates and data migrations"
             icon={Database}
             onClick={() => router.push("/admin/updateCenter")}
-            gradient="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20"
+            gradient="bg-linear-to-br from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20"
           />
 
           <NavigationCard
@@ -171,7 +171,7 @@ export default function Page() {
             description="Create test data for development purposes"
             icon={Database}
             onClick={() => router.push("/admin/generate")}
-            gradient="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/20 dark:to-cyan-950/20"
+            gradient="bg-linear-to-br from-teal-50 to-cyan-50 dark:from-teal-950/20 dark:to-cyan-950/20"
           />
 
           <NavigationCard
@@ -179,7 +179,7 @@ export default function Page() {
             description="Manage Shopify store integrations"
             icon={ShoppingBag}
             onClick={() => router.push("/admin/shopify")}
-            gradient="bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-950/20 dark:to-teal-950/20"
+            gradient="bg-linear-to-br from-green-50 to-teal-50 dark:from-green-950/20 dark:to-teal-950/20"
           />
         </div>
       </div>

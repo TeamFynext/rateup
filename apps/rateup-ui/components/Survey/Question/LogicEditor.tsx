@@ -19,9 +19,9 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   useQuestions,
@@ -78,13 +78,8 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
   };
 
   const handleSave = () => {
-    notifications.show({
+    toast.loading(translations("Hold on, your changes are getting updated"), {
       id: "load-data",
-      loading: true,
-      title: translations("updating question"),
-      message: translations("Hold on, your changes are getting updated"),
-      autoClose: false,
-      withCloseButton: false,
     });
     questionUpdateMutation
       .mutateAsync({

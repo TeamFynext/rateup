@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+
 import { getPhotosList, triggeringDownload } from "./unsplash.api";
 
 export function useUnsplashPhotosList(opened: boolean, searchQuery: string) {

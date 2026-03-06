@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createNewTheme,
   deleteTheme,
@@ -45,10 +45,12 @@ export const useUpdateSurveyTheme = (
       queryClient.invalidateQueries({
         queryKey: ["surveyTheme", surveyThemeId],
       });
-      showSuccessToast("Survey theme updated successfully");
+      toast.success("Survey theme updated successfully");
     },
-    onError: () => {
-      showErrorToast("Something went wrong, Error updating survey theme");
+    onError: (error) => {
+      toast.error(
+        error?.message || "Something went wrong, Error updating survey theme",
+      );
     },
   });
 };
@@ -61,10 +63,12 @@ export const useRenameSurveyThemeMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["allThemes"],
       });
-      showSuccessToast("Renamed theme successfully");
+      toast.success("Renamed theme successfully");
     },
-    onError: () => {
-      showErrorToast("Something went wrong, Error renaming survey theme");
+    onError: (error) => {
+      toast.error(
+        error?.message || "Something went wrong, Error renaming survey theme",
+      );
     },
   });
 };
@@ -80,15 +84,17 @@ export const useCreateNewThemeMutation = (surveyId) => {
       await queryClient.invalidateQueries({
         queryKey: ["survey", surveyId],
       });
-      showSuccessToast("Created and applied new theme successfully");
+      toast.success("Created and applied new theme successfully");
     },
-    onError: (err: AxiosError) => {
+    onError: (error) => {
       // @ts-ignore
       if (err?.response?.data?.message) {
         // @ts-ignore
-        showErrorToast(err?.response?.data?.message);
+        toast.error(error?.message || err?.response?.data?.message);
       } else {
-        showErrorToast("Unable to create theme, please try again later.");
+        toast.error(
+          error?.message || "Unable to create theme, please try again later.",
+        );
       }
     },
   });
@@ -102,10 +108,12 @@ export const useDeleteThemeMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["allThemes"],
       });
-      showSuccessToast("Deleted theme successfully");
+      toast.success("Deleted theme successfully");
     },
-    onError: (err) => {
-      showErrorToast("unable to delete theme, please try again later.");
+    onError: (error) => {
+      toast.error(
+        error?.message || "unable to delete theme, please try again later.",
+      );
     },
   });
 };
@@ -114,12 +122,14 @@ export const useUpdateAllThemesMutation = () => {
   return useMutation({
     mutationFn: updateAllThemes,
     onSuccess: () => {
-      showSuccessToast(
+      toast.success(
         "No Json changes needed for now, if there is a need for json change check endpoint code",
       );
     },
-    onError: (err) => {
-      showErrorToast("Unable to update themes, please try again later.");
+    onError: (error) => {
+      toast.error(
+        error?.message || "Unable to update themes, please try again later.",
+      );
     },
   });
 };

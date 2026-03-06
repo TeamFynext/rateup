@@ -1,4 +1,5 @@
 import _sodium from "libsodium-wrappers";
+
 //creating a sodium instance with type _sodium
 type SodiumInstance = typeof _sodium;
 

@@ -1,1 +1,1 @@
-export const WHATSAPP_URL = '/wa';
+export const WHATSAPP_URL = "/wa";

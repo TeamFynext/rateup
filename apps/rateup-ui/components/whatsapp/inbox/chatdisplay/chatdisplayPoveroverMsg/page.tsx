@@ -25,6 +25,7 @@ import {
   IconCircleXFilled,
   IconTicket,
 } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import useContactStore from "@/app/dashboard/inbox/store";
 import {
@@ -34,7 +35,6 @@ import {
 } from "@/backend/tickets/tickets.query";
 import { useUser } from "@/context/UserContext";
 import { TicketPriority, TicketStatus } from "@/utils/enums/ticket";
-import { showErrorToast } from "@/utils/notifications";
 
 const WaInboxChatDisplayPopoverMsg = () => {
   const { opened, close, selectedTicket, setSelectedTicket } =
@@ -84,7 +84,7 @@ const WaInboxChatDisplayPopoverMsg = () => {
         form.reset();
       },
       onError: (error) => {
-        showErrorToast(error?.response?.data?.message);
+        toast.error(error?.message || error?.message);
       },
     });
   };

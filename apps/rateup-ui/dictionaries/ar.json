@@ -539,7 +539,7 @@
   "Uploading": "جارٍ التحميل",
   "Hold onfile is getting uploaded": "انتظر.. يتم تحميل الملف",
   "File uploaded successfully": "تم تحميل الملف بنجاح",
-  "Errror uploading file": "خطأ في تحميل الملف",
+  "Error uploading file": "خطأ في تحميل الملف",
   "Upload Source": "تحميل المصدر",
   "Select Source": "اختر المصدر",
   "Enter web url": "أدخل رابط الويب",

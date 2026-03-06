@@ -14,7 +14,7 @@ export const ReputationManagement = () => {
   return (
     <section
       id="reputation-management"
-      className="overflow-hidden bg-gradient-to-br from-white to-[#f0f4fa] py-24"
+      className="overflow-hidden bg-linear-to-br from-white to-[#f0f4fa] py-24"
     >
       <div>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-16 items-center">

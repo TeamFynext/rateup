@@ -16,6 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useBookDemoMutation } from "@/backend/bookdemo/bookdemo.query";
 import Layout from "@/components/RateupHomePage/Layout";
@@ -31,7 +32,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { showSuccessToast } from "@/utils/notifications";
 
 export function BookDemoComponent() {
   const router = useRouter();
@@ -95,7 +95,7 @@ export function BookDemoComponent() {
 
     mutate(payload, {
       onSuccess: () => {
-        showSuccessToast(translations("Demo Booked Successfully!"));
+        toast.success(translations("Demo Booked Successfully!"));
         setIsSubmitted(true);
         reset();
       },
@@ -107,7 +107,7 @@ export function BookDemoComponent() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-rateup-blue/5 via-white to-rateup-orange/5 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-linear-to-br from-rateup-blue/5 via-white to-rateup-orange/5 flex items-center justify-center p-6">
         <Card className="max-w-md mx-auto p-8 text-center shadow-xl">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-8 h-8 text-green-600" />
@@ -146,7 +146,7 @@ export function BookDemoComponent() {
   }
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-rateup-blue/5 via-white to-rateup-orange/5">
+      <div className="min-h-screen bg-linear-to-br from-rateup-blue/5 via-white to-rateup-orange/5">
         <div className="max-w-4xl mx-auto px-6 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
             {/* Left Column */}

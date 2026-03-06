@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { isNotEmpty, useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
 import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -17,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { deleteOrg } from "@/backend/org/org.api";
 import { useChangePasswordMutation } from "@/backend/user/user.query";
@@ -97,25 +97,15 @@ export default function Security() {
     changePassword.mutate(data, {
       onSuccess: () => {
         passwordForm.reset();
-        notifications.show({
+        toast.success(translations("Password Changed Successfully"), {
           id: "load-data",
-          color: "teal",
-          title: "Success",
-          message: translations("Password Changed Successfully"),
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
         });
         setIsLoading(false);
       },
-      onError: (error: any) => {
+      onError: (error) => {
         console.error("Error changed password:", error.message);
-        notifications.show({
+        toast.error(error?.message, {
           id: "load-data",
-          color: "red",
-          title: "Failed",
-          message: error?.response?.data?.message,
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
         });
 
         setIsLoading(false);
@@ -126,27 +116,15 @@ export default function Security() {
   const orgDeleteMutation = useMutation({
     mutationFn: ({ id }: { id: string }) => deleteOrg(id),
     onSuccess: (msg) => {
-      notifications.update({
+      toast.success(translations("Organization Deleted Successfully!"), {
         id: "delete-data",
-        color: "teal",
-        title: translations("Success"),
-        message: translations("Organization Deleted Successfully!"),
-        loading: false,
-        icon: <IconCheck />,
-        autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       router.push("/logout");
     },
-    onError: (error: any) => {
-      notifications.update({
+    onError: (error) => {
+      toast.error(error?.message, {
         id: "delete-data",
-        loading: false,
-        color: "red",
-        title: translations("Delete Failed!"),
-        message: error?.response?.data?.error,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 4000,
       });
     },
   });
@@ -294,7 +272,7 @@ export default function Security() {
         </Card>
 
         {user.role === UserRole.SUPADM && (
-          <Card className="p-6 border-red-200 bg-gradient-to-br from-red-50 to-orange-50 shadow-sm">
+          <Card className="p-6 border-red-200 bg-linear-to-br from-red-50 to-orange-50 shadow-sm">
             <h3 className="mb-4 text-red-700">{translations("Danger Zone")}</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-5 bg-white border-2 border-red-200 rounded-xl">
@@ -325,7 +303,6 @@ export default function Security() {
           </Card>
         )}
       </div>
-
       {/* Delete Confirmation Dialog */}
       {user.role === UserRole.SUPADM && (
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -420,16 +397,14 @@ export default function Security() {
               <Button
                 variant="destructive"
                 onClick={async () => {
-                  notifications.show({
-                    id: "delete-data",
-                    loading: true,
-                    title: translations("Deleting Organization"),
-                    message: translations(
+                  toast.loading(
+                    translations(
                       "Hold on, your organization is getting deleted",
                     ),
-                    autoClose: false,
-                    withCloseButton: false,
-                  });
+                    {
+                      id: "delete-data",
+                    },
+                  );
                   await orgDeleteMutation.mutateAsync({ id: user?.orgId });
                 }}
                 disabled={!isConfirmValid || isDeleting}

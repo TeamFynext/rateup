@@ -22,11 +22,11 @@ import {
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import _ from "lodash";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import {
@@ -67,7 +67,6 @@ import {
 import SelectedLanguageContext from "@/context/SelectedLanguage";
 import { SAVE_HOTKEY, WaNPSQuestions } from "@/utils/constants";
 import { googleReviewSupportedTypes, logicSupportedTypes } from "@/utils/data";
-import { showErrorToast } from "@/utils/notifications";
 import {
   getInitialQuestionValues,
   validateAllLanguagesArePopulated,
@@ -108,13 +107,8 @@ export function FlowQuestionDetailedView({
 
   function handleUpdateQuestion(q: Question) {
     const { googleReview } = q;
-    notifications.show({
+    toast.loading(`Hold on, your changes are getting updated`, {
       id: "load-data",
-      loading: true,
-      title: "updating question",
-      message: `Hold on, your changes are getting updated`,
-      autoClose: false,
-      withCloseButton: false,
     });
     updateQuestionMutation.mutate({ qId: q.id, data: { googleReview } });
   }
@@ -313,14 +307,14 @@ function ElementEditor({
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
     if (!flowEditable) {
-      showErrorToast(translations("Published Flows cannot be edited"));
+      toast.error(translations("Published Flows cannot be edited"));
       return;
     }
 
     // Form validation
     const formValidation = form.validate();
     if (formValidation.hasErrors) {
-      showErrorToast(translations("Fix errors before saving"));
+      toast.error(translations("Fix errors before saving"));
       return "error";
     }
 
@@ -345,7 +339,7 @@ function ElementEditor({
       const { hasErrors: extraConfigErrors } = extraConfigForm.validate();
       if (extraConfigErrors) return "error";
 
-      notifications.clean();
+      toast.dismiss();
       const updatedValues = getUpdatedValues();
       form.setFieldValue("extraConfig", updatedValues);
     }
@@ -411,13 +405,8 @@ function ElementEditor({
 
   // Update existing question
   const updateExistingQuestion = () => {
-    notifications.show({
+    toast.loading(translations("Hold on, your changes are getting updated"), {
       id: "load-data",
-      loading: true,
-      title: translations("Updating question"),
-      message: translations("Hold on, your changes are getting updated"),
-      autoClose: false,
-      withCloseButton: false,
     });
 
     questionUpdateMutation.mutate(
@@ -427,14 +416,13 @@ function ElementEditor({
       },
       {
         onSuccess: () => {
-          notifications.clean();
-          notifications.show({
-            id: "load-data",
-            title: translations("Success"),
-            message: translations("Your question was updated successfully"),
-            color: "green",
-            autoClose: 3000,
-          });
+          toast.dismiss();
+          toast.success(
+            translations("Your question was updated successfully"),
+            {
+              id: "load-data",
+            },
+          );
         },
       },
     );

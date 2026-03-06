@@ -1,5 +1,6 @@
+import { Button, Menu } from "@mantine/core";
 import { IconChevronDown } from "@tabler/icons-react";
-import { Menu, Button } from "@mantine/core";
+
 import { SurveyTypeFilters } from "../../../types/enums";
 
 export function SurveyTypeFilter({ filterParam, setFilterParam }) {

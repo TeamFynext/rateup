@@ -3,6 +3,8 @@
 import React from "react";
 
 import { Box, Text } from "@mantine/core";
+import { IconChevronLeft } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
 import {
@@ -10,11 +12,6 @@ import {
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
 import styles from "./AuthForm.module.css";
-
-import "react-phone-number-input/style.css";
-
-import { IconChevronLeft } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
 
 const PhoneNumberForm = ({ form, setSignUpTypeValue, isLoading, title }) => {
   const translations = useTranslations();

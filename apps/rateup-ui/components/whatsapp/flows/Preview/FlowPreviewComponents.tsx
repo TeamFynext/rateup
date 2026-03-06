@@ -219,7 +219,7 @@ export function DropDownPreview({
       variant="unstyled"
       placeholder={label}
       value={""}
-      onChange={() => { }}
+      onChange={() => {}}
       classNames={{
         input: styles.textInput,
       }}
@@ -316,7 +316,7 @@ export function FlowPreviewContainer({ children, footerLabel }) {
       }}
       gap={0}
     >
-      {FlowContainerHeader(() => { })}
+      {FlowContainerHeader(() => {})}
       <Divider />
       <Stack
         style={{

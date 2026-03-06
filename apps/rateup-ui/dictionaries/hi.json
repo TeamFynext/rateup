@@ -539,7 +539,7 @@
   "Uploading": "अपलोड हो रहा है",
   "Hold onfile is getting uploaded": "कृपया प्रतीक्षा करें.. फ़ाइल अपलोड हो रही है",
   "File uploaded successfully": "फ़ाइल सफलतापूर्वक अपलोड की गई",
-  "Errror uploading file": "फ़ाइल अपलोड करने में त्रुटि",
+  "Error uploading file": "फ़ाइल अपलोड करने में त्रुटि",
   "Upload Source": "स्रोत अपलोड करें",
   "Select Source": "स्रोत चुनें",
   "Enter web url": "वेब URL दर्ज करें",

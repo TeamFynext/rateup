@@ -43,10 +43,9 @@ export const useCreateCampaignMutation = (teamId, type) => {
     },
     onError: (error: any) => {
       if (!(error?.response?.data?.displayMessageInClient ?? false))
-        toast.error(
-          `Error creating campaign: ${error?.response?.data?.error}`,
-          { id: "campaign-create" },
-        );
+        toast.error(error?.message || `Error creating campaign`, {
+          id: "campaign-create",
+        });
     },
   });
 };
@@ -85,8 +84,8 @@ export const useUpdateCampaignMutation = (
       });
       complete();
     },
-    onError: (error: any) => {
-      toast.error(`Error updating campaign: ${error?.response?.data?.error}`, {
+    onError: (error) => {
+      toast.error(error?.message || `Error updating campaign`, {
         id: "campaign-update",
       });
       complete();
@@ -105,8 +104,8 @@ export const useDeleteCampaignMutation = (teamId, type) => {
         id: "campaign-delete",
       });
     },
-    onError: (error: any) => {
-      toast.error(`Error deleting campaign: ${error?.response?.data.error}`, {
+    onError: (error) => {
+      toast.error(error?.message || `Error deleting campaign`, {
         id: "campaign-delete",
       });
     },
@@ -157,7 +156,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
     onError: (error: any) => {
       if (!(error?.response?.data?.displayMessageInClient ?? false))
         toast.error(
-          `${error?.response?.data?.message ?? "Error sending campaign"}`,
+          error?.message || `${error?.message ?? "Error sending campaign"}`,
           { id: "campaign-start" },
         );
     },
@@ -183,9 +182,12 @@ export const useCampaignResponseDownloadById = () => {
       });
     },
     onError: (error) => {
-      toast.error(error.message || "Error generating delivery report.", {
-        id: "delivery-report",
-      });
+      toast.error(
+        error?.message || error.message || "Error generating delivery report.",
+        {
+          id: "delivery-report",
+        },
+      );
     },
   });
 };

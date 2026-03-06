@@ -17,7 +17,7 @@ export function getSoucePlatformIconAndColor(sourcePlatform) {
     case MessagePlatform.INSTAGRAM:
       return {
         icon: <IconBrandInstagram className="w-4 h-4 text-white" />,
-        bgColor: "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500",
+        bgColor: "bg-linear-to-br from-purple-600 via-pink-500 to-orange-500",
       };
     case MessagePlatform.WEBCHAT:
       return {

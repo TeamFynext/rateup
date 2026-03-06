@@ -4,8 +4,7 @@ import { Group, rem, Stack, Text } from "@mantine/core";
 import { Dropzone, DropzoneProps, MIME_TYPES } from "@mantine/dropzone";
 import { IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
-
-import { showErrorToast } from "../../../../utils/notifications";
+import { toast } from "sonner";
 
 interface ExtendedDropzoneProps extends Partial<DropzoneProps> {
   setCsvFile: (file: File) => void;
@@ -18,9 +17,7 @@ export function DropZoneArea(props: Readonly<ExtendedDropzoneProps>) {
     <Dropzone
       onDrop={(files) => setCsvFile(files[0])}
       onReject={() =>
-        showErrorToast(
-          translations("file format must be csv and select one file"),
-        )
+        toast.error(translations("file format must be csv and select one file"))
       }
       accept={[MIME_TYPES.csv, MIME_TYPES.xls]}
       multiple={false}

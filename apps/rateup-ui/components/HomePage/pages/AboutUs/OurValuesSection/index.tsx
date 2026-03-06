@@ -1,6 +1,7 @@
 import Image from "next/image";
-import styles from "./OurValuesSection.module.css";
+
 import { imagesPath } from "../../../constants";
+import styles from "./OurValuesSection.module.css";
 
 function OurValuesSection() {
   return (

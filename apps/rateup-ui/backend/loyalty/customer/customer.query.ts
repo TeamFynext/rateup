@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   AssignRewardRequest,
@@ -29,8 +28,8 @@ export const useCreateLoyaltyCustomerMutation = () => {
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
     },
-    onError: (e: any) => {
-      toast.error(e?.response?.data?.error || "Error creating customer");
+    onError: (error) => {
+      toast.error(error?.message || "Error creating customer");
     },
   });
 };
@@ -74,10 +73,10 @@ export const useDeleteLoyaltyCustomerMutation = () => {
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
       qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Success");
+      toast.success("Success");
     },
-    onError: () => {
-      showErrorToast("Error");
+    onError: (error) => {
+      toast.error(error?.message || "Error");
     },
   });
 };
@@ -89,10 +88,10 @@ export const useLCAction = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
-      showSuccessToast("success action");
+      toast.success("success action");
     },
-    onError: (e: any) => {
-      showErrorToast(`Failed:${e?.response?.data ?? ""}`);
+    onError: (error) => {
+      toast.error(error?.message || `Failed`);
     },
   });
 };
@@ -103,18 +102,16 @@ export const useImportCSVCustomerMutation = () => {
     mutationFn: importCustomers,
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
-      showSuccessToast(
-        "Contacts imported successfully",
-        "Customer-create",
+      toast.success("Contacts imported successfully", {
         // <IconCheck />,
-      );
+        id: "Customer-create",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error creating the Customer: ${error?.response?.data?.error}`,
-        "contact-create",
+    onError: (error) => {
+      toast.error(error?.message || `Error creating the Customer`, {
         // <IconX />,
-      );
+        id: "contact-create",
+      });
     },
   });
 };
@@ -134,10 +131,10 @@ export const useExportCustomersMutation = () => {
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
-      showSuccessToast("Exported successfully");
+      toast.success("Exported successfully");
     },
-    onError: () => {
-      showErrorToast("Error exporting");
+    onError: (error) => {
+      toast.error(error?.message || "Error exporting");
     },
   });
 };
@@ -158,12 +155,10 @@ export const useUpdateLoyaltyCustomerMutation = () => {
         queryKey: ["loyaltyCustomer", variables.customerId],
       });
       queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Customer updated successfully");
+      toast.success("Customer updated successfully");
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error updating customer: ${error?.response?.data?.error || error.message}`,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error updating customer`);
     },
   });
 };
@@ -188,12 +183,10 @@ export const useAwardPointsMutation = () => {
         queryKey: ["loyaltyCustomerByContact", variables.contactId],
       });
       queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Points awarded successfully");
+      toast.success("Points awarded successfully");
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error awarding points: ${error?.response?.data?.error || error.message}`,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error awarding points`);
     },
   });
 };
@@ -214,9 +207,11 @@ export const useAssignRewardMutation = (onSuccess?: () => void) => {
       onSuccess?.();
       toast.success("Reward assigned successfully!");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error assigning reward:", error);
-      toast.error(error?.response?.data?.message || "Failed to assign reward");
+      toast.error(
+        error?.message || error?.message || "Failed to assign reward",
+      );
     },
   });
 };

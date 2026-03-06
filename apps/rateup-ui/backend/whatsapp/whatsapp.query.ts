@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { getErrorMessage } from "../../utils";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createWaTemplate,
   deleteWaTemplate,
@@ -34,14 +34,12 @@ export const useCreateTemplateMutation = (onSuccess, onError) => {
   const createMutation = useMutation({
     mutationFn: (templateData: any) => createWaTemplate(templateData),
     onSuccess: () => {
-      showSuccessToast("Template Created Successfully");
+      toast.success("Template Created Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       onSuccess();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error creating template!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error creating template!");
       onError();
     },
   });
@@ -54,15 +52,13 @@ export const useSaveTemplateAsDraftMutation = (id, onSuccess, onError) => {
   const createMutation = useMutation({
     mutationFn: (templateData: any) => saveTemplateAsDraft(templateData),
     onSuccess: () => {
-      showSuccessToast("Template Saved as Draft Successfully");
+      toast.success("Template Saved as Draft Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       queryClient.invalidateQueries({ queryKey: ["watemplate", id] });
       onSuccess();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error saving as draft template!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error saving as draft template!");
       onError();
     },
   });
@@ -75,15 +71,13 @@ export const useUpdateTemplateMutation = (id, onSuccess?, onError?) => {
     mutationFn: ({ templateId, templateData }: any) =>
       updateWaTemplate(templateId, templateData),
     onSuccess: () => {
-      showSuccessToast("Template Updated Successfully");
+      toast.success("Template Updated Successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       queryClient.invalidateQueries({ queryKey: ["watemplate", id] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error updating template!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error updating template!");
       onError?.();
     },
   });
@@ -95,17 +89,16 @@ export const useDeleteWaTemplateMutation = (onSuccess?, onError?) => {
   const deleteMutation = useMutation({
     mutationFn: deleteWaTemplate,
     onSuccess: () => {
-      showSuccessToast(
-        "Template Deleted Successfully",
-        "template-delete",
-        null,
-        true,
-      );
+      toast.success("Template Deleted Successfully", {
+        id: "template-delete",
+      });
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       onSuccess?.();
     },
-    onError: () => {
-      showErrorToast("Error deleting template!", "template-delete", null, true);
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting template!", {
+        id: "template-delete",
+      });
       onError?.();
     },
   });
@@ -118,11 +111,11 @@ export const useSyncTemplatesMutation = (onSuccess?, onError?) => {
     mutationFn: syncTemplates,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
-      showSuccessToast("Templates Synced Successfully");
+      toast.success("Templates Synced Successfully");
       onSuccess?.();
     },
-    onError: () => {
-      showErrorToast("Error syncing templates!");
+    onError: (error) => {
+      toast.error(error?.message || "Error syncing templates!");
       onError?.();
     },
   });
@@ -141,12 +134,12 @@ export const useRegisterTemplatesMutation = (onSuccess?, onError?) => {
   const registerMutation = useMutation({
     mutationFn: registerTemplates,
     onSuccess: () => {
-      showSuccessToast("Templates synced successfully");
+      toast.success("Templates synced successfully");
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       onSuccess?.();
     },
-    onError: () => {
-      showErrorToast("Error syncing templates!");
+    onError: (error) => {
+      toast.error(error?.message || "Error syncing templates!");
       onError?.();
     },
   });
@@ -178,14 +171,10 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
       queryClient.invalidateQueries({ queryKey: ["wa-messages", contactId] });
       queryClient.invalidateQueries({ queryKey: ["wa-contacts"] });
       queryClient.invalidateQueries({ queryKey: ["wa-contact", contactId] });
-      showSuccessToast("Template sent successfully");
+      toast.success("Template sent successfully");
     },
-    onError: (error: any) => {
-      showErrorToast(
-        typeof error?.response?.data === "string"
-          ? error?.response?.data
-          : "Error sending template!",
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error sending template!");
     },
   });
 };

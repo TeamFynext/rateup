@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import {
   createMenu,
   deleteMenu,
@@ -10,7 +12,6 @@ import {
   updateMenu,
   updateMenuVisitedMutation,
 } from "./menu.api";
-import { showSuccessToast, showErrorToast } from "../../utils/notifications";
 
 // TODO: update tanstack querykeys. (use teamId & create a proper hierarchy)
 
@@ -53,13 +54,13 @@ export const useCreateMenuMutation = (teamId: string, close, setIsCreating) => {
   const createMutation = useMutation({
     mutationFn: createMenu,
     onSuccess: () => {
-      showSuccessToast("Menu created successfully");
+      toast.success("Menu created successfully");
       queryClient.invalidateQueries({ queryKey: ["allMenus"] });
       close();
       setIsCreating(false);
     },
-    onError: () => {
-      showErrorToast("Error creating menu");
+    onError: (error) => {
+      toast.error(error?.message || "Error creating menu");
       setIsCreating(false);
     },
   });
@@ -72,15 +73,15 @@ export const useUpdateMenuMutation = (teamId, onSuccess, onError) => {
   const updateMutation = useMutation({
     mutationFn: updateMenu,
     onSuccess: () => {
-      showSuccessToast("Menu updated successfully");
+      toast.success("Menu updated successfully");
       queryClient.invalidateQueries({ queryKey: ["allMenus"] });
       queryClient.invalidateQueries({ queryKey: ["menu", teamId] });
       queryClient.invalidateQueries({ queryKey: ["menu", "full", teamId] });
       queryClient.invalidateQueries({ queryKey: ["menuLanding", teamId] });
       onSuccess();
     },
-    onError: () => {
-      showErrorToast("Error updating menu");
+    onError: (error) => {
+      toast.error(error?.message || "Error updating menu");
       onError();
     },
   });
@@ -93,17 +94,16 @@ export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
   const deleteMutation = useMutation({
     mutationFn: deleteMenu,
     onSuccess: () => {
-      showSuccessToast(
-        "Menu deleted successfully",
-        "delete-data-menu",
-        "",
-        true
-      );
+      toast.success("Menu deleted successfully", {
+        id: "delete-data-menu",
+      });
       queryClient.invalidateQueries({ queryKey: ["allMenus"] });
       onSuccess();
     },
-    onError: () => {
-      showErrorToast("Error deleting menu", "delete-data-menu", "", true);
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting menu", {
+        id: "delete-data-menu",
+      });
       onError();
     },
   });

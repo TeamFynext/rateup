@@ -16,13 +16,13 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconKey } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import RateupSwitch from "@/components/Switch/RateupSwitch";
 
 import { useAllResponses } from "../../../../backend/surveys/response/response.query";
 import { useEditSurveyMutation } from "../../../../backend/surveys/surveys.query";
 import { useUser } from "../../../../context/UserContext";
-import { showErrorToast } from "../../../../utils/notifications";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { updateEndToEndEncryption } from "../updateSettings";
 import styles from "./SecuritySettings.module.css";
@@ -45,7 +45,7 @@ export default function ETESettings(props: ETESettingsInterface) {
   function onSwitched(e) {
     if (e.target.checked) {
       if (!user?.encryptionKeys) {
-        showErrorToast(
+        toast.error(
           translations(
             "You need to generate encryptionKeys first , head on to settings to generate your keys",
           ),

@@ -23,6 +23,7 @@ import {
   IconPlus,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { MenuItemPriceType } from "@/types/enums";
 import {
@@ -32,7 +33,6 @@ import {
   useUpdateMenuBannerMutation,
 } from "@/backend/menu/Banner/banner.query";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
-import { showErrorToast } from "@/utils/notifications";
 
 import { RateupButtonPrimary, RateupIconButton } from "../Button/RateupButtons";
 import RateupLoader from "../Loaders/RateupLoader";
@@ -216,7 +216,7 @@ export const BannerAddAndViewModal = ({
                 disabled={data?.length === 4}
                 onClick={() => {
                   if (!data?.[data?.length - 1]?.id) {
-                    showErrorToast(
+                    toast.error(
                       translations(
                         "Save the form you just made, then click Add Banner button to make a new form",
                       ),

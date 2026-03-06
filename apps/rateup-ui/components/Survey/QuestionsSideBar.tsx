@@ -22,13 +22,13 @@ import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { PageType, QuestionType } from "@/types/enums";
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
 import { useNavControlContext } from "@/context/NavControlContext";
 import { uniquePages } from "@/utils/constants";
-import { showErrorToast } from "@/utils/notifications";
 import { reorder, reOrderPages } from "@/utils/questions";
 
 import { QuestionTabsEnum } from "./EditSurvey";
@@ -155,9 +155,11 @@ export function QuestionsSideBar({
       haveUnsavedChanges &&
       Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
     ) {
-      showErrorToast(
+      toast.error(
         translations("Please Enter heading and choices for all languages"),
-        "missing-title-toast",
+        {
+          id: "missing-title-toast",
+        },
       );
       return;
     }
@@ -265,11 +267,13 @@ export function QuestionsSideBar({
                     selectedQ?.type as QuestionType,
                   )
                 ) {
-                  showErrorToast(
+                  toast.error(
                     translations(
                       "Please Enter heading and choices for all languages",
                     ),
-                    "missing-title-toast",
+                    {
+                      id: "missing-title-toast",
+                    },
                   );
                   return;
                 }
@@ -289,7 +293,6 @@ export function QuestionsSideBar({
           </Tooltip>
         </Group>
       )}
-
       {!questionsState?.length && (
         <Paper
           style={{ cursor: "pointer", height: "100%", maxHeight: "850px" }}
@@ -305,7 +308,6 @@ export function QuestionsSideBar({
           </Center>
         </Paper>
       )}
-
       <ScrollArea
         className={styles["questions-list-container"]}
         scrollbarSize={10}

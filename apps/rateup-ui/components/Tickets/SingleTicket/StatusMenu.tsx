@@ -1,5 +1,6 @@
 import { Button, Menu } from "@mantine/core";
 import { IconChevronDown } from "@tabler/icons-react";
+
 import { TicketStatus } from "../../../utils/enums/ticket";
 
 export function StatusMenu({ status, setStatus }) {

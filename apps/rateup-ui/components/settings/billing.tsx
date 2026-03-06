@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useCancelRazorpaySubscriptionMutation } from "@/backend/payment/payment.query";
 import { useCancelStripeSubscriptionMutation } from "@/backend/payment/stripe/stripe.query";
@@ -44,7 +45,6 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { formatIsoDateString } from "@/utils/dateTime";
-import { showLoadingToast } from "@/utils/notifications";
 
 export function UsageCard({ subscription }) {
   const { data: stats, refetch, isRefetching, isLoading } = useUsageStats();
@@ -221,12 +221,9 @@ export const Billing = ({
   const router = useRouter();
 
   const handleCancelSubscription = () => {
-    showLoadingToast(
-      translations("Hold your subscription is getting cancelled"),
-      "load-data",
-      true,
-      translations("Cancelling Subscription"),
-    );
+    toast.loading(translations("Hold your subscription is getting cancelled"), {
+      id: "load-data",
+    });
 
     if (subscription?.basePlan?.stripeProduct) {
       CancelStripeSubscription.mutate(null, {

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   createLoyaltyReward,
   deleteReward,
@@ -30,10 +30,10 @@ export const useCreateLoyaltyRewardMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRewards"] });
       qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Reward created successfully");
+      toast.success("Reward created successfully");
     },
-    onError: () => {
-      showErrorToast("Error creating reward");
+    onError: (error) => {
+      toast.error(error?.message || "Error creating reward");
     },
   });
   return createMutation;
@@ -56,10 +56,10 @@ export const useUpdateLoyaltyRewardMutation = (rewardId) => {
     onSuccess: (_, reward) => {
       qc.invalidateQueries({ queryKey: ["loyaltyRewards", rewardId] });
       qc.invalidateQueries({ queryKey: ["loyaltyRewards"] });
-      showSuccessToast("Reward updated successfully");
+      toast.success("Reward updated successfully");
     },
-    onError: () => {
-      showErrorToast("Error updating reward");
+    onError: (error) => {
+      toast.error(error?.message || "Error updating reward");
     },
   });
   return updateMutation;
@@ -72,10 +72,10 @@ export const useDeleteRewardMutation = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRewards"] });
       qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Reward deleted successfully");
+      toast.success("Reward deleted successfully");
     },
-    onError: () => {
-      showErrorToast("Error deleting reward");
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting reward");
     },
   });
   return deleteMutation;

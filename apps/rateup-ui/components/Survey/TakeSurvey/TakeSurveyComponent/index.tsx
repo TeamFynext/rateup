@@ -11,6 +11,7 @@ import { Box, Center, Container, ScrollArea, Stack, Text } from "@mantine/core";
 import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
 import { AnimatePresence, motion } from "motion/react";
 import { useBeforeUnload } from "react-use";
+import { toast } from "sonner";
 
 import { useUpdateCompletedMutation } from "../../../../backend/surveys/surveys.query";
 import { NextPrevFuncsAndLastQuestionContextProvider } from "../../../../context/NextPrevFuncsContext";
@@ -22,7 +23,6 @@ import { SurveyThemeContextProvider } from "../../../../context/SurveyThemeConte
 import { LogicAction, PageType, QuestionType } from "../../../../types/enums";
 import { isHtml } from "../../../../utils";
 import { encryptResponse } from "../../../../utils/encryption";
-import { showErrorToast } from "../../../../utils/notifications";
 import { parseLogicAction } from "../../../../utils/survey/logic/logic.utils";
 import CustomHTML from "../../Page/Previews/CustomHTML";
 import {
@@ -242,7 +242,7 @@ function TakeSurvey({
               try {
                 finishSurvey(nextQ.type);
               } catch (error) {
-                showErrorToast(error?.message?.toString());
+                toast.error(error?.message?.toString());
               } finally {
                 return;
               }
@@ -268,7 +268,7 @@ function TakeSurvey({
       try {
         finishSurvey();
       } catch (error) {
-        showErrorToast(error?.message?.toString());
+        toast.error(error?.message?.toString());
       }
     } else {
       openConfirmationResponsesModal();

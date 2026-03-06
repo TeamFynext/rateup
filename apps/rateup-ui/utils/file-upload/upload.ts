@@ -1,11 +1,7 @@
 import axios from "axios";
+import { toast } from "sonner";
 
 import { fallbackImage } from "../constants";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "../notifications";
 
 export const uploadFile = async (
   file,
@@ -17,14 +13,9 @@ export const uploadFile = async (
   formData.append("size", file?.size?.toString());
   formData.append("file", file);
   try {
-    showLoadingToast(
-      "Uploading file...",
-      "upload-file",
-      true,
-      undefined,
-      undefined,
-      false,
-    );
+    toast.loading("Uploading file...", {
+      id: "upload-file",
+    });
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/api/public/upload/${
         withThumbnails ? "fileWithThumb" : "file"
@@ -34,16 +25,20 @@ export const uploadFile = async (
         timeout: 0,
       },
     );
-    showSuccessToast("File uploaded successfully", "upload-file", null, true);
+    toast.success("File uploaded successfully", {
+      id: "upload-file",
+    });
     return response?.data?.data?.key as string;
   } catch (error) {
-    throw error?.response?.data?.message;
+    throw error?.message;
   }
 };
 
 export const deleteUploadedFiles = async (data) => {
   try {
-    showLoadingToast("Deleting file...", "delete-file");
+    toast.loading("Deleting file...", {
+      id: "delete-file",
+    });
     const response = await axios.put(
       `${process.env.NEXT_PUBLIC_API_URL}/api/public/upload/file/delete`,
       data,
@@ -53,15 +48,14 @@ export const deleteUploadedFiles = async (data) => {
         },
       },
     );
-    showSuccessToast("File deleted successfully", "delete-file", null, true);
+    toast.success("File deleted successfully", {
+      id: "delete-file",
+    });
     return response?.data;
   } catch (error) {
-    showErrorToast(
-      error?.response?.data?.message || "Error deleting file",
-      "delete-file",
-      null,
-      true,
-    );
+    toast.error(error?.message || "Error deleting file", {
+      id: "delete-file",
+    });
     return error?.data;
   }
 };

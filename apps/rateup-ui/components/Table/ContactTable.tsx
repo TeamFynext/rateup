@@ -20,6 +20,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { ContactGroupType } from "@/types/enums";
 import { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
@@ -34,7 +35,6 @@ import {
   useExportContactsMutation,
 } from "../../backend/campaign/contacts/contacts.query";
 import { docsPath, PAGE_SIZE } from "../../utils/constants";
-import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 import InfoButton from "../Button/InfoButton";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import RefreshButton from "../Button/RefreshButton";
@@ -188,42 +188,30 @@ function ContactTable({
             );
             switch (tab) {
               case WhatsappTableType.CONTACTS:
-                showLoadingToast(
-                  translations("Contacts getting deleted"),
-                  "contact-delete",
-                  true,
-                  "Deleting Contacts",
-                );
+                toast.loading(translations("Contacts getting deleted"), {
+                  id: "contact-delete",
+                });
                 deleteManyContactsMutation?.mutate(selectedIds);
                 break;
               case WhatsappTableType.GROUPS:
-                showLoadingToast(
-                  translations("Contact groups getting deleted"),
-                  "contact-group-delete",
-                  true,
-                  translations("Deleting Contact Groups"),
-                );
+                toast.loading(translations("Contact groups getting deleted"), {
+                  id: "contact-group-delete",
+                });
                 deleteManyContactGroupsMutation.mutate(selectedIds);
                 break;
               case WhatsappTableType.MEMBERS:
-                showLoadingToast(
-                  translations("Members getting removed"),
-                  "contact-group-remove",
-                  true,
-                  translations("Removing Members"),
-                );
+                toast.loading(translations("Members getting removed"), {
+                  id: "contact-group-remove",
+                });
                 removeContactsMutation.mutate({
                   contactIds: selectedIds,
                   groupId,
                 });
                 break;
               case WhatsappTableType.PARTICIPANTS:
-                showLoadingToast(
-                  translations("Participants getting removed"),
-                  "campaign-mulitiple-participants-remove",
-                  true,
-                  translations("Removing Participants"),
-                );
+                toast.loading(translations("Participants getting removed"), {
+                  id: "campaign-mulitiple-participants-remove",
+                });
                 removeMulitpleGroupParticipants.mutate({
                   data: selectedIds,
                   campaignId: groupId,
@@ -283,19 +271,13 @@ function ContactTable({
                     <ActionIcon
                       variant="light"
                       onClick={async () => {
-                        showLoadingToast(
-                          translations("Data getting loaded"),
-                          "contacts",
-                          true,
-                          translations("Loading"),
-                        );
+                        toast.loading(translations("Data getting loaded"), {
+                          id: "contacts",
+                        });
                         await refetch();
-                        showSuccessToast(
-                          translations("Data updated"),
-                          "contacts",
-                          <IconCheck />,
-                          true,
-                        );
+                        toast.success(translations("Data updated"), {
+                          id: "contacts",
+                        });
                       }}
                     >
                       <IconRefresh stroke={1.5} />

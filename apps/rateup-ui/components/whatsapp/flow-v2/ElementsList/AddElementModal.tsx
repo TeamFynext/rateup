@@ -20,6 +20,7 @@ import {
   IconThumbUpFilled,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   LDResponse2,
@@ -38,7 +39,6 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FlowQuestionTypes2 } from "@/utils/constants";
-import { showErrorToast } from "@/utils/notifications";
 
 import useFlowStoreV3 from "../utils/store";
 import { NO_NAME_TYPES, NO_VISIBLE_TYPES } from "../utils/typeConstants";
@@ -127,7 +127,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
   const handleTypeSelection = (type: QuestionType2) => {
     const screen = getCurrentScreen();
     if (!screen) {
-      showErrorToast(translations("Please select a screen first"));
+      toast.error(translations("Please select a screen first"));
       return;
     }
 
@@ -135,10 +135,9 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
 
     // Validation checks
     if (formElementChildren.length > 50) {
-      showErrorToast(
-        translations("Only 50 components allowed in a screen"),
-        "error-max-screen-elements",
-      );
+      toast.error(translations("Only 50 components allowed in a screen"), {
+        id: "error-max-screen-elements",
+      });
       return;
     }
 
@@ -148,10 +147,9 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
       ) &&
       formElementChildren.find((c) => c.type === type)
     ) {
-      showErrorToast(
-        `Only one ${type} allowed per screen`,
-        "error-max-screen-elements",
-      );
+      toast.error(`Only one ${type} allowed per screen`, {
+        id: "error-max-screen-elements",
+      });
       return;
     }
 
@@ -163,11 +161,13 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
         ["DocumentPicker", "PhotoPicker"].includes(child.type),
       )
     ) {
-      showErrorToast(
+      toast.error(
         translations(
           "Using both PhotoPicker and DocumentPicker components on a single screen is not allowed",
         ),
-        "error-max-screen-elements",
+        {
+          id: "error-max-screen-elements",
+        },
       );
       return;
     }
@@ -177,11 +177,13 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
       formElementChildren.filter((c) => c.type === ("ImageCarousel" as any))
         .length >= 2
     ) {
-      showErrorToast(
+      toast.error(
         translations(
           "Maximum of 2 ImageCarousel components allowed per screen",
         ),
-        "error-max-screen-elements",
+        {
+          id: "error-max-screen-elements",
+        },
       );
       return;
     }
@@ -192,9 +194,11 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
         .flatMap((screen) => screen.layout.children)
         .filter((child) => child.type === ("ImageCarousel" as any)).length >= 3
     ) {
-      showErrorToast(
+      toast.error(
         translations("Maximum of 3 ImageCarousel components allowed per flow"),
-        "error-max-screen-elements",
+        {
+          id: "error-max-screen-elements",
+        },
       );
       return;
     }

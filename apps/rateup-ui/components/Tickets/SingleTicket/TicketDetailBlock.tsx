@@ -1,4 +1,5 @@
-import { Group, Box } from "@mantine/core";
+import { Box, Group } from "@mantine/core";
+
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 export function TicketDetailBlock({

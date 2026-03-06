@@ -2,19 +2,31 @@
 
 import { useEffect, useState } from "react";
 
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Smartphone } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { QuestionType2 } from "@/types/enums";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 import useFlowStoreV3 from "../utils/store";
 import styles from "./WhatsAppPreview.module.css";
@@ -37,21 +49,25 @@ function WhatsAppPreview() {
         <div className="p-4">
           <div className="flex items-center gap-2 mb-0.5">
             <Smartphone className="w-4 h-4" />
-            <h2 className="text-base font-semibold">{translations("Preview")}</h2>
+            <h2 className="text-base font-semibold">
+              {translations("Preview")}
+            </h2>
           </div>
           <p className="text-xs text-muted-foreground">
             {translations("See how your flow looks on mobile")}
           </p>
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">{translations("No screen selected")}</p>
+          <p className="text-sm text-muted-foreground">
+            {translations("No screen selected")}
+          </p>
         </div>
       </div>
     );
   }
 
   const elements = (screen.layout.children || []).filter(
-    (el: any) => el.visible !== false
+    (el: any) => el.visible !== false,
   );
 
   const renderElement = (element: any, index: number) => {
@@ -107,7 +123,9 @@ function WhatsAppPreview() {
               {element.required && <span className="text-red-500 ml-1">*</span>}
             </Label>
             <Input
-              placeholder={element["helper-text"] || translations("Type your answer")}
+              placeholder={
+                element["helper-text"] || translations("Type your answer")
+              }
               type={element["input-type"] || "text"}
               value={formData[element.id] || ""}
               onChange={(e) =>
@@ -126,7 +144,9 @@ function WhatsAppPreview() {
               {element.required && <span className="text-red-500 ml-1">*</span>}
             </Label>
             <Textarea
-              placeholder={element["helper-text"] || translations("Type your answer")}
+              placeholder={
+                element["helper-text"] || translations("Type your answer")
+              }
               rows={3}
               value={formData[element.id] || ""}
               onChange={(e) =>
@@ -165,7 +185,9 @@ function WhatsAppPreview() {
                       } else {
                         setFormData({
                           ...formData,
-                          [element.id]: current.filter((id: string) => id !== option.id),
+                          [element.id]: current.filter(
+                            (id: string) => id !== option.id,
+                          ),
                         });
                       }
                     }}
@@ -206,7 +228,10 @@ function WhatsAppPreview() {
               <div className="space-y-2">
                 {(element["data-source"] || []).map((option: any) => (
                   <div key={option.id} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option.id} id={`${element.id}-${option.id}`} />
+                    <RadioGroupItem
+                      value={option.id}
+                      id={`${element.id}-${option.id}`}
+                    />
                     <label
                       htmlFor={`${element.id}-${option.id}`}
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -296,7 +321,9 @@ function WhatsAppPreview() {
                 <Button
                   key={option.id}
                   size="sm"
-                  variant={formData[element.id] === option.id ? "default" : "outline"}
+                  variant={
+                    formData[element.id] === option.id ? "default" : "outline"
+                  }
                   onClick={() =>
                     setFormData({ ...formData, [element.id]: option.id })
                   }
@@ -322,7 +349,9 @@ function WhatsAppPreview() {
         return (
           <div key={key}>
             <p className="text-sm text-muted-foreground">
-              {element.type || element.metaType || translations("Unknown element")}
+              {element.type ||
+                element.metaType ||
+                translations("Unknown element")}
             </p>
           </div>
         );
@@ -352,7 +381,7 @@ function WhatsAppPreview() {
               <div className="text-white font-semibold text-sm">
                 {translations("Business Name")}
               </div>
-              <div className="text-white/80" style={{ fontSize: '10px' }}>
+              <div className="text-white/80" style={{ fontSize: "10px" }}>
                 {translations("Online")}
               </div>
             </div>
@@ -361,15 +390,19 @@ function WhatsAppPreview() {
             <div className={styles["phone-content"]}>
               <Card className="shadow-sm">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">{screen.title || "Screen"}</CardTitle>
+                  <CardTitle className="text-sm">
+                    {screen.title || "Screen"}
+                  </CardTitle>
                   {elements.length > 0 && (
                     <CardDescription className="text-xs">
-                      {elements.find(e => e.label)?.label || ""}
+                      {elements.find((e) => e.label)?.label || ""}
                     </CardDescription>
                   )}
                 </CardHeader>
                 <CardContent className="space-y-3 pt-0">
-                  {elements.map((element, index) => renderElement(element, index))}
+                  {elements.map((element, index) =>
+                    renderElement(element, index),
+                  )}
                 </CardContent>
               </Card>
             </div>

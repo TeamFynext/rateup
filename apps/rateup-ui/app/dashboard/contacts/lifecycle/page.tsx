@@ -69,7 +69,6 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLifecycleContext } from "@/context/LifecycleContext";
-import { showErrorToast } from "@/utils/notifications";
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
@@ -359,14 +358,14 @@ const ContactSettings = () => {
   const deleteLifecycle = useDeleteLifeCycleMutation();
   const handleDeleteStage = async (stage) => {
     if (stage?.isDefault) {
-      showErrorToast("Cannot delete default stage");
+      toast.error("Cannot delete default stage");
       return;
     }
     // Don't allow deleting the last won stage in lifecycle
     if (stage?.category === "won") {
       const wonStages = lifecycleStages.filter((s) => s.category === "won");
       if (wonStages.length === 1) {
-        showErrorToast(
+        toast.error(
           "Cannot delete the last won stage. There must be at least one won stage.",
         );
         return;
@@ -566,7 +565,7 @@ const renderAddStageForm = ({ lifecycleStages, lostStages, onSave }) => {
     const totalStages = lifecycles.length;
 
     if (totalStages >= 10) {
-      showErrorToast("Maximum 10 stages allowed in total");
+      toast.error("Maximum 10 stages allowed in total");
       return;
     }
 
@@ -755,7 +754,7 @@ const LifecycleStageForm = ({
     const totalStages = lifecycles.length;
 
     if (totalStages >= 10) {
-      showErrorToast("Maximum 10 stages allowed in total");
+      toast.error("Maximum 10 stages allowed in total");
       return;
     }
 
@@ -779,8 +778,8 @@ const LifecycleStageForm = ({
         toast.success("stage added");
         if (onSave) onSave();
       },
-      onError: () => {
-        toast.error("error adding stage");
+      onError: (error) => {
+        toast.error(error?.message || "error adding stage");
       },
       onSettled: () => {
         addStageForm.reset();

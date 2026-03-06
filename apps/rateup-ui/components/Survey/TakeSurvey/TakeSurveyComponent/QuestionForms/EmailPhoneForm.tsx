@@ -4,15 +4,11 @@ import { useContext, useRef } from "react";
 
 import { Stack, TextInput, useMantineTheme } from "@mantine/core";
 import { IconMail } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import PhoneInput from "react-phone-number-input";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import classes from "../TakeSurvey.module.css";
-
-import "react-phone-number-input/style.css";
-
-import { useTranslations } from "next-intl";
-
 import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function EmailPhoneForm() {

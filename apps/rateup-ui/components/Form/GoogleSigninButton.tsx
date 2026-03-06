@@ -3,9 +3,9 @@
 import { Button } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-react/recipe/thirdparty";
 
-import { showErrorToast } from "../../utils/notifications";
 import { GoogleIcon } from "../Button/GoogleIcon";
 
 type GoogleSignInButtonProps = {
@@ -35,13 +35,13 @@ function GoogleSignInButton({ buttonText, className }) {
     } catch (err: any) {
       if (err.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
-        showErrorToast(err.message, "load-data", <IconX size="1rem" />);
+        toast.error(err.message, {
+          id: "load-data",
+        });
       } else {
-        showErrorToast(
-          translations("Oops! Something went wrong") + err,
-          "load-data",
-          <IconX size="1rem" />,
-        );
+        toast.error(translations("Oops! Something went wrong") + err, {
+          id: "load-data",
+        });
       }
     }
   }

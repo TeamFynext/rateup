@@ -14,6 +14,7 @@ import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { IntegratedApps, ShopifySendAfter } from "@/types/enums";
 import {
@@ -36,7 +37,6 @@ import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TableLayoutSecondary from "@/components/styled/Table/TableLayoutSecondary";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime";
-import { showLoadingToast } from "@/utils/notifications";
 
 const PETPOOJA_WEBHOOK_ENDPOINT = `${process.env.NEXT_PUBLIC_API_URL}/api/public/integrations/petpooja`;
 
@@ -82,7 +82,9 @@ const PetpoojaConfig = ({ integration, updateIntegration }) => {
       return;
     }
     if (integration) {
-      showLoadingToast("Updating configuration", "integration-update");
+      toast.loading("Updating configuration", {
+        id: "integration-update",
+      });
       updateIntegration.mutate({
         credential: { ...integration.credential, restaurantId },
       });
@@ -174,7 +176,9 @@ const WaTemplateSendSettings = ({
 
   const handleSave = () => {
     if (form.validate().hasErrors) return;
-    showLoadingToast("Updating settings", "integration-update");
+    toast.loading("Updating settings", {
+      id: "integration-update",
+    });
     updateIntegration.mutate({
       credential: {
         ...integration.credential,
@@ -189,7 +193,9 @@ const WaTemplateSendSettings = ({
   }, [integration]);
 
   const handleDelete = () => {
-    showLoadingToast("Updating settings", "integration-update");
+    toast.loading("Updating settings", {
+      id: "integration-update",
+    });
     updateIntegration.mutate(
       {
         credential: {

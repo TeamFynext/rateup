@@ -31,7 +31,7 @@ const item = {
 
 const DidYouKnow = () => {
   return (
-    <section className="py-28 bg-gradient-to-br from-[#f1fdf6] to-[#e3f6ec]">
+    <section className="py-28 bg-linear-to-br from-[#f1fdf6] to-[#e3f6ec]">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Heading */}
         <div className="text-center mb-20 max-w-3xl mx-auto">
@@ -90,7 +90,7 @@ const DidYouKnow = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
-          className="mt-20 text-center px-8 py-20 rounded-[2rem] bg-gradient-to-br from-[#ffffff] to-[#f2fdf7] border border-[#d6f3e4] shadow-2xl"
+          className="mt-20 text-center px-8 py-20 rounded-[2rem] bg-linear-to-br from-[#ffffff] to-[#f2fdf7] border border-[#d6f3e4] shadow-2xl"
         >
           <div className="max-w-4xl mx-auto">
             <h2 className="text-xl md:text-3xl font-semibold text-gray-800 leading-snug">

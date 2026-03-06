@@ -11,10 +11,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { useCheckEmailExistMutation } from "../../backend/user/user.query";
-import { showNotification } from "../../utils/auth";
 import {
   useSendResetEmail,
   useSetNewPassword,
@@ -129,13 +129,7 @@ const ResetPasswordForm = ({ mode }) => {
   ];
 
   const handleSuccess = () => {
-    showNotification(
-      "password-success",
-      "green",
-      "Success",
-      "Password updated successfully!",
-      <IconCheck size="1rem" />,
-    );
+    toast.success("Password updated successfully!", { id: "password-success" });
     router.push("/login");
   };
 
@@ -152,13 +146,9 @@ const ResetPasswordForm = ({ mode }) => {
               "email",
               translations("User with this email does not exist!"),
             );
-            showNotification(
-              "error",
-              "red",
-              "Error",
-              translations("User with this email does not exist!"),
-              <IconX size="1rem" />,
-            );
+            toast.error(translations("User with this email does not exist!"), {
+              id: "user-not-found",
+            });
             return;
           }
           setIsLoading(true);

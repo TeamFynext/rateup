@@ -19,7 +19,6 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
 import {
   IconBrandGoogle,
   IconDeviceSdCard,
@@ -27,6 +26,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   useQuestionCreateMutation,
@@ -38,7 +38,6 @@ import {
   googleReviewSupportedTypes,
   logicSupportedTypes,
 } from "../../../utils/data";
-import { showErrorToast } from "../../../utils/notifications";
 import {
   getInitialQuestionValues,
   validateAllLanguagesArePopulated,
@@ -143,7 +142,7 @@ export function WaQuestionDetailedView({
       !form.values.description[selectedLanguage] ||
       form.values.description[selectedLanguage] == ""
     ) {
-      showErrorToast("Question title is missing");
+      toast.error("Question title is missing");
       return "error";
     } else {
       if (incompleteLanguages.length > 0) {
@@ -161,14 +160,12 @@ export function WaQuestionDetailedView({
         });
       } else {
         // Updating existing question
-        notifications.show({
-          id: "load-data",
-          loading: true,
-          title: translations("updating question"),
-          message: translations("Hold on, your changes are getting updated"),
-          autoClose: false,
-          withCloseButton: false,
-        });
+        toast.loading(
+          translations("Hold on, your changes are getting updated"),
+          {
+            id: "load-data",
+          },
+        );
         questionUpdateMutation.mutate({ qId: question.id, data: form.values });
       }
     }

@@ -18,7 +18,7 @@ import SupportWidget from "@rateup/support-widget";
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary/10 to-background py-12 mb-0 flex items-center justify-center">
+      <section className="relative bg-linear-to-br from-primary/10 to-background py-12 mb-0 flex items-center justify-center">
         <div className="absolute inset-0 pointer-events-none">
           <div className="w-72 h-72 bg-primary/20 rounded-full blur-2xl opacity-20 absolute left-1/2 top-0 -translate-x-1/2"></div>
         </div>

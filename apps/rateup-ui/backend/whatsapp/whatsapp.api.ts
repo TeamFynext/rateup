@@ -88,7 +88,7 @@ export async function uploadTemplateMedia(file: File) {
     );
     return response?.data as imageResponse;
   } catch (error) {
-    throw Error(error?.response?.data?.message);
+    throw new Error(error?.response?.data?.message);
   }
 }
 

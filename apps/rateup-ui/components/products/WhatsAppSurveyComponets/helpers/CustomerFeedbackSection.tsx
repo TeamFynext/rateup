@@ -5,7 +5,7 @@ import { Mail, MessageSquare, Phone } from "lucide-react";
 
 export default function CustomerFeedbackSection() {
   return (
-    <section className="w-full mt-10 px-6 py-24 bg-gradient-to-br from-white to-gray-100 text-center">
+    <section className="w-full mt-10 px-6 py-24 bg-linear-to-br from-white to-gray-100 text-center">
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
