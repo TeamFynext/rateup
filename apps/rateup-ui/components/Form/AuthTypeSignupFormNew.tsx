@@ -89,9 +89,7 @@ function AuthTypeSignupForm({
   const handleSubmit = () => {
     setIsLoading(true);
     if (isUserExist) {
-      toast.success("Sign up process is already completed", {
-        id: "",
-      });
+      toast.success("Sign up process is already completed");
       router.push("/dashboard");
       return;
     }

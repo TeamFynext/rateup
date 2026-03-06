@@ -51,14 +51,10 @@ export const useSyncStripeProducts = () => {
     mutationFn: syncStripeProducts,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stripeProducts"] });
-      toast.success("Stripe products synced successfully", {
-        id: "",
-      });
+      toast.success("Stripe products synced successfully");
     },
     onError: (error) => {
-      toast.error(error?.message || "Error in Syncing stripe products", {
-        id: "",
-      });
+      toast.error(error?.message || "Error in Syncing stripe products");
     },
   });
 };
@@ -69,14 +65,10 @@ export const useUpdateStripeProduct = () => {
     mutationFn: updateStripeProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stripeProducts"] });
-      toast.success("Stripe product updated successfully", {
-        id: "",
-      });
+      toast.success("Stripe product updated successfully");
     },
     onError: (error) => {
-      toast.error(error?.message || "Error in updating stripe product", {
-        id: "",
-      });
+      toast.error(error?.message || "Error in updating stripe product");
     },
   });
 };

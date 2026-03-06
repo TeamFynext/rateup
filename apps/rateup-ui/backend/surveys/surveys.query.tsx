@@ -476,14 +476,10 @@ export const useCreateSurveyVariableMutation = (surveyId) => {
       queryClient.invalidateQueries({
         queryKey: ["surveyVariables", surveyId],
       });
-      toast.success("Variable created successfully", {
-        id: "",
-      });
+      toast.success("Variable created successfully");
     },
     onError: (error) => {
-      toast.error(error?.message || `Error creating variable`, {
-        id: "",
-      });
+      toast.error(error?.message || `Error creating variable`);
     },
   });
 };
@@ -496,14 +492,10 @@ export const useUpdateSurveyVariableMutation = (surveyId) => {
       queryClient.invalidateQueries({
         queryKey: ["surveyVariables", surveyId],
       });
-      toast.success("Variable updated successfully", {
-        id: "",
-      });
+      toast.success("Variable updated successfully");
     },
     onError: (error) => {
-      toast.error(error?.message || `Error updating variable`, {
-        id: "",
-      });
+      toast.error(error?.message || `Error updating variable`);
     },
   });
 };
@@ -516,14 +508,10 @@ export const useDeleteSurveyVariableMutation = (surveyId) => {
       queryClient.invalidateQueries({
         queryKey: ["surveyVariables", surveyId],
       });
-      toast.success("Variable deleted successfully", {
-        id: "",
-      });
+      toast.success("Variable deleted successfully");
     },
     onError: (error) => {
-      toast.error(error?.message || `Error deleting variable`, {
-        id: "",
-      });
+      toast.error(error?.message || `Error deleting variable`);
     },
   });
 };

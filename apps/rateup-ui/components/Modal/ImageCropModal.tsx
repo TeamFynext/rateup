@@ -1,7 +1,5 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-
 import {
   Box,
   Button,
@@ -10,6 +8,11 @@ import {
   Modal,
   NumberInput,
 } from "@mantine/core";
+
+import "cropperjs/dist/cropper.css";
+
+import { useCallback, useRef, useState } from "react";
+
 import { useTranslations } from "next-intl";
 import Cropper, { ReactCropperElement } from "react-cropper";
 
