@@ -1,6 +1,7 @@
 import { Button, Menu } from "@mantine/core";
-import { TicketPriority } from "../../../utils/enums/ticket";
 import { IconChevronDown } from "@tabler/icons-react";
+
+import { TicketPriority } from "../../../utils/enums/ticket";
 
 export function PriorityMenu({ priority, setPriority }) {
   return (

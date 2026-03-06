@@ -1,9 +1,9 @@
 import { useRouter } from "next/navigation";
 
 import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import { orgWsMessage } from "../types/global";
-import { showInfoToast } from "../utils/notifications";
 
 export function useNotifyWsMessages() {
   const router = useRouter();
@@ -19,17 +19,17 @@ export function useNotifyWsMessages() {
           window.location.pathname !== pathnamesMap.inbox &&
           message?.inbox?.message?.messageBody?.exchangeProcess === "receive"
         ) {
-          showInfoToast(
-            "Whatsapp Inbox",
-            `You have a new message from ${message.inbox.contact.name}`,
-            <IconBrandWhatsapp size={18} />,
-            () => {
-              router.push(
-                `${pathnamesMap.inbox}?contactId=${message.inbox.contact.id}`,
-              );
+          toast.info(`New message from ${message.inbox.contact.name}`, {
+            icon: <IconBrandWhatsapp size={18} />,
+            action: {
+              label: "View",
+              onClick: () => {
+                router.push(
+                  `${pathnamesMap.inbox}?contactId=${message.inbox.contact.id}`,
+                );
+              },
             },
-            message.inbox.message.messageId,
-          );
+          });
           audio.play().catch((e) => {
             console.warn("Audio playback failed:", e);
           });

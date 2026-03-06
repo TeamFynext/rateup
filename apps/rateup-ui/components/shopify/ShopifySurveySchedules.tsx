@@ -6,6 +6,7 @@ import { ActionIcon, Badge, Group, Menu, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums";
 import { ShopifyIntegration, ShopifySurvey } from "@/types/global";
@@ -15,7 +16,6 @@ import { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
 
 import { shopifyEventData } from "../../utils/constants";
 import { formatIsoDateStringWithTime } from "../../utils/dateTime";
-import { showLoadingToast } from "../../utils/notifications";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import RefreshButton from "../Button/RefreshButton";
 import ConfirmationModal from "../Modal/ConfirmationModal";
@@ -139,14 +139,9 @@ const ActionMenu = ({
       active: !selectedRow.active,
     };
     allSchedules.push(updateRow);
-    showLoadingToast(
-      translations("Updating survey schedules"),
-      "integration-update",
-      true,
-      "",
-      "",
-      false,
-    );
+    toast.loading(translations("Updating survey schedules"), {
+      id: "integration-update",
+    });
     updateIntegration.mutate({
       credential: { ...shopifyInfo.credential, shopifySurveys: allSchedules },
     });
@@ -156,14 +151,9 @@ const ActionMenu = ({
     const allSchedules = shopifyInfo.credential.shopifySurveys.filter(
       (s) => s.event !== selectedRow.event,
     );
-    showLoadingToast(
-      translations("Deleting survey schedules"),
-      "integration-update",
-      true,
-      "",
-      "",
-      false,
-    );
+    toast.loading(translations("Deleting survey schedules"), {
+      id: "integration-update",
+    });
     updateIntegration.mutate({
       credential: { ...shopifyInfo.credential, shopifySurveys: allSchedules },
     });

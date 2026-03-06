@@ -1,9 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
-import { showErrorToastFromError } from "@/utils/query";
+import { toast } from "sonner";
 
 import {
   getProductSetById,
@@ -17,10 +15,10 @@ export const useSyncProductSets = () => {
     mutationFn: syncProductSets,
     onSuccess: (_, catalogId) => {
       qc.invalidateQueries({ queryKey: ["productSets", catalogId] });
-      showSuccessToast("Product sets synced");
+      toast.success("Product sets synced");
     },
-    onError: (e) => {
-      showErrorToastFromError(e, "Sync failed");
+    onError: (error) => {
+      toast.error(error?.message || "Sync failed");
     },
   });
 };

@@ -153,8 +153,8 @@ const ContactGroup = () => {
           setGroupName("");
           setIsEditingName(false);
         },
-        onError: () => {
-          toast.error("Error in updating group name");
+        onError: (error) => {
+          toast.error(error?.message || "Error in updating group name");
         },
       },
     );
@@ -169,8 +169,8 @@ const ContactGroup = () => {
         router.push("/dashboard/contacts/groups");
         router.refresh();
       },
-      onError: () => {
-        toast.error("Error in deleting group");
+      onError: (error) => {
+        toast.error(error?.message || "Error in deleting group");
       },
     });
   }
@@ -207,12 +207,12 @@ const ContactGroup = () => {
 
   return (
     <div className="flex flex-col gap-3 h-full">
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-white to-blue-50/30 shrink-0 p-4">
+      <Card className="border-0 shadow-lg bg-linear-to-br from-white via-white to-blue-50/30 shrink-0 p-4">
         <div className="flex items-center justify-between gap-8">
           <div className="relative flex items-center gap-5 flex-1">
             <div className="relative shrink-0 group">
               <div
-                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 cursor-pointer overflow-hidden relative transition-all hover:ring-rateup-blue"
+                className="w-16 h-16 rounded-2xl bg-linear-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 cursor-pointer overflow-hidden relative transition-all hover:ring-rateup-blue"
                 onClick={() => setShowEditIconDialog(true)}
               >
                 {groupDetails?.icon ? (
@@ -230,7 +230,7 @@ const ContactGroup = () => {
                   <Upload className="w-5 h-5 text-white" />
                 </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br from-rateup-blue to-blue-600 flex items-center justify-center shadow-md ring-4 ring-white">
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-linear-to-br from-rateup-blue to-blue-600 flex items-center justify-center shadow-md ring-4 ring-white">
                 <Users className="w-3.5 h-3.5 text-white" />
               </div>
             </div>
@@ -304,7 +304,7 @@ const ContactGroup = () => {
               </div>
 
               {!isEditingName && (
-                <div className="flex flex-col items-center justify-center px-5 py-2 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 shrink-0 ml-auto">
+                <div className="flex flex-col items-center justify-center px-5 py-2 rounded-xl bg-linear-to-br from-blue-50 to-indigo-50 border border-blue-100 shrink-0 ml-auto">
                   <div className="text-3xl bg-linear-to-r from-rateup-blue to-indigo-600 bg-clip-text text-transparent">
                     {groupDetails?._count?.contacts || 0}
                   </div>
@@ -343,7 +343,7 @@ const ContactGroup = () => {
           )}
         </div>
       </Card>
-      <div className="flex-grow min-h-0 overflow-auto border-0 shadow-lg bg-card">
+      <div className="grow min-h-0 overflow-auto border-0 shadow-lg bg-card">
         <DataTable
           columns={column}
           data={groupDetails?.contacts || []}
@@ -374,7 +374,7 @@ const ContactGroup = () => {
         onAction={handleDeleteGroup}
       />
       <ContactImportErrorModal
-        body={createNewContactsFromCSV?.error?.response?.data}
+        body={createNewContactsFromCSV?.error?.message}
         isError={createNewContactsFromCSV.isError}
       />
     </div>
@@ -396,8 +396,8 @@ const ContactGroupIconEditDialog = ({ opened, setOpened, group }) => {
           toast.success("Icon removed successfully");
           setOpened(false);
         },
-        onError: () => {
-          toast.error("Error removing icon");
+        onError: (error) => {
+          toast.error(error?.message || "Error removing icon");
         },
       },
     );
@@ -416,8 +416,8 @@ const ContactGroupIconEditDialog = ({ opened, setOpened, group }) => {
           setOpened(false);
           deleteUploadedFiles({ fileKeyArray: [{ Key: oldIcon }] });
         },
-        onError: () => {
-          toast.error("Error removing icon");
+        onError: (error) => {
+          toast.error(error?.message || "Error removing icon");
         },
       },
     );
@@ -426,7 +426,7 @@ const ContactGroupIconEditDialog = ({ opened, setOpened, group }) => {
     <Dialog open={opened} onOpenChange={setOpened}>
       <DialogContent className="border-0 shadow-2xl max-w-md">
         <DialogHeader>
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center mb-4">
+          <div className="w-14 h-14 rounded-full bg-linear-to-br from-orange-100 to-orange-200 flex items-center justify-center mb-4">
             <Folder className="w-7 h-7 text-rateup-orange" />
           </div>
           <DialogTitle className="text-2xl">Edit Group Icon</DialogTitle>
@@ -437,7 +437,7 @@ const ContactGroupIconEditDialog = ({ opened, setOpened, group }) => {
         <div className="py-6">
           {/* Current Icon Preview */}
           <div className="flex justify-center mb-6">
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 overflow-hidden">
+            <div className="w-32 h-32 rounded-2xl bg-linear-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 overflow-hidden">
               {group?.icon ? (
                 <Image
                   src={getFileUrlFromKey(group?.icon)}

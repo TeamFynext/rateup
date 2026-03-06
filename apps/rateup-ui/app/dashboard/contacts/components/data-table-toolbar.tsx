@@ -186,8 +186,8 @@ export function DataTableToolbar<TData>({
         toast.success("contact deleted successfully");
         resetRowSelection();
       },
-      onError: () => {
-        toast.error("Error deleting contacts");
+      onError: (error) => {
+        toast.error(error?.message || "Error deleting contacts");
       },
     });
   }
@@ -439,8 +439,8 @@ const ImportContactModal = ({ opened, setOpened }) => {
         toast.success("Contact imported successfully");
         setOpened(false);
       },
-      onError: () => {
-        toast.error("Importing failed");
+      onError: (error) => {
+        toast.error(error?.message || "Importing failed");
         setOpened(false);
       },
     });
@@ -541,7 +541,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
         </div>
       </DialogContent>
       <ContactImportErrorModal
-        body={importCSVContactMutation?.error?.response?.data}
+        body={importCSVContactMutation?.error?.message}
         isError={importCSVContactMutation.isError}
       />
     </Dialog>

@@ -1,9 +1,8 @@
 import { rem } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import { getTeamSurveys } from "../team/team.api";
 import {
   cloneSurvey,
@@ -177,26 +176,15 @@ export const useCreateSurveyMutation = () => {
   const createMutation = useMutation({
     mutationFn: createSurvey,
     onSuccess: (data) => {
-      notifications.update({
+      toast.success("Survey Created...!", {
         id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Success",
-        message: "Survey Created...!",
-        icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
-        autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["whatsappsurveys"] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
     },
-    onError: (error: any) => {
-      notifications.show({
+    onError: (error) => {
+      toast.loading(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -220,14 +208,8 @@ export const useCreateSurveyLandingPageMutation = ({
   const createMutation = useMutation({
     mutationFn: createSurveyLandingPage,
     onSuccess: () => {
-      notifications.update({
+      toast.success("Survey Landing Page created Created...!", {
         id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Success",
-        message: "Survey Landing Page created Created...!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["surveysLanding"] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
@@ -235,14 +217,9 @@ export const useCreateSurveyLandingPageMutation = ({
       setIsCreating(false);
       resetForm();
     },
-    onError: (error: any) => {
-      notifications.show({
+    onError: (error) => {
+      toast.loading(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -266,14 +243,8 @@ export const useUpdateSurveyLandingPageMutation = ({
   const updateMutation = useMutation({
     mutationFn: updateSurveyLandingPage,
     onSuccess: () => {
-      notifications.update({
+      toast.success("Survey Landing Page Updated...!", {
         id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Success",
-        message: "Survey Landing Page Updated...!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["surveysLanding"] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
@@ -281,14 +252,9 @@ export const useUpdateSurveyLandingPageMutation = ({
       setIsCreating(false);
       resetForm();
     },
-    onError: (error: any) => {
-      notifications.show({
+    onError: (error) => {
+      toast.loading(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -307,29 +273,17 @@ export function useCloneSurveyMutation({ close, selectedTeamId }: CloneProps) {
     mutationFn: ({ id, teamIds }: { id: string; teamIds: string[] }) =>
       cloneSurvey(id, teamIds),
     onSuccess: (data, variables) => {
-      notifications.update({
+      toast.success("Survey Copy created!", {
         id: "load-data",
-        color: "teal",
-        title: "Success",
-        loading: false,
-        message: "Survey Copy created!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       queryClient.invalidateQueries({ queryKey: ["surveys", selectedTeamId] });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
       close();
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Survey Clone:", error.message);
-      notifications.update({
+      toast.error(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        loading: false,
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -340,27 +294,15 @@ export function useUpdateSurveyPwdMutation(surveyId) {
   return useMutation({
     mutationFn: updateSurveyPassword,
     onSuccess: (res: any) => {
-      notifications.show({
+      toast.loading("Sucessfully updated Password Protection ", {
         id: "load-data",
-        color: "green",
-        title: res?.data?.isProtected
-          ? "Success"
-          : "Disabled Password - Success",
-        message: "Sucessfully updated Password Protection ",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Password Protection:", error.message);
-      notifications.show({
+      toast.loading(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -375,28 +317,16 @@ export function useVerifySurveyPwdMutation(
   return useMutation({
     mutationFn: () => handleSurveyVerifyPwd(surveyId, password),
     onSuccess: (response) => {
-      notifications.update({
+      toast.success("Start attending the survey. ", {
         id: "load-data",
-        color: "green",
-        loading: false,
-        title: "Access Verified...",
-        message: "Start attending the survey. ",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       setIsPasswordVerified(true);
       close();
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Survey Login", error.message);
-      notifications.update({
+      toast.error(error?.message, {
         id: "load-data",
-        loading: false,
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -412,27 +342,17 @@ export function useEditSurveyMutation(id) {
   return useMutation({
     mutationFn: (data: any) => updateSurvey(id, data),
     onSuccess: () => {
-      notifications.show({
+      toast.loading("Survey Updated Successfully!", {
         id: "load-data",
-        color: "teal",
-        title: "Success",
-        message: "Survey Updated Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
       queryClient.invalidateQueries({ queryKey: ["survey", id] });
       queryClient.invalidateQueries({ queryKey: ["questions", id] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Survey Update:", error.message);
-      notifications.show({
+      toast.loading(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Some Changes Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 5000,
       });
       queryClient.invalidateQueries({ queryKey: ["survey"] });
     },
@@ -448,15 +368,12 @@ export const useUpdateSurveyGoogleLinkMutation = (
       return updateSurveyGoogleLink(surveyTeamMapId, data);
     },
     onSuccess: (data) => {
-      notifications.clean();
+      toast.dismiss();
       setLinkUpdateStatus(true);
     },
     onError: (err) => {
       console.error(err);
-      notifications.show({
-        message: "Error updating google link",
-        color: "red",
-      });
+      toast.loading("Error updating google link");
       setLinkUpdateStatus(false);
     },
   });
@@ -520,7 +437,7 @@ export function useUpdateSurveyMutation() {
     mutationFn: ({ surveyId, data }: { surveyId: string; data: any }) =>
       updateSurvey(surveyId, data),
     onSuccess: () => {
-      showSuccessToast("Survey Updated Successfully!");
+      toast.success("Survey Updated Successfully!");
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
     },
   });
@@ -559,14 +476,14 @@ export const useCreateSurveyVariableMutation = (surveyId) => {
       queryClient.invalidateQueries({
         queryKey: ["surveyVariables", surveyId],
       });
-      showSuccessToast("Variable created successfully", "", <IconCheck />);
+      toast.success("Variable created successfully", {
+        id: "",
+      });
     },
-    onError: (e: any) => {
-      showErrorToast(
-        `Error creating variable:${e?.response?.data?.error}`,
-        "",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error creating variable`, {
+        id: "",
+      });
     },
   });
 };
@@ -579,14 +496,14 @@ export const useUpdateSurveyVariableMutation = (surveyId) => {
       queryClient.invalidateQueries({
         queryKey: ["surveyVariables", surveyId],
       });
-      showSuccessToast("Variable updated successfully", "", <IconCheck />);
+      toast.success("Variable updated successfully", {
+        id: "",
+      });
     },
-    onError: (e: any) => {
-      showErrorToast(
-        `Error updating variable:${e?.response?.data?.error}`,
-        "",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error updating variable`, {
+        id: "",
+      });
     },
   });
 };
@@ -599,14 +516,14 @@ export const useDeleteSurveyVariableMutation = (surveyId) => {
       queryClient.invalidateQueries({
         queryKey: ["surveyVariables", surveyId],
       });
-      showSuccessToast("Variable deleted successfully", "", <IconCheck />);
+      toast.success("Variable deleted successfully", {
+        id: "",
+      });
     },
-    onError: (e: any) => {
-      showErrorToast(
-        `Error deleting variable:${e?.response?.data?.error}`,
-        "",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error deleting variable`, {
+        id: "",
+      });
     },
   });
 };
@@ -636,12 +553,19 @@ export const useSurveyUpdateMutation = (surveyId) => {
       return updateSurvey(surveyId, data);
     },
     onSuccess: () => {
-      showSuccessToast("Data updated Successfully", surveyId);
+      toast.success("Data updated Successfully", {
+        id: surveyId,
+      });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["survey-templates", "web"] });
     },
-    onError: () => {
-      showErrorToast("Something went wrong, Please try again later.", surveyId);
+    onError: (error) => {
+      toast.error(
+        error?.message || "Something went wrong, Please try again later.",
+        {
+          id: surveyId,
+        },
+      );
     },
   });
 };

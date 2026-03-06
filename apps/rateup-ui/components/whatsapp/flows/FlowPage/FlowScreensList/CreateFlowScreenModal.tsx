@@ -5,10 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 
 import { useForm } from "@mantine/form";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import { getUniqueRandomAlphaId } from "../../../../../utils/misc/random.utils";
-import { showErrorToast } from "../../../../../utils/notifications";
 import {
   getNewScreenObj,
   getScreenObjById,
@@ -48,7 +48,7 @@ function CreateFlowScreenModal({
     validate: {
       screenId: (value) => {
         if (!/^[a-zA-Z,_]*$/.test(value)) {
-          showErrorToast(
+          toast.error(
             translations(
               "Error Occured Please report this bug to the developer code: #flowsidval",
             ),

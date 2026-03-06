@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   approveRedemption,
   getRedemptions,
@@ -42,10 +42,10 @@ export const useApproveRedemptionMutation = () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedemptions"] });
       qc.invalidateQueries({ queryKey: ["loyaltyTransactions"] });
       qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Redemption approved successfully");
+      toast.success("Redemption approved successfully");
     },
-    onError: () => {
-      showErrorToast("Error approving redemption");
+    onError: (error) => {
+      toast.error(error?.message || "Error approving redemption");
     },
   });
   return approveMutation;
@@ -59,10 +59,10 @@ export const useRejectRedemptionMutation = () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedemptions"] });
       qc.invalidateQueries({ queryKey: ["loyaltyTransactions"] });
       qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Redemption rejected successfully");
+      toast.success("Redemption rejected successfully");
     },
-    onError: () => {
-      showErrorToast("Error rejecting redemption");
+    onError: (error) => {
+      toast.error(error?.message || "Error rejecting redemption");
     },
   });
   return rejectMutation;

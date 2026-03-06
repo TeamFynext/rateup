@@ -412,8 +412,8 @@ export default function CampaignDetails() {
               : t("messages.dripPaused"),
           );
         },
-        onError: () => {
-          toast.error(t("messages.dripError"));
+        onError: (error) => {
+          toast.error(error?.message || t("messages.dripError"));
         },
       },
     );
@@ -451,8 +451,8 @@ export default function CampaignDetails() {
         toast.success("Campaign deleted successfully");
         router.push("/dashboard/campaign");
       },
-      onError: () => {
-        toast.error("Failed to delete campaign");
+      onError: (error) => {
+        toast.error(error?.message || "Failed to delete campaign");
       },
     });
   };
@@ -468,8 +468,8 @@ export default function CampaignDetails() {
         onSuccess: () => {
           toast.success(t("messages.campaignStopped"));
         },
-        onError: () => {
-          toast.error(t("messages.campaignStopError"));
+        onError: (error) => {
+          toast.error(error?.message || t("messages.campaignStopError"));
         },
       },
     );

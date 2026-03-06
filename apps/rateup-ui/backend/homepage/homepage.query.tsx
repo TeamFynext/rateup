@@ -1,31 +1,22 @@
-import { notifications } from "@mantine/notifications";
 import { IconCheck } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import { IContactForm, sendContactMessage } from "./homepage.api";
 
 export function useSendContactFormMutation(setIsLoading) {
   return useMutation({
     mutationFn: (values: IContactForm) => sendContactMessage(values),
     onSuccess: () => {
-      notifications.show({
+      toast.loading("Message sent Successfully!", {
         id: "load-data",
-        color: "teal",
-        title: "Success",
-        message: "Message sent Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       setIsLoading(false);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Sending msg:", error.message);
-      notifications.show({
+      toast.loading(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
 
       setIsLoading(false);

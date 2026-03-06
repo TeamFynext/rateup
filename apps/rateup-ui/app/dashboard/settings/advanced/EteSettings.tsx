@@ -20,6 +20,7 @@ import {
   IconRefresh,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useUpdateOrgDetailsMutation } from "../../../../backend/org/org.query";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
@@ -32,10 +33,6 @@ import {
   generateKeyPair,
   passwordToKey,
 } from "../../../../utils/encryption";
-import {
-  showLoadingToast,
-  showSuccessToast,
-} from "../../../../utils/notifications";
 import styles from "../setting.module.css";
 
 export default function ETESettings() {
@@ -59,7 +56,7 @@ export default function ETESettings() {
             },
           });
           sessionStorage.clear();
-          showSuccessToast(translations("End to end encryption enabled"));
+          toast.success(translations("End to end encryption enabled"));
           closeEteModal();
         },
       );
@@ -77,12 +74,9 @@ export default function ETESettings() {
     },
   });
   const onPasswordResetSubmit = async (values) => {
-    showLoadingToast(
-      translations("Hold your password is getting modified"),
-      "reset-encryption-password",
-      true,
-      translations("Resetting Password"),
-    );
+    toast.loading(translations("Hold your password is getting modified"), {
+      id: "reset-encryption-password",
+    });
     const { privateKey } = await decryptPrivateKey(
       user?.encryptionKeys?.privateKey,
       values["oldPassword"],
@@ -115,7 +109,7 @@ export default function ETESettings() {
           {
             onSuccess: () => {
               sessionStorage.clear();
-              showSuccessToast(translations("Password reset successful"));
+              toast.success(translations("Password reset successful"));
               closePasswordResetModal();
             },
           },

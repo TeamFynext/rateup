@@ -11,7 +11,6 @@ import React, {
 import { useParams, useRouter } from "next/navigation";
 
 import { useDebouncedState } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
   IconFileDownload,
@@ -27,6 +26,7 @@ import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
+import { toast } from "sonner";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
@@ -75,11 +75,6 @@ import {
 } from "../../../types/enums";
 import { docsPath, PAGE_SIZE } from "../../../utils/constants";
 import { TicketType } from "../../../utils/enums/ticket";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "../../../utils/notifications";
 import InfoButton from "../../Button/InfoButton";
 import RefreshButton from "../../Button/RefreshButton";
 import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
@@ -208,11 +203,9 @@ const WaResponses = ({
 
   const downloadExcelResponse = useDownloadExcelResponse();
   const handleExportContacts = useCallback(() => {
-    showLoadingToast(
-      translations("Exporting Contact responses to Contacts"),
-      "export-contacts",
-      true,
-    );
+    toast.loading(translations("Exporting Contact responses to Contacts"), {
+      id: "export-contacts",
+    });
     exportContactMutation.mutate();
   }, [exportContactMutation, translations]);
 
@@ -252,13 +245,8 @@ const WaResponses = ({
   }, [createTicketOpened]);
 
   const confirmDelete = useCallback(() => {
-    notifications.show({
+    toast.loading(translations("Hold on, response is getting deleted"), {
       id: "load-data",
-      loading: true,
-      title: translations("Deleting Response"),
-      message: translations("Hold on, response is getting deleted"),
-      autoClose: false,
-      withCloseButton: false,
     });
     setIsDeleting(true);
     deleteResponse.mutate(selectedRowId);
@@ -392,10 +380,11 @@ const WaResponses = ({
         {
           onSuccess: () => {
             setIsSyncing(false);
-            showSuccessToast(
+            toast.success(
               translations("Response synced to Google sheet successfully"),
-              "success",
-              <IconCheck />,
+              {
+                id: "success",
+              },
             );
             toggle();
           },
@@ -411,7 +400,9 @@ const WaResponses = ({
               redirectModalOpen();
             } else {
               toggle();
-              showErrorToast(translations("Error in syncing response"));
+              toast.error(
+                error?.message || translations("Error in syncing response"),
+              );
             }
           },
         },

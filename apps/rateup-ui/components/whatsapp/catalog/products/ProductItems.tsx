@@ -11,6 +11,7 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import {
@@ -21,11 +22,6 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import { Button } from "@/components/ui/button";
 import { fallbackImage } from "@/utils/constants";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "@/utils/notifications";
 
 import { AddCatalogProductModal } from "./AddCatalogProduct";
 
@@ -99,14 +95,9 @@ const ProductItems = ({ catalogId }) => {
   }
   const { vertical } = catalog;
   function handleDelete(product) {
-    showLoadingToast(
-      "Hold on...deleting..",
-      "delete-catalog-product",
-      true,
-      "Loading",
-      "",
-      false,
-    );
+    toast.loading("Hold on...deleting..", {
+      id: "delete-catalog-product",
+    });
 
     let productIds = [];
     if (vertical === "commerce") {
@@ -125,20 +116,14 @@ const ProductItems = ({ catalogId }) => {
       { productIds },
       {
         onSuccess: () => {
-          showSuccessToast(
-            "product deleted",
-            "delete-catalog-product",
-            <IconCheck />,
-            true,
-          );
+          toast.success("product deleted", {
+            id: "delete-catalog-product",
+          });
         },
-        onError: () => {
-          showErrorToast(
-            "product deletion failed",
-            "delete-catalog-product",
-            <IconX />,
-            true,
-          );
+        onError: (error) => {
+          toast.error(error?.message || "product deletion failed", {
+            id: "delete-catalog-product",
+          });
         },
       },
     );

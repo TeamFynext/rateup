@@ -4,9 +4,9 @@ import { useRef } from "react";
 
 import { ActionIcon, Group, Stack, Text } from "@mantine/core";
 import { IconDeviceAudioTape, IconDownload } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import { useGetMediaFile } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { showErrorToast } from "@/utils/notifications";
 
 interface Props {
   messageContent: string;
@@ -19,11 +19,9 @@ export default function WaInboxVideo({ messageContent }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleVideoError = () => {
-    showErrorToast(
-      "Video file not found",
-      "error-video-not-found",
-      <IconDeviceAudioTape />,
-    );
+    toast.error("Video file not found", {
+      id: "error-video-not-found",
+    });
   };
 
   const handleDownload = () => {
@@ -42,12 +40,10 @@ export default function WaInboxVideo({ messageContent }: Props) {
           });
         }
       },
-      onError: () => {
-        showErrorToast(
-          "Failed to download video file",
-          "error-video-download",
-          <IconDeviceAudioTape />,
-        );
+      onError: (error) => {
+        toast.error(error?.message || "Failed to download video file", {
+          id: "error-video-download",
+        });
       },
     });
   };

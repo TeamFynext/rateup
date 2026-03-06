@@ -1,10 +1,10 @@
-import { notifications } from "@mantine/notifications";
 import {
   useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { saveContactsToDB } from "@/app/dashboard/inbox/idb";
@@ -13,11 +13,6 @@ import useContactStore, {
   useMessagesStore,
 } from "@/app/dashboard/inbox/store";
 import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilter";
-import {
-  showErrorToast,
-  showSuccessToast,
-  showWarnToast,
-} from "@/utils/notifications";
 
 import {
   assignInboxToUser,
@@ -113,16 +108,15 @@ export const useExportWaChats = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showSuccessToast(
-        "Chats exported successfully",
-        "export-chats",
-        undefined,
-        true,
-      );
+      toast.success("Chats exported successfully", {
+        id: "export-chats",
+      });
     },
     onError: (error) => {
       console.error("Error exporting chats", error);
-      showErrorToast("Error exporting chats", "export-chats", undefined, true);
+      toast.error(error?.message || "Error exporting chats", {
+        id: "export-chats",
+      });
     },
   });
 };
@@ -143,10 +137,10 @@ export const useAssignInboxToUer = (contactId, filterData) => {
       qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
       qc.invalidateQueries({ queryKey: ["notification"] });
       qc.invalidateQueries({ queryKey: ["notificationCount"] });
-      showSuccessToast("Assigned successfully");
+      toast.success("Assigned successfully");
     },
     onError: (e) => {
-      showWarnToast(e?.message || "Something went wrong");
+      toast.warning(e?.message || "Something went wrong");
     },
   });
 };
@@ -182,11 +176,11 @@ export const useBlockWhatsAppUser = () => {
   return useMutation({
     mutationFn: blockWhatsAppUser,
     onSuccess: () => {
-      showSuccessToast("User blocked successfully");
+      toast.success("User blocked successfully");
       qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
     },
-    onError: (e) => {
-      showErrorToast("Unable to block users");
+    onError: (error) => {
+      toast.error(error?.message || "Unable to block users");
     },
   });
 };
@@ -196,11 +190,11 @@ export const useUnBlockWhatsAppUser = (filterData) => {
   return useMutation({
     mutationFn: unblockWhatsAppUser,
     onSuccess: () => {
-      showSuccessToast("User unblocked successfully");
+      toast.success("User unblocked successfully");
       qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
     },
-    onError: (e) => {
-      showErrorToast("Unable to unblock users");
+    onError: (error) => {
+      toast.error(error?.message || "Unable to unblock users");
     },
   });
 };
@@ -245,24 +239,13 @@ export function useGenerateInboxResponse() {
         queryKey: ["contacts", "filtered"],
         exact: false,
       });
-
-      notifications.update({
+      toast.success("Response generated successfully", {
         id: "generateWaChat",
-        loading: false,
-        color: "green",
-        title: "Response Generate Success",
-        message: "Generate Response successfully",
-        autoClose: 3000,
       });
     },
-    onError: (error: any) => {
-      notifications.update({
+    onError: (error) => {
+      toast.error(error?.message || "Failed Response Generate", {
         id: "generateWaChat",
-        color: "red",
-        loading: false,
-        title: "Failed Response Generate",
-        message: error?.response?.data?.message ?? error?.response?.data,
-        autoClose: 3000,
       });
     },
   });

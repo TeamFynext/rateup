@@ -12,7 +12,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import {
   IconCircleCheckFilled,
   IconEdit,
@@ -21,6 +20,7 @@ import {
   IconWashDrycleanOff,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { fallbackImage } from "../../../../utils/constants";
 import { getImageValue } from "../../../../utils/file-upload/upload";
@@ -119,14 +119,12 @@ const TableRow = ({
             headerTitle={translations("Delete Menu Item?")}
             confirmLabel={translations("Delete")}
             onConfirm={(e) => {
-              notifications.show({
-                id: "delete-data-menu-item",
-                loading: true,
-                title: translations("Deleting menu item"),
-                message: translations("Hold on, menu item is getting deleted"),
-                autoClose: false,
-                withCloseButton: false,
-              });
+              toast.loading(
+                translations("Hold on, menu item is getting deleted"),
+                {
+                  id: "delete-data-menu-item",
+                },
+              );
               deleteItemMutation.mutate(item?.id);
               close();
             }}

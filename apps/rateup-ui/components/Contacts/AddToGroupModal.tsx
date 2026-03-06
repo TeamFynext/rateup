@@ -49,8 +49,8 @@ const AddToGroupModal = ({
           }
           setOpened(false);
         },
-        onError: () => {
-          toast.error("error adding contact to group");
+        onError: (error) => {
+          toast.error(error?.message || "error adding contact to group");
           setOpened(false);
         },
       },

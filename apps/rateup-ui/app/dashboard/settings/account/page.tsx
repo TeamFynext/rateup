@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 
 import "react-phone-number-input/style.css";
 
@@ -25,6 +24,7 @@ import PhoneInputWithCountrySelect, {
 } from "react-phone-number-input";
 import SelectR from "react-select";
 import countryList from "react-select-country-list";
+import { toast } from "sonner";
 
 import {
   useUpdateOrgDetailsMutation,
@@ -193,29 +193,23 @@ export default function Account() {
             if (typeof fileKey === "string") {
               updateLogo.mutate(data);
 
-              notifications.show({
-                id: "load-data",
-                loading: true,
-                title: translations("Uploading Logo"),
-                message: translations(
-                  "Hold on, changing your organization Logo",
-                ),
-                autoClose: false,
-                withCloseButton: false,
-              });
+              toast.loading(
+                translations("Hold on, changing your organization Logo"),
+                {
+                  id: "load-data",
+                },
+              );
             }
           } else {
             const data = { profilePhoto: fileKey };
             updateProfilePhoto.mutate(data, {
               onSuccess: () => {
-                notifications.update({
-                  id: "upload-photo",
-                  title: translations("Success"),
-                  message: translations("Profile photo updated successfully"),
-                  color: "green",
-                  loading: false,
-                  autoClose: 3000,
-                });
+                toast.success(
+                  translations("Profile photo updated successfully"),
+                  {
+                    id: "upload-photo",
+                  },
+                );
               },
             });
           }
@@ -253,14 +247,12 @@ export default function Account() {
       industry: values?.industry ?? "",
       businessmail: values?.businessmail ?? "",
     };
-    notifications.show({
-      id: "load-data",
-      loading: true,
-      title: translations("Updating Organization info"),
-      message: translations("Hold on, Organization info is getting updated"),
-      autoClose: false,
-      withCloseButton: false,
-    });
+    toast.loading(
+      translations("Hold on, Organization info is getting updated"),
+      {
+        id: "load-data",
+      },
+    );
     orgDetailsUpdate.mutate(data);
   };
 
@@ -282,23 +274,16 @@ export default function Account() {
 
   useEffect(() => {
     if (updateProfilePhoto.isPending) {
-      notifications.show({
+      toast.loading(translations("Hold on, changing your profile photo"), {
         id: "upload-photo",
-        loading: true,
-        title: translations("Uploading photo"),
-        message: translations("Hold on, changing your profile photo"),
-        autoClose: false,
-        withCloseButton: false,
       });
       if (updateLogo.isPending) {
-        notifications.show({
-          id: "upload-photo",
-          loading: true,
-          title: translations("Uploading photo"),
-          message: translations("Hold on, changing your organization photo"),
-          autoClose: false,
-          withCloseButton: false,
-        });
+        toast.loading(
+          translations("Hold on, changing your organization photo"),
+          {
+            id: "upload-photo",
+          },
+        );
       }
     }
   }, [updateLogo.isPending, updateProfilePhoto.isPending]);
@@ -316,7 +301,7 @@ export default function Account() {
 
       {/* User Profile Section */}
       {isProfileLoading ? (
-        <Card className="p-4 sm:p-6 shadow-sm border-gray-200 bg-gradient-to-br from-white to-gray-50/50">
+        <Card className="p-4 sm:p-6 shadow-sm border-gray-200 bg-linear-to-br from-white to-gray-50/50">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
             {/* Avatar Skeleton */}
             <div className="relative">
@@ -341,7 +326,7 @@ export default function Account() {
           </div>
         </Card>
       ) : (
-        <Card className="p-4 sm:p-6 shadow-sm border-gray-200 bg-gradient-to-br from-white to-gray-50/50">
+        <Card className="p-4 sm:p-6 shadow-sm border-gray-200 bg-linear-to-br from-white to-gray-50/50">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
             {/* Avatar Section */}
             <div className="relative group">

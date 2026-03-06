@@ -4,10 +4,10 @@ import React, { useRef } from "react";
 
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { RateupFileUploadButton } from "@/components/Button/RateupButtons";
-import { showErrorToast } from "@/utils/notifications";
 
 import { FileConverter } from "./DataSource";
 
@@ -38,10 +38,9 @@ const ImageInput = (props) => {
       choiceForm.setFieldValue("image", base64String);
       props.onChange(base64String);
     } catch (error) {
-      showErrorToast(
-        "Error converting file to Base64:" + JSON.stringify(error),
-        "file-converting",
-      );
+      toast.error("Error converting file to Base64:" + JSON.stringify(error), {
+        id: "file-converting",
+      });
     }
   };
   return (

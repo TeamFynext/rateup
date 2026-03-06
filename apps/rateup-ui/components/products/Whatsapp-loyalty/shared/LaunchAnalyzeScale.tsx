@@ -77,7 +77,7 @@ const LaunchAnalyzeScale = () => {
 
         {/* Benefits Section */}
         <motion.div
-          className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-8 lg:p-12"
+          className="bg-linear-to-br from-purple-50 to-indigo-50 rounded-2xl p-8 lg:p-12"
           variants={item}
           initial="hidden"
           whileInView="visible"

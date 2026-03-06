@@ -1,10 +1,4 @@
 import { useEffect, useState } from "react";
-
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-import countryList from "react-select-country-list";
-
-import "react-phone-number-input/style.css";
-
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -33,7 +27,9 @@ import {
 } from "lucide-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import SelectR from "react-select";
+import countryList from "react-select-country-list";
 import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
@@ -192,7 +188,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
     });
   };
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center w-full p-3 sm:p-4 md:p-6 bg-gradient-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center w-full p-3 sm:p-4 md:p-6 bg-linear-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative">
       <div className="text-center mb-0.5 sm:mb-1 max-w-xs sm:max-w-sm">
         <div className="flex items-center justify-center">
           <img
@@ -336,7 +332,7 @@ export function Step1({ formData, handleNext, translations, google }) {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
-          className="inline-flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30 mb-1.5 sm:mb-2"
+          className="inline-flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-2xl bg-linear-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30 mb-1.5 sm:mb-2"
         >
           <Users className="w-5 h-5 sm:w-5.5 sm:h-5.5 md:w-6 md:h-6 text-white" />
         </motion.div>
@@ -694,7 +690,7 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
-          className="inline-flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30 mb-1.5 sm:mb-2 mx-auto"
+          className="inline-flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-2xl bg-linear-to-br from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30 mb-1.5 sm:mb-2 mx-auto"
         >
           <Building className="w-5 h-5 sm:w-5.5 sm:h-5.5 md:w-6 md:h-6 text-white" />
         </motion.div>
@@ -858,7 +854,7 @@ export function Step3({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", duration: 0.6 }}
-            className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 shadow-lg shadow-purple-500/30 mb-1.5 sm:mb-2 mx-auto"
+            className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-linear-to-br from-purple-400 to-pink-500 shadow-lg shadow-purple-500/30 mb-1.5 sm:mb-2 mx-auto"
           >
             <Target className="w-5 h-5 sm:w-5.5 sm:h-5.5 md:w-6 md:h-6 text-white" />
           </motion.div>
@@ -892,7 +888,7 @@ export function Step3({
                     className={`w-5 h-5 sm:w-6 sm:h-6 rounded-sm flex items-center justify-center transition-colors shadow-md ${
                       formData.values.goals.includes(goal.id)
                         ? `bg-linear-to-r ${goal.color}`
-                        : "bg-gradient-to-br from-gray-200 to-gray-300"
+                        : "bg-linear-to-br from-gray-200 to-gray-300"
                     }`}
                   >
                     <goal.icon

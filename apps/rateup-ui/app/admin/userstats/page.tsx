@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +46,6 @@ import {
   isToday,
   isYesterday,
 } from "../../../utils/dateTime";
-import { showLoadingToast } from "../../../utils/notifications";
 import { DataTableToolbar } from "./data-table-toolbar";
 import UserModal from "./UserModal";
 
@@ -220,12 +220,9 @@ const index = () => {
   };
 
   const handleUpdateUserRecipe = () => {
-    showLoadingToast(
-      translations("Recipes getting updated"),
-      "user-recipe",
-      true,
-      "Updating..",
-    );
+    toast.loading(translations("Recipes getting updated"), {
+      id: "user-recipe",
+    });
     updateRecipeMutation.mutate();
   };
 
@@ -313,7 +310,7 @@ const index = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
           <Card className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
+            <div className="absolute inset-0 bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -331,7 +328,7 @@ const index = () => {
           </Card>
 
           <Card className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20" />
+            <div className="absolute inset-0 bg-linear-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -349,7 +346,7 @@ const index = () => {
           </Card>
 
           <Card className="relative overflow-hidden border-green-200 dark:border-green-800">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20" />
+            <div className="absolute inset-0 bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -369,7 +366,7 @@ const index = () => {
           </Card>
 
           <Card className="relative overflow-hidden border-amber-200 dark:border-amber-800">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20" />
+            <div className="absolute inset-0 bg-linear-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -389,7 +386,7 @@ const index = () => {
           </Card>
 
           <Card className="relative overflow-hidden border-purple-200 dark:border-purple-800">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20" />
+            <div className="absolute inset-0 bg-linear-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -411,7 +408,7 @@ const index = () => {
           </Card>
 
           <Card className="relative overflow-hidden border-rose-200 dark:border-rose-800">
-            <div className="absolute inset-0 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20" />
+            <div className="absolute inset-0 bg-linear-to-br from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20" />
             <CardHeader className="relative pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">

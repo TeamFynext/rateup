@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import {
   createReviewSuggestions,
   deleteReviewSuggestion,
@@ -7,7 +9,6 @@ import {
   getReviewsCountByTeamId,
   updateReviewSuggestion,
 } from "./reviewSuggestion.api";
-import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
 
 export const useReviewSuggestions = (enabled: boolean, teamId: string) =>
   useQuery({
@@ -36,13 +37,13 @@ export const useCreateReviewSuggestionsMutation = (teamId: string) => {
   const createMutation = useMutation({
     mutationFn: createReviewSuggestions,
     onSuccess: () => {
-      showSuccessToast("Review suggestions created successfully");
+      toast.success("Review suggestions created successfully");
       queryClient.invalidateQueries({
         queryKey: ["reviewSuggestion", teamId],
       });
     },
-    onError: () => {
-      showErrorToast("Error creating review suggestions");
+    onError: (error) => {
+      toast.error(error?.message || "Error creating review suggestions");
     },
   });
   return createMutation;
@@ -57,15 +58,15 @@ export const useUpdateReviewSuggestionMutation = (
   const updateMutation = useMutation({
     mutationFn: updateReviewSuggestion,
     onSuccess: (_data, variables) => {
-      showSuccessToast("Review suggestion updated successfully");
+      toast.success("Review suggestion updated successfully");
       console.log(variables);
       onSuccess();
       queryClient.invalidateQueries({
         queryKey: ["reviewSuggestion", teamId],
       });
     },
-    onError: () => {
-      showErrorToast("Error updating review suggestion");
+    onError: (error) => {
+      toast.error(error?.message || "Error updating review suggestion");
       onError();
     },
   });
@@ -81,14 +82,14 @@ export const useDeleteReviewSuggestionMutation = (
     mutationFn: deleteReviewSuggestion,
     onSuccess: () => {
       suppressNotifications ||
-        showSuccessToast("Review suggestion deleted successfully");
+        toast.success("Review suggestion deleted successfully");
       queryClient.invalidateQueries({
         queryKey: ["reviewSuggestion", teamId],
       });
     },
-    onError: () => {
+    onError: (error) => {
       suppressNotifications ||
-        showErrorToast("Error deleting review suggestion");
+        toast.error(error?.message || "Error deleting review suggestion");
     },
   });
   return deleteMutation;

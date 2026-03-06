@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const ReviewCta = () => {
   return (
-    <section className="py-24 px-6 lg:px-8 bg-gradient-to-br from-[#075E54] via-[#009987] to-[#075E54] text-white">
+    <section className="py-24 px-6 lg:px-8 bg-linear-to-br from-[#075E54] via-[#009987] to-[#075E54] text-white">
       <div className="max-w-4xl mx-auto text-center">
         <h2 className="text-3xl md:text-4xl font-bold leading-snug">
           Ready to Boost Your Online Reputation?

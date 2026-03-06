@@ -9,18 +9,14 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { IconCalendar, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 import { DateRangePicker, Range } from "react-date-range";
 
-import classes from "./InsideLabel.module.css";
-
-import "react-date-range/dist/styles.css";
-import "react-date-range/dist/theme/default.css";
-
-import { IconCalendar, IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
-
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+
+import classes from "./InsideLabel.module.css";
 
 export function DateRangePickerButton({
   onChange,

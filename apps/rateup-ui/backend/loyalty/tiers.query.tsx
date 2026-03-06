@@ -28,7 +28,8 @@ export const useCreateLoyaltyTierMutation = (onSuccess?: () => void) => {
     },
     onError: (error) => {
       toast.error(
-        `${error.message || "Error creating loyalty tier: Unknown error"}`,
+        error?.message ||
+          `${error.message || "Error creating loyalty tier: Unknown error"}`,
       );
     },
   });

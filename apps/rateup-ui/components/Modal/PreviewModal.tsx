@@ -1,4 +1,5 @@
 import { Image, Modal, Stack } from "@mantine/core";
+
 import { RateupButtonBlue } from "../Button/RateupButtons";
 
 interface PreviewModalProps {

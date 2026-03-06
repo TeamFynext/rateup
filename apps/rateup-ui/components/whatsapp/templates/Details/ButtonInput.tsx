@@ -10,6 +10,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { UseFormReturnType } from "@mantine/form";
 import {
   IconChevronDown,
   IconPlus,
@@ -17,8 +18,14 @@ import {
   IconVariable,
   IconX,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
+import { z } from "zod/v4";
 
+import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
+import { AccountSelector } from "@/components/input/AccountSelector";
+
+import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
 import { WHATSAPP_BUTTON_TYPE } from "../../../../utils/constants";
 import {
   ContainedDateTimePickerInput,
@@ -28,17 +35,6 @@ import {
   ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput";
 import { LengthTracker } from "../../../input/LengthTracker";
-
-import "react-phone-number-input/style.css";
-
-import { UseFormReturnType } from "@mantine/form";
-import { useTranslations } from "next-intl";
-import { z } from "zod/v4";
-
-import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
-import { AccountSelector } from "@/components/input/AccountSelector";
-
-import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
 import { FlowSelector } from "../../flows/FlowSelector/FlowSelector";
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector";
 import { templateSchema } from "../Schema/templateSchema";

@@ -17,10 +17,10 @@ import {
 import { useForm } from "@mantine/form";
 import { IconDeviceSdCard } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { getWaFlowFormElementTypeLabel } from "../../../../../utils/enums";
 import { fileToBase64 } from "../../../../../utils/misc/base64.utils";
-import { showErrorToast } from "../../../../../utils/notifications";
 import {
   getFlowFormElementById,
   getFormObjFromScreenId,
@@ -68,7 +68,7 @@ export function FlowImageDetailedView() {
   }
   function handleSaveElement() {
     const { hasErrors } = form.validate();
-    if (hasErrors) return showErrorToast(translations("Unable to Save Image"));
+    if (hasErrors) return toast.error(translations("Unable to Save Image"));
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
     const index = flowForm.children.findIndex(
       (fe) => fe === selectedFormElement,
@@ -145,7 +145,7 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
   useEffect(() => {
     if (!file) return;
     if (file.size > 300 * 1024) {
-      showErrorToast(translations("Size must be under 300kb"));
+      toast.error(translations("Size must be under 300kb"));
       return;
     }
 

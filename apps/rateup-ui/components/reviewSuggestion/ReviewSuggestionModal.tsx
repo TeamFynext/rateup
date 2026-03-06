@@ -27,6 +27,7 @@ import {
   IconUpload,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   useCreateReviewSuggestionsMutation,
@@ -36,7 +37,6 @@ import {
 } from "../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { useSurveyLanguagesFromTeam } from "../../backend/team/team.query";
 import { ReviewSuggestion } from "../../types/global";
-import { showErrorToast } from "../../utils/notifications";
 import {
   ContainedSelection,
   ContainedTextArea,
@@ -64,7 +64,7 @@ export function ReviewSuggestionModal({
   } = useReviewSuggestions(opened, teamId);
 
   if (isError && opened) {
-    showErrorToast(translations("Error fetching review suggestions"));
+    toast.error(translations("Error fetching review suggestions"));
     return;
   }
 
@@ -168,7 +168,7 @@ function ImportJsonPanel({ handleClose, teamId }) {
   function handleImport() {
     const { hasErrors } = form.validate();
     if (hasErrors) {
-      showErrorToast("Invalid JSON");
+      toast.error("Invalid JSON");
       return;
     }
     const reviews = JSON.parse(form.values.json) as Array<string>;

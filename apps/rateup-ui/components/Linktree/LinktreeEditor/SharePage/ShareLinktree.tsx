@@ -4,11 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Group, Stack } from "@mantine/core";
+import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
 
 import { useUpdateLinktreeMutation } from "../../../../backend/linktree/linktree.query";
 import { uploadFile } from "../../../../utils/file-upload/upload";
-import { showErrorToast } from "../../../../utils/notifications";
 import { RateupButtonBlue } from "../../../Button/RateupButtons";
 import Preview from "../../../Survey/ShareSurvey/Preview/Preview";
 import LogoTabpanel from "../../../Survey/ShareSurvey/ShareQR/LogoTabPanel";
@@ -61,7 +61,7 @@ function ShareLinktree({ url, isPublished, title }) {
           shareSettings: newState,
         });
       } catch (err) {
-        showErrorToast("Unable to save settings, Please try again later");
+        toast.error("Unable to save settings, Please try again later");
       }
     }
     setIsSavingSettings(false);

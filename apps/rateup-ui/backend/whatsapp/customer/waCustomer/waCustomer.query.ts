@@ -1,15 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import {
   createWaCustomers,
-  getAllWaCustomerGroupsByWaCustomer,
-  getWaCustomerSurveySendHistoryByWaCustomerId,
-  getAllWaCustomers,
-  sendSurveyToWaCustomer,
-  getWaCustomersByTeamId,
-  getWaCustomerResponseHistoryByWaCustomerId,
   deleteWaCustomer,
+  getAllWaCustomerGroupsByWaCustomer,
+  getAllWaCustomers,
+  getWaCustomerResponseHistoryByWaCustomerId,
+  getWaCustomersByTeamId,
+  getWaCustomerSurveySendHistoryByWaCustomerId,
+  sendSurveyToWaCustomer,
 } from "./waCustomer.api";
-import { notifications } from "@mantine/notifications";
 
 export const useWaCustomers = (teamId: string, enabled: boolean) =>
   useQuery({
@@ -58,10 +59,7 @@ export const useSendSurveyToWaCustomerMutation = ({ waCustomerId }) => {
       return sendSurveyToWaCustomer(waCustomerId, surveyId, templateId);
     },
     onSuccess: () => {
-      notifications.show({
-        message: "Survey sent successfully!",
-        color: "green",
-      });
+      toast.loading("Survey sent successfully!");
       queryClient.invalidateQueries({
         queryKey: ["waCustomer", waCustomerId, "history", "surveys"],
       });
@@ -76,10 +74,7 @@ export const useCreateWaCustomersMutation = (teamId: string) => {
       return createWaCustomers(waCustomers, teamId);
     },
     onSuccess: () => {
-      notifications.show({
-        message: "WaCustomers created successfully!",
-        color: "green",
-      });
+      toast.loading("WaCustomers created successfully!");
       queryClient.invalidateQueries({ queryKey: ["waCustomer"] });
     },
   });
@@ -92,10 +87,7 @@ export const useDeleteWaCustomerMutation = () => {
       return deleteWaCustomer(waCustomerId);
     },
     onSuccess: () => {
-      notifications.show({
-        message: "WaCustomer deleted successfully!",
-        color: "green",
-      });
+      toast.loading("WaCustomer deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["waCustomer"] });
     },
   });

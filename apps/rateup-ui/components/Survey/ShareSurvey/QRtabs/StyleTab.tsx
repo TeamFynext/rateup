@@ -14,7 +14,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { IconCheck } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 

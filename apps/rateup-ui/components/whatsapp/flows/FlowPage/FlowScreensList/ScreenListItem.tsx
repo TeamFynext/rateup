@@ -30,6 +30,7 @@ import {
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import classNames from "classnames/bind";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   QuestionType,
@@ -53,7 +54,6 @@ import {
   FlowMaxScreens,
 } from "@/components/whatsapp/whatsappConfig";
 import { FlowChoiceQuestions } from "@/utils/constants";
-import { showErrorToast } from "@/utils/notifications";
 import {
   getFlowElementText,
   getFlowFooterElementsFromScreen,
@@ -188,7 +188,7 @@ function ScreenListItem({
       screen,
     ) as WaFlowFormElement[];
     if (elements?.length >= FlowMaxElementsPerScreen) {
-      showErrorToast(
+      toast.error(
         `Maximum ${FlowMaxElementsPerScreen} elements allowed per screen`,
       );
     } else {
@@ -249,7 +249,7 @@ function ScreenListItem({
     }
     if (errorMessages.length > 0) {
       errorMessages?.map((error) =>
-        showErrorToast(`Atleast one choice in ${error} question needed`),
+        toast.error(`Atleast one choice in ${error} question needed`),
       );
     } else {
       pushToWaMutation.mutate(dbFlowId);
@@ -397,8 +397,8 @@ function ScreenListItem({
                   label={
                     dbFlow.pendingSave
                       ? translations(
-                        "Save your flow to WhatsApp, so that you can test or share draft version before publishing",
-                      )
+                          "Save your flow to WhatsApp, so that you can test or share draft version before publishing",
+                        )
                       : translations("No changes to save")
                   }
                 >

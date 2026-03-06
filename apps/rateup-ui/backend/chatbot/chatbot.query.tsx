@@ -1,7 +1,7 @@
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createChatbot,
   deleteChatbot,
@@ -37,10 +37,14 @@ export const useUploadSourceForEmbed = () => {
     mutationFn: uploadSourceForEmbed,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chatbotResources"] });
-      showSuccessToast("Uploaded Successfully", "url", <IconCheck />);
+      toast.success("Uploaded Successfully", {
+        id: "url",
+      });
     },
-    onError: (e) => {
-      showErrorToast("Error in uploading", "url", <IconX />);
+    onError: (error) => {
+      toast.error(error?.message || "Error in uploading", {
+        id: "url",
+      });
     },
   });
 };
@@ -58,16 +62,15 @@ export const useDeleteChatborResource = () => {
   return useMutation({
     mutationFn: deleteChatbotResource,
     onSuccess: () => {
-      showSuccessToast(
-        "Sources deleted Successfully",
-        "source",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Sources deleted Successfully", {
+        id: "source",
+      });
       queryClient.invalidateQueries({ queryKey: ["chatbotResources"] });
     },
-    onError: () => {
-      showErrorToast("Error in deleting source", "source", <IconX />, true);
+    onError: (error) => {
+      toast.error(error?.message || "Error in deleting source", {
+        id: "source",
+      });
     },
   });
 };
@@ -76,16 +79,15 @@ export const useDeleteManyChatborResource = () => {
   return useMutation({
     mutationFn: deleteManyChatbotResource,
     onSuccess: () => {
-      showSuccessToast(
-        "Sources deleted Successfully",
-        "source",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Sources deleted Successfully", {
+        id: "source",
+      });
       queryClient.invalidateQueries({ queryKey: ["chatbotResources"] });
     },
-    onError: () => {
-      showErrorToast("Error in deleting source", "source", <IconX />, true);
+    onError: (error) => {
+      toast.error(error?.message || "Error in deleting source", {
+        id: "source",
+      });
     },
   });
 };
@@ -158,10 +160,10 @@ export const useUpdateChatbot = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chatbotDetails"] });
       queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
-      showSuccessToast("Chatbot updated");
+      toast.success("Chatbot updated");
     },
-    onError: () => {
-      showErrorToast("Updation Failed");
+    onError: (error) => {
+      toast.error(error?.message || "Updation Failed");
     },
   });
 };
@@ -189,10 +191,10 @@ export const useDeleteChatbot = () => {
         queryKey: ["chatbotDetails", chatbotId],
       });
 
-      showSuccessToast("Chatbot deleted successfully");
+      toast.success("Chatbot deleted successfully");
     },
-    onError: () => {
-      showErrorToast("Failed to delete chatbot");
+    onError: (error) => {
+      toast.error(error?.message || "Failed to delete chatbot");
     },
   });
 };

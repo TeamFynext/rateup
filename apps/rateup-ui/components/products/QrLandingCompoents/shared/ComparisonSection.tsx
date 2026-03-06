@@ -20,7 +20,7 @@ const ComparisonSection = () => {
             Needs QR Code
           </h2>
 
-          <div className="bg-gradient-to-br from-yellow-400 to-orange-500 w-10 sm:w-14 h-10 sm:h-14 rounded-full flex items-center justify-center font-bold text-white text-lg sm:text-3xl shadow-lg">
+          <div className="bg-linear-to-br from-yellow-400 to-orange-500 w-10 sm:w-14 h-10 sm:h-14 rounded-full flex items-center justify-center font-bold text-white text-lg sm:text-3xl shadow-lg">
             ?
           </div>
         </motion.div>

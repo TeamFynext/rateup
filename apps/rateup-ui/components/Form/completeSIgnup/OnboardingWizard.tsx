@@ -149,7 +149,7 @@ export default function OnboardingWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 flex flex-col items-center justify-center p-4 w-full">
+    <div className="min-h-screen bg-linear-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 flex flex-col items-center justify-center p-4 w-full">
       <AnimatePresence>
         {activeIntegration && (
           <motion.div
@@ -231,9 +231,9 @@ export default function OnboardingWizard() {
                           whileTap={isAccessible ? { scale: 0.95 } : {}}
                           className={`flex-1 flex flex-col items-center space-y-1.5 p-2 rounded-xl border-2 transition-all duration-300 ${
                             isActive
-                              ? "bg-gradient-to-br from-blue-100 to-indigo-100 border-blue-400 shadow-lg shadow-blue-200/60"
+                              ? "bg-linear-to-br from-blue-100 to-indigo-100 border-blue-400 shadow-lg shadow-blue-200/60"
                               : isCompleted
-                                ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-400/60 hover:border-green-500 cursor-pointer"
+                                ? "bg-linear-to-br from-green-50 to-emerald-50 border-green-400/60 hover:border-green-500 cursor-pointer"
                                 : isAccessible
                                   ? "bg-white/80 backdrop-blur-sm border-gray-300 hover:border-gray-400 cursor-pointer shadow-sm"
                                   : "bg-gray-100/50 border-gray-300 opacity-60 cursor-not-allowed"
@@ -245,7 +245,7 @@ export default function OnboardingWizard() {
                                 ? "bg-linear-to-r from-blue-500 to-indigo-600 shadow-lg"
                                 : isCompleted
                                   ? "bg-linear-to-r from-green-500 to-emerald-500 shadow-md"
-                                  : "bg-gradient-to-br from-gray-300 to-gray-400"
+                                  : "bg-linear-to-br from-gray-300 to-gray-400"
                             }`}
                           >
                             {isCompleted ? (

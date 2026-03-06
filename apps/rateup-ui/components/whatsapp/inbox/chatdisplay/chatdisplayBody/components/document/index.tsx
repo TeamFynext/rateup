@@ -9,10 +9,10 @@ import {
   IconFile,
   IconFileAnalytics,
 } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import { useGetMediaFile } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import { showErrorToast } from "@/utils/notifications";
 
 interface Props {
   messageContent: string;
@@ -45,12 +45,10 @@ export default function WaInboxDocument({ messageContent }: Props) {
         link.click();
         document.body.removeChild(link);
       },
-      onError: () => {
-        showErrorToast(
-          "Failed to download document file",
-          "error-document-download",
-          <IconDeviceAudioTape />,
-        );
+      onError: (error) => {
+        toast.error(error?.message || "Failed to download document file", {
+          id: "error-document-download",
+        });
       },
     });
   };

@@ -134,7 +134,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
         setLoading(false);
       },
       onError(error) {
-        toast.error("error adding contact");
+        toast.error(error?.message || "error adding contact");
         setLoading(false);
       },
     });

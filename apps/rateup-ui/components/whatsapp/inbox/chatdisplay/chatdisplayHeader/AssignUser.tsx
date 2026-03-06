@@ -240,7 +240,7 @@ const AssignUser = ({
               }),
             }));
           },
-          onError: async (error: any) => {
+          onError: async (error) => {
             setAssignedStaff(
               prevAssignedRef.current.map((a) => ({
                 userId: a.userId,

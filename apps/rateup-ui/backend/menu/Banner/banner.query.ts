@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import { toast } from "sonner";
+
 import {
   createMenuBanner,
   deleteMenuBanner,
@@ -16,13 +17,13 @@ export const useCreateMenuBannerMutation = (
   const createMutation = useMutation({
     mutationFn: createMenuBanner,
     onSuccess: () => {
-      showSuccessToast("Menu banner created successfully");
+      toast.success("Menu banner created successfully");
       queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
       queryClient.invalidateQueries({ queryKey: ["menu", menuId, "banner"] });
       onSuccess();
     },
-    onError: () => {
-      showErrorToast("Error creating menu banner");
+    onError: (error) => {
+      toast.error(error?.message || "Error creating menu banner");
       onError();
     },
   });
@@ -38,13 +39,13 @@ export const useUpdateMenuBannerMutation = (
   const createMutation = useMutation({
     mutationFn: updateMenuBanner,
     onSuccess: () => {
-      showSuccessToast("Menu banner updated");
+      toast.success("Menu banner updated");
       queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
       queryClient.invalidateQueries({ queryKey: ["menu", menuId, "banner"] });
       onSuccess();
     },
-    onError: () => {
-      showErrorToast("Error creating menu banner");
+    onError: (error) => {
+      toast.error(error?.message || "Error creating menu banner");
       onError();
     },
   });
@@ -70,23 +71,17 @@ export const useDeleteMenuBannerMutation = (
   const createMutation = useMutation({
     mutationFn: deleteMenuBanner,
     onSuccess: () => {
-      showSuccessToast(
-        "Menu banner deleted successfully",
-        "menu-banner-delete",
-        "",
-        true,
-      );
+      toast.success("Menu banner deleted successfully", {
+        id: "menu-banner-delete",
+      });
       queryClient.invalidateQueries({ queryKey: ["menu", menuId, "category"] });
       queryClient.invalidateQueries({ queryKey: ["menu", menuId, "banner"] });
       onSuccess();
     },
-    onError: () => {
-      showErrorToast(
-        "Error creating menu banner",
-        "menu-banner-delete",
-        "",
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error creating menu banner", {
+        id: "menu-banner-delete",
+      });
       onError();
     },
   });

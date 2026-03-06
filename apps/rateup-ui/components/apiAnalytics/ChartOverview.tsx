@@ -28,7 +28,6 @@ function ChartOverview({ messageTrendData, isLoading }) {
           {t("Message Delivery Trend (24h)")}
         </CardTitle>
       </CardHeader>
-
       <CardContent>
         {/* Loading State */}
         {isLoading ? (
@@ -113,7 +112,6 @@ export function DailyTrend({ dailyMessageData, isLoading }) {
           {t("Daily Message Volume")}
         </CardTitle>
       </CardHeader>
-
       <CardContent>
         {/* Loading State */}
         {isLoading ? (

@@ -2,7 +2,10 @@
 
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
+import { useDebouncedCallback, useHotkeys } from "@mantine/hooks";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   addEdge,
   Background,
@@ -18,14 +21,7 @@ import {
   useNodesState,
   type Node,
 } from "@xyflow/react";
-
-import "@xyflow/react/dist/style.css";
-
-import { useRouter } from "next/navigation";
-
-import { useDebouncedCallback, useHotkeys } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
-import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
 import { WaAutomatedReply } from "@/types/global";
@@ -259,11 +255,7 @@ function FlowEditorContent({
           .getNodes()
           .find((n: Node) => n.type === "startNode");
         if (existingStartNode) {
-          notifications.show({
-            title: "Not Allowed",
-            message: "Only one start node is allowed in the flow.",
-            color: "red",
-          });
+          toast.loading("Only one start node is allowed in the flow.");
           return;
         }
       }
@@ -352,12 +344,7 @@ function FlowEditorContent({
 
       // Check if there are any nodes
       if (allNodes.length === 0) {
-        !silent &&
-          notifications.show({
-            title: "Validation Error",
-            message: "Flow is empty. Please add some nodes.",
-            color: "red",
-          });
+        !silent && toast.loading("Flow is empty. Please add some nodes.");
         return false;
       }
 
@@ -369,50 +356,25 @@ function FlowEditorContent({
       );
       if (isLeadAutomation) {
         if (leadgenNodes.length > 1) {
-          !silent &&
-            notifications.show({
-              title: "Validation Error",
-              message: "Only one Lead node is allowed",
-              color: "red",
-            });
+          !silent && toast.loading("Only one Lead node is allowed");
           return false;
         }
         if (allNodes[0].type !== "leadgenNode") {
-          !silent &&
-            notifications.show({
-              title: "Validation Error",
-              message: "First node should be a Lead Node.",
-              color: "red",
-            });
+          !silent && toast.loading("First node should be a Lead Node.");
           return false;
         }
       }
 
       if (!isLeadAutomation) {
         if (startNodes.length === 0) {
-          !silent &&
-            notifications.show({
-              title: "Validation Error",
-              message: "Flow must have a start node.",
-              color: "red",
-            });
+          !silent && toast.loading("Flow must have a start node.");
           return false;
         } else if (startNodes.length > 1) {
-          !silent &&
-            notifications.show({
-              title: "Validation Error",
-              message: "Flow must have exactly one start node.",
-              color: "red",
-            });
+          !silent && toast.loading("Flow must have exactly one start node.");
           return false;
         }
         if (leadgenNodes.length) {
-          !silent &&
-            notifications.show({
-              title: "Validation Error",
-              message: "Lead node is only allowed lead automation",
-              color: "red",
-            });
+          !silent && toast.loading("Lead node is only allowed lead automation");
           return false;
         }
       }
@@ -431,11 +393,9 @@ function FlowEditorContent({
 
       if (nodesWithoutIncoming.length > 0) {
         !silent &&
-          notifications.show({
-            title: "Validation Error",
-            message: `Some nodes are not connected: ${nodesWithoutIncoming.map((n: Node) => n.data.label).join(", ")}`,
-            color: "red",
-          });
+          toast.loading(
+            `Some nodes are not connected: ${nodesWithoutIncoming.map((n: Node) => n.data.label).join(", ")}`,
+          );
         return false;
       }
 
@@ -443,22 +403,12 @@ function FlowEditorContent({
       for (const node of allNodes) {
         const validationResult = validateNodeData(node as TypedNode);
         if (!validationResult.valid) {
-          !silent &&
-            notifications.show({
-              title: "Validation Error",
-              message: validationResult.message,
-              color: "red",
-            });
+          !silent && toast.loading(validationResult.message);
           return false;
         }
       }
 
-      !silent &&
-        notifications.show({
-          title: "Success",
-          message: "Flow validation successful!",
-          color: "green",
-        });
+      !silent && toast.loading("Flow validation successful!");
       return true;
     },
     [reactFlowInstance],
@@ -489,17 +439,11 @@ function FlowEditorContent({
         });
         updateUndoRedoState();
 
-        notifications.show({
-          title: "Success",
-          message: "Flow loaded successfully!",
-          color: "green",
-        });
+        toast.loading("Flow loaded successfully!");
       } catch (error) {
-        notifications.show({
-          title: "Error",
-          message: "Failed to load flow. The saved data might be corrupted.",
-          color: "red",
-        });
+        toast.loading(
+          "Failed to load flow. The saved data might be corrupted.",
+        );
       }
     }
   }, [

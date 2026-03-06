@@ -1,5 +1,6 @@
 import { Group, NumberInput, Text } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
+
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
 
 interface CountRestrictionCardsProps {

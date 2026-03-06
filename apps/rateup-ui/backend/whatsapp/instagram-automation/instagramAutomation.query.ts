@@ -37,9 +37,11 @@ export const useCreateInstagramAutomationMutation = () => {
       qc.invalidateQueries({ queryKey: ["allInstagramAutomations"] });
       toast.success("Instagram Automation Created Successfully");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(
-        error?.response?.data?.error || "Error Creating Instagram Automation",
+        error?.message ||
+          error?.message ||
+          "Error Creating Instagram Automation",
       );
     },
   });
@@ -54,9 +56,11 @@ export const useDeleteInstagramAutomationMutation = () => {
       qc.invalidateQueries({ queryKey: ["allInstagramAutomations"] });
       toast.success("Instagram Automation Deleted Successfully");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(
-        error?.response?.data?.error || "Error Deleting Instagram Automation",
+        error?.message ||
+          error?.message ||
+          "Error Deleting Instagram Automation",
       );
     },
   });
@@ -65,9 +69,11 @@ export const useDeleteInstagramAutomationMutation = () => {
 export const useUpdateInstagramAutomationMutation = () => {
   return useMutation({
     mutationFn: ({ id, ...data }: any) => updateInstagramAutomation(id, data),
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(
-        error?.response?.data?.error || "Error Updating Instagram Automation",
+        error?.message ||
+          error?.message ||
+          "Error Updating Instagram Automation",
       );
     },
   });
@@ -82,9 +88,11 @@ export const useInitiateInstagramAutomationMutation = (
     onSuccess: (res) => {
       toast.success("Instagram Automation initiated Successfully");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(
-        error?.response?.data?.error || "Error initiating Instagram Automation",
+        error?.message ||
+          error?.message ||
+          "Error initiating Instagram Automation",
       );
     },
   });

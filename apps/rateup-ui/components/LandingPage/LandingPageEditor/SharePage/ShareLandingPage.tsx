@@ -5,11 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 
 import { Group, Stack } from "@mantine/core";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
 
 import { useUpdateLandingPageMutation } from "../../../../backend/landingPage/landingPage.query";
 import { uploadFile } from "../../../../utils/file-upload/upload";
-import { showErrorToast } from "../../../../utils/notifications";
 import { RateupButtonBlue } from "../../../Button/RateupButtons";
 import Preview from "../../../Survey/ShareSurvey/Preview/Preview";
 import LogoTabpanel from "../../../Survey/ShareSurvey/ShareQR/LogoTabPanel";
@@ -62,7 +62,7 @@ function ShareLandingPage({ url, isPublished, title }) {
           shareSettings: newState,
         });
       } catch (err) {
-        showErrorToast(
+        toast.error(
           translations("Unable to save settings, Please try again later"),
         );
       }

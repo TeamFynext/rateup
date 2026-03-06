@@ -23,13 +23,13 @@ import {
   IconRefresh,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   useRegisterTemplatesMutation,
   useSyncTemplatesMutation,
   useUnregisteredTemplates,
 } from "../../../backend/whatsapp/whatsapp.query";
-import { showErrorToast } from "../../../utils/notifications";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
 import { WaResponseMessage } from "../MessageComponents";
 import whatsappStyles from "../whatsapp.module.css";
@@ -336,7 +336,7 @@ export function ImportTemplatesButton() {
   } = useUnregisteredTemplates(openModal);
 
   if (error) {
-    showErrorToast(translations("Error syncing templates"));
+    toast.error(translations("Error syncing templates"));
     console.error(error);
   }
 

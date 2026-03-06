@@ -15,6 +15,7 @@ import {
   Type,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,6 @@ import {
 import RefreshButton from "../../../components/Button/RefreshButton";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import { PaymentPlanStatus } from "../../../types/enums";
-import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
 import { ProductsDataTableToolbar } from "./products-data-table-toolbar";
 
 interface ProductTableData {
@@ -74,11 +74,11 @@ const StripeProducts = () => {
       rateupPlans &&
       rateupPlans?.find((plan) => plan?.stripeId === product?.id);
     if (productInRateupPlan) {
-      showErrorToast(
+      toast.error(
         translations("Unable to delete. Product is in use in rateup plan"),
-        "stripe",
-        undefined,
-        true,
+        {
+          id: "stripe",
+        },
       );
       return;
     }
@@ -313,7 +313,6 @@ const StripeProducts = () => {
           </div>
         </CardHeader>
       </Card>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -366,13 +365,11 @@ const StripeProducts = () => {
           </CardContent>
         </Card>
       </div>
-
       <DataTable
         columns={columns}
         data={tableData}
         DataTableToolbar={ProductsDataTableToolbar}
       />
-
       <ConfirmationModal
         opened={openedDeleteModal}
         onClose={closeDeleteModal}
@@ -380,11 +377,11 @@ const StripeProducts = () => {
         confirmLabel={translations("Delete")}
         headerTitle={translations("Delete Stripe Product")}
         onConfirm={() => {
-          showLoadingToast(
+          toast.loading(
             translations("Hold onStripe Product is getting deleted"),
-            "stripe",
-            true,
-            translations("Deleting Stripe product"),
+            {
+              id: "stripe",
+            },
           );
           handleDeleteProduct();
         }}

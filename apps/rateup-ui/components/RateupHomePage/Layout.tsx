@@ -227,7 +227,6 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
           </MobileNavMenu>
         </MobileNav>
       </Navbar>
-
       {children}
       <CookieConsentBanner />
       <script

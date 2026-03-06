@@ -17,10 +17,10 @@ import {
   Text,
   useMantineTheme,
 } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { IconChartBar } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useSurveys } from "../../backend/surveys/surveys.query";
 import { useUser } from "../../context/UserContext";
@@ -60,13 +60,8 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
   const handleCheckBox = (e, surveyid, checked) => {
     e.stopPropagation();
     if (surveyidArray.length >= 4 && e.target.checked) {
-      notifications.show({
+      toast.loading(translations("Max 4 surveys can be merged."), {
         id: "survey-merge-max",
-
-        title: translations("Limit exceed"),
-        message: translations("Max 4 surveys can be merged."),
-
-        autoClose: 2000,
       });
       return;
     }

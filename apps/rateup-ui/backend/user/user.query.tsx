@@ -1,6 +1,5 @@
 import { useRouter } from "next/navigation";
 
-import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import {
   keepPreviousData,
@@ -9,12 +8,8 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "../../utils/notifications";
 import {
   changeUserPassword,
   checkEmailExist,
@@ -64,29 +59,18 @@ export function useCreateUserMutation(setIsLoading) {
   return useMutation({
     mutationFn: (values: ICreateGoogleUser) => handleCreateUser(values),
     onSuccess: () => {
-      notifications.show({
+      toast.loading("Sign up process is Complete!", {
         id: "load-data",
-        color: "teal",
-        title: "Success",
-        message: "Sign up process is Complete!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       router.push("/dashboard?msg=welcome");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error completing signup:", error.message);
-      notifications.show({
+      toast.loading(error?.message, {
         id: "load-data",
-        color: "red",
-
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
 
       setIsLoading(false);
@@ -109,28 +93,18 @@ export function useUpdateProfileMutation(setIsLoading) {
   return useMutation({
     mutationFn: (values: IUpdateProfile) => updateUserProfile(values),
     onSuccess: () => {
-      notifications.show({
+      toast.loading("Profile Updated Successfully!", {
         id: "load-data",
-        color: "teal",
-        title: "Success",
-        message: "Profile Updated Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Profile Update:", error.message);
-      notifications.show({
+      toast.loading(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
 
       setIsLoading(false);
@@ -143,28 +117,18 @@ export function useUpdateUserLanguageMutation(setIsLoading) {
   return useMutation({
     mutationFn: (values: IUpdateUserLanguage) => updateUserLanguage(values),
     onSuccess: () => {
-      notifications.show({
+      toast.loading("Language Updated Successfully!", {
         id: "load-data",
-        color: "teal",
-        title: "Success",
-        message: "Language Updated Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error updating language:", error.message);
-      notifications.show({
+      toast.loading(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
       setIsLoading(false);
     },
@@ -176,30 +140,18 @@ export function useUpdateProfilePhotoMutation(setIsLoadingUpload) {
   return useMutation({
     mutationFn: (values: IUpdateProfilePhoto) => updateUserProfilePhoto(values),
     onSuccess: () => {
-      notifications.update({
+      toast.success("Profile Photo Updated Successfully!", {
         id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Success",
-        message: "Profile Photo Updated Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       setIsLoadingUpload(false);
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Profile photo Update:", error.message);
-      notifications.update({
+      toast.error(error?.message, {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
 
       setIsLoadingUpload(false);
@@ -212,14 +164,8 @@ export function useUpdateActiveStatusMutation() {
   return useMutation({
     mutationFn: (userId: string) => updateActiveStatus(userId),
     onSuccess: () => {
-      notifications.update({
+      toast.success("Member Deleted Successfully!", {
         id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Success",
-        message: "Member Deleted Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
@@ -227,16 +173,10 @@ export function useUpdateActiveStatusMutation() {
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error deleting member", error.message);
-      notifications.update({
+      toast.error(error?.message, {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -253,21 +193,15 @@ export function useUpdateRecipeNameMutation() {
   return useMutation({
     mutationFn: updateRecipeName,
     onSuccess: () => {
-      showSuccessToast(
-        "updated recipe name",
-        "user-recipe",
-        <IconCheck />,
-        true,
-      );
+      toast.success("updated recipe name", {
+        id: "user-recipe",
+      });
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
     },
-    onError: () => {
-      showErrorToast(
-        "error in updating recipe name",
-        "user-recipe",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "error in updating recipe name", {
+        id: "user-recipe",
+      });
     },
   });
 }
@@ -277,13 +211,13 @@ export const useUpdateUserPause = () => {
   return useMutation({
     mutationFn: updateUserPause,
     onSuccess: () => {
-      showSuccessToast("Pause status has been updated");
+      toast.success("Pause status has been updated");
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
     },
-    onError: () => {
-      showErrorToast("Error in updating pause status");
+    onError: (error) => {
+      toast.error(error?.message || "Error in updating pause status");
     },
   });
 };
@@ -295,22 +229,23 @@ export const useUpdateUserAvailabilityStatus = () => {
       status: UserAvailabilityStatus;
       presenceMode: UserPresenceMode;
     }) => {
-      showLoadingToast("Updating status...", "user-status", true, "Updating");
+      toast.loading("Updating status...", {
+        id: "user-status",
+      });
       return updateUserAvailabilityStatus(data);
     },
     onSuccess: () => {
-      showSuccessToast("Status updated", "user-status", <IconCheck />, true);
+      toast.success("Status updated", {
+        id: "user-status",
+      });
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       queryClient.invalidateQueries({ queryKey: ["team-member-stats"] });
     },
-    onError: () => {
-      showErrorToast(
-        "Error in updating status",
-        "user-status",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error in updating status", {
+        id: "user-status",
+      });
     },
   });
   return { ...mutation, queryClient };

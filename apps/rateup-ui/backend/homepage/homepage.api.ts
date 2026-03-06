@@ -1,14 +1,15 @@
 import { axiosClient } from "../apiClient";
 
-export interface IContactForm{
+export interface IContactForm {
   name: string;
-  email: string; 
+  email: string;
   message: string;
   address: string;
 }
 
-export const sendContactMessage = (data: IContactForm) => axiosClient({
-  url: `/public/contact`,
-  method: 'POST',
-  data: data
-})
+export const sendContactMessage = (data: IContactForm) =>
+  axiosClient({
+    url: `/public/contact`,
+    method: "POST",
+    data: data,
+  });

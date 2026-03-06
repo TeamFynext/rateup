@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { getErrorMessage } from "../../utils";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createLoyaltyTier,
   deleteLoyaltyTier,
@@ -43,14 +43,12 @@ export const useCreateLoyaltyTierMutation = (
   return useMutation({
     mutationFn: (tierData: LoyaltyTierInput) => createLoyaltyTier(tierData),
     onSuccess: () => {
-      showSuccessToast("Loyalty tier created successfully");
+      toast.success("Loyalty tier created successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error creating loyalty tier!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error creating loyalty tier!");
       onError?.();
     },
   });
@@ -70,15 +68,13 @@ export const useUpdateLoyaltyTierMutation = (
     mutationFn: (tierData: LoyaltyTierUpdateInput) =>
       updateLoyaltyTier(tierId, tierData),
     onSuccess: () => {
-      showSuccessToast("Loyalty tier updated successfully");
+      toast.success("Loyalty tier updated successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
       queryClient.invalidateQueries({ queryKey: ["loyalty-tier", tierId] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error updating loyalty tier!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error updating loyalty tier!");
       onError?.();
     },
   });
@@ -96,22 +92,16 @@ export const useDeleteLoyaltyTierMutation = (
   return useMutation({
     mutationFn: (tierId: string) => deleteLoyaltyTier(tierId),
     onSuccess: () => {
-      showSuccessToast(
-        "Loyalty tier deleted successfully",
-        "loyalty-tier-delete",
-        null,
-        true,
-      );
+      toast.success("Loyalty tier deleted successfully", {
+        id: "loyalty-tier-delete",
+      });
       queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error deleting loyalty tier!"),
-        "loyalty-tier-delete",
-        null,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting loyalty tier!", {
+        id: "loyalty-tier-delete",
+      });
       onError?.();
     },
   });

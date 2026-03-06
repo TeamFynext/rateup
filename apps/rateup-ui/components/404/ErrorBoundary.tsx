@@ -1,7 +1,9 @@
 import React from "react";
-import styles from "./ErrorBoundary.module.css";
 import Image from "next/image";
+
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
+import styles from "./ErrorBoundary.module.css";
+
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }> {
   constructor(props) {
     super(props);

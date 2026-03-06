@@ -19,7 +19,7 @@ const TestimonialFeaturesGrid = () => {
           </h2>
         </div>
 
-        <div className="relative py-16 bg-gradient-to-br from-white to-[#f2f6fb]">
+        <div className="relative py-16 bg-linear-to-br from-white to-[#f2f6fb]">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 relative z-10">
               {features.map((step, index) => (

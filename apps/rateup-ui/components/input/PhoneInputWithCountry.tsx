@@ -1,12 +1,9 @@
 import React from "react";
 
+import { Box, Group, Stack, Text } from "@mantine/core";
 import PhoneInputWithCountrySelect, {
   DefaultInputComponentProps,
 } from "react-phone-number-input";
-
-import "react-phone-number-input/style.css";
-
-import { Box, Group, Stack, Text } from "@mantine/core";
 
 import styles from "./InputStyles.module.css";
 

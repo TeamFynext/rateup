@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 import { useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
 import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -20,6 +19,7 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   useAllTeamsMembersOfOrg,
@@ -67,7 +67,6 @@ import {
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
-import { showErrorToast } from "@/utils/notifications";
 import { getOrgIdRole, getUserID } from "@/utils/userInfo";
 
 type SelectedUser = {
@@ -127,66 +126,44 @@ export default function UsersPage() {
   // 🧩 Handle Resend Invite
   const handleResendInvite = async (inviteId: string) => {
     try {
-      notifications.show({
+      toast.loading(translations("Hold on, Team Invitation is being resent."), {
         id: "load-data-invitation",
-        loading: true,
-        title: translations("Resending Invitation"),
-        message: translations("Hold on, Team Invitation is being resent."),
-        autoClose: false,
-        withCloseButton: false,
       });
 
       await resendInviteMutation.mutateAsync(inviteId);
 
-      notifications.update({
-        id: "load-data-invitation",
-        color: "green",
-        title: translations("Invitation Resent"),
-        message: translations(
-          "The team invitation has been resent successfully.",
-        ),
-        autoClose: 2000,
-      });
-    } catch (error) {
-      showErrorToast(
-        translations("Team Invitation Resend Failed"),
-        "load-data-invitation",
-        "",
-        true,
+      toast.success(
+        translations("The team invitation has been resent successfully."),
+        {
+          id: "load-data-invitation",
+        },
       );
+    } catch (error) {
+      toast.error(translations("Team Invitation Resend Failed"), {
+        id: "load-data-invitation",
+      });
     }
   };
 
   // 🧩 Handle Delete Invite
   const handleDeleteInvite = async (inviteId: string) => {
     try {
-      notifications.show({
+      toast.loading(translations("Hold on, Staff invite is getting deleted."), {
         id: "load-data-deleting",
-        loading: true,
-        title: translations("Deleting Invite"),
-        message: translations("Hold on, Staff invite is getting deleted."),
-        autoClose: false,
-        withCloseButton: false,
       });
 
       await deleteInviteMutation.mutateAsync(inviteId);
 
-      notifications.update({
-        id: "load-data-deleting",
-        color: "green",
-        title: translations("Invite Deleted"),
-        message: translations(
-          "The staff invite has been deleted successfully.",
-        ),
-        autoClose: 2000,
-      });
-    } catch (error) {
-      showErrorToast(
-        translations("Team Invitation Deletion Failed"),
-        "load-data-deleting",
-        "",
-        true,
+      toast.success(
+        translations("The staff invite has been deleted successfully."),
+        {
+          id: "load-data-deleting",
+        },
       );
+    } catch (error) {
+      toast.error(translations("Team Invitation Deletion Failed"), {
+        id: "load-data-deleting",
+      });
     }
   };
 
@@ -219,27 +196,17 @@ export default function UsersPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
-      notifications.show({
-        color: "teal",
-        title: translations("success"),
-        message: data?.existing
+      toast.loading(
+        data?.existing
           ? translations("Staff added successfully")
           : translations("Invite sent successfully"),
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
+      );
       userForm.reset();
       setIsAddUserDialogOpen(false);
     },
-    onError: (error: any) => {
-      console.error("Error creating invite:", error?.response?.data);
-      notifications.show({
-        color: "red",
-        title: translations("Failed"),
-        message: error?.response?.data?.message || error.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
+    onError: (error) => {
+      console.error("Error creating invite:", error?.message);
+      toast.loading(error?.message || error.message);
     },
   });
 
@@ -670,13 +637,8 @@ function EditMember({
   function onChangeRole(id: string, role: string) {
     const data = { memberId: id, body: { role: role } };
     updateRole.mutate(data);
-    notifications.show({
+    toast.loading(translations("Hold on, your changes are getting updated"), {
       id: "load-data",
-      loading: true,
-      title: translations("Updating role"),
-      message: translations("Hold on, your changes are getting updated"),
-      autoClose: false,
-      withCloseButton: false,
     });
   }
 

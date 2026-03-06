@@ -160,8 +160,8 @@ export default function CashierPage() {
       setIssuePointsOpen(false);
       setPointsAmount("");
       setPointsNotes("");
-    } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Failed to issue points");
+    } catch (error) {
+      toast.error(error?.message || "Failed to issue points");
     }
   };
 
@@ -178,8 +178,8 @@ export default function CashierPage() {
       });
       setClaimRewardOpen(false);
       setSelectedRewardId("");
-    } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Failed to claim reward");
+    } catch (error) {
+      toast.error(error?.message || "Failed to claim reward");
     }
   };
 

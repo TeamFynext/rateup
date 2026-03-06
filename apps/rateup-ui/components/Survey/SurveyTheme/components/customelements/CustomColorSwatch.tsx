@@ -1,4 +1,5 @@
-import { ColorSwatch, Group, CheckIcon } from "@mantine/core";
+import { CheckIcon, ColorSwatch, Group } from "@mantine/core";
+
 import { swatchesNamesArray } from "../../SurveyTheme.constants";
 
 interface CustomColorSwatchProps {

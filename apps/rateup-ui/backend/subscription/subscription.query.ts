@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   getAllSubscriptions,
   getMessageStats,
@@ -44,12 +44,12 @@ export const useUpdateSubscriptionMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
-      showSuccessToast("Subscription updated successfully");
+      toast.success("Subscription updated successfully");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error(error);
-      showErrorToast(
-        `Error updating subscription ${error?.response?.data?.message ?? ""}`,
+      toast.error(
+        error?.message || `Error updating subscription ${error?.message ?? ""}`,
       );
     },
   });

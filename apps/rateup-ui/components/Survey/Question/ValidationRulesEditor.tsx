@@ -19,10 +19,10 @@ import {
 } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { isEmptyObject } from "@tiptap/react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
@@ -280,13 +280,8 @@ const ValidationRulesEditor = ({
         return;
       }
     }
-    notifications.show({
+    toast.loading(translations("Hold on, your changes are getting updated"), {
       id: "load-data",
-      loading: true,
-      title: translations("Saving validations"),
-      message: translations("Hold on, your changes are getting updated"),
-      autoClose: false,
-      withCloseButton: false,
     });
 
     const data = {

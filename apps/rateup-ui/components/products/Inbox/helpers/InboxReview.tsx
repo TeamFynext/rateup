@@ -64,7 +64,7 @@ const InboxReview = () => {
               transition={{ duration: 0.5 }}
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-2xl transition-shadow duration-300 overflow-hidden flex flex-col"
             >
-              <div className="p-6 flex flex-col justify-between flex-grow text-left">
+              <div className="p-6 flex flex-col justify-between grow text-left">
                 <div>
                   <StarRating count={t.rating} />
                   <p className="text-gray-700 font-semibold dark:text-gray-200 pt-3 text-sm">

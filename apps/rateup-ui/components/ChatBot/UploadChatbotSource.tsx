@@ -6,15 +6,11 @@ import { Stack } from "@mantine/core";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { uploadFileForEmbed } from "../../backend/chatbot/chatbot.api";
 import { useUploadSourceForEmbed } from "../../backend/chatbot/chatbot.query";
 import { ChatBotDataSourceType } from "../../types/enums";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "../../utils/notifications";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import {
   ContainedFileInput,
@@ -53,46 +49,33 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
       case ChatBotDataSourceType.FILE:
         if (!file) return;
         if (file.size > 1048576 * 10)
-          showLoadingToast(
+          toast.loading(
             translations(
               "Hold onfile is getting uploaded It may take few minutes",
             ),
-            "file-upload",
-            true,
-            translations("Uploading"),
-            "teal",
-            false,
+            {
+              id: "file-upload",
+            },
           );
         else
-          showLoadingToast(
-            translations("Hold onfile is getting uploaded"),
-            "file-upload",
-            true,
-            translations("Uploading"),
-            "teal",
-            false,
-          );
+          toast.loading(translations("Hold onfile is getting uploaded"), {
+            id: "file-upload",
+          });
         await uploadFileForEmbed(file, selectedChatbotId).then(
           () => {
             setIsUpload(false);
-            showSuccessToast(
-              translations("File uploaded successfully"),
-              "file-upload",
-              <IconCheck />,
-              true,
-            );
+            toast.success(translations("File uploaded successfully"), {
+              id: "file-upload",
+            });
             queryClient.invalidateQueries({ queryKey: ["chatbotResources"] });
             setFile(null);
             close();
           },
           () => {
             setIsUpload(false);
-            showErrorToast(
-              translations("Errror uploading file"),
-              "file-upload",
-              <IconX />,
-              true,
-            );
+            toast.error(translations("Errror uploading file"), {
+              id: "file-upload",
+            });
             close();
           },
         );

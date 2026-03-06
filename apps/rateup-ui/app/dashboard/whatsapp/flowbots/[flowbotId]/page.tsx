@@ -1,7 +1,5 @@
 "use client";
 
-import "@xyflow/react/dist/style.css";
-
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { ColumnDef } from "@tanstack/react-table";

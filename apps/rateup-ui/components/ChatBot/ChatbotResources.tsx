@@ -14,6 +14,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { ChatbotResourses } from "../../backend/chatbot/chatbot.api";
 import {
@@ -23,7 +24,6 @@ import {
 } from "../../backend/chatbot/chatbot.query";
 import { ChatBotDataSourceType } from "../../types/enums";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
-import { showLoadingToast } from "../../utils/notifications";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import NothingFound from "../NothingFound/NothingFound";
 import PaperLayout from "../styled/Layouts/PaperLayout";
@@ -42,22 +42,16 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
   const deleteSourceMutation = useDeleteChatborResource();
   const deleteManySourceMutation = useDeleteManyChatborResource();
   const handleDelete = (source) => {
-    showLoadingToast(
-      translations("Hold onSource getting deleted"),
-      "source",
-      true,
-      translations("Deleting"),
-    );
+    toast.loading(translations("Hold onSource getting deleted"), {
+      id: "source",
+    });
     deleteSourceMutation.mutate(source);
   };
   const handleDeleteMany = () => {
     if (!selectedSources.length) return;
-    showLoadingToast(
-      translations("Hold onSources getting deleted"),
-      "source",
-      true,
-      translations("Deleting"),
-    );
+    toast.loading(translations("Hold onSources getting deleted"), {
+      id: "source",
+    });
     deleteManySourceMutation.mutate(selectedSources, {
       onSettled: () => {
         setSelectedSources([]);

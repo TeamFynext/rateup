@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
 import { Plus, RefreshCcw, User, Users, UserX } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { createTeam } from "@/backend/team/team.api";
 import {
@@ -110,14 +110,12 @@ const Team = () => {
 
   const handleSubmit = async (values) => {
     setIsCreating(true);
-    notifications.show({
-      id: "load-data",
-      loading: true,
-      title: translations("Creating Team.."),
-      message: `${translations("Hold on, Your team")} '${values?.name}' ${translations("is getting created.")}`,
-      autoClose: false,
-      withCloseButton: false,
-    });
+    toast.loading(
+      `${translations("Hold on, Your team")} '${values?.name}' ${translations("is getting created.")}`,
+      {
+        id: "load-data",
+      },
+    );
     createTeamMutation.mutate(values);
   };
 
@@ -158,7 +156,6 @@ const Team = () => {
           </Button>
         )}
       </div>
-
       {/* Teams Grid with Skeletons */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full">
         {isLoadingTeamsUser ? (
@@ -276,7 +273,6 @@ const Team = () => {
           </div>
         )}
       </div>
-
       {/* create team */}
       {user?.role === UserRole.SUPADM && (
         <Dialog
@@ -371,7 +367,6 @@ const Team = () => {
           </DialogContent>
         </Dialog>
       )}
-
       {/* manage teams */}
       {user?.role === UserRole.SUPADM && (
         <Dialog

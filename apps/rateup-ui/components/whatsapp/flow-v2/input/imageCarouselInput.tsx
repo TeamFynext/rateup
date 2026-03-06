@@ -4,10 +4,10 @@ import React, { useEffect, useRef } from "react";
 
 import { Button, Card, Flex, SimpleGrid } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { toast } from "sonner";
 
 import { RateupFileUploadButton } from "@/components/Button/RateupButtons";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
-import { showErrorToast } from "@/utils/notifications";
 
 import { FileConverter } from "./DataSource";
 
@@ -35,7 +35,7 @@ const ImageCarouselInput = (props) => {
     try {
       if (!file) return;
       if (file.size > 400000) {
-        showErrorToast("Max image size is 400KB");
+        toast.error("Max image size is 400KB");
         return form.setFieldError(
           `images.${idx}.src`,
           "max image size is 400KB",
@@ -46,10 +46,9 @@ const ImageCarouselInput = (props) => {
       form.setFieldValue(`images.${idx}.src`, base64String);
       triggerOnChange();
     } catch (error) {
-      showErrorToast(
-        "Error converting file to Base64:" + JSON.stringify(error),
-        "file-converting",
-      );
+      toast.error("Error converting file to Base64:" + JSON.stringify(error), {
+        id: "file-converting",
+      });
     }
   };
 

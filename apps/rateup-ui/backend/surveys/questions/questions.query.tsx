@@ -1,8 +1,7 @@
-import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   createQuestion,
   deleteQuestion,
@@ -33,15 +32,15 @@ export const useQuestionCreateMutation = ({ surveyId }: iProps) => {
   const createMutation = useMutation({
     mutationFn: (data: any) => createQuestion(surveyId, data),
     onSuccess: () => {
-      showSuccessToast("Question created");
+      toast.success("Question created");
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
       queryClient.invalidateQueries({
         queryKey: ["surveyVariables", surveyId],
       });
     },
-    onError: (e) => {
-      showErrorToast("An error has occurred");
+    onError: (error) => {
+      toast.error(error?.message || "An error has occurred");
     },
   });
   return createMutation;
@@ -55,19 +54,16 @@ export const useQuestionUpdateMutation = ({ surveyId }: iProps) => {
       return updateQuestion(surveyId, qId, rest);
     },
     onSuccess: () => {
-      notifications.update({
+      toast.success("Saved Changes..", {
         id: "load-data",
-        color: "teal",
-        title: "Success",
-        loading: false,
-        message: "Saved Changes..",
-        autoClose: 3000,
       });
       queryClient.invalidateQueries({ queryKey: ["questions", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },
-    onError: (err) => {
-      showErrorToast("Error updating question", "load-data", <IconX />, true);
+    onError: (error) => {
+      toast.error(error?.message || "Error updating question", {
+        id: "load-data",
+      });
     },
   });
 
@@ -89,11 +85,10 @@ export const useQuestionDeleteMutation = (
       queryClient.invalidateQueries({
         queryKey: ["surveyVariables", surveyId],
       });
-      showSuccessToast("Question deleted");
+      toast.success("Question deleted");
     },
-    onError: (e) => {
-      console.error(e);
-      showErrorToast("Could not delete question");
+    onError: (error) => {
+      toast.error(error?.message || "Could not delete question");
     },
   });
 
@@ -119,8 +114,8 @@ export const useReplaceQuestionsMutation = (surveyId: string) => {
         queryKey: ["surveyVariables", surveyId],
       });
     },
-    onError: (e) => {
-      console.error(e);
+    onError: (error) => {
+      toast.error(error?.message || "Could not replace questions");
     },
   });
   return replaceMutation;

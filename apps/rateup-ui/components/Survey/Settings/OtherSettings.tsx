@@ -5,9 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 
 import { Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useResetResponsesStats } from "../../../backend/surveys/response/response.query";
 import { useDeleteSurveyMutation } from "../../../backend/surveys/surveys.query";
@@ -45,24 +45,14 @@ const OtherSettings = () => {
 
   const confirmReset = () => {
     if (user?.email === verifyEmail) {
-      notifications.show({
+      toast.loading(translations("Hold on, data is getting reset"), {
         id: "load-data",
-        loading: true,
-        title: translations("Resetting data"),
-        message: translations("Hold on, data is getting reset"),
-        autoClose: false,
-        withCloseButton: false,
       });
       setIsLoading(true);
       resetResponsesStats.mutate();
     } else {
-      notifications.show({
+      toast.loading(translations("Incorrect email"), {
         id: "load-data",
-        color: "red",
-        title: translations("Error"),
-        message: translations("Incorrect email"),
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
     }
   };
@@ -70,13 +60,8 @@ const OtherSettings = () => {
   const deleteSurveyMutation = useDeleteSurveyMutation();
 
   const confirmDeleteSurvey = () => {
-    notifications.show({
+    toast.loading(translations("Hold on, survey is getting deleted"), {
       id: "delete-survey",
-      loading: true,
-      title: translations("Deleting survey"),
-      message: translations("Hold on, survey is getting deleted"),
-      autoClose: true,
-      withCloseButton: false,
     });
     setIsLoading(true);
     deleteSurveyMutation.mutate(surveyId);

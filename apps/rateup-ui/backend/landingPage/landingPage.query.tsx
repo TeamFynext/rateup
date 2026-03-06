@@ -1,7 +1,7 @@
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createLandingPage,
   deleteLandingPage,
@@ -33,18 +33,18 @@ function useCreateLandingPageMutation() {
   return useMutation({
     mutationFn: createLandingPage,
     onSuccess: () => {
-      showSuccessToast(
-        "Created landingPage successfully.",
-        "CreateLandingPage",
-        <IconCheck />,
-      );
+      toast.success("Created landingPage successfully.", {
+        id: "CreateLandingPage",
+      });
       queryClient.invalidateQueries({ queryKey: ["landingPages"] });
     },
-    onError: () => {
-      showErrorToast(
-        "Unable to create landingPage, please try again later",
-        "CreateLandingPage",
-        <IconX />,
+    onError: (error) => {
+      toast.error(
+        error?.message ||
+          "Unable to create landingPage, please try again later",
+        {
+          id: "CreateLandingPage",
+        },
       );
     },
   });
@@ -57,19 +57,19 @@ function useUpdateLandingPageMutation(shortUrlId) {
       return updateLandingPage(data);
     },
     onSuccess: () => {
-      showSuccessToast(
-        "Updated landingPage successfully.",
-        "UpdateLandingPage",
-        <IconCheck />,
-      );
+      toast.success("Updated landingPage successfully.", {
+        id: "UpdateLandingPage",
+      });
       queryClient.invalidateQueries({ queryKey: ["landingPages"] });
       queryClient.invalidateQueries({ queryKey: ["landingPage", shortUrlId] });
     },
-    onError: () => {
-      showErrorToast(
-        "Unable to update Landing Page, please try again later",
-        "CreateLandingPage",
-        <IconX />,
+    onError: (error) => {
+      toast.error(
+        error?.message ||
+          "Unable to update Landing Page, please try again later",
+        {
+          id: "CreateLandingPage",
+        },
       );
     },
   });
@@ -82,18 +82,18 @@ function useDeleteLandingPageMutation(id) {
       return deleteLandingPage(id);
     },
     onSuccess: () => {
-      showSuccessToast(
-        "Deleted landingPage successfully.",
-        "deleteLandingPage",
-        <IconCheck />,
-      );
+      toast.success("Deleted landingPage successfully.", {
+        id: "deleteLandingPage",
+      });
       queryClient.invalidateQueries({ queryKey: ["landingPages"] });
     },
-    onError: () => {
-      showErrorToast(
-        "unable to delete landingPage, please try again later",
-        "deleteLandingPage",
-        <IconX />,
+    onError: (error) => {
+      toast.error(
+        error?.message ||
+          "unable to delete landingPage, please try again later",
+        {
+          id: "deleteLandingPage",
+        },
       );
     },
   });

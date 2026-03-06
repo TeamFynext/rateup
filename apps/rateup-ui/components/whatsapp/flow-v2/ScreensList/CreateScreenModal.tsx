@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +25,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useTranslations } from "next-intl";
 
 import useFlowStoreV3 from "../utils/store";
 
@@ -70,7 +71,10 @@ function CreateScreenModal({ opened, close }: CreateScreenModalProps) {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="title"
@@ -92,9 +96,7 @@ function CreateScreenModal({ opened, close }: CreateScreenModalProps) {
               <Button type="button" variant="outline" onClick={close}>
                 {translations("Cancel")}
               </Button>
-              <Button type="submit">
-                {translations("Create Screen")}
-              </Button>
+              <Button type="submit">{translations("Create Screen")}</Button>
             </DialogFooter>
           </form>
         </Form>

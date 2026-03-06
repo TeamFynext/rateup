@@ -6,11 +6,11 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Center, Group, MultiSelect, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { useNavControlContext } from "@/context/NavControlContext";
 import { SurveyContextProvider } from "@/context/SurveyObjContext";
-import { showErrorToast } from "@/utils/notifications";
 
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import {
@@ -125,7 +125,9 @@ export default function SurveyID() {
         });
         return;
       } else if (haveUnsavedChanges && feedbackElement === "toast") {
-        showErrorToast(toastMessage, "surveyid-unsaved-changes-toast");
+        toast.error(toastMessage, {
+          id: "surveyid-unsaved-changes-toast",
+        });
         return;
       }
       setActiveTab(value);

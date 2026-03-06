@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+import { toast } from "sonner";
 
 import {
   createLifeCycle,
@@ -18,24 +17,18 @@ export function useCreateLifeCycleMutation() {
   return useMutation({
     mutationFn: createLifeCycle,
     onSuccess: () => {
-      showSuccessToast(
-        t("Life cycle created successfully"),
-        "c-life-cycle",
-        null,
-        true,
-      );
+      toast.success(t("Life cycle created successfully"), {
+        id: "c-life-cycle",
+      });
       queryClient.invalidateQueries({ queryKey: ["lifecycles"] });
       queryClient.invalidateQueries({
         queryKey: ["lifecyclesWithContactCount"],
       });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        error?.response?.data?.message,
-        "c-life-cycle",
-        null,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || error?.message, {
+        id: "c-life-cycle",
+      });
     },
   });
 }
@@ -46,24 +39,18 @@ export function useUpdateLifeCycleMutation() {
   return useMutation({
     mutationFn: updateLifeCycle,
     onSuccess: () => {
-      showSuccessToast(
-        t("Life cycle updated successfully"),
-        "c-life-cycle",
-        null,
-        true,
-      );
+      toast.success(t("Life cycle updated successfully"), {
+        id: "c-life-cycle",
+      });
       queryClient.invalidateQueries({ queryKey: ["lifecycles"] });
       queryClient.invalidateQueries({
         queryKey: ["lifecyclesWithContactCount"],
       });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        error?.response?.data?.message,
-        "c-life-cycle",
-        null,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || error?.message, {
+        id: "c-life-cycle",
+      });
     },
   });
 }
@@ -73,24 +60,18 @@ export function useDeleteLifeCycleMutation() {
   return useMutation({
     mutationFn: deleteLifeCycle,
     onSuccess: () => {
-      showSuccessToast(
-        t("Life cycle deleted successfully"),
-        "c-life-cycle",
-        null,
-        true,
-      );
+      toast.success(t("Life cycle deleted successfully"), {
+        id: "c-life-cycle",
+      });
       queryClient.invalidateQueries({ queryKey: ["lifecycles"] });
       queryClient.invalidateQueries({
         queryKey: ["lifecyclesWithContactCount"],
       });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        error?.response?.data?.message,
-        "c-life-cycle",
-        null,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || error?.message, {
+        id: "c-life-cycle",
+      });
     },
   });
 }
@@ -107,24 +88,18 @@ export function useReorderLifeCycleMutation() {
   return useMutation({
     mutationFn: reorderLifeCycles,
     onSuccess: () => {
-      showSuccessToast(
-        t("Life cycle updated successfully"),
-        "c-life-cycle",
-        null,
-        true,
-      );
+      toast.success(t("Life cycle updated successfully"), {
+        id: "c-life-cycle",
+      });
       queryClient.invalidateQueries({ queryKey: ["lifecycles"] });
       queryClient.invalidateQueries({
         queryKey: ["lifecyclesWithContactCount"],
       });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        error?.response?.data?.message,
-        "c-life-cycle",
-        null,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || error?.message, {
+        id: "c-life-cycle",
+      });
     },
   });
 }

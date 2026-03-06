@@ -16,6 +16,7 @@ import {
 } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useBoardQueries } from "@/backend/tickets/tickets.query";
@@ -26,7 +27,6 @@ import { TeamSelector } from "@/components/input/TeamSelector";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { BoardCard } from "@/components/Tickets/BoardCard";
 import { BoardContent } from "@/components/Tickets/BoardContent";
-import { showWarnToast } from "@/utils/notifications";
 
 export default function Page() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -124,7 +124,7 @@ export default function Page() {
 
   const confirmDeleteBoard = () => {
     if (!isAdmin) {
-      showWarnToast("Only admin or super admin can delete a board.");
+      toast.warning("Only admin or super admin can delete a board.");
       return;
     }
 

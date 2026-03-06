@@ -3,7 +3,7 @@ import { industries } from "../QrConstants";
 const Industries = () => {
   return (
     <section
-      className="bg-gradient-to-br from-gray-50 via-gray-100 to-white py-16 md:py-24"
+      className="bg-linear-to-br from-gray-50 via-gray-100 to-white py-16 md:py-24"
       id="platform"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">

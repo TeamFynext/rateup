@@ -1,5 +1,6 @@
-import { UseListStateHandlers } from "@mantine/hooks";
 import { createContext } from "react";
+
+import { UseListStateHandlers } from "@mantine/hooks";
 
 interface CurrentResponsesContext {
   // TODO: add a dynamic type which changes based on the question type?
@@ -7,4 +8,7 @@ interface CurrentResponsesContext {
   updateResponse: any;
 }
 
-export const CurrentResponsesContext = createContext<CurrentResponsesContext>({response: undefined, updateResponse: undefined})
+export const CurrentResponsesContext = createContext<CurrentResponsesContext>({
+  response: undefined,
+  updateResponse: undefined,
+});

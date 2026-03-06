@@ -6,14 +6,25 @@ import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
 import { QuestionType2 } from "@/types/enums";
-import { getResponses2 } from "@/utils/survey/logic/logic.utils";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Separator } from "@/components/ui/separator";
 import { MultiSelect } from "@/components/ui/multi-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { getResponses2 } from "@/utils/survey/logic/logic.utils";
 
 import useFlowStoreV3 from "../utils/store";
 
@@ -41,24 +52,32 @@ interface ComponentLogicEditorProps {
   setBlocks: (updater: any) => void;
 }
 
-export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) => {
+export const ComponentLogicEditor = ({
+  blocks,
+  setBlocks,
+}: ComponentLogicEditorProps) => {
   const { getCurrentScreen, currentScreenId } = useFlowStoreV3();
   const translations = useTranslations();
 
   const currentScreen = getCurrentScreen();
 
-  const filteredQuestions = currentScreen?.layout.children.filter(
-    ({ label, type }) => label && type !== QuestionType2.Footer
-  ) || [];
+  const filteredQuestions =
+    currentScreen?.layout.children.filter(
+      ({ label, type }) => label && type !== QuestionType2.Footer,
+    ) || [];
 
   const questions = filteredQuestions.map((comp) => ({
     label: comp.label,
     value: comp.id,
   }));
 
-  const componentsList = currentScreen?.layout.children
-    .filter(({ type }) => type !== QuestionType2.Footer)
-    .map((comp) => ({ label: comp.label || comp.text || comp.type, value: comp.id })) || [];
+  const componentsList =
+    currentScreen?.layout.children
+      .filter(({ type }) => type !== QuestionType2.Footer)
+      .map((comp) => ({
+        label: comp.label || comp.text || comp.type,
+        value: comp.id,
+      })) || [];
 
   const getOperators = useMemo(() => {
     return (field: string) => {
@@ -91,17 +110,22 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
     setBlocks([...blocks, newBlock]);
   };
 
-  const updateCondition = (blockIndex: number, conditionIndex: number, field: string, value: any) => {
+  const updateCondition = (
+    blockIndex: number,
+    conditionIndex: number,
+    field: string,
+    value: any,
+  ) => {
     const updatedBlocks = [...blocks];
     if (field === "field") {
       updatedBlocks[blockIndex].conditions[conditionIndex].operator = null;
       updatedBlocks[blockIndex].conditions[conditionIndex].value = null;
     }
-    
+
     if (!isNaN(value)) {
       updatedBlocks[blockIndex].conditions[conditionIndex].isNumber = true;
     }
-    
+
     updatedBlocks[blockIndex].conditions[conditionIndex][field] = value;
     setBlocks(updatedBlocks);
   };
@@ -112,7 +136,11 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
     setBlocks(updatedBlocks);
   };
 
-  const updateSwitchCaseComponents = (blockIndex: number, caseKey: string, components: string[]) => {
+  const updateSwitchCaseComponents = (
+    blockIndex: number,
+    caseKey: string,
+    components: string[],
+  ) => {
     const updatedBlocks = [...blocks];
     updatedBlocks[blockIndex].cases[caseKey] = components.map((type) => ({
       type,
@@ -121,7 +149,11 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
     setBlocks(updatedBlocks);
   };
 
-  const updateSwitchCaseKey = (blockIndex: number, oldKey: string, newKey: string) => {
+  const updateSwitchCaseKey = (
+    blockIndex: number,
+    oldKey: string,
+    newKey: string,
+  ) => {
     const updatedBlocks = [...blocks];
     const components = updatedBlocks[blockIndex].cases[oldKey];
     delete updatedBlocks[blockIndex].cases[oldKey];
@@ -154,7 +186,11 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
     setBlocks(updatedBlocks);
   };
 
-  const addComponent = (blockIndex: number, key: string, componentTypes: string[]) => {
+  const addComponent = (
+    blockIndex: number,
+    key: string,
+    componentTypes: string[],
+  ) => {
     const updatedBlocks = [...blocks];
     updatedBlocks[blockIndex][key] = componentTypes;
     setBlocks(updatedBlocks);
@@ -183,7 +219,9 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
   return (
     <div className="flex flex-col gap-6 flex-1">
       <div className="mb-2">
-        <h3 className="text-lg font-semibold mb-2">{translations("Component Jump")}</h3>
+        <h3 className="text-lg font-semibold mb-2">
+          {translations("Component Jump")}
+        </h3>
         <p className="text-sm text-muted-foreground">
           {translations("Show or hide components based on conditions")}
         </p>
@@ -203,7 +241,9 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
                   className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setBlocks(blocks.filter((_: any, i: number) => i !== index));
+                    setBlocks(
+                      blocks.filter((_: any, i: number) => i !== index),
+                    );
                   }}
                 >
                   <IconTrash size={16} />
@@ -214,106 +254,75 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
               <div className="flex flex-col gap-4 pt-4">
                 {block.type === "If" && (
                   <>
-                    <h4 className="text-sm font-semibold">{translations("Conditions")}:</h4>
-                    {block.conditions.map((condition: any, condIndex: number) => {
-                      let q = filteredQuestions.find(
-                        (qs) => qs.id === condition.field
-                      );
-                      let operatorData = q && getResponses2(q);
-                      return (
-                        <div key={condIndex} className="flex gap-2 items-start">
-                          <div className="flex-1 space-y-1.5">
-                            <Label className="text-xs">{translations("Question")}</Label>
-                            <Select
-                              value={condition.field}
-                              onValueChange={(value) => {
-                                updateCondition(index, condIndex, "field", value);
-                              }}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder={translations("Select question")} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {questions.map((q) => (
-                                  <SelectItem key={q.value} value={q.value}>
-                                    {q.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="flex-1 space-y-1.5">
-                            <Label className="text-xs">{translations("Operator")}</Label>
-                            <Select
-                              value={condition.operator}
-                              onValueChange={(value) => {
-                                updateCondition(index, condIndex, "operator", value);
-                              }}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder={translations("Select operator")} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {getOperators(condition.field).map((op) => (
-                                  <SelectItem key={op.value} value={op.value}>
-                                    {op.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          {operatorData ? (
+                    <h4 className="text-sm font-semibold">
+                      {translations("Conditions")}:
+                    </h4>
+                    {block.conditions.map(
+                      (condition: any, condIndex: number) => {
+                        let q = filteredQuestions.find(
+                          (qs) => qs.id === condition.field,
+                        );
+                        let operatorData = q && getResponses2(q);
+                        return (
+                          <div
+                            key={condIndex}
+                            className="flex gap-2 items-start"
+                          >
                             <div className="flex-1 space-y-1.5">
-                              <Label className="text-xs">{translations("Value")}</Label>
+                              <Label className="text-xs">
+                                {translations("Question")}
+                              </Label>
                               <Select
-                                value={condition.value}
+                                value={condition.field}
                                 onValueChange={(value) => {
-                                  updateCondition(index, condIndex, "value", value);
+                                  updateCondition(
+                                    index,
+                                    condIndex,
+                                    "field",
+                                    value,
+                                  );
                                 }}
                               >
                                 <SelectTrigger>
-                                  <SelectValue placeholder={translations("Select value")} />
+                                  <SelectValue
+                                    placeholder={translations(
+                                      "Select question",
+                                    )}
+                                  />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {operatorData.map((item: any) => (
-                                    <SelectItem key={item.value} value={item.value}>
-                                      {item.label}
+                                  {questions.map((q) => (
+                                    <SelectItem key={q.value} value={q.value}>
+                                      {q.label}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
                             </div>
-                          ) : (
                             <div className="flex-1 space-y-1.5">
-                              <Label className="text-xs">{translations("Value")}</Label>
-                              <Input
-                                placeholder={translations("Enter value")}
-                                value={condition.value}
-                                type={q?.["input-type"] || "text"}
-                                onChange={(e) => {
-                                  let value =
-                                    q?.["input-type"] === "number"
-                                      ? Number(e.target.value)
-                                      : e.target.value;
-                                  updateCondition(index, condIndex, "value", value);
-                                }}
-                              />
-                            </div>
-                          )}
-                          {condIndex > 0 && (
-                            <div className="flex-1 space-y-1.5">
-                              <Label className="text-xs">{translations("Logic")}</Label>
+                              <Label className="text-xs">
+                                {translations("Operator")}
+                              </Label>
                               <Select
-                                value={condition.logic}
+                                value={condition.operator}
                                 onValueChange={(value) => {
-                                  updateCondition(index, condIndex, "logic", value);
+                                  updateCondition(
+                                    index,
+                                    condIndex,
+                                    "operator",
+                                    value,
+                                  );
                                 }}
                               >
                                 <SelectTrigger>
-                                  <SelectValue placeholder={translations("Select logic")} />
+                                  <SelectValue
+                                    placeholder={translations(
+                                      "Select operator",
+                                    )}
+                                  />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {logicalOperators.map((op) => (
+                                  {getOperators(condition.field).map((op) => (
                                     <SelectItem key={op.value} value={op.value}>
                                       {op.label}
                                     </SelectItem>
@@ -321,19 +330,110 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
                                 </SelectContent>
                               </Select>
                             </div>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 mt-7"
-                            onClick={() => removeCondition(index, condIndex)}
-                            disabled={condIndex === 0}
-                          >
-                            <IconTrash size={16} />
-                          </Button>
-                        </div>
-                      );
-                    })}
+                            {operatorData ? (
+                              <div className="flex-1 space-y-1.5">
+                                <Label className="text-xs">
+                                  {translations("Value")}
+                                </Label>
+                                <Select
+                                  value={condition.value}
+                                  onValueChange={(value) => {
+                                    updateCondition(
+                                      index,
+                                      condIndex,
+                                      "value",
+                                      value,
+                                    );
+                                  }}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue
+                                      placeholder={translations("Select value")}
+                                    />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {operatorData.map((item: any) => (
+                                      <SelectItem
+                                        key={item.value}
+                                        value={item.value}
+                                      >
+                                        {item.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            ) : (
+                              <div className="flex-1 space-y-1.5">
+                                <Label className="text-xs">
+                                  {translations("Value")}
+                                </Label>
+                                <Input
+                                  placeholder={translations("Enter value")}
+                                  value={condition.value}
+                                  type={q?.["input-type"] || "text"}
+                                  onChange={(e) => {
+                                    let value =
+                                      q?.["input-type"] === "number"
+                                        ? Number(e.target.value)
+                                        : e.target.value;
+                                    updateCondition(
+                                      index,
+                                      condIndex,
+                                      "value",
+                                      value,
+                                    );
+                                  }}
+                                />
+                              </div>
+                            )}
+                            {condIndex > 0 && (
+                              <div className="flex-1 space-y-1.5">
+                                <Label className="text-xs">
+                                  {translations("Logic")}
+                                </Label>
+                                <Select
+                                  value={condition.logic}
+                                  onValueChange={(value) => {
+                                    updateCondition(
+                                      index,
+                                      condIndex,
+                                      "logic",
+                                      value,
+                                    );
+                                  }}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue
+                                      placeholder={translations("Select logic")}
+                                    />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {logicalOperators.map((op) => (
+                                      <SelectItem
+                                        key={op.value}
+                                        value={op.value}
+                                      >
+                                        {op.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 mt-7"
+                              onClick={() => removeCondition(index, condIndex)}
+                              disabled={condIndex === 0}
+                            >
+                              <IconTrash size={16} />
+                            </Button>
+                          </div>
+                        );
+                      },
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -349,13 +449,19 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
                 {block.type === "Switch" && (
                   <>
                     <div className="space-y-1.5">
-                      <Label className="text-xs">{translations("Question")}</Label>
+                      <Label className="text-xs">
+                        {translations("Question")}
+                      </Label>
                       <Select
                         value={block.value}
-                        onValueChange={(value) => updateSwitchValue(index, value)}
+                        onValueChange={(value) =>
+                          updateSwitchValue(index, value)
+                        }
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={translations("Select question")} />
+                          <SelectValue
+                            placeholder={translations("Select question")}
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           {questions.map((q) => (
@@ -379,7 +485,7 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
                                   updateSwitchCaseKey(
                                     index,
                                     caseKey,
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -399,11 +505,18 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
                           <h4 className="text-sm font-semibold">{`${translations("Case")} ${caseKey}`}</h4>
                         )}
                         <div className="space-y-1.5">
-                          <Label className="text-xs">{translations("Add Components")}</Label>
+                          <Label className="text-xs">
+                            {translations("Add Components")}
+                          </Label>
                           <MultiSelect
                             placeholder={translations("Select component")}
-                            options={componentsList.map(item => ({ label: item.label, value: item.value }))}
-                            defaultValue={block.cases[caseKey].map((comp: any) => comp.type)}
+                            options={componentsList.map((item) => ({
+                              label: item.label,
+                              value: item.value,
+                            }))}
+                            defaultValue={block.cases[caseKey].map(
+                              (comp: any) => comp.type,
+                            )}
                             onValueChange={(value: string[]) =>
                               updateSwitchCaseComponents(index, caseKey, value)
                             }
@@ -418,7 +531,7 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
                       onClick={() =>
                         addSwitchCase(
                           index,
-                          `Case ${Object.keys(block.cases).length}`
+                          `Case ${Object.keys(block.cases).length}`,
                         )
                       }
                     >
@@ -434,9 +547,13 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
                   <Separator className="my-4" />
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-3">
-                      <h4 className="text-sm font-semibold">{translations("Then")}:</h4>
+                      <h4 className="text-sm font-semibold">
+                        {translations("Then")}:
+                      </h4>
                       <div className="space-y-1.5">
-                        <Label className="text-xs">{translations("Add Then Component")}</Label>
+                        <Label className="text-xs">
+                          {translations("Add Then Component")}
+                        </Label>
                         <MultiSelect
                           placeholder={translations("Select component")}
                           options={componentsList
@@ -445,22 +562,31 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
                               value: d.value,
                             }))
                             .filter((component) => {
-                              const isInElse = block.else?.includes(component.value);
+                              const isInElse = block.else?.includes(
+                                component.value,
+                              );
                               const isInConditions = block.conditions?.some(
-                                (condition: any) => condition?.field === component.value
+                                (condition: any) =>
+                                  condition?.field === component.value,
                               );
                               return !isInElse && !isInConditions;
                             })}
                           defaultValue={block.then || []}
-                          onValueChange={(value: string[]) => addComponent(index, "then", value)}
+                          onValueChange={(value: string[]) =>
+                            addComponent(index, "then", value)
+                          }
                         />
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-3">
-                      <h4 className="text-sm font-semibold">{translations("Else")}:</h4>
+                      <h4 className="text-sm font-semibold">
+                        {translations("Else")}:
+                      </h4>
                       <div className="space-y-1.5">
-                        <Label className="text-xs">{translations("Add Else Component")}</Label>
+                        <Label className="text-xs">
+                          {translations("Add Else Component")}
+                        </Label>
                         <MultiSelect
                           placeholder={translations("Select component")}
                           options={componentsList
@@ -469,14 +595,19 @@ export const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditor
                               value: d.value,
                             }))
                             .filter((component) => {
-                              const isInThen = block.then?.includes(component.value);
+                              const isInThen = block.then?.includes(
+                                component.value,
+                              );
                               const isInConditions = block.conditions?.some(
-                                (condition: any) => condition?.field === component.value
+                                (condition: any) =>
+                                  condition?.field === component.value,
                               );
                               return !isInThen && !isInConditions;
                             })}
                           defaultValue={block.else || []}
-                          onValueChange={(value: string[]) => addComponent(index, "else", value)}
+                          onValueChange={(value: string[]) =>
+                            addComponent(index, "else", value)
+                          }
                         />
                       </div>
                     </div>

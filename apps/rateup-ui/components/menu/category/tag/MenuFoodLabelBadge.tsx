@@ -1,5 +1,7 @@
 import React from "react";
+
 import { Badge, Flex, Image } from "@mantine/core";
+
 import { menuLabelWithText } from "../../util/menuLabelData";
 
 type MenuFoodLabelBadgeProps = {

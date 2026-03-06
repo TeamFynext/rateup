@@ -35,6 +35,7 @@ import {
   Lock,
   UserCog,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { WaReceiveMessageBody, WaSendMessageBody } from "@/types/global";
@@ -50,7 +51,6 @@ import {
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar";
 import { useUser } from "@/context/UserContext";
-import { showErrorToast } from "@/utils/notifications";
 
 import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {
@@ -138,14 +138,14 @@ export default function WaInboxSingleMessageLayout(props: Props) {
   }
   function sendReaction(emoji: string, emojiData: EmojiClickData) {
     if (!whatsappSettingsPhoneId) {
-      showErrorToast("Select a account to send the message");
+      toast.error("Select a account to send the message");
       return;
     }
     let reactionText;
     if (platform === MessagePlatform.INSTAGRAM) {
       reactionText = emojiReactionMap(emojiData.unified);
       if (!reactionText) {
-        showErrorToast(`${emoji} not supported`);
+        toast.error(`${emoji} not supported`);
         return;
       }
     }

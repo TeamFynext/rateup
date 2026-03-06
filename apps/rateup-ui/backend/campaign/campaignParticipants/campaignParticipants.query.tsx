@@ -26,11 +26,8 @@ export const useAddContactParticipantMutation = (campaignId) => {
       });
       toast.success(translations("Added participants successfully"));
     },
-    onError: (error: any) => {
-      toast.error(
-        `Error adding participants: 
-        ${error?.response?.data?.error}`,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error adding participants`);
     },
   });
 };
@@ -49,11 +46,8 @@ export const useAddGroupParticipantMutation = (campaignId) => {
       });
       toast.success(translations("Added group participants successfully"));
     },
-    onError: (error: any) => {
-      toast.error(
-        `Error adding group participants: 
-        ${error?.response?.data?.error}`,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error adding group participants`);
     },
   });
 };
@@ -107,11 +101,8 @@ export const useAddCampaignParticipants = (
       toast.success(translations("Campaign particiants added successfully"));
       onSuccess();
     },
-    onError: (error: any) => {
-      toast.error(
-        `Error on adding participants: 
-        ${error?.response?.data.error}`,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error on adding participants`);
       onSuccess();
     },
   });
@@ -134,9 +125,9 @@ export const useRemoveCampaignParticipant = (campaignId: string) => {
         queryKey: ["campaigns"],
       });
     },
-    onError(error: any) {
+    onError(error) {
       toast.error(
-        `Error removing participants from campaign: ${error?.response?.data?.error}`,
+        error?.message || `Error removing participants from campaign`,
         { id: "campaign-participants-remove" },
       );
     },
@@ -163,9 +154,9 @@ export const useRemoveMulitpleGroupParticipants = (
       });
       onSucess();
     },
-    onError(error: any) {
+    onError(error) {
       toast.error(
-        `Error removing participants from campaign: ${error?.response?.data?.error}`,
+        error?.message || `Error removing participants from campaign`,
         { id: "campaign-mulitiple-participants-remove" },
       );
     },

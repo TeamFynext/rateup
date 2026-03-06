@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { RichTextEditor } from "@mantine/tiptap";
 import { IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui/popover";
 import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter";
 import { uploadFile } from "@/utils/file-upload/upload";
-import { showErrorToast } from "@/utils/notifications";
 
 const InsertInboxImage = () => {
   const [isUploadingFile, setIsUploadingFile] = useState(false);
@@ -42,7 +42,7 @@ const InsertInboxImage = () => {
 
       setFiles([]);
     } catch (e) {
-      showErrorToast(e);
+      toast.error(e);
       resetMedia();
     }
 

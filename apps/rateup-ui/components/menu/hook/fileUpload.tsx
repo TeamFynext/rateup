@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+import { toast } from "sonner";
+
 import { uploadFile } from "../../../utils/file-upload/upload";
-import { showErrorToast } from "../../../utils/notifications";
 
 export const useFileUpload = (file: File | null, field: string, form: any) => {
   const [isUploading, setIsUploading] = useState(false);
@@ -18,7 +19,7 @@ export const useFileUpload = (file: File | null, field: string, form: any) => {
         setIsUploading(false);
       })
       .catch((err) => {
-        showErrorToast(`Error uploading ${field}. Please try again.`);
+        toast.error(`Error uploading ${field}. Please try again.`);
         setIsUploading(false);
       });
   }, [file]);

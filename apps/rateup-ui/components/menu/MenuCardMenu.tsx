@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 
 import { ActionIcon, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useDeleteMenuMutation } from "../../backend/menu/menu.query";
 import ConfirmationModal from "../Modal/ConfirmationModal";
@@ -43,13 +43,8 @@ function MenuCardMenu({
         headerTitle={translations("Delete Menu?")}
         confirmLabel={translations("Delete")}
         onConfirm={(e) => {
-          notifications.show({
+          toast.loading(translations("Hold on, menu is getting deleted"), {
             id: "delete-data-menu",
-            loading: true,
-            title: translations("Deleting menu"),
-            message: translations("Hold on, menu is getting deleted"),
-            autoClose: false,
-            withCloseButton: false,
           });
           deleteMutation.mutate(menuId);
           closeDialog();

@@ -1,20 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { notifications } from "@mantine/notifications";
+import { toast } from "sonner";
+
 import {
-  showSuccessToast,
-  showErrorToast,
-} from "../../../../utils/notifications";
-import {
-  getWaCustomerGroupsByTeamId,
-  getWaCustomerGroups,
-  getWaCustomerGroupSurveySendHistory,
-  getWaCustomersByWaCustomerGroup,
-  sendSurveyToWaCustomerGroup,
+  addWaCustomers,
   createRgroupFromPhoneNumbers,
   deleteWaCustomerFromWaCustomerGroup,
   deleteWaCustomerGroup,
+  getWaCustomerGroups,
+  getWaCustomerGroupsByTeamId,
+  getWaCustomerGroupSurveySendHistory,
+  getWaCustomersByWaCustomerGroup,
+  sendSurveyToWaCustomerGroup,
   updateWaCustomerGroup,
-  addWaCustomers,
 } from "./waCustomerGroup.api";
 
 export const useWaCustomerGroups = (teamId: string, enabled: boolean) => {
@@ -59,13 +56,13 @@ export const useSendSurveyToWaCustomerGroupMutation = ({ rgroupId }) => {
       return sendSurveyToWaCustomerGroup(rgroupId, surveyId, templateId);
     },
     onSuccess: () => {
-      showSuccessToast("Survey sent successfully");
+      toast.success("Survey sent successfully");
       queryClient.invalidateQueries({
         queryKey: ["rgroup", rgroupId, "history", "surveys"],
       });
     },
-    onError: () => {
-      showErrorToast("Error sending survey");
+    onError: (error) => {
+      toast.error(error?.message || "Error sending survey");
     },
   });
 };
@@ -83,10 +80,7 @@ export const useCreateWaCustomerGroupMutation = (teamId: string) => {
       return createRgroupFromPhoneNumbers(teamId, rgroupName, phoneNumbers);
     },
     onSuccess: () => {
-      notifications.show({
-        message: "WaCustomer Group created successfully!",
-        color: "green",
-      });
+      toast.loading("WaCustomer Group created successfully!");
       queryClient.invalidateQueries({ queryKey: ["rgroup", "team", teamId] });
       queryClient.invalidateQueries({
         queryKey: ["waCustomer", "team", teamId],
@@ -108,10 +102,7 @@ export const useDeleteWaCustomerFromWaCustomerGroupMutation = () => {
       return deleteWaCustomerFromWaCustomerGroup(rgroupId, waCustomerId);
     },
     onSuccess: () => {
-      notifications.show({
-        message: "WaCustomer removed from group successfully!",
-        color: "green",
-      });
+      toast.loading("WaCustomer removed from group successfully!");
       queryClient.invalidateQueries({ queryKey: ["rgroup"] });
     },
   });
@@ -124,10 +115,7 @@ export const useDeleteWaCustomerGroupMutation = () => {
       return deleteWaCustomerGroup(rgroupId);
     },
     onSuccess: () => {
-      notifications.show({
-        message: "WaCustomer Group deleted successfully!",
-        color: "green",
-      });
+      toast.loading("WaCustomer Group deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["rgroup"] });
     },
   });
@@ -140,10 +128,7 @@ export const useUpdateWaCustomerGroupMutation = (rgroupId) => {
       return updateWaCustomerGroup(rgroupId, rgroup);
     },
     onSuccess: () => {
-      notifications.show({
-        message: "WaCustomer Group updated successfully!",
-        color: "green",
-      });
+      toast.loading("WaCustomer Group updated successfully!");
       // TODO: only invalidate the updated rgroup?
       queryClient.invalidateQueries({ queryKey: ["rgroup"] });
     },
@@ -157,10 +142,7 @@ export const useAddWaCustomersMutation = (rgroupId) => {
       return addWaCustomers(rgroupId, waCustomers);
     },
     onSuccess: () => {
-      notifications.show({
-        message: "WaCustomers added successfully!",
-        color: "green",
-      });
+      toast.loading("WaCustomers added successfully!");
       queryClient.invalidateQueries({ queryKey: ["rgroup", rgroupId] });
     },
   });

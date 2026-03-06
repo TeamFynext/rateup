@@ -133,8 +133,8 @@ const CreateOrEditContactModal = ({
             form.reset();
             toast.success("contact updated successfully");
           },
-          onError: () => {
-            toast.error("Error in updating contact");
+          onError: (error) => {
+            toast.error(error?.message || "Error in updating contact");
           },
         },
       );
@@ -154,8 +154,8 @@ const CreateOrEditContactModal = ({
             form.reset();
             toast.success("contact added successfully");
           },
-          onError: () => {
-            toast.error("Error in adding contact");
+          onError: (error) => {
+            toast.error(error?.message || "Error in adding contact");
           },
         });
       }
@@ -184,7 +184,7 @@ const CreateOrEditContactModal = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {!initialValues && (
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rateup-blue to-blue-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-rateup-blue to-blue-600 flex items-center justify-center">
                 <UserPlus className="w-4 h-4 text-white" />
               </div>
             )}
@@ -200,7 +200,7 @@ const CreateOrEditContactModal = ({
           <div className="flex items-center gap-3 pb-3 border-b">
             <Avatar className="w-16 h-16">
               <AvatarImage src={initialValues.profilePic} />
-              <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-blue-600 text-white">
+              <AvatarFallback className="bg-linear-to-br from-rateup-blue to-blue-600 text-white">
                 {getInitials(initialValues.name)}
               </AvatarFallback>
             </Avatar>

@@ -1,10 +1,11 @@
 import { Box, Center, Image, Stack, Text } from "@mantine/core";
 import {
-  IconPhoto,
-  IconVideo,
   IconFileText,
   IconMapPin,
+  IconPhoto,
+  IconVideo,
 } from "@tabler/icons-react";
+
 import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "../../../../utils/constants";
 
 const MediaCardPreview = ({ children }) => {

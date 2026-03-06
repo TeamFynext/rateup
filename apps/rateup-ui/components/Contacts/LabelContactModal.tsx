@@ -39,8 +39,8 @@ const LabelContactModal = ({
           }
           handleCancel();
         },
-        onError: () => {
-          toast.error("Error applying labels");
+        onError: (error) => {
+          toast.error(error?.message || "Error applying labels");
         },
       },
     );

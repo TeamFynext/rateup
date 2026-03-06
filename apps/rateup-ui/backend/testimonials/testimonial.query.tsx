@@ -1,4 +1,7 @@
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import {
   addMultipleTestimonialsToCollection,
   createTestimonialCollection,
@@ -6,13 +9,11 @@ import {
   deleteTestimonialCollection,
   getAllTestimonialBySurvey,
   getAllTestimonialCollections,
-  getAllTestimonialSurveys,
   getAllTestimonials,
   getAllTestimonialsByCollection,
+  getAllTestimonialSurveys,
   updateTestimonialCollection,
 } from "./testimonial.api";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
 
 export function useGetAllTestimonials(surveyId) {
   return useQuery({
@@ -42,18 +43,17 @@ export function useCreateTestimonialCollection() {
   return useMutation({
     mutationFn: createTestimonialCollection,
     onSuccess: (data) => {
-      showSuccessToast(
-        "Collection created",
-        "create-collection",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Collection created", {
+        id: "create-collection",
+      });
       queryClient.invalidateQueries({
         queryKey: ["allTestimonialCollections"],
       });
     },
     onError: (error) => {
-      showErrorToast("Error creating collection", error.message, <IconX />);
+      toast.error(error?.message || "Error creating collection", {
+        id: error.message,
+      });
     },
   });
 }
@@ -71,17 +71,17 @@ export function useUpdateCollection(collectionId) {
   return useMutation({
     mutationFn: updateTestimonialCollection,
     onSuccess: () => {
-      showSuccessToast(
-        "Collection updated",
-        "update-collection",
-        <IconCheck />,
-      );
+      toast.success("Collection updated", {
+        id: "update-collection",
+      });
       queryClient.invalidateQueries({
         queryKey: ["allTestimonialsByCollection", collectionId],
       });
     },
     onError: (error) => {
-      showErrorToast("Error updating collection", error.message, <IconX />);
+      toast.error(error?.message || "Error updating collection", {
+        id: error.message,
+      });
     },
   });
 }
@@ -91,17 +91,17 @@ export function useDeleteTestimonialCollection() {
   return useMutation({
     mutationFn: deleteTestimonialCollection,
     onSuccess: () => {
-      showSuccessToast(
-        "Collection deleted",
-        "delete-collection",
-        <IconCheck />,
-      );
+      toast.success("Collection deleted", {
+        id: "delete-collection",
+      });
       queryClient.invalidateQueries({
         queryKey: ["allTestimonialCollections"],
       });
     },
     onError: (error) => {
-      showErrorToast("Error deleting collection", error.message, <IconX />);
+      toast.error(error?.message || "Error deleting collection", {
+        id: error.message,
+      });
     },
   });
 }
@@ -120,13 +120,17 @@ export function useAddMultipleTestimonialsToCollection(collectionId: string) {
     mutationFn: (testimonialIds: string[]) =>
       addMultipleTestimonialsToCollection(collectionId, testimonialIds),
     onSuccess: () => {
-      showSuccessToast("Testimonials added", "add-testimonials", <IconCheck />);
+      toast.success("Testimonials added", {
+        id: "add-testimonials",
+      });
       queryClient.invalidateQueries({
         queryKey: ["allTestimonialsByCollection", collectionId],
       });
     },
     onError: (error) => {
-      showErrorToast("Error adding testimonials", error.message, <IconX />);
+      toast.error(error?.message || "Error adding testimonials", {
+        id: error.message,
+      });
     },
   });
 }
@@ -139,17 +143,17 @@ export function useDeleteMultipleTestimonialsFromCollection(
     mutationFn: (testimonialIds: string[]) =>
       deleteMultipleTestimonialsFromCollection(collectionId, testimonialIds),
     onSuccess: () => {
-      showSuccessToast(
-        "Testimonials deleted",
-        "delete-testimonials",
-        <IconCheck />,
-      );
+      toast.success("Testimonials deleted", {
+        id: "delete-testimonials",
+      });
       queryClient.invalidateQueries({
         queryKey: ["allTestimonialsByCollection", collectionId],
       });
     },
     onError: (error) => {
-      showErrorToast("Error deleting testimonials", error.message, <IconX />);
+      toast.error(error?.message || "Error deleting testimonials", {
+        id: error.message,
+      });
     },
   });
 }

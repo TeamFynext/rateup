@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 
-import { notifications } from "@mantine/notifications";
 import { Database, MessageCircle, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useGenerateInboxResponse } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { Badge } from "@/components/ui/badge";
@@ -32,13 +32,8 @@ const GenerateData = () => {
   const translations = useTranslations();
 
   const handleSubmit = () => {
-    notifications.show({
+    toast.loading(translations("Hold on, response is getting generated"), {
       id: "generateResponse",
-      loading: true,
-      title: translations("Generate Response"),
-      message: translations("Hold on, response is getting generated"),
-      autoClose: false,
-      withCloseButton: false,
     });
     generateResponse.mutate({
       surveyTeamMapId: selectedSurveyTeamMapId,
@@ -47,13 +42,8 @@ const GenerateData = () => {
   };
 
   const handleWaChat = () => {
-    notifications.show({
+    toast.loading(translations("Hold on, WhatsApp chat is getting generated"), {
       id: "generateWaChat",
-      loading: true,
-      title: translations("Generate WhatsApp Chat"),
-      message: translations("Hold on, WhatsApp chat is getting generated"),
-      autoClose: false,
-      withCloseButton: false,
     });
     generateInboxResponse.mutate({
       numberOfContacts: numberOfContacts,
@@ -87,7 +77,7 @@ const GenerateData = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Generate Survey Response Card */}
         <Card className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
+          <div className="absolute inset-0 bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
           <CardHeader className="relative">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
@@ -166,7 +156,7 @@ const GenerateData = () => {
 
         {/* Generate WhatsApp Chat Card */}
         <Card className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20" />
+          <div className="absolute inset-0 bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20" />
           <CardHeader className="relative">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">

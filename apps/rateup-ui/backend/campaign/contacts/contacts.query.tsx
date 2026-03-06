@@ -1,15 +1,11 @@
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { ContactGroupType } from "@/types/enums";
 import { useContactsStore } from "@/app/dashboard/inbox/store";
 
 import { CONTACT_SORT } from "../../../components/Contacts/utils/utils";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "../../../utils/notifications";
 import {
   assignContactLabelsToContactId,
   assignContactLabelsToMultipleContacts,
@@ -70,7 +66,7 @@ export const useCreateContactMutation = () => {
         queryKey: ["contacts", "filtered"],
       });
     },
-    onError: (error: any) => {},
+    onError: (error) => {},
   });
 };
 
@@ -80,18 +76,14 @@ export const useImportContactMutation = () => {
     mutationFn: importContacts,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      showSuccessToast(
-        "Contacts imported successfully",
-        "contact-create",
-        <IconCheck />,
-      );
+      toast.success("Contacts imported successfully", {
+        id: "contact-create",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error creating the contact: ${error?.response?.data?.error}`,
-        "contact-create",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error creating the contact`, {
+        id: "contact-create",
+      });
     },
   });
 };
@@ -111,9 +103,9 @@ export const useImportCSVContactMutation = () => {
       //   <IconCheck />,
       // );
     },
-    onError: (error: any) => {
+    onError: (error) => {
       // showErrorToast(
-      //   `Error creating the contact: ${error?.response?.data?.error}`,
+      //   `Error creating the contact: ${error?.message}`,
       //   "contact-create",
       //   <IconX />,
       // );
@@ -127,22 +119,18 @@ export const useContactDeleteMutation = (groupId: string) => {
     mutationFn: deleteContact,
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      (queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
-      }),
-        showSuccessToast(
-          "Contact Deleted successfully",
-          "contact-delete",
-          <IconCheck />,
-        ));
+      });
+      toast.success("Contact Deleted successfully", {
+        id: "contact-delete",
+      });
       deleteContactsByIds([variables]);
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error deleting contact: ${error?.response?.data?.error}`,
-        "contact-delete",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error deleting contact`, {
+        id: "contact-delete",
+      });
     },
   });
 };
@@ -163,18 +151,14 @@ export const useEditContactMutation = (groupId?: string) => {
       queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
       queryClient.invalidateQueries({ queryKey: ["notification"] });
       queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
-      showSuccessToast(
-        "Contact updated successfully.",
-        "contact-update",
-        <IconCheck />,
-      );
+      toast.success("Contact updated successfully.", {
+        id: "contact-update",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error updating the contact: ${error?.response?.data?.error}`,
-        "contact-update",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error updating the contact`, {
+        id: "contact-update",
+      });
     },
   });
 };
@@ -185,18 +169,14 @@ export const useEditContactLabelsMutation = (contactId: string) => {
     mutationFn: editContactLabels,
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
-      showSuccessToast(
-        "Contact updated successfully.",
-        "contact-update",
-        <IconCheck />,
-      );
+      toast.success("Contact updated successfully.", {
+        id: "contact-update",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error updating the contact: ${error?.response?.data?.error}`,
-        "contact-update",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error updating the contact`, {
+        id: "contact-update",
+      });
     },
   });
 };
@@ -220,13 +200,10 @@ export const useDeleteManyContactsMutation = () => {
       deleteContactsByIds([...variables]);
       // onSucess();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error deleting contact: ${error?.response?.data?.error}`,
-        "contact-delete",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error deleting contact`, {
+        id: "contact-delete",
+      });
     },
   });
 };
@@ -243,18 +220,14 @@ export const useCreateCustomFieldMutation = () => {
     mutationFn: createCustomField,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customFields"] });
-      showSuccessToast(
-        "Custom field created successfully.",
-        "custom-field-create",
-        <IconCheck />,
-      );
+      toast.success("Custom field created successfully.", {
+        id: "custom-field-create",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error creating custom field: ${error?.response?.data?.error}`,
-        "custom-field-create",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error creating custom field`, {
+        id: "custom-field-create",
+      });
     },
   });
 };
@@ -266,18 +239,14 @@ export const useUpdateCustomFieldMutation = () => {
       updateCustomField(fieldId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customFields"] });
-      showSuccessToast(
-        "Custom field updated successfully.",
-        "custom-field-update",
-        <IconCheck />,
-      );
+      toast.success("Custom field updated successfully.", {
+        id: "custom-field-update",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error updating custom field: ${error?.response?.data?.error}`,
-        "custom-field-update",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error updating custom field`, {
+        id: "custom-field-update",
+      });
     },
   });
 };
@@ -288,18 +257,14 @@ export const useDeleteCustomFieldMutation = () => {
     mutationFn: deleteCustomField,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customFields"] });
-      showSuccessToast(
-        "Custom field deleted successfully.",
-        "custom-field-delete",
-        <IconCheck />,
-      );
+      toast.success("Custom field deleted successfully.", {
+        id: "custom-field-delete",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error deleting custom field: ${error?.response?.data?.error}`,
-        "custom-field-delete",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error deleting custom field`, {
+        id: "custom-field-delete",
+      });
     },
   });
 };
@@ -308,30 +273,19 @@ export const useExportContactsMutation = () => {
   return useMutation({
     mutationFn: exportContacts,
     onMutate: () => {
-      showLoadingToast(
-        "Preparing contacts for export...",
-        "contact-export",
-        undefined,
-        undefined,
-        undefined,
-        false,
-      );
+      toast.loading("Preparing contacts for export...", {
+        id: "contact-export",
+      });
     },
     onSuccess: () => {
-      showSuccessToast(
-        "Contacts export initiated successfully.",
-        "contact-export",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Contacts export initiated successfully.", {
+        id: "contact-export",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error exporting contacts: ${error?.response?.data?.error}`,
-        "contact-export",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error exporting contacts`, {
+        id: "contact-export",
+      });
     },
   });
 };
@@ -349,18 +303,14 @@ export const useCreateContactLabelMutation = () => {
     mutationFn: createContactLabel,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contactLabels"] });
-      showSuccessToast(
-        "Label created successfully",
-        "label-create",
-        <IconCheck />,
-      );
+      toast.success("Label created successfully", {
+        id: "label-create",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error creating label: ${error?.response?.data?.message}`,
-        "label-create",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error creating label`, {
+        id: "label-create",
+      });
     },
   });
 };
@@ -372,18 +322,14 @@ export const useUpdateContactLabelMutation = () => {
       updateContactLabel(labelId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contactLabels"] });
-      showSuccessToast(
-        "Label updated successfully",
-        "label-update",
-        <IconCheck />,
-      );
+      toast.success("Label updated successfully", {
+        id: "label-update",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error updating label: ${error?.response?.data?.message}`,
-        "label-update",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error updating label`, {
+        id: "label-update",
+      });
     },
   });
 };
@@ -394,18 +340,14 @@ export const useDeleteContactLabelMutation = () => {
     mutationFn: deleteContactLabel,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contactLabels"] });
-      showSuccessToast(
-        "Label deleted successfully",
-        "label-delete",
-        <IconCheck />,
-      );
+      toast.success("Label deleted successfully", {
+        id: "label-delete",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error deleting label: ${error?.response?.data?.message}`,
-        "label-delete",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error deleting label`, {
+        id: "label-delete",
+      });
     },
   });
 };

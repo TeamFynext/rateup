@@ -16,7 +16,7 @@ import {
   Text,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
+import { toast } from "sonner";
 
 import { PageType } from "@/types/enums";
 import { getQuestionsLength } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/util";
@@ -205,13 +205,8 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
         title={"Survey Login"}
         centered
         onSubmit={() => {
-          notifications.show({
+          toast.loading(`Hold on, your access is getting verified.`, {
             id: "load-data",
-            loading: true,
-            title: "Verifying Password..",
-            message: `Hold on, your access is getting verified.`,
-            autoClose: false,
-            withCloseButton: false,
           });
           verifySurveyPassword.mutate();
         }}
@@ -230,7 +225,6 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
           my="lg"
         />
       </FormModalLayout>
-
       <Stack
         className={`${styles["take-survey-layout-web-root-div"]} take-survey-layout-web-root-div`}
         w={"100%"}

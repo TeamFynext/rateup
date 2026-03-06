@@ -11,18 +11,21 @@ import {
 } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 
+import styles from "./EditFlow.module.css";
 import ElementsList from "./ElementsList";
 import WhatsAppPreview from "./Preview/WhatsAppPreview";
 import ScreensList from "./ScreensList";
 import useFlowStoreV3 from "./utils/store";
-import styles from "./EditFlow.module.css";
 
 interface EditFlowV3Props {
   previewOpened?: boolean;
   setPreviewOpened?: (opened: boolean) => void;
 }
 
-function EditFlowV3({ previewOpened = true, setPreviewOpened }: EditFlowV3Props = {}) {
+function EditFlowV3({
+  previewOpened = true,
+  setPreviewOpened,
+}: EditFlowV3Props = {}) {
   const params = useParams();
   const dbFlowId = params.dbFlowId as string;
 
@@ -44,17 +47,19 @@ function EditFlowV3({ previewOpened = true, setPreviewOpened }: EditFlowV3Props 
   useEffect(() => {
     if (dbFlow) {
       // Normalize elements to ensure they have metaType
-      const normalizedScreens = (dbFlow.json.screens || []).map((screen: any) => ({
-        ...screen,
-        layout: {
-          ...screen.layout,
-          children: (screen.layout.children || []).map((element: any) => ({
-            ...element,
-            // Ensure metaType is set, fallback to type if missing
-            metaType: element.metaType || element.type,
-          })),
-        },
-      }));
+      const normalizedScreens = (dbFlow.json.screens || []).map(
+        (screen: any) => ({
+          ...screen,
+          layout: {
+            ...screen.layout,
+            children: (screen.layout.children || []).map((element: any) => ({
+              ...element,
+              // Ensure metaType is set, fallback to type if missing
+              metaType: element.metaType || element.type,
+            })),
+          },
+        }),
+      );
 
       addScreens(normalizedScreens as any);
       if (currentScreenId) {
@@ -90,7 +95,8 @@ function EditFlowV3({ previewOpened = true, setPreviewOpened }: EditFlowV3Props 
       // Deep comparison to avoid unnecessary saves
       const screensChanged = !_.isEqual(dbFlow.json.screens, getScreens());
       const logicJumpsChanged = !_.isEqual(dbFlow.logicJumps, logicJumps);
-      const ticketsChanged = ticketIssued && !_.isEqual(dbFlow.ticketIssued, ticketIssued);
+      const ticketsChanged =
+        ticketIssued && !_.isEqual(dbFlow.ticketIssued, ticketIssued);
 
       if (screensChanged || logicJumpsChanged || ticketsChanged) {
         const timeoutId = setTimeout(() => {
@@ -115,7 +121,9 @@ function EditFlowV3({ previewOpened = true, setPreviewOpened }: EditFlowV3Props 
   if (isPending) return <RateupLoader />;
 
   return (
-    <div className={`${styles["edit-flow-container"]} ${!previewOpened ? styles["no-preview"] : ""}`}>
+    <div
+      className={`${styles["edit-flow-container"]} ${!previewOpened ? styles["no-preview"] : ""}`}
+    >
       {/* Column 1: Screens List */}
       <div className={styles["column-1"]}>
         <ScreensList />

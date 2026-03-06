@@ -14,11 +14,11 @@ import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconDeviceSdCard } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { WaFlowFormElementType } from "../../../../../types/enums";
 import { SAVE_HOTKEY } from "../../../../../utils/constants";
 import { getWaFlowFormElementTypeLabel } from "../../../../../utils/enums";
-import { showErrorToast } from "../../../../../utils/notifications";
 import {
   getFlowFormElementById,
   getFlowTextLimit,
@@ -66,7 +66,7 @@ export function FlowEmbeddedLinkDetailedView() {
   function handleSaveElement() {
     const res = form.validate();
     if (res.hasErrors) {
-      showErrorToast(translations("Fix errors before saving"));
+      toast.error(translations("Fix errors before saving"));
       return "error";
     } else {
       const flowForm = getFormObjFromScreenId(

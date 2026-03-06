@@ -1,5 +1,7 @@
-import { Center } from "@mantine/core";
 import Image from "next/image";
+
+import { Center } from "@mantine/core";
+
 import styles from "./decorative-image.module.css";
 
 function LoginSignupDecorativeImage() {
