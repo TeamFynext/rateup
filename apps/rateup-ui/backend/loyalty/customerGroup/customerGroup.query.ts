@@ -13,14 +13,14 @@ export const useAddNewCustomersFromCSVMutation = (groupId: string) => {
   return useMutation({
     mutationFn: addNewCustomersFromCSV,
     onSettled: () => {
-      (queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
-      }),
-        queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] }),
-        toast.success("Added new member successfully.", {
-          // <IconCheck />,
-          id: "customer-group-add-member",
-        }));
+      });
+      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      toast.success("Added new member successfully.", {
+        // <IconCheck />,
+        id: "customer-group-add-member",
+      });
     },
     onError: (error) => {
       toast.error(error?.message || `Error adding member`, {

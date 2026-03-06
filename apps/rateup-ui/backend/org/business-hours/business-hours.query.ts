@@ -38,11 +38,11 @@ export const useCreateBusinessHour = () => {
   return useMutation({
     mutationFn: (data: BusinessHoursFormValues) => createBusinessHour(data),
     onSuccess: () => {
-      toast.loading("Business hours created successfully!");
+      toast.success("Business hours created successfully!");
       queryClient.invalidateQueries({ queryKey: ["businessHours"] });
     },
     onError: (error) => {
-      toast.loading(error?.message || "Failed to create business hours");
+      toast.error(error?.message || "Failed to create business hours");
     },
   });
 };
@@ -54,11 +54,11 @@ export const useUpdateBusinessHour = () => {
     mutationFn: ({ id, data }: { id: string; data: BusinessHoursFormValues }) =>
       updateBusinessHour(id, data),
     onSuccess: () => {
-      toast.loading("Business hours updated successfully!");
+      toast.success("Business hours updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["businessHours"] });
     },
     onError: (error) => {
-      toast.loading(error?.message || "Failed to update business hours");
+      toast.error(error?.message || "Failed to update business hours");
     },
   });
 };
@@ -69,11 +69,11 @@ export const useDeleteBusinessHour = () => {
   return useMutation({
     mutationFn: (id: string) => deleteBusinessHour(id),
     onSuccess: () => {
-      toast.loading("Business hours deleted successfully!");
+      toast.success("Business hours deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["businessHours"] });
     },
     onError: (error) => {
-      toast.loading(error?.message || "Failed to delete business hours");
+      toast.error(error?.message || "Failed to delete business hours");
     },
   });
 };

@@ -49,7 +49,8 @@ const InsertInboxVideo = () => {
 
       setFile(null);
     } catch (e) {
-      toast.error(e);
+      const message = e instanceof Error ? e.message : String(e);
+      toast.error(message || "Error uploading video");
       resetMedia();
     }
 

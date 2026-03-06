@@ -60,7 +60,7 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
   const handleCheckBox = (e, surveyid, checked) => {
     e.stopPropagation();
     if (surveyidArray.length >= 4 && e.target.checked) {
-      toast.loading(translations("Max 4 surveys can be merged."), {
+      toast.warning(translations("Max 4 surveys can be merged."), {
         id: "survey-merge-max",
       });
       return;

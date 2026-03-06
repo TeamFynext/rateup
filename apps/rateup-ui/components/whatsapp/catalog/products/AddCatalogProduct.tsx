@@ -49,7 +49,6 @@ import {
   CURRENCY_CODES,
 } from "@/utils/constants";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload";
-import { showErrorToastFromError } from "@/utils/query";
 
 function getInitialValues(type = CatalogProductType.PRODUCT_ITEM) {
   switch (type) {

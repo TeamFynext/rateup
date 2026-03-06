@@ -32,7 +32,7 @@ export const useCreateRuleMutation = () => {
       toast.success("Rule Created Successfully");
     },
     onError: (error) => {
-      toast.error(error?.message || (error?.message ?? "Error Creating Rule"));
+      toast.error(error?.message || "Error Creating Rule");
     },
   });
 };
@@ -48,7 +48,7 @@ export const useUpdateRuleMutation = () => {
       toast.success("Rule Updated Successfully");
     },
     onError: (error) => {
-      toast.error(error?.message || (error?.message ?? "Error Updating Rule"));
+      toast.error(error?.message || "Error Updating Rule");
     },
   });
 };
@@ -62,7 +62,7 @@ export const useDeleteRuleMutation = () => {
       toast.success("Rule Deleted Successfully");
     },
     onError: (error) => {
-      toast.error(error?.message || (error?.message ?? "Error Deleting Rule"));
+      toast.error(error?.message || "Error Deleting Rule");
     },
   });
 };

@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { showErrorToastFromError } from "../../../utils/query";
 import {
   createWaSettings,
   deleteWaSettings,
