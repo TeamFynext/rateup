@@ -183,7 +183,7 @@ export const useCreateSurveyMutation = () => {
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
     },
     onError: (error) => {
-      toast.loading(error?.message, {
+      toast.error(error?.message, {
         id: "load-data",
       });
     },
@@ -218,7 +218,7 @@ export const useCreateSurveyLandingPageMutation = ({
       resetForm();
     },
     onError: (error) => {
-      toast.loading(error?.message, {
+      toast.error(error?.message, {
         id: "load-data",
       });
     },
@@ -253,7 +253,7 @@ export const useUpdateSurveyLandingPageMutation = ({
       resetForm();
     },
     onError: (error) => {
-      toast.loading(error?.message, {
+      toast.error(error?.message, {
         id: "load-data",
       });
     },
@@ -294,14 +294,14 @@ export function useUpdateSurveyPwdMutation(surveyId) {
   return useMutation({
     mutationFn: updateSurveyPassword,
     onSuccess: (res: any) => {
-      toast.loading("Sucessfully updated Password Protection ", {
+      toast.success("Sucessfully updated Password Protection ", {
         id: "load-data",
       });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },
     onError: (error) => {
       console.error("Error Password Protection:", error.message);
-      toast.loading(error?.message, {
+      toast.error(error?.message, {
         id: "load-data",
       });
     },
@@ -342,7 +342,7 @@ export function useEditSurveyMutation(id) {
   return useMutation({
     mutationFn: (data: any) => updateSurvey(id, data),
     onSuccess: () => {
-      toast.loading("Survey Updated Successfully!", {
+      toast.success("Survey Updated Successfully!", {
         id: "load-data",
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
@@ -351,7 +351,7 @@ export function useEditSurveyMutation(id) {
     },
     onError: (error) => {
       console.error("Error Survey Update:", error.message);
-      toast.loading(error?.message, {
+      toast.error(error?.message, {
         id: "load-data",
       });
       queryClient.invalidateQueries({ queryKey: ["survey"] });
@@ -373,7 +373,7 @@ export const useUpdateSurveyGoogleLinkMutation = (
     },
     onError: (err) => {
       console.error(err);
-      toast.loading("Error updating google link");
+      toast.error("Error updating google link");
       setLinkUpdateStatus(false);
     },
   });

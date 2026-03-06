@@ -174,12 +174,12 @@ export function useDownloadExcelResponse() {
     mutationFn: (data: downloadExcelResponseType) =>
       downloadExcelResponse(data),
     onSuccess: (response) => {
-      toast.loading("Downloaded Response successfully", {
+      toast.success("Downloaded Response successfully", {
         id: "downloadExcel",
       });
     },
     onError: (error) => {
-      toast.loading("Try again after some time", {
+      toast.error(error?.message || "Try again after some time", {
         id: "downloadExcel",
       });
     },

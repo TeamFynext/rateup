@@ -255,7 +255,7 @@ function FlowEditorContent({
           .getNodes()
           .find((n: Node) => n.type === "startNode");
         if (existingStartNode) {
-          toast.loading("Only one start node is allowed in the flow.");
+          toast.error("Only one start node is allowed in the flow.");
           return;
         }
       }
@@ -344,7 +344,7 @@ function FlowEditorContent({
 
       // Check if there are any nodes
       if (allNodes.length === 0) {
-        !silent && toast.loading("Flow is empty. Please add some nodes.");
+        !silent && toast.error("Flow is empty. Please add some nodes.");
         return false;
       }
 
@@ -356,25 +356,25 @@ function FlowEditorContent({
       );
       if (isLeadAutomation) {
         if (leadgenNodes.length > 1) {
-          !silent && toast.loading("Only one Lead node is allowed");
+          !silent && toast.error("Only one Lead node is allowed");
           return false;
         }
         if (allNodes[0].type !== "leadgenNode") {
-          !silent && toast.loading("First node should be a Lead Node.");
+          !silent && toast.error("First node should be a Lead Node.");
           return false;
         }
       }
 
       if (!isLeadAutomation) {
         if (startNodes.length === 0) {
-          !silent && toast.loading("Flow must have a start node.");
+          !silent && toast.error("Flow must have a start node.");
           return false;
         } else if (startNodes.length > 1) {
-          !silent && toast.loading("Flow must have exactly one start node.");
+          !silent && toast.error("Flow must have exactly one start node.");
           return false;
         }
         if (leadgenNodes.length) {
-          !silent && toast.loading("Lead node is only allowed lead automation");
+          !silent && toast.error("Lead node is only allowed lead automation");
           return false;
         }
       }
@@ -393,7 +393,7 @@ function FlowEditorContent({
 
       if (nodesWithoutIncoming.length > 0) {
         !silent &&
-          toast.loading(
+          toast.error(
             `Some nodes are not connected: ${nodesWithoutIncoming.map((n: Node) => n.data.label).join(", ")}`,
           );
         return false;
@@ -403,12 +403,12 @@ function FlowEditorContent({
       for (const node of allNodes) {
         const validationResult = validateNodeData(node as TypedNode);
         if (!validationResult.valid) {
-          !silent && toast.loading(validationResult.message);
+          !silent && toast.error(validationResult.message);
           return false;
         }
       }
 
-      !silent && toast.loading("Flow validation successful!");
+      !silent && toast.success("Flow validation successful!");
       return true;
     },
     [reactFlowInstance],
@@ -439,11 +439,9 @@ function FlowEditorContent({
         });
         updateUndoRedoState();
 
-        toast.loading("Flow loaded successfully!");
+        toast.success("Flow loaded successfully!");
       } catch (error) {
-        toast.loading(
-          "Failed to load flow. The saved data might be corrupted.",
-        );
+        toast.error("Failed to load flow. The saved data might be corrupted.");
       }
     }
   }, [

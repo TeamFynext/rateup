@@ -166,7 +166,7 @@ export default function NodeEditor({
     // Validate the node data before closing
     const validationResult = validateNodeData({ ...node, data: nodeData });
     if (!validationResult.valid) {
-      toast.loading(validationResult.message);
+      toast.error(validationResult.message);
       return;
     }
     onClose();

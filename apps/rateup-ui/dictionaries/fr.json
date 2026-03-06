@@ -538,7 +538,7 @@
   "Uploading": "Téléchargement",
   "Hold onfile is getting uploaded": "Veuillez patienter..Le fichier est en cours de téléchargement",
   "File uploaded successfully": "Fichier téléchargé avec succès",
-  "Errror uploading file": "Erreur lors du téléchargement du fichier",
+  "Error uploading file": "Erreur lors du téléchargement du fichier",
   "Upload Source": "Télécharger la source",
   "Select Source": "Sélectionner la source",
   "Enter web url": "Entrez l'URL web",

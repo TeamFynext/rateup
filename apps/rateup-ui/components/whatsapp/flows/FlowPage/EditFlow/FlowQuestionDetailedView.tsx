@@ -417,7 +417,7 @@ function ElementEditor({
       {
         onSuccess: () => {
           toast.dismiss();
-          toast.loading(
+          toast.success(
             translations("Your question was updated successfully"),
             {
               id: "load-data",

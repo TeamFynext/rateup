@@ -73,7 +73,7 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
           },
           () => {
             setIsUpload(false);
-            toast.error(translations("Errror uploading file"), {
+            toast.error(translations("Error uploading file"), {
               id: "file-upload",
             });
             close();

@@ -179,7 +179,7 @@ const TicketIssueEditor = ({
     const isChecked = event.currentTarget.checked;
     setEnableTicketIssue(isChecked);
     if (isChecked) {
-      toast.loading(translations("Enter condition for ticket issue"), {
+      toast.error(translations("Enter condition for ticket issue"), {
         id: "load-data",
       });
     }
@@ -207,7 +207,7 @@ const TicketIssueEditor = ({
 
   const handleError = (error) => {
     console.error("Failed to update", error);
-    toast.loading(
+    toast.error(
       ` ${translations("Failed to update try again Error:")} ${error.message}`,
       {
         id: "load-data",

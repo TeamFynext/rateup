@@ -59,7 +59,7 @@ export function useCreateUserMutation(setIsLoading) {
   return useMutation({
     mutationFn: (values: ICreateGoogleUser) => handleCreateUser(values),
     onSuccess: () => {
-      toast.loading("Sign up process is Complete!", {
+      toast.success("Sign up process is Complete!", {
         id: "load-data",
       });
       setIsLoading(false);
@@ -69,7 +69,7 @@ export function useCreateUserMutation(setIsLoading) {
     },
     onError: (error) => {
       console.error("Error completing signup:", error.message);
-      toast.loading(error?.message, {
+      toast.error(error?.message, {
         id: "load-data",
       });
 
@@ -93,7 +93,7 @@ export function useUpdateProfileMutation(setIsLoading) {
   return useMutation({
     mutationFn: (values: IUpdateProfile) => updateUserProfile(values),
     onSuccess: () => {
-      toast.loading("Profile Updated Successfully!", {
+      toast.success("Profile Updated Successfully!", {
         id: "load-data",
       });
       setIsLoading(false);
@@ -103,7 +103,7 @@ export function useUpdateProfileMutation(setIsLoading) {
     },
     onError: (error) => {
       console.error("Error Profile Update:", error.message);
-      toast.loading(error?.message, {
+      toast.error(error?.message, {
         id: "load-data",
       });
 
@@ -117,7 +117,7 @@ export function useUpdateUserLanguageMutation(setIsLoading) {
   return useMutation({
     mutationFn: (values: IUpdateUserLanguage) => updateUserLanguage(values),
     onSuccess: () => {
-      toast.loading("Language Updated Successfully!", {
+      toast.success("Language Updated Successfully!", {
         id: "load-data",
       });
       setIsLoading(false);
@@ -127,7 +127,7 @@ export function useUpdateUserLanguageMutation(setIsLoading) {
     },
     onError: (error) => {
       console.error("Error updating language:", error.message);
-      toast.loading(error?.message, {
+      toast.error(error?.message, {
         id: "load-data",
       });
       setIsLoading(false);

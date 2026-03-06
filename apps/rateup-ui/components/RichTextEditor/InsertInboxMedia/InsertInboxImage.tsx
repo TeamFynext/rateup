@@ -42,7 +42,11 @@ const InsertInboxImage = () => {
 
       setFiles([]);
     } catch (e) {
-      toast.error(e);
+      const errorMessage =
+        e instanceof Error
+          ? e.message
+          : String(e || "Failed to upload image. Please try again.");
+      toast.error(errorMessage || "Failed to upload image. Please try again.");
       resetMedia();
     }
 

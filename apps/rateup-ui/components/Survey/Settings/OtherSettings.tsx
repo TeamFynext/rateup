@@ -51,7 +51,7 @@ const OtherSettings = () => {
       setIsLoading(true);
       resetResponsesStats.mutate();
     } else {
-      toast.loading(translations("Incorrect email"), {
+      toast.error(translations("Incorrect email"), {
         id: "load-data",
       });
     }

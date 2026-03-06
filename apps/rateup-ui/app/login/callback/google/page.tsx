@@ -23,12 +23,12 @@ const GoogleCallbacck = () => {
           // sign up successful
           router.push("/signup?auth=google");
 
-          toast.loading("Sign up success", {
+          toast.success("Sign up success", {
             id: "load-data",
           });
         } else {
           // login successful
-          toast.loading("Login Successful..", {
+          toast.success("Login Successful..", {
             id: "load-data",
           });
 
@@ -54,12 +54,12 @@ const GoogleCallbacck = () => {
         console.log(err);
         // this may be a custom error message sent from the API by you.
         // window.alert(err.message);
-        toast.loading(err.message, {
+        toast.error(err.message, {
           id: "load-data",
         });
         router.push("/logout");
       } else {
-        toast.loading("Oops! Something went wrong" + JSON.stringify(err), {
+        toast.error("Oops! Something went wrong" + JSON.stringify(err), {
           id: "load-data",
         });
         router.push("/logout");

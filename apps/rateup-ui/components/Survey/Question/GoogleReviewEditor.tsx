@@ -130,7 +130,7 @@ const GoogleReviewEditor = ({
     const isChecked = event.currentTarget.checked;
     setEnableGoogleReview(isChecked);
     if (isChecked) {
-      toast.loading(translations("Enter condition and Google page URL"), {
+      toast.error(translations("Enter condition and Google page URL"), {
         id: "load-data",
       });
     }
@@ -151,7 +151,7 @@ const GoogleReviewEditor = ({
 
   const handleSave = async () => {
     if (teamsToDisplay.some((team) => !team.googleLink)) {
-      toast.loading(
+      toast.error(
         translations("Please enter Google Review links for all teams"),
       );
       return;
@@ -170,7 +170,7 @@ const GoogleReviewEditor = ({
 
   const handleError = (error) => {
     console.error("Failed to update", error);
-    toast.loading(
+    toast.error(
       `${translations("Failed to update try again Error:")} ${error.message}`,
       {
         id: "load-data",

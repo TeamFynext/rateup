@@ -97,14 +97,14 @@ export default function Security() {
     changePassword.mutate(data, {
       onSuccess: () => {
         passwordForm.reset();
-        toast.loading(translations("Password Changed Successfully"), {
+        toast.success(translations("Password Changed Successfully"), {
           id: "load-data",
         });
         setIsLoading(false);
       },
       onError: (error) => {
         console.error("Error changed password:", error.message);
-        toast.loading(error?.message, {
+        toast.error(error?.message, {
           id: "load-data",
         });
 

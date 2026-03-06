@@ -351,7 +351,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
   const surveyDeleteMutation = useMutation({
     mutationFn: deleteSurvey,
     onSuccess: () => {
-      toast.loading("Deleted!");
+      toast.success("Deleted!");
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
       queryClient.invalidateQueries({ queryKey: ["surveysByTeam"] });
     },
@@ -360,7 +360,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
   const surveyUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(survey.id, data),
     onSuccess: () => {
-      toast.loading(translations("Survey status Updated!"), {
+      toast.success(translations("Survey status Updated!"), {
         id: "survey",
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });

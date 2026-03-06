@@ -111,12 +111,12 @@ export function usePlanSyncMutation() {
     mutationFn: () => syncRazorPayPlans(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentPlansQuery"] });
-      toast.loading("RazorPay Plan list updated successfully.", {
+      toast.success("RazorPay Plan list updated successfully.", {
         id: "load-data",
       });
     },
     onError: (error) => {
-      toast.loading(error?.message || "Error syncing RazorPay Plans", {
+      toast.error(error?.message || "Error syncing RazorPay Plans", {
         id: "load-data",
       });
     },
@@ -127,7 +127,7 @@ export function useCreateCheckoutSession(setIsLoading, setOrder) {
   return useMutation({
     mutationFn: (values: ICreateCheckoutType) => createCheckoutSession(values),
     onSuccess: (data) => {
-      toast.loading("Please wait get ready for payment", {
+      toast.success("Please wait get ready for payment", {
         id: "load-data",
       });
       setIsLoading(false);
@@ -135,7 +135,7 @@ export function useCreateCheckoutSession(setIsLoading, setOrder) {
     },
     onError: (error) => {
       console.error("Error creating order:" + error.message);
-      toast.loading(error?.message, {
+      toast.error(error?.message || "Error creating order", {
         id: "load-data",
       });
 

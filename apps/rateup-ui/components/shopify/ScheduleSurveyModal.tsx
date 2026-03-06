@@ -190,7 +190,7 @@ const ScheduleSurveyModal = ({
       createdAt: new Date(),
     });
 
-    toast.loading(translations("Creating Survey Schedule"), {
+    toast.success(translations("Creating Survey Schedule"), {
       id: "integration-update",
     });
 

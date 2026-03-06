@@ -59,7 +59,7 @@ export const useSendSurveyToWaCustomerMutation = ({ waCustomerId }) => {
       return sendSurveyToWaCustomer(waCustomerId, surveyId, templateId);
     },
     onSuccess: () => {
-      toast.loading("Survey sent successfully!");
+      toast.success("Survey sent successfully!");
       queryClient.invalidateQueries({
         queryKey: ["waCustomer", waCustomerId, "history", "surveys"],
       });
@@ -74,7 +74,7 @@ export const useCreateWaCustomersMutation = (teamId: string) => {
       return createWaCustomers(waCustomers, teamId);
     },
     onSuccess: () => {
-      toast.loading("WaCustomers created successfully!");
+      toast.success("WaCustomers created successfully!");
       queryClient.invalidateQueries({ queryKey: ["waCustomer"] });
     },
   });
@@ -87,7 +87,7 @@ export const useDeleteWaCustomerMutation = () => {
       return deleteWaCustomer(waCustomerId);
     },
     onSuccess: () => {
-      toast.loading("WaCustomer deleted successfully!");
+      toast.success("WaCustomer deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["waCustomer"] });
     },
   });

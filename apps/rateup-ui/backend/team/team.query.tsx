@@ -82,7 +82,7 @@ export function useEditTeamMutation(
   return useMutation({
     mutationFn: (values: IEditTeam) => editTeam(id, values, onlyTag),
     onSuccess: (res) => {
-      toast.loading("Team Details Updated Successfully!", {
+      toast.success("Team Details Updated Successfully!", {
         id: "load-data",
       });
       setIsLoading(false);
@@ -95,7 +95,7 @@ export function useEditTeamMutation(
     },
     onError: (error) => {
       console.error("Error Team Update:", error.message);
-      toast.loading(error?.message, {
+      toast.error(error?.message || "Error updating team details", {
         id: "load-data",
       });
 

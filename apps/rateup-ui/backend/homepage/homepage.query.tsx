@@ -8,14 +8,14 @@ export function useSendContactFormMutation(setIsLoading) {
   return useMutation({
     mutationFn: (values: IContactForm) => sendContactMessage(values),
     onSuccess: () => {
-      toast.loading("Message sent Successfully!", {
+      toast.success("Message sent Successfully!", {
         id: "load-data",
       });
       setIsLoading(false);
     },
     onError: (error) => {
       console.error("Error Sending msg:", error.message);
-      toast.loading(error?.message, {
+      toast.error(error?.message, {
         id: "load-data",
       });
 

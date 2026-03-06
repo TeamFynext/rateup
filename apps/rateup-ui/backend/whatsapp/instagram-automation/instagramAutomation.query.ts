@@ -38,11 +38,7 @@ export const useCreateInstagramAutomationMutation = () => {
       toast.success("Instagram Automation Created Successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          error?.message ||
-          "Error Creating Instagram Automation",
-      );
+      toast.error(error?.message || "Error Creating Instagram Automation");
     },
   });
 };
@@ -57,11 +53,7 @@ export const useDeleteInstagramAutomationMutation = () => {
       toast.success("Instagram Automation Deleted Successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          error?.message ||
-          "Error Deleting Instagram Automation",
-      );
+      toast.error(error?.message || "Error Deleting Instagram Automation");
     },
   });
 };
@@ -70,11 +62,7 @@ export const useUpdateInstagramAutomationMutation = () => {
   return useMutation({
     mutationFn: ({ id, ...data }: any) => updateInstagramAutomation(id, data),
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          error?.message ||
-          "Error Updating Instagram Automation",
-      );
+      toast.error(error?.message || "Error Updating Instagram Automation");
     },
   });
 };
@@ -89,11 +77,7 @@ export const useInitiateInstagramAutomationMutation = (
       toast.success("Instagram Automation initiated Successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          error?.message ||
-          "Error initiating Instagram Automation",
-      );
+      toast.error(error?.message || "Error initiating Instagram Automation");
     },
   });
 };

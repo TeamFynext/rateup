@@ -28,7 +28,7 @@ export function useCreateStripeCheckoutSession(setIsLoading) {
     },
     onError: (error) => {
       console.error("Error creating order:" + error.message);
-      toast.loading(error?.message, {
+      toast.error(error?.message, {
         id: "load-data",
       });
 

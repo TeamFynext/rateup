@@ -201,7 +201,7 @@ const Responses = ({
       setIsDeleting(true);
       deleteResponse.mutate(selectedRowId);
     } else {
-      toast.loading(translations("Incorrect email"), {
+      toast.error(translations("Incorrect email"), {
         id: "load-data",
       });
     }

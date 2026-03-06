@@ -49,7 +49,11 @@ const InsertInboxAudio = () => {
 
       setFile(null);
     } catch (e) {
-      toast.error(e);
+      const errorMessage =
+        e instanceof Error
+          ? e.message
+          : String(e || "Failed to upload audio. Please try again.");
+      toast.error(errorMessage || "Failed to upload audio. Please try again.");
       resetMedia();
     }
 

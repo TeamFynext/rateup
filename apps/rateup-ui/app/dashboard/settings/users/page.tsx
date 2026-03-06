@@ -196,7 +196,7 @@ export default function UsersPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
-      toast.loading(
+      toast.success(
         data?.existing
           ? translations("Staff added successfully")
           : translations("Invite sent successfully"),
@@ -206,7 +206,7 @@ export default function UsersPage() {
     },
     onError: (error) => {
       console.error("Error creating invite:", error?.message);
-      toast.loading(error?.message || error.message);
+      toast.error(error?.message || error.message);
     },
   });
 

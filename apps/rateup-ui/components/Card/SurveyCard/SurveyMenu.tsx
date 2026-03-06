@@ -131,7 +131,7 @@ export function SurveyMenu({
   const surveyUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(survey.id, data),
     onSuccess: () => {
-      toast.loading(translations("Survey status Updated!"), {
+      toast.success(translations("Survey status Updated!"), {
         id: "survey",
       });
       refetchSurveys();

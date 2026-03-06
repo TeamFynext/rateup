@@ -197,7 +197,7 @@ const ShareSurvey = ({
   const surveyStatusUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(survey.id, data),
     onSuccess: () => {
-      toast.loading("Survey status Updated!", {
+      toast.success("Survey status Updated!", {
         id: "survey",
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });

@@ -80,7 +80,7 @@ export const useCreateWaCustomerGroupMutation = (teamId: string) => {
       return createRgroupFromPhoneNumbers(teamId, rgroupName, phoneNumbers);
     },
     onSuccess: () => {
-      toast.loading("WaCustomer Group created successfully!");
+      toast.success("WaCustomer Group created successfully!");
       queryClient.invalidateQueries({ queryKey: ["rgroup", "team", teamId] });
       queryClient.invalidateQueries({
         queryKey: ["waCustomer", "team", teamId],
@@ -102,7 +102,7 @@ export const useDeleteWaCustomerFromWaCustomerGroupMutation = () => {
       return deleteWaCustomerFromWaCustomerGroup(rgroupId, waCustomerId);
     },
     onSuccess: () => {
-      toast.loading("WaCustomer removed from group successfully!");
+      toast.success("WaCustomer removed from group successfully!");
       queryClient.invalidateQueries({ queryKey: ["rgroup"] });
     },
   });
@@ -115,7 +115,7 @@ export const useDeleteWaCustomerGroupMutation = () => {
       return deleteWaCustomerGroup(rgroupId);
     },
     onSuccess: () => {
-      toast.loading("WaCustomer Group deleted successfully!");
+      toast.success("WaCustomer Group deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["rgroup"] });
     },
   });
@@ -128,7 +128,7 @@ export const useUpdateWaCustomerGroupMutation = (rgroupId) => {
       return updateWaCustomerGroup(rgroupId, rgroup);
     },
     onSuccess: () => {
-      toast.loading("WaCustomer Group updated successfully!");
+      toast.success("WaCustomer Group updated successfully!");
       // TODO: only invalidate the updated rgroup?
       queryClient.invalidateQueries({ queryKey: ["rgroup"] });
     },
@@ -142,7 +142,7 @@ export const useAddWaCustomersMutation = (rgroupId) => {
       return addWaCustomers(rgroupId, waCustomers);
     },
     onSuccess: () => {
-      toast.loading("WaCustomers added successfully!");
+      toast.success("WaCustomers added successfully!");
       queryClient.invalidateQueries({ queryKey: ["rgroup", rgroupId] });
     },
   });
