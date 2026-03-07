@@ -1,29 +1,22 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import {
   ActionIcon,
   Anchor,
-  Box,
   BoxComponentProps,
-  Flex,
-  Group,
   Image,
   Indicator,
   Modal,
-  ScrollAreaAutosize,
   Stack,
-  Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { RichTextEditor } from "@mantine/tiptap";
 import {
   IconFileFilled,
-  IconPaperclip,
   IconRobot,
   IconTrash,
-  IconTypography,
   IconWaveSine,
   IconX,
 } from "@tabler/icons-react";
@@ -32,19 +25,13 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { Extension, generateHTML, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
-import {
-  LayoutTemplate,
-  Paperclip,
-  Send,
-  TypeOutline,
-  X,
-  Zap,
-} from "lucide-react";
+import { LayoutTemplate, Paperclip, TypeOutline, X, Zap } from "lucide-react";
 import { Plugin } from "prosemirror-state";
 
 import { MessagePlatform } from "@/types/enums";
 import { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { uploadFile } from "@/utils/file-upload/upload";
 import {
   getMessageSourceName,
   isInboxSessionExpired,
@@ -91,6 +78,7 @@ interface WaTextEditorProps extends BoxComponentProps {
   otherHeaders?: React.ReactNode;
   isQuickReplyEditor?: boolean;
   border?: boolean;
+  allowFiles?: boolean;
 }
 
 export const CustomEnter = Extension.create({
@@ -130,11 +118,13 @@ function WaTextEditor({
   otherHeaders = null,
   isQuickReplyEditor = false,
   border,
+  allowFiles = false,
   ...props
 }: WaTextEditorProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [quickReplySearchQuery, setQuickReplySearchQuery] = useState("");
+  const { addMedia } = useMediaStore();
   const extensions = useMemo(() => {
     const ext = [
       StarterKit.configure({ link: false }),
@@ -185,6 +175,37 @@ function WaTextEditor({
 
                 setShowQuickReplies(true);
               }
+              return false;
+            },
+
+            handlePaste(view, event) {
+              if (!allowFiles) return false;
+              const items = event.clipboardData?.items;
+              if (!items) return false;
+
+              const files: File[] = [];
+
+              for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+
+                if (item.kind === "file") {
+                  const file = item.getAsFile();
+                  if (file) files.push(file);
+                }
+              }
+
+              if (files.length) {
+                event.preventDefault();
+
+                window.dispatchEvent(
+                  new CustomEvent("editor-file-drop", {
+                    detail: files,
+                  }),
+                );
+
+                return true;
+              }
+
               return false;
             },
           },
@@ -296,8 +317,43 @@ function WaTextEditor({
     );
   };
 
+  useEffect(() => {
+    const handler = async (e: any) => {
+      const files: File[] = e.detail;
+
+      for (const file of files) {
+        try {
+          const fileKey = await uploadFile(file);
+          const fileUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${fileKey}`;
+
+          const type = file.type.startsWith("image/")
+            ? "image"
+            : file.type.startsWith("video/")
+              ? "video"
+              : file.type.startsWith("audio/")
+                ? "audio"
+                : "document";
+
+          addMedia({
+            type,
+            name: file.name,
+            url: fileUrl,
+            key: fileKey,
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    };
+
+    window.addEventListener("editor-file-drop", handler);
+    return () => window.removeEventListener("editor-file-drop", handler);
+  }, []);
+
   return (
-    <div className={`${border ? "border-t" : ""} bg-background shrink-0`}>
+    <div
+      className={`${border ? "border-t" : ""} bg-background shrink-0 relative`}
+    >
       <div className="flex gap-1 ">
         {media.length > 0 &&
           media.map((me) => {
@@ -419,7 +475,9 @@ function WaTextEditor({
                 style={{
                   borderRadius: "5px",
                 }}
-                className={`${editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""}`}
+                className={`${
+                  editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""
+                }`}
               />
               <div className="absolute bottom-2 right-2 flex items-center space-x-1">
                 <WaTextCharacterCount editor={editor} max={max} />

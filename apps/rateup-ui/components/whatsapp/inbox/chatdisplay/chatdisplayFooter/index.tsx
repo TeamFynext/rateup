@@ -439,6 +439,7 @@ export default function WaInboxChatDisplayFooter({
               placeholder="Type a message...Type / for quick replies"
               sendMessageButton={<SendMessageComponent />}
               border={true}
+              allowFiles={true}
             />
           </TabsContent>
 
