@@ -32,7 +32,9 @@ const RefreshButton = ({
   const handleRefresh = async () => {
     if (isRefreshing) return;
     setLoading(true);
-    toast.success(translations("Hold onData is refreshing"));
+    toast.loading(translations("Hold onData is refreshing"), {
+      id: "refreshing-data",
+    });
     if (onClick) {
       onClick();
     } else if (queryKeys?.length) {
@@ -41,7 +43,9 @@ const RefreshButton = ({
       }
     }
     setLoading(false);
-    toast.success(translations("Data Updated Successfully"));
+    toast.success(translations("Data Updated Successfully"), {
+      id: "refreshing-data",
+    });
   };
 
   return (
