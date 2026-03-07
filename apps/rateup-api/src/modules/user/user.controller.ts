@@ -49,7 +49,17 @@ export async function getLoggedUserInfoHandler(
     }
   } catch (e) {
     log.error(e);
-    reply.code(500).send({ message: `${e.message}` });
+    if (
+      e?.message === "Session does not exist anymore" ||
+      e?.message?.includes("Session")
+    ) {
+      return reply.code(401).send({
+        message: e.message,
+      });
+    }
+    return reply.code(500).send({
+      message: "Internal server error",
+    });
   }
 }
 
