@@ -45,6 +45,7 @@ import { Plugin } from "prosemirror-state";
 import { MessagePlatform } from "@/types/enums";
 import { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { uploadFile } from "@/utils/file-upload/upload";
 import {
   getMessageSourceName,
   isInboxSessionExpired,
@@ -135,6 +136,9 @@ function WaTextEditor({
   const [opened, { open, close }] = useDisclosure(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [quickReplySearchQuery, setQuickReplySearchQuery] = useState("");
+  const { addMedia } = useMediaStore();
+  const [isDragging, setIsDragging] = useState(false);
+
   const extensions = useMemo(() => {
     const ext = [
       StarterKit.configure({ link: false }),
@@ -185,6 +189,36 @@ function WaTextEditor({
 
                 setShowQuickReplies(true);
               }
+              return false;
+            },
+
+            handlePaste(view, event) {
+              const items = event.clipboardData?.items;
+              if (!items) return false;
+
+              const files: File[] = [];
+
+              for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+
+                if (item.kind === "file") {
+                  const file = item.getAsFile();
+                  if (file) files.push(file);
+                }
+              }
+
+              if (files.length) {
+                event.preventDefault();
+
+                window.dispatchEvent(
+                  new CustomEvent("editor-file-drop", {
+                    detail: files,
+                  }),
+                );
+
+                return true;
+              }
+
               return false;
             },
           },
@@ -295,9 +329,93 @@ function WaTextEditor({
       />
     );
   };
+  const handleFiles = async (files: File[]) => {
+    if (!files?.length) return;
+
+    for (const file of files) {
+      try {
+        const fileKey = await uploadFile(file);
+
+        const fileUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${fileKey}`;
+
+        let type: "image" | "video" | "audio" | "document" = "document";
+
+        if (file.type.startsWith("image/")) {
+          type = "image";
+        } else if (file.type.startsWith("video/")) {
+          type = "video";
+        } else if (file.type.startsWith("audio/")) {
+          type = "audio";
+        }
+
+        addMedia({
+          type,
+          name: file.name,
+          url: fileUrl,
+          key: fileKey,
+        });
+      } catch (error) {
+        console.error("File upload failed:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handler = async (e: any) => {
+      const files: File[] = e.detail;
+
+      for (const file of files) {
+        try {
+          const fileKey = await uploadFile(file);
+          const fileUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${fileKey}`;
+
+          const type = file.type.startsWith("image/")
+            ? "image"
+            : file.type.startsWith("video/")
+              ? "video"
+              : file.type.startsWith("audio/")
+                ? "audio"
+                : "document";
+
+          addMedia({
+            type,
+            name: file.name,
+            url: fileUrl,
+            key: fileKey,
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    };
+
+    window.addEventListener("editor-file-drop", handler);
+    return () => window.removeEventListener("editor-file-drop", handler);
+  }, []);
 
   return (
-    <div className={`${border ? "border-t" : ""} bg-background shrink-0`}>
+    <div
+      className={`${border ? "border-t" : ""} bg-background shrink-0 relative`}
+      onDragOver={(e) => {
+        if (!e.dataTransfer?.types.includes("Files")) return;
+        e.preventDefault();
+        setIsDragging(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setIsDragging(false);
+        }
+      }}
+      onDrop={async (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+
+        const files = e.dataTransfer?.files;
+        if (!files?.length) return;
+
+        await handleFiles(Array.from(files));
+      }}
+    >
       <div className="flex gap-1 ">
         {media.length > 0 &&
           media.map((me) => {
@@ -419,8 +537,21 @@ function WaTextEditor({
                 style={{
                   borderRadius: "5px",
                 }}
-                className={`${editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""}`}
-              />
+                className={`${
+                  editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""
+                } ${isDragging ? "border-2 border-dashed border-primary bg-primary/5" : ""}`}
+              >
+                {isDragging && (
+                  <div className="absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary bg-black/40 backdrop-blur-sm rounded-lg pointer-events-none">
+                    <div className="flex flex-col items-center gap-2 text-white">
+                      <IconPaperclip size={36} />
+                      <p className="text-sm font-medium">
+                        Drop files to upload
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </RichTextEditor.Content>
               <div className="absolute bottom-2 right-2 flex items-center space-x-1">
                 <WaTextCharacterCount editor={editor} max={max} />
                 {inbox && (
