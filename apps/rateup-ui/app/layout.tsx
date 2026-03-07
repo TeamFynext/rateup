@@ -14,6 +14,7 @@ import "@mantine/nprogress/styles.css";
 import "@mantine/dropzone/styles.css";
 import "@mantine/tiptap/styles.css";
 import "keen-slider/keen-slider.min.css";
+import "react-phone-number-input/style.css";
 import "./globals.css";
 
 import { Suspense } from "react";
