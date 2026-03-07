@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Group, Text } from "@mantine/core";
-import { IconExclamationCircle } from "@tabler/icons-react";
+import { IconExclamationCircle, IconPaperclip } from "@tabler/icons-react";
 import { MessageSquare } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   useContactsStore,
@@ -30,6 +31,7 @@ export default function WaInboxChatDisplay({
   waSettings?: any;
 }>) {
   const contact = useContactsStore((s) => s.selectedContact);
+  const [isDragging, setIsDragging] = useState(false);
 
   const { updateContactById } = useContactsStore();
   const { user } = useUser();
@@ -42,10 +44,30 @@ export default function WaInboxChatDisplay({
   const translations = useTranslations();
   const { isLoading } = useMessagesStore();
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
-
   const contactId = contact?.id;
   const { data: assignedUserList } = useGetAssignedUserForContact(contactId);
+  const MAX_FILES = 10;
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (!contact) return;
 
+    const files = e.dataTransfer?.files;
+    if (!files?.length) return;
+
+    const fileArray = Array.from(files);
+
+    if (fileArray.length > MAX_FILES) {
+      toast.error(`Maximum ${MAX_FILES} files only`);
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("editor-file-drop", {
+        detail: fileArray,
+      }),
+    );
+  };
   useEffect(() => {
     if (!contact?.id || !assignedUserList) return;
 
@@ -92,9 +114,56 @@ export default function WaInboxChatDisplay({
       </Group>
     );
   }
+  useEffect(() => {
+    const handleDragEnter = (e: DragEvent) => {
+      if (e.dataTransfer?.types.includes("Files")) {
+        setIsDragging(true);
+      }
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      if (!e.relatedTarget) {
+        setIsDragging(false);
+      }
+    };
+
+    const handleDrop = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener("dragenter", handleDragEnter);
+    window.addEventListener("dragleave", handleDragLeave);
+    window.addEventListener("drop", handleDrop);
+
+    return () => {
+      window.removeEventListener("dragenter", handleDragEnter);
+      window.removeEventListener("dragleave", handleDragLeave);
+      window.removeEventListener("drop", handleDrop);
+    };
+  }, []);
+
+  useEffect(() => {
+    const resetDragging = () => setIsDragging(false);
+
+    window.addEventListener("mouseup", resetDragging);
+    window.addEventListener("blur", resetDragging);
+
+    return () => {
+      window.removeEventListener("mouseup", resetDragging);
+      window.removeEventListener("blur", resetDragging);
+    };
+  }, []);
 
   return (
-    <div className="h-full">
+    <div
+      className="h-full relative"
+      onDragOver={(e) => {
+        if (!contact) return;
+        if (!e.dataTransfer?.types.includes("Files")) return;
+        e.preventDefault();
+      }}
+      onDrop={handleDrop}
+    >
       {!contact ? (
         <div className="flex-1 flex items-center justify-center bg-muted/20 h-full">
           <div className="text-center">
@@ -124,6 +193,22 @@ export default function WaInboxChatDisplay({
             isOpen={showCustomerInfo}
             setIsOpen={setShowCustomerInfo}
           />
+        </div>
+      )}
+      {isDragging && contact && (
+        <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm border-2 border-dashed border-primary">
+          <div className="flex flex-col items-center gap-3 text-white">
+            <IconPaperclip size={48} />
+            <Text size="lg" fw={600}>
+              Drop files to upload
+            </Text>
+            <Text size="sm" opacity={0.8}>
+              Images, videos, audio or documents
+            </Text>
+            <Text size="xs" opacity={0.7}>
+              Maximum {MAX_FILES} files
+            </Text>
+          </div>
         </div>
       )}
     </div>

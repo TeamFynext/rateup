@@ -71,6 +71,11 @@ function getQueryClient() {
   }
 }
 
+// Call this during logout to force a fresh QueryClient for the next user session.
+export function resetBrowserQueryClient() {
+  browserQueryClient = undefined;
+}
+
 function onError(error) {
   if (error.code === "MISSING_MESSAGE" && isProduction) return;
   console.error(error);

@@ -547,14 +547,14 @@ export default function CampaignDetails() {
                 <TabsList className="bg-transparent p-0 h-auto gap-2 border-0">
                   <TabsTrigger
                     value="info"
-                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-lg px-4 py-2 transition-all border-0 data-[state=inactive]:shadow-none"
+                    className="border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-none px-4 py-2 transition-all cursor-pointer"
                   >
                     <TrendingUp className="w-4 h-4 mr-2" />
                     {t("tabs.overview")}
                   </TabsTrigger>
                   <TabsTrigger
                     value="participants"
-                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-lg px-4 py-2 transition-all border-0 data-[state=inactive]:shadow-none"
+                    className="border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-none px-4 py-2 transition-all cursor-pointer"
                   >
                     <Users className="w-4 h-4 mr-2" />
                     {t("tabs.participants")}
