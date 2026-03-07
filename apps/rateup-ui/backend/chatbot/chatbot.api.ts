@@ -51,7 +51,7 @@ export async function uploadFileForEmbed(file, selectedChatbotId) {
       },
     );
     return response;
-  } catch (error) {
+  } catch (error: any) {
     throw error?.response?.data?.message;
   }
 }

@@ -24,7 +24,7 @@ function OnboardingStep4({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
-          className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/30 mb-3 mx-auto"
+          className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-linear-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/30 mb-3 mx-auto"
         >
           <Zap className="w-6 h-6 text-white" />
         </motion.div>

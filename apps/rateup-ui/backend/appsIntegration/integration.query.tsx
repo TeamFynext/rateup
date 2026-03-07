@@ -1,8 +1,8 @@
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums";
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   createGoogleSheetAuthToken,
@@ -43,21 +43,15 @@ export const useGetWaPaymentConfigurationByNameMutation = (
   return useMutation({
     mutationFn: getWaPaymentConfigurationByName,
     onSuccess: () => {
-      showSuccessToast(
-        "whatsapp payment configuration found successfully",
-        "waPaymentConfiguration-get-by-name",
-        <IconCheck />,
-        true,
-      );
+      toast.success("whatsapp payment configuration found successfully", {
+        id: "waPaymentConfiguration-get-by-name",
+      });
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error getting waPaymentConfiguration: ${error?.response?.data?.message}`,
-        "waPaymentConfiguration-get-by-name",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error getting waPaymentConfiguration`, {
+        id: "waPaymentConfiguration-get-by-name",
+      });
     },
   });
 };
@@ -69,21 +63,15 @@ export const useCreateWaPaymentConfigurationMutation = (
   return useMutation({
     mutationFn: createWaPaymentConfiguration,
     onSuccess: () => {
-      showSuccessToast(
-        "whatsapp payment configuration created successfully",
-        "waPaymentConfigurations-create",
-        <IconCheck />,
-        true,
-      );
+      toast.success("whatsapp payment configuration created successfully", {
+        id: "waPaymentConfigurations-create",
+      });
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error creating waPaymentConfigurations: ${error?.response?.data?.error}`,
-        "waPaymentConfigurations-create",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error creating waPaymentConfigurations`, {
+        id: "waPaymentConfigurations-create",
+      });
     },
   });
 };
@@ -95,17 +83,19 @@ export const useRegenerateWaPaymentConfigurationOauthMutation = (
     mutationFn: regenerateWaPaymentConfigurationOauth,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
-      showSuccessToast(
+      toast.success(
         "whatsapp payment configuration oauth link updated successfully",
-        "waPaymentConfigurations-oauth",
-        <IconCheck />,
+        {
+          id: "waPaymentConfigurations-oauth",
+        },
       );
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error creating waPaymentConfigurations oauth link: ${error?.response?.data?.message}`,
-        "waPaymentConfigurations-oauth",
-        <IconX />,
+    onError: (error) => {
+      toast.error(
+        error?.message || `Error creating waPaymentConfigurations oauth link`,
+        {
+          id: "waPaymentConfigurations-oauth",
+        },
       );
     },
   });
@@ -119,20 +109,14 @@ export const useDeleteWaPaymentConfigurationMutation = (
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
 
-      showSuccessToast(
-        "whatsapp payment configuration created successfully",
-        "waPaymentConfigurations-delete",
-        <IconCheck />,
-        true,
-      );
+      toast.success("whatsapp payment configuration created successfully", {
+        id: "waPaymentConfigurations-delete",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error creating waPaymentConfigurations: ${error?.response?.data}`,
-        "waPaymentConfigurations-delete",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error creating waPaymentConfigurations`, {
+        id: "waPaymentConfigurations-delete",
+      });
     },
   });
 };
@@ -144,18 +128,14 @@ export const useCreateIntegrationMutation = (type: IntegratedApps) => {
       createIntegration({ name: type, ...data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
-      showSuccessToast(
-        "Integration created successfully",
-        "Integration-create",
-        <IconCheck />,
-      );
+      toast.success("Integration created successfully", {
+        id: "Integration-create",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error creating integration: ${error?.response?.data?.error}`,
-        "integration-create",
-        <IconX />,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error creating integration`, {
+        id: "integration-create",
+      });
     },
   });
 };
@@ -167,20 +147,14 @@ export const useUpdateIntegrationMutation = (type: IntegratedApps) => {
       updateIntegration(type, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
-      showSuccessToast(
-        "Integration updated successfully",
-        "integration-update",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Integration updated successfully", {
+        id: "integration-update",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error updating integration: ${error?.response?.data?.error}`,
-        "integration-update",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error updating integration`, {
+        id: "integration-update",
+      });
     },
   });
 };
@@ -191,20 +165,14 @@ export const useDeleteIntegrationMutation = (type: IntegratedApps) => {
     mutationFn: () => deleteIntegration(type),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
-      showSuccessToast(
-        "Integration deleted successfully",
-        "integration-delete",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Integration deleted successfully", {
+        id: "integration-delete",
+      });
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error deleting integration: ${error?.response?.data?.error}`,
-        "integration-delete",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Error deleting integration`, {
+        id: "integration-delete",
+      });
     },
   });
 };
@@ -238,10 +206,10 @@ export const useDeleteZapierTriggerHook = () => {
       queryClient.invalidateQueries({
         queryKey: ["integrations", IntegratedApps.zapier],
       });
-      showSuccessToast("success");
+      toast.success("success");
     },
-    onError: () => {
-      showErrorToast("Failed");
+    onError: (error) => {
+      toast.error(error?.message || "Failed");
     },
   });
 };

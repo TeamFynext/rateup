@@ -1,5 +1,7 @@
 import React from "react";
-import { Skeleton, Stack, Box, Flex, Group } from "@mantine/core";
+
+import { Box, Flex, Group, Skeleton, Stack } from "@mantine/core";
+
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import SkeletonList from "../SkeletonList";
 

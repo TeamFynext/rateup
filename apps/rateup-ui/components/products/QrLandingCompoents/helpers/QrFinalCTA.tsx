@@ -8,7 +8,7 @@ import { imagesPath } from "@/utils/constants";
 
 const QrFinalCTA = () => {
   return (
-    <section className="relative bg-gradient-to-br from-[#00397b] via-[#013553] to-[#1c518e] text-white overflow-hidden py-24 px-4 sm:px-6 lg:px-8">
+    <section className="relative bg-linear-to-br from-[#00397b] via-[#013553] to-[#1c518e] text-white overflow-hidden py-24 px-4 sm:px-6 lg:px-8">
       {/* Decorative Blur Background */}
       <div className="absolute -top-20 -left-20 w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl opacity-20 z-0"></div>
       <div className="absolute bottom-0 right-0 w-[250px] h-[250px] bg-white/10 rounded-full blur-2xl opacity-20 z-0"></div>

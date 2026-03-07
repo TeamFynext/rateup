@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { getMenuLandingPageById } from "./landingpage.api";
 
 export const useMenuLandingById = (menuId: string) => {

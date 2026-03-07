@@ -1,8 +1,7 @@
-import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   cancelRazorpaySubscription,
   createCheckoutSession,
@@ -51,26 +50,14 @@ export function useRateupPaymentsPlanMutation(close) {
     mutationFn: (data) => createRateupPaymentPlan(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
-      notifications.update({
+      toast.success("RateUp Plan created successfully.", {
         id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Sync Success",
-        message: "RateUp Plan created successfully.",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       close();
     },
-    onError: (error: any) => {
-      notifications.update({
+    onError: (error) => {
+      toast.error(error?.message || "Error creating RateUp Plan", {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed",
-        message: error.response.data,
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -84,27 +71,15 @@ export function useRateupPaymentsPlanUpdateMutation(close) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      notifications.update({
+      toast.success("RateUp Plan updated successfully.", {
         id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Sync Success",
-        message: "RateUp Plan updated successfully.",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       close();
     },
-    onError: (error: any) => {
+    onError: (error) => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
-      notifications.update({
+      toast.error(error?.message || "Error updating RateUp Plan", {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed",
-        message: error.response.data,
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -117,26 +92,14 @@ export function useRateupPaymentsPlanDeleteMutation() {
     mutationFn: (id: string) => deleteRateupPaymentPlan(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
-      notifications.update({
+      toast.success("RateUp Plan deleted successfully.", {
         id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Sync Success",
-        message: "RateUp Plan deleted successfully.",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       queryClient.invalidateQueries({ queryKey: ["rateupPaymentPlansQuery"] });
-      notifications.update({
+      toast.error(error?.message || "Error deleting RateUp Plan", {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed",
-        message: error.response.data,
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -148,25 +111,13 @@ export function usePlanSyncMutation() {
     mutationFn: () => syncRazorPayPlans(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentPlansQuery"] });
-      notifications.show({
+      toast.success("RazorPay Plan list updated successfully.", {
         id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Sync Success",
-        message: "RazorPay Plan list updated successfully.",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
-    onError: (error: any) => {
-      notifications.show({
+    onError: (error) => {
+      toast.error(error?.message || "Error syncing RazorPay Plans", {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed",
-        message: error.response.data,
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -176,27 +127,16 @@ export function useCreateCheckoutSession(setIsLoading, setOrder) {
   return useMutation({
     mutationFn: (values: ICreateCheckoutType) => createCheckoutSession(values),
     onSuccess: (data) => {
-      notifications.show({
+      toast.success("Please wait get ready for payment", {
         id: "load-data",
-        color: "teal",
-        title: "Processing Started",
-        message: "Please wait get ready for payment",
-        icon: <IconCheck size="1rem" />,
-        loading: true,
-        autoClose: 3000,
       });
       setIsLoading(false);
       setOrder(data.data.data);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error creating order:" + error.message);
-      notifications.show({
+      toast.error(error?.message || "Error creating order", {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
 
       setIsLoading(false);
@@ -210,14 +150,14 @@ export function usePaymentPlanUpdate() {
     mutationFn: updatePaymentPlan,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentPlansQuery"] });
-      showSuccessToast(
-        "Plan updated succesfully",
-        "plan-update",
-        <IconCheck />,
-      );
+      toast.success("Plan updated succesfully", {
+        id: "plan-update",
+      });
     },
-    onError: () => {
-      showErrorToast("Error updating plan", "plan-update", <IconX />);
+    onError: (error) => {
+      toast.error(error?.message || "Error updating plan", {
+        id: "plan-update",
+      });
     },
   });
 }
@@ -237,28 +177,18 @@ export function useCancelRazorpaySubscriptionMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
-      notifications.update({
-        id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Cancel Success",
-        message:
-          "Rateup Subscription cancelled. Enjoy services till expiry date.",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 4000,
-      });
+      toast.success(
+        "Rateup Subscription cancelled. Enjoy services till expiry date.",
+        {
+          id: "load-data",
+        },
+      );
     },
-    onError: (error: any) => {
+    onError: (error) => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
-      notifications.update({
+      toast.error(error?.message || "Error cancelling Rateup Subscription", {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed",
-        message: error.response.data,
-        icon: <IconX size="1rem" />,
-        autoClose: 4000,
       });
     },
   });
@@ -277,10 +207,14 @@ export const useDeletePaymentPlanMutation = () => {
     mutationFn: deletePaymentPlan,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentPlansQuery"] });
-      showSuccessToast("Plan Deleted Succefully", "plan", <IconCheck />, true);
+      toast.success("Plan Deleted Succefully", {
+        id: "plan",
+      });
     },
-    onError: () => {
-      showErrorToast("Error in deleting Plan", "plan", <IconCheck />, true);
+    onError: (error) => {
+      toast.error(error?.message || "Error in deleting Plan", {
+        id: "plan",
+      });
     },
   });
 };

@@ -19,6 +19,7 @@ import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { QuestionType2 } from "@/types/enums";
@@ -36,7 +37,6 @@ import {
   MAX_METADATA_COUNT,
   WaNPSQuestions2,
 } from "@/utils/constants";
-import { showErrorToast } from "@/utils/notifications";
 
 import { PopoverEmojiPicker } from "../../templates/Details/TextFormateToolBar";
 import inputStyles from "../EditFlow.module.css";
@@ -135,10 +135,9 @@ export function DataSourceInput(props) {
       const base64String = await FileConverter.fileToBase64(file);
       choiceForm.setFieldValue("image", base64String);
     } catch (error) {
-      showErrorToast(
-        "Error converting file to Base64:" + JSON.stringify(error),
-        "file-converting",
-      );
+      toast.error("Error converting file to Base64:" + JSON.stringify(error), {
+        id: "file-converting",
+      });
     }
   };
 
@@ -390,10 +389,12 @@ function Choice({
       const base64String = await FileConverter.fileToBase64(file);
       choiceForm.setFieldValue("image", base64String);
     } catch (error) {
-      showErrorToast(
+      toast.error(
         translations("Error converting file to Base64:") +
           JSON.stringify(error),
-        "file-converting",
+        {
+          id: "file-converting",
+        },
       );
     }
   };

@@ -1,5 +1,5 @@
-import { notifications } from "@mantine/notifications";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { BusinessHoursFormValues } from "@/components/account/business-hours/schema";
 
@@ -38,22 +38,11 @@ export const useCreateBusinessHour = () => {
   return useMutation({
     mutationFn: (data: BusinessHoursFormValues) => createBusinessHour(data),
     onSuccess: () => {
-      notifications.show({
-        color: "teal",
-        title: "Success",
-        message: "Business hours created successfully!",
-        autoClose: 3000,
-      });
+      toast.success("Business hours created successfully!");
       queryClient.invalidateQueries({ queryKey: ["businessHours"] });
     },
-    onError: (error: any) => {
-      notifications.show({
-        color: "red",
-        title: "Failed",
-        message:
-          error?.response?.data?.message || "Failed to create business hours",
-        autoClose: 3000,
-      });
+    onError: (error) => {
+      toast.error(error?.message || "Failed to create business hours");
     },
   });
 };
@@ -65,22 +54,11 @@ export const useUpdateBusinessHour = () => {
     mutationFn: ({ id, data }: { id: string; data: BusinessHoursFormValues }) =>
       updateBusinessHour(id, data),
     onSuccess: () => {
-      notifications.show({
-        color: "teal",
-        title: "Success",
-        message: "Business hours updated successfully!",
-        autoClose: 3000,
-      });
+      toast.success("Business hours updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["businessHours"] });
     },
-    onError: (error: any) => {
-      notifications.show({
-        color: "red",
-        title: "Failed",
-        message:
-          error?.response?.data?.message || "Failed to update business hours",
-        autoClose: 3000,
-      });
+    onError: (error) => {
+      toast.error(error?.message || "Failed to update business hours");
     },
   });
 };
@@ -91,22 +69,11 @@ export const useDeleteBusinessHour = () => {
   return useMutation({
     mutationFn: (id: string) => deleteBusinessHour(id),
     onSuccess: () => {
-      notifications.show({
-        color: "teal",
-        title: "Success",
-        message: "Business hours deleted successfully!",
-        autoClose: 3000,
-      });
+      toast.success("Business hours deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["businessHours"] });
     },
-    onError: (error: any) => {
-      notifications.show({
-        color: "red",
-        title: "Failed",
-        message:
-          error?.response?.data?.message || "Failed to delete business hours",
-        autoClose: 3000,
-      });
+    onError: (error) => {
+      toast.error(error?.message || "Failed to delete business hours");
     },
   });
 };

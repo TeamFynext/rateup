@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState } from "react";
 
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { useImmer } from "use-immer";
 
 import {
@@ -12,21 +13,23 @@ import {
   QuestionType2,
   WaQuestions,
 } from "@/types/enums";
+import { FlowLogicCondition, FlowLogicJump } from "@/types/global";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  FlowLogicCondition,
-  FlowLogicJump,
-} from "@/types/global";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { logicSupportedTypes3 } from "@/utils/data";
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 import {
   getConditionsv2,
   getResponses2,
 } from "@/utils/survey/logic/logic.utils";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { MultiSelect } from "@/components/ui/multi-select";
 
 import useFlowStore, { EditorType } from "../utils/store";
 // Component logic editor for conditional component visibility
@@ -34,7 +37,9 @@ import ComponentLogicEditor from "./ComponentLogicEditor";
 
 export const ScreenLogicEditor = () => {
   const [logicJumps, updateLogicJumps] = useImmer<Array<FlowLogicJump>>([]);
-  const [logicJumpsComponentLevel, updateLogicJumpsComponentLevel] = useImmer([]);
+  const [logicJumpsComponentLevel, updateLogicJumpsComponentLevel] = useImmer(
+    [],
+  );
 
   const {
     getCurrentScreen,
@@ -65,7 +70,7 @@ export const ScreenLogicEditor = () => {
   useEffect(() => {
     if (currentScreenId) {
       const existingJumps = getLogicJumps(currentScreenId);
-      
+
       if (existingJumps && existingJumps.length > 0) {
         const stringActions = [];
         const objectActions = [];
@@ -90,15 +95,21 @@ export const ScreenLogicEditor = () => {
 
   const handleSave = () => {
     // Validate component-level jumps if needed
-    const hasInvalidComponentJumps = logicJumpsComponentLevel.some((jump: any) => {
-      return !jump.conditions || jump.conditions.length === 0 || !jump.then || !jump.else;
-    });
+    const hasInvalidComponentJumps = logicJumpsComponentLevel.some(
+      (jump: any) => {
+        return (
+          !jump.conditions ||
+          jump.conditions.length === 0 ||
+          !jump.then ||
+          !jump.else
+        );
+      },
+    );
 
     if (hasInvalidComponentJumps) {
-      showErrorToast(
-        "Please complete all component logic jump configurations",
-        "error-invalid-logic-jumps"
-      );
+      toast.error("Please complete all component logic jump configurations", {
+        id: "error-invalid-logic-jumps",
+      });
       return;
     }
 
@@ -107,8 +118,10 @@ export const ScreenLogicEditor = () => {
 
     // Save to store
     saveLogicJumps(currentScreenId, allJumps);
-    
-    showSuccessToast("Logic jumps saved successfully", "success-logic-jumps");
+
+    toast.success("Logic jumps saved successfully", {
+      id: "success-logic-jumps",
+    });
     setDetailActiveEditor(EditorType.ElementEditor);
   };
 
@@ -117,10 +130,10 @@ export const ScreenLogicEditor = () => {
   return (
     <div className="flex flex-col h-full p-4">
       <div className="flex items-center gap-2 mb-6">
-        <h3 className="text-xl font-semibold">{translations("Logic Jumps for Screen:")}</h3>
-        <h3 className="text-xl font-medium text-green-600">
-          {screen.title}
+        <h3 className="text-xl font-semibold">
+          {translations("Logic Jumps for Screen:")}
         </h3>
+        <h3 className="text-xl font-medium text-green-600">{screen.title}</h3>
       </div>
 
       <ScrollArea className="grow">
@@ -135,9 +148,13 @@ export const ScreenLogicEditor = () => {
         {/* Screen-Level Logic Jumps */}
         <div className="flex flex-col gap-6 flex-1">
           <div className="mb-2">
-            <h4 className="text-lg font-semibold mb-2">{translations("Screen Jump")}</h4>
+            <h4 className="text-lg font-semibold mb-2">
+              {translations("Screen Jump")}
+            </h4>
             <p className="text-sm text-muted-foreground">
-              {translations("Navigate to different screens based on conditions")}
+              {translations(
+                "Navigate to different screens based on conditions",
+              )}
             </p>
           </div>
 
@@ -149,7 +166,7 @@ export const ScreenLogicEditor = () => {
               updateLogicJumps={updateLogicJumps}
             />
           ))}
-          
+
           <Button
             variant="outline"
             className="w-full mt-4"
@@ -169,9 +186,7 @@ export const ScreenLogicEditor = () => {
           >
             {translations("Close")}
           </Button>
-          <Button onClick={handleSave}>
-            {translations("Save")}
-          </Button>
+          <Button onClick={handleSave}>{translations("Save")}</Button>
         </div>
       </div>
     </div>
@@ -195,25 +210,28 @@ function AtomicConditionBlock({
 
   const selectedScreen = getCurrentScreen();
   const [selectedCondition, setSelectedCondition] = useState(
-    condition.condition
+    condition.condition,
   );
 
-  const questionsInScreen = selectedScreen?.layout.children
-    .filter((child) => child.type !== QuestionType2.Footer)
-    .map(({ id, label, type, metaType, "data-source": dataSource }) => ({
-      id,
-      label,
-      type,
-      metaType,
-      dataSource,
-    })) || [];
+  const questionsInScreen =
+    selectedScreen?.layout.children
+      .filter((child) => child.type !== QuestionType2.Footer)
+      .map(({ id, label, type, metaType, "data-source": dataSource }) => ({
+        id,
+        label,
+        type,
+        metaType,
+        dataSource,
+      })) || [];
 
   const logicSupportedQuestionsInScreen = questionsInScreen.filter((q) =>
-    logicSupportedTypes3.includes(QuestionType2[q.metaType as keyof typeof QuestionType2] || q.type)
+    logicSupportedTypes3.includes(
+      QuestionType2[q.metaType as keyof typeof QuestionType2] || q.type,
+    ),
   );
 
   const [selectedQId, setSelectedQId] = useState(
-    condition?.questionId || logicSupportedQuestionsInScreen?.[0]?.id
+    condition?.questionId || logicSupportedQuestionsInScreen?.[0]?.id,
   );
   const selectedQ = questionsInScreen.find((q) => q.id === selectedQId);
   const selectedQType = selectedQ?.metaType || selectedQ?.type;
@@ -239,9 +257,7 @@ function AtomicConditionBlock({
   }
 
   return (
-    <div
-      className="flex gap-2 bg-white rounded-lg relative p-4 min-w-[320px]"
-    >
+    <div className="flex gap-2 bg-white rounded-lg relative p-4 min-w-[320px]">
       <div className="flex flex-col gap-2 grow">
         <div>
           <Label>{translations("For Question")}</Label>
@@ -261,7 +277,10 @@ function AtomicConditionBlock({
 
         <div>
           <Label>{translations("If condition")}</Label>
-          <Select value={selectedCondition} onValueChange={(val: any) => setSelectedCondition(val)}>
+          <Select
+            value={selectedCondition}
+            onValueChange={(val: any) => setSelectedCondition(val)}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -288,7 +307,7 @@ function AtomicConditionBlock({
             <Label>{translations("Response")}</Label>
             <MultiSelect
               options={(getResponses2(selectedQ) || []).map((opt: any) =>
-                typeof opt === "string" ? { label: opt, value: opt } : opt
+                typeof opt === "string" ? { label: opt, value: opt } : opt,
               )}
               defaultValue={Array.isArray(matchData) ? matchData : []}
               onValueChange={setMatchData}
@@ -344,12 +363,12 @@ function ConditionsActionMapBlock({
   const translations = useTranslations();
 
   const [selectedAction, setSelectedAction] = useState(
-    logic.action || LogicAction.NextQ
+    logic.action || LogicAction.NextQ,
   );
 
   const currentIndex = screens.findIndex((s) => s.id === currentScreenId);
   const nextScreens = screens.slice(currentIndex + 1);
-  
+
   const possibleActions = [
     { label: translations("Next Screen (default)"), value: LogicAction.NextQ },
     ...nextScreens.map((s) => ({
@@ -365,16 +384,12 @@ function ConditionsActionMapBlock({
   }, [selectedAction]);
 
   return (
-    <div
-      className="flex gap-6 bg-green-50 rounded-xl relative p-6 min-w-fit items-stretch"
-    >
+    <div className="flex gap-6 bg-green-50 rounded-xl relative p-6 min-w-fit items-stretch">
       <div className="grow min-w-[350px]">
         <h5 className="text-base font-semibold mb-4 text-center">
           {translations("Conditions")}
         </h5>
-        <div
-          className="flex flex-col gap-4 text-left"
-        >
+        <div className="flex flex-col gap-4 text-left">
           {logic.conditions.map((condition, conditionIndex) => (
             <Fragment key={conditionIndex}>
               <AtomicConditionBlock
@@ -397,15 +412,13 @@ function ConditionsActionMapBlock({
                 }}
               />
               {conditionIndex !== logic.conditions.length - 1 && (
-                <p
-                  className="text-center font-semibold text-sm my-2"
-                >
+                <p className="text-center font-semibold text-sm my-2">
                   {translations("AND")}
                 </p>
               )}
             </Fragment>
           ))}
-          
+
           <Button
             variant="secondary"
             size="sm"
@@ -430,9 +443,7 @@ function ConditionsActionMapBlock({
         <h5 className="text-base font-semibold text-center mb-4">
           {translations("Action")}
         </h5>
-        <div
-          className="grow rounded-lg p-6 bg-white flex items-center justify-center"
-        >
+        <div className="grow rounded-lg p-6 bg-white flex items-center justify-center">
           <div className="w-full">
             <Label>{translations("Navigate to")}</Label>
             <Select

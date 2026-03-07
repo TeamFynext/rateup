@@ -10,8 +10,8 @@ import { ImageCropModal } from "components/Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "components/Modal/ImageUploadMethodModal";
 import { UnsplashModal } from "components/Modal/UnsplashModal";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "utils/constants";
-import { showErrorToast } from "utils/notifications";
 
 import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
 
@@ -112,7 +112,7 @@ const ImageUploadSettings = ({
   const onChangeLogo = (event: File) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {
-      showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      toast.error(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
       return;
     }
     setSelectedUnslashImage({
@@ -128,7 +128,7 @@ const ImageUploadSettings = ({
   const handleBgPick = (e: File | null) => {
     if (!e) return;
     if (e.size > MAX_FILE_SIZE_IN_BYTE) {
-      return showErrorToast(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
+      return toast.error(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
     }
     handleUnsplashImageSave(URL.createObjectURL(e), e.name);
   };

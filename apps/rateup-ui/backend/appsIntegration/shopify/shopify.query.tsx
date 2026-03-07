@@ -1,9 +1,9 @@
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums";
 
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   deleteAllShopifyWebhooks,
   deleteShopifyIntegrationByShop,
@@ -42,24 +42,18 @@ export const useRegisterWebhooks = () => {
   return useMutation({
     mutationFn: registerShopifyWebhooks,
     onSuccess: () => {
-      showSuccessToast(
-        "Webhooks registration succesfull",
-        "webhooks",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Webhooks registration succesfull", {
+        id: "webhooks",
+      });
       queryClient.invalidateQueries({
         queryKey: ["integrations", IntegratedApps.shopify],
       });
       queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
     },
-    onError: () => {
-      showErrorToast(
-        "Webhook registration failed",
-        "webhooks",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Webhook registration failed", {
+        id: "webhooks",
+      });
     },
   });
 };
@@ -69,24 +63,18 @@ export const useRegisterWebhookByTopic = () => {
   return useMutation({
     mutationFn: registerShopifyWebhookbyTopic,
     onSuccess: () => {
-      showSuccessToast(
-        "Webhooks registration succesfull",
-        "webhooks",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Webhooks registration succesfull", {
+        id: "webhooks",
+      });
       queryClient.invalidateQueries({
         queryKey: ["integrations", IntegratedApps.shopify],
       });
       queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
     },
-    onError: () => {
-      showErrorToast(
-        "Webhook registration failed",
-        "webhooks",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Webhook registration failed", {
+        id: "webhooks",
+      });
     },
   });
 };
@@ -96,24 +84,18 @@ export const useDeleteAllWebhooks = () => {
   return useMutation({
     mutationFn: deleteAllShopifyWebhooks,
     onSuccess: () => {
-      showSuccessToast(
-        "Webhooks subscription deletion succesfull",
-        "webhooks",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Webhooks subscription deletion succesfull", {
+        id: "webhooks",
+      });
       queryClient.invalidateQueries({
         queryKey: ["integrations", IntegratedApps.shopify],
       });
       queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
     },
-    onError: () => {
-      showErrorToast(
-        "Webhook subscription deletion failed",
-        "webhooks",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Webhook subscription deletion failed", {
+        id: "webhooks",
+      });
     },
   });
 };
@@ -123,24 +105,18 @@ export const useDeleteWebhookByTopic = () => {
   return useMutation({
     mutationFn: deleteShopifyWebhookByTopic,
     onSuccess: () => {
-      showSuccessToast(
-        "Webhooks subscription deletion succesfull",
-        "webhooks",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Webhooks subscription deletion succesfull", {
+        id: "webhooks",
+      });
       queryClient.invalidateQueries({
         queryKey: ["integrations", IntegratedApps.shopify],
       });
       queryClient.invalidateQueries({ queryKey: ["shopifyWebhooks"] });
     },
-    onError: () => {
-      showErrorToast(
-        "Webhook subscription deletion failed",
-        "webhooks",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Webhook subscription deletion failed", {
+        id: "webhooks",
+      });
     },
   });
 };
@@ -150,20 +126,18 @@ export const useDeleteShopifyIntegrationByShop = () => {
   return useMutation({
     mutationFn: deleteShopifyIntegrationByShop,
     onSuccess: () => {
-      showSuccessToast(
-        "Integration deleted",
-        "integration",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Integration deleted", {
+        id: "integration",
+      });
       queryClient.invalidateQueries({ queryKey: ["integrations"] });
     },
-    onError: (e: any) => {
-      showErrorToast(
-        `Error in deleting integration ${e.response.data ?? ""}`,
-        "integration",
-        <IconX />,
-        true,
+    onError: (error) => {
+      toast.error(
+        error?.message ||
+          `Error in deleting integration ${error?.message ?? ""}`,
+        {
+          id: "integration",
+        },
       );
     },
   });

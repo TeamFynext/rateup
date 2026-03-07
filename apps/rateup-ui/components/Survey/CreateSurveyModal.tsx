@@ -20,9 +20,9 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { CreateSurveyResponse } from "../../backend/surveys/survey.api";
 import { useCreateSurveyMutation } from "../../backend/surveys/surveys.query";
@@ -201,13 +201,8 @@ export function CreateSurveyModal({
       console.error(validationRes.errors);
       return;
     }
-    notifications.show({
+    toast.loading(translations("Hold on, your survey is getting created"), {
       id: "load-data",
-      loading: true,
-      title: translations("Creating survey"),
-      message: translations("Hold on, your survey is getting created"),
-      autoClose: false,
-      withCloseButton: true,
     });
     createSurveyMutation.mutate(
       { ...form.values, type: surveyType, templateId: templateId || "" },
@@ -221,7 +216,7 @@ export function CreateSurveyModal({
           }
         },
         onError: (error) => {
-          notifications.hide("load-data");
+          toast.dismiss("load-data");
         },
       },
     );

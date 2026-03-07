@@ -15,7 +15,6 @@ function TeamOverview({ teamData, isLoading }) {
           {t("Team Performance Breakdown")}
         </CardTitle>
       </CardHeader>
-
       <CardContent>
         {/* Loading State */}
         {isLoading ? (

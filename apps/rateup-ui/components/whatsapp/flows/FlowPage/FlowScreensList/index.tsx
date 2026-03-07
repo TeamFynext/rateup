@@ -8,6 +8,7 @@ import { useCounter, useDisclosure } from "@mantine/hooks";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { WaFlowFormElement } from "@/types/global";
 
@@ -16,7 +17,6 @@ import {
   WaFlowFormElementType,
   WaFlowStatus,
 } from "../../../../../types/enums";
-import { showErrorToast } from "../../../../../utils/notifications";
 import { reorder } from "../../../../../utils/questions";
 import {
   getFlowFormElementsFromScreen,
@@ -60,7 +60,7 @@ function FlowScreensList({
   const translations = useTranslations();
   function handleCreateScreenClick() {
     if (flowJson.screens.length >= FlowMaxScreens) {
-      showErrorToast(`You can only have ${FlowMaxScreens} screens`);
+      toast.error(`You can only have ${FlowMaxScreens} screens`);
     } else {
       openCreateFlowScreenModal();
     }

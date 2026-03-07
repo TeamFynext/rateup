@@ -14,6 +14,7 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   useCreateTemplateMutation,
@@ -22,7 +23,6 @@ import {
 import inputStyles from "../../../components/input/InputStyles.module.css";
 import { WaTemplateStatus } from "../../../types/enums";
 import { SAVE_HOTKEY } from "../../../utils/constants";
-import { showWarnToast } from "../../../utils/notifications";
 import { parseTemplate } from "../../../utils/whatsapp/templates";
 import {
   ContainedTextArea,
@@ -103,7 +103,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
     setIsSubmitting(true);
     if (editingItem) {
       if (editingItem.data.status === WaTemplateStatus.PENDING) {
-        showWarnToast(
+        toast.warning(
           translations("Cannot edit pending template Please wait for approval"),
         );
         setIsSubmitting(false);

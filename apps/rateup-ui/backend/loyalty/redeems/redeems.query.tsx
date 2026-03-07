@@ -1,8 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
-
 import {
   getLoyaltyRedeems,
   getRewardByShortCode,
@@ -33,8 +31,8 @@ export const useRedeemRewardByShortCode = () => {
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       toast.success("Reward redeemed successfully using short code");
     },
-    onError: (e) => {
-      toast.error(`Redemption failed: ${e?.message ?? "Unknown error"}`);
+    onError: (error) => {
+      toast.error(error?.message || `Redemption failed`);
     },
   });
 };
@@ -52,9 +50,9 @@ export const useRedeemReward = (selectedPhone: string) => {
       });
       toast.success("Reward claimed successfully");
     },
-    onError: (e) => {
+    onError: (error) => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
-      toast.error(`Reward redeem failed: ${e?.message ?? ""}`);
+      toast.error(error?.message || `Reward redeem failed`);
     },
   });
 };
@@ -69,9 +67,9 @@ export const useUpdateRedeem = () => {
       qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
       toast.success("Redeem updated successfully");
     },
-    onError: (e) => {
+    onError: (error) => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
-      toast.error(`Redeem updation failed: ${e?.message ?? ""}`);
+      toast.error(error?.message || `Redeem updation failed`);
     },
   });
 };

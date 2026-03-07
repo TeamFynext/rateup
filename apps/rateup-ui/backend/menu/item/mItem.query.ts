@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import {
   createMenuItem,
   createMenuItemUsingCsv,
@@ -7,7 +9,6 @@ import {
   updateMenuItem,
   updateSortOrderMenuItem,
 } from "./mItem.api";
-import { showSuccessToast, showErrorToast } from "../../../utils/notifications";
 
 export const useItemsByCategoryId = (categoryId: string, menuId: string) =>
   useQuery({
@@ -26,14 +27,14 @@ export const useCreateMenuItemMutation = (
   const createMutation = useMutation({
     mutationFn: createMenuItem,
     onSuccess: () => {
-      showSuccessToast("Menu item created successfully");
+      toast.success("Menu item created successfully");
       queryClient.invalidateQueries({
         queryKey: ["menu", menuId, "category", categoryId, "item"],
       });
       onSuccess();
     },
-    onError: () => {
-      showErrorToast("Error creating menu item");
+    onError: (error) => {
+      toast.error(error?.message || "Error creating menu item");
       onError();
     },
   });
@@ -49,12 +50,12 @@ export const useCreateMenuItemUsingCsvMutation = (
   const createMutation = useMutation({
     mutationFn: createMenuItemUsingCsv,
     onSuccess: () => {
-      showSuccessToast("Menu items created successfully");
+      toast.success("Menu items created successfully");
       queryClient.invalidateQueries({ queryKey: ["menu-category", menuId] });
       onSuccess();
     },
-    onError: () => {
-      showErrorToast("Error creating menu items");
+    onError: (error) => {
+      toast.error(error?.message || "Error creating menu items");
       onError();
     },
   });
@@ -71,24 +72,18 @@ export const useDeleteMenuItemMutation = (
   const deleteMutation = useMutation({
     mutationFn: deleteMenuItem,
     onSuccess: () => {
-      showSuccessToast(
-        "Menu item deleted successfully",
-        "delete-data-menu-item",
-        "",
-        true,
-      );
+      toast.success("Menu item deleted successfully", {
+        id: "delete-data-menu-item",
+      });
       queryClient.invalidateQueries({
         queryKey: ["menu", menuId, "category", categoryId, "item"],
       });
       onSuccess();
     },
-    onError: () => {
-      showErrorToast(
-        "Error deleting menu item",
-        "delete-data-menu-item",
-        "",
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting menu item", {
+        id: "delete-data-menu-item",
+      });
       onError();
     },
   });
@@ -111,14 +106,14 @@ export const useUpdateMenuItemMutation = (
       menuItem: any;
     }) => updateMenuItem(menuItemId, menuItem),
     onSuccess: () => {
-      showSuccessToast("Menu item updated successfully");
+      toast.success("Menu item updated successfully");
       queryClient.invalidateQueries({
         queryKey: ["menu", menuId, "category", categoryId, "item"],
       });
       onSuccess();
     },
-    onError: () => {
-      showErrorToast("Error updating menu item");
+    onError: (error) => {
+      toast.error(error?.message || "Error updating menu item");
       onError();
     },
   });
@@ -135,7 +130,7 @@ export const useUpdateSortOrderMenuItemMutation = (
     mutationFn: ({ menuItem }: { menuItem: any }) =>
       updateSortOrderMenuItem(categoryId, menuItem),
     onSuccess: () => {
-      showSuccessToast("Menu item updated successfully");
+      toast.success("Menu item updated successfully");
       queryClient.invalidateQueries({
         queryKey: ["menu", menuId, "category", categoryId, "item"],
       });

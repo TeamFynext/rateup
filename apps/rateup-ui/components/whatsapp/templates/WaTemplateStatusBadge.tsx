@@ -1,4 +1,5 @@
 import { Badge } from "@mantine/core";
+
 import { WaTemplateStatus } from "../../../types/enums";
 
 interface WaTemplateStatusBadgeProps {

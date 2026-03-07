@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+import { toast } from "sonner";
 
 import {
   createLoyaltyTemplate,
@@ -16,12 +15,10 @@ export const useCreateLoyaltyTemplate = () => {
     mutationFn: createLoyaltyTemplate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["allLoyaltyTemplates"] });
-      showSuccessToast("Command configured");
+      toast.success("Command configured");
     },
-    onError: (e: any) => {
-      showErrorToast(
-        `Command configuration failed: ${e?.response?.data?.message ?? e?.response?.data ?? ""}`,
-      );
+    onError: (error) => {
+      toast.error(error?.message || `Command configuration failed`);
     },
   });
 };
@@ -33,10 +30,10 @@ export const useUpdateLoyaltyTemplate = (commandId) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["LoyaltyTemplate"] });
       queryClient.invalidateQueries({ queryKey: ["allLoyaltyTemplates"] });
-      showSuccessToast("Command configuration updated");
+      toast.success("Command configuration updated");
     },
-    onError: () => {
-      showErrorToast("Command config updation failed");
+    onError: (error) => {
+      toast.error(error?.message || "Command config updation failed");
     },
   });
 };
@@ -48,10 +45,10 @@ export const useDeleteLoyaltyTemplate = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["LoyaltyTemplate"] });
       queryClient.invalidateQueries({ queryKey: ["allLoyaltyTemplates"] });
-      showSuccessToast("Command configuration deleted");
+      toast.success("Command configuration deleted");
     },
-    onError: () => {
-      showErrorToast("Command config deletion failed");
+    onError: (error) => {
+      toast.error(error?.message || "Command config deletion failed");
     },
   });
 };

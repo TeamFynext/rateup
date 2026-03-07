@@ -7,6 +7,7 @@ import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { Folder } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { ContactGroupType } from "@/types/enums";
 
@@ -16,7 +17,6 @@ import {
 } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { SAVE_HOTKEY } from "../../utils/constants";
 import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
-import { showErrorToast } from "../../utils/notifications";
 import { TeamSelector } from "../input/TeamSelector";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
@@ -139,7 +139,7 @@ const CreateGroupModal = ({
         setIsUploading(false);
       })
       .catch((err) => {
-        showErrorToast(translations("Error uploading icon Please try again"));
+        toast.error(translations("Error uploading icon Please try again"));
         setIsUploading(false);
       });
   }, [file]);

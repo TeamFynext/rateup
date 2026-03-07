@@ -4,8 +4,8 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { LoadingOverlay, Text } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { toast } from "sonner";
 import { signInAndUp } from "supertokens-auth-react/recipe/thirdparty";
 
 const GoogleCallbacck = () => {
@@ -23,23 +23,13 @@ const GoogleCallbacck = () => {
           // sign up successful
           router.push("/signup?auth=google");
 
-          notifications.show({
+          toast.success("Sign up success", {
             id: "load-data",
-            color: "teal",
-            title: "Success",
-            message: "Sign up success",
-            icon: <IconCheck size="1rem" />,
-            autoClose: 3000,
           });
         } else {
           // login successful
-          notifications.show({
+          toast.success("Login Successful..", {
             id: "load-data",
-            color: "teal",
-            title: "Success",
-            message: "Login Successful..",
-            icon: <IconCheck size="1rem" />,
-            autoClose: 3000,
           });
 
           // router.push("/signup?auth=google");
@@ -64,23 +54,13 @@ const GoogleCallbacck = () => {
         console.log(err);
         // this may be a custom error message sent from the API by you.
         // window.alert(err.message);
-        notifications.show({
+        toast.error(err.message, {
           id: "load-data",
-          color: "red",
-          title: "Error",
-          message: err.message,
-          icon: <IconX size="1rem" />,
-          autoClose: 6000,
         });
         router.push("/logout");
       } else {
-        notifications.show({
+        toast.error("Oops! Something went wrong" + JSON.stringify(err), {
           id: "load-data",
-          color: "red",
-          title: "Error",
-          message: "Oops! Something went wrong" + JSON.stringify(err),
-          icon: <IconX size="1rem" />,
-          autoClose: 6000,
         });
         router.push("/logout");
       }

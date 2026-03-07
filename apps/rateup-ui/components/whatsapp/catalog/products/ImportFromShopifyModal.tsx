@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 
-import { Loader2 } from "lucide-react";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   useImportShopifyProducts,
@@ -18,11 +19,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "@/utils/notifications";
 
 interface ImportFromShopifyModalProps {
   catalogId: string;
@@ -76,31 +72,26 @@ export function ImportFromShopifyModal({
     const selectedItems = (products ?? []).filter((p) =>
       selectedIds.has(p.retailer_id),
     );
-    showLoadingToast(
+    toast.loading(
       `Importing ${selectedItems.length} product${selectedItems.length !== 1 ? "s" : ""}...`,
-      "import-shopify-products",
-      true,
-      "",
-      "",
-      false,
+      {
+        id: "import-shopify-products",
+      },
     );
     importMut.mutate(selectedItems, {
       onSuccess: (data) => {
-        showSuccessToast(
+        toast.success(
           `Imported ${data.imported} product${data.imported !== 1 ? "s" : ""} from Shopify`,
-          "import-shopify-products",
-          <IconCheck />,
-          true,
+          {
+            id: "import-shopify-products",
+          },
         );
         onClose();
       },
-      onError: () => {
-        showErrorToast(
-          "Import failed. Please try again.",
-          "import-shopify-products",
-          <IconX />,
-          true,
-        );
+      onError: (error) => {
+        toast.error(error?.message || "Import failed. Please try again.", {
+          id: "import-shopify-products",
+        });
       },
     });
   }
@@ -131,7 +122,13 @@ export function ImportFromShopifyModal({
               <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
                 <Checkbox
                   checked={allSelected}
-                  data-state={someSelected ? "indeterminate" : allSelected ? "checked" : "unchecked"}
+                  data-state={
+                    someSelected
+                      ? "indeterminate"
+                      : allSelected
+                        ? "checked"
+                        : "unchecked"
+                  }
                   onCheckedChange={toggleAll}
                 />
                 Select all ({allIds.length})
@@ -170,7 +167,9 @@ export function ImportFromShopifyModal({
                       <p className="truncate text-sm font-medium">{p.title}</p>
                       <p className="text-xs text-muted-foreground">
                         {p.sale_price} {p.currencyCode} ·{" "}
-                        {p.availability === "in stock" ? "In stock" : "Out of stock"}
+                        {p.availability === "in stock"
+                          ? "In stock"
+                          : "Out of stock"}
                       </p>
                     </div>
                   </div>

@@ -1,9 +1,8 @@
-import { notifications } from "@mantine/notifications";
 import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   completeOrgDetails,
   getAllOrgs,
@@ -53,29 +52,17 @@ export function useUpdateRoleMutation() {
     mutationFn: (values: { memberId: string; body: { role: string } }) =>
       updateRole(values.memberId, values.body),
     onSuccess: () => {
-      notifications.update({
+      toast.success("Staff Role Updated Successfully!", {
         id: "load-data",
-        loading: false,
-        color: "teal",
-        title: "Success",
-        message: "Staff Role Updated Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
       queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Role Update:", error.message);
-      notifications.update({
+      toast.error(error?.message, {
         id: "load-data",
-        loading: false,
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -86,29 +73,17 @@ export function useUpdateOrgLogoMutation(setIsLoadingUpload) {
   return useMutation({
     mutationFn: (values: IUpdateLogo) => updateOrgLogo(values),
     onSuccess: () => {
-      notifications.update({
+      toast.success("Logo Updated Successfully!", {
         id: "load-data",
-        loading: false,
-        color: "teal",
-        title: "Success",
-        message: "Logo Updated Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       setIsLoadingUpload(false);
       queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Logo Update:", error.message);
-      notifications.update({
+      toast.error(error?.message, {
         id: "load-data",
-        loading: false,
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       setIsLoadingUpload(false);
     },
@@ -121,28 +96,16 @@ export function useUpdateOrgDetailsMutation() {
     mutationFn: (values: Partial<IUpdateOrgDetails>) =>
       updateOrgDetails(values),
     onSuccess: () => {
-      notifications.update({
+      toast.success("Org details updated successfully", {
         id: "load-data",
-        loading: false,
-        color: "teal",
-        title: "Success",
-        message: "Org details updated successfully",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error in Organization Update:", error.message);
-      notifications.update({
+      toast.error(error?.message, {
         id: "load-data",
-        loading: false,
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -153,11 +116,11 @@ export const useUpdateOrgPause = () => {
   return useMutation({
     mutationFn: updateOrgPause,
     onSuccess: () => {
-      showSuccessToast("Pause status has been updated");
+      toast.success("Pause status has been updated");
       queryClient.invalidateQueries({ queryKey: ["org"] });
     },
-    onError: () => {
-      showErrorToast("Error in updating pause status");
+    onError: (error) => {
+      toast.error(error?.message || "Error in updating pause status");
     },
   });
 };

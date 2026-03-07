@@ -106,7 +106,7 @@ export default function WaInboxChatSelectCard({
               platform === MessagePlatform.WHATSAPP
                 ? "bg-green-600 border"
                 : platform === MessagePlatform.INSTAGRAM
-                  ? "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500 border"
+                  ? "bg-linear-to-br from-purple-600 via-pink-500 to-orange-500 border"
                   : "bg-blue-600 border"
             }`}
           >

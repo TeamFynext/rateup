@@ -6,7 +6,7 @@ import { imagesPath } from "@/utils/constants";
 
 export default function MobileAppSection() {
   return (
-    <section className="bg-gradient-to-br from-[#e8f1f887] via-[#F4F7F3] to-[#e8f1f887] pt-2 ">
+    <section className="bg-linear-to-br from-[#e8f1f887] via-[#F4F7F3] to-[#e8f1f887] pt-2 ">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         {/* Left Content */}
         <div>

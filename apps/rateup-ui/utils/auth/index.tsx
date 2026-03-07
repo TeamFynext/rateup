@@ -1,8 +1,8 @@
 import { JSX, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-import { notifications } from "@mantine/notifications";
 import { IconCheck, IconInfoCircleFilled, IconX } from "@tabler/icons-react";
+import { toast } from "sonner";
 import { signIn, signUp } from "supertokens-auth-react/recipe/emailpassword";
 import {
   sendVerificationEmail,
@@ -31,21 +31,13 @@ const handleCreateCode = async (phoneNumber: string, router) => {
     if (err.isSuperTokensGeneralError === true) {
       // this may be a custom error message sent from the API by you,
       // or if the input email / phone number is not valid.
-      showNotification(
-        "load-data",
-        "red",
-        "Failed",
-        err.message,
-        <IconX size="1rem" />,
-      );
+      toast.error(err.message || "Failed to send OTP", {
+        id: "load-data",
+      });
     } else {
-      showNotification(
-        "load-data",
-        "red",
-        "Failed",
-        "Oops! Something went wrong.",
-        <IconX size="1rem" />,
-      );
+      toast.error("Oops! Something went wrong.", {
+        id: "load-data",
+      });
     }
   }
 };
@@ -75,24 +67,16 @@ export function useSignIn() {
           response?.formFields?.forEach((formField) => {
             if (formField?.id === "email") {
               // Email validation failed (for example incorrect email syntax).
-              showNotification(
-                "load-data",
-                "red",
-                "Error",
-                formField?.error,
-                <IconX size="1rem" />,
-              );
+              toast.error(formField?.error || "Invalid email", {
+                id: "load-data",
+              });
             }
           });
         } else if (response?.status === "WRONG_CREDENTIALS_ERROR") {
           // Email password combination is incorrect.
-          showNotification(
-            "load-data",
-            "red",
-            "Failed",
-            "Email password combination is incorrect.",
-            <IconX size="1rem" />,
-          );
+          toast.error("Email password combination is incorrect.", {
+            id: "load-data",
+          });
         } else {
           // sign in successful. The session tokens are automatically handled by
           // the frontend SDK.
@@ -102,42 +86,12 @@ export function useSignIn() {
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
-        showNotification(
-          "load-data",
-          "red",
-          "Error",
-          err?.message,
-          <IconX size="1rem" />,
-        );
+        toast.error(err?.message || "Error", { id: "load-data" });
       } else {
-        showNotification(
-          "load-data",
-          "red",
-          "Error",
-          "Oops! Something went wrong.",
-          <IconX size="1rem" />,
-        );
+        toast.error("Oops! Something went wrong.", { id: "load-data" });
       }
     }
   };
-}
-
-export function showNotification(
-  id: string,
-  color: string,
-  title: string,
-  message: string,
-  icon: JSX.Element,
-  autoClose: number = 4000,
-) {
-  notifications.show({
-    id,
-    color,
-    title,
-    message,
-    icon,
-    autoClose,
-  });
 }
 
 export async function sendOTP(phoneNumber: string) {
@@ -157,21 +111,13 @@ export async function sendOTP(phoneNumber: string) {
     if (err.isSuperTokensGeneralError === true) {
       // this may be a custom error message sent from the API by you,
       // or if the input email / phone number is not valid.
-      showNotification(
-        "load-data",
-        "red",
-        "Error",
-        err.message,
-        <IconX size="1rem" />,
-      );
+      toast.error(err.message || "Failed to send OTP", {
+        id: "load-data",
+      });
     } else {
-      showNotification(
-        "load-data",
-        "red",
-        "Error",
-        "Oops! Something went wrong.",
-        <IconX size="1rem" />,
-      );
+      toast.error("Oops! Something went wrong.", {
+        id: "load-data",
+      });
     }
   }
 }
@@ -187,43 +133,19 @@ export async function resendOTP() {
       // was called - so that if the user does a page reload, they will now see the
       // enter email / phone UI again.
       await clearLoginAttemptInfo();
-      showNotification(
-        "load-data",
-        "red",
-        "Failed",
-        "Login failed. Please try again",
-        <IconX size="1rem" />,
-      );
+      toast.error("Login failed. Please try again", { id: "load-data" });
       window.location.assign("/login");
     } else {
-      showNotification(
-        "load-data",
-        "green",
-        "Sucess",
-        "Otp resend sucessfully",
-        <IconCheck size="1rem" />,
-      );
+      toast.success("Otp resend sucessfully", { id: "load-data" });
     }
   } catch (err: any) {
     console.log(err);
 
     if (err.isSuperTokensGeneralError === true) {
       // this may be a custom error message sent from the API by you.
-      showNotification(
-        "load-data",
-        "red",
-        "Failed",
-        err.message,
-        <IconX size="1rem" />,
-      );
+      toast.error(err.message || "Failed", { id: "load-data" });
     } else {
-      showNotification(
-        "load-data",
-        "red",
-        "Failed",
-        "Oops! Something went wrong.",
-        <IconX size="1rem" />,
-      );
+      toast.error("Oops! Something went wrong.", { id: "load-data" });
     }
   }
 }
@@ -306,23 +228,15 @@ export function useSignUp() {
           if (formField?.id === "email") {
             // Email validation failed (for example incorrect email syntax),
             // or the email is not unique.
-            showNotification(
-              "sign-up-error",
-              "red",
-              "Error",
-              formField?.error,
-              <IconX size="1rem" />,
-            );
+            toast.error(formField?.error || "Invalid email", {
+              id: "load-data",
+            });
           } else if (formField?.id === "password") {
             // Password validation failed.
             // Maybe it didn't match the password strength
-            showNotification(
-              "sign-up-error",
-              "red",
-              "Error",
-              formField?.error,
-              <IconX size="1rem" />,
-            );
+            toast.error(formField?.error || "Invalid password", {
+              id: "load-data",
+            });
           }
         });
       } else {
@@ -335,22 +249,10 @@ export function useSignUp() {
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
-        showNotification(
-          "sign-up-error",
-          "red",
-          "Error",
-          err?.message,
-          <IconX size="1rem" />,
-        );
+        toast.error(err?.message || "Failed", { id: "load-data" });
       } else {
         console.log(err);
-        showNotification(
-          "sign-up-error",
-          "red",
-          "Error",
-          "Oops! Something went wrong.",
-          <IconX size="1rem" />,
-        );
+        toast.error("Oops! Something went wrong.", { id: "load-data" });
       }
     }
   };
@@ -359,38 +261,22 @@ export function useSignUp() {
 export const useConsumeVerificationCode = () => {
   const router = useRouter();
   const consumeVerificationCode = async () => {
-    notifications.show({
+    toast.loading("Hold on, We are verifying your email...", {
       id: "verify-email",
-      loading: true,
-      title: "Verifying email",
-      message: `Hold on, We are verifying your email...`,
-      autoClose: false,
-      withCloseButton: false,
     });
-
     try {
       let response = await verifyEmail();
       if (response?.status === "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR") {
         // This can happen if the verification code is expired or invalid.
         // You should ask the user to retry
-        showNotification(
-          "verify-email",
-          "red",
-          "Error",
-          "Oops! Seems like the verification link expired. Please try again",
-          <IconX size="1rem" />,
-        );
+        toast.error("Verification link expired. Please try again.", {
+          id: "verify-email",
+        });
         //window.location.assign("/login/verify-email"); // back to the email sending screen.
       } else {
         // email was verified successfully.
-        notifications.update({
+        toast.success("Verified email successfully.", {
           id: "verify-email",
-          color: "teal",
-          loading: false,
-          title: "Success",
-          message: "Verified email successfully.",
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
         });
         // router.push(route);
         router.push("/login/complete-login");
@@ -398,21 +284,11 @@ export const useConsumeVerificationCode = () => {
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
-        showNotification(
-          "verify-email",
-          "red",
-          "Error",
-          err?.message,
-          <IconX size="1rem" />,
-        );
+        toast.error(err?.message || "Error", {
+          id: "verify-email",
+        });
       } else {
-        showNotification(
-          "verify-email",
-          "red",
-          "Error",
-          "Oops! Something went wrong.",
-          <IconX size="1rem" />,
-        );
+        toast.error("Oops! Something went wrong.", { id: "verify-email" });
       }
     }
   };
@@ -429,31 +305,15 @@ export function useEmailSend() {
       if (response?.status === "EMAIL_ALREADY_VERIFIED_ERROR") {
         router.push("/dashboard");
       } else {
-        showNotification(
-          "send-mail-error",
-          "blue",
-          "Check mail inbox & Verify",
-          "Please check your email and click the link in it",
-          <IconInfoCircleFilled size="1rem" />,
-        );
+        toast.info("Please check your email and click the link in it", {
+          id: "send-mail-error",
+        });
       }
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {
-        showNotification(
-          "send-mail-error",
-          "red",
-          "Error",
-          err?.message,
-          <IconX size="1rem" />,
-        );
+        toast.error(err?.message || "Error", { id: "send-mail-error" });
       } else {
-        showNotification(
-          "send-mail-error",
-          "red",
-          "Error",
-          "Oops! Something went wrong.",
-          <IconX size="1rem" />,
-        );
+        toast.error("Oops! Something went wrong.", { id: "send-mail-error" });
       }
     }
   }, [router]);

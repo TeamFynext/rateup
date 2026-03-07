@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 
 import { Tabs } from "@mantine/core";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { useImmer } from "use-immer";
 
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
@@ -22,7 +23,6 @@ import { useUser } from "../../../../context/UserContext";
 import { QuestionType, WaFlowStatus } from "../../../../types/enums";
 import { WaFlowJson, WaFlowMap } from "../../../../types/global";
 import { UserRole } from "../../../../utils/enums";
-import { showErrorToast } from "../../../../utils/notifications";
 import {
   getFlowElementJsonFromQuestion,
   getNewScreenObj,
@@ -87,7 +87,7 @@ function FlowPage() {
   useEffect(() => {
     if (!flowEditable || !flowJson) return;
     if (flow.status === WaFlowStatus.PUBLISHED) {
-      showErrorToast("You can't edit a published flow.");
+      toast.error("You can't edit a published flow.");
       return;
     }
     const timer = setTimeout(() => {

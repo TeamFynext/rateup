@@ -2,7 +2,6 @@
 
 import { Button, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import {
   IconEdit,
   IconPlus,
@@ -10,6 +9,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
@@ -53,14 +53,12 @@ export function CategoryCardHeader({
           headerTitle={translations("Delete Category?")}
           confirmLabel={translations("Delete")}
           onConfirm={(e) => {
-            notifications.show({
-              id: "delete-data-menu-category",
-              loading: true,
-              title: translations("Deleting category"),
-              message: translations("Hold on, category is getting deleted"),
-              autoClose: false,
-              withCloseButton: false,
-            });
+            toast.loading(
+              translations("Hold on, category is getting deleted"),
+              {
+                id: "delete-data-menu-category",
+              },
+            );
             handleDelete.mutate(category?.id);
             closeDialog();
           }}

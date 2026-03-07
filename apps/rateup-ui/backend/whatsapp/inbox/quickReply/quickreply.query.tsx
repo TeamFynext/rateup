@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+import { toast } from "sonner";
 
 import {
   createWaQuickReply,
@@ -24,8 +23,8 @@ export const useCreateWaQuickReply = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["quick-reply"] });
     },
-    onError: (e) => {
-      console.error(e);
+    onError: (error) => {
+      toast.error(error?.message || "Creation failed");
     },
   });
 };
@@ -37,8 +36,8 @@ export const useUpdateReplyOrder = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["quick-reply"] });
     },
-    onError: (e) => {
-      console.error(e);
+    onError: (error) => {
+      toast.error(error?.message || "Update failed");
     },
   });
 };
@@ -50,9 +49,8 @@ export const useUpdateReply = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["quick-reply"] });
     },
-    onError: (e) => {
-      console.error(e);
-      showErrorToast("Updation failed");
+    onError: (error) => {
+      toast.error(error?.message || "Updation failed");
     },
   });
 };
@@ -64,8 +62,8 @@ export const useDeleteReply = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["quick-reply"] });
     },
-    onError: (e) => {
-      console.error(e);
+    onError: (error) => {
+      toast.error(error?.message || "Deletion failed");
     },
   });
 };

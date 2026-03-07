@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { getBrowserId } from "@/lib/utils";
 import {
@@ -13,7 +14,6 @@ import {
 } from "@/app/dashboard/inbox/store";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { useMarkWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { showInfoToast } from "@/utils/notifications";
 
 export const useChatSocket = () => {
   const socketRef = useRef<WebSocket | null>(null);
@@ -167,17 +167,18 @@ const handleNotificationWithSound = ({ message, router }) => {
 
   const audio = new Audio("/sounds/noti.wav");
 
-  showInfoToast(
-    "Whatsapp Inbox",
-    `You have a new message from ${message.inbox.contact.name}`,
-    <IconBrandWhatsapp size={18} />,
-    () => {
-      router.push(
-        `${pathnamesMap.inbox}?contactId=${message.inbox.contact.id}`,
-      );
+  toast.info(`You have a new message from ${message.inbox.contact.name}`, {
+    id: message.inbox.message.messageId,
+    icon: <IconBrandWhatsapp size={18} />,
+    action: {
+      label: "Action",
+      onClick: () => {
+        router.push(
+          `${pathnamesMap.inbox}?contactId=${message.inbox.contact.id}`,
+        );
+      },
     },
-    message.inbox.message.messageId,
-  );
+  });
   audio.play().catch((e) => {
     console.warn("Audio playback failed:", e);
   });

@@ -3,15 +3,11 @@
 import { useContext } from "react";
 
 import { useMantineTheme } from "@mantine/core";
+import { useTranslations } from "next-intl";
 import PhoneInput from "react-phone-number-input";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import classes from "../TakeSurvey.module.css";
-
-import "react-phone-number-input/style.css";
-
-import { useTranslations } from "next-intl";
-
 import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function PhoneForm() {

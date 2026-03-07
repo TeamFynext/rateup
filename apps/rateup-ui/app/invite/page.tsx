@@ -16,10 +16,10 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { IconArrowAutofitLeft, IconCheck } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { signOut } from "supertokens-auth-react/recipe/session";
 
 import { completeInvite } from "../../backend/team/team.api";
@@ -48,41 +48,24 @@ const Invite = () => {
   const updateInviteMutation = useMutation({
     mutationFn: () => acceptInvite(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }), //update team list on add
-        notifications.update({
-          id: "load-data",
-          color: "teal",
-          title: "Success",
-          loading: false,
-          message: translations("Invite Accepted successfully"),
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
-        });
+      queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }); //update team list on add
+      toast.success(translations("Invite Accepted successfully"), {
+        id: "load-data",
+      });
     },
 
     onError: (error: Error) => {
       console.error("Error:", error.message);
-      notifications.update({
+      toast.error(error.message, {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed",
-        message: error.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
 
   useEffect(() => {
     if (type === "team" && token) {
-      notifications.show({
+      toast.loading(translations("Hold on, while validating your invite"), {
         id: "load-data",
-        loading: true,
-        title: translations("Accepting Invite"),
-        message: translations("Hold on, while validating your invite"),
-        autoClose: false,
-        withCloseButton: false,
       });
       setTimeout(() => {
         !updateInviteMutation.data && updateInviteMutation.mutate();

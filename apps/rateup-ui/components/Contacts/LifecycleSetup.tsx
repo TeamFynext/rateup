@@ -86,7 +86,7 @@ const LifecycleSetup = ({
     <div className="flex flex-col h-full">
       <div className="border-b-1 pb-4">
         <div className="flex gap-2 items-center px-4">
-          <div className="bg-gradient-to-br from-rateup-blue to-blue-600 rounded-md text-white w-8 h-8 flex items-center justify-center">
+          <div className="bg-linear-to-br from-rateup-blue to-blue-600 rounded-md text-white w-8 h-8 flex items-center justify-center">
             <Activity className="text-[9px]" />
           </div>
           <div className="flex flex-col gap-1/2">
@@ -99,7 +99,7 @@ const LifecycleSetup = ({
           </div>
         </div>
       </div>
-      <div className="flex-grow min-h-0 overflow-auto items-center p-8">
+      <div className="grow min-h-0 overflow-auto items-center p-8">
         <Card className="p-4 my-2 mb-6">
           <Field className="" orientation="horizontal">
             <FieldContent>

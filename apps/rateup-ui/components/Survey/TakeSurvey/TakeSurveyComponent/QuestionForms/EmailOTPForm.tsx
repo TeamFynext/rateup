@@ -13,6 +13,7 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import { IconMail } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   useSendOTPEmail,
@@ -23,7 +24,6 @@ import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../../context/SelectedQ";
 import { useSurveyContext } from "../../../../../context/SurveyObjContext";
 import { emailPattern } from "../../../../../utils/constants";
-import { showErrorToast } from "../../../../../utils/notifications";
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
 import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util";
@@ -88,8 +88,10 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
         setIsOtpSend(true);
         setTimerComplete(false);
       },
-      onError: () => {
-        showErrorToast(translations("Something went wrong please retry"));
+      onError: (error) => {
+        toast.error(
+          error?.message || translations("Something went wrong please retry"),
+        );
       },
     });
   };

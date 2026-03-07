@@ -15,7 +15,6 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
   IconCopy,
@@ -28,6 +27,7 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   deleteSurvey,
@@ -98,13 +98,8 @@ export function SurveyMenu({
       console.error(validationRes.errors);
       return;
     }
-    notifications.show({
+    toast.loading(translations("Hold on, your survey is getting clonned"), {
       id: "load-data",
-      loading: true,
-      title: translations("Clonning survey"),
-      message: translations("Hold on, your survey is getting clonned"),
-      autoClose: false,
-      withCloseButton: false,
     });
     cloneSurvey.mutate({ id: survey?.id, teamIds: cloneForm.values.teamIds });
   };
@@ -120,27 +115,15 @@ export function SurveyMenu({
         ? deleteSurveyForOneTeam(id, teamId)
         : deleteSurvey(id),
     onSuccess: () => {
-      notifications.update({
+      toast.success(translations("Deleted Survey Successfully!"), {
         id: "delete-data",
-        color: "teal",
-        title: translations("Success"),
-        message: translations("Deleted Survey Successfully!"),
-        loading: false,
-        icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
-        autoClose: 2000,
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       //console.error("Error deleting Survey:", error.message);
-      notifications.update({
+      toast.error(error?.message, {
         id: "delete-data",
-        loading: false,
-        color: "red",
-        title: translations("Delete Failed!"),
-        message: error?.response?.data?.error,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 4000,
       });
     },
   });
@@ -148,10 +131,8 @@ export function SurveyMenu({
   const surveyUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(survey.id, data),
     onSuccess: () => {
-      notifications.show({
+      toast.success(translations("Survey status Updated!"), {
         id: "survey",
-        message: translations("Survey status Updated!"),
-        autoClose: true,
       });
       refetchSurveys();
     },
@@ -214,13 +195,8 @@ export function SurveyMenu({
         headerTitle={translations("Delete Survey?")}
         confirmLabel={translations("Delete")}
         onConfirm={async (e) => {
-          notifications.show({
+          toast.loading(translations("Hold on, survey is getting deleted"), {
             id: "delete-data",
-            loading: true,
-            title: translations("Deleting survey"),
-            message: translations("Hold on, survey is getting deleted"),
-            autoClose: false,
-            withCloseButton: false,
           });
           selectedTeamId && selectedTeamId !== "all"
             ? await surveyDeleteMutation.mutateAsync({

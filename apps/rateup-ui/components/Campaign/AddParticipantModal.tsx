@@ -11,6 +11,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,6 @@ import {
   ContactGroupType,
 } from "../../types/enums";
 import { PAGE_SIZE } from "../../utils/constants";
-import { showWarnToast } from "../../utils/notifications";
 import StatePagination from "./CampaignContactPagination";
 
 interface AddParticipantModalProps {
@@ -151,7 +151,7 @@ const AddParticipantModal = ({
       selectedGroups.length === 0 &&
       selectedCampaigns?.length === 0
     ) {
-      showWarnToast(t("warnings.noSelection"));
+      toast.warning(t("warnings.noSelection"));
       return;
     }
     // ✅ OLD UI LOGIC: Campaign requires message status
@@ -160,7 +160,7 @@ const AddParticipantModal = ({
       selectedCampaigns.length > 0 &&
       selectedStatus.length === 0
     ) {
-      showWarnToast(t("messageStatus.required"));
+      toast.warning(t("messageStatus.required"));
       return;
     }
 

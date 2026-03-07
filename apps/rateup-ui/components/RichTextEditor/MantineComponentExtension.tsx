@@ -1,6 +1,6 @@
 import { Badge } from "@mantine/core";
-import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { Node } from "@tiptap/core";
+import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 
 const MantineComponentExtension = ({ MantineComponent, componentName }) => {
   return Node.create({

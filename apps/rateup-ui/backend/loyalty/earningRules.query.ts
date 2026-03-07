@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { getErrorMessage } from "../../utils";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createLoyaltyEarningRule,
   deleteLoyaltyEarningRule,
@@ -44,14 +44,12 @@ export const useCreateLoyaltyEarningRuleMutation = (
     mutationFn: (ruleData: LoyaltyEarningRuleInput) =>
       createLoyaltyEarningRule(ruleData),
     onSuccess: () => {
-      showSuccessToast("Earning rule created successfully");
+      toast.success("Earning rule created successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-earning-rules"] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error creating earning rule!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error creating earning rule!");
       onError?.();
     },
   });
@@ -71,17 +69,15 @@ export const useUpdateLoyaltyEarningRuleMutation = (
     mutationFn: (ruleData: LoyaltyEarningRuleUpdateInput) =>
       updateLoyaltyEarningRule(ruleId, ruleData),
     onSuccess: () => {
-      showSuccessToast("Earning rule updated successfully");
+      toast.success("Earning rule updated successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-earning-rules"] });
       queryClient.invalidateQueries({
         queryKey: ["loyalty-earning-rule", ruleId],
       });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error updating earning rule!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error updating earning rule!");
       onError?.();
     },
   });
@@ -99,22 +95,16 @@ export const useDeleteLoyaltyEarningRuleMutation = (
   return useMutation({
     mutationFn: (ruleId: string) => deleteLoyaltyEarningRule(ruleId),
     onSuccess: () => {
-      showSuccessToast(
-        "Earning rule deleted successfully",
-        "earning-rule-delete",
-        null,
-        true,
-      );
+      toast.success("Earning rule deleted successfully", {
+        id: "earning-rule-delete",
+      });
       queryClient.invalidateQueries({ queryKey: ["loyalty-earning-rules"] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error deleting earning rule!"),
-        "earning-rule-delete",
-        null,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting earning rule!", {
+        id: "earning-rule-delete",
+      });
       onError?.();
     },
   });
@@ -137,17 +127,15 @@ export const useToggleLoyaltyEarningRuleStatusMutation = (
       status: "active" | "inactive" | "scheduled" | "expired";
     }) => updateLoyaltyEarningRule(ruleId, { status }),
     onSuccess: () => {
-      showSuccessToast("Earning rule status updated successfully");
+      toast.success("Earning rule status updated successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-earning-rules"] });
       queryClient.invalidateQueries({
         queryKey: ["loyalty-earning-rule", ruleId],
       });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error updating rule status!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error updating rule status!");
       onError?.();
     },
   });

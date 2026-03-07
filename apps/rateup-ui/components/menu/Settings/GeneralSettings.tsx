@@ -15,7 +15,9 @@ import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslations } from "next-intl";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
+import { toast } from "sonner";
 
 import { MenuButtons } from "@/types/enums";
 import { useUpdateMenuMutation } from "@/backend/menu/menu.query";
@@ -31,16 +33,11 @@ import Heading from "@/components/styled/Heading/Heading";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { SAVE_HOTKEY } from "@/utils/constants";
 import { deleteUploadedFiles, uploadFile } from "@/utils/file-upload/upload";
-import { showErrorToast } from "@/utils/notifications";
 
 import { currencyLabel } from "../util/currencyData";
 import { schema } from "./GeneralFormSchema";
 import styles from "./GeneralSettings.module.css";
 import ImageUploadSettings from "./ImageUploadSettings";
-
-import "react-phone-number-input/style.css";
-
-import { useTranslations } from "next-intl";
 
 const GeneralSettings = ({ editingItem }) => {
   let formatedItemValue = {
@@ -157,7 +154,7 @@ const GeneralSettings = ({ editingItem }) => {
         updatedData: values,
       });
       for (const imageUploadError of errors) {
-        showErrorToast(imageUploadError.reason);
+        toast.error(imageUploadError.reason);
       }
     } catch (error) {
       setUpdatingLoading(false);

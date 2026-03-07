@@ -14,7 +14,7 @@ function page() {
   return (
     <div className="min-h-screen flex flex-col">
       <TicketHeaderBar />
-      <main className="flex-grow">
+      <main className="grow">
         <TicketHero />
         <ClientsSection />
         <TicketFeatureSection />

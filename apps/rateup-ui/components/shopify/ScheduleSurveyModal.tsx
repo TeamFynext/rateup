@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 
 import {
@@ -29,7 +30,6 @@ import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopif
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 
 import { shopifyEventData } from "../../utils/constants";
-import { showLoadingToast } from "../../utils/notifications";
 import { TeamSelector } from "../input/TeamSelector";
 import WaTemplateSelector from "../input/WaTemplateSelector";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
@@ -190,14 +190,9 @@ const ScheduleSurveyModal = ({
       createdAt: new Date(),
     });
 
-    showLoadingToast(
-      translations("Creating Survey Schedule"),
-      "integration-update",
-      true,
-      translations("Loading"),
-      "",
-      false,
-    );
+    toast.loading(translations("Creating Survey Schedule"), {
+      id: "integration-update",
+    });
 
     updateIntegration.mutate(
       {

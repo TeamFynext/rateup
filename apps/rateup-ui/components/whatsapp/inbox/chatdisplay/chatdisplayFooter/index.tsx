@@ -10,6 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { MessageSquare, Send, StickyNote } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { create } from "zustand";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
@@ -31,7 +32,6 @@ import { User, useUser } from "@/context/UserContext";
 import { WaMessageClosedStatus } from "@/utils/constants";
 import { formatDateWithRelativeTime } from "@/utils/dateTime";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload";
-import { showErrorToast } from "@/utils/notifications";
 
 import {
   useAssignInboxToUer,
@@ -155,7 +155,7 @@ export default function WaInboxChatDisplayFooter({
   function handleSendMessage() {
     if (form.validate().hasErrors) return;
     if (!whatsappSettingsPhoneId && platform !== MessagePlatform.WEBCHAT) {
-      showErrorToast("Select a account to send the message");
+      toast.error("Select a account to send the message");
       return;
     }
     const values = { ...form.values };
@@ -240,7 +240,7 @@ export default function WaInboxChatDisplayFooter({
   function handleSendPrivateMessage() {
     if (form.validate().hasErrors) return;
     if (!whatsappSettingsPhoneId && platform !== MessagePlatform.WEBCHAT) {
-      showErrorToast("Select a account to send the message");
+      toast.error("Select a account to send the message");
       return;
     }
     const values = { ...form.values };
@@ -484,7 +484,7 @@ export const WaInboxAssignUserFooter = ({
 
   function handleAssignToMe() {
     if (!user) {
-      return showErrorToast("failed!try again");
+      return toast.error("failed!try again");
     }
     let message = `Chat assigned to ${user.userName}`;
     const id = generateInternalMessageId();

@@ -14,11 +14,11 @@ import {
   IconRobotFace,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import ChatHistory from "@/components/ChatBot/ChatHistory";
 import CreateNewChatbot from "@/components/ChatBot/CreateNewChatbot";
-import { showSuccessToast } from "@/utils/notifications";
 
 import {
   useAllChatbots,
@@ -72,7 +72,7 @@ const ChatBot = () => {
       {
         onSuccess: (newChatbot) => {
           console.log("New chatbot created:", newChatbot);
-          showSuccessToast("Chatbot created successfully");
+          toast.success("Chatbot created successfully");
 
           queryClient.setQueryData(["all-chatbots"], (old: any) => {
             if (!old) return [newChatbot];
@@ -113,7 +113,7 @@ const ChatBot = () => {
 
     deleteChatbot(selectedChatbotId, {
       onSuccess: () => {
-        showSuccessToast("Chatbot deleted successfully");
+        toast.success("Chatbot deleted successfully");
 
         const updatedChatbots = allChatbots.filter(
           (cb) => cb.id !== selectedChatbotId,
@@ -147,9 +147,9 @@ const ChatBot = () => {
         onSuccess: (data) => {
           handler.append({ content: data.message, source: ChatBotSource.AI });
         },
-        onError: (error: any) => {
+        onError: (error) => {
           handler.append({
-            content: error.response.data.message,
+            content: error?.message,
             source: ChatBotSource.AI,
           });
         },

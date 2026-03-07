@@ -15,15 +15,12 @@ import {
 } from "@mantine/core";
 import { IconInfoCircle, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useImportEmailIdsMutation } from "../../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import SurveyContext from "../../../../context/SurveyContext";
 import { emailPattern } from "../../../../utils/constants";
-import {
-  showErrorToast,
-  showSuccessToast,
-} from "../../../../utils/notifications";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -247,11 +244,13 @@ const ImportAllowedEmailIDs = ({ qId }) => {
       { questionId: qId, data: formData, surveyId },
       {
         onSuccess: () => {
-          showSuccessToast(translations("Email Ids imported"));
+          toast.success(translations("Email Ids imported"));
           setFile(null);
         },
-        onError: () => {
-          showErrorToast(translations("Error in importing emailIds"));
+        onError: (error) => {
+          toast.error(
+            error?.message || translations("Error in importing emailIds"),
+          );
           setFile(null);
         },
       },

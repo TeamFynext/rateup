@@ -80,7 +80,7 @@ const InboxWorks = () => {
             >
               <div className="mb-6 flex justify-center">
                 <div
-                  className={`w-14 h-14 rounded-full bg-gradient-to-br ${card.iconBg} flex items-center justify-center shadow-lg`}
+                  className={`w-14 h-14 rounded-full bg-linear-to-br ${card.iconBg} flex items-center justify-center shadow-lg`}
                 >
                   {card.icon}
                 </div>

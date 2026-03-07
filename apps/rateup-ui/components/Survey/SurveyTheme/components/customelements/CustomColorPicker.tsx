@@ -1,4 +1,5 @@
 import { ColorPicker } from "@mantine/core";
+
 import { swatches } from "../../SurveyTheme.constants";
 
 interface CustomColorPickerProps {

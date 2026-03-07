@@ -23,6 +23,7 @@ import {
   IconRefresh,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   useImportFlowsMutation,
@@ -36,7 +37,6 @@ import {
   WaFlowWa,
 } from "../../../types/global";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
-import { showErrorToast } from "../../../utils/notifications";
 import {
   getQuestionResponses,
   getQuestionTypesFromFlowElement,
@@ -221,7 +221,7 @@ function ConfigureFlow({
   }, [flowJson]);
 
   if (isError) {
-    showErrorToast("Error loading flow");
+    toast.error("Error loading flow");
     console.error(error);
   }
   if (isLoading || !flowJson) return <RateupLoader />;
@@ -477,7 +477,7 @@ export function SyncFlowsButton({ disabled = false }) {
   } = useUnsyncedFlows(openModal);
 
   if (error) {
-    showErrorToast("Error syncing templates");
+    toast.error("Error syncing templates");
     console.error(error);
   }
   const translations = useTranslations();

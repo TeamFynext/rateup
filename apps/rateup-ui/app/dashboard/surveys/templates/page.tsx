@@ -13,9 +13,9 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useSurveyTemplates } from "../../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../../backend/team/team.query";
@@ -87,7 +87,6 @@ const Templates = ({ survey }) => {
   return (
     <Stack gap={0}>
       {/* <Modal opened={opened} onClose={close} title="Create Survey from Template" size="auto" centered> */}
-
       <Group
         style={{ textAlign: "center", alignItems: "center", margin: "auto" }}
       >
@@ -128,7 +127,6 @@ const Templates = ({ survey }) => {
         </FormModalLayout>
       </Group>
       {/* </Modal> */}
-
       <CreateSurveyModal
         open={createSurveyOpened}
         close={closeCreateSurvey}
@@ -137,7 +135,6 @@ const Templates = ({ survey }) => {
         template={selectedTemplate}
         setTemplate={setSelectedTemplate}
       />
-
       <Group gap="md" justify="space-between">
         <Group ml="md">
           <Heading
@@ -155,26 +152,22 @@ const Templates = ({ survey }) => {
             title={translations("Start Blank")}
             onClick={() => {
               router.push(`/dashboard/surveys?action=create`);
-              notifications.show({
-                id: "blank-survey",
-                color: "teal",
-                title: translations("Setting up Blank Template.."),
-                loading: true,
-                message: translations("Hold.. your survey is getting setup.."),
-                autoClose: 2000,
-              });
+              toast.loading(
+                translations("Hold.. your survey is getting setup.."),
+                {
+                  id: "blank-survey",
+                },
+              );
             }}
           />
         )}
       </Group>
-
       {isLoading && (
         <Box m="200px">
           {" "}
           <Loader type="bars" />{" "}
         </Box>
       )}
-
       {allTemplates && (
         <Box m="lg" pb="xl">
           {Object?.entries(allTemplates)?.length < 1 && (

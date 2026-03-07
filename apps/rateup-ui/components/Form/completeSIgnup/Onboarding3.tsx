@@ -90,7 +90,7 @@ export default function OnboardingStep3({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
-          className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 shadow-lg shadow-purple-500/30 mx-auto mb-1"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-linear-to-br from-purple-400 to-pink-500 shadow-lg shadow-purple-500/30 mx-auto mb-1"
         >
           <Sparkles className="w-5 h-5 text-white" />
         </motion.div>
@@ -120,7 +120,7 @@ export default function OnboardingStep3({
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors shadow-md ${
                     data.selectedTemplate === template.id
                       ? `bg-linear-to-r ${template.color}`
-                      : "bg-gradient-to-br from-gray-200 to-gray-300"
+                      : "bg-linear-to-br from-gray-200 to-gray-300"
                   }`}
                 >
                   <template.icon

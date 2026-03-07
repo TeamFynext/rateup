@@ -16,7 +16,7 @@ function page() {
   return (
     <div className="min-h-screen flex flex-col">
       <InboxHeader />
-      <main className="flex-grow">
+      <main className="grow">
         <InboxHero />
         <ClientLogos />
         <InboxWorks />

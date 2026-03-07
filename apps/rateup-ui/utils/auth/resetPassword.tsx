@@ -1,13 +1,12 @@
 import { useRouter } from "next/navigation";
 
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { toast } from "sonner";
 //save new password
 import {
   sendPasswordResetEmail,
   submitNewPassword,
 } from "supertokens-auth-react/recipe/emailpassword";
-
-import { showNotification } from ".";
 
 export function useSendResetEmail() {
   const router = useRouter();
@@ -27,24 +26,17 @@ export function useSendResetEmail() {
         response?.formFields?.forEach((formField) => {
           if (formField?.id === "email") {
             // Email validation failed (for example incorrect email syntax).
-            showNotification(
-              "error",
-              "red",
-              "Error",
-              formField?.error,
-              <IconX size="1rem" />,
-            );
+            toast.error(formField?.error, { id: "email-error" });
           }
         });
       } else {
         // reset password email sent.
         //window.alert("Please check your email for the password reset link")
-        showNotification(
-          "send-mail-error",
-          "teal",
-          "Reset Email Sent",
-          "Please check your email for the password reset link",
-          <IconCheck size="1rem" />,
+        toast.success("Please check your email for the password reset link", {
+          id: "send-mail-success",
+        });
+        router.push(
+          `/login/reset-password?emailTo=${encodeURIComponent(email)}&requestStatus=success`,
         );
         router.push(
           `/login/reset-password?emailTo=${encodeURIComponent(email)}&requestStatus=success`,
@@ -53,21 +45,9 @@ export function useSendResetEmail() {
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
-        showNotification(
-          "reset-email-error",
-          "red",
-          "Error",
-          err?.message,
-          <IconX size="1rem" />,
-        );
+        toast.error(err?.message, { id: "reset-email-error" });
       } else {
-        showNotification(
-          "reset-email-error",
-          "red",
-          "Error",
-          "Oops! Something went wrong.",
-          <IconX size="1rem" />,
-        );
+        toast.error("Oops! Something went wrong.", { id: "general-error" });
       }
     }
   };
@@ -90,24 +70,14 @@ export function useSetNewPassword(open) {
         response?.formFields.forEach((formField) => {
           if (formField?.id === "password") {
             // New password did not meet password criteria on the backend.
-            showNotification(
-              "error",
-              "red",
-              "Error",
-              formField?.error,
-              <IconX size="1rem" />,
-            );
+            toast.error(formField?.error, { id: "password-error" });
           }
         });
       } else if (response?.status === "RESET_PASSWORD_INVALID_TOKEN_ERROR") {
         // the password reset token in the URL is invalid, expired, or already consumed
-        showNotification(
-          "reset-error",
-          "red",
-          "Failed",
-          "Password reset failed. Please try again",
-          <IconX size="1rem" />,
-        );
+        toast.error("Password reset failed. Please try again", {
+          id: "reset-error",
+        });
         router.push("/login"); // back to the login scree.
       } else {
         open();
@@ -115,21 +85,9 @@ export function useSetNewPassword(open) {
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
-        showNotification(
-          "set-pwd-error",
-          "red",
-          "Error",
-          err?.message,
-          <IconX size="1rem" />,
-        );
+        toast.error(err?.message, { id: "set-pwd-error" });
       } else {
-        showNotification(
-          "set-pwd-error",
-          "red",
-          "Error",
-          "Oops! Something went wrong.",
-          <IconX size="1rem" />,
-        );
+        toast.error("Oops! Something went wrong.", { id: "set-pwd-error" });
       }
     }
   };

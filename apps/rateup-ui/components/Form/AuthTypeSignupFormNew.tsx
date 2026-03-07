@@ -5,11 +5,11 @@ import { isEmail, useForm } from "@mantine/form";
 import { IconCheck } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import { useUserInfo } from "@/backend/user/user.query";
-import { showSuccessToast } from "@/utils/notifications";
 
 import { Card } from "../ui/card";
 import { Step1, Step2, Step3 } from "./SignupFormNew";
@@ -89,11 +89,7 @@ function AuthTypeSignupForm({
   const handleSubmit = () => {
     setIsLoading(true);
     if (isUserExist) {
-      showSuccessToast(
-        "Sign up process is already completed",
-        "",
-        <IconCheck />,
-      );
+      toast.success("Sign up process is already completed");
       router.push("/dashboard");
       return;
     }

@@ -9,7 +9,7 @@ const axiosClient = axios.create({
   },
 });
 
-const shouldSkipLocalErrorToast = (error: any) =>
+const shouldSkipLocalErrorToast = (error) =>
   !!error?.response?.data?.displayMessageInClient;
 
 const interceptorErrorHandler = (error) => {
@@ -34,7 +34,11 @@ const interceptorErrorHandler = (error) => {
   let message = "Something went wrong";
 
   if (response?.data) {
-    message = response.data.message || response.data.error || message;
+    if (typeof response.data === "string") {
+      message = response.data;
+    } else {
+      message = response.data.message || response.data.error || message;
+    }
   } else if (request) {
     message = "Network error. Please try again.";
   } else if (error.message) {

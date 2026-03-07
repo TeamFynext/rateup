@@ -16,7 +16,7 @@ export const TestimonialCTASection = () => {
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true, margin: "-100px" }}
-          className="relative p-8 md:p-12 lg:p-16 rounded-2xl 10 bg-gradient-to-br from-[#e0f2ffca] via-[#e0f2ffa5] to-[#cce4ff9c]  text-center "
+          className="relative p-8 md:p-12 lg:p-16 rounded-2xl 10 bg-linear-to-br from-[#e0f2ffca] via-[#e0f2ffa5] to-[#cce4ff9c]  text-center "
         >
           <div className="max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold pb-6 text-[#00397b]">

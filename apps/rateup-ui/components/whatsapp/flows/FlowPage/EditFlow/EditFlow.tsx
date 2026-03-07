@@ -5,8 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconEye, IconEyeClosed } from "@tabler/icons-react";
-
-import { showErrorToast } from "@/utils/notifications";
+import { toast } from "sonner";
 
 import { useQuestionDeleteMutation } from "../../../../../backend/surveys/questions/questions.query";
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
@@ -105,10 +104,9 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
       (se) => se.type === "Form",
     ).children;
     if (formElementChildren.length > 50)
-      return showErrorToast(
-        "Only 50 components in a screen",
-        "error-max-screen-elements",
-      );
+      return toast.error("Only 50 components in a screen", {
+        id: "error-max-screen-elements",
+      });
     let qsType = [
       WaFlowFormElementType.nonInputText,
       WaFlowFormElementType.image,
@@ -121,10 +119,9 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
       ) &&
       formElementChildren.find((c) => c.type === qsType)
     ) {
-      return showErrorToast(
-        `Only one ${type} allowed per screen`,
-        "error-max-screen-elements",
-      );
+      return toast.error(`Only one ${type} allowed per screen`, {
+        id: "error-max-screen-elements",
+      });
     } else if (
       [QuestionType.DocumentPicker, QuestionType.PhotoPicker].includes(
         type as QuestionType,
@@ -136,9 +133,11 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
         ].includes(child.type),
       )
     ) {
-      return showErrorToast(
+      return toast.error(
         "Using both PhotoPicker and DocumentPicker components on a single screen is not allowed per screen",
-        "error-max-screen-elements",
+        {
+          id: "error-max-screen-elements",
+        },
       );
     }
     if (Object.values(QuestionType).includes(type as QuestionType)) {
@@ -288,13 +287,13 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
           />
         )}
         {activeEditor === EditFlowRightPanel.ElementEditor &&
-          selectedQuestion &&
-          survey.id ? (
+        selectedQuestion &&
+        survey.id ? (
           <FlowQuestionDetailedView
             key={selectedQuestion.id}
             question={selectedQuestion}
             surveyId={survey.id}
-            setSelectedLanguage={() => { }}
+            setSelectedLanguage={() => {}}
             surveyLanguages={["en"]}
             onCreated={handleNewQuestionCreated}
           />

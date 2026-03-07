@@ -1,4 +1,7 @@
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import {
   createQr,
   deleteQr,
@@ -8,8 +11,6 @@ import {
   incrementNoOfScans,
   updateQr,
 } from "./generateQr.api";
-import { showErrorToast, showSuccessToast } from "utils/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
 
 function useGetAllGeneratedQrsQuery() {
   return useQuery({
@@ -38,14 +39,17 @@ function useCreateQrMutation() {
   return useMutation({
     mutationFn: createQr,
     onSuccess: () => {
-      showSuccessToast("Created QR successfully.", "CreateQr", <IconCheck />);
+      toast.success("Created QR successfully.", {
+        id: "CreateQr",
+      });
       queryClient.invalidateQueries({ queryKey: ["generatedQrs"] });
     },
-    onError: () => {
-      showErrorToast(
-        "Unable to create QR, please try again later",
-        "CreateQr",
-        <IconX />,
+    onError: (error) => {
+      toast.error(
+        error?.message || "Unable to create QR, please try again later",
+        {
+          id: "CreateQr",
+        },
       );
     },
   });
@@ -56,15 +60,19 @@ function useUpdateQrMutation(shortUrlId) {
   return useMutation({
     mutationFn: updateQr,
     onSuccess: () => {
-      showSuccessToast("Updated QR successfully.", "UpdateQr", <IconCheck />);
+      toast.success("Updated QR successfully.", {
+        id: "UpdateQr",
+      });
       queryClient.invalidateQueries({ queryKey: ["generatedQrs"] });
       queryClient.invalidateQueries({ queryKey: ["generatedQr", shortUrlId] });
     },
-    onError: () => {
-      showErrorToast(
-        "Unable to update Landing Page, please try again later",
-        "CreateLandingPage",
-        <IconX />,
+    onError: (error) => {
+      toast.error(
+        error?.message ||
+          "Unable to update Landing Page, please try again later",
+        {
+          id: "CreateLandingPage",
+        },
       );
     },
   });
@@ -75,14 +83,17 @@ function useDeleteQrMutation() {
   return useMutation({
     mutationFn: deleteQr,
     onSuccess: () => {
-      showSuccessToast("Deleted QR successfully.", "deleteQr", <IconCheck />);
+      toast.success("Deleted QR successfully.", {
+        id: "deleteQr",
+      });
       queryClient.invalidateQueries({ queryKey: ["generatedQrs"] });
     },
-    onError: () => {
-      showErrorToast(
-        "unable to delete QR, please try again later",
-        "deleteQr",
-        <IconX />,
+    onError: (error) => {
+      toast.error(
+        error?.message || "unable to delete QR, please try again later",
+        {
+          id: "deleteQr",
+        },
       );
     },
   });

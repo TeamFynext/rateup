@@ -15,6 +15,7 @@ import {
 } from "@mantine/core";
 import { isInRange, isNotEmpty, useForm } from "@mantine/form";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import { CatalogProductType } from "@/types/enums";
 import {
@@ -48,12 +49,6 @@ import {
   CURRENCY_CODES,
 } from "@/utils/constants";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "@/utils/notifications";
-import { showErrorToastFromError } from "@/utils/query";
 
 function getInitialValues(type = CatalogProductType.PRODUCT_ITEM) {
   switch (type) {
@@ -239,14 +234,9 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
         }
       } catch (e) {}
 
-      showLoadingToast(
-        "Adding product to Shopify...",
-        "catalog-product",
-        true,
-        "",
-        "",
-        false,
-      );
+      toast.loading("Adding product to Shopify...", {
+        id: "catalog-product",
+      });
 
       createShopifyMut.mutate(
         {
@@ -259,22 +249,15 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
         },
         {
           onSuccess: () => {
-            showSuccessToast(
-              "Product added to Shopify and imported to catalog!",
-              "catalog-product",
-              <IconCheck />,
-              true,
-            );
+            toast.success("Product added to Shopify and imported to catalog!", {
+              id: "catalog-product",
+            });
             cancel();
           },
-          onError: (err: any) => {
-            showErrorToast(
-              err?.response?.data?.message ??
-                "Failed to add product to Shopify",
-              "catalog-product",
-              <IconX />,
-              true,
-            );
+          onError: (error) => {
+            toast.error(error?.message || "Failed to add product to Shopify", {
+              id: "catalog-product",
+            });
           },
         },
       );
@@ -286,14 +269,9 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
     let loadinggMessage = productData
       ? "Updating Product"
       : "Uploading product..";
-    showLoadingToast(
-      loadinggMessage,
-      "catalog-product",
-      true,
-      "Uploading",
-      "",
-      false,
-    );
+    toast.loading(loadinggMessage, {
+      id: "catalog-product",
+    });
     const { type, ...rest } = form.values;
 
     try {
@@ -314,37 +292,30 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
     if (productData) {
       updateProducts.mutate(data, {
         onSuccess: () => {
-          showSuccessToast(
-            "Prodcut Updated",
-            "catalog-product",
-            <IconCheck />,
-            true,
-          );
+          toast.success("Prodcut Updated", {
+            id: "catalog-product",
+          });
           cancel();
         },
-        onError: () => {
-          showErrorToast(
-            "Product updation failed",
-            "catalog-product",
-            <IconX />,
-            true,
-          );
+        onError: (error) => {
+          toast.error(error?.message || "Product updation failed", {
+            id: "catalog-product",
+          });
         },
       });
       return;
     }
     createBatch.mutate(data, {
       onSuccess: () => {
-        showSuccessToast(
-          "Prodcut Uploaded",
-          "catalog-product",
-          <IconCheck />,
-          true,
-        );
+        toast.success("Prodcut Uploaded", {
+          id: "catalog-product",
+        });
         cancel();
       },
-      onError: () => {
-        showErrorToast("Product failed", "catalog-product", <IconX />, true);
+      onError: (error) => {
+        toast.error(error?.message || "Product failed", {
+          id: "catalog-product",
+        });
       },
     });
   }

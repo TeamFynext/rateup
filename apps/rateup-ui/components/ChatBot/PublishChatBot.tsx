@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   useCreateChatbot,
@@ -19,11 +20,6 @@ import {
   useUpdateChatbot,
 } from "../../backend/chatbot/chatbot.query";
 import { ChatbotPublicPageStatus } from "../../types/enums";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "../../utils/notifications";
 import { RateupButtonSecondary } from "../Button/RateupButtons";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import { CopyLinkComponent } from "../Survey/ShareSurvey/ShareSurvey";
@@ -40,28 +36,19 @@ const PublishChatbot = (selectedChatbotId) => {
   const queryClient = useQueryClient();
   const translations = useTranslations();
   const generateUrl = () => {
-    showLoadingToast(
-      translations("Hold onUrl is getting generated"),
-      "short-url",
-      true,
-      translations("Generating"),
-    );
+    toast.loading(translations("Hold onUrl is getting generated"), {
+      id: "short-url",
+    });
     createChatbotUrlMutate.mutate(null, {
       onSuccess: () => {
-        showSuccessToast(
-          translations("Url generated Successfully"),
-          "short-url",
-          <IconCheck />,
-          true,
-        );
+        toast.success(translations("Url generated Successfully"), {
+          id: "short-url",
+        });
       },
-      onError: () => {
-        showErrorToast(
-          translations("Error generating url"),
-          "short-url",
-          <IconX />,
-          true,
-        );
+      onError: (error) => {
+        toast.error(error?.message || translations("Error generating url"), {
+          id: "short-url",
+        });
       },
     });
   };
@@ -73,7 +60,9 @@ const PublishChatbot = (selectedChatbotId) => {
     const loadingTitle = isActive
       ? translations("Deactivating")
       : translations("Activating");
-    showLoadingToast(loadingMessage, "chatbot-page", true, loadingTitle);
+    toast.loading(loadingMessage, {
+      id: "chatbot-page",
+    });
     updateChatbotMutate.mutate(
       {
         chatbotId: selectedChatbotId.selectedChatbotId,
@@ -88,22 +77,19 @@ const PublishChatbot = (selectedChatbotId) => {
           queryClient.invalidateQueries({
             queryKey: ["chatbotPublicPageStatus", chatbotDetails?.shortUrlId],
           });
-          showSuccessToast(
+          toast.success(
             isActive
               ? translations("Page Deactivated Succesfully")
               : translations("Page Activated Succesfully"),
-            "chatbot-page",
-            <IconCheck />,
-            true,
+            {
+              id: "chatbot-page",
+            },
           );
         },
-        onError: () => {
-          showErrorToast(
-            translations("something went wrong"),
-            "chatbot-page",
-            <IconX />,
-            true,
-          );
+        onError: (error) => {
+          toast.error(error?.message || translations("something went wrong"), {
+            id: "chatbot-page",
+          });
         },
       },
     );

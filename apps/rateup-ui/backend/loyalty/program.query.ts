@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { getErrorMessage } from "../../utils";
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createLoyaltyProgram,
   deleteLoyaltyProgram,
@@ -34,14 +34,12 @@ export const useCreateLoyaltyProgramMutation = (
     mutationFn: (programData: LoyaltyProgramInput) =>
       createLoyaltyProgram(programData),
     onSuccess: () => {
-      showSuccessToast("Loyalty program created successfully");
+      toast.success("Loyalty program created successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-program"] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error creating loyalty program!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error creating loyalty program!");
       onError?.();
     },
   });
@@ -61,14 +59,12 @@ export const useUpdateLoyaltyProgramMutation = (
     mutationFn: (programData: LoyaltyProgramUpdateInput) =>
       updateLoyaltyProgram(programId, programData),
     onSuccess: () => {
-      showSuccessToast("Loyalty program updated successfully");
+      toast.success("Loyalty program updated successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-program"] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error updating loyalty program!"),
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error updating loyalty program!");
       onError?.();
     },
   });
@@ -92,22 +88,16 @@ export const useDeleteLoyaltyProgramMutation = (
       force?: boolean;
     }) => deleteLoyaltyProgram(programId, force),
     onSuccess: () => {
-      showSuccessToast(
-        "Loyalty program deleted successfully",
-        "loyalty-program-delete",
-        null,
-        true,
-      );
+      toast.success("Loyalty program deleted successfully", {
+        id: "loyalty-program-delete",
+      });
       queryClient.invalidateQueries({ queryKey: ["loyalty-program"] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error deleting loyalty program!"),
-        "loyalty-program-delete",
-        null,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting loyalty program!", {
+        id: "loyalty-program-delete",
+      });
       onError?.();
     },
   });
@@ -125,22 +115,16 @@ export const useResetLoyaltyProgramPointsMutation = (
   return useMutation({
     mutationFn: (programId: string) => resetLoyaltyProgramPoints(programId),
     onSuccess: () => {
-      showSuccessToast(
-        "Loyalty points reset successfully",
-        "loyalty-points-reset",
-        null,
-        true,
-      );
+      toast.success("Loyalty points reset successfully", {
+        id: "loyalty-points-reset",
+      });
       queryClient.invalidateQueries({ queryKey: ["loyalty-program"] });
       onSuccess?.();
     },
-    onError: (error: any) => {
-      showErrorToast(
-        getErrorMessage(error?.response, "Error resetting loyalty points!"),
-        "loyalty-points-reset",
-        null,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error resetting loyalty points!", {
+        id: "loyalty-points-reset",
+      });
       onError?.();
     },
   });

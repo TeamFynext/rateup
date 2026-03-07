@@ -1,6 +1,7 @@
-import { Stack, Title, Text } from "@mantine/core";
-import PaperLayout from "../styled/Layouts/PaperLayout";
+import { Stack, Text, Title } from "@mantine/core";
+
 import { formatDate } from "../../utils/dateTime";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 const TestimonialSurveyCard = ({ survey, selectedTeamId }) => {
   return (

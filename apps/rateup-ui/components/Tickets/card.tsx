@@ -28,11 +28,11 @@ import {
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
 import { createPortal } from "react-dom";
+import { toast } from "sonner";
 import invariant from "tiny-invariant";
 
 import { useUserInfo } from "@/backend/user/user.query";
 import { formatDate, getTimeRemaining } from "@/utils/dateTime";
-import { showWarnToast } from "@/utils/notifications";
 
 import {
   getCardData,
@@ -325,7 +325,7 @@ export function Card({
 
   const handleDeleteCard = () => {
     if (!isAdmin) {
-      showWarnToast("Only admin or super admin can delete this ticket.");
+      toast.warning("Only admin or super admin can delete this ticket.");
       return;
     }
 

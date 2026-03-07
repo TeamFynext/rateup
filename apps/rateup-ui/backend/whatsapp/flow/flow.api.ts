@@ -1,9 +1,8 @@
-import { notifications } from "@mantine/notifications";
 import { CreateAxiosDefaults } from "axios";
+import { toast } from "sonner";
 
 import { WHATSAPP_URL } from "..";
 import { WaFlowJson, WaFlowWa } from "../../../types/global";
-import { showErrorToast } from "../../../utils/notifications";
 import { axiosClient as ac } from "../../apiClient";
 
 const axiosInstanceConfig: CreateAxiosDefaults = {
@@ -15,7 +14,7 @@ const axiosClient = ac.create(axiosInstanceConfig);
 
 axiosClient.interceptors.response.use(undefined, (error) => {
   if (error.code === "ECONNABORTED") {
-    showErrorToast("Request Timed Out");
+    toast.error("Request Timed Out");
   }
   return Promise.reject(error);
 });
@@ -90,13 +89,8 @@ export async function updateFlow(
   data: Partial<Omit<DbFlow, "id">>,
 ) {
   try {
-    notifications.show({
+    toast.loading(`Hold on, flow is getting Updated...`, {
       id: "flow-update",
-      loading: true,
-      title: "Updating Flow",
-      message: `Hold on, flow is getting Updated...`,
-      autoClose: false,
-      withCloseButton: false,
     });
     return (await axiosClient.put(`${BASE}/${dbFlowId}`, data))?.data;
   } catch (error) {
@@ -139,13 +133,8 @@ export async function updateFlowMetaData(
   data: { name: string; anonymous: boolean },
 ) {
   try {
-    notifications.show({
+    toast.loading(`Hold on, flow is getting Updated...`, {
       id: "flow-meta-data-update",
-      loading: true,
-      title: "Updating Flow",
-      message: `Hold on, flow is getting Updated...`,
-      autoClose: false,
-      withCloseButton: false,
     });
     return (
       await axiosClient.put(`${BASE}/update-flow-metadata/${dbFlowId}`, data)

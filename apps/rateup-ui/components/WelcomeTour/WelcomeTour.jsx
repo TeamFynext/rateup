@@ -1,8 +1,11 @@
 import React, { useRef } from "react";
-import { driver } from "driver.js";
-import "driver.js/dist/driver.css";
+
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
+import { driver } from "driver.js";
+
+import "driver.js/dist/driver.css";
+
 import styles from "./Welcome.module.css";
 
 const WelcomeTour = ({ steps }) => {

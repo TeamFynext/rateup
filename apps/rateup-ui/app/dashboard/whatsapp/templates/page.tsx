@@ -13,10 +13,10 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { TemplateType } from "@/types/enums";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
@@ -186,7 +186,6 @@ export default function Template() {
           </Tooltip>
         </Flex>
       </Flex>
-
       <TemplateCardList
         handleEditClick={handleEditClick}
         isError={isError}
@@ -207,14 +206,12 @@ export default function Template() {
         confirmLabel={translations("Delete")}
         onConfirm={() => {
           if (selectedTemplate) {
-            notifications.show({
-              id: "template-delete",
-              loading: true,
-              title: translations("Deleting Template"),
-              message: translations("Hold on, Template is getting Deleted"),
-              autoClose: false,
-              withCloseButton: false,
-            });
+            toast.loading(
+              translations("Hold on, Template is getting Deleted"),
+              {
+                id: "template-delete",
+              },
+            );
             templateDeleteMutation.mutate(selectedTemplate);
           }
         }}

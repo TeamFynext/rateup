@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
 import { getTimeSince } from "../utils";
 
 export function useTimeSince(date: Date) {

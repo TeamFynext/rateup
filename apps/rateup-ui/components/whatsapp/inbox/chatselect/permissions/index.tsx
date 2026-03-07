@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 import { Radio, RadioGroup, Stack } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
+import { toast } from "sonner";
 
 import { WaAssignedChatPermission } from "@/types/enums";
 import {
@@ -20,7 +20,6 @@ import {
 import { TeamSelector } from "@/components/input/TeamSelector";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { useUser } from "@/context/UserContext";
-import { showLoadingToast } from "@/utils/notifications";
 
 const WaInboxPermissions = () => {
   const { user } = useUser();
@@ -43,13 +42,8 @@ const WaInboxPermissions = () => {
     }
   }, [assignedChatPermission]);
   if (orgDetailsUpdate.isPending) {
-    notifications.show({
+    toast.loading("Hold On...Updating permission", {
       id: "load-data",
-      loading: true,
-      title: "Updating",
-      message: "Hold On...Updating permission",
-      autoClose: false,
-      withCloseButton: false,
     });
   }
   if (!user) return <RateupLoader />;

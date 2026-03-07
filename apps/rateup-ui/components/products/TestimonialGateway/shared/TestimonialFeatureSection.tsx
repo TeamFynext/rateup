@@ -68,7 +68,7 @@ const TestimonialTemplate: React.FC<{
         );
       case "social":
         return (
-          <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg space-y-3">
+          <div className="p-4 rounded-xl bg-linear-to-br from-purple-500 to-pink-500 text-white shadow-lg space-y-3">
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-semibold">

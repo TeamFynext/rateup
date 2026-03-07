@@ -42,6 +42,7 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { useCampaignParticipants } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
@@ -79,10 +80,6 @@ import {
 import { Campaign } from "../../../../types/global";
 import { getErrorMessage } from "../../../../utils";
 import { getCampaignParticipantStatusLabel } from "../../../../utils/enums";
-import {
-  showErrorToast,
-  showLoadingToast,
-} from "../../../../utils/notifications";
 import styles from "../campaign.module.css";
 import { SearchInput } from "../page";
 
@@ -224,7 +221,9 @@ const CampaignById = () => {
               campaignId,
               selectedDripStage,
             });
-            showLoadingToast("Generating report", "delivery-report");
+            toast.loading("Generating report", {
+              id: "delivery-report",
+            });
           }}
         />
         {dripStages?.length && (
@@ -251,12 +250,10 @@ const CampaignById = () => {
           campaignData?.errorMessage || sendMutation.isError ? "block" : "none"
         }
       >
-        {getErrorMessage(
-          sendMutation.error?.response,
-          campaignData?.errorMessage ?? translations("Error Sending campaign"),
-        )}
+        {sendMutation.error?.message ||
+          (campaignData?.errorMessage ??
+            translations("Error Sending campaign"))}
       </Alert>
-
       <Tabs
         value={activeTab}
         color="var(--tertiary-color)"
@@ -398,7 +395,7 @@ const StartCampaignCard = ({
   const handleCampaign = () => {
     const { hasErrors, errors } = form.validate();
     if (hasErrors) {
-      showErrorToast(
+      toast.error(
         (Object.values(errors)?.[0] as string) ??
           translations("Error in campaign senting data"),
       );

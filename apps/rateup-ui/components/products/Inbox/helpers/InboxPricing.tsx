@@ -56,7 +56,7 @@ export default function InboxPricing() {
   return (
     <section
       id="pricing"
-      className="bg-gradient-to-br from-gray-50 to-white py-24"
+      className="bg-linear-to-br from-gray-50 to-white py-24"
     >
       <div className="max-w-7xl mx-auto px-6 text-center">
         <h2 className="text-4xl md:text-5xl font-extrabold text-[#1c518e] mb-4">

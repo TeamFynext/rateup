@@ -1,11 +1,6 @@
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "@/utils/notifications";
+import { toast } from "sonner";
 
 import {
   deleteAllNotifications,
@@ -48,15 +43,21 @@ export const useUpdateNotificationSettings = () => {
       waMessageAssignNotification?: boolean;
       waMessageClosedNotification?: boolean;
     }) => {
-      showLoadingToast("Hold on...updating settings", "notification", true);
+      toast.loading("Hold on...updating settings", {
+        id: "notification",
+      });
       return updateNotificationSettings(data);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notificationSettings"] });
-      showSuccessToast("success", "notification", <IconCheck />, true);
+      toast.success("success", {
+        id: "notification",
+      });
     },
-    onError: () => {
-      showErrorToast("failed", "notification", <IconX />, true);
+    onError: (error) => {
+      toast.error(error?.message || "failed", {
+        id: "notification",
+      });
     },
   });
 };
@@ -65,16 +66,22 @@ export const useDeleteNotification = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (notificationId) => {
-      showLoadingToast("Hold on...deleting", "notification", true);
+      toast.loading("Hold on...deleting", {
+        id: "notification",
+      });
       return deleteNotification(notificationId);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notification"] });
       qc.invalidateQueries({ queryKey: ["notificationCount"] });
-      showSuccessToast("success", "notification", <IconCheck />, true);
+      toast.success("success", {
+        id: "notification",
+      });
     },
-    onError: () => {
-      showErrorToast("failed", "notification", <IconX />, true);
+    onError: (error) => {
+      toast.error(error?.message || "failed", {
+        id: "notification",
+      });
     },
   });
 };
@@ -83,16 +90,22 @@ export const useDeleteAllNotifications = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => {
-      showLoadingToast("Hold on...deleting", "notification", true);
+      toast.loading("Hold on...deleting", {
+        id: "notification",
+      });
       return deleteAllNotifications();
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notification"] });
       qc.invalidateQueries({ queryKey: ["notificationCount"] });
-      showSuccessToast("success", "notification", <IconCheck />, true);
+      toast.success("success", {
+        id: "notification",
+      });
     },
-    onError: () => {
-      showErrorToast("failed", "notification", <IconX />, true);
+    onError: (error) => {
+      toast.error(error?.message || "failed", {
+        id: "notification",
+      });
     },
   });
 };

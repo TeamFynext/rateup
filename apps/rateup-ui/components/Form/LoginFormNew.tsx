@@ -77,7 +77,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
     });
   };
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center w-full p-3 sm:p-4 md:p-6 bg-gradient-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center w-full p-3 sm:p-4 md:p-6 bg-linear-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative">
       <div className="text-center mb-1.5 sm:mb-2 md:mb-3">
         <div className="flex items-center justify-center mb-0.5 sm:mb-1">
           <img
@@ -99,7 +99,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", duration: 0.6 }}
-            className="inline-flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-1.5 sm:mb-2"
+            className="inline-flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-1.5 sm:mb-2"
           >
             <Lock className="w-5 h-5 sm:w-5.5 sm:h-5.5 md:w-6 md:h-6 text-white" />
           </motion.div>

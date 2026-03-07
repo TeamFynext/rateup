@@ -1,10 +1,9 @@
 import { useRouter } from "next/navigation";
 
-import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   cancelStripeSubscription,
   createStripeCheckoutSession,
@@ -21,27 +20,16 @@ export function useCreateStripeCheckoutSession(setIsLoading) {
   return useMutation({
     mutationFn: (values: any) => createStripeCheckoutSession(values),
     onSuccess: (data) => {
-      notifications.show({
+      toast.loading("Please wait get ready for payment", {
         id: "load-data",
-        color: "teal",
-        title: "Processing Started",
-        message: "Please wait get ready for payment",
-        icon: <IconCheck size="1rem" />,
-        loading: true,
-        autoClose: 3000,
       });
       setIsLoading(false);
       //setOrder(data.data.data);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error creating order:" + error.message);
-      notifications.show({
+      toast.error(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
 
       setIsLoading(false);
@@ -63,14 +51,10 @@ export const useSyncStripeProducts = () => {
     mutationFn: syncStripeProducts,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stripeProducts"] });
-      showSuccessToast(
-        "Stripe products synced successfully",
-        "",
-        <IconCheck />,
-      );
+      toast.success("Stripe products synced successfully");
     },
-    onError: () => {
-      showErrorToast("Error in Syncing stripe products", "", <IconX />);
+    onError: (error) => {
+      toast.error(error?.message || "Error in Syncing stripe products");
     },
   });
 };
@@ -81,14 +65,10 @@ export const useUpdateStripeProduct = () => {
     mutationFn: updateStripeProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stripeProducts"] });
-      showSuccessToast(
-        "Stripe product updated successfully",
-        "",
-        <IconCheck />,
-      );
+      toast.success("Stripe product updated successfully");
     },
-    onError: () => {
-      showErrorToast("Error in updating stripe product", "", <IconX />);
+    onError: (error) => {
+      toast.error(error?.message || "Error in updating stripe product");
     },
   });
 };
@@ -99,20 +79,14 @@ export const useDeleteStripeProduct = () => {
     mutationFn: deleteStripeProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stripeProducts"] });
-      showSuccessToast(
-        "Stripe product deleted successfully",
-        "stripe",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Stripe product deleted successfully", {
+        id: "stripe",
+      });
     },
-    onError: () => {
-      showErrorToast(
-        "Error in deleting stripe product",
-        "stripe",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Error in deleting stripe product", {
+        id: "stripe",
+      });
     },
   });
 };
@@ -139,28 +113,18 @@ export function useCancelStripeSubscriptionMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
-      notifications.update({
-        id: "load-data",
-        color: "teal",
-        loading: false,
-        title: "Cancel Success",
-        message:
-          "Rateup Subscription cancelled. Enjoy services till expiry date.",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 4000,
-      });
+      toast.success(
+        "Rateup Subscription cancelled. Enjoy services till expiry date.",
+        {
+          id: "load-data",
+        },
+      );
     },
-    onError: (error: any) => {
+    onError: (error) => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       queryClient.invalidateQueries({ queryKey: ["userOrgOrdersQuery"] });
-      notifications.update({
+      toast.error(error?.message || "Error cancelling Rateup Subscription", {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed",
-        message: error.response.data,
-        icon: <IconX size="1rem" />,
-        autoClose: 4000,
       });
     },
   });

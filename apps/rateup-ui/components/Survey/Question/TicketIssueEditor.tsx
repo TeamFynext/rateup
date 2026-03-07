@@ -15,9 +15,9 @@ import {
   Title,
   useMantineTheme,
 } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { IconInfoCircle, IconX } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
@@ -179,13 +179,8 @@ const TicketIssueEditor = ({
     const isChecked = event.currentTarget.checked;
     setEnableTicketIssue(isChecked);
     if (isChecked) {
-      notifications.show({
+      toast.error(translations("Enter condition for ticket issue"), {
         id: "load-data",
-        color: "var(--color-tertiary)",
-        title: translations("Configure Ticket Issue"),
-        message: translations("Enter condition for ticket issue"),
-        icon: <IconInfoCircle size="3rem" />,
-        autoClose: 3000,
       });
     }
   };
@@ -199,13 +194,8 @@ const TicketIssueEditor = ({
   };
 
   const handleSave = async () => {
-    notifications.show({
+    toast.loading(translations("Hold on, your changes are getting updated"), {
       id: "load-data",
-      loading: true,
-      title: translations("Enabling automatic ticket issue"),
-      message: translations("Hold on, your changes are getting updated"),
-      autoClose: false,
-      withCloseButton: false,
     });
 
     try {
@@ -217,14 +207,12 @@ const TicketIssueEditor = ({
 
   const handleError = (error) => {
     console.error("Failed to update", error);
-    notifications.show({
-      id: "load-data",
-      color: "red",
-      title: translations("Failed"),
-      message: ` ${translations("Failed to update try again Error:")} ${error.message}`,
-      icon: <IconX size="1rem" />,
-      autoClose: 2000,
-    });
+    toast.error(
+      ` ${translations("Failed to update try again Error:")} ${error.message}`,
+      {
+        id: "load-data",
+      },
+    );
   };
 
   const finishQuestionOptionsUpdate = () => {
@@ -235,24 +223,17 @@ const TicketIssueEditor = ({
       },
       {
         onError: (error) => {
-          notifications.update({
+          toast.success(translations("Error updating Ticket issue settings"), {
             id: "load-data",
-            loading: false,
-            title: translations("Failed"),
-            message: translations("Error updating Ticket issue settings"),
-            autoClose: true,
-            withCloseButton: true,
           });
         },
         onSuccess: () => {
-          notifications.update({
-            id: "load-data",
-            loading: false,
-            title: translations("Success"),
-            message: translations("Updated Ticket issue settings Successfully"),
-            autoClose: true,
-            withCloseButton: true,
-          });
+          toast.success(
+            translations("Updated Ticket issue settings Successfully"),
+            {
+              id: "load-data",
+            },
+          );
         },
       },
     );

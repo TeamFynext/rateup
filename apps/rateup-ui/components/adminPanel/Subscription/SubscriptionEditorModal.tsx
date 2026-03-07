@@ -8,11 +8,11 @@ import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useRateupPaymentsPlanUpdateMutation } from "../../../backend/payment/payment.query";
 import { useUpdateSubscriptionMutation } from "../../../backend/subscription/subscription.query";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { showLoadingToast } from "../../../utils/notifications";
 import { FeatureCard } from "./FeatureCard";
 
 interface SubscriptionEditorModalProps {
@@ -41,12 +41,9 @@ export function SubscriptionEditorModal({
     !rateupPlanEnable && subscription?.basePlan?.paymentPlanId;
   function handleSave() {
     if (rateupPlanEnable) {
-      showLoadingToast(
-        translations("Plan is getting updated"),
-        "load-data",
-        true,
-        translations("Updating"),
-      );
+      toast.loading(translations("Plan is getting updated"), {
+        id: "load-data",
+      });
       const updatedData: any = {
         id: subscription?.id,
         paymentPlanId: subscription?.paymentPlanId,

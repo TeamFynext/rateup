@@ -2,8 +2,8 @@
 
 import React from "react";
 
-import { notifications } from "@mantine/notifications";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { toast } from "sonner";
 
 import { getContent } from "@/utils";
 
@@ -166,10 +166,7 @@ export function submitSurvey({
     })
     .catch((e) => {
       console.error(e);
-      notifications.show({
-        message: "Something went wrong",
-        color: "red",
-      });
+      toast.error("Something went wrong while submitting the survey.");
       setIsSavingResponses(false);
       if (e?.response?.data === "ALREADY_RESPONDED") {
         throw new Error("ALREADY_RESPONDED");

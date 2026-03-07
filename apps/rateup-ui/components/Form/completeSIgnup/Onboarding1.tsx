@@ -11,11 +11,8 @@ import {
   MessageSquare,
 } from "lucide-react";
 
-import { Card } from "@/components/ui/card";
-
-import "react-phone-number-input/style.css";
-
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export default function OnboardingStep1({
   data,
@@ -35,7 +32,7 @@ export default function OnboardingStep1({
       id: "whatsapp-api",
       name: "WhatsApp Business API",
       icon: MessageSquare,
-      color: "bg-gradient-to-br from-green-400 to-emerald-500",
+      color: "bg-linear-to-br from-green-400 to-emerald-500",
       description: "Advanced WhatsApp automation and messaging",
       benefit: "Reach 2.5B+ users",
       recommended: true,
@@ -44,7 +41,7 @@ export default function OnboardingStep1({
       id: "whatsapp-loyalty",
       name: "WhatsApp Loyalty Program",
       icon: Crown,
-      color: "bg-gradient-to-br from-orange-400 to-pink-500",
+      color: "bg-linear-to-br from-orange-400 to-pink-500",
       description: "Reward customers via WhatsApp",
       benefit: "Increase repeat purchases",
     },
@@ -52,7 +49,7 @@ export default function OnboardingStep1({
       id: "web-survey",
       name: "Web Survey Platform",
       icon: BarChart3,
-      color: "bg-gradient-to-br from-blue-400 to-indigo-500",
+      color: "bg-linear-to-br from-blue-400 to-indigo-500",
       description: "Collect customer feedback and insights",
       benefit: "Data-driven decisions",
     },
@@ -78,7 +75,7 @@ export default function OnboardingStep1({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
-          className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30 mb-2 mx-auto"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-linear-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30 mb-2 mx-auto"
         >
           <ClipboardList className="w-5 h-5 text-white" />
         </motion.div>

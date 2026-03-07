@@ -1,10 +1,11 @@
 import {
-  Title,
-  TitleProps,
   MantineStyleProp,
   Stack,
   Text,
+  Title,
+  TitleProps,
 } from "@mantine/core";
+
 interface HeadingPropsInterface {
   title?: string;
   subtitle?: string;

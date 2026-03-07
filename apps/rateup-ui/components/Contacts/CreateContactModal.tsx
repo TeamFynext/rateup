@@ -22,20 +22,25 @@ import {
   IconInfoCircle,
   IconX,
 } from "@tabler/icons-react";
+import { ChevronDownIcon, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
+import { toast } from "sonner";
 
+import { ContactGroupType } from "@/types/enums";
 import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
 import {
   useContactLabels,
   useCreateContactMutation,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
+import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
+import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { SAVE_HOTKEY } from "@/utils/constants";
 import { importMethod } from "@/utils/enums";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   RateupButtonBlue,
@@ -45,16 +50,6 @@ import {
   ContainedFileInput,
   ContainedMultiSelect,
 } from "../input/ContainedInput/ContainedInput";
-
-import "react-phone-number-input/style.css";
-
-import { ChevronDownIcon, User } from "lucide-react";
-import { useTranslations } from "next-intl";
-
-import { ContactGroupType } from "@/types/enums";
-import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
-import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
-
 import PhoneInputWithCountry from "../input/PhoneInputWithCountry";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
@@ -165,7 +160,7 @@ const CreateContactModal = ({
     const validation = form.validate();
     if (validation.hasErrors) {
       if (validation.errors.contactType) {
-        showErrorToast(validation.errors.contactType as string);
+        toast.error(validation.errors.contactType as string);
       }
       return;
     }
@@ -233,22 +228,18 @@ const CreateContactModal = ({
         } else {
           createContactMutation.mutate(contactData, {
             onSuccess: () => {
-              showSuccessToast(
-                "Contact created successfully.",
-                "contact-create",
-                <IconCheck />,
-              );
+              toast.success("Contact created successfully.", {
+                id: "contact-create",
+              });
               setIsCreating(false);
               contactClose();
               close();
               form.reset();
             },
             onError: (error) => {
-              showErrorToast(
-                `Error creating the contact: ${error?.response?.data?.error}`,
-                "contact-create",
-                <IconX />,
-              );
+              toast.error(error?.message || `Error creating the contact`, {
+                id: "contact-create",
+              });
               setIsCreating(false);
             },
           });

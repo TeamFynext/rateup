@@ -57,9 +57,7 @@ export default function TestimonialCard({
         <div>
           <p className="text-base font-semibold text-gray-900 dark:text-white">
             {author}{" "}
-            {verified && (
-              <span className="ml-1 text-sm text-green-500">✔</span>
-            )}
+            {verified && <span className="ml-1 text-sm text-green-500">✔</span>}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-300">
             {role} @ {company}

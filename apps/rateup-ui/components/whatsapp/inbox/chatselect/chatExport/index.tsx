@@ -23,9 +23,9 @@ import { useMediaQuery } from "@mantine/hooks";
 import { IconDownload } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import useContactStore from "@/app/dashboard/inbox/store";
-import { showLoadingToast } from "@/utils/notifications";
 
 import { useExportWaChats } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import classes from "./styles.module.css";
@@ -91,14 +91,9 @@ export default function WaInboxChatExport() {
   });
   function handleSubmit(values: typeof form.values) {
     setChatsExporting(true);
-    showLoadingToast(
-      "Exporting chats...",
-      "export-chats",
-      true,
-      undefined,
-      undefined,
-      false,
-    );
+    toast.loading("Exporting chats...", {
+      id: "export-chats",
+    });
     exportChats.mutate(
       {
         constraints: encodeURIComponent(JSON.stringify(values)),

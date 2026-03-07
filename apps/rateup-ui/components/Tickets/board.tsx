@@ -12,6 +12,7 @@ import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
+import { toast } from "sonner";
 import invariant from "tiny-invariant";
 
 import { useBoard } from "@/backend/tickets/tickets.query";
@@ -20,7 +21,6 @@ import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import { showWarnToast } from "@/utils/notifications";
 
 import { Column } from "./column";
 import { TColumn } from "./data";
@@ -84,7 +84,7 @@ export function Board({
 
   const handleDeleteColumn = (columnId: string) => {
     if (!isAdmin) {
-      showWarnToast("Only admin or super admin can delete this.");
+      toast.warning("Only admin or super admin can delete this.");
       return;
     }
 

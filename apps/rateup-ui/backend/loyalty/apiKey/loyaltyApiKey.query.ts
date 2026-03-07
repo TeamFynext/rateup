@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import {
   createApiKey,
   deleteApiKey,
   getApiKeyCreatedAt,
   regenerateApiKey,
 } from "./loyaltyApiKey.api";
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
 export const useLoyaltyApiKey = () =>
   useQuery({
@@ -21,11 +22,11 @@ export const useCreateLoyaltyApiKey = () => {
       qc.invalidateQueries({
         queryKey: ["apiAccessToken"],
       });
-      showSuccessToast("API Key created successfully");
+      toast.success("API Key created successfully");
     },
     onError: (error) => {
       console.error(error);
-      showErrorToast("Failed to create API Key");
+      toast.error(error?.message || "Failed to create API Key");
     },
   });
 };
@@ -38,11 +39,11 @@ export const useDeleteLoyaltyApiKey = () => {
       qc.invalidateQueries({
         queryKey: ["apiAccessToken"],
       });
-      showSuccessToast("API Key deleted successfully");
+      toast.success("API Key deleted successfully");
     },
     onError: (error) => {
       console.error(error);
-      showErrorToast("Failed to delete API Key");
+      toast.error(error?.message || "Failed to delete API Key");
     },
   });
 };
@@ -55,11 +56,11 @@ export const useRegenerateLoyaltyApiKey = () => {
       qc.invalidateQueries({
         queryKey: ["apiAccessToken"],
       });
-      showSuccessToast("API Key regenerated successfully");
+      toast.success("API Key regenerated successfully");
     },
     onError: (error) => {
       console.error(error);
-      showErrorToast("Failed to regenerate API Key");
+      toast.error(error?.message || "Failed to regenerate API Key");
     },
   });
 };

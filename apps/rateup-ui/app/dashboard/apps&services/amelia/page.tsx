@@ -7,6 +7,7 @@ import { useForm } from "@mantine/form";
 import { IconTrash } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { IntegratedApps } from "@/types/enums";
@@ -22,7 +23,6 @@ import {
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import { showLoadingToast } from "@/utils/notifications";
 
 const WpAmelia = () => {
   const { data, isPending, isError } = useIntegrationByType(
@@ -119,14 +119,9 @@ const WpAmelia = () => {
                 loading={deleteIntegrationMutation?.isPending}
                 disabled={!data?.credential?.apiKey && !data?.credential?.base}
                 onClick={() => {
-                  showLoadingToast(
-                    translations("Deleting.."),
-                    "integration-delete",
-                    true,
-                    "",
-                    "",
-                    false,
-                  );
+                  toast.loading(translations("Deleting.."), {
+                    id: "integration-delete",
+                  });
                   deleteIntegrationMutation.mutate();
                 }}
               >

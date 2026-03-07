@@ -13,8 +13,7 @@ import {
 } from "@mantine/core";
 import { IconChevronRight, IconPencil } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
-
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+import { toast } from "sonner";
 
 import styles from "./AutosaveInput.module.css";
 
@@ -54,14 +53,12 @@ function AutosaveInput({
         setIsSavingText(true);
         try {
           await onSave(inputState, name);
-          if (showToasts) showSuccessToast(translations("Saved Changes"));
+          if (showToasts) toast.success(translations("Saved Changes"));
         } catch (err) {
           setInputState(value);
-          if (showToasts)
-            showErrorToast(translations("Failed to Save Changes"));
+          if (showToasts) toast.error(translations("Failed to Save Changes"));
         }
         setIsSavingText(false);
-        showSuccessToast;
       }
     },
     [inputState, value, name],

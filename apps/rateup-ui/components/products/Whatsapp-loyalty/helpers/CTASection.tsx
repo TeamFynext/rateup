@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 const CTASection = () => {
   return (
-    <section className="py-20 bg-gradient-to-br from-[#c0e8d4] to-[#e5f8ed]">
+    <section className="py-20 bg-linear-to-br from-[#c0e8d4] to-[#e5f8ed]">
       <div className="max-w-5xl mx-auto px-6 lg:px-10 text-center">
         <h2 className="text-3xl md:text-4xl text-gray-900 mb-4">
           <span className="font-bold">

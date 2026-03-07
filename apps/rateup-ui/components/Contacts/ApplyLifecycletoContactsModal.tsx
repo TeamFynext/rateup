@@ -39,8 +39,8 @@ const ApplyLifecycletoContactsModal = ({
           }
           handleCancel();
         },
-        onError: () => {
-          toast.error("Error updating lifecycle stage");
+        onError: (error) => {
+          toast.error(error?.message || "Error updating lifecycle stage");
         },
       },
     );

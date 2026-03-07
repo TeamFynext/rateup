@@ -16,13 +16,14 @@ import {
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconArrowAutofitLeft, IconSend, IconX } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import {
   clearLoginAttemptInfo,
   consumeCode,
 } from "supertokens-auth-react/recipe/passwordless";
 
 import { fetchUserProfile } from "../../backend/user/user.api";
-import { resendOTP, showNotification } from "../../utils/auth";
+import { resendOTP } from "../../utils/auth";
 import { SAVE_HOTKEY } from "../../utils/constants";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
@@ -54,28 +55,22 @@ function VerifyPhoneNumberPage() {
         }
       } else if (response.status === "INCORRECT_USER_INPUT_CODE_ERROR") {
         // the user entered an invalid OTP
-        showNotification(
-          "load-data",
-          "red",
-          "Error",
+        toast.error(
           translations(
             "Wrong OTP! Please try again Number of attempts left: ",
           ) +
             (response.maximumCodeInputAttempts -
               response.failedCodeInputAttemptCount),
-          <IconX size="1rem" />,
+          { id: "incorrect-otp" },
         );
       } else if (response.status === "EXPIRED_USER_INPUT_CODE_ERROR") {
         // it can come here if the entered OTP was correct, but has expired because
         // it was generated too long ago.
-        showNotification(
-          "load-data",
-          "red",
-          "Error",
+        toast.error(
           translations(
             "Old OTP entered Please regenerate a new one and try again",
           ),
-          <IconX size="1rem" />,
+          { id: "expired-otp" },
         );
       } else {
         // this can happen if the user tried an incorrect OTP too many times.
@@ -90,21 +85,9 @@ function VerifyPhoneNumberPage() {
     } catch (err: any) {
       if (err.isSuperTokensGeneralError === true) {
         // this may be a custom error message sent from the API by you.
-        showNotification(
-          "load-data",
-          "red",
-          "Error",
-          err.message,
-          <IconX size="1rem" />,
-        );
+        toast.error(err.message, { id: "super-tokens-error" });
       } else {
-        showNotification(
-          "load-data",
-          "red",
-          "Error",
-          "Oops! Something went wrong.",
-          <IconX size="1rem" />,
-        );
+        toast.error("Oops! Something went wrong.", { id: "general-error" });
       }
     } finally {
       setIsLoading(false);

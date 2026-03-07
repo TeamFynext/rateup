@@ -1,8 +1,10 @@
 import { Box, Group, Image, Stack } from "@mantine/core";
-import styles from "./Banner.module.css";
 import classNames from "classnames/bind";
-import BookDemoContactForm from "../BookDemoContactForm";
+
 import { imagesPath } from "../../constants";
+import BookDemoContactForm from "../BookDemoContactForm";
+import styles from "./Banner.module.css";
+
 const cx = classNames.bind(styles);
 
 function Banner({ title, subtitle }) {

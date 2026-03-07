@@ -2,12 +2,12 @@
 
 import { Center, Flex, Image, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { IconBrandGoogleDrive } from "@tabler/icons-react";
 import { RateupButtonPrimary } from "components/Button/RateupButtons";
 import ConfirmationModal from "components/Modal/ConfirmationModal";
 import { useTranslations } from "next-intl";
 import { useLocalStorage } from "react-use";
+import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums";
 import {
@@ -37,13 +37,8 @@ const GoogleSheet = () => {
   );
 
   const handleSignOutGoogleSync = () => {
-    notifications.show({
+    toast.loading(translations("Hold on, Signing out from google sheet"), {
       id: "integration-delete",
-      loading: true,
-      title: translations("Signing out from google sheet"),
-      message: translations("Hold on, Signing out from google sheet"),
-      autoClose: false,
-      withCloseButton: false,
     });
     deleteAccount.mutate();
   };

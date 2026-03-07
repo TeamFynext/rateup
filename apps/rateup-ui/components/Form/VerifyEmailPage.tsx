@@ -39,7 +39,7 @@ function VerifyEmailPage({ sendEmail }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50/30 via-gray-50/20 to-orange-50/30 gap-1 p-4">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-linear-to-br from-blue-50/30 via-gray-50/20 to-orange-50/30 gap-1 p-4">
       <div className="flex flex-col gap-1 items-center justify-center">
         <img
           src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup-logo-blue-text.svg`}

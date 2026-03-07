@@ -21,7 +21,6 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
   IconChevronLeft,
@@ -34,6 +33,7 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import RateupSwitch from "@/components/Switch/RateupSwitch";
 
@@ -45,7 +45,6 @@ import {
   formatIsoDateStringWithTime,
   roundOffMinutesAndSeconds,
 } from "../../../utils/dateTime";
-import { showLoadingToast } from "../../../utils/notifications";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -167,35 +166,28 @@ const ShareSurvey = ({
       if (data?.data?.status === "failed") {
         setIsPublished(false);
 
-        notifications.update({
-          id: "load-data",
-          color: "red",
-          title: "Failed..!",
-          loading: false,
-          message: data?.data?.error
+        toast.error(
+          data?.data?.error
             ? data?.data?.error
             : translations("Your survey is incomplete"),
-          icon: <IconX size="1rem" />,
-          autoClose: 3000,
-        });
+          {
+            id: "load-data",
+          },
+        );
         setErrors(data?.data?.data);
         open();
       } else {
         data?.data?.action === "unpublish" && setIsPublished(false);
         data?.data?.action === "publish" && setIsPublished(true);
 
-        notifications.update({
-          id: "load-data",
-          color: "teal",
-          title: "Success",
-          loading: false,
-          message:
-            data?.data?.action === "unpublish"
-              ? translations("Survey Un-Published.")
-              : translations("Survey Published Successfully!"),
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
-        });
+        toast.success(
+          data?.data?.action === "unpublish"
+            ? translations("Survey Un-Published.")
+            : translations("Survey Published Successfully!"),
+          {
+            id: "load-data",
+          },
+        );
         queryClient.invalidateQueries({ queryKey: ["surveys"] });
         queryClient.invalidateQueries({ queryKey: ["survey", survey.id] });
       }
@@ -205,10 +197,8 @@ const ShareSurvey = ({
   const surveyStatusUpdateMutation = useMutation({
     mutationFn: (data: any) => updateSurvey(survey.id, data),
     onSuccess: () => {
-      notifications.show({
+      toast.success("Survey status Updated!", {
         id: "survey",
-        message: "Survey status Updated!",
-        autoClose: true,
       });
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
       queryClient.invalidateQueries({ queryKey: ["survey", survey.id] });
@@ -263,11 +253,11 @@ const ShareSurvey = ({
               onMessage={translations("Click here to unschedule the survey")}
               checked={isScheduled}
               onChange={(event) => {
-                showLoadingToast(
+                toast.loading(
                   translations("Hold your survey is getting unpublished"),
-                  "load-data",
-                  true,
-                  "Unpublishing...",
+                  {
+                    id: "load-data",
+                  },
                 );
                 surveyUpdateMutation.mutate({
                   isPublished: event.currentTarget.checked,
@@ -291,11 +281,11 @@ const ShareSurvey = ({
                   setEditPublish(null);
                   openPublishSettings();
                 } else {
-                  showLoadingToast(
+                  toast.loading(
                     translations("Hold your survey is getting UnPublished"),
-                    "load-data",
-                    true,
-                    "Unpublishing...",
+                    {
+                      id: "load-data",
+                    },
                   );
                   surveyUpdateMutation.mutate({
                     isPublished: event.currentTarget.checked,
@@ -410,7 +400,6 @@ const ShareSurvey = ({
           />
         </Group>
       </PaperLayout>
-
       <FormModalLayout
         centered
         onClose={close}
@@ -725,13 +714,8 @@ const PubliShSettingsModal = ({
     },
   });
   const handlePublish = (event) => {
-    notifications.show({
+    toast.loading(translations("Please hold on while publishing your survey"), {
       id: "load-data",
-      color: "teal",
-      title: translations("Publishing"),
-      loading: true,
-      message: translations("Please hold on while publishing your survey"),
-      autoClose: 3000,
     });
     const data =
       editPublish === "Publish"

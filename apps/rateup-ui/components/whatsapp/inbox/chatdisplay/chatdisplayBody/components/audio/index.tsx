@@ -4,9 +4,9 @@ import { JSX, useRef } from "react";
 
 import { ActionIcon, Group } from "@mantine/core";
 import { IconDeviceAudioTape, IconDownload } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 import { useGetMediaFile } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { showErrorToast } from "@/utils/notifications";
 
 interface Props {
   messageContent: string;
@@ -23,11 +23,9 @@ export default function WaInboxAudio({ messageContent }: Props): JSX.Element {
       : null;
 
   const handleAudioError = () => {
-    showErrorToast(
-      "Audio file not found",
-      "error-audio-not-found",
-      <IconDeviceAudioTape />,
-    );
+    toast.error("Audio file not found", {
+      id: "error-audio-not-found",
+    });
   };
 
   const handleDownload = () => {
@@ -46,12 +44,10 @@ export default function WaInboxAudio({ messageContent }: Props): JSX.Element {
           });
         }
       },
-      onError: () => {
-        showErrorToast(
-          "Failed to download audio file",
-          "error-audio-download",
-          <IconDeviceAudioTape />,
-        );
+      onError: (error) => {
+        toast.error(error?.message || "Failed to download audio file", {
+          id: "error-audio-download",
+        });
       },
     });
   };

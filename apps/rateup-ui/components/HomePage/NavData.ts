@@ -1,9 +1,9 @@
 import {
-  IconNotification,
-  IconChartPie3,
-  IconBrowser,
-  IconClipboardList,
   IconBrandWhatsapp,
+  IconBrowser,
+  IconChartPie3,
+  IconClipboardList,
+  IconNotification,
 } from "@tabler/icons-react";
 
 export const navData = [

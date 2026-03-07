@@ -21,6 +21,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums";
 import { ShopifyIntegration } from "@/types/global";
@@ -31,11 +32,6 @@ import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import ShopifySchedules from "@/components/shopify/ShopifySchedules";
 import ShopifySettings from "@/components/shopify/ShopifySettings";
-import {
-  showErrorToast,
-  showLoadingToast,
-  showSuccessToast,
-} from "@/utils/notifications";
 
 import {
   RateupButtonBlue,
@@ -77,26 +73,18 @@ const Shopify = () => {
 
   const handleLoadProducts = async () => {
     try {
-      showLoadingToast(
-        translations("Syncing Shopify products"),
-        "shopify-products",
-        true,
-      );
+      toast.loading(translations("Syncing Shopify products"), {
+        id: "shopify-products",
+      });
       const products = await getProductsFromShopify();
       setShopifyProducts(products ?? []);
-      showSuccessToast(
-        translations("Products loaded successfully"),
-        "shopify-products",
-        <IconCheck />,
-        true,
-      );
+      toast.success(translations("Products loaded successfully"), {
+        id: "shopify-products",
+      });
     } catch (e) {
-      showErrorToast(
-        translations("Product syncing failed"),
-        "shopify-products",
-        <IconX />,
-        true,
-      );
+      toast.error(translations("Product syncing failed"), {
+        id: "shopify-products",
+      });
     }
   };
 

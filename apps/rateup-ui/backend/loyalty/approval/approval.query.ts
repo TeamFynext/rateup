@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   approveApprovalRequest,
   ApproveRequestInput,
@@ -36,10 +36,10 @@ export const useCreateApprovalRequest = () => {
       createApprovalRequest(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyApprovals"] });
-      showSuccessToast("Approval request created successfully");
+      toast.success("Approval request created successfully");
     },
-    onError: () => {
-      showErrorToast("Error creating approval request");
+    onError: (error) => {
+      toast.error(error?.message || "Error creating approval request");
     },
   });
 };
@@ -60,10 +60,10 @@ export const useApproveApprovalRequest = () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyRedemptions"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyTransactions"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Approval request approved successfully");
+      toast.success("Approval request approved successfully");
     },
-    onError: () => {
-      showErrorToast("Error approving approval request");
+    onError: (error) => {
+      toast.error(error?.message || "Error approving approval request");
     },
   });
 };
@@ -84,10 +84,10 @@ export const useRejectApprovalRequest = () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyRedemptions"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyTransactions"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      showSuccessToast("Approval request rejected successfully");
+      toast.success("Approval request rejected successfully");
     },
-    onError: () => {
-      showErrorToast("Error rejecting approval request");
+    onError: (error) => {
+      toast.error(error?.message || "Error rejecting approval request");
     },
   });
 };
@@ -105,10 +105,10 @@ export const useCancelApprovalRequest = () => {
     }) => cancelApprovalRequest(approvalId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyApprovals"] });
-      showSuccessToast("Approval request cancelled successfully");
+      toast.success("Approval request cancelled successfully");
     },
-    onError: () => {
-      showErrorToast("Error cancelling approval request");
+    onError: (error) => {
+      toast.error(error?.message || "Error cancelling approval request");
     },
   });
 };

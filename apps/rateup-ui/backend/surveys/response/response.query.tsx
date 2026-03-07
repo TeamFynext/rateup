@@ -1,10 +1,8 @@
 import { useContext } from "react";
 
-import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+import { toast } from "sonner";
 
 import SurveyContext from "../../../context/SurveyContext";
 import { useUser } from "../../../context/UserContext";
@@ -83,34 +81,19 @@ export function useResetResponsesStats(
       queryClient.invalidateQueries({ queryKey: ["responses"] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
 
-      notifications.update({
-        id: "load-data",
-        loading: false,
-        color: response?.success ? "green" : "red",
-        title: response?.success ? "Reset Success" : "Failed Reset",
-        message: response?.success
-          ? "Cleaned up responses & Stats"
-          : "Please try again",
-        icon: response?.success ? (
-          <IconCheck size="1rem" />
-        ) : (
-          <IconX size="1rem" />
-        ),
-        autoClose: 3000,
-      });
+      toast.success(
+        response?.success ? "Cleaned up responses & Stats" : "Please try again",
+        {
+          id: "load-data",
+        },
+      );
       response?.success && close();
       setIsLoading(false);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Reseting", error.message);
-      notifications.update({
+      toast.error(error.message, {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed Reset",
-        message: error.message,
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
       setIsLoading(false);
     },
@@ -132,34 +115,21 @@ export function useDeleteResponse(
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["allresponses", surveyId] });
 
-      notifications.update({
-        id: "load-data",
-        loading: false,
-        color: response?.success ? "green" : "red",
-        title: response?.success ? "Delete Success" : "Failed Delete",
-        message: response?.success
+      toast.success(
+        response?.success
           ? "Deleted Response successfully"
           : "Please try again",
-        icon: response?.success ? (
-          <IconCheck size="1rem" />
-        ) : (
-          <IconX size="1rem" />
-        ),
-        autoClose: 3000,
-      });
+        {
+          id: "load-data",
+        },
+      );
       response?.success && close();
       setIsDeleting(false);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Deleting", error.message);
-      notifications.update({
+      toast.error(error.message, {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed Delete",
-        message: error.message,
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
       setIsDeleting(false);
     },
@@ -177,25 +147,13 @@ export function useGenerateResponse(surveyId: string) {
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["allresponses", surveyId] });
 
-      notifications.update({
+      toast.success("Generate Response successfully", {
         id: "generateResponse",
-        loading: false,
-        color: "green",
-        title: "Response Generate Success",
-        message: "Generate Response successfully",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
-    onError: (error: any) => {
-      notifications.update({
+    onError: (error) => {
+      toast.error(error?.message ?? "An error occurred", {
         id: "generateResponse",
-        color: "red",
-        loading: false,
-        title: "Failed Response Generate",
-        message: error?.response?.data?.message ?? error?.response?.data,
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -216,25 +174,13 @@ export function useDownloadExcelResponse() {
     mutationFn: (data: downloadExcelResponseType) =>
       downloadExcelResponse(data),
     onSuccess: (response) => {
-      notifications.show({
+      toast.success("Downloaded Response successfully", {
         id: "downloadExcel",
-        loading: false,
-        color: "green",
-        title: "Response Download Success",
-        message: "Downloaded Response successfully",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
-    onError: (error: any) => {
-      notifications.show({
+    onError: (error) => {
+      toast.error(error?.message || "Try again after some time", {
         id: "downloadExcel",
-        color: "red",
-        loading: false,
-        title: "Failed Response Downloading",
-        message: "Try again after some time",
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -260,20 +206,14 @@ export const useExportContactResponses = (surveyId) => {
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
       });
-      showSuccessToast(
-        "Contacts exported successfully",
-        "export-contacts",
-        <IconCheck />,
-        true,
-      );
+      toast.success("Contacts exported successfully", {
+        id: "export-contacts",
+      });
     },
-    onError: () => {
-      showErrorToast(
-        "Contacts export failed",
-        "export-contacts",
-        <IconX />,
-        true,
-      );
+    onError: (error) => {
+      toast.error(error?.message || "Contacts export failed", {
+        id: "export-contacts",
+      });
     },
   });
 };

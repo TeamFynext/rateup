@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 
 import { Group, Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";
 import { List, NotebookTabs, Sparkles, Ticket, Type } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
 import {
@@ -130,13 +130,8 @@ const CreateTicketModal = ({
       console.error(validationRes.errors);
       return;
     }
-    notifications.show({
+    toast.loading(translations("Hold on, your ticket is getting created"), {
       id: "load-data",
-      loading: true,
-      title: translations("Creating Ticket"),
-      message: translations("Hold on, your ticket is getting created"),
-      autoClose: false,
-      withCloseButton: true,
     });
 
     createTicket.mutate(form.values, {

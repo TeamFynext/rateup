@@ -4,8 +4,8 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { useTeamsByUser } from "../../backend/team/team.query";
 import { useCreateTestimonialCollection } from "../../backend/testimonials/testimonial.query";
@@ -46,13 +46,8 @@ const SaveTestimonialCollection = ({ opened, close }) => {
   const saveCollection = useCreateTestimonialCollection();
   const onSubmit = () => {
     if (form.validate().hasErrors) return;
-    notifications.show({
+    toast.loading(translations("Hold on, your collection is getting created"), {
       id: "create-collection",
-      loading: true,
-      title: translations("Creating survey"),
-      message: translations("Hold on, your collection is getting created"),
-      autoClose: false,
-      withCloseButton: true,
     });
     saveCollection.mutate(form.values, {
       onSuccess: (data) => {

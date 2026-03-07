@@ -4,6 +4,7 @@ import { useCallback, useEffect } from "react";
 
 import { Palette, Save } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
 
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import {
   useGetShareSettings,
   useUpdateShareSettingsMutation,
 } from "../../../../backend/surveyShareSettings/surveyShareSettings.query";
-import { showErrorToast } from "../../../../utils/notifications";
 import Preview from "../Preview/Preview";
 import LogoTabpanel from "./LogoTabPanel";
 import {
@@ -79,7 +79,7 @@ const ShareQR = ({
           body: formData,
         });
       } catch (err) {
-        showErrorToast(
+        toast.error(
           translations("Unable to save settings, Please try again later"),
         );
       }

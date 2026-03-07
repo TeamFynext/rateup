@@ -38,7 +38,7 @@ export default function WhatsAppSurveyHero() {
 
       {/* Image Section */}
       <div
-        className=" bg-gradient-to-br from-[#075E54] sm:rounded-b-4xl via-[#075E54]
+        className=" bg-linear-to-br from-[#075E54] sm:rounded-b-4xl via-[#075E54]
        to-[#009987] flex items-center justify-center py-1 px-4"
       >
         <div className="relative w-full h-[400px] sm:h-[750px]">

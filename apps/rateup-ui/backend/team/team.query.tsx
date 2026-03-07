@@ -1,10 +1,8 @@
 import { useRouter } from "next/navigation";
 
-import { notifications } from "@mantine/notifications";
 import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+import { toast } from "sonner";
 
 import { getOrgIdRole, getUserID } from "../../utils/userInfo";
 import {
@@ -55,30 +53,18 @@ export function useCreateTeamMutation(
   return useMutation({
     mutationFn: (values) => handleCreateTeam(values),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
-        notifications.update({
-          id: "load-data",
-          color: "teal",
-          title: "Success",
-          loading: false,
-          message: "Team created successfully.",
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
-        });
+      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+      toast.success("Team created successfully.", {
+        id: "load-data",
+      });
       setIsCreating(false);
       setIsCreateTeamDialogOpen(false);
       createTeamForm.reset();
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error creating the post:", error.message);
-      notifications.update({
+      toast.error(error?.message, {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        loading: false,
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       setIsCreating(false);
     },
@@ -96,13 +82,8 @@ export function useEditTeamMutation(
   return useMutation({
     mutationFn: (values: IEditTeam) => editTeam(id, values, onlyTag),
     onSuccess: (res) => {
-      notifications.show({
+      toast.success("Team Details Updated Successfully!", {
         id: "load-data",
-        color: "teal",
-        title: "Success",
-        message: "Team Details Updated Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] });
@@ -112,15 +93,10 @@ export function useEditTeamMutation(
         queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
       }
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error Team Update:", error.message);
-      notifications.show({
+      toast.error(error?.message || "Error updating team details", {
         id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
 
       setIsLoading(false);
@@ -133,26 +109,14 @@ export function useDeleteTeamMutation() {
   return useMutation({
     mutationFn: deleteTeamById,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
-        notifications.update({
+      (queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
+        toast.success("Team deleted successfully.", {
           id: "load-data",
-          color: "teal",
-          loading: false,
-          title: "Delete Success",
-          message: "Team deleted successfully.",
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
-        });
+        }));
     },
-    onError: (error: any) => {
-      notifications.update({
+    onError: (error) => {
+      toast.error(error?.message || "Error deleting team", {
         id: "load-data",
-        color: "red",
-        loading: false,
-        title: "Failed",
-        message: error.response.data,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
     },
   });
@@ -177,16 +141,10 @@ export function userResendInviteTeamMutation() {
   return useMutation({
     mutationFn: (id: string) => resendInviteTeamMember(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
-        notifications.update({
+      (queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
+        toast.success("Team Invitation Resend successfully.", {
           id: "load-data-invitaion",
-          color: "teal",
-          loading: false,
-          title: "Resend Invitation Success",
-          message: "Team Invitation Resend successfully.",
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
-        });
+        }));
     },
   });
 }
@@ -195,19 +153,13 @@ export function useDeleteInviteMutation(teamId) {
   return useMutation({
     mutationFn: (id: string) => deleteInviteById(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }),
+      (queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }),
         queryClient.invalidateQueries({
           queryKey: ["invitedTeamMembers", teamId],
         }),
-        queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
-      notifications.update({
+        queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] }));
+      toast.success("Invite deleted successfully.", {
         id: "load-data-deleting",
-        color: "teal",
-        title: "Success",
-        loading: false,
-        message: "Invite deleted successfully.",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
       });
       close();
     },
@@ -233,10 +185,10 @@ export function useAddUsertoTeams() {
       queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
 
-      showSuccessToast("success");
+      toast.success("success");
     },
-    onError: () => {
-      showErrorToast("Failed");
+    onError: (error) => {
+      toast.error(error?.message || "Failed");
     },
   });
 }
@@ -252,10 +204,10 @@ export function useRemoveUserFromTeam(teamId) {
         queryKey: ["invitedTeamMembers", teamId],
       });
 
-      showSuccessToast("success");
+      toast.success("success");
     },
-    onError: () => {
-      showErrorToast("Failed");
+    onError: (error) => {
+      toast.error(error?.message || "Failed");
     },
   });
 }
