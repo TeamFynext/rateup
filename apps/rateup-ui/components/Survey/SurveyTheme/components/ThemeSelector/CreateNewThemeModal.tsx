@@ -15,7 +15,8 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
-import modalStyles from "styles/commonCssModules/modal.module.css";
+
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 import { useCreateNewThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import styles from "./ThemeSelector.module.css";

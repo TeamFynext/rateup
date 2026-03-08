@@ -6,12 +6,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { Anchor, Center, Stack, Text } from "@mantine/core";
 import { IconMoodSad, IconReload } from "@tabler/icons-react";
-import { RateupButtonBlue } from "components/Button/RateupButtons";
-import PaperLayout from "components/styled/Layouts/PaperLayout";
 import { useTranslations } from "next-intl";
-import { API_URL } from "utils/constants";
 
+import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import RateupLoader from "@/components/Loaders/RateupLoader";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { API_URL } from "@/utils/constants";
 
 export default function Page() {
   return (

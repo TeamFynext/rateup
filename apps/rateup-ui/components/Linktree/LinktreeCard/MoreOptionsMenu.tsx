@@ -14,7 +14,8 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
-import modalStyles from "styles/commonCssModules/modal.module.css";
+
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 import { useDeleteLinktreeMutation } from "../../../backend/linktree/linktree.query";
 import CreateLinktreeModal from "../CreateLinktreeModal";

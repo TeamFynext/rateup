@@ -15,6 +15,7 @@ import axios from "axios";
 import { NextIntlClientProvider } from "next-intl";
 import Session from "supertokens-auth-react/recipe/session";
 
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserProvider } from "@/context/UserContext";
 import { isProduction } from "@/utils/constants";
 import RouteChangeHandler from "@/utils/routeHandler";
@@ -100,7 +101,7 @@ export default function Providers({ children, locale, messages }) {
         <UserProvider>
           <RouteChangeHandler />
           <HydrationBoundary state={dehydrate(queryClient)}>
-            {children}
+            <TooltipProvider>{children}</TooltipProvider>
           </HydrationBoundary>
         </UserProvider>
         <ReactQueryDevtools initialIsOpen={false} buttonPosition="top-right" />

@@ -7,10 +7,10 @@ import { Center, Group, MultiSelect, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { useNavControlContext } from "@/context/NavControlContext";
 import { SurveyContextProvider } from "@/context/SurveyObjContext";
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import {

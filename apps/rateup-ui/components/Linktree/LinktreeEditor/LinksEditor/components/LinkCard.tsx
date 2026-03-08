@@ -6,7 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { Box, Button, Loader, Text, TextInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconGripVertical, IconPencil, IconTrash } from "@tabler/icons-react";
-import modalStyles from "styles/commonCssModules/modal.module.css";
+
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 import { useUpdateLinktreeMutation } from "../../../../../backend/linktree/linktree.query";
 import restOfModalStyles from "../../../LinktreeCard/LinktreeCard.module.css";

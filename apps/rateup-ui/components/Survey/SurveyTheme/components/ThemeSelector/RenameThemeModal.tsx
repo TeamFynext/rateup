@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Box, Button, Modal, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import modalStyles from "styles/commonCssModules/modal.module.css";
+
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 import { useRenameSurveyThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
 

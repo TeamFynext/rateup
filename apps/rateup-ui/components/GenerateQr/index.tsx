@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { useDisclosure } from "@mantine/hooks";
-import { useGetAllGeneratedQrsQuery } from "backend/generateQr/generateQr.query";
 import { Plus, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
+
+import { useGetAllGeneratedQrsQuery } from "@/backend/generateQr/generateQr.query";
 
 import SortDropdown, { sortData } from "../Dashboard/SortDropDown";
 import NothingFound from "../NothingFound/NothingFound";

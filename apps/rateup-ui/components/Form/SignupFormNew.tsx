@@ -38,17 +38,10 @@ import { useCheckEmailExistMutation } from "@/backend/user/user.query";
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import { Checkbox } from "../ui/checkboxnew";
+import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Loader } from "../ui/loader";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 import styles from "./AuthForm.module.css";
 import GoogleSignInButton from "./GoogleSigninButton";
 

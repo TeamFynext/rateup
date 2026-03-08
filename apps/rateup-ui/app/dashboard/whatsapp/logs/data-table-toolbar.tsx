@@ -19,7 +19,7 @@ export function DataTableToolbar<TData>({
   const queryClient = useQueryClient();
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between mb-2">
       <div className="flex flex-1 items-center gap-2">
         <Input
           placeholder="Filter by phone number"

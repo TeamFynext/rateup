@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { IconBook, IconPlus, IconSearch } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
@@ -19,7 +19,6 @@ import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import WaFlowTourSteps from "@/components/WelcomeTour/components/FlowTourSteps";
@@ -102,29 +101,27 @@ function Flows() {
             </p>
           </div>
           {!waSettings ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div>
-                    <Button
-                      className={styles["create-button"]}
-                      onClick={handleCreateFlowModalOpen}
-                      disabled={isLoading || !waSettings}
-                    >
-                      <IconPlus size={16} className="mr-2" />
-                      {translations("Create Flow")}
-                    </Button>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    {translations(
-                      "Connect a WhatsApp number in settings to create a Flow",
-                    )}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button
+                    className={styles["create-button"]}
+                    onClick={handleCreateFlowModalOpen}
+                    disabled={isLoading || !waSettings}
+                  >
+                    <IconPlus size={16} className="mr-2" />
+                    {translations("Create Flow")}
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  {translations(
+                    "Connect a WhatsApp number in settings to create a Flow",
+                  )}
+                </p>
+              </TooltipContent>
+            </Tooltip>
           ) : (
             <Button
               className={styles["create-button"]}
@@ -172,22 +169,20 @@ function Flows() {
             <RefreshButton queryKeys={["flow", "db"]} />
 
             {!waSettings ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <SyncFlowsButton disabled={!waSettings} />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      {translations(
-                        "Connect a WhatsApp number in settings to sync a Flow",
-                      )}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <SyncFlowsButton disabled={!waSettings} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {translations(
+                      "Connect a WhatsApp number in settings to sync a Flow",
+                    )}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             ) : (
               <SyncFlowsButton disabled={false} />
             )}
