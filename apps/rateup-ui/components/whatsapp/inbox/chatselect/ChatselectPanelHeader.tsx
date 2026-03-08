@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 
 import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { DialogTitle } from "@radix-ui/react-dialog";
 import {
   Clock,
   Download,
@@ -17,7 +16,12 @@ import { useSearchParam } from "react-use";
 
 import { Button } from "@/components/ui/button";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Popover,

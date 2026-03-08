@@ -3,15 +3,15 @@
 import { useCallback, useRef } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useCreateQrMutation,
-  useUpdateQrMutation,
-} from "backend/generateQr/generateQr.query";
 import { Edit, Info, Plus, QrCode } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
+import {
+  useCreateQrMutation,
+  useUpdateQrMutation,
+} from "@/backend/generateQr/generateQr.query";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

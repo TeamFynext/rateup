@@ -40,7 +40,6 @@ import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -244,18 +243,16 @@ export default function OrgById() {
                   Annual Message Limit
                 </Label>
                 {subscription?.basePlan?.paymentPlan && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          Updation will affect only in current subscription year
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        Updation will affect only in current subscription year
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             )}

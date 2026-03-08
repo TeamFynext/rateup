@@ -1,7 +1,5 @@
 import React from "react";
 
-// radix-ui
-import { SelectProps } from "@radix-ui/react-select";
 // data
 import { currencies as AllCurrencies } from "country-data-list";
 
@@ -24,9 +22,24 @@ export interface Currency {
   number: string;
   symbol?: string;
 }
-
-// constants
-// import { customCurrencies, allCurrencies } from "@/lib/constants/currencies";
+type Direction = "ltr" | "rtl";
+interface SelectSharedProps {
+  children?: React.ReactNode;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?(open: boolean): void;
+  dir?: Direction;
+  name?: string;
+  autoComplete?: string;
+  disabled?: boolean;
+  required?: boolean;
+  form?: string;
+}
+type SelectProps = SelectSharedProps & {
+  value?: string;
+  defaultValue?: string;
+  onValueChange?(value: string): void;
+};
 
 interface CurrencySelectProps extends Omit<SelectProps, "onValueChange"> {
   onValueChange?: (value: string) => void;

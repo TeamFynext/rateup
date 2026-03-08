@@ -3,14 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 
-import {
-  useGetQrWithShortUrlId,
-  useUpdateQrMutation,
-} from "backend/generateQr/generateQr.query";
-import ShareQR from "components/Survey/ShareSurvey/ShareQR";
 import { Copy, Edit, ExternalLink, Sparkles, TrendingUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import {
+  useGetQrWithShortUrlId,
+  useUpdateQrMutation,
+} from "@/backend/generateQr/generateQr.query";
+import ShareQR from "@/components/Survey/ShareSurvey/ShareQR";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

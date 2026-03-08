@@ -1,13 +1,12 @@
 import { useMemo } from "react";
 
-import { ArrowRight, BarChart3, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { useGetConversationAccountDistribution } from "@/backend/conversation/conversation.query";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progressnew";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function getMessageSourcePlatformColor(platform: MessagePlatform) {

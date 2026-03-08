@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -49,24 +48,20 @@ const RefreshButton = ({
   };
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            aria-label="Refresh"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            <IconRefresh className={isRefreshing ? "animate-spin" : ""} />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="top">
-          {translations("Refresh data")}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label="Refresh"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <IconRefresh className={isRefreshing ? "animate-spin" : ""} />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top">{translations("Refresh data")}</TooltipContent>
+    </Tooltip>
   );
 };
 

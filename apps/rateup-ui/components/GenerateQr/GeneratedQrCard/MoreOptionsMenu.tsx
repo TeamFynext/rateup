@@ -14,9 +14,10 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
-import { useDeleteQrMutation } from "backend/generateQr/generateQr.query";
 import { useTranslations } from "next-intl";
-import modalStyles from "styles/commonCssModules/modal.module.css";
+
+import { useDeleteQrMutation } from "@/backend/generateQr/generateQr.query";
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 import CreateShortUrlModal from "../CreateQrModal";
 import styles from "./GeneratedQrCard.module.css";

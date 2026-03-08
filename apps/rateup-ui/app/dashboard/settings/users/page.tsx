@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 import { useForm } from "@mantine/form";
-import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
@@ -31,10 +30,7 @@ import {
   userResendInviteTeamMutation,
   useTeamsByUser,
 } from "@/backend/team/team.query";
-import {
-  useUpdateActiveStatusMutation,
-  useUpdateUserPause,
-} from "@/backend/user/user.query";
+import { useUpdateUserPause } from "@/backend/user/user.query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,10 +57,8 @@ import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 import { getOrgIdRole, getUserID } from "@/utils/userInfo";
@@ -459,42 +453,41 @@ export default function UsersPage() {
                     {/* Team info */}
                     <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-2">
                       <Users className="w-3 h-3" />
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1 cursor-default">
-                              <span className="line-clamp-1">
-                                {user?.teams.length === 0
-                                  ? "Not in any team"
-                                  : user.teams
-                                      .slice(0, 2)
-                                      .map((t) => t.team_name)
-                                      .join(", ")}
-                                {user.teams.length > 2 ? "..." : ""}
-                              </span>
-                            </div>
-                          </TooltipTrigger>
 
-                          <TooltipContent className="border shadow-md rounded-lg p-2 text-xs max-w-[200px]">
-                            <div className="flex flex-col gap-1">
-                              {user.teams.map((t: any) => (
-                                <div
-                                  key={t.id}
-                                  className="flex items-center gap-2"
-                                >
-                                  <span
-                                    className="w-2 h-2 rounded-full"
-                                    style={{
-                                      backgroundColor: t.team_color || "#ccc",
-                                    }}
-                                  />
-                                  <span>{t.team_name}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1 cursor-default">
+                            <span className="line-clamp-1">
+                              {user?.teams.length === 0
+                                ? "Not in any team"
+                                : user.teams
+                                    .slice(0, 2)
+                                    .map((t) => t.team_name)
+                                    .join(", ")}
+                              {user.teams.length > 2 ? "..." : ""}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+
+                        <TooltipContent className="border shadow-md rounded-lg p-2 text-xs max-w-[200px]">
+                          <div className="flex flex-col gap-1">
+                            {user.teams.map((t: any) => (
+                              <div
+                                key={t.id}
+                                className="flex items-center gap-2"
+                              >
+                                <span
+                                  className="w-2 h-2 rounded-full"
+                                  style={{
+                                    backgroundColor: t.team_color || "#ccc",
+                                  }}
+                                />
+                                <span>{t.team_name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
 
                     <Button
@@ -530,29 +523,26 @@ export default function UsersPage() {
                   key={invite.id}
                   className="p-3 lg:max-w-[15vw] min-w-[15vw] border-dashed border-gray-300 hover:border-rateup-orange/40 hover:shadow-md transition-all group relative"
                 >
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span
-                          className="absolute top-2 right-2 border rounded-sm p-1 hover:text-primary cursor-pointer"
-                          onClick={() => handleCopy(invite?.id)}
-                        >
-                          {copied ? (
-                            <Check className="w-4 h-4" />
-                          ) : (
-                            <Copy className="w-3.5 h-3.5" />
-                          )}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          {copied
-                            ? translations("Copied")
-                            : translations("Copy")}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="absolute top-2 right-2 border rounded-sm p-1 hover:text-primary cursor-pointer"
+                        onClick={() => handleCopy(invite?.id)}
+                      >
+                        {copied ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {copied ? translations("Copied") : translations("Copy")}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+
                   <div className="flex flex-col items-center text-center justify-center gap-1">
                     <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
                       <AvatarFallback className="bg-yellow-500 text-white">

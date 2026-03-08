@@ -23,7 +23,6 @@ import {
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -164,31 +163,29 @@ export const useSurveyResponseColumns = ({
 
                 return (
                   <div className="flex items-center justify-center pr-20">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={translations("View Ticket")}
-                            className="h-9 w-9 rounded focus-visible:ring-orange-500"
-                            onClick={() =>
-                              window.open(
-                                `/dashboard/tickets/${ticket.id}`,
-                                "_blank",
-                                "noopener,noreferrer",
-                              )
-                            }
-                          >
-                            <IconTicket color="orange" className="w-9 h-9" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          {translations("View Ticket")}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={translations("View Ticket")}
+                          className="h-9 w-9 rounded focus-visible:ring-orange-500"
+                          onClick={() =>
+                            window.open(
+                              `/dashboard/tickets/${ticket.id}`,
+                              "_blank",
+                              "noopener,noreferrer",
+                            )
+                          }
+                        >
+                          <IconTicket color="orange" className="w-9 h-9" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        {translations("View Ticket")}
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 );
               },

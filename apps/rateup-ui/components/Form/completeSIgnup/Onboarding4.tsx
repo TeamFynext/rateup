@@ -1,11 +1,11 @@
 import React from "react";
 
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, X, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkboxnew";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader } from "@/components/ui/loader";
 
 function OnboardingStep4({

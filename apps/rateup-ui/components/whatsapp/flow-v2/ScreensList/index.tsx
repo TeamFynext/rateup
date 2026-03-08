@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -41,23 +40,22 @@ function ScreensList() {
     <div className={styles["screens-list-container"]}>
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-base font-semibold">{translations("Screens")}</h2>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={handleAddScreen}
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-              >
-                <IconPlus size={16} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{translations("Add Screen")}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={handleAddScreen}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+            >
+              <IconPlus size={16} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{translations("Add Screen")}</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       <p className="text-xs text-muted-foreground ">

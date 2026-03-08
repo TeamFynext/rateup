@@ -5,13 +5,14 @@ import React, { useRef, useState } from "react";
 import { Box, Button, FileButton, Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
-import { RateupButtonPrimary } from "components/Button/RateupButtons";
-import { ImageCropModal } from "components/Modal/ImageCropModal";
-import { ImageUploadMethodModal } from "components/Modal/ImageUploadMethodModal";
-import { UnsplashModal } from "components/Modal/UnsplashModal";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "utils/constants";
+
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import { ImageCropModal } from "@/components/Modal/ImageCropModal";
+import { ImageUploadMethodModal } from "@/components/Modal/ImageUploadMethodModal";
+import { UnsplashModal } from "@/components/Modal/UnsplashModal";
+import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "@/utils/constants";
 
 import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
 

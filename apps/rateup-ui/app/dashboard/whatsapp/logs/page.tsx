@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { List } from "@mantine/core";
 import { useDebouncedState } from "@mantine/hooks";
 import {
   ColumnDef,
@@ -63,13 +62,11 @@ const Logs = () => {
           message: string;
         }[];
         return (
-          <List size="sm" variant="">
+          <ul className="list-none text-sm space-y-1">
             {logs?.map((data, index) => (
-              <List.Item key={data?.code || index}>
-                {data?.message || data?.title}
-              </List.Item>
+              <li key={data?.code || index}>{data?.message || data?.title}</li>
             ))}
-          </List>
+          </ul>
         );
       },
       meta: { title: "Error Messages" },
@@ -87,13 +84,13 @@ const Logs = () => {
           };
         }[];
         return (
-          <List size="sm" variant="">
+          <ul className="list-none text-sm space-y-1">
             {logs?.map((data, index) => (
-              <List.Item key={data?.code || index}>
+              <li key={data?.code || index}>
                 {data?.error_data?.details || "N/A"}
-              </List.Item>
+              </li>
             ))}
-          </List>
+          </ul>
         );
       },
       meta: { title: "Error Details" },

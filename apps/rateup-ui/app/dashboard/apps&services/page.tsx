@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 
 import { Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { IconApi, IconCloudLock, IconFidgetSpinner } from "@tabler/icons-react";
-import PaperLayout from "components/styled/Layouts/PaperLayout";
-import { IntegratedApps } from "types/enums";
 
+import { IntegratedApps } from "@/types/enums";
 import { ActionsGrid } from "@/components/Card/ActionGrid";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
 function getAppIconImageUrl(app) {
   switch (app) {

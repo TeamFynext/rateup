@@ -3,7 +3,8 @@
 import { useCallback, useRef } from "react";
 
 import { Box, Center, Image, Textarea } from "@mantine/core";
-import { useLinktreeObj } from "components/Linktree/LinktreeEditor/LinktreeContext/LinktreeContext";
+
+import { useLinktreeObj } from "@/components/Linktree/LinktreeEditor/LinktreeContext/LinktreeContext";
 
 import { imagesPath } from "../../../../../HomePage/constants";
 import PreviewDeviceSelector from "../../../../../Survey/SurveyTheme/components/PreviewDeviceSelector";

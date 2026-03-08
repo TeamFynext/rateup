@@ -11,15 +11,7 @@ import React, {
 import { useParams, useRouter } from "next/navigation";
 
 import { useDebouncedState } from "@mantine/hooks";
-import {
-  IconCheck,
-  IconFileDownload,
-  IconFilter,
-  IconRefresh,
-  IconTableExport,
-  IconTicket,
-  IconX,
-} from "@tabler/icons-react";
+import { IconTicket } from "@tabler/icons-react";
 import { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
@@ -30,21 +22,9 @@ import { toast } from "sonner";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
-import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
-import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
@@ -73,15 +53,8 @@ import {
   SubscriptionFeaturePathName,
   WaQuestions,
 } from "../../../types/enums";
-import { docsPath, PAGE_SIZE } from "../../../utils/constants";
+import { PAGE_SIZE } from "../../../utils/constants";
 import { TicketType } from "../../../utils/enums/ticket";
-import InfoButton from "../../Button/InfoButton";
-import RefreshButton from "../../Button/RefreshButton";
-import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
-import {
-  ContainedMultiSelect,
-  ContainedTextField,
-} from "../../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../../Modal/FormModalLayout";
 import { DataTable } from "../../Table/data-table";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
@@ -324,18 +297,16 @@ const WaResponses = ({
                     }}
                   >
                     {ticketExist && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div>
-                              <IconTicket color="orange" className="w-9 h-9" />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="right">
-                            {translations("View Ticket")}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            <IconTicket color="orange" className="w-9 h-9" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          {translations("View Ticket")}
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                   </div>
                 );
