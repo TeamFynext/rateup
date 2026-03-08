@@ -20,13 +20,13 @@ import {
   IconInfoCircle,
   IconX,
 } from "@tabler/icons-react";
-import styles from "components/Graph/graph.module.css";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { QuestionType } from "@/types/enums";
 import { useGenerateLargeTextResponseSummaryByAI } from "@/backend/surveys/response/response.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
+import styles from "@/components/Graph/graph.module.css";
 import Heading from "@/components/styled/Heading/Heading";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { FormElement } from "@/components/whatsapp/flow-v2/utils/store";

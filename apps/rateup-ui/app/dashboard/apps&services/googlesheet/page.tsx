@@ -3,8 +3,6 @@
 import { Center, Flex, Image, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandGoogleDrive } from "@tabler/icons-react";
-import { RateupButtonPrimary } from "components/Button/RateupButtons";
-import ConfirmationModal from "components/Modal/ConfirmationModal";
 import { useTranslations } from "next-intl";
 import { useLocalStorage } from "react-use";
 import { toast } from "sonner";
@@ -15,7 +13,9 @@ import {
   useGetGoogleSheetAuthorizationUrl,
   useIntegrationByType,
 } from "@/backend/appsIntegration/integration.query";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
 const GoogleSheet = () => {

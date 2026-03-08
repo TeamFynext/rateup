@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import {
   useGetQrWithShortUrlIdPublic,
   useIncrementNoOfScansMutation,
-} from "backend/generateQr/generateQr.query";
+} from "@/backend/generateQr/generateQr.query";
 
 function GenerateQrRedirectionPage() {
   const params = useParams();

@@ -58,7 +58,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Progress } from "@/components/ui/progressnew";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,

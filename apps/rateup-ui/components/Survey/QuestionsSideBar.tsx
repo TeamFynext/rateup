@@ -23,11 +23,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { PageType, QuestionType } from "@/types/enums";
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
 import { useNavControlContext } from "@/context/NavControlContext";
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 import { uniquePages } from "@/utils/constants";
 import { reorder, reOrderPages } from "@/utils/questions";
 

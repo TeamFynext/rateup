@@ -5,11 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { Center, Stack, Text } from "@mantine/core";
 import { IconLoader } from "@tabler/icons-react";
-import { useRouteAndCartStore } from "components/HomePage/pages/Pricing/store/RouteAndCartStore";
 import { useTranslations } from "next-intl";
 import Session from "supertokens-auth-react/recipe/session";
 
 import { useUpdateShopifySession } from "@/backend/appsIntegration/shopify/shopify.query";
+import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 
 import style from "../../../components/Graph/graph.module.css";

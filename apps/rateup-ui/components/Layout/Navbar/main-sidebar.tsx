@@ -184,7 +184,7 @@ export default function MainSidebar({ children }) {
       <WebSocketHandler />
 
       <SidebarProvider
-        defaultOpen={false}
+        defaultOpen={true}
         style={
           {
             "--sidebar-width": "0px", // for custom second sidebar width

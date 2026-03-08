@@ -1,4 +1,4 @@
-import ApiAccessKeyPage from "components/ExternalApi/ApiAccessKey";
+import ApiAccessKeyPage from "@/components/ExternalApi/ApiAccessKey";
 
 const index = () => {
   return <ApiAccessKeyPage />;

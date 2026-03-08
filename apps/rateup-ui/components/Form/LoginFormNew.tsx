@@ -11,7 +11,7 @@ import { z } from "zod/v4";
 
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import { Checkbox } from "../ui/checkboxnew";
+import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Loader } from "../ui/loader";

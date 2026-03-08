@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -32,21 +31,20 @@ export const CalenderIconDateRangePicker = ({
 
   return (
     <>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={getButtonVariant(variant)}
-              size="icon-sm"
-              onClick={open}
-              aria-label={label}
-            >
-              <IconCalendar className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">{label}</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant={getButtonVariant(variant)}
+            size="icon-sm"
+            onClick={open}
+            aria-label={label}
+          >
+            <IconCalendar className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top">{label}</TooltipContent>
+      </Tooltip>
+
       <DateRangePickerModal
         opened={opened}
         ranges={ranges}

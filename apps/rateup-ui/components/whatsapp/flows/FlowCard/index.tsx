@@ -36,7 +36,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -142,81 +141,77 @@ function FlowCard({
                   e.stopPropagation();
                 }}
               >
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDialogOpened(true);
-                          }}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <IconTrash size={16} className="mr-2" />
-                          {translations("Delete")}
-                        </DropdownMenuItem>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        {status !== WaFlowStatus.DRAFT
-                          ? translations(
-                              "It will be deprecated and will be removed from the system",
-                            )
-                          : translations("Delete Flow")}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCloneDialogOpened(true);
-                          }}
-                          disabled={status === WaFlowStatus.DEPRECATED}
-                        >
-                          <IconCopy size={16} className="mr-2" />
-                          {translations("Clone")}
-                        </DropdownMenuItem>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>clone-flow</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCloneAandRenewOpened(true);
-                          }}
-                          disabled={status !== WaFlowStatus.PUBLISHED}
-                        >
-                          <IconCopy size={16} className="mr-2" />
-                          {translations("Copy & Renew Flow")}
-                        </DropdownMenuItem>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        {status !== WaFlowStatus.PUBLISHED
-                          ? translations(
-                              "You can only Copy & Renew Flow in PUBLISHED state",
-                            )
-                          : translations("Copy & Renew Flow")}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDialogOpened(true);
+                        }}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <IconTrash size={16} className="mr-2" />
+                        {translations("Delete")}
+                      </DropdownMenuItem>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {status !== WaFlowStatus.DRAFT
+                        ? translations(
+                            "It will be deprecated and will be removed from the system",
+                          )
+                        : translations("Delete Flow")}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCloneDialogOpened(true);
+                        }}
+                        disabled={status === WaFlowStatus.DEPRECATED}
+                      >
+                        <IconCopy size={16} className="mr-2" />
+                        {translations("Clone")}
+                      </DropdownMenuItem>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>clone-flow</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCloneAandRenewOpened(true);
+                        }}
+                        disabled={status !== WaFlowStatus.PUBLISHED}
+                      >
+                        <IconCopy size={16} className="mr-2" />
+                        {translations("Copy & Renew Flow")}
+                      </DropdownMenuItem>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {status !== WaFlowStatus.PUBLISHED
+                        ? translations(
+                            "You can only Copy & Renew Flow in PUBLISHED state",
+                          )
+                        : translations("Copy & Renew Flow")}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
