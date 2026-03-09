@@ -50,6 +50,50 @@ export function BookDemoComponent() {
       useCase: "",
       additionalInfo: "",
     },
+
+    validate: {
+      firstname: (value) =>
+        !value
+          ? "First name must not be empty"
+          : value.trim().length < 3
+            ? "First name must be at least 3 characters"
+            : null,
+
+      lastname: (value) =>
+        !value
+          ? "Last name must not be empty"
+          : value.trim().length < 3
+            ? "Last name must be at least 3 characters"
+            : null,
+
+      email: (value) =>
+        !value
+          ? "Email must not be empty"
+          : /^\S+@\S+$/.test(value)
+            ? null
+            : "Invalid email address",
+
+      teamSize: (value) => (!value ? "Team size must not be empty" : null),
+
+      phone: (value) =>
+        !value
+          ? "Phone number must not be empty"
+          : /^[0-9]{10,15}$/.test(value)
+            ? null
+            : "Invalid phone number",
+
+      companyName: (value) =>
+        !value
+          ? "Company name must not be empty"
+          : value.trim().length < 3
+            ? "Company name must be at least 3 characters"
+            : null,
+
+      preferredTime: (value) =>
+        !value ? "Please select a preferred time" : null,
+
+      useCase: (value) => (!value ? "Please select a use case" : null),
+    },
   });
 
   const timeSlots = [
@@ -229,7 +273,17 @@ export function BookDemoComponent() {
               <Card className="p-8 shadow-xl">
                 <form
                   className="space-y-6"
-                  onSubmit={fromData.onSubmit(handleSubmit)}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const validation = fromData.validate();
+                    if (validation.hasErrors) {
+                      Object.values(fromData.errors).forEach((err) => {
+                        if (err) toast.error(err);
+                      });
+                      return;
+                    }
+                    handleSubmit(fromData.values);
+                  }}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* First Name */}
@@ -245,6 +299,9 @@ export function BookDemoComponent() {
                           required
                           {...fromData.getInputProps("firstname")}
                         />
+                        <p className="text-red-500 text-xs">
+                          {fromData.errors.firstname}
+                        </p>
                       </div>
                     </div>
 
@@ -261,6 +318,9 @@ export function BookDemoComponent() {
                           required
                           {...fromData.getInputProps("lastname")}
                         />
+                        <p className="text-red-500 text-xs">
+                          {fromData.errors.lastname}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -278,6 +338,9 @@ export function BookDemoComponent() {
                         required
                         {...fromData.getInputProps("email")}
                       />
+                      <p className="text-red-500 text-xs">
+                        {fromData.errors.email}
+                      </p>
                     </div>
                   </div>
 
@@ -285,7 +348,7 @@ export function BookDemoComponent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="phone">
-                        {translations("Phone Number")}
+                        {translations("Phone Number")} *
                       </Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -296,6 +359,9 @@ export function BookDemoComponent() {
                           className="pl-10"
                           {...fromData.getInputProps("phone")}
                         />
+                        <p className="text-red-500 text-xs">
+                          {fromData.errors.phone}
+                        </p>
                       </div>
                     </div>
 
@@ -313,6 +379,9 @@ export function BookDemoComponent() {
                           required
                           {...fromData.getInputProps("companyName")}
                         />
+                        <p className="text-red-500 text-xs">
+                          {fromData.errors.companyName}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -321,7 +390,7 @@ export function BookDemoComponent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="teamSize">
-                        {translations("Team Size")}
+                        {translations("Team Size")} *
                       </Label>
                       <Select
                         value={fromData.values.teamSize}
@@ -368,6 +437,9 @@ export function BookDemoComponent() {
                           ))}
                         </SelectContent>
                       </Select>
+                      <p className="text-red-500 text-xs">
+                        {fromData.errors.preferredTime}
+                      </p>
                     </div>
                   </div>
 
@@ -398,6 +470,9 @@ export function BookDemoComponent() {
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-red-500 text-xs">
+                      {fromData.errors.useCase}
+                    </p>
                   </div>
 
                   {/* Additional Info */}
