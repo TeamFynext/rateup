@@ -544,17 +544,17 @@ export default function CampaignDetails() {
           <div className="shrink-0 border-b">
             <div className="px-6">
               <div className="flex items-center justify-between">
-                <TabsList className="bg-transparent p-0 h-auto gap-2 border-0">
+                <TabsList className="bg-transparent p-0 h-auto gap-2 border-none">
                   <TabsTrigger
                     value="info"
-                    className="border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-none px-4 py-2 transition-all cursor-pointer"
+                    className="border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:shadow-none! data-[state=active]:bg-transparent! data-[state=active]:text-primary data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-none px-4 py-2 transition-all cursor-pointer"
                   >
                     <TrendingUp className="w-4 h-4 mr-2" />
                     {t("tabs.overview")}
                   </TabsTrigger>
                   <TabsTrigger
                     value="participants"
-                    className="border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-none px-4 py-2 transition-all cursor-pointer"
+                    className="border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:shadow-none! data-[state=active]:bg-transparent! data-[state=active]:text-primary data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-none px-4 py-2 transition-all cursor-pointer"
                   >
                     <Users className="w-4 h-4 mr-2" />
                     {t("tabs.participants")}
