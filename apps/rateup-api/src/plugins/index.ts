@@ -46,8 +46,9 @@ export async function registerPlugins(server: FastifyInstance) {
   await registerKafka(server);
 
   // Initialize BullMQ workers
-  await import("../modules/whatsapp/workers/pausedAutomation.worker.js");
-  await import("../modules/integrations/shopify/workers/webhook.worker.js");
+  await import("../jobs/pausedAutomation.worker.js");
+  await import("../jobs/webhook.worker.js");
+  await import("../jobs/notification.worker.js");
 
   // Cron jobs
   await registerCronJobs(server);

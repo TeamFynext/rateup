@@ -3,6 +3,7 @@ import shopify from "./shopify.config.js";
 import { GraphqlClient, Session, DataType } from "@shopify/shopify-api";
 import isEmpty from "lodash/isEmpty.js";
 import baseRedis, {
+  notificationQueue,
   shopifySurveyQueue,
 } from "../../../utils/redisConnection.js";
 import crypto from "crypto";
@@ -22,6 +23,7 @@ import {
 import { updateMonthlyStat } from "../../stats/stats.service.js";
 import {
   IntegratedApps,
+  NotificationType,
   ShopifyEvents,
   SubscriptionFeaturePathName,
 } from "../../../types/enums.js";
@@ -55,7 +57,6 @@ import {
 import { getSubscription } from "../../subscription/subscription.service.js";
 import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated.js";
-import { sendAWSEmail } from "../../../utils/email/sendAWSEmail.js";
 import { pauseOrg } from "../../org/org.services.js";
 import { WEBHOOK_API_ROUTE } from "./shopify.handler.js";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
@@ -1050,7 +1051,10 @@ async function activateSubscriptionThroughShopify(
       ),
     };
     try {
-      sendAWSEmail(msg);
+      await notificationQueue.add("notification", {
+        type: NotificationType.EMAIL,
+        emailData: msg,
+      });
     } catch (error) {
       console.error(error);
       throw new Error("Email sending failed. E:" + error);

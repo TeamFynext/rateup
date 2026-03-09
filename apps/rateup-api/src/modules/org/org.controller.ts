@@ -26,8 +26,9 @@ import {
 import Session from "supertokens-node/recipe/session/index.js";
 import { log } from "../../utils/logger.js";
 import { getWebhookSecret } from "../../utils/webhook.js";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { getUserByEmail } from "../user/user.service.js";
+import { NotificationType } from "../../types/enums.js";
+import { notificationQueue } from "../../utils/redisConnection.js";
 
 export async function createOrgHandler(
   request: FastifyRequest<{
@@ -297,7 +298,10 @@ Onboarding Questionnaire:
       </ul>
       `,
     };
-    await sendAWSEmail(emaildata);
+    await notificationQueue.add("notification", {
+      type: NotificationType.EMAIL,
+      emailData: emaildata,
+    });
     reply.code(200).send(orgData);
   } catch (e) {
     reply.code(500).send(e);

@@ -1,7 +1,8 @@
 import { CreateContactMessageInput } from "./contact.schema.js";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { emailBodyContactForm } from "../../utils/email/emailBodyContactForm.js";
 import prisma from "../../utils/prisma.js";
+import { notificationQueue } from "../../utils/redisConnection.js";
+import { NotificationType } from "../../types/enums.js";
 
 export async function createMsg({
   name,
@@ -30,7 +31,10 @@ export async function createMsg({
       html: emailBodyContactForm(name, email, message),
     };
     try {
-      sendAWSEmail(msg);
+      await notificationQueue.add("notification", {
+        type: NotificationType.EMAIL,
+        emailData: msg,
+      });
     } catch (error) {
       console.error(error);
       throw new Error("Email sending failed. E:" + error);

@@ -1,5 +1,9 @@
+import { Job } from "bullmq";
+import { EmailParams, sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import prisma from "../../utils/prisma.js";
+import { sendPushNotification } from "../mobileNotification/mobile.service.js";
 import { NotificationSettingSchema } from "./notification.schema.js";
+import { NotificationType } from "../../types/enums.js";
 
 export async function getNotifications(userId: string, orgId: string) {
   return await prisma.notification.findMany({
@@ -106,4 +110,60 @@ export async function deleteAllNotificationsByUser(userId, orgId) {
       },
     },
   });
+}
+
+interface SystemNotificationData {
+  userId: string;
+  orgId: string;
+  source: string;
+  subSource: string;
+  data: Record<string, any>;
+}
+
+interface PushNotificationData {
+  expoTokens: string[];
+  title: string;
+  body: string;
+  data?: Record<string, any>;
+}
+
+type NotificationTypes =
+  | NotificationType.EMAIL
+  | NotificationType.PUSH
+  | NotificationType.SYSTEM;
+
+interface NotificationJobData {
+  type: NotificationTypes;
+  emailData?: EmailParams;
+  systemNotificationData?: SystemNotificationData;
+  pushNotificationData?: PushNotificationData;
+}
+
+export async function processNotification(job: Job<NotificationJobData>) {
+  const { type, emailData, systemNotificationData, pushNotificationData } =
+    job.data;
+
+  switch (type) {
+    case NotificationType.EMAIL:
+      await sendAWSEmail(emailData);
+      break;
+
+    case NotificationType.PUSH:
+      await sendPushNotification(
+        pushNotificationData.expoTokens,
+        pushNotificationData.title,
+        pushNotificationData.body,
+        pushNotificationData.data,
+      );
+      break;
+
+    case NotificationType.SYSTEM:
+      const { userId, orgId, source, subSource, data } = systemNotificationData;
+
+      await createNotification(userId, orgId, source, subSource, data);
+      break;
+
+    default:
+      throw new Error(`Unknown notification type: ${type}`);
+  }
 }

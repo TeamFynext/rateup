@@ -12,7 +12,6 @@ import {
 import EmailVerification from "supertokens-node/recipe/emailverification/index.js";
 import { createEmailBody } from "../../utils/email/supertoken/inviteEmail.js";
 import { Role } from "../../utils/enums/index.js";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 
 import EmailPassword from "supertokens-node/recipe/emailpassword/index.js";
 
@@ -24,6 +23,8 @@ import {
 } from "../../utils/hubspot.js";
 
 import { getEmailBodyTemplate } from "../email/email.util.js";
+import { notificationQueue } from "../../utils/redisConnection.js";
+import { NotificationType } from "../../types/enums.js";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {
@@ -231,7 +232,10 @@ export async function inviteTeamMember(input: InviteMemberInput) {
           }),
         };
         try {
-          sendAWSEmail(msg);
+          await notificationQueue.add("notification", {
+            type: NotificationType.EMAIL,
+            emailData: msg,
+          });
         } catch (error) {
           console.error(error);
           throw new Error("Email sending failed. E:" + error);
@@ -306,8 +310,10 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         ),
       };
       try {
-        //sendEmail(msg);
-        sendAWSEmail(msg);
+        await notificationQueue.add("notification", {
+          type: NotificationType.EMAIL,
+          emailData: msg,
+        });
       } catch (error) {
         console.error(error);
         throw new Error("Email sending failed. E:" + error);
@@ -350,7 +356,10 @@ export async function resendInviteTeamMember(id: string) {
         existingInvitation?.email,
       ),
     };
-    await sendAWSEmail(msg);
+    await notificationQueue.add("notification", {
+      type: NotificationType.EMAIL,
+      emailData: msg,
+    });
   }
   return "sent";
 }
@@ -903,7 +912,10 @@ export async function addMembersToTeamsMail(email, teamName, user) {
     }),
   };
   try {
-    sendAWSEmail(msg);
+    await notificationQueue.add("notification", {
+      type: NotificationType.EMAIL,
+      emailData: msg,
+    });
   } catch (error) {
     console.error(error);
     throw new Error("Email sending failed. E:" + error);

@@ -20,7 +20,7 @@ import {
 } from "./contactGroup/contactGroup.service.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { BATCH_SIZE } from "../../utils/constants/constants.js";
-import { WaMessageAssignStatus } from "../../types/enums.js";
+import { NotificationType, WaMessageAssignStatus } from "../../types/enums.js";
 import {
   assignWaMessageToUser,
   createInternalWaMessage,
@@ -28,10 +28,7 @@ import {
   getAssignedUserForContact,
 } from "../whatsapp/inbox/message/wamessage.service.js";
 import { getChatbotDetails } from "../chatbot/chatbot.service.js";
-import {
-  createNotification,
-  getNotificationSettings,
-} from "../notification/notification.service.js";
+import { getNotificationSettings } from "../notification/notification.service.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
@@ -47,6 +44,7 @@ import {
   WaMessageClosedStatus,
 } from "../whatsapp/constants.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
+import { notificationQueue } from "../../utils/redisConnection.js";
 
 export async function createContact(
   contact: ContactCore & { orgId: string },
@@ -701,16 +699,19 @@ export async function updateContactById(
         updatedContact.orgId,
       );
       if (notificationSetting?.waMessageClosedNotification) {
-        await createNotification(
-          assignee.assignedUserId,
-          updatedContact.orgId,
-          "whatsapp",
-          "chat-closed",
-          {
-            contactId: updatedContact.id,
-            contactName: updatedContact.name,
+        await notificationQueue.add("notification", {
+          type: NotificationType.SYSTEM,
+          systemNotificationData: {
+            userId: assignee.assignedUserId,
+            orgId: updatedContact.orgId,
+            source: "whatsapp",
+            subSource: "chat-closed",
+            data: {
+              contactId: updatedContact.id,
+              contactName: updatedContact.name,
+            },
           },
-        );
+        });
       }
     }
     if (contact?.waMessageAssignStatus) {

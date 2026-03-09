@@ -1,7 +1,8 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { createBookDemo } from "./bookDemo.service.js";
 import { CreateBookDemoInput } from "./bookDemo.schema.js";
+import { notificationQueue } from "../../utils/redisConnection.js";
+import { NotificationType } from "../../types/enums.js";
 
 export async function bookDemoHandler(
   request: FastifyRequest<{ Body: CreateBookDemoInput }>,
@@ -58,11 +59,14 @@ export async function bookDemoHandler(
       <p><strong>Additional Info:</strong> ${additionalInfo}</p>
     `;
 
-    await sendAWSEmail({
-      to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
-      subject,
-      text,
-      html,
+    await notificationQueue.add("notification", {
+      type: NotificationType.EMAIL,
+      emailData: {
+        to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
+        subject: subject,
+        html: html,
+        text: text,
+      },
     });
 
     const emailForClient = {
@@ -299,12 +303,14 @@ export async function bookDemoHandler(
 </html>
 `,
     };
-
-    await sendAWSEmail({
-      to: workEmail,
-      subject: emailForClient.subject,
-      html: emailForClient.html,
-      text: emailForClient.text,
+    await notificationQueue.add("notification", {
+      type: NotificationType.EMAIL,
+      emailData: {
+        to: workEmail,
+        subject: emailForClient.subject,
+        html: emailForClient.html,
+        text: emailForClient.text,
+      },
     });
 
     return reply.status(200).send({
