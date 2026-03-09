@@ -11,6 +11,7 @@ import { parseArrayString } from "../utils/array.js";
 import { registerCronJobs } from "./cron.js";
 import { registerSwagger } from "./swagger.js";
 import { registerKafka } from "./kafka.js";
+import registerWorkers from "../jobs/index.js";
 
 export async function registerPlugins(server: FastifyInstance) {
   // SuperTokens initialization
@@ -46,9 +47,7 @@ export async function registerPlugins(server: FastifyInstance) {
   await registerKafka(server);
 
   // Initialize BullMQ workers
-  await import("../jobs/pausedAutomation.worker.js");
-  await import("../jobs/webhook.worker.js");
-  await import("../jobs/notification.worker.js");
+  await registerWorkers();
 
   // Cron jobs
   await registerCronJobs(server);

@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { createBookDemo } from "./bookDemo.service.js";
 import { CreateBookDemoInput } from "./bookDemo.schema.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
-import { NotificationType } from "../../types/enums.js";
 
 export async function bookDemoHandler(
   request: FastifyRequest<{ Body: CreateBookDemoInput }>,
@@ -60,7 +59,6 @@ export async function bookDemoHandler(
     `;
 
     await notificationQueue.add("notification", {
-      type: NotificationType.EMAIL,
       emailData: {
         to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
         subject: subject,
@@ -304,7 +302,6 @@ export async function bookDemoHandler(
 `,
     };
     await notificationQueue.add("notification", {
-      type: NotificationType.EMAIL,
       emailData: {
         to: workEmail,
         subject: emailForClient.subject,

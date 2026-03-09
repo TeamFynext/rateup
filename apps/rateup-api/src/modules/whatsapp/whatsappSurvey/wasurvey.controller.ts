@@ -46,7 +46,6 @@ import {
   WaTemplateSupportedFormats,
   CampaignStatus,
   WhatsappSettingsStatus,
-  NotificationType,
 } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import {
@@ -537,9 +536,8 @@ async function whatsappMessageHandler(
   }
   const expoToken = await getTokensByOrgId(orgId);
   await notificationQueue.add("notification", {
-    type: NotificationType.PUSH,
     pushNotificationData: {
-      expoTokens: [expoToken],
+      expoTokens: expoToken,
       title: "RateUp",
       body: `New message from ${userName}`,
       data: {},

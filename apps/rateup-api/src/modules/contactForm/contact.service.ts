@@ -2,7 +2,6 @@ import { CreateContactMessageInput } from "./contact.schema.js";
 import { emailBodyContactForm } from "../../utils/email/emailBodyContactForm.js";
 import prisma from "../../utils/prisma.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
-import { NotificationType } from "../../types/enums.js";
 
 export async function createMsg({
   name,
@@ -32,7 +31,6 @@ export async function createMsg({
     };
     try {
       await notificationQueue.add("notification", {
-        type: NotificationType.EMAIL,
         emailData: msg,
       });
     } catch (error) {

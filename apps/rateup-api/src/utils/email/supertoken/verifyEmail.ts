@@ -1,4 +1,3 @@
-import { NotificationType } from "../../../types/enums.js";
 import { notificationQueue } from "../../redisConnection.js";
 
 export async function sendVerifyMail(
@@ -15,7 +14,6 @@ export async function sendVerifyMail(
     };
     try {
       await notificationQueue.add("notification", {
-        type: NotificationType.EMAIL,
         emailData: msg,
       });
     } catch (error) {

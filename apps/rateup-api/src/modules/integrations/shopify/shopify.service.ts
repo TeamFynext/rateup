@@ -23,7 +23,6 @@ import {
 import { updateMonthlyStat } from "../../stats/stats.service.js";
 import {
   IntegratedApps,
-  NotificationType,
   ShopifyEvents,
   SubscriptionFeaturePathName,
 } from "../../../types/enums.js";
@@ -1052,7 +1051,6 @@ async function activateSubscriptionThroughShopify(
     };
     try {
       await notificationQueue.add("notification", {
-        type: NotificationType.EMAIL,
         emailData: msg,
       });
     } catch (error) {

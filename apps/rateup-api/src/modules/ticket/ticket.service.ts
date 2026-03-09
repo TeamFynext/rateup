@@ -10,7 +10,6 @@ import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js"
 import { getContactByPhoneNumberAndOrgId } from "../contact/contact.service.js";
 import dayjs from "dayjs";
 import { notificationQueue } from "../../utils/redisConnection.js";
-import { NotificationType } from "../../types/enums.js";
 
 export async function sendTicketAssignedWaMessage(data: {
   phone: string;
@@ -64,7 +63,6 @@ export async function sendTicketAssignedEmail(data: {
   };
   try {
     await notificationQueue.add("notification", {
-      type: NotificationType.EMAIL,
       emailData: msg,
     });
   } catch (error) {
@@ -125,7 +123,6 @@ export async function sendTicketCreateEmail(data: {
   };
   try {
     await notificationQueue.add("notification", {
-      type: NotificationType.EMAIL,
       emailData: msg,
     });
   } catch (error) {

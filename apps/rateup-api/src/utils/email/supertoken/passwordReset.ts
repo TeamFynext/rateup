@@ -1,4 +1,3 @@
-import { NotificationType } from "../../../types/enums.js";
 import { notificationQueue } from "../../redisConnection.js";
 
 export async function sendResetPasswordMail(
@@ -14,7 +13,6 @@ export async function sendResetPasswordMail(
     };
     try {
       await notificationQueue.add("notification", {
-        type: NotificationType.EMAIL,
         emailData: msg,
       });
     } catch (error) {

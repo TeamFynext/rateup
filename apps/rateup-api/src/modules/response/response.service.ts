@@ -15,7 +15,6 @@ import {
   ChoiceTypeQuestions,
   IntegratedApps,
   LDResponse,
-  NotificationType,
   NPSWeightage,
   PageType,
   QuestionType,
@@ -904,7 +903,6 @@ export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
       ),
     };
     await notificationQueue.add("notification", {
-      type: NotificationType.EMAIL,
       emailData: msg,
     });
   }

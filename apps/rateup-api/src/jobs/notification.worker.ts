@@ -19,12 +19,8 @@ new Worker(
   },
   {
     connection: baseRedis,
-    concurrency: 50,
     removeOnComplete: {
-      count: 100,
-    },
-    removeOnFail: {
-      count: 50,
+      count: 1,
     },
   },
 );

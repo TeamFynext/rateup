@@ -476,9 +476,3 @@ export enum MetaLoginAssets {
   INSTAGRAM = "INSTAGRAM ACCOUNTS",
   ADACCOUNTS = "AD ACCOUNTS",
 }
-
-export enum NotificationType {
-  EMAIL = "EMAIL",
-  SYSTEM = "SYSTEM",
-  PUSH = "PUSH",
-}

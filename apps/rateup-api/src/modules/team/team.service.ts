@@ -24,7 +24,6 @@ import {
 
 import { getEmailBodyTemplate } from "../email/email.util.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
-import { NotificationType } from "../../types/enums.js";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {
@@ -233,7 +232,6 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         };
         try {
           await notificationQueue.add("notification", {
-            type: NotificationType.EMAIL,
             emailData: msg,
           });
         } catch (error) {
@@ -311,7 +309,6 @@ export async function inviteTeamMember(input: InviteMemberInput) {
       };
       try {
         await notificationQueue.add("notification", {
-          type: NotificationType.EMAIL,
           emailData: msg,
         });
       } catch (error) {
@@ -357,7 +354,6 @@ export async function resendInviteTeamMember(id: string) {
       ),
     };
     await notificationQueue.add("notification", {
-      type: NotificationType.EMAIL,
       emailData: msg,
     });
   }
@@ -913,7 +909,6 @@ export async function addMembersToTeamsMail(email, teamName, user) {
   };
   try {
     await notificationQueue.add("notification", {
-      type: NotificationType.EMAIL,
       emailData: msg,
     });
   } catch (error) {

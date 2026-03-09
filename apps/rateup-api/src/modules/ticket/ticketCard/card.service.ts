@@ -14,7 +14,6 @@ import {
   ZapierTriggers,
 } from "../../integrations/external/zapier/zapier.service.js";
 import { notificationQueue } from "../../../utils/redisConnection.js";
-import { NotificationType } from "../../../types/enums.js";
 
 export interface CardInput {
   title?: string;
@@ -118,7 +117,6 @@ export async function createCard(data: CardInput) {
     const notificationSetting = await getNotificationSettings(user.id, orgId);
     if (notificationSetting && notificationSetting.ticketAssignNotification) {
       await notificationQueue.add("notification", {
-        type: NotificationType.SYSTEM,
         systemNotificationData: {
           userId: user.id,
           orgId: orgId,
@@ -342,7 +340,6 @@ export async function updateCard(
     const notificationSetting = await getNotificationSettings(user.id, orgId);
     if (notificationSetting && notificationSetting.ticketAssignNotification) {
       await notificationQueue.add("notification", {
-        type: NotificationType.SYSTEM,
         systemNotificationData: {
           userId: user.id,
           orgId: orgId,

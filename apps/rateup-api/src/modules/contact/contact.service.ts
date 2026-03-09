@@ -20,7 +20,7 @@ import {
 } from "./contactGroup/contactGroup.service.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { BATCH_SIZE } from "../../utils/constants/constants.js";
-import { NotificationType, WaMessageAssignStatus } from "../../types/enums.js";
+import { WaMessageAssignStatus } from "../../types/enums.js";
 import {
   assignWaMessageToUser,
   createInternalWaMessage,
@@ -700,7 +700,6 @@ export async function updateContactById(
       );
       if (notificationSetting?.waMessageClosedNotification) {
         await notificationQueue.add("notification", {
-          type: NotificationType.SYSTEM,
           systemNotificationData: {
             userId: assignee.assignedUserId,
             orgId: updatedContact.orgId,
