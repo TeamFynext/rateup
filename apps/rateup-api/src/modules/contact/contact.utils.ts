@@ -170,7 +170,6 @@ export async function handleSendTemplate(
   orgId,
   phone,
   dynamicVariables,
-  whatsappSettingsPhoneId?,
 ) {
   if (!waTemplateId) {
     log.trace("No template Id found");
@@ -196,6 +195,5 @@ export async function handleSendTemplate(
     undefined,
     undefined,
     undefined,
-    whatsappSettingsPhoneId,
   );
 }

@@ -103,7 +103,6 @@ export async function checkBirthdayEventTriggers() {
               customer.contact.orgId,
               customer.contact.phone,
               dynamicVariables,
-              trigger.program.whatsappSettingsId,
             );
 
             // If a reward is configured, issue it automatically
@@ -239,7 +238,6 @@ export async function checkInactivityEventTriggers() {
               customer.contact.orgId,
               customer.contact.phone,
               dynamicVariables,
-              trigger.program.whatsappSettingsId,
             );
 
             // If a reward is configured to incentivize return, issue it
