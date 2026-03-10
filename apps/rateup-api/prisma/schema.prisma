@@ -284,7 +284,7 @@ model WhatsappSettings {
   createdAt        DateTime           @default(now())
   /// [PWaEncryptionKeys]
   encryption       Json? // for flow {publicKey: string, privateKey: string}
-  Campaign         Campaign[]
+  WaTemplate       WaTemplate[]
   LoyaltyWaCommand LoyaltyWaCommand[]
   metaAssets       MetaAssets[]
   catalog          CatalogPhoneIdMap?
@@ -815,8 +815,6 @@ model Campaign {
   dynamicTags             String[]              @default([])
   useUserConsent          Boolean               @default(true)
   CampaignStats           CampaignStats?
-  WhatsappSettings        WhatsappSettings?     @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
-  whatsappSettingsPhoneId String?
   CampaignDripStage       CampaignDripStage[]
 }
 
@@ -1000,24 +998,26 @@ model ContactForm {
 }
 
 model WaTemplate {
-  id                String                @id @default(uuid()) @db.Uuid
-  createdAt         DateTime              @default(now())
+  id                      String                @id @default(uuid()) @db.Uuid
+  createdAt               DateTime              @default(now())
   /// [PWaTemplateWithTypesData]
-  data              Json
-  acceptButton      String? // QuickReplyButton text which on clicking will send the survey to the user
+  data                    Json
+  acceptButton            String? // QuickReplyButton text which on clicking will send the survey to the user
   /// [PWaTemplateDefaultValues]
-  defaultValues     Json? // default values for images and other fields
-  templateType      TemplateType          @default(GENERAL_NOTIFICATION)
-  config            Json?
-  org               Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId             String                @db.Uuid
-  waSession         WaSession[]
-  Campaign          Campaign[]
-  waMessageSchedule WaMessageSchedule[]
-  loyaltyTemplates  LoyaltyWaCommand[]
-  CampaignDripStage CampaignDripStage[]
-  loyaltyRewards    LoyaltyReward[]
-  eventTriggers     LoyaltyEventTrigger[]
+  defaultValues           Json? // default values for images and other fields
+  templateType            TemplateType          @default(GENERAL_NOTIFICATION)
+  config                  Json?
+  org                     Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                   String                @db.Uuid
+  WhatsappSettings        WhatsappSettings?     @relation(fields: [whatsappSettingsPhoneId], references: [phoneId], onDelete: SetNull)
+  whatsappSettingsPhoneId String?
+  waSession               WaSession[]
+  Campaign                Campaign[]
+  waMessageSchedule       WaMessageSchedule[]
+  loyaltyTemplates        LoyaltyWaCommand[]
+  CampaignDripStage       CampaignDripStage[]
+  loyaltyRewards          LoyaltyReward[]
+  eventTriggers           LoyaltyEventTrigger[]
 }
 
 model MenuLanding {
@@ -1531,15 +1531,15 @@ enum AssignType {
 }
 
 model WaAutomatedReply {
-  id                       String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                     String
-  createdAt                DateTime     @default(now())
+  createdAt                DateTime @default(now())
   matchData                Json
   matchType                String // enums.ts: WaAutomatedReplyMatchType
-  orgId                    String?      @db.Uuid
-  org                      Org?         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                    String?  @db.Uuid
+  org                      Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId  String?
-  whatsappSettingsPhoneIds String[]     @default([]) //for multiple whatsapp integration
+  whatsappSettingsPhoneIds String[] @default([]) //for multiple whatsapp integration
   platform                 String   @default("WHATSAPP") // enums.ts: AutomationPlatform (WHATSAPP | INSTAGRAM)
 
   isEnabled         Boolean @default(true)
@@ -1681,8 +1681,6 @@ model Integration {
 
   @@unique([orgId, name], name: "orgid_integration_name_unique")
 }
-
-
 
 model WaMessageSchedule {
   id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

@@ -110,17 +110,30 @@ export async function createTemplateHandler(
     const orgId = request.user.orgId;
     // TODO: restrict access to super admin and admin?
 
-    const { defaultValues, templateType, config, ...templateData } =
-      request.body;
+    const {
+      defaultValues,
+      templateType,
+      config,
+      whatsappSettingsPhoneId,
+      ...templateData
+    } = request.body;
     const formattedTemplate = generateTemplate(templateData);
     let fetchedTemplate;
     switch (request.body.templateType) {
       case TemplateType.GENERAL_NOTIFICATION:
       case TemplateType.LOYALTY:
       case TemplateType.CAROUSEL:
-        const template = await createTemplate(orgId, formattedTemplate);
+        const template = await createTemplate(
+          orgId,
+          formattedTemplate,
+          whatsappSettingsPhoneId,
+        );
         //this is required to fetch the template from whatsapp to retreive the actual template data from whatsap
-        fetchedTemplate = await fetchTemplate(template?.name, orgId);
+        fetchedTemplate = await fetchTemplate(
+          template?.name,
+          orgId,
+          whatsappSettingsPhoneId,
+        );
         break;
       case TemplateType.ORDER_DETAILS:
         fetchedTemplate = {
@@ -149,6 +162,7 @@ export async function createTemplateHandler(
         defaultValues as WaTemplateDefaultValues,
         templateType,
         config,
+        whatsappSettingsPhoneId,
       );
     } else {
       await saveTemplate(
@@ -157,6 +171,7 @@ export async function createTemplateHandler(
         defaultValues as WaTemplateDefaultValues,
         templateType,
         config,
+        whatsappSettingsPhoneId,
       );
     }
 
@@ -179,7 +194,12 @@ export async function saveTemplateAsDraftHandler(
 ) {
   try {
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
-    const { defaultValues, templateType, ...templateData } = request.body;
+    const {
+      defaultValues,
+      templateType,
+      whatsappSettingsPhoneId,
+      ...templateData
+    } = request.body;
     let formattedTemplate: any = generateTemplate(templateData);
     formattedTemplate.status = WaTemplateStatus.DRAFT;
     if (request.body?.id) {
@@ -193,6 +213,8 @@ export async function saveTemplateAsDraftHandler(
         template.data,
         defaultValues as WaTemplateDefaultValues,
         templateType,
+        undefined,
+        whatsappSettingsPhoneId,
       );
     } else {
       await saveTemplate(
@@ -200,6 +222,8 @@ export async function saveTemplateAsDraftHandler(
         orgId,
         defaultValues as WaTemplateDefaultValues,
         templateType,
+        undefined,
+        whatsappSettingsPhoneId,
       );
     }
     reply.code(200);
@@ -284,7 +308,11 @@ export async function deleteTemplateHandler(
 }
 
 export async function syncTemplatesHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{
+    Body: {
+      whatsappSettingsPhoneIds: string[];
+    };
+  }>,
   reply: FastifyReply,
 ) {
   const { orgId, role } = await getOrgIdAndRole({ id: request.userId });
@@ -293,11 +321,14 @@ export async function syncTemplatesHandler(
     reply.code(403);
     return;
   }
-  const synced = await syncTemplates(orgId);
-  if (synced) {
-    reply.code(200);
+  const result = await syncTemplates(
+    orgId,
+    request.body.whatsappSettingsPhoneIds,
+  );
+  if (result.success) {
+    reply.code(200).send(result);
   } else {
-    reply.code(500);
+    reply.code(500).send(result);
   }
 }
 
@@ -371,7 +402,6 @@ export async function sendTemplateToUserCore(
   timeDelay?: number,
   isTemplateName = false,
   tag?: string,
-  whatsappSettingsPhoneId?: string,
   buttonVariable?: string,
   externalApi: boolean = false,
 ): Promise<{ status: boolean; message: string; id?: string }> {
@@ -387,7 +417,7 @@ export async function sendTemplateToUserCore(
     dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
   }
 
-  const { data, defaultValues } = dbTemplate;
+  const { data, defaultValues, whatsappSettingsPhoneId } = dbTemplate;
   const components = [...parameterData]; // Clone parameter data
   log.trace("parameterData => %o", parameterData);
 
@@ -1211,8 +1241,7 @@ export async function sendTemplateToUserHandler(
 ) {
   try {
     const { templateId } = request.params;
-    const { phone, parameterData, teamId, whatsappSettingsPhoneId } =
-      request.body;
+    const { phone, parameterData, teamId } = request.body;
     const orgId = request.user.orgId;
     const userId = request.userId;
 
@@ -1226,7 +1255,6 @@ export async function sendTemplateToUserHandler(
       undefined,
       false,
       undefined,
-      whatsappSettingsPhoneId,
     );
 
     reply.code(200).send("Template sent to user successfully");

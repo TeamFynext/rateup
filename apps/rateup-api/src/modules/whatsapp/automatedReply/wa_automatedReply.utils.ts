@@ -1097,7 +1097,6 @@ async function executeSendTemplateAction(
     undefined,
     undefined,
     undefined,
-    context.phoneNumberId,
   );
 
   return true;

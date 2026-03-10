@@ -60,17 +60,6 @@ export async function sendTemplateByNameToPhoneExternalController(
     if (phone.isValid() === false) {
       return rep.code(400).send("Invalid phone number.");
     }
-    let whatsappSettingsPhoneId = undefined;
-    if (from && from > 0) {
-      let fromString = String(from);
-      let whatsappPhone = fromString.startsWith("+")
-        ? fromString
-        : "+" + fromString;
-      const waSettings = await getWaSettingsByPhone(whatsappPhone);
-      if (waSettings) {
-        whatsappSettingsPhoneId = waSettings.phoneId;
-      }
-    }
     let phoneNumber = phone.number.replace("+", "");
     let header: any = [];
     for (let { filename, link, type } of parameterData || []) {
@@ -108,7 +97,6 @@ export async function sendTemplateByNameToPhoneExternalController(
       timeDelay,
       true,
       tag,
-      whatsappSettingsPhoneId,
       buttonVariable,
       true,
     );
@@ -148,7 +136,6 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
       headerType,
       filename,
       file,
-      from,
       buttonVariable,
     } = req.body;
     const bodyVariables = JSON.parse(body_variables?.[0] || "[]");
@@ -242,17 +229,6 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
         }),
       });
     }
-    let whatsappSettingsPhoneId = undefined;
-    if (from && from > 0) {
-      let fromString = String(from);
-      let whatsappPhone = fromString.startsWith("+")
-        ? fromString
-        : "+" + fromString;
-      const waSettings = await getWaSettingsByPhone(whatsappPhone);
-      if (waSettings) {
-        whatsappSettingsPhoneId = waSettings.phoneId;
-      }
-    }
     const response = await sendTemplateToUserCore(
       orgId,
       templateName,
@@ -263,7 +239,6 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
       timeDelay,
       true,
       tag,
-      whatsappSettingsPhoneId,
       buttonVariable,
       true,
     );

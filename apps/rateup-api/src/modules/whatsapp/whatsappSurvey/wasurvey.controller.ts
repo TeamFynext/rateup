@@ -1172,7 +1172,6 @@ export async function processNextNode(
           undefined,
           undefined,
           undefined,
-          automation?.whatsappSettingsPhoneId,
         );
         break;
       case "ticketNode":

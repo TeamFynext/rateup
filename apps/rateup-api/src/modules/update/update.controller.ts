@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger.js";
 import {
   backfillWithSQL,
+  migrateWaTemplatePhoneIds,
   updateFreePlanExpiry,
   updatePlanFeatures,
   updateRateupPlanFeature,
@@ -348,5 +349,21 @@ export async function migrateAutomationToRulesHandler(
   } catch (error) {
     log.error(error);
     res.code(500).send("Error migrating automation to rules");
+  }
+}
+
+export async function migrateWaTemplatePhoneIdsHandler(
+  req: FastifyRequest,
+  res: FastifyReply,
+) {
+  try {
+    const result = await migrateWaTemplatePhoneIds();
+    res.code(200).send({
+      message: "WaTemplate whatsappSettingsPhoneId migration completed",
+      ...result,
+    });
+  } catch (error) {
+    log.error(error);
+    res.code(500).send("Error migrating WaTemplate phone IDs");
   }
 }

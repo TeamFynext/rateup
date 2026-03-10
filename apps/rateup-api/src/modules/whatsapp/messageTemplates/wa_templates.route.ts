@@ -94,7 +94,15 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     deleteTemplateHandler,
   );
 
-  server.get("/sync", syncTemplatesHandler);
+  server.post(
+    "/sync",
+    {
+      schema: {
+        body: $WTref("syncTemplatesSchema"),
+      },
+    },
+    syncTemplatesHandler,
+  );
 
   server.get("/unregistered", getUnregisteredTemplatesHandler);
   server.post("/register", registerTemplatesInDbHandler);

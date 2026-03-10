@@ -315,6 +315,7 @@ declare global {
   type WaTemplateWithTypes = {
     id: string;
     createdAt: Date;
+    whatsappSettingsPhoneId?: string;
     data: {
       name: string;
       components: Array<any>;
