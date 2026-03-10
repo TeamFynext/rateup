@@ -1,5 +1,4 @@
 import { generateAnswerHtml } from "../../utils/email/emailTemplateGenerateFunction.js";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { createEmailBodySurveyResponse } from "../../utils/email/supertoken/surveyResponseEmail.js";
 import prisma from "../../utils/prisma.js";
 import {
@@ -63,6 +62,7 @@ import {
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
 import { autoGenerateTicket } from "../ticket/ticketCard/card.service.js";
 import { Prisma } from "../../../generated/prisma/client.js";
+import { notificationQueue } from "../../utils/redisConnection.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -902,7 +902,9 @@ export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
         survey?.title,
       ),
     };
-    await sendAWSEmail(msg);
+    await notificationQueue.add("notification", {
+      emailData: msg,
+    });
   }
   return "response";
 }

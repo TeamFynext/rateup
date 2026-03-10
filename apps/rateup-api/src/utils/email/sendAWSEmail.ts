@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
   SES: { sesClient, SendEmailCommand },
 });
 
-interface EmailParams {
+export interface EmailParams {
   to: string;
   subject: string;
   text: string;

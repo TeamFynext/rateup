@@ -1,11 +1,11 @@
 import { Worker, Job } from "bullmq";
-import { log } from "../../../../utils/logger.js";
-import baseRedis from "../../../../utils/redisConnection.js";
+import { log } from "../utils/logger.js";
+import baseRedis from "../utils/redisConnection.js";
 import {
   handleWebhook,
   processShopifySurveySchedule,
-} from "../shopify.service.js";
-import { ShopifyEvents } from "../../../../types/enums.js";
+} from "../modules/integrations/shopify/shopify.service.js";
+import { ShopifyEvents } from "../types/enums.js";
 
 const workerConnection = baseRedis.duplicate();
 

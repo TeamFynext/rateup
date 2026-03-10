@@ -1,6 +1,7 @@
 import "dotenv/config";
 import IORedis from "ioredis";
 import { Queue } from "bullmq";
+import { NotificationJobData } from "../modules/notification/notification.service.js";
 const redisURL = new URL(process.env.REDIS_URL);
 const connection = new IORedis.default({
   family: 0,
@@ -34,5 +35,10 @@ export const webhookQueue = new Queue("webhookQueue", { connection });
 export const shopifySurveyQueue = new Queue("shopifySurveyQueue", {
   connection,
 });
+
+export const notificationQueue = new Queue<NotificationJobData>(
+  "notificationQueue",
+  { connection },
+);
 
 export default connection;

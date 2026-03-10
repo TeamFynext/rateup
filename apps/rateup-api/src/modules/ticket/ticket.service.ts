@@ -4,12 +4,12 @@ import {
   createEmailBodyTicketAssigned,
   createEmailBodyTicketCreated,
 } from "../../utils/email/tickets/ticketAssigned.js";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { parsePhoneforWa } from "../loyalty/util.js";
 import { log } from "../../utils/logger.js";
 import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { getContactByPhoneNumberAndOrgId } from "../contact/contact.service.js";
 import dayjs from "dayjs";
+import { notificationQueue } from "../../utils/redisConnection.js";
 
 export async function sendTicketAssignedWaMessage(data: {
   phone: string;
@@ -62,7 +62,9 @@ export async function sendTicketAssignedEmail(data: {
     }),
   };
   try {
-    sendAWSEmail(msg);
+    await notificationQueue.add("notification", {
+      emailData: msg,
+    });
   } catch (error) {
     console.error(error);
     throw new Error("Email sending failed. E:" + error);
@@ -120,7 +122,9 @@ export async function sendTicketCreateEmail(data: {
     }),
   };
   try {
-    sendAWSEmail(msg);
+    await notificationQueue.add("notification", {
+      emailData: msg,
+    });
   } catch (error) {
     console.error(error);
     throw new Error("Email sending failed. E:" + error);
