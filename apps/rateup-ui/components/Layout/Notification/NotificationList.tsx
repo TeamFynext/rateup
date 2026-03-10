@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import Link from "next/link";
 
 import {
   IconBrandWhatsappFilled,
+  IconSend,
   IconTicket,
   IconX,
 } from "@tabler/icons-react";
@@ -12,7 +13,6 @@ import {
 import {
   useDeleteAllNotifications,
   useDeleteNotification,
-  useNotifications,
 } from "@/backend/notification/notification.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import NothingFound from "@/components/NothingFound/NothingFound";
@@ -26,9 +26,13 @@ const NotificationList = ({ close, data, isLoading }) => {
   const getNotificationIcon = useCallback((source) => {
     switch (source) {
       case "whatsapp":
-        return <IconBrandWhatsappFilled color="#25D366" />;
+        return <IconBrandWhatsappFilled className="size-4 text-foreground" />;
       case "ticket":
-        return <IconTicket />;
+        return <IconTicket className="size-4 text-foreground" />;
+      case "campaign":
+        return <IconSend className="size-4 text-foreground" />;
+      default:
+        return null;
     }
   }, []);
 
@@ -38,7 +42,7 @@ const NotificationList = ({ close, data, isLoading }) => {
       case "chat-assigned":
         return (
           <div className="flex flex-col gap-2">
-            <p className="text-sm w-[280px] text-muted-foreground">
+            <p className="w-70 text-sm text-muted-foreground">
               A chat from{" "}
               <span className="font-medium text-foreground">
                 {data?.contactName}
@@ -57,7 +61,7 @@ const NotificationList = ({ close, data, isLoading }) => {
       case "chat-closed":
         return (
           <div className="flex flex-col gap-2">
-            <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
+            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
               Chat from{" "}
               <span className="font-medium text-foreground">
                 {data?.contactName}
@@ -76,7 +80,7 @@ const NotificationList = ({ close, data, isLoading }) => {
       case "ticket-assigned":
         return (
           <div className="flex flex-col gap-2">
-            <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
+            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
               A ticket from board{" "}
               <span className="font-medium text-foreground">
                 {data?.board_name}
@@ -95,7 +99,7 @@ const NotificationList = ({ close, data, isLoading }) => {
       case "mentioned":
         return (
           <div className="flex flex-col gap-2">
-            <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
+            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
               You were mentioned in a chat from{" "}
               <span className="font-medium text-foreground">
                 {data?.contactName}
@@ -110,15 +114,31 @@ const NotificationList = ({ close, data, isLoading }) => {
             </p>
           </div>
         );
+      case "campaign-completed":
+        return (
+          <div className="flex flex-col gap-2">
+            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
+              Your campaign "{data?.campaignName}" completed.
+              <Link
+                href={`/dashboard/campaign/${data?.campaignId}`}
+                onClick={close}
+                className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
+              >
+                Show campaign
+              </Link>
+            </p>
+          </div>
+        );
     }
   }, []);
   if (isLoading) return <RateupLoader />;
   if (data?.length === 0) return <NothingFound text="No notifications found" />;
+
   return (
     <div className="h-full flex flex-col gap-4">
       <div className="flex justify-end">
         <Button variant="outline" onClick={() => deleteAll.mutate()}>
-          clear
+          Clear all
         </Button>
       </div>
       <ScrollArea className="h-[calc(100vh-180px)]">
@@ -126,7 +146,7 @@ const NotificationList = ({ close, data, isLoading }) => {
           {data?.map((notification) => (
             <div
               key={notification?.id}
-              className="bg-shade-of-blue p-2 rounded-lg shadow-xs"
+              className="rounded-lg border border-border bg-muted/40 p-2"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-start gap-2">

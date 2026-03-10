@@ -363,11 +363,21 @@ export function ImportTemplatesButton() {
   );
 }
 
-export function SyncTemplatesButton({ disabled = false }) {
+export function SyncTemplatesButton({
+  disabled = false,
+  whatsappSettingsPhoneIds,
+}: Readonly<{
+  disabled?: boolean;
+  whatsappSettingsPhoneIds?: string[];
+}>) {
   const syncMutation = useSyncTemplatesMutation();
   const translations = useTranslations();
   function handleSyncClick() {
-    syncMutation.mutate();
+    syncMutation.mutate(
+      whatsappSettingsPhoneIds?.length
+        ? { whatsappSettingsPhoneIds }
+        : undefined,
+    );
   }
 
   return (

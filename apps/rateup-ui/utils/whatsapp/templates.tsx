@@ -17,6 +17,10 @@ export function parseTemplate(template) {
   parsedTemplate.footer = "";
   parsedTemplate.templateType = template?.templateType;
   parsedTemplate.defaultValues = template?.defaultValues;
+  parsedTemplate.whatsappSettingsPhoneId =
+    template?.whatsappSettingsPhoneId ||
+    template?.defaultValues?.whatsappSettingsPhoneId ||
+    "";
   parsedTemplate.mediaCarousel = [];
   parsedTemplate.productCarousel = [];
   // parsedTemplate.config = template?.config;

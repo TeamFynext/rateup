@@ -92,9 +92,6 @@ const formSchema = z.object({
   flowId: z.string().optional(),
   dynamicTags: z.array(z.string()).optional(),
   useUserConsent: z.boolean(),
-  whatsappSettingsPhoneId: z.string().min(1, {
-    error: "Must select a phone number",
-  }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -124,7 +121,6 @@ const CreateCampaignModal = ({
       flowId: campaign?.flowId || "",
       dynamicTags: campaign?.dynamicTags || [],
       useUserConsent: campaign?.useUserConsent ?? true,
-      whatsappSettingsPhoneId: campaign?.whatsappSettingsPhoneId || "",
     },
   });
 
@@ -155,7 +151,6 @@ const CreateCampaignModal = ({
         flowId: campaign?.flowId || "",
         dynamicTags: campaign?.dynamicTags || [],
         useUserConsent: campaign?.useUserConsent ?? true,
-        whatsappSettingsPhoneId: campaign?.whatsappSettingsPhoneId || "",
       });
 
       if (campaign?.dripStages && campaign.dripStages.length > 0) {
@@ -315,9 +310,7 @@ const CreateCampaignModal = ({
   ]);
 
   const handleNext = async () => {
-    const fieldsToValidate = isEdit
-      ? ["name", "whatsappSettingsPhoneId"]
-      : ["teamId", "name", "whatsappSettingsPhoneId"];
+    const fieldsToValidate = isEdit ? ["name"] : ["teamId", "name"];
 
     const isValid = await form.trigger(fieldsToValidate as any);
 
@@ -493,20 +486,6 @@ const CreateCampaignModal = ({
                               placeholder={t("placeholders.name")}
                               {...field}
                             />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="whatsappSettingsPhoneId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("fields.phone")}</FormLabel>
-                          <FormControl>
-                            <AccountSelector {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
