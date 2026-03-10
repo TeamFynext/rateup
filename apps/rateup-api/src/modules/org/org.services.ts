@@ -134,21 +134,27 @@ export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
   });
 
   // Transform into cleaner structure
-  const formattedMembers = members.map((m) => ({
-    id: m.user.id,
-    name: m.user.name,
-    email: m.user.email,
-    profilePhoto: m.user.profilePhoto,
-    role: m.role,
-    teams: m.user.teamMember.map((tm) => ({
-      team_id: tm.team.id,
-      team_name: tm.team.name,
-      team_code: tm.team.code,
-      team_color: tm.team.color,
-    })),
-    isPaused: m.user.isPaused,
-    status: m.status,
-  }));
+  const formattedMembers = members
+    .map((m) => ({
+      id: m.user.id,
+      name: m.user.name,
+      email: m.user.email,
+      profilePhoto: m.user.profilePhoto,
+      role: m.role,
+      teams: m.user.teamMember.map((tm) => ({
+        team_id: tm.team.id,
+        team_name: tm.team.name,
+        team_code: tm.team.code,
+        team_color: tm.team.color,
+      })),
+      isPaused: m.user.isPaused,
+      status: m.status,
+    }))
+    .sort((a, b) => {
+      if (a.status === "online" && b.status !== "online") return -1;
+      if (a.status !== "online" && b.status === "online") return 1;
+      return 0;
+    });
 
   // Fetch pending invitations for the same org
   const invitations = await prisma.invitation.findMany({
