@@ -117,17 +117,17 @@ export default function RewardsPage() {
 
   // Form instances
   const pointRewardForm = useForm<z.infer<typeof pointRewardSchema>>({
-    resolver: zodResolver(pointRewardSchema),
+    resolver: zodResolver(pointRewardSchema as any),
     defaultValues: defaultPointRewardValues,
   });
 
   const couponForm = useForm<z.infer<typeof couponSchema>>({
-    resolver: zodResolver(couponSchema),
+    resolver: zodResolver(couponSchema as any),
     defaultValues: defaultCouponValues,
   });
 
   const giftForm = useForm<z.infer<typeof giftSchema>>({
-    resolver: zodResolver(giftSchema),
+    resolver: zodResolver(giftSchema as any),
     defaultValues: defaultGiftValues,
   });
 
