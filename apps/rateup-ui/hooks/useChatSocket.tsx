@@ -171,7 +171,7 @@ const handleNotificationWithSound = ({ message, router }) => {
     id: message.inbox.message.messageId,
     icon: <IconBrandWhatsapp size={18} />,
     action: {
-      label: "Action",
+      label: "View",
       onClick: () => {
         router.push(
           `${pathnamesMap.inbox}?contactId=${message.inbox.contact.id}`,

@@ -67,22 +67,26 @@ import { Textarea } from "@/components/ui/textarea";
 const tierSchema = z.object({
   name: z.string().min(1, "Tier name is required"),
   color: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid color format"),
-  pointsMultiplier: z.number().min(0, "Must be a positive number"),
-  threshold: z.number().min(0, "Must be a positive number"),
+  pointsMultiplier: z.coerce.number().min(0, "Must be a positive number"),
+  threshold: z.coerce.number().min(0, "Must be a positive number"),
 });
 
 const earningRuleSchema = z.object({
   name: z.string().min(1, "Rule name is required"),
   description: z.string().optional(),
-  priority: z.number().min(0).default(10),
+  priority: z.coerce.number().min(0).default(10),
   status: z
     .enum(["active", "inactive", "scheduled", "expired"])
     .default("active"),
-  pointsPerUnit: z.number().min(0).default(1.0),
-  multiplier: z.number().min(0).default(1.0),
-  bonusPoints: z.number().min(0).default(0),
-  minPurchaseAmount: z.number().min(0).nullable().optional(),
-  maxPurchaseAmount: z.number().min(0).nullable().optional(),
+  pointsPerUnit: z.coerce.number().min(0).default(1.0),
+  multiplier: z.coerce.number().min(0).default(1.0),
+  bonusPoints: z.coerce.number().min(0).default(0),
+  minPurchaseAmount: z
+    .union([z.literal(""), z.null(), z.undefined(), z.coerce.number().min(0)])
+    .transform((v) => (v === "" ? null : v)),
+  maxPurchaseAmount: z
+    .union([z.literal(""), z.null(), z.undefined(), z.coerce.number().min(0)])
+    .transform((v) => (v === "" ? null : v)),
   // UI supports these (and backend may accept them); keep permissive for date input values.
   validFrom: z.string().nullable().optional(),
   validUntil: z.string().nullable().optional(),
@@ -504,6 +508,7 @@ export default function EarningRulesPage() {
                           <FormControl>
                             <Input
                               {...field}
+                              value={field.value as number}
                               type="number"
                               step="0.1"
                               min="1"
@@ -523,7 +528,12 @@ export default function EarningRulesPage() {
                         <FormItem className="space-y-2">
                           <FormLabel>{t("bonusPoints")}</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" min="0" />
+                            <Input
+                              {...field}
+                              value={field.value as number}
+                              type="number"
+                              min="0"
+                            />
                           </FormControl>
                           <FormDescription>
                             {t("bonusPointsHint")}
@@ -745,7 +755,13 @@ function TierCard({
   });
 
   const onSubmit = (values: TierFormValues) => {
-    updateTierMutation.mutate(values, {
+    const updatedData: LoyaltyTierInput = {
+      name: values.name,
+      color: values.color,
+      pointsMultiplier: Number(values.pointsMultiplier),
+      threshold: Number(values.threshold),
+    };
+    updateTierMutation.mutate(updatedData, {
       onSuccess: () => onCancelEdit(),
     });
   };
@@ -886,6 +902,7 @@ function TierCard({
                       <FormControl>
                         <Input
                           {...field}
+                          value={field.value as number}
                           type="number"
                           className="h-9 font-semibold"
                           min="0"
@@ -910,6 +927,7 @@ function TierCard({
                       <Input
                         {...field}
                         type="number"
+                        value={field.value as number}
                         className="mt-1 h-9"
                         min="0"
                         disabled={tier.threshold === 0}
@@ -1196,6 +1214,7 @@ function RuleCard({
                     <FormControl>
                       <Input
                         {...field}
+                        value={field.value as number}
                         type="number"
                         step="0.1"
                         className="mt-1 h-9"
@@ -1215,7 +1234,12 @@ function RuleCard({
                       {t("bonusPoints")}
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" className="mt-1 h-9" />
+                      <Input
+                        {...field}
+                        value={field.value as number}
+                        type="number"
+                        className="mt-1 h-9"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

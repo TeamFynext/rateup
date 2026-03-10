@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { getErrorMessage } from "../../utils";
 import {
   createWaTemplate,
   deleteWaTemplate,
@@ -13,6 +12,7 @@ import {
   saveTemplateAsDraft,
   sendWaTemplateToUser,
   syncTemplates,
+  SyncTemplatesInput,
   updateWaTemplate,
 } from "./whatsapp.api";
 
@@ -108,7 +108,7 @@ export const useDeleteWaTemplateMutation = (onSuccess?, onError?) => {
 export const useSyncTemplatesMutation = (onSuccess?, onError?) => {
   const queryClient = useQueryClient();
   const syncMutation = useMutation({
-    mutationFn: syncTemplates,
+    mutationFn: (data?: SyncTemplatesInput) => syncTemplates(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["watemplates"] });
       toast.success("Templates Synced Successfully");

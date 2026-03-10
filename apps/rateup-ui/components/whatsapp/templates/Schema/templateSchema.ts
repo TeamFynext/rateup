@@ -148,6 +148,7 @@ export const templateSchema = z
     status: z.enum(WaTemplateStatus),
     example: z.array(z.string().trim()).optional(),
     templateType: z.enum(TemplateType),
+    whatsappSettingsPhoneId: z.string().optional(),
     mediaCarousel: z
       .array(
         z.object({

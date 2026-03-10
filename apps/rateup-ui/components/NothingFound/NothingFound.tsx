@@ -1,32 +1,35 @@
 "use client";
 
-import { Image, Stack, Text } from "@mantine/core";
+import Image from "next/image";
+
 import { useTranslations } from "next-intl";
 
 interface NothingFoundProps {
   text: string;
   className?: string;
 }
-export default function NothingFound({ className, text }: NothingFoundProps) {
+
+export default function NothingFound({
+  className,
+  text,
+}: Readonly<NothingFoundProps>) {
   const translations = useTranslations();
+
   return (
-    <Stack
-      className={className}
-      h={"100%"}
-      align={"center"}
-      justify="center"
-      p={"xl"}
-      flex={1}
+    <div
+      className={`flex h-full flex-1 flex-col items-center justify-center gap-4 p-6 text-center ${className ?? ""}`}
     >
       <Image
         src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/nodata.svg`}
         alt={translations("Nothing_found")}
-        maw={140}
-        opacity={0.35}
+        width={140}
+        height={140}
+        className="opacity-35"
       />
-      <Text c={"dimmed"} fw={500}>
+
+      <p className="text-sm font-medium text-muted-foreground">
         {text ?? translations("Nothing_found")}
-      </Text>
-    </Stack>
+      </p>
+    </div>
   );
 }

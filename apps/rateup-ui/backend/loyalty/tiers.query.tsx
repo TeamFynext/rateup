@@ -48,6 +48,11 @@ export const useUpdateLoyaltyTierMutation = (
       queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
       onSuccess?.();
     },
+    onError: (error) => {
+      toast.error(
+        error?.message || `Error updating loyalty tier: Unknown error`,
+      );
+    },
   });
 };
 

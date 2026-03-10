@@ -48,6 +48,7 @@ import {
   useWaTemplateById,
 } from "@/backend/whatsapp/whatsapp.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import { AccountSelector } from "@/components/input/AccountSelector";
 import {
   ContainedNumberInput,
   ContainedSelection,
@@ -123,6 +124,7 @@ export default function WhatsappTemplateById() {
       templateType: TemplateType.GENERAL_NOTIFICATION,
       mediaCarousel: [],
       productCarousel: [],
+      whatsappSettingsPhoneId: "",
       defaultValues: {
         catalog: {
           thumbnail_product_retailer_id: "",
@@ -154,10 +156,31 @@ export default function WhatsappTemplateById() {
     if (editingItem) {
       form.resetDirty();
       form.setValues(parseTemplate(editingItem));
+      const selectedPhoneId =
+        editingItem?.whatsappSettingsPhoneId ||
+        editingItem?.defaultValues?.whatsappSettingsPhoneId ||
+        "";
+      form.setFieldValue("whatsappSettingsPhoneId", selectedPhoneId);
+      form.setFieldValue(
+        "defaultValues.whatsappSettingsPhoneId",
+        selectedPhoneId,
+      );
       configForm.setValues(editingItem?.config);
       update({ templateId: editingItem?.data?.name });
     }
   }, [editingItem]);
+
+  useEffect(() => {
+    if (
+      form.values.whatsappSettingsPhoneId !==
+      form.values.defaultValues?.whatsappSettingsPhoneId
+    ) {
+      form.setFieldValue(
+        "defaultValues.whatsappSettingsPhoneId",
+        form.values.whatsappSettingsPhoneId,
+      );
+    }
+  }, [form.values.whatsappSettingsPhoneId]);
 
   const { data: subscription, isLoading } = useSubscription();
   const templateTypes = useMemo(
@@ -263,14 +286,14 @@ export default function WhatsappTemplateById() {
   );
 
   const { data: catalog } = useConnectedWaCatalog(
-    form.values.defaultValues?.whatsappSettingsPhoneId,
+    form.values.whatsappSettingsPhoneId,
   );
   const productRetailerIds = useMemo(
     () => (catalog ? catalog.products?.map((p) => p.retailer_id) : []),
     [catalog],
   );
   useEffect(() => {
-    const selectedCatalogId = form.values.defaultValues.catalog.catalogId;
+    const selectedCatalogId = form.values.defaultValues?.catalog?.catalogId;
     if (
       catalog &&
       (!selectedCatalogId.length || selectedCatalogId !== catalog.catalogId)
@@ -399,6 +422,15 @@ export default function WhatsappTemplateById() {
     try {
       if (saveAsDraft) setIsSubmittingDraft(true);
       else setIsSubmitting(true);
+      const selectedWhatsappPhoneId =
+        values.whatsappSettingsPhoneId ||
+        values.defaultValues?.whatsappSettingsPhoneId ||
+        "";
+      values.whatsappSettingsPhoneId = selectedWhatsappPhoneId;
+      values.defaultValues = {
+        ...values.defaultValues,
+        whatsappSettingsPhoneId: selectedWhatsappPhoneId,
+      };
       const defaultValues: WaTemplateDefaultValues = {};
       if (
         values.format !== WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE &&
@@ -557,6 +589,10 @@ export default function WhatsappTemplateById() {
       }
       form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE);
       form.setFieldValue("defaultValues", {
+        whatsappSettingsPhoneId:
+          form.values.whatsappSettingsPhoneId ||
+          form.values.defaultValues?.whatsappSettingsPhoneId ||
+          "",
         orderDetails: {
           productType: "digital-goods",
           discount: 0.0,
@@ -808,6 +844,23 @@ export default function WhatsappTemplateById() {
                     data={WHATSAPP_TEMPLATE_LANGUAGE}
                     allowDeselect={false}
                   />
+                  <div>
+                    <AccountSelector
+                      value={form.values.whatsappSettingsPhoneId}
+                      onChange={(value) => {
+                        form.setFieldValue(
+                          "whatsappSettingsPhoneId",
+                          value ?? "",
+                        );
+                        form.setFieldValue(
+                          "defaultValues.whatsappSettingsPhoneId",
+                          value ?? "",
+                        );
+                      }}
+                      label={translations("Account")}
+                      className="h-10"
+                    />
+                  </div>
                 </SimpleGrid>
                 {form.values?.category !== WaTemplateCategory.AUTHENTICATION &&
                   form.getValues().templateType !==

@@ -12,6 +12,10 @@ const REDIRECT_URL = `${WHATSAPP_URL}/redirect`;
 export type WaTemplate = {
   id: string;
   createdAt: Date;
+  whatsappSettingsPhoneId?: string;
+  defaultValues?: {
+    whatsappSettingsPhoneId?: string;
+  };
   data: {
     name: string;
     components: Array<any>;
@@ -23,6 +27,10 @@ export type WaTemplate = {
   acceptButton: string;
   orgId: string;
   templateType?: TemplateType;
+};
+
+export type SyncTemplatesInput = {
+  whatsappSettingsPhoneIds?: string[];
 };
 
 /**
@@ -55,8 +63,8 @@ export const deleteWaTemplate = async (id: string) => {
 export const updateWaTemplate = async (id: string, templateData: any) => {
   return axiosClient.put(`${TEMPLATES_URL}/${id}`, templateData);
 };
-export const syncTemplates = async () => {
-  return axiosClient.get(`${TEMPLATES_URL}/sync`);
+export const syncTemplates = async (input: SyncTemplatesInput) => {
+  return axiosClient.post(`${TEMPLATES_URL}/sync`, input);
 };
 export const getUnregisteredTemplates = async () => {
   return (await axiosClient.get(`${TEMPLATES_URL}/unregistered`)).data;
