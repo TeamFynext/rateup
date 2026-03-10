@@ -8,14 +8,12 @@ import {
   sendTicketCreateEmail,
   sendTicketCreateWaMessage,
 } from "../ticket.service.js";
-import {
-  createNotification,
-  getNotificationSettings,
-} from "../../notification/notification.service.js";
+import { getNotificationSettings } from "../../notification/notification.service.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
 } from "../../integrations/external/zapier/zapier.service.js";
+import { notificationQueue } from "../../../utils/redisConnection.js";
 
 export interface CardInput {
   title?: string;
@@ -118,11 +116,19 @@ export async function createCard(data: CardInput) {
       });
     const notificationSetting = await getNotificationSettings(user.id, orgId);
     if (notificationSetting && notificationSetting.ticketAssignNotification) {
-      await createNotification(user.id, orgId, "ticket", "ticket-assigned", {
-        board_name: board.title,
-        column_name: column.title,
-        cardId: card.id,
-        ticketId: card.ticketId,
+      await notificationQueue.add("notification", {
+        systemNotificationData: {
+          userId: user.id,
+          orgId: orgId,
+          source: "ticket",
+          subSource: "ticket-assigned",
+          data: {
+            board_name: board.title,
+            column_name: column.title,
+            cardId: card.id,
+            ticketId: card.ticketId,
+          },
+        },
       });
     }
   }
@@ -333,11 +339,19 @@ export async function updateCard(
   for await (const user of users) {
     const notificationSetting = await getNotificationSettings(user.id, orgId);
     if (notificationSetting && notificationSetting.ticketAssignNotification) {
-      await createNotification(user.id, orgId, "ticket", "ticket-assigned", {
-        board_name: board.title,
-        column_name: column.title,
-        cardId: card.id,
-        ticketId: card.ticketId,
+      await notificationQueue.add("notification", {
+        systemNotificationData: {
+          userId: user.id,
+          orgId: orgId,
+          source: "ticket",
+          subSource: "ticket-assigned",
+          data: {
+            board_name: board.title,
+            column_name: column.title,
+            cardId: card.id,
+            ticketId: card.ticketId,
+          },
+        },
       });
     }
     if (board.ticketAssignedEmail)

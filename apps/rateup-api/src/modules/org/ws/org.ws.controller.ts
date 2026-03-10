@@ -4,11 +4,6 @@ import { orgWsMessage } from "../../../types/global.js";
 import { log } from "../../../utils/logger.js";
 import baseRedis, { userStatusQueue } from "../../../utils/redisConnection.js";
 import { WebSocket } from "@fastify/websocket";
-import { updateUserAvailablityStatus } from "../../user/user.service.js";
-import { UserAvailabilityStatus } from "../../user/user.schema.js";
-import { Job, Worker } from "bullmq";
-import prisma from "../../../utils/prisma.js";
-import { UserPresenceMode } from "../../../../generated/prisma/enums.js";
 import { getSessionWithoutRequestResponse } from "supertokens-node/recipe/session/index.js";
 // Constants for delays
 const ONLINE_DEBOUNCE_MS = 2000;
@@ -66,39 +61,6 @@ async function scheduleOfflineStatus(userId: string, orgId: string) {
     log.error("Error scheduling offline status: %s", err);
   }
 }
-
-new Worker(
-  "user-availability",
-  async (job: Job) => {
-    const { userId, orgId } = job.data;
-    const user = await prisma.user.findFirst({
-      where: { id: userId },
-      select: { presenceMode: true },
-    });
-    if (user?.presenceMode !== UserPresenceMode.automatic) return;
-    try {
-      if (job.name === "set-online") {
-        await updateUserAvailablityStatus(
-          userId,
-          orgId,
-          UserAvailabilityStatus.online,
-        );
-      } else if (job.name === "set-offline") {
-        await updateUserAvailablityStatus(
-          userId,
-          orgId,
-          UserAvailabilityStatus.offline,
-        );
-      }
-    } catch (err) {
-      log.error("Error updating user availability: %s", err);
-    }
-  },
-  {
-    connection: baseRedis,
-    removeOnComplete: { count: 1 },
-  },
-);
 
 subscriber.on("message", (channel, message) => {
   if (channel !== WS_CHANNEL) return;

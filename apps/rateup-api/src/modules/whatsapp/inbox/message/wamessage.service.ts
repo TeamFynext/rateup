@@ -44,10 +44,7 @@ import {
 import { Role } from "../../../org/org.services.js";
 import { getTeamIdsByUserId } from "../../../team/team.service.js";
 import { UserAvailabilityStatus } from "../../../user/user.schema.js";
-import {
-  createNotification,
-  getNotificationSettings,
-} from "../../../notification/notification.service.js";
+import { getNotificationSettings } from "../../../notification/notification.service.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
@@ -58,7 +55,11 @@ import {
   getLastCreatedConversationForContact,
   updateConversationAssignees,
 } from "../../../contact/conversation/conversation.service.js";
-import { sendMessageQueue } from "../../../../utils/redisConnection.js";
+import {
+  notificationQueue,
+  sendMessageQueue,
+} from "../../../../utils/redisConnection.js";
+import dayjs from "dayjs";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -764,7 +765,12 @@ export async function exportWhatsapChats(
     if (constraints?.date) {
       switch (constraints.date.type) {
         case DateType.BETWEEN:
-          extendedWhereClause += `AND wm."createdAt" BETWEEN '${constraints.date.between.from}' AND '${constraints.date.between.to}' `;
+          extendedWhereClause += `
+          AND wm."createdAt" >= '${constraints.date.between.from}'
+          AND wm."createdAt" < '${dayjs(constraints.date.between.to)
+            .add(1, "day")
+            .format("YYYY-MM-DD")}'
+          `;
           break;
         case DateType.BEFORE:
           extendedWhereClause += `AND TO_CHAR(wm."createdAt",'YYYY-MM-DD') ${constraints.date.inclusive ? "<=" : "<"} '${constraints.date.before}' `;
@@ -1037,16 +1043,18 @@ export async function assignWaMessageToUser(
         notificationSetting &&
         notificationSetting.waMessageAssignNotification
       ) {
-        await createNotification(
-          user.userId,
-          updatedContact.orgId,
-          "whatsapp",
-          "chat-assigned",
-          {
-            contactId: updatedContact.id,
-            contactName: updatedContact.name,
+        await notificationQueue.add("notification", {
+          systemNotificationData: {
+            userId: user.userId,
+            orgId: updatedContact.orgId,
+            source: "whatsapp",
+            subSource: "chat-assigned",
+            data: {
+              contactId: updatedContact.id,
+              contactName: updatedContact.name,
+            },
           },
-        );
+        });
       }
     }
 
@@ -1769,13 +1777,15 @@ export async function createInternalWaMessage({
 
       await Promise.all(
         mentionedUserDetails.map((user) =>
-          createNotification(
-            user.id,
-            orgId,
-            "whatsapp",
-            "mentioned",
-            notificationData,
-          ),
+          notificationQueue.add("notification", {
+            systemNotificationData: {
+              userId: user.id,
+              orgId: orgId,
+              source: "whatsapp",
+              subSource: "mentioned",
+              data: notificationData,
+            },
+          }),
         ),
       );
     }

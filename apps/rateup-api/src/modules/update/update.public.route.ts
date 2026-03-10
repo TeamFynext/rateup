@@ -14,6 +14,7 @@ import {
   migratePhoneIdsHandle,
   backfillWithSQLHandler,
   migrateAutomationToRulesHandler,
+  migrateWaTemplatePhoneIdsHandler,
 } from "./update.controller.js";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
@@ -28,4 +29,8 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.put("/migrate-to-whatsapp-phone-ids", migratePhoneIdsHandle);
   server.put("/backfill", backfillWithSQLHandler);
   server.put("/migrate-automation-to-rules", migrateAutomationToRulesHandler);
+  server.put(
+    "/migrate-wa-template-to-whatsapp-phone-id",
+    migrateWaTemplatePhoneIdsHandler,
+  );
 }

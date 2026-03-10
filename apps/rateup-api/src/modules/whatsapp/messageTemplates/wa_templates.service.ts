@@ -29,9 +29,12 @@ import { SendTemplateHeaderComponent } from "../../../external/v1/wa-templates/w
  * fetches templates from WhatsApp Business API
  * @returns
  */
-export async function fetchTemplates(orgId: string) {
+export async function fetchTemplates(
+  orgId: string,
+  whatsappSettingsPhoneId?: string,
+) {
   try {
-    const waSettings = await getWaSettings(orgId);
+    const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
     if (!waSettings) {
       throw new Error("No WhatsApp settings found for orgId " + orgId);
     }
@@ -50,9 +53,13 @@ export async function fetchTemplates(orgId: string) {
   }
 }
 
-export async function fetchTemplate(templateName: string, orgId: string) {
+export async function fetchTemplate(
+  templateName: string,
+  orgId: string,
+  whatsappSettingsPhoneId?: string,
+) {
   try {
-    const waSettings = await getWaSettings(orgId);
+    const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
     log.trace("fetching template %s", templateName);
     const {
       data: { data: templates },
@@ -90,6 +97,12 @@ export async function getTemplatesByOrgIdAndTemplateType(
       data: true,
       createdAt: true,
       templateType: true,
+      whatsappSettingsPhoneId: true,
+      WhatsappSettings: {
+        select: {
+          phoneDisplayName: true,
+        },
+      },
       _count: {
         select: {
           Campaign: true,
@@ -128,6 +141,7 @@ export type templateData = {
     name: string;
     tax: number;
   } | null;
+  whatsappSettingsPhoneId: string | null;
 };
 export async function getTemplateByIdAndOrgId(id: string, orgId: string) {
   const template = await prisma.waTemplate.findFirst({
@@ -187,8 +201,12 @@ export async function getTemplateWithHSMId(hsmId: string) {
  * @param template
  * @returns
  */
-export async function createTemplate(orgId: string, template: any) {
-  const waSettings = await getWaSettings(orgId);
+export async function createTemplate(
+  orgId: string,
+  template: any,
+  whatsappSettingsPhoneId?: string,
+) {
+  const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
   if (!waSettings) {
     throw new Error("No WhatsApp settings found for orgId " + orgId);
   }
@@ -226,6 +244,7 @@ export async function saveTemplate(
   defaultValues: WaTemplateDefaultValues = {},
   templateType?: TemplateType,
   config?: any,
+  whatsappSettingsPhoneId?: string,
 ) {
   try {
     const res = await prisma.waTemplate.create({
@@ -236,6 +255,7 @@ export async function saveTemplate(
         defaultValues,
         templateType,
         config,
+        whatsappSettingsPhoneId,
       },
     });
     log.trace("Template saved to db %o", res);
@@ -299,6 +319,7 @@ export async function updateTemplateInDb(
   defaultValues?: WaTemplateDefaultValues,
   templateType?: TemplateType,
   config?: any,
+  whatsappSettingsPhoneId?: string,
 ) {
   log.trace(`Updating template %o`, { templateId, data: template });
   try {
@@ -311,6 +332,7 @@ export async function updateTemplateInDb(
         defaultValues: defaultValues ? defaultValues : undefined,
         templateType,
         config,
+        whatsappSettingsPhoneId,
       },
     });
     return res;
@@ -329,10 +351,11 @@ export async function editTemplate(
   hsm_id: string,
   components: Array<any>,
   category: string,
+  whatsappSettingsPhoneId?: string,
 ) {
   log.trace(`Updating template %o`, { templateId: hsm_id, components });
   try {
-    const waSettings = await getWaSettings(orgId);
+    const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
     const res = await callWhatsappApi(
       `/${hsm_id}`,
       "POST",
@@ -375,17 +398,21 @@ export async function updateTemplate(
         template.data.id,
         formattedTemplate.components,
         template.data.category,
+        data.whatsappSettingsPhoneId ?? template.whatsappSettingsPhoneId,
       );
       if (res) {
         const updatedTemplate = await fetchTemplate(
           template.data.name,
           template.orgId,
+          data.whatsappSettingsPhoneId ?? template.whatsappSettingsPhoneId,
         );
         res = await updateTemplateInDb(
           templateId,
           updatedTemplate,
           data.defaultValues as WaTemplateDefaultValues,
           data.templateType,
+          undefined,
+          data.whatsappSettingsPhoneId,
         );
         break;
       }
@@ -401,6 +428,7 @@ export async function updateTemplate(
         data.defaultValues as WaTemplateDefaultValues,
         data.templateType,
         data.config,
+        data.whatsappSettingsPhoneId,
       );
       break;
     default:
@@ -417,6 +445,7 @@ export async function updateTemplate(
         data.defaultValues as WaTemplateDefaultValues,
         data.templateType,
         data.config,
+        data.whatsappSettingsPhoneId,
       );
       break;
   }
@@ -490,23 +519,57 @@ function extractDefaultValues(template: any): WaTemplateDefaultValues {
   return defaultValues;
 }
 
-export async function syncTemplates(orgId: string) {
+export async function syncTemplates(
+  orgId: string,
+  whatsappSettingsPhoneIds: string[] = [],
+) {
   try {
     log.trace("Syncing templates for orgId %s", orgId);
-    const waTemplates = await fetchTemplates(orgId);
+
+    const phoneIdsToSync = whatsappSettingsPhoneIds.length
+      ? whatsappSettingsPhoneIds
+      : [undefined];
     const dbTemplates = await getTemplatesByOrgId(orgId);
 
-    console.log(waTemplates, dbTemplates);
-    let idToHSMIdMap = {};
-    const waTemplateIds = dbTemplates.map((dt: any) => {
-      idToHSMIdMap[dt.data.id] = dt.id;
-      return dt.data.id;
-    });
-    for (let wt of waTemplates) {
-      if (waTemplateIds.includes(wt.id)) {
-        await updateTemplateInDb(idToHSMIdMap[wt.id], wt);
-      } else {
-        // New template found in WhatsApp, create it in DB
+    const templateByWaId = new Map<string, any>();
+    const templateByNameAndPhone = new Map<string, any>();
+
+    for (const dbTemplate of dbTemplates) {
+      const dbWaTemplateId = dbTemplate?.data?.id;
+      if (dbWaTemplateId) {
+        templateByWaId.set(dbWaTemplateId, dbTemplate);
+      }
+
+      const key = `${dbTemplate?.data?.name ?? ""}|${dbTemplate?.whatsappSettingsPhoneId ?? ""}`;
+      templateByNameAndPhone.set(key, dbTemplate);
+    }
+
+    let created = 0;
+    let updated = 0;
+
+    for (const whatsappSettingsPhoneId of phoneIdsToSync) {
+      const waTemplates = await fetchTemplates(orgId, whatsappSettingsPhoneId);
+
+      for (const wt of waTemplates) {
+        const existingByWaId = wt?.id ? templateByWaId.get(wt.id) : null;
+        const nameAndPhoneKey = `${wt?.name ?? ""}|${whatsappSettingsPhoneId ?? ""}`;
+        const existingByNameAndPhone =
+          templateByNameAndPhone.get(nameAndPhoneKey);
+        const existingTemplate = existingByWaId ?? existingByNameAndPhone;
+
+        if (existingTemplate) {
+          await updateTemplateInDb(
+            existingTemplate.id,
+            wt,
+            undefined,
+            existingTemplate.templateType,
+            existingTemplate.config,
+            whatsappSettingsPhoneId,
+          );
+          updated += 1;
+          continue;
+        }
+
         const templateType = inferTemplateType(wt);
         const defaultValues = extractDefaultValues(wt);
         log.trace(
@@ -514,14 +577,31 @@ export async function syncTemplates(orgId: string) {
           wt.name,
           templateType,
         );
-        await saveTemplate(wt, orgId, defaultValues, templateType);
+        const createdTemplate = await saveTemplate(
+          wt,
+          orgId,
+          defaultValues,
+          templateType,
+          undefined,
+          whatsappSettingsPhoneId,
+        );
+
+        if (createdTemplate) {
+          if (wt?.id) {
+            templateByWaId.set(wt.id, createdTemplate);
+          }
+          const createdKey = `${wt?.name ?? ""}|${whatsappSettingsPhoneId ?? ""}`;
+          templateByNameAndPhone.set(createdKey, createdTemplate);
+          created += 1;
+        }
       }
     }
+
     log.trace("Templates synced");
-    return true;
+    return { success: true, created, updated };
   } catch (e: any) {
     log.error("Error syncing templates \n%o", e);
-    return false;
+    return { success: false, created: 0, updated: 0 };
   }
 }
 

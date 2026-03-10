@@ -452,3 +452,52 @@ export async function migrateAutomationToRules() {
     throw error;
   }
 }
+
+export async function migrateWaTemplatePhoneIds() {
+  const orgs = await prisma.org.findMany({
+    select: { id: true },
+  });
+
+  let updatedTemplates = 0;
+  let skippedOrgs = 0;
+
+  for (const org of orgs) {
+    const firstWhatsappAccount = await prisma.whatsappSettings.findFirst({
+      where: {
+        orgId: org.id,
+        phoneId: {
+          not: null,
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+      select: {
+        phoneId: true,
+      },
+    });
+
+    if (!firstWhatsappAccount?.phoneId) {
+      skippedOrgs++;
+      continue;
+    }
+
+    const result = await prisma.waTemplate.updateMany({
+      where: {
+        orgId: org.id,
+        whatsappSettingsPhoneId: null,
+      },
+      data: {
+        whatsappSettingsPhoneId: firstWhatsappAccount.phoneId,
+      },
+    });
+
+    updatedTemplates += result.count;
+  }
+
+  return {
+    orgsProcessed: orgs.length,
+    orgsWithoutWhatsappAccount: skippedOrgs,
+    templatesUpdated: updatedTemplates,
+  };
+}

@@ -31,11 +31,11 @@ import {
 import Session from "supertokens-node/recipe/session/index.js";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js";
 import { log } from "../../utils/logger.js";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { sendEmailService } from "../email/email.service.js";
 // import { html } from "cheerio";
 import { createEmailBodyPricingPlanSelected } from "../../utils/email/payments/pricingPlanSelected.js";
 import { Order } from "../../../generated/prisma/client.js";
+import { notificationQueue } from "../../utils/redisConnection.js";
 
 export async function createCheckoutSessionHandler(
   request: FastifyRequest<{
@@ -305,7 +305,9 @@ export async function sendEmailPlanSelectionDetailsHandler(
       subject: "ALERT: User initiated subscription",
       html: createEmailBodyPricingPlanSelected(request.body),
     };
-    await sendAWSEmail(emailParams);
+    await notificationQueue.add("notification", {
+      emailData: emailParams,
+    });
     reply.code(200).send();
   } catch (e) {
     log.error(e);

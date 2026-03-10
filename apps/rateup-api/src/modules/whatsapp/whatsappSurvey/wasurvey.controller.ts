@@ -129,10 +129,7 @@ import {
   verifyAutomationTriggerLimit,
 } from "../automatedReply/wa_automatedReply.service.js";
 import { handleWaOrderfromCatalog } from "../catalog/catalog.service.js";
-import {
-  getTokensByOrgId,
-  sendPushNotification,
-} from "../../mobileNotification/mobile.service.js";
+import { getTokensByOrgId } from "../../mobileNotification/mobile.service.js";
 import {
   assignWaMessageToUser,
   getAssignedUsersCountForContactByTeam,
@@ -146,7 +143,10 @@ import {
   getCustomerAccountByPhone,
 } from "../../loyalty/accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
-import { pausedAutomationQueue } from "../../../utils/redisConnection.js";
+import {
+  notificationQueue,
+  pausedAutomationQueue,
+} from "../../../utils/redisConnection.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -535,12 +535,14 @@ async function whatsappMessageHandler(
     return;
   }
   const expoToken = await getTokensByOrgId(orgId);
-  await sendPushNotification(
-    expoToken,
-    "RateUp",
-    `New message from ${userName}`,
-    {},
-  );
+  await notificationQueue.add("notification", {
+    pushNotificationData: {
+      expoTokens: expoToken,
+      title: "RateUp",
+      body: `New message from ${userName}`,
+      data: {},
+    },
+  });
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);
   const messageLowerCase =
@@ -1172,7 +1174,6 @@ export async function processNextNode(
           undefined,
           undefined,
           undefined,
-          automation?.whatsappSettingsPhoneId,
         );
         break;
       case "ticketNode":

@@ -1,6 +1,9 @@
-import { sendAWSEmail } from "../sendAWSEmail.js";
+import { notificationQueue } from "../../redisConnection.js";
 
-export function sendResetPasswordMail(reset_link: string, email_id: string) {
+export async function sendResetPasswordMail(
+  reset_link: string,
+  email_id: string,
+) {
   if (reset_link && email_id) {
     const msg = {
       to: email_id,
@@ -9,7 +12,9 @@ export function sendResetPasswordMail(reset_link: string, email_id: string) {
       html: createEmailBody(reset_link),
     };
     try {
-      sendAWSEmail(msg);
+      await notificationQueue.add("notification", {
+        emailData: msg,
+      });
     } catch (error) {
       console.error(error);
       throw new Error("Email sending failed. E:" + error);

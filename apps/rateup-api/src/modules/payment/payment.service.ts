@@ -17,12 +17,12 @@ import {
   createEmailBodySubscriptionActivated,
   createEmailBodyTrialSubscriptionActivated,
 } from "../../utils/email/payments/subscriptionActivated.js";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import {
   getRecurringCharge,
   getShopifyInfo,
 } from "../integrations/shopify/shopify.service.js";
 import prisma from "../../utils/prisma.js";
+import { notificationQueue } from "../../utils/redisConnection.js";
 
 const credentials = Buffer.from(
   `${process.env.RAZORPAY_API_KEY}:${process.env.RAZORPAY_API_SECRET}`,
@@ -408,7 +408,9 @@ export async function updateSubscription(payload) {
         ),
       };
       try {
-        sendAWSEmail(msg);
+        await notificationQueue.add("notification", {
+          emailData: msg,
+        });
       } catch (error) {
         console.error(error);
         throw new Error("Email sending failed. E:" + error);
@@ -820,7 +822,9 @@ export async function updateSubscriptionForTrial(
     ),
   };
   try {
-    sendAWSEmail(msg);
+    await notificationQueue.add("notification", {
+      emailData: msg,
+    });
   } catch (error) {
     console.error(error);
     throw new Error("Email sending failed. E:" + error);

@@ -155,6 +155,7 @@ const waTemplateInput = {
       }),
     )
     .optional(),
+  whatsappSettingsPhoneId: z.string(),
   templateType: z.nativeEnum(TemplateType).optional(),
   config: z.any(),
 };
@@ -242,6 +243,10 @@ const waUserSendTemplateBodySchema = z.object({
   whatsappSettingsPhoneId: z.string(),
 });
 
+const syncTemplatesSchema = z.object({
+  whatsappSettingsPhoneIds: z.array(z.string()).min(1),
+});
+
 export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas(
   {
     waTemplateInputSchema,
@@ -250,6 +255,7 @@ export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas(
     templateTypeParamsSchema,
     registerTemplatesInDbBodySchema,
     waUserSendTemplateBodySchema,
+    syncTemplatesSchema,
   },
   { $id: "waTemplates" },
 );

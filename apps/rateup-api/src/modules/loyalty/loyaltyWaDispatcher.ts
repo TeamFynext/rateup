@@ -129,13 +129,7 @@ export async function dispatchLoyaltyNotification(
     log.trace(
       `[LoyaltyWaDispatcher] Sending ${commandKey} to ${payload.customerPhone}`,
     );
-    await handleSendTemplate(
-      templateId,
-      orgId,
-      payload.customerPhone,
-      params,
-      eventTrigger?.program?.whatsappSettingsId,
-    );
+    await handleSendTemplate(templateId, orgId, payload.customerPhone, params);
   } catch (error) {
     console.log("🚀 ~ dispatchLoyaltyNotification ~ error:", error);
     log.error(

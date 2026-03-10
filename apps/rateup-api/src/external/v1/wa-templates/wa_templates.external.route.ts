@@ -127,6 +127,7 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
               type: "string",
               description:
                 "WhatsApp phone number with country code (e.g. 1234567890)",
+              deprecated: true,
             },
           },
         },

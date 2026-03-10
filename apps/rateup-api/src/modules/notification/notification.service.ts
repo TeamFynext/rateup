@@ -1,4 +1,7 @@
+import { Job } from "bullmq";
+import { EmailParams, sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import prisma from "../../utils/prisma.js";
+import { sendPushNotification } from "../mobileNotification/mobile.service.js";
 import { NotificationSettingSchema } from "./notification.schema.js";
 
 export async function getNotifications(userId: string, orgId: string) {
@@ -106,4 +109,54 @@ export async function deleteAllNotificationsByUser(userId, orgId) {
       },
     },
   });
+}
+
+interface SystemNotificationData {
+  userId: string;
+  orgId: string;
+  source: string;
+  subSource: string;
+  data: Record<string, any>;
+}
+
+interface PushNotificationData {
+  expoTokens: string[];
+  title: string;
+  body: string;
+  data?: Record<string, any>;
+}
+
+export interface NotificationJobData {
+  emailData?: EmailParams;
+  systemNotificationData?: SystemNotificationData;
+  pushNotificationData?: PushNotificationData;
+}
+
+export async function processNotification(job: Job<NotificationJobData>) {
+  const { emailData, systemNotificationData, pushNotificationData } = job.data;
+
+  if (emailData) {
+    await sendAWSEmail(emailData);
+  }
+
+  if (pushNotificationData) {
+    await sendPushNotification(
+      pushNotificationData.expoTokens,
+      pushNotificationData.title,
+      pushNotificationData.body,
+      pushNotificationData.data,
+    );
+  }
+
+  if (systemNotificationData) {
+    const { userId, orgId, source, subSource, data } = systemNotificationData;
+
+    await createNotification(userId, orgId, source, subSource, data);
+  }
+
+  if (!emailData && !pushNotificationData && !systemNotificationData) {
+    throw new Error(
+      "Invalid notification job: no notification payload provided",
+    );
+  }
 }
