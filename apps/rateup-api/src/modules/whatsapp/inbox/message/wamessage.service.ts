@@ -23,7 +23,6 @@ import {
 } from "../../settings/wa_settings.service.js";
 import axios from "axios";
 import {
-  NotificationType,
   WaAssignedChatPermission,
   WaMessageAssignStatus,
 } from "../../../../types/enums.js";
@@ -1039,7 +1038,6 @@ export async function assignWaMessageToUser(
         notificationSetting.waMessageAssignNotification
       ) {
         await notificationQueue.add("notification", {
-          type: NotificationType.SYSTEM,
           systemNotificationData: {
             userId: user.userId,
             orgId: updatedContact.orgId,
@@ -1774,7 +1772,6 @@ export async function createInternalWaMessage({
       await Promise.all(
         mentionedUserDetails.map((user) =>
           notificationQueue.add("notification", {
-            type: NotificationType.SYSTEM,
             systemNotificationData: {
               userId: user.id,
               orgId: orgId,
