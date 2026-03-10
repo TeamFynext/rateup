@@ -94,13 +94,17 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     accountOptions = [{ value: "all", label: "All" }, ...accountOptions];
   }
 
+  const defaultAccountOption =
+    accountOptions?.find((account) => account.status !== "DISCONNECTED") ??
+    accountOptions?.[0];
+
   useEffect(() => {
     if (value) return;
     if (optional) return;
-    if (accountOptions.length > 0) {
-      onChange(accountOptions[0].value);
+    if (defaultAccountOption?.value) {
+      onChange(defaultAccountOption.value);
     }
-  }, [accountOptions, value, optional]);
+  }, [defaultAccountOption, value, optional]);
 
   if (isError) {
     return <Text>{translations("Something went wrong!")}</Text>;
@@ -120,7 +124,9 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
       <ContainedMultiSelect
         data={accountOptions}
         defaultValue={
-          accountOptions?.length && [accountOptions[0]?.value as string]
+          defaultAccountOption?.value
+            ? [defaultAccountOption.value as string]
+            : undefined
         }
         onChange={onChange}
         value={value}
@@ -133,7 +139,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   }
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between">
         {!hideLabel && (
           <Label className="text-xs text-muted-foreground">
             {label ?? translations("Account")}
@@ -153,11 +159,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
       </div>
       <Select
         value={value}
-        defaultValue={
-          optional
-            ? undefined
-            : accountOptions?.length && accountOptions[0]?.value
-        }
+        defaultValue={optional ? undefined : defaultAccountOption?.value}
         onValueChange={onChange}
         required={!optional}
       >
