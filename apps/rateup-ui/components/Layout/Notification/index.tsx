@@ -13,6 +13,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconBell, IconSettings } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   useNotifications,
@@ -32,7 +33,7 @@ enum NotificationTabs {
 
 const NotificationBellIcon = (props) => {
   const [opened, { open, close }] = useDisclosure(false);
-
+  const qc = useQueryClient();
   const [tab, setTab] = useState(NotificationTabs.notifications);
   const { data, isLoading, refetch } = useNotifications(
     tab === NotificationTabs.notifications,
@@ -58,6 +59,12 @@ const NotificationBellIcon = (props) => {
         return <NotificationSettings />;
     }
   }, [tab, data, notificationSettings]);
+
+  const handleOpen = () => {
+    qc.invalidateQueries({ queryKey: ["notification"] });
+    qc.invalidateQueries({ queryKey: ["notificationCount"] });
+    open();
+  };
 
   return (
     <>
@@ -99,7 +106,7 @@ const NotificationBellIcon = (props) => {
         <Button
           size="icon-sm"
           style={{ color: "light-dark(black, white)" }}
-          onClick={open}
+          onClick={handleOpen}
           variant="secondary"
           className="h-8 w-8"
         >

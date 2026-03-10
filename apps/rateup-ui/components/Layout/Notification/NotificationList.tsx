@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import {
   IconBrandWhatsappFilled,
+  IconSend,
   IconTicket,
   IconX,
 } from "@tabler/icons-react";
@@ -29,6 +30,8 @@ const NotificationList = ({ close, data, isLoading }) => {
         return <IconBrandWhatsappFilled color="#25D366" />;
       case "ticket":
         return <IconTicket />;
+      case "campaign":
+        return <IconSend />;
     }
   }, []);
 
@@ -106,6 +109,21 @@ const NotificationList = ({ close, data, isLoading }) => {
                 className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
               >
                 Show chat
+              </Link>
+            </p>
+          </div>
+        );
+      case "campaign-completed":
+        return (
+          <div className="flex flex-col gap-2">
+            <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
+              Your campaign "{data?.campaignName}" completed.
+              <Link
+                href={`/dashboard/campaign/${data?.campaignId}`}
+                onClick={close}
+                className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
+              >
+                Show campaign
               </Link>
             </p>
           </div>
