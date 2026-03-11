@@ -247,11 +247,11 @@ export async function updateWaSettingsById(
     },
     data: {
       ...(rest as any),
-      teams: teams
-        ? {
-            set: teams.map((id) => ({ id })),
-          }
-        : undefined,
+      ...(teams !== undefined && {
+        teams: {
+          set: teams.map((id) => ({ id })),
+        },
+      }),
     },
   });
 }

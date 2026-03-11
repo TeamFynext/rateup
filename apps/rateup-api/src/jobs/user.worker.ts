@@ -6,7 +6,7 @@ import { updateUserAvailablityStatus } from "../modules/user/user.service.js";
 import { UserAvailabilityStatus } from "../modules/user/user.schema.js";
 import { log } from "../utils/logger.js";
 
-new Worker(
+export const userAvailabilityWorker = new Worker(
   "user-availability",
   async (job: Job) => {
     const { userId, orgId } = job.data;

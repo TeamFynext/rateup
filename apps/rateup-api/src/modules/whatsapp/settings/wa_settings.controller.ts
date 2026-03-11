@@ -69,7 +69,7 @@ export async function getWaSettingsHandler(
   const userId = req.user.userId;
   const waSettings = await getAccessibleWaSettings(orgId, userId, role);
   if (!waSettings?.length) {
-    return res.status(204).send();
+    return res.status(200).send([]);
   }
   return res.status(200).send(waSettings);
 }
