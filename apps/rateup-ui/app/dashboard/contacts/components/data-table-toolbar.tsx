@@ -219,7 +219,7 @@ export function DataTableToolbar<TData>({
             </div>
             <LifecycleSelector
               all={true}
-              className="bg-gray-100 border-none w-48"
+              className="bg-gray-100 border-none w-48 h-full rounded-sm px-2"
               value={filter?.lifecycleId}
               onChange={(value, lifecycleObj) =>
                 setFilter({ ...filter, lifecycleId: value })

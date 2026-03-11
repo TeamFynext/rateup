@@ -5,6 +5,11 @@ import { Folder } from "lucide-react";
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 
 import { Card } from "../ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import { MultiSelect } from "../ui/multi-select";
 import {
   Select,
@@ -71,11 +76,9 @@ export const ContactGroupsSelector = ({
 }) => {
   const { data: groups, isLoading: groupsLoading } = useContactGroup();
 
-  // Local state to avoid mutation on initial load
   const [selectedIds, setSelectedIds] = useState<string[]>(value);
   const [initialized, setInitialized] = useState(false);
 
-  // Initialize from API once
   useEffect(() => {
     if (!initialized && contactgroups) {
       const existingIds = contactgroups.map((g) => g.id);
@@ -91,13 +94,11 @@ export const ContactGroupsSelector = ({
       ? prev.filter((id) => id !== groupId)
       : [...prev, groupId];
 
-    // Calculate diff
     const addGroupIds = next.filter((id) => !prev.includes(id));
     const removeGroupIds = prev.filter((id) => !next.includes(id));
 
     setSelectedIds(next);
 
-    // Send diff to parent
     onChange({
       nextIds: next,
       addGroupIds,
@@ -107,7 +108,6 @@ export const ContactGroupsSelector = ({
 
   const selectedCount = selectedIds.length;
 
-  // Loading state
   if (groupsLoading || contactGroupsLoading) {
     return (
       <div className="w-40">
@@ -117,22 +117,18 @@ export const ContactGroupsSelector = ({
   }
 
   return (
-    <Select>
-      <SelectTrigger
-        className={`border-none text-sm font-medium flex items-center text-foreground! justify-start ${className}`}
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={`border-none text-sm font-medium flex items-center text-foreground justify-start cursor-pointer gap-2 ${className}`}
       >
         <Folder className="h-4 w-4 shrink-0 text-foreground" />
+
         {selectedCount
           ? `${selectedCount} Group${selectedCount > 1 ? "s" : ""}`
           : "Groups"}
-      </SelectTrigger>
+      </DropdownMenuTrigger>
 
-      <SelectContent
-        position="popper"
-        side="right"
-        align="start"
-        className="w-48"
-      >
+      <DropdownMenuContent side="right" align="start" className="w-48">
         {groups?.length ? (
           groups.map((group) => {
             const active = selectedIds.includes(group.id);
@@ -141,14 +137,11 @@ export const ContactGroupsSelector = ({
               <div
                 key={group.id}
                 onClick={() => toggleGroup(group.id)}
-                className={`
-                  flex items-center px-2 py-1.5 cursor-pointer rounded-sm
-                  ${
-                    active
-                      ? "bg-accent text-accent-foreground"
-                      : "hover:bg-accent"
-                  }
-                `}
+                className={`flex items-center px-2 py-1.5 cursor-pointer rounded-sm ${
+                  active
+                    ? "bg-accent text-accent-foreground"
+                    : "hover:bg-accent"
+                }`}
               >
                 <span className="text-sm flex-1">{group.name}</span>
                 {active && <span className="text-xs">✓</span>}
@@ -160,7 +153,7 @@ export const ContactGroupsSelector = ({
             No groups found
           </div>
         )}
-      </SelectContent>
-    </Select>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

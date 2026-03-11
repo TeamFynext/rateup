@@ -7,14 +7,13 @@ import { Activity, Infinity } from "lucide-react";
 import { useLifecycleContext } from "@/context/LifecycleContext";
 
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 export const LifecycleSelector = ({
   value,
@@ -23,6 +22,7 @@ export const LifecycleSelector = ({
   customTrigger,
   className = "",
   all = false,
+  position = "bottom",
 }: {
   value: string;
   onChange: (
@@ -33,11 +33,11 @@ export const LifecycleSelector = ({
   className?: string;
   customTrigger?: React.ReactNode;
   all?: boolean;
+  position?: "top" | "bottom" | "left" | "right";
 }) => {
   const tags = useLifecycleContext();
   const [selectedLifeCycle, setSelectedLifeCycle] = useState(null);
 
-  // Memoize the labels to prevent unnecessary recalculations
   const inboxLabels = React.useMemo(
     () => [
       {
@@ -86,11 +86,12 @@ export const LifecycleSelector = ({
     const itemWithIcon = allItems?.find((i) => i.value === value);
     setSelectedLifeCycle(itemWithIcon);
   }, [value]);
-  // Flatten all items for easier navigation
+
   const allItems = React.useMemo(
     () => [...inboxLabels[0].items, ...inboxLabels[1].items],
     [inboxLabels],
   );
+
   if (all && !allItems.find((i) => i.value === "all")) {
     allItems.unshift({
       value: "all",
@@ -107,14 +108,13 @@ export const LifecycleSelector = ({
     });
   }
 
-  // Check if current item is in lost category
   const isLostCategory = React.useMemo(() => {
     const currentTag = tags?.find((tag) => tag.id === value);
     return currentTag?.category === "lost";
   }, [value, tags]);
 
   const handleSubmit = (newValue: string) => {
-    if (newValue === value) return; // Prevent unnecessary updates
+    if (newValue === value) return;
     const lifecycle = tags?.find((t) => t.id === newValue);
     const itemWithIcon = allItems?.find((i) => i.value === newValue);
     setSelectedLifeCycle(itemWithIcon);
@@ -122,7 +122,7 @@ export const LifecycleSelector = ({
   };
 
   const handleNextStage = () => {
-    if (isLostCategory) return; // Don't proceed if already in lost category
+    if (isLostCategory) return;
 
     const currentIndex = allItems.findIndex((item) => item.value === value);
     const nextIndex = (currentIndex + 1) % allItems.length;
@@ -132,11 +132,12 @@ export const LifecycleSelector = ({
       handleSubmit(nextItem.value);
     }
   };
+
   const TriggerComponent = () => {
     if (customTrigger) {
       if (value) return customTrigger;
       return (
-        <span className="text-muted-foreground text-sm">
+        <span className="text-foreground text-sm">
           {placeholder ?? "Select a lifecycle stage"}
         </span>
       );
@@ -150,7 +151,7 @@ export const LifecycleSelector = ({
       );
     }
     return (
-      <span className="text-muted-foreground text-sm">
+      <span className="text-foreground text-sm">
         {placeholder ?? "Select a lifecycle stage"}
       </span>
     );
@@ -158,49 +159,62 @@ export const LifecycleSelector = ({
 
   if (all) {
     return (
-      <Select value={value} onValueChange={handleSubmit} defaultValue={"all"}>
-        <SelectTrigger
-          className={`${className} flex items-center text-foreground! justify-start w-full`}
-        >
-          <Activity className="h-4 w-4 shrink-0 text-foreground" />
-          <TriggerComponent />
-        </SelectTrigger>
-        <SelectContent side="right" align="start">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div
+            className={`${className} flex items-center text-foreground justify-start gap-2 cursor-pointer`}
+          >
+            <Activity className="h-4 w-4 shrink-0 text-foreground" />
+            <TriggerComponent />
+          </div>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent side={position} align="start">
           {allItems.map((lifecycle) => (
-            <SelectItem
-              value={lifecycle.value}
+            <DropdownMenuItem
               key={lifecycle.value}
-              className={`data-[highlighted]:text-blue-500 cursor-pointer ${className}`}
+              onClick={() => handleSubmit(lifecycle.value)}
+              className="cursor-pointer"
             >
               <lifecycle.icon />
               <span className="ml-1">{lifecycle.label}</span>
-            </SelectItem>
+            </DropdownMenuItem>
           ))}
-        </SelectContent>
-      </Select>
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
+
   return (
-    <Select value={value} onValueChange={handleSubmit}>
-      <SelectTrigger
-        className={`${className} flex items-center justify-start text-foreground!`}
-      >
-        <Activity className="h-4 w-4 shrink-0 text-foreground" />
-        <TriggerComponent />
-      </SelectTrigger>
-      <SelectContent side="right" align="start">
-        {inboxLabels.map((group) => (
-          <SelectGroup key={group.group}>
-            <SelectLabel>{group.group}</SelectLabel>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <div
+          className={`${className} flex items-center justify-start text-foreground gap-2 cursor-pointer`}
+        >
+          <Activity className="h-4 w-4 shrink-0 text-foreground" />
+          <TriggerComponent />
+        </div>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent side={position} align="start">
+        {inboxLabels.map((group, index) => (
+          <React.Fragment key={group.group}>
+            <DropdownMenuLabel>{group.group}</DropdownMenuLabel>
+
             {group.items.map((label) => (
-              <SelectItem value={label.value} key={label.value}>
+              <DropdownMenuItem
+                key={label.value}
+                onClick={() => handleSubmit(label.value)}
+              >
                 <label.icon />
                 <span className="ml-1">{label.label}</span>
-              </SelectItem>
+              </DropdownMenuItem>
             ))}
-          </SelectGroup>
+
+            {index !== inboxLabels.length - 1 && <DropdownMenuSeparator />}
+          </React.Fragment>
         ))}
-      </SelectContent>
-    </Select>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

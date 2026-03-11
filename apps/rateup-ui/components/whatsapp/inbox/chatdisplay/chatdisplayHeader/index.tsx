@@ -62,7 +62,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Select, SelectContent, SelectTrigger } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useUser } from "@/context/UserContext";
 import { useChatbotStore } from "@/store/chatbot.store";
@@ -219,7 +218,6 @@ export default function WaInboxChatDisplayHeader({
             </div>
           </div>
         </div>
-
         <div className="flex items-center gap-2 shrink-0">
           <Popover>
             <PopoverTrigger asChild>
@@ -229,33 +227,28 @@ export default function WaInboxChatDisplayHeader({
             </PopoverTrigger>
 
             <PopoverContent className="p-1 w-fit min-w-36">
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2 p-2">
                 {/* Lifecycle */}
-                <div className="flex items-center gap-1">
-                  <LifecycleSelector
-                    value={contact.lifecycleId}
-                    customTrigger={
-                      <span className="text-sm font-medium truncate">
-                        {contact.lifecycleName}
-                      </span>
-                    }
-                    className="border-none h-auto w-full"
-                    onChange={handleLifecycleChange}
-                    placeholder="Lifecycle"
-                  />
-                </div>
+                <LifecycleSelector
+                  value={contact.lifecycleId}
+                  position="right"
+                  customTrigger={
+                    <span className="text-sm font-medium truncate text-foreground!">
+                      {contact.lifecycleName}
+                    </span>
+                  }
+                  className="border-none h-auto w-full cursor-pointer"
+                  onChange={handleLifecycleChange}
+                  placeholder="Lifecycle"
+                />
 
                 {/* Labels */}
-                <div className="flex items-center gap-1">
-                  <ContactLabel
-                    contactLabel={contactLabels}
-                    contact={contact}
-                    labelPending={isPending}
-                  />
-                </div>
-                <div className="flex items-center gap-1">
-                  <AddtoContactGroup selectedContactIds={[contact.id]} />
-                </div>
+                <ContactLabel
+                  contactLabel={contactLabels}
+                  contact={contact}
+                  labelPending={isPending}
+                />
+                <AddtoContactGroup selectedContactIds={[contact.id]} />
               </div>
             </PopoverContent>
           </Popover>
@@ -592,31 +585,27 @@ function ContactLabel({ contactLabel, labelPending, contact }) {
   const selectedCount = activeLabels.length;
 
   return (
-    <Select open={undefined}>
-      <SelectTrigger className="text-foreground! border-none flex items-center justify-start h-auto w-full bg-transparent text-sm font-medium">
+    <DropdownMenu>
+      <DropdownMenuTrigger className="text-foreground border-none flex items-center justify-start h-auto w-full bg-transparent text-sm font-medium cursor-pointer gap-2">
         <Tag className="h-4 w-4 shrink-0 text-foreground" />
 
         {selectedCount
           ? `${selectedCount} Label${selectedCount > 1 ? "s" : ""}`
           : "Labels"}
-      </SelectTrigger>
+      </DropdownMenuTrigger>
 
-      <SelectContent side="right" align="start">
+      <DropdownMenuContent align="start" side="right" className="w-48">
         {contactLabel?.length ? (
           contactLabel.map((label) => {
             const active = isActive(label.id);
 
             return (
-              <div
+              <DropdownMenuItem
                 key={label.id}
                 onClick={() => handleToggleLabel(label.id)}
-                className={`
-                  flex items-center gap-2 px-2 py-1.5 cursor-pointer rounded-sm
-                  ${active ? "bg-accent text-accent-foreground" : "hover:bg-accent"}
-                  ${labelPending ? "pointer-events-none opacity-50" : ""}
-                `}
+                disabled={labelPending}
+                className="flex items-center gap-2 cursor-pointer"
               >
-                {/* color dot */}
                 <span
                   style={{ backgroundColor: label.color }}
                   className="h-3 w-3 rounded-full"
@@ -624,9 +613,8 @@ function ContactLabel({ contactLabel, labelPending, contact }) {
 
                 <span className="text-sm flex-1">{label.name}</span>
 
-                {/* check indicator */}
                 {active && <span className="text-xs">✓</span>}
-              </div>
+              </DropdownMenuItem>
             );
           })
         ) : (
@@ -634,8 +622,8 @@ function ContactLabel({ contactLabel, labelPending, contact }) {
             No labels found
           </div>
         )}
-      </SelectContent>
-    </Select>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
