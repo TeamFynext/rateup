@@ -10,6 +10,7 @@ import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Rule } from "@/types/rule";
+import { GenericCardGrid } from "@/components/common/generic-card";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -178,9 +179,11 @@ export function CardView({
           </Empty>
         </div>
       ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {data.map((item) => (
-            <Link href={`/dashboard/automation/${item.id}`} key={item.id}>
+        <GenericCardGrid
+          items={data}
+          getKey={(item) => item.id}
+          renderItem={(item) => (
+            <Link href={`/dashboard/automation/${item.id}`}>
               <RuleCard
                 item={item}
                 onToggleActive={() => {
@@ -193,8 +196,8 @@ export function CardView({
                 }}
               />
             </Link>
-          ))}
-        </div>
+          )}
+        />
       ) : (
         <DataTable
           data={data}

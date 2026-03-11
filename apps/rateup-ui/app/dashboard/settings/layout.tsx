@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import {
+  Bolt,
   ChevronRight,
   CreditCard,
   Crown,
   Menu,
+  MessageSquare,
   Shield,
   User,
   UserCog,
@@ -71,17 +73,26 @@ const SettingsLayout = ({ children }) => {
           description: translations("Team members & roles"),
           href: "/dashboard/settings/team",
         },
-        ...(user?.role === UserRole.SUPADM
-          ? [
-              {
-                id: "channels" as SettingsSection,
-                label: translations("Channel Permissions"),
-                icon: Shield,
-                description: translations("Manage team channel access"),
-                href: "/dashboard/settings/channels",
-              },
-            ]
-          : []),
+      ],
+    },
+    {
+      category: translations("Platform Settings"),
+      items: [
+        {
+          id: "channels" as SettingsSection,
+          label: translations("Channels"),
+          icon: MessageSquare,
+          description: translations("Communication channels"),
+          href: "/dashboard/settings/channels",
+        },
+
+        // {
+        //   id: "integrations" as SettingsSection,
+        //   label: translations("Integrations"),
+        //   icon: Bolt,
+        //   description: translations("External services"),
+        //   href: "/dashboard/settings/integrations",
+        // },
       ],
     },
     {

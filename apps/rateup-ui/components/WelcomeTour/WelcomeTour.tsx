@@ -1,10 +1,16 @@
 import React, { useRef } from "react";
 
-import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { driver } from "driver.js";
 
 import "driver.js/dist/driver.css";
+
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import styles from "./Welcome.module.css";
 
@@ -30,10 +36,15 @@ const WelcomeTour = ({ steps }) => {
   };
 
   return (
-    <Tooltip label="Start Tour" position="top" withArrow>
-      <ActionIcon onClick={startTour} variant="light">
-        <IconInfoCircle size={24} />
-      </ActionIcon>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button onClick={startTour} variant="outline" size="icon-sm">
+          <IconInfoCircle size={24} />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>Start Tour</p>
+      </TooltipContent>
     </Tooltip>
   );
 };
