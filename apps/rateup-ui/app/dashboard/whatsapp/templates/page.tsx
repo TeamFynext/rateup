@@ -3,13 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  IconCalendar,
-  IconDots,
-  IconPlus,
-  IconTrash,
-} from "@tabler/icons-react";
-import { Search } from "lucide-react";
+import { IconDots, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -19,18 +13,17 @@ import {
   useDeleteWaTemplateMutation,
   useWaTemplates,
 } from "@/backend/whatsapp/whatsapp.query";
-import ErrorComponent from "@/components/404/ErrorComponent";
-import { TemplatesCardListSkeleton } from "@/components/animation/skeleton/wa/TemplatesCardList.skeleton";
-import InfoButton from "@/components/Button/InfoButton";
-import RefreshButton from "@/components/Button/RefreshButton";
+import {
+  GenericActionCard,
+  GenericCardGrid,
+} from "@/components/common/generic-card";
+import { ListPageLayout } from "@/components/common/list-page-layout";
 import { sortData } from "@/components/Dashboard/SortDropDown";
-import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import useDebounce from "@/components/menu/hook/useDebounce";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,26 +31,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import styles from "@/components/WelcomeTour/components/Tour.module.css";
 import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps";
-import WelcomeTour from "@/components/WelcomeTour/WelcomeTour";
 import { TemplateFilterSort } from "@/components/whatsapp/templates/FilterAndSort";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge";
-import { docsPath } from "@/utils/constants";
 
 function formatLabel(value: string) {
   return value
@@ -68,6 +50,24 @@ function formatLabel(value: string) {
     )
     .join(" ");
 }
+
+type TemplateListEntry = {
+  readonly id: string;
+  readonly createdAt: string;
+  readonly templateType?: string;
+  readonly whatsappSettingsPhoneId?: string | null;
+  readonly WhatsappSettings?: {
+    readonly phoneDisplayName?: string | null;
+  };
+  readonly _count?: {
+    readonly Campaign?: number;
+  };
+  readonly data?: {
+    readonly name?: string;
+    readonly category?: string;
+    readonly status?: string;
+  };
+};
 
 export default function Template() {
   const { data: templates, isPending, isError, refetch } = useWaTemplates();
@@ -129,7 +129,7 @@ export default function Template() {
       );
     });
 
-    return sortData(filtered, sortOption);
+    return sortData(filtered, sortOption) as TemplateListEntry[];
   }, [templates, filters, sortOption, debouncedSearch, selectedAccountId]);
 
   const templateDeleteMutation = useDeleteWaTemplateMutation(
@@ -166,92 +166,71 @@ export default function Template() {
 
   const tourSteps = WaPageTourSteps({ styles });
 
+  const rightControls = (
+    <>
+      <TemplateFilterSort
+        filters={filters}
+        setFilters={setFilters}
+        templateTypeOptions={templateTypeOptions}
+      />
+      <AccountSelector
+        value={selectedAccountId}
+        onChange={setSelectedAccountId}
+        withAllOption
+      />
+
+      {data ? (
+        <SyncTemplatesButton
+          disabled={isPending}
+          whatsappSettingsPhoneIds={syncAccountIds}
+        />
+      ) : (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <SyncTemplatesButton disabled />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>
+              {translations(
+                "Connect a WhatsApp number in settings to sync Template",
+              )}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </>
+  );
+
   return (
-    <div className="flex h-full flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex min-h-12.5 flex-wrap items-center gap-3">
-          {data ? (
-            <Button onClick={handleCreateClick} disabled={isPending}>
-              {translations("Create Templates")}
-              <IconPlus size={16} className="ml-2" />
-            </Button>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Button onClick={handleCreateClick} disabled>
-                    {translations("Create Templates")}
-                    <IconPlus size={16} className="ml-2" />
-                  </Button>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>
-                  {translations(
-                    "Connect a WhatsApp number in settings to create a Template",
-                  )}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-
-          <InfoButton docUrl={`${docsPath}/whatsapp/templates`} />
-          <WelcomeTour steps={tourSteps} />
-          <RefreshButton queryKeys={["watemplates"]} />
-        </div>
-
-        <div className="flex min-h-12.5 flex-wrap items-start gap-2.5">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search templates..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <TemplateFilterSort
-            filters={filters}
-            setFilters={setFilters}
-            sortOption={sortOption}
-            setSortOption={setSortOption}
-            templateTypeOptions={templateTypeOptions}
-          />
-          <AccountSelector
-            value={selectedAccountId}
-            onChange={setSelectedAccountId}
-            withAllOption
-          />
-
-          {data ? (
-            <SyncTemplatesButton
-              disabled={isPending}
-              whatsappSettingsPhoneIds={syncAccountIds}
-            />
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <SyncTemplatesButton disabled />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>
-                  {translations(
-                    "Connect a WhatsApp number in settings to sync Template",
-                  )}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-      </div>
-
+    <ListPageLayout
+      canCreate={Boolean(data)}
+      createLabel={translations("Create Templates")}
+      createDisabledText={translations(
+        "Connect a WhatsApp number in settings to create a Template",
+      )}
+      docsUrl={"whatsapp/templates"}
+      isLoading={isPending}
+      queryKeys={["watemplates"]}
+      search={search}
+      searchPlaceholder="Search templates..."
+      tourSteps={tourSteps}
+      onCreate={handleCreateClick}
+      onSearchChange={setSearch}
+      sortValue={sortOption}
+      onSortChange={setSortOption}
+      isError={isError}
+      onRetry={refetch}
+      isEmpty={!isPending && !isError && filteredTemplates.length === 0}
+      emptyTitle={translations("No templates found")}
+      emptyDescription={translations(
+        "Try changing filters or create a new template.",
+      )}
+      rightControls={rightControls}
+    >
       <TemplateCardList
         handleEditClick={handleEditClick}
-        isError={isError}
-        isPending={isPending}
-        refetch={refetch}
         setSelectedTemplate={setSelectedTemplate}
         sortedTemplates={filteredTemplates}
         toggle={() => setDeleteDialogOpened((prev) => !prev)}
@@ -277,145 +256,125 @@ export default function Template() {
           }
         }}
       />
-    </div>
+    </ListPageLayout>
   );
 }
 
+type TemplateCardListProps = {
+  readonly sortedTemplates: TemplateListEntry[];
+  readonly toggle: () => void;
+  readonly handleEditClick: (template: TemplateListEntry) => void;
+  readonly setSelectedTemplate: (value: string) => void;
+};
+
 const TemplateCardList = ({
-  isPending,
-  isError,
-  refetch,
   sortedTemplates,
   toggle,
   handleEditClick,
   setSelectedTemplate,
-}) => {
-  if (isPending) return <TemplatesCardListSkeleton />;
-  if (isError) return <ErrorComponent refetch={refetch} />;
-  if (!sortedTemplates?.length) {
-    return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Search className="size-5" />
-          </EmptyMedia>
-          <EmptyTitle>No templates found</EmptyTitle>
-          <EmptyDescription>
-            Try changing filters or create a new template.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
-  }
-
+}: Readonly<TemplateCardListProps>) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {sortedTemplates?.map((t) => (
+    <GenericCardGrid
+      items={sortedTemplates ?? []}
+      getKey={(template) => template.id}
+      renderItem={(template) => (
         <TemplateCard
-          key={t.id}
-          template={t}
-          onClick={() => handleEditClick(t)}
+          template={template}
+          onClick={() => handleEditClick(template)}
           toggle={toggle}
           setSelectedTemplate={setSelectedTemplate}
         />
-      ))}
-    </div>
+      )}
+    />
   );
 };
-function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
+type TemplateCardProps = {
+  readonly template: TemplateListEntry;
+  readonly onClick: () => void;
+  readonly toggle: () => void;
+  readonly setSelectedTemplate: (value: string) => void;
+};
+
+function TemplateCard({
+  template,
+  onClick,
+  toggle,
+  setSelectedTemplate,
+}: Readonly<TemplateCardProps>) {
+  const hasActiveCampaign = (template?._count?.Campaign ?? 0) > 0;
+
+  const menu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <IconDots size={20} />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <DropdownMenuItem
+                onClick={() => {
+                  if (hasActiveCampaign) return;
+                  setSelectedTemplate(template.id);
+                  toggle();
+                }}
+                disabled={hasActiveCampaign}
+                variant="destructive"
+              >
+                <IconTrash size={16} className="mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>
+              {hasActiveCampaign
+                ? "Cannot delete template with active campaigns"
+                : "Delete template"}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+  const content = (
+    <div className="flex flex-wrap gap-2">
+      <Badge variant="default" className="text-xs">
+        {(template?.WhatsappSettings?.phoneDisplayName ||
+          template?.whatsappSettingsPhoneId) ??
+          "No Account"}
+      </Badge>
+      <WaTemplateStatusBadge
+        status={template?.data?.category as never}
+        defaultType
+      />
+      <WaTemplateStatusBadge
+        status={template?.templateType as never}
+        defaultType
+      />
+    </div>
+  );
+
   return (
-    <Card
-      className="h-full cursor-pointer hover:border-primary transition-colors border"
+    <GenericActionCard
+      title={template?.data?.name}
+      titleTooltip={template?.data?.name}
+      subtitle={template?.data?.category || "Template"}
+      actions={menu}
+      content={content}
+      footerLeft={
+        <WaTemplateStatusBadge status={template?.data?.status as never} />
+      }
+      createdAt={template.createdAt}
       onClick={onClick}
-    >
-      <CardContent className="px-4 flex flex-col justify-between h-full gap-4">
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-between items-start">
-            <div className="flex-1 overflow-hidden">
-              <h3
-                className="font-semibold text-lg truncate"
-                title={template?.data?.name}
-              >
-                {template?.data?.name}
-              </h3>
-              <p className="text-xs text-muted-foreground truncate">
-                {template?.data?.category || "Template"}
-              </p>
-            </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <IconDots size={20} />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="end"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          if (template?._count?.Campaign > 0) return;
-                          setSelectedTemplate(template.id);
-                          toggle();
-                        }}
-                        disabled={template?._count?.Campaign > 0}
-                        variant="destructive"
-                      >
-                        <IconTrash size={16} className="mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      {template?._count?.Campaign > 0
-                        ? "Cannot delete template with active campaigns"
-                        : "Delete template"}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          <div className="flex gap-2">
-            <Badge variant="default" className="text-xs">
-              {(template?.WhatsappSettings?.phoneDisplayName ||
-                template?.whatsappSettingsPhoneId) ??
-                "No Account"}
-            </Badge>
-            <WaTemplateStatusBadge
-              status={template?.data?.category}
-              defaultType
-            />
-            <WaTemplateStatusBadge
-              status={template?.templateType}
-              defaultType
-            />
-          </div>
-        </div>
-
-        <div>
-          <Separator className="mb-3" />
-          <div className="flex justify-between items-center">
-            <WaTemplateStatusBadge status={template?.data?.status} />
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <IconCalendar size={18} />
-              <CreatedSinceText createdAt={template.createdAt} />
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    />
   );
 }

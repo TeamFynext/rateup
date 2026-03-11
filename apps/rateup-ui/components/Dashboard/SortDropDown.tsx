@@ -49,17 +49,20 @@ export default SortDropdown;
 
 // utils/sorting.js
 
-export const sortData = (data: any[] = [], sortOption: string) => {
+export const sortData = (data: any[] = [], sortOption: string = "latest") => {
   return [...data].sort((a, b) => {
+    const leftName = a.data?.name ?? a.name ?? "";
+    const rightName = b.data?.name ?? b.name ?? "";
+
     switch (sortOption) {
       case "latest":
         return dayjs(a.createdAt).isBefore(b.createdAt) ? 1 : -1;
       case "oldest":
         return dayjs(b.createdAt).isBefore(a.createdAt) ? 1 : -1;
       case "a-z":
-        return a.data?.name.localeCompare(b.data.name);
+        return leftName.localeCompare(rightName);
       case "z-a":
-        return b.data?.name.localeCompare(a.data.name);
+        return rightName.localeCompare(leftName);
       default:
         return 0;
     }
