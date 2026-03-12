@@ -276,7 +276,7 @@ const WaInboxChatSelect = () => {
       WaMessageAssignStatus.ASSIGNED,
       WaMessageAssignStatus.UNASSIGNED,
     ];
-    const hasOpenStatus = filter.status.some((s) =>
+    const hasOpenStatus = filter?.status?.some((s) =>
       openStatus.includes(s as WaMessageAssignStatus),
     );
     if (tab === "Addressed" && hasOpenStatus) {
@@ -287,9 +287,9 @@ const WaInboxChatSelect = () => {
         ),
       });
     } else if (tab === "All" && !hasOpenStatus) {
-      const prFilter = previousFilterForTab.find((t) => t.tab === "All");
+      const prFilter = previousFilterForTab?.find((t) => t.tab === "All");
       if (prFilter) {
-        const openStatusInPrFilter = prFilter.filter.status.filter((s) =>
+        const openStatusInPrFilter = prFilter?.filter?.status?.filter((s) =>
           openStatus.includes(s as WaMessageAssignStatus),
         );
         setFilter({
