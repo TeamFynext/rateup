@@ -148,8 +148,7 @@ export default function MainSidebar({ children }) {
   const paddingExclusion = isInbox
     ? true
     : pathname?.includes("/dashboard/settings") ||
-      pathname?.includes("/dashboard/whatsapp/flows/v2/") ||
-      pathname?.includes("/dashboard/whatsapp/flowbots");
+      pathname?.includes("/dashboard/whatsapp/flows/v2/");
   const { data: inboxCount } = useGetInboxUserCount(isInbox);
 
   useEffect(() => {

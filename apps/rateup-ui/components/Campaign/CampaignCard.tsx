@@ -1,15 +1,27 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
-import dayjs from "dayjs";
 import { Edit2, Eye, MoreVertical, Trash2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { useDeleteCampaignMutation } from "@/backend/campaign/campaign.query";
+import {
+  useDeleteCampaignMutation,
+  useUpdateCampaignMutation,
+} from "@/backend/campaign/campaign.query";
+import { GenericActionCard } from "@/components/common/generic-card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +29,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import { Separator } from "../ui/separator";
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -35,140 +49,162 @@ function getStatusColor(status: string) {
   }
 }
 
-interface Campaign {
-  id: string;
-  teamId: string;
-  teamName?: string;
-  type: string;
-  status?: string;
-  name?: string;
-  campaignParticipantsCount?: number;
-  createdAt?: string;
+export interface Campaign {
+  readonly id: string;
+  readonly teamId: string;
+  readonly teamName?: string;
+  readonly type: string;
+  readonly status?: string;
+  readonly name?: string;
+  readonly campaignParticipantsCount?: number;
+  readonly createdAt?: string;
 }
 interface CampaignCardProps {
-  campaign: Campaign;
-  onView: (campaign: Campaign) => void;
-  onEdit: (campaign: Campaign) => void;
+  readonly campaign: Campaign;
+  readonly onView: (campaign: Campaign) => void;
+  readonly onEdit: (campaign: Campaign) => void;
 }
 
-export default function CampaignCard({
-  campaign,
-  onView,
-  onEdit,
-}: CampaignCardProps) {
+export default function CampaignCard(props: Readonly<CampaignCardProps>) {
+  const { campaign, onView, onEdit } = props;
+  const updateCampaignMutation = useUpdateCampaignMutation(
+    campaign.id,
+    campaign.teamId,
+    () => {},
+    campaign.type,
+  );
   const t = useTranslations("campaign.card");
-  const router = useRouter();
   const deleteCampaignMutation = useDeleteCampaignMutation(
     campaign.teamId,
     campaign.type,
   );
+  const handleStatusChange = async (campaign: Campaign, checked: boolean) => {
+    const newStatus = checked ? "ACTIVE" : "INACTIVE";
 
+    try {
+      await updateCampaignMutation.mutateAsync({
+        campaignId: campaign.id,
+        data: {
+          status: newStatus,
+        },
+      });
+    } catch {
+      toast.error(t("toast.statusUpdateError"));
+    }
+  };
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
     try {
       await deleteCampaignMutation.mutateAsync(campaign.id);
       toast.success(t("toast.deleteSuccess"));
-      router.refresh();
     } catch {
       toast.error(t("toast.deleteError"));
     }
   };
 
-  return (
-    <Card
-      key={campaign.id}
-      className="p-[0.7rem] group hover:shadow-lg transition-all duration-300 cursor-pointer  border border-border hover:border-primary/30 dark:hover:border-primary/10 overflow-hidden relative hover:-translate-y-0.5"
-      onClick={() => onView(campaign)}
-    >
-      {/* Card Content */}
-      <div className="p-4">
-        {/* Header with Name and 3-dot menu */}
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="text-sm line-clamp-2 flex-1 pr-2 dark:text-slate-50">
-            {campaign.name}
-          </h3>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 hover:bg-slate-100 dark:hover:bg-slate-800 h-7 w-7 rounded-lg"
-              >
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
+  const actions = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild onClick={(event) => event.stopPropagation()}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 shrink-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+        >
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onView(campaign);
-                }}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                {t("actions.view")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(campaign);
-                }}
-              >
-                <Edit2 className="w-4 h-4 mr-2" />
-                {t("actions.edit")}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
+      <DropdownMenuContent
+        align="end"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <DropdownMenuItem
+          onClick={(event) => {
+            event.stopPropagation();
+            onView(campaign);
+          }}
+        >
+          <Eye className="mr-2 h-4 w-4" />
+          {t("actions.view")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={(event) => {
+            event.stopPropagation();
+            onEdit(campaign);
+          }}
+        >
+          <Edit2 className="mr-2 h-4 w-4" />
+          {t("actions.edit")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem
+              onSelect={(e) => e.preventDefault()}
+              className="text-destructive dark:text-red-400 focus:text-destructive dark:focus:text-red-400"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t("actions.delete")}
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("deleteModal.title")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("deleteModal.description", { name: campaign.name })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("deleteModal.cancel")}</AlertDialogCancel>
+
+              <AlertDialogAction
                 onClick={handleDelete}
-                className="text-destructive dark:text-red-400 focus:text-destructive dark:focus:text-red-400"
+                className="bg-destructive text-white hover:bg-destructive/90"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                {t("actions.delete")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                {t("deleteModal.confirm")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
-        {/* Team */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 mb-3">
-          <Users className="w-3.5 h-3.5" />
-          <span>{campaign.teamName}</span>
-        </div>
-
-        {/* Status Badge */}
-        <div className="mb-3">
-          <span
-            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusColor(
-              campaign.status,
-            )}`}
-          >
-            {campaign.status}
-          </span>
-        </div>
-
-        {/* Participants */}
-        <div className="flex items-center justify-between py-2 border-t border-slate-100 dark:border-slate-700">
-          <span className="text-xs text-slate-600 dark:text-slate-400">
-            {t("labels.participants")}
-          </span>
-          <span className="text-sm dark:text-slate-200">
+  return (
+    <GenericActionCard
+      title={campaign.name}
+      titleTooltip={campaign.name}
+      subtitle={campaign.type}
+      actions={actions}
+      showSwitch
+      switchChecked={campaign.status === "ACTIVE"}
+      onSwitchChange={(checked) => handleStatusChange(campaign, checked)}
+      content={
+        <div className="flex">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 pr-3 text-sm text-slate-600 dark:text-slate-400">
+            <Users className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{campaign.teamName}</span>
+          </div>
+          <Separator orientation="vertical" className="mx-1 h-auto" />
+          <div className="flex flex-1 flex-col items-end justify-center gap-1 text-sm">
             {campaign.campaignParticipantsCount?.toLocaleString() ?? "0"}
-          </span>
+          </div>
         </div>
-
-        {/* Created */}
-        <div className="flex items-center justify-between py-2 border-t border-slate-100 dark:border-slate-700">
-          <span className="text-xs text-slate-600 dark:text-slate-400">
-            {t("labels.created")}
-          </span>
-          <span className="text-xs text-slate-900 dark:text-slate-200">
-            {campaign.createdAt
-              ? dayjs(campaign.createdAt).format("DD-MM-YYYY")
-              : "-"}
-          </span>
-        </div>
-      </div>
-    </Card>
+      }
+      footerLeft={
+        <Badge
+          variant="outline"
+          className={getStatusColor(campaign.status ?? "")}
+        >
+          {campaign.status}
+        </Badge>
+      }
+      createdAt={campaign.createdAt}
+      className="group relative h-full cursor-pointer overflow-hidden border border-border p-[0.7rem] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg dark:hover:border-primary/10"
+      onClick={() => onView(campaign)}
+    />
   );
 }

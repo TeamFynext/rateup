@@ -303,12 +303,21 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
                       const index = previousFilterForTab.findIndex(
                         (p) => p.tab === tab,
                       );
+
+                      let updated;
+
                       if (index !== -1) {
-                        previousFilterForTab[index].filter = { ...newFilter };
+                        updated = previousFilterForTab.map((p, i) =>
+                          i === index ? { ...p, filter: newFilter } : p,
+                        );
                       } else {
-                        previousFilterForTab.push({ tab, filter: newFilter });
+                        updated = [
+                          ...previousFilterForTab,
+                          { tab, filter: newFilter },
+                        ];
                       }
-                      setPreviousFilterForTab(previousFilterForTab);
+
+                      setPreviousFilterForTab(updated);
                     }}
                   />
                   <label

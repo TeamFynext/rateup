@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 
-import {
-  ArrowUpDown,
-  Check,
-  ChevronDown,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,13 +12,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-
-const SORT_OPTIONS = [
-  { value: "latest", label: "Newest" },
-  { value: "oldest", label: "Oldest" },
-  { value: "a-z", label: "Name (A-Z)" },
-  { value: "z-a", label: "Name (Z-A)" },
-];
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -110,12 +98,9 @@ function FilterSection({ label, hint, isOpen, onToggle, children }) {
 export function TemplateFilterSort({
   filters,
   setFilters,
-  sortOption,
-  setSortOption,
   templateTypeOptions = [],
 }) {
   const [filterOpen, setFilterOpen] = useState(false);
-  const [sortOpen, setSortOpen] = useState(false);
   const [openSection, setOpenSection] = useState(null); // "status" | "category" | "templateType" | null
 
   const activeFilterCount = [
@@ -123,9 +108,6 @@ export function TemplateFilterSort({
     filters.category !== "all",
     filters.templateType !== "all",
   ].filter(Boolean).length;
-
-  const currentSortLabel =
-    SORT_OPTIONS.find((o) => o.value === sortOption)?.label ?? "Sort";
 
   function toggleSection(section) {
     setOpenSection((prev) => (prev === section ? null : section));
@@ -138,44 +120,13 @@ export function TemplateFilterSort({
 
   return (
     <div className="flex items-center gap-2">
-      {/* Sort Button */}
-      <Popover open={sortOpen} onOpenChange={setSortOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn(
-              "h-8 gap-1.5 px-3 text-sm font-medium transition-all",
-              sortOption !== "latest" && "border-primary/50 text-primary",
-            )}
-          >
-            <ArrowUpDown className="h-3.5 w-3.5" />
-            {currentSortLabel}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" sideOffset={6} className="w-44 p-1.5">
-          {SORT_OPTIONS.map((opt) => (
-            <OptionRow
-              key={opt.value}
-              label={opt.label}
-              active={sortOption === opt.value}
-              onClick={() => {
-                setSortOption(opt.value);
-                setSortOpen(false);
-              }}
-            />
-          ))}
-        </PopoverContent>
-      </Popover>
-
-      {/* Filter Button */}
       <Popover open={filterOpen} onOpenChange={handleFilterOpenChange}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             size="sm"
             className={cn(
-              "h-8 gap-1.5 px-3 text-sm font-medium transition-all",
+              "gap-1.5 px-3 text-sm font-medium transition-all",
               activeFilterCount > 0 && "border-primary/50 text-primary",
             )}
           >
@@ -189,7 +140,7 @@ export function TemplateFilterSort({
           {/* Status */}
           <FilterSection
             label="Status"
-            hint={filters.status !== "all" ? filters.status : null}
+            hint={filters.status === "all" ? null : filters.status}
             isOpen={openSection === "status"}
             onToggle={() => toggleSection("status")}
           >
@@ -208,7 +159,7 @@ export function TemplateFilterSort({
           {/* Category */}
           <FilterSection
             label="Category"
-            hint={filters.category !== "all" ? filters.category : null}
+            hint={filters.category === "all" ? null : filters.category}
             isOpen={openSection === "category"}
             onToggle={() => toggleSection("category")}
           >
@@ -230,7 +181,7 @@ export function TemplateFilterSort({
               <FilterSection
                 label="Type"
                 hint={
-                  filters.templateType !== "all" ? filters.templateType : null
+                  filters.templateType === "all" ? null : filters.templateType
                 }
                 isOpen={openSection === "templateType"}
                 onToggle={() => toggleSection("templateType")}

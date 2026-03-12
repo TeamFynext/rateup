@@ -3,25 +3,43 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { ChevronDown, Filter, Grid3x3, List } from "lucide-react";
+
 import { Rule } from "@/types/rule";
 import {
   useDeleteRuleMutation,
   useRules,
   useUpdateRuleMutation,
 } from "@/backend/whatsapp/rule/rule.query";
-import { ToolBar } from "@/components/common/tool-bar";
+import { ListPageLayout } from "@/components/common/list-page-layout";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 
 import { CardView } from "./components/card-view";
-import Skeletons from "./components/skeletons";
+
+const AUTOMATION_SORT_OPTIONS = [
+  { value: "latest", label: "Newest" },
+  { value: "oldest", label: "Oldest" },
+  { value: "a-z", label: "Name (A-Z)" },
+  { value: "z-a", label: "Name (Z-A)" },
+] as const;
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "date" | "status">("date");
+  const [sortBy, setSortBy] = useState<"latest" | "oldest" | "a-z" | "z-a">(
+    "latest",
+  );
   const [filterActive, setFilterActive] = useState<
     "all" | "active" | "inactive"
   >("all");
-  const { data = [], isLoading } = useRules();
+  const { data = [], isLoading, isError, refetch } = useRules();
   const deleteMutation = useDeleteRuleMutation();
   const updateMutation = useUpdateRuleMutation();
   const router = useRouter();
@@ -36,9 +54,13 @@ export default function Home() {
       item.name.toLowerCase().includes(searchTerm.toLowerCase()),
     )
     .sort((a, b) => {
-      if (sortBy === "name") return a.name.localeCompare(b.name);
-      if (sortBy === "status")
-        return (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0);
+      if (sortBy === "oldest") {
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      }
+      if (sortBy === "a-z") return a.name.localeCompare(b.name);
+      if (sortBy === "z-a") return b.name.localeCompare(a.name);
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
@@ -56,31 +78,98 @@ export default function Home() {
   };
 
   return (
-    <main className="container space-y-4 h-full flex flex-col">
-      <ToolBar
-        title="Automation"
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-        filterActive={filterActive}
-        onFilterChange={setFilterActive}
-        onCreate={handleCreate}
-        isLoading={isLoading}
-      />
+    <ListPageLayout
+      canCreate
+      createLabel="Create Automation"
+      createDisabledText=""
+      docsUrl="automation/overview"
+      isLoading={isLoading}
+      queryKeys={["rules"]}
+      search={searchTerm}
+      searchPlaceholder="Search..."
+      tourSteps={[]}
+      onCreate={handleCreate}
+      onSearchChange={setSearchTerm}
+      sortOptions={AUTOMATION_SORT_OPTIONS}
+      sortValue={sortBy}
+      onSortChange={(value) =>
+        setSortBy(value as "latest" | "oldest" | "a-z" | "z-a")
+      }
+      isError={isError}
+      onRetry={refetch}
+      isEmpty={!isLoading && !isError && filteredData.length === 0}
+      emptyTitle="No Automation Yet"
+      emptyDescription="You haven't created any automation yet. Get started by creating your first automation."
+      rightControls={
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs gap-1"
+                disabled={isLoading}
+              >
+                <Filter className="w-3.5 h-3.5" />
+                Filter
+                <ChevronDown className="w-3.5 h-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="text-sm">
+              <DropdownMenuItem
+                onClick={() => setFilterActive("all")}
+                className={filterActive === "all" ? "bg-accent" : ""}
+              >
+                All
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setFilterActive("active")}
+                className={filterActive === "active" ? "bg-accent" : ""}
+              >
+                Active
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setFilterActive("inactive")}
+                className={filterActive === "inactive" ? "bg-accent" : ""}
+              >
+                Inactive
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-      {isLoading ? (
-        <Skeletons viewMode={viewMode} />
-      ) : (
-        <CardView
-          data={filteredData}
-          viewMode={viewMode}
-          onToggleActive={handleToggleActive}
-          onDelete={handleDelete}
-        />
-      )}
-    </main>
+          <Separator orientation="vertical" className="h-5 mx-1" />
+
+          <div className="flex gap-1 bg-muted p-1 rounded">
+            <Button
+              onClick={() => setViewMode("grid")}
+              variant={viewMode === "grid" ? "default" : "ghost"}
+              size="sm"
+              className="gap-2"
+              disabled={isLoading}
+            >
+              <Grid3x3 className="w-4 h-4" />
+              Grid
+            </Button>
+            <Button
+              onClick={() => setViewMode("list")}
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              className="gap-2"
+              disabled={isLoading}
+            >
+              <List className="w-4 h-4" />
+              List
+            </Button>
+          </div>
+        </div>
+      }
+    >
+      <CardView
+        data={filteredData}
+        viewMode={viewMode}
+        onToggleActive={handleToggleActive}
+        onDelete={handleDelete}
+      />
+    </ListPageLayout>
   );
 }

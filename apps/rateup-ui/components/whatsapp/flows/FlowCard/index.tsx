@@ -1,14 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  IconCalendar,
-  IconCopy,
-  IconDots,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -19,20 +14,18 @@ import {
   useDeleteFlowMutation,
   useDeprecateFlowMutation,
 } from "@/backend/whatsapp/flow/flow.query";
-import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
+import { GenericActionCard } from "@/components/common/generic-card";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
@@ -82,7 +75,7 @@ function FlowCard({
   }));
   const translations = useTranslations();
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!teamId) {
       setTeamIdError("Must contain one team");
@@ -98,146 +91,125 @@ function FlowCard({
     });
   };
 
-  return (
-    <Card
-      className="h-full cursor-pointer hover:border-blue-400 dark:hover:border-blue-600 transition-colors border dark:border-gray-700"
-      onClick={() =>
-        router.push(
-          `/dashboard/whatsapp/flows/v${version}/${dbFlowId}${status === WaFlowStatus.PUBLISHED ? "?tab=Result" : ""}`,
-        )
-      }
-    >
-      <CardContent className="px-4  flex flex-col justify-between h-full gap-4">
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-start">
-            <div className="flex-1 overflow-hidden">
-              <h3
-                className="font-semibold text-lg text-black dark:text-white truncate"
-                title={name}
-              >
-                {name}
-              </h3>
-              <p className="text-xs text-muted-foreground dark:text-gray-400">
-                {category}
-              </p>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                >
-                  <IconDots size={20} />
-                </Button>
-              </DropdownMenuTrigger>
+  const menu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <IconDots size={20} />
+        </Button>
+      </DropdownMenuTrigger>
 
-              <DropdownMenuContent
-                align="end"
+      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
+                  setDialogOpened(true);
                 }}
+                className="text-red-600 focus:text-red-600"
               >
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDialogOpened(true);
-                        }}
-                        className="text-red-600 focus:text-red-600"
-                      >
-                        <IconTrash size={16} className="mr-2" />
-                        {translations("Delete")}
-                      </DropdownMenuItem>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      {status !== WaFlowStatus.DRAFT
-                        ? translations(
-                            "It will be deprecated and will be removed from the system",
-                          )
-                        : translations("Delete Flow")}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
+                <IconTrash size={16} className="mr-2" />
+                {translations("Delete")}
+              </DropdownMenuItem>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>
+              {status === WaFlowStatus.DRAFT
+                ? translations("Delete Flow")
+                : translations(
+                    "It will be deprecated and will be removed from the system",
+                  )}
+            </p>
+          </TooltipContent>
+        </Tooltip>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCloneDialogOpened(true);
-                        }}
-                        disabled={status === WaFlowStatus.DEPRECATED}
-                      >
-                        <IconCopy size={16} className="mr-2" />
-                        {translations("Clone")}
-                      </DropdownMenuItem>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>clone-flow</p>
-                  </TooltipContent>
-                </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCloneDialogOpened(true);
+                }}
+                disabled={status === WaFlowStatus.DEPRECATED}
+              >
+                <IconCopy size={16} className="mr-2" />
+                {translations("Clone")}
+              </DropdownMenuItem>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>clone-flow</p>
+          </TooltipContent>
+        </Tooltip>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCloneAandRenewOpened(true);
-                        }}
-                        disabled={status !== WaFlowStatus.PUBLISHED}
-                      >
-                        <IconCopy size={16} className="mr-2" />
-                        {translations("Copy & Renew Flow")}
-                      </DropdownMenuItem>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      {status !== WaFlowStatus.PUBLISHED
-                        ? translations(
-                            "You can only Copy & Renew Flow in PUBLISHED state",
-                          )
-                        : translations("Copy & Renew Flow")}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCloneAandRenewOpened(true);
+                }}
+                disabled={status !== WaFlowStatus.PUBLISHED}
+              >
+                <IconCopy size={16} className="mr-2" />
+                {translations("Copy & Renew Flow")}
+              </DropdownMenuItem>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>
+              {status === WaFlowStatus.PUBLISHED
+                ? translations("Copy & Renew Flow")
+                : translations(
+                    "You can only Copy & Renew Flow in PUBLISHED state",
+                  )}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
-          <p className="font-semibold text-sm text-muted-foreground mt-2">
+  return (
+    <>
+      <GenericActionCard
+        title={name}
+        titleTooltip={name}
+        subtitle={category}
+        actions={menu}
+        content={
+          <p className="mt-2 text-sm font-semibold text-muted-foreground">
             {responseCount} responses
           </p>
-        </div>
-
-        <div>
-          <Separator className="mb-3" />
-          <div className="flex justify-between items-center">
-            <Badge
-              variant="secondary"
-              className={styles[`${status.toLowerCase()}-badge`]}
-            >
-              {status === WaFlowStatus.PUBLISHED ? "Active" : status}
-            </Badge>
-
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <IconCalendar size={18} />
-              <CreatedSinceText createdAt={createdAt} />
-            </div>
-          </div>
-        </div>
-      </CardContent>
+        }
+        footerLeft={
+          <Badge
+            variant="secondary"
+            className={styles[`${status.toLowerCase()}-badge`]}
+          >
+            {status === WaFlowStatus.PUBLISHED ? "Active" : status}
+          </Badge>
+        }
+        createdAt={createdAt}
+        onClick={() =>
+          router.push(
+            `/dashboard/whatsapp/flows/v${version}/${dbFlowId}${
+              status === WaFlowStatus.PUBLISHED ? "?tab=Result" : ""
+            }`,
+          )
+        }
+        className="h-full cursor-pointer border transition-colors hover:border-blue-400 dark:border-gray-700 dark:hover:border-blue-600"
+      />
 
       <ConfirmationModal
         forDeleteFunctionality
@@ -310,7 +282,7 @@ function FlowCard({
           />
         </div>
       </FormModalLayout>
-    </Card>
+    </>
   );
 }
 
