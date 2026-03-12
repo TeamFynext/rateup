@@ -80,7 +80,8 @@ import ChatselectPanelHeader from "./ChatselectPanelHeader";
 const WaInboxChatSelect = () => {
   const searchParams = useSearchParams();
   const tab = (searchParams.get("tab") as string) ?? "New";
-  const { filter, setFilter, previousFilterForTab } = useChatFilterStore();
+  const { filter, setFilter, previousFilterForTab, clearFilter } =
+    useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
   const {
     setSelectedContact,
@@ -270,6 +271,12 @@ const WaInboxChatSelect = () => {
     hasNextPageFilteredContacts,
     fetchNextPageFilteredContacts,
   ]);
+
+  useEffect(() => {
+    if (!filter || !Array.isArray(filter.status)) {
+      clearFilter();
+    }
+  }, [filter]);
 
   useEffect(() => {
     const openStatus = [
