@@ -1,0 +1,186 @@
+# Settings
+
+The **Settings** page allows administrators to configure global settings for the loyalty program, including program details, notification preferences, and point expiration rules.
+
+import ScreenShot from "../../../components/Screenshot";
+import { CDN } from "../../../lib/cdn";
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/settings-general.png`}
+  alt="Loyalty program general settings"
+/>
+
+---
+
+## Opening Settings
+
+To configure loyalty program settings:
+
+1. Open **Loyalty** from the sidebar.
+2. Click **Settings**.
+
+The page contains two main tabs:
+
+- **General**
+- **Notifications**
+
+---
+
+# General Settings
+
+The **General** tab contains core configuration options for the loyalty program.
+
+## Basic Settings
+
+### Program Name
+Defines the name of the loyalty program.
+
+Example:
+- Hotel Loyalty
+- Restaurant Rewards
+
+---
+
+### Points Currency
+Defines the name used for loyalty points.
+
+Example:
+- Points
+- Stars
+- Credits
+
+---
+
+### Money Currency
+Specifies the currency used for rewards and transactions.
+
+Example:
+- INR – Indian Rupee
+- USD – US Dollar
+
+---
+
+### Default Country
+Defines the default country for loyalty customers.
+
+---
+
+### WhatsApp Account
+Select the WhatsApp account used to send loyalty notifications.
+
+---
+
+## Notification Controls
+
+This section controls how notifications are delivered.
+
+- **Program Active** – Enables or disables the loyalty program.
+- **Customer Notifications** – Sends alerts for point activity.
+- **Auto-approve Adjustments** – Skips manual approval for point changes.
+- **Email Notifications** – Enables email alerts.
+- **WhatsApp Notifications** – Enables WhatsApp alerts.
+
+---
+
+## Points Expiration
+
+Controls whether loyalty points expire after a certain time period.
+
+### Enable Expiration
+When enabled, points expire after the configured period.
+
+### Expiration Period
+Example:
+- 12 months
+- 24 months
+
+---
+
+## Danger Zone
+
+Contains critical administrative actions.
+
+### Reset Points
+Resets all customer points to **zero**.
+
+### Delete Program
+Deletes the entire loyalty program and its data.
+
+---
+
+# Notification Templates
+
+The **Notifications** tab allows administrators to configure automated WhatsApp notifications.
+
+---
+
+## Transaction Notifications
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/settings-notification-transactions.png`}
+  alt="Transaction notification settings"
+/>
+
+These notifications are triggered when loyalty transactions occur.
+
+Examples include:
+
+- **Points Earned**
+- **Points Adjusted**
+- **Reward Assigned**
+- **Reward Redeemed**
+
+Each notification can be enabled and linked to a WhatsApp template.
+
+---
+
+## Tier Updates
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/settings-notification-tier-updates.png`}
+  alt="Tier update notification settings"
+/>
+
+This notification is sent when a customer reaches a new loyalty tier.
+
+Example:
+- Bronze → Silver
+- Silver → Gold
+
+---
+
+## Points Reminder
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/settings-notification-points-reminder.png`}
+  alt="Points reminder notification settings"
+/>
+
+Reminds customers when they have unused loyalty points.
+
+### Days of Inactivity
+Defines how long a customer must be inactive before receiving a reminder.
+
+Example:
+- 30 days
+
+---
+
+## Birthday Reminders
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/settings-notification-birthday.png`}
+  alt="Birthday notification settings"
+/>
+
+Automatically sends birthday messages and rewards.
+
+### Birthday Gift
+Select the reward given to customers on their birthday.
+
+Example:
+- Free Birthday Cake
+- Complimentary Dessert
+
+### Preview Message
+Displays a preview of the WhatsApp message sent to customers.

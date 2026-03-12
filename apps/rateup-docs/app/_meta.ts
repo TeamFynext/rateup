@@ -8,6 +8,7 @@ export default {
   contacts:"Contacts",
   whatsapp:"Whatsapp",
   automation:"Automation",
+  loyality:"Loyality",
   profilesettings: "Profile",
   teams: "Teams and User Roles",
   websurvey: "Web Survey",
