@@ -4,8 +4,22 @@ import { Edit2, Eye, MoreVertical, Trash2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { useDeleteCampaignMutation } from "@/backend/campaign/campaign.query";
+import {
+  useDeleteCampaignMutation,
+  useUpdateCampaignMutation,
+} from "@/backend/campaign/campaign.query";
 import { GenericActionCard } from "@/components/common/generic-card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,12 +67,31 @@ interface CampaignCardProps {
 
 export default function CampaignCard(props: Readonly<CampaignCardProps>) {
   const { campaign, onView, onEdit } = props;
+  const updateCampaignMutation = useUpdateCampaignMutation(
+    campaign.id,
+    campaign.teamId,
+    () => {},
+    campaign.type,
+  );
   const t = useTranslations("campaign.card");
   const deleteCampaignMutation = useDeleteCampaignMutation(
     campaign.teamId,
     campaign.type,
   );
+  const handleStatusChange = async (campaign: Campaign, checked: boolean) => {
+    const newStatus = checked ? "ACTIVE" : "INACTIVE";
 
+    try {
+      await updateCampaignMutation.mutateAsync({
+        campaignId: campaign.id,
+        data: {
+          status: newStatus,
+        },
+      });
+    } catch {
+      toast.error(t("toast.statusUpdateError"));
+    }
+  };
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
@@ -105,13 +138,37 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
           {t("actions.edit")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={handleDelete}
-          className="text-destructive dark:text-red-400 focus:text-destructive dark:focus:text-red-400"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          {t("actions.delete")}
-        </DropdownMenuItem>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem
+              onSelect={(e) => e.preventDefault()}
+              className="text-destructive dark:text-red-400 focus:text-destructive dark:focus:text-red-400"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t("actions.delete")}
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("deleteModal.title")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("deleteModal.description", { name: campaign.name })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("deleteModal.cancel")}</AlertDialogCancel>
+
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive text-white hover:bg-destructive/90"
+              >
+                {t("deleteModal.confirm")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -122,6 +179,9 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
       titleTooltip={campaign.name}
       subtitle={campaign.type}
       actions={actions}
+      showSwitch
+      switchChecked={campaign.status === "ACTIVE"}
+      onSwitchChange={(checked) => handleStatusChange(campaign, checked)}
       content={
         <div className="flex">
           <div className="flex min-w-0 flex-1 items-center gap-1.5 pr-3 text-sm text-slate-600 dark:text-slate-400">

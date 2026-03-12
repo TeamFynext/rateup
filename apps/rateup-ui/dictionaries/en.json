@@ -3228,6 +3228,14 @@
       "toast": {
         "deleteSuccess": "Campaign deleted successfully",
         "deleteError": "Failed to delete campaign"
+      },
+      "deleteModal": {
+        "title": "Delete Campaign",
+        "description": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete",
+        "deleteSuccess": "Campaign deleted successfully",
+        "deleteError": "Failed to delete campaign"
       }
     },
 

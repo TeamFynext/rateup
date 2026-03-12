@@ -8,6 +8,8 @@ import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
+import { Switch } from "../ui/switch";
+
 type GenericCardGridProps<T> = {
   readonly items: readonly T[];
   readonly getKey: (item: T, index: number) => string;
@@ -48,6 +50,10 @@ type GenericActionCardProps = {
   readonly footerRight?: ReactNode;
   readonly onClick?: () => void;
   readonly className?: string;
+
+  readonly showSwitch?: boolean;
+  readonly switchChecked?: boolean;
+  readonly onSwitchChange?: (checked: boolean) => void;
 };
 
 export function GenericActionCard({
@@ -61,6 +67,9 @@ export function GenericActionCard({
   footerRight,
   onClick,
   className,
+  showSwitch,
+  switchChecked,
+  onSwitchChange,
 }: Readonly<GenericActionCardProps>) {
   const cardClassName =
     className ??
@@ -79,7 +88,7 @@ export function GenericActionCard({
     <Card className={cardClassName} onClick={onClick}>
       <CardContent className="flex h-full flex-col justify-between gap-4 px-4">
         <div className="flex flex-col gap-3">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-2">
             <div className="flex-1 overflow-hidden">
               <h3
                 className="truncate text-lg font-semibold"
@@ -87,13 +96,27 @@ export function GenericActionCard({
               >
                 {title}
               </h3>
+
               {subtitle ? (
                 <p className="truncate text-xs text-muted-foreground">
                   {subtitle}
                 </p>
               ) : null}
             </div>
-            {actions}
+
+            <div className="flex items-center gap-2">
+              {showSwitch && (
+                <Switch
+                  checked={switchChecked}
+                  onCheckedChange={(checked) => {
+                    onSwitchChange?.(checked);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              )}
+
+              {actions}
+            </div>
           </div>
 
           {content}
