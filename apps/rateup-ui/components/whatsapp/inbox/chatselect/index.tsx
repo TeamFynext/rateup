@@ -80,7 +80,8 @@ import ChatselectPanelHeader from "./ChatselectPanelHeader";
 const WaInboxChatSelect = () => {
   const searchParams = useSearchParams();
   const tab = (searchParams.get("tab") as string) ?? "New";
-  const { filter, setFilter, previousFilterForTab } = useChatFilterStore();
+  const { filter, setFilter, previousFilterForTab, clearFilter } =
+    useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
   const {
     setSelectedContact,
@@ -272,11 +273,17 @@ const WaInboxChatSelect = () => {
   ]);
 
   useEffect(() => {
+    if (!filter || !Array.isArray(filter.status)) {
+      clearFilter();
+    }
+  }, [filter]);
+
+  useEffect(() => {
     const openStatus = [
       WaMessageAssignStatus.ASSIGNED,
       WaMessageAssignStatus.UNASSIGNED,
     ];
-    const hasOpenStatus = filter.status.some((s) =>
+    const hasOpenStatus = filter?.status?.some((s) =>
       openStatus.includes(s as WaMessageAssignStatus),
     );
     if (tab === "Addressed" && hasOpenStatus) {
@@ -287,9 +294,9 @@ const WaInboxChatSelect = () => {
         ),
       });
     } else if (tab === "All" && !hasOpenStatus) {
-      const prFilter = previousFilterForTab.find((t) => t.tab === "All");
+      const prFilter = previousFilterForTab?.find((t) => t.tab === "All");
       if (prFilter) {
-        const openStatusInPrFilter = prFilter.filter.status.filter((s) =>
+        const openStatusInPrFilter = prFilter?.filter?.status?.filter((s) =>
           openStatus.includes(s as WaMessageAssignStatus),
         );
         setFilter({
