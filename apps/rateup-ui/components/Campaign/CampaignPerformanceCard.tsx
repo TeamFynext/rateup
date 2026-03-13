@@ -37,7 +37,6 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
           value={sent}
           label={t("metrics.sent")}
           badge="100%"
-          color="primary"
           badgeColor={"sent"}
           iconColor={"sentBadge"}
         />
@@ -48,7 +47,6 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
           value={delivered}
           label={t("metrics.delivered")}
           badge={`${percent(delivered)}%`}
-          color="green"
           badgeColor={"delivered"}
           iconColor={"delBadge"}
         />
@@ -59,7 +57,6 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
           value={read}
           label={t("metrics.read")}
           badge={`${percent(read)}%`}
-          color="emerald"
           badgeColor={"read"}
           iconColor={"readBadge"}
         />
@@ -70,7 +67,6 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
           value={pending}
           label={t("metrics.pending")}
           badge={pending.toString()}
-          color="amber"
           badgeColor={"pending"}
           iconColor={"pendingBadge"}
         />
@@ -81,7 +77,6 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
           value={failed}
           label={t("metrics.failed")}
           badge={`${percent(failed)}%`}
-          color="red"
           badgeColor={"failed"}
           iconColor={"faildBadge"}
         />
@@ -95,7 +90,7 @@ interface MetricCardProps {
   value: number;
   label: string;
   badge: string;
-  color: "primary" | "green" | "emerald" | "amber" | "red";
+  color?: "primary" | "green" | "emerald" | "amber" | "red";
   badgeColor: "sent" | "delivered" | "read" | "pending" | "failed";
   iconColor:
     | "sentBadge"
@@ -177,8 +172,8 @@ function MetricCard({
           </Badge>
         </div>
 
+        <div className="text-sm text-muted-foreground">{label}</div>
         <div className="text-3xl mb-1">{value.toLocaleString()}</div>
-        <div className="text-sm">{label}</div>
       </CardContent>
     </Card>
   );
