@@ -9,6 +9,7 @@ import { CONTACT_SORT } from "../../../components/Contacts/utils/utils";
 import {
   assignContactLabelsToContactId,
   assignContactLabelsToMultipleContacts,
+  bulkAssignStatus,
   createContact,
   createContactLabel,
   createCustomField,
@@ -385,6 +386,48 @@ export const useUpdateLifecycleofMultipleContacts = () => {
     mutationFn: updateLifecycleofMultipleContacts,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+  });
+};
+
+export const useBulkAssignStatusMutation = (filterData) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: bulkAssignStatus,
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+
+      queryClient.invalidateQueries({
+        queryKey: ["contacts", "filtered", filterData],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["assignedInboxUser"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["contactInboxCount"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["notification"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["notificationCount"],
+      });
+
+      toast.success("Chats updated successfully.", {
+        id: "bulk-chat-update",
+      });
+    },
+
+    onError: (error: any) => {
+      toast.error(error?.message || "Error updating chats", {
+        id: "bulk-chat-update",
+      });
     },
   });
 };

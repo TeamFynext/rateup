@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import {
   ActionIcon,
@@ -21,30 +21,13 @@ import {
 } from "@mantine/core";
 import {
   IconForbid2,
-  IconMessageBolt,
   IconMessageCheck,
-  IconRefresh,
-  IconSearch,
-  IconSquareRoundedX,
   IconUserCheck,
   IconUserCircle,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import lodash from "lodash";
-import {
-  ChevronDown,
-  Clock,
-  Download,
-  Filter,
-  Key,
-  Loader,
-  MessageSquare,
-  RefreshCcw,
-  Search,
-  UserPlus,
-  X,
-} from "lucide-react";
+import { CheckCircle, Loader, Loader2, UserCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
@@ -56,19 +39,30 @@ import useContactStore, {
   useContactsStore,
   useMessagesStore,
 } from "@/app/dashboard/inbox/store";
-import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import { useBulkAssignStatusMutation } from "@/backend/campaign/contacts/contacts.query";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useLifecycleContext } from "@/context/LifecycleContext";
 import { useUser } from "@/context/UserContext";
 
-import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import WhatsAppInboxLoader from "../loader";
-import AddUnknownContactModal, {
-  AddUnknownContactForm,
-} from "./addUnknownContactModal";
+import AddUnknownContactModal from "./addUnknownContactModal";
+import BulkAssignUser from "./AssignUser";
 import WaInboxChatFilter, {
   ChatFilter,
   useChatFilterStore,
@@ -89,6 +83,7 @@ const WaInboxChatSelect = () => {
     loadContactsFromDB,
     isLoading: isStoreLoading,
     clearContactsForFilter,
+    updateContactById,
   } = useContactsStore();
   const currentFilterKey = useContactsStore((s) => s.currentFilterKey);
   const contactsById = useContactsStore((s) => s.contactsById);
@@ -145,6 +140,17 @@ const WaInboxChatSelect = () => {
   const { data: waSettings, isLoading } = useWaSettings();
 
   const { setFilterData, filterData } = useContactStore();
+
+  const {
+    mutate: bulkAssignStatusMutation,
+    isPending: isBulkAssignStatusPending,
+  } = useBulkAssignStatusMutation(filterData);
+
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+
+  const [selectedChats, setSelectedChats] = useState([]);
+  const [showBulkAssignDialog, setShowBulkAssignDialog] = useState(false);
+  const [openConfirmHandleClose, setOpenConfirmHandleClose] = useState(false);
 
   const parentRef = useRef(null);
 
@@ -362,6 +368,7 @@ const WaInboxChatSelect = () => {
   }, [tab, filter, prepareFilters]);
 
   useEffect(() => {
+    setIsSelectionMode(false);
     if (parentRef.current) {
       parentRef.current.scrollTop = 0;
     }
@@ -372,6 +379,42 @@ const WaInboxChatSelect = () => {
   if (isContactLoading || isLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;
 
+  const toggleSelectAll = () => {
+    if (selectedChats.length === contactIds.length) {
+      setSelectedChats([]);
+    } else {
+      setSelectedChats(contactIds);
+    }
+  };
+
+  const handleBulkClose = async () => {
+    await bulkAssignStatusMutation(
+      {
+        contactIds: selectedChats,
+        waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+      },
+      {
+        onSuccess: () => {
+          setSelectedChats([]);
+          setIsSelectionMode(false);
+          setOpenConfirmHandleClose(false);
+          selectedChats.forEach((contactId) => {
+            updateContactById(contactId, (existing) => ({
+              ...existing,
+              waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+              closedAt: new Date().toISOString(),
+              closedUser: {
+                name: user?.userName,
+                id: user?.userId,
+              },
+              assignedUsers: [],
+            }));
+          });
+        },
+      },
+    );
+  };
+
   return (
     <div className="h-full bg-background">
       <ChatselectPanelHeader
@@ -381,6 +424,9 @@ const WaInboxChatSelect = () => {
           refetchFilteredContacts();
         }}
         tab={tab}
+        isSelectionMode={isSelectionMode}
+        setIsSelectionMode={setIsSelectionMode}
+        setSelectedChats={setSelectedChats}
       />
       <div>
         {isStoreLoading ||
@@ -399,6 +445,76 @@ const WaInboxChatSelect = () => {
             }}
           >
             <Divider />
+            {isSelectionMode && selectedChats.length > 0 && (
+              <div className="h-12 px-3 border-b flex items-center justify-between transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedChats.length === contactIds.length}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded text-foreground focus:ring-primary"
+                    />
+
+                    <span className="text-sm font-medium text-foreground">
+                      {selectedChats.length} selected
+                    </span>
+                  </div>
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setSelectedChats([])}
+                  >
+                    {translations("Clear")}
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {tab !== "Assigned" && tab !== "mine" && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => setShowBulkAssignDialog(true)}
+                          >
+                            <UserCheck className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+
+                        <TooltipContent>
+                          <p>{translations("Assign selected chats")}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+
+                  {tab !== "Addressed" && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 w-8 p-0"
+                            onClick={() => setOpenConfirmHandleClose(true)}
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+
+                        <TooltipContent>
+                          <p>{translations("Close selected chats")}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+              </div>
+            )}
             <div
               style={{
                 // height: `${rowVirtualizer.getTotalSize()}px`,
@@ -439,6 +555,9 @@ const WaInboxChatSelect = () => {
                           contact={contact}
                           waSettings={waSettings}
                           lifeCycleLabels={lifeCycleLabels}
+                          isSelectionMode={isSelectionMode}
+                          selectedChats={selectedChats}
+                          setSelectedChats={setSelectedChats}
                         />
                         <Divider />
                       </>
@@ -474,6 +593,72 @@ const WaInboxChatSelect = () => {
           </div>
         )}
       </div>
+      {/* confirm close */}
+      <Dialog
+        open={openConfirmHandleClose}
+        onOpenChange={setOpenConfirmHandleClose}
+      >
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>{translations("Close selected chats")}?</DialogTitle>
+          </DialogHeader>
+
+          <p className="text-sm text-muted-foreground">
+            {translations("Are you sure you want to close the selected chats")}.
+          </p>
+
+          <DialogFooter className="flex gap-2 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setOpenConfirmHandleClose(false)}
+            >
+              {translations("Cancel")}
+            </Button>
+
+            <Button
+              disabled={isBulkAssignStatusPending}
+              onClick={() => {
+                handleBulkClose();
+              }}
+            >
+              {isBulkAssignStatusPending && (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              )}
+              {translations("Confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/*bulk assign*/}
+      <Dialog
+        open={showBulkAssignDialog}
+        onOpenChange={setShowBulkAssignDialog}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Assign {selectedChats.length} Chat
+              {selectedChats.length > 1 ? "s" : ""}
+            </DialogTitle>
+
+            <DialogDescription>
+              {translations(
+                "Select a team member to assign the selected conversations",
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <BulkAssignUser
+            filterData={filterData}
+            contactIds={selectedChats}
+            onSuccess={() => {
+              setSelectedChats([]);
+              setIsSelectionMode(false);
+              setShowBulkAssignDialog(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

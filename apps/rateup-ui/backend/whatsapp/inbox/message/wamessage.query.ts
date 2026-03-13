@@ -17,6 +17,7 @@ import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatF
 import {
   assignInboxToUser,
   blockWhatsAppUser,
+  bulkAssignInboxToUser,
   createPrivateMessage,
   exportWaChats,
   generateInboxResponse,
@@ -140,6 +141,32 @@ export const useAssignInboxToUer = (contactId, filterData) => {
       toast.success("Assigned successfully");
     },
     onError: (e) => {
+      toast.warning(e?.message || "Something went wrong");
+    },
+  });
+};
+
+export const useBulkAssignInboxToUser = (filterData?: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: bulkAssignInboxToUser,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
+      qc.invalidateQueries({
+        queryKey: ["contacts", "filtered", filterData],
+      });
+      qc.invalidateQueries({
+        queryKey: ["contactInboxCount"],
+      });
+      qc.invalidateQueries({
+        queryKey: ["notification"],
+      });
+      qc.invalidateQueries({
+        queryKey: ["notificationCount"],
+      });
+      toast.success("Chats assigned successfully");
+    },
+    onError: (e: any) => {
       toast.warning(e?.message || "Something went wrong");
     },
   });

@@ -176,6 +176,14 @@ export async function assignInboxToUser(data: {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign`, data)).data;
 }
 
+export async function bulkAssignInboxToUser(data: {
+  contactIds: string[];
+  assignee: { userId: string; teamId: string };
+}) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign-bulk`, data))
+    .data;
+}
+
 export async function getAssignedUserForContact(contactId) {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/assign/${contactId}`))
     .data;
