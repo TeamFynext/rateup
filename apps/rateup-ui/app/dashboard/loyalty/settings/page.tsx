@@ -25,6 +25,7 @@ import {
   useResetLoyaltyProgramPointsMutation,
   useUpdateLoyaltyProgramMutation,
 } from "@/backend/loyalty/program.query";
+import InfoButton from "@/components/Button/InfoButton";
 import { BasicSettings } from "@/components/loyalty/settings/BasicSettings";
 import { BirthdayReminderSettings } from "@/components/loyalty/settings/BirthdayReminderSettings";
 import { DangerZone } from "@/components/loyalty/settings/DangerZone";
@@ -42,6 +43,7 @@ import { TransactionNotifications } from "@/components/loyalty/settings/Transact
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { Form } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { docsPath } from "@/utils/constants";
 
 export default function LoyaltySettingsPage() {
   const t = useTranslations();
@@ -393,13 +395,15 @@ export default function LoyaltySettingsPage() {
   return (
     <div className="space-y-4 p-6 relative">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl mb-1">{t("Loyalty Program Settings")}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t("Configure your loyalty program settings")}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl mb-1">{t("Loyalty Program Settings")}</h1>
+          <p className="text-sm text-muted-foreground">
+            {t("Configure your loyalty program settings")}
+          </p>
+        </div>
+        <InfoButton docUrl={`${docsPath}/loyality/settings`} />
       </div>
-
       <Tabs
         defaultValue={activeTab}
         className="w-full space-y-4"

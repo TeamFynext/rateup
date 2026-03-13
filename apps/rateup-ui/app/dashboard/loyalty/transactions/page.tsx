@@ -8,9 +8,11 @@ import { Download, Filter, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useGetTransactions } from "@/backend/loyalty/redemption/redemption.query";
+import InfoButton from "@/components/Button/InfoButton";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { docsPath } from "@/utils/constants";
 
 interface Transaction {
   id: string;
@@ -165,6 +167,7 @@ export default function TransactionsPage() {
             <Download className="w-4 h-4 mr-2" />
             {t("Export")}
           </Button>
+          <InfoButton docUrl={`${docsPath}/loyality/transctions`} />
         </div>
       </div>
       {/* DataTable */}

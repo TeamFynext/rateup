@@ -26,6 +26,7 @@ import { useLoyaltyTiers } from "@/backend/loyalty/tier.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
+import InfoButton from "@/components/Button/InfoButton";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { RewardCard } from "@/components/LoyaltyComponents/RewardCard";
 import { RewardFormContainer } from "@/components/LoyaltyComponents/RewardFormContainer";
@@ -35,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { docsPath } from "@/utils/constants";
 
 import { couponSchema, giftSchema, pointRewardSchema } from "./schemas";
 
@@ -386,15 +388,17 @@ export default function RewardsPage() {
     <div className="space-y-5 relative">
       {rewardsViewMode === "list" && (
         <>
-          {/* Header */}
-          <div>
-            <h1 className="text-2xl mb-1">Rewards</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage all types of rewards - point-based, coupons, and referral
-              programs
-            </p>
+          {/* Header */}{" "}
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h1 className="text-2xl mb-1">Rewards</h1>
+              <p className="text-sm text-muted-foreground">
+                Manage all types of rewards - point-based, coupons, and referral
+                programs
+              </p>
+            </div>
+            <InfoButton docUrl={`${docsPath}/loyality/rewards`} />
           </div>
-
           {/* Category Tabs */}
           <Tabs
             value={selectedRewardCategory}
