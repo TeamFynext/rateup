@@ -539,8 +539,8 @@ const PauseNodeEditor: React.FC<NodeComponentProps<"pauseNode">> = ({
 const MediaNodeEditor: React.FC<
   NodeComponentProps<
     "documentNode" | "imageNode" | "videoNode" | "audioNode" | "buttonNode"
-  > & { nodeType: NodeType }
-> = ({ nodeData, handleInputChange, nodeType }) => {
+  > & { nodeType: NodeType; disableCaption?: boolean }
+> = ({ nodeData, handleInputChange, nodeType, disableCaption = false }) => {
   const typedData = nodeData;
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -720,7 +720,7 @@ const MediaNodeEditor: React.FC<
           </Button>
         </Stack>
       )}
-      {nodeType !== "audioNode" && (
+      {nodeType !== "audioNode" && !disableCaption && (
         <WaTextEditor
           label={"Caption (optional)"}
           content={typedData.caption || ""}
@@ -847,6 +847,7 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
             handleInputChange={handleInputChange}
             nodeData={typedData}
             nodeType={getType()}
+            disableCaption={true}
           />
         )
       )}
