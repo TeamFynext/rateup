@@ -7,6 +7,7 @@ import { IconBell, IconSettings } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
+  useDeleteAllNotifications,
   useNotifications,
   useNotificationsCount,
   useNotificationSettings,
@@ -35,6 +36,7 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
   const { data, isLoading, refetch } = useNotifications(
     tab === NotificationTabs.notifications,
   );
+  const deleteAll = useDeleteAllNotifications();
   const { isLoading: isLoadingSettings, refetch: refetchSettings } =
     useNotificationSettings(tab === NotificationTabs.notificationSettings);
   const {
@@ -79,20 +81,34 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
         }}
       >
         <SheetContent>
-          <SheetHeader className="flex-row items-center justify-between gap-2 border-b pb-3">
+          <SheetHeader className="flex-row items-center justify-between gap-1 border-b pb-3 pr-10">
             <SheetTitle>
               {tab === NotificationTabs.notifications
                 ? "Notifications"
                 : "Notification Settings"}
             </SheetTitle>
-            {tab === NotificationTabs.notifications ? (
-              <RefreshButton isLoading={isLoading} onClick={() => refetch()} />
-            ) : (
-              <RefreshButton
-                isLoading={isLoadingSettings}
-                onClick={() => refetchSettings()}
-              />
-            )}
+            <div className="flex items-center gap-2">
+              {tab === NotificationTabs.notifications ? (
+                <RefreshButton
+                  isLoading={isLoading}
+                  onClick={() => refetch()}
+                />
+              ) : (
+                <RefreshButton
+                  isLoading={isLoadingSettings}
+                  onClick={() => refetchSettings()}
+                />
+              )}
+              {tab === NotificationTabs.notifications && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => deleteAll.mutate()}
+                >
+                  Clear all
+                </Button>
+              )}
+            </div>
           </SheetHeader>
 
           <div className="flex h-[calc(100dvh-80px)] flex-col justify-between">
@@ -118,7 +134,7 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
         )}
 
         {isFetched && Boolean(notificationCount) && (
-          <span className="absolute -top-2 -right-2 inline-flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground">
+          <span className="absolute -top-2 -right-2 inline-flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground text-white">
             {Number(notificationCount) > 99 ? "99+" : notificationCount}
           </span>
         )}

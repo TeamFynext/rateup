@@ -10,10 +10,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 
-import {
-  useDeleteAllNotifications,
-  useDeleteNotification,
-} from "@/backend/notification/notification.query";
+import { useDeleteNotification } from "@/backend/notification/notification.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import { Button } from "@/components/ui/button";
@@ -22,7 +19,7 @@ import { formatToRelativeTime } from "@/utils/dateTime";
 
 const NotificationList = ({ close, data, isLoading }) => {
   const deleteNotificationMut = useDeleteNotification();
-  const deleteAll = useDeleteAllNotifications();
+
   const getNotificationIcon = useCallback((source) => {
     switch (source) {
       case "whatsapp":
@@ -136,12 +133,7 @@ const NotificationList = ({ close, data, isLoading }) => {
 
   return (
     <div className="h-full flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Button variant="outline" onClick={() => deleteAll.mutate()}>
-          Clear all
-        </Button>
-      </div>
-      <ScrollArea className="h-[calc(100vh-180px)]">
+      <ScrollArea className="h-[calc(100vh-180px)] px-2">
         <div className="flex flex-col gap-1">
           {data?.map((notification) => (
             <div
