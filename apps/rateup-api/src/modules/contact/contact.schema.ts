@@ -29,6 +29,12 @@ export const contactCoreSchema = z.object({
 
 export const createMultipleContactSchema = z.array(contactCoreSchema);
 
+const bulkUpdateContactStatusSchema = z.object({
+  contactIds: z.array(z.string().uuid()),
+  waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus),
+  messageId: z.string().optional(), // for internal messages
+});
+
 const updateContactSchema = z.object({
   name: z.string().optional(),
   phone: z.string().optional(),
@@ -112,6 +118,7 @@ export const { schemas: contactSchemas, $ref: $contactRef } = buildJsonSchemas(
     customFieldSchema,
     byFieldIdSchema,
     assignLabelsToContactSchema,
+    bulkUpdateContactStatusSchema,
   },
   {
     $id: "contactSchema",
@@ -130,6 +137,9 @@ export type UpdateContactLabelsSchema = z.infer<
   typeof updateContactLabelsSchema
 >;
 export type CustomFieldSchema = z.infer<typeof customFieldSchema>;
+export type BulkUpdateContactStatusSchema = z.infer<
+  typeof bulkUpdateContactStatusSchema
+>;
 
 export type ByFieldIdSchema = z.infer<typeof byFieldIdSchema>;
 export type AssignLabelsToContactSchema = z.infer<

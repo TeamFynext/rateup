@@ -8,10 +8,12 @@ import {
   PaginationQuery,
   UpdateContactLabelsSchema,
   CustomFieldSchema,
+  BulkUpdateContactStatusSchema,
 } from "./contact.schema.js";
 import { log } from "../../utils/logger.js";
 import {
   addCustomField,
+  bulkUpdateWaMessageAssignStatus,
   createContact,
   createMultipleContacts,
   deleteContactById,
@@ -38,6 +40,7 @@ import {
 import {
   LoyaltyTemplateTypes,
   WaAutomatedReplyResponseType,
+  WaMessageAssignStatus,
 } from "../../types/enums.js";
 import {
   getLoyaltyWaCommandByType,
@@ -479,5 +482,43 @@ export async function updateLifecycleStageofContactsHandler(
     reply
       .code(500)
       .send({ message: "Error updating lifecycle stage of contacts" });
+  }
+}
+
+export async function bulkUpdateWaMessageAssignStatusHandler(
+  request: FastifyRequest<{
+    Body: BulkUpdateContactStatusSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { contactIds, waMessageAssignStatus, messageId } = request.body;
+
+    const contacts = await bulkUpdateWaMessageAssignStatus(
+      contactIds,
+      waMessageAssignStatus,
+      request.userId,
+      messageId,
+    );
+
+    return reply.code(200).send({
+      message: "Contacts updated successfully",
+      updatedCount: contacts.length,
+      contacts,
+    });
+  } catch (error) {
+    log.error(error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return reply.code(400).send({
+          error: "Duplicate record conflict",
+        });
+      }
+    }
+
+    return reply.code(500).send({
+      error: "Something went wrong",
+    });
   }
 }
