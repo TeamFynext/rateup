@@ -11,8 +11,8 @@ import { useRouter } from "expo-router";
 import {
   useSearchWebFormStore,
   useWebFormFilterStore,
-} from "@/src/utils/store";
-import { colors } from "@/src/constants/constants";
+} from "@/utils/store";
+import { colors } from "@/constants/constants";
 
 const WebFormSearchBar = () => {
   const router = useRouter();

@@ -1,3 +1,4 @@
+import { Toast } from "toastify-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   assignRewardToCustomer,
@@ -7,7 +8,6 @@ import {
   redeemReward,
   redeemRewardByShortCode,
 } from "./loyalty.api";
-import { useToast } from "react-native-toast-notifications";
 import { AssignRewardRequest } from "./loyalty.type";
 
 export const useCustomerRewardsByPhone = (phone: string) => {
@@ -26,7 +26,6 @@ export const useLoyaltyTiers = () =>
   });
 
 export const useAwardPointsMutation = () => {
-  const toast = useToast();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: {
@@ -46,20 +45,22 @@ export const useAwardPointsMutation = () => {
         queryKey: ["loyaltyCustomerByContact", variables.contactId],
       });
       queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
-      toast.show("Points awarded successfully", { type: "success" });
+      Toast.show({
+        type: "success",
+        text1: "Points awarded successfully"
+      });
     },
     onError: (error: any) => {
-      toast.show(
-        `Error awarding points: ${error?.response?.data?.error || error.message}`,
-        { type: "danger" },
-      );
+      Toast.show({
+        type: "error",
+        text1: `Error awarding points: ${error?.response?.data?.error || error.message}`
+      });
     },
   });
 };
 
 export const useRedeemReward = (selectedPhone: string) => {
   const qc = useQueryClient();
-  const toast = useToast();
   return useMutation({
     mutationFn: redeemReward,
     onSuccess: () => {
@@ -69,12 +70,16 @@ export const useRedeemReward = (selectedPhone: string) => {
       qc.invalidateQueries({
         queryKey: ["loyalty-cashier-customer", selectedPhone],
       });
-      toast.show("Reward claimed successfully", { type: "success" });
+      Toast.show({
+        type: "success",
+        text1: "Reward claimed successfully"
+      });
     },
     onError: (e: any) => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
-      toast.show(`Reward redeem failed: ${e?.response?.data ?? ""}`, {
-        type: "danger",
+      Toast.show({
+        type: "error",
+        text1: `Reward redeem failed: ${e?.response?.data ?? ""}`
       });
     },
   });
@@ -82,7 +87,6 @@ export const useRedeemReward = (selectedPhone: string) => {
 
 export const useAssignRewardMutation = (onSuccess?: () => void) => {
   const queryClient = useQueryClient();
-  const toast = useToast();
   return useMutation({
     mutationFn: (payload: AssignRewardRequest) =>
       assignRewardToCustomer(payload),
@@ -94,12 +98,16 @@ export const useAssignRewardMutation = (onSuccess?: () => void) => {
         queryKey: ["loyalty-customers"],
       });
       onSuccess?.();
-      toast.show("Reward assigned successfully!", { type: "success" });
+      Toast.show({
+        type: "success",
+        text1: "Reward assigned successfully!"
+      });
     },
     onError: (error: any) => {
       console.error("Error assigning reward:", error);
-      toast.show(error?.response?.data?.message || "Failed to assign reward", {
-        type: "danger",
+      Toast.show({
+        type: "error",
+        text1: error?.response?.data?.message || "Failed to assign reward"
       });
     },
   });
@@ -107,19 +115,20 @@ export const useAssignRewardMutation = (onSuccess?: () => void) => {
 
 export const useRedeemRewardByShortCode = () => {
   const qc = useQueryClient();
-  const toast = useToast();
   return useMutation({
     mutationFn: redeemRewardByShortCode,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
-      toast.show("Reward redeemed successfully using short code", {
+      Toast.show({
         type: "success",
+        text1: "Reward redeemed successfully using short code"
       });
     },
     onError: (e) => {
-      toast.show(`Redemption failed: ${e?.message ?? "Unknown error"}`, {
-        type: "danger",
+      Toast.show({
+        type: "error",
+        text1: `Redemption failed: ${e?.message ?? "Unknown error"}`
       });
     },
   });

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { signInWithGoogle } from "../api/google_auth";
 import { useEffect, useState } from "react";
 import { configureGoogleSignIn } from "../config/googleConfig";
@@ -48,7 +48,7 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
       setError("Failed to enable push notifications");
     }
 
-    router.replace("/protected/Home");
+    router.replace("/protected/inbox");
   } catch (error) {
     console.error("Unexpected Google login error:", error);
     setError("Something went wrong. Please try again.");

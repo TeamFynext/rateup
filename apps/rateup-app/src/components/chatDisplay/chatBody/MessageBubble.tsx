@@ -8,14 +8,14 @@ import WaInboxText, {
   WaInboxTemplate,
   WaInboxVideo,
 } from "./messageBubbleTypes";
-import { namePreview } from "@/src/utils/chatbox_utils";
-import { WaTemplateComponent } from "@/src/context/type";
+import { namePreview } from "@/utils/chatbox_utils";
+import { WaTemplateComponent } from "@/context/type";
 import {
   Lock,
 } from "lucide-react-native";
-import { colors } from "@/src/constants/constants";
-import { WaMessageAssignStatus } from "@/src/api/inbox/types";
-import { getClosedIcon } from "@/src/util";
+import { colors } from "@/constants/constants";
+import { WaMessageAssignStatus } from "@/api/inbox/types";
+import { getClosedIcon } from "@/util";
 
 type MessageBubbleProps = {
   messageContent: any;

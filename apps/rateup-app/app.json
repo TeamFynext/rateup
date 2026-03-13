@@ -5,7 +5,7 @@
     "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "RateUp",
+    "scheme": "rateup",
     "userInterfaceStyle": "automatic",
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
@@ -14,23 +14,16 @@
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow RateUp to access microphone.",
         "CFBundleURLTypes": [
-      {
-        "CFBundleURLSchemes": [
-          "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.42123891439-smrmrokcalpi6j7m1dg1ep23keh4829f"
+            ]
+          }
         ]
       }
-    ]
-      } 
     },
     "android": {
-      "permissions": [
-        "RECORD_AUDIO"
-      ],
-      "statusBar": {
-        "translucent": true,
-        "backgroundColor": "transparent"
-      },
-      "edgeToEdgeEnabled": true,
+      "permissions": ["RECORD_AUDIO"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -59,7 +52,23 @@
           }
         }
       ],
-      "expo-audio"
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone.",
+          "enableBackgroundPlayback": true,
+          "enableBackgroundRecording": false
+        }
+      ],
+      "expo-font",
+      [
+        "expo-document-picker",
+        {
+          "supportsOpeningDocumentsInPlace": true,
+          "enableFileSharing": true
+        }
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

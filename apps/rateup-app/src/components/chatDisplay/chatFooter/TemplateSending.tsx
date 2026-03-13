@@ -1,3 +1,4 @@
+import { Toast } from "toastify-react-native";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -8,12 +9,11 @@ import {
   ActivityIndicator,
 } from "react-native";
 import useTemplatesAvailableForTeam from "./templates/team";
-import { useTeamsByUser } from "@/src/api/teams/teams.query";
-import { useSendWaTemplateToUser } from "@/src/api/whatsapp/template/whatsapp.query";
+import { useTeamsByUser } from "@/api/teams/teams.query";
+import { useSendWaTemplateToUser } from "@/api/whatsapp/template/whatsapp.query";
 import { WaInboxTemplate } from "../chatBody/messageBubbleTypes";
 import { AccountSelector } from "./templates/TemplateComponents";
-import { getContactById } from "@/src/api/inbox/contacts/contacts.api";
-import { useToast } from "react-native-toast-notifications";
+import { getContactById } from "@/api/inbox/contacts/contacts.api";
 
 const TemplateSending = ({
   onClose,
@@ -35,8 +35,6 @@ const TemplateSending = ({
   const [whatsappSettingsPhoneId, setWhatsappSettingsPhoneId] =
     useState<string>("");
 
-  const toast = useToast();
-
   const teams = useTeamsByUser();
   const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);
 
@@ -52,7 +50,10 @@ const TemplateSending = ({
         const detail = await getContactById(contact);
         setContactDetails(detail);
       } catch (e) {
-        toast.show("Contacts fetching failed", { type: "danger" });
+        Toast.show({
+          type: "error",
+          text1: "Contacts fetching failed"
+        });
       } finally {
         setLoadingContact(false);
       }
@@ -93,7 +94,10 @@ const TemplateSending = ({
       });
       onClose(); // Close modal after send
     } catch (e) {
-      toast.show("Error in template sending", { type: "danger" });
+      Toast.show({
+        type: "error",
+        text1: "Error in template sending"
+      });
     } finally {
       setSending(false);
     }

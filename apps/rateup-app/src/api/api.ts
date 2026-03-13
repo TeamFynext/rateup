@@ -1,4 +1,4 @@
-import axios from "@/src/config/axios";
+import axios from "@/config/axios";
 import { router } from "expo-router";
 import SuperTokens from "supertokens-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";

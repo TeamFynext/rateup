@@ -1,4 +1,4 @@
-import axios from "@/src/config/axios";
+import axios from "@/config/axios";
 import { DbFlow } from "../types";
 
 const BASE = `/api/wa/flows`;

@@ -19,12 +19,12 @@ import {
   useMediaStore,
   useSessionActiveStore,
   useVoiceRecordStore,
-} from "@/src/utils/store";
+} from "@/utils/store";
 import {
   useCreatePrivateMessage,
   useSendNewWaMessage,
-} from "@/src/api/inbox/messages/message.query";
-import { uploadFile } from "@/src/utils/fileUpload";
+} from "@/api/inbox/messages/message.query";
+import { uploadFile } from "@/utils/fileUpload";
 import VoiceRecorder from "./VoiceRecorder";
 import {
   ImageIcon,
@@ -36,9 +36,9 @@ import {
   Send,
 } from "lucide-react-native"; // Import Lucide icons
 import TemplateSending from "./TemplateSending";
-import { generateInternalMessageId } from "@/src/utils/chatbox_utils";
+import { generateInternalMessageId } from "@/utils/chatbox_utils";
 import { create } from "zustand";
-import { colors } from "@/src/constants/constants";
+import { colors } from "@/constants/constants";
 import Animated, {
   interpolate,
   useAnimatedStyle,

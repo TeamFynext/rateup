@@ -6,7 +6,7 @@ import {
 } from "react-native";
 import { useRef, useState } from "react";
 import { Search, X } from "lucide-react-native";
-import { colors } from "@/src/constants/constants";
+import { colors } from "@/constants/constants";
 
 type SearchBarProps = {
   searchTerm: string;

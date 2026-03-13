@@ -19,8 +19,8 @@ import {
   WaTemplateComponent,
   WaTemplateFetchBody,
   WaTemplateFetchBodyComponent,
-} from "@/src/context/type";
-import { useWaSettings } from "@/src/api/whatsapp/template/whatsapp.query";
+} from "@/context/type";
+import { useWaSettings } from "@/api/whatsapp/template/whatsapp.query";
 
 // Placeholder for your utility function
 const TextWithFormatting = (text: string, params: string[]) => {

@@ -2,11 +2,9 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./src/*"],
+      "@/assets/*": ["./assets/*"]
     }
   },
   "include": [
@@ -14,6 +12,8 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
-, "/src/constants/imageExports.ts", "src/utils/phoneNumConvert.ts"  ]
+    "nativewind-env.d.ts",
+    "/src/constants/imageExports.ts",
+    "src/utils/phoneNumConvert.ts"
+  ]
 }

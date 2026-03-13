@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react-native";
 import { QuestionType2 } from "./enum";
-import { renderChoiceItem } from "@/src/util";
+import { renderChoiceItem } from "@/util";
 
 type SurveyQuestionProps = {
   choiceWise: any;

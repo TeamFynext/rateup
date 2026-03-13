@@ -9,7 +9,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { EllipsisVertical, Filter, RefreshCcw } from "lucide-react-native";
-import { colors } from "@/src/constants/constants";
+import { colors } from "@/constants/constants";
 import Animated, {
   Easing,
   useAnimatedStyle,

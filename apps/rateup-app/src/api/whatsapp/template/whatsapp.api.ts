@@ -1,4 +1,4 @@
-import axios from "@/src/config/axios";
+import axios from "@/config/axios";
 import { WaSettings, WaTemplate } from "../types";
 
 const TEMPLATES_URL = `/api/wa/templates`;

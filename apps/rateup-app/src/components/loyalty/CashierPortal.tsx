@@ -1,3 +1,4 @@
+import { Toast } from "toastify-react-native";
 import {
   View,
   Text,
@@ -11,7 +12,7 @@ import {
   Modal,
 } from "react-native";
 import { useMemo, useState } from "react";
-import { countries } from "@/src/constants/countries";
+import { countries } from "@/constants/countries";
 import {
   ChevronDown,
   ChevronUp,
@@ -22,7 +23,7 @@ import {
   Trophy,
   User,
 } from "lucide-react-native";
-import { colors } from "@/src/constants/constants";
+import { colors } from "@/constants/constants";
 import { IconGift } from "@tabler/icons-react-native";
 import {
   useAssignRewardMutation,
@@ -31,15 +32,13 @@ import {
   useLoyaltyTiers,
   useRedeemReward,
   useRedeemRewardByShortCode,
-} from "@/src/api/loyalty/loyalty.query";
-import { useToast } from "react-native-toast-notifications";
+} from "@/api/loyalty/loyalty.query";
 import {
   AvailableRewardsCard,
   PendingRedemptionsCard,
 } from "./cashierPortal/components";
 
 const CashierPortal = () => {
-  const toast = useToast();
   const [phone, setPhone] = useState("");
   const [fullPhoneNumber, setFullPhoneNumber] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
@@ -96,7 +95,10 @@ const CashierPortal = () => {
 
   const handleIssuePoints = async () => {
     if (!customer?.contactId || !pointsAmount) {
-      toast.show("Please enter points amount", { type: "danger" });
+      Toast.show({
+        type: "error",
+        text1: "Please enter points amount",
+      });
       return;
     }
 
@@ -106,20 +108,27 @@ const CashierPortal = () => {
         purchaseAmount: Number(pointsAmount),
         notes: pointsNotes,
       });
-      toast.show("Points issued successfully", { type: "success" });
+      Toast.show({
+        type: "success",
+        text1: "Points issued successfully",
+      });
       setIssuePointsOpen(false);
       setPointsAmount("");
       setPointsNotes("");
     } catch (error: any) {
-      toast.show(error?.response?.data?.error || "Failed to issue points", {
-        type: "danger",
+      Toast.show({
+        type: "error",
+        text1: error?.response?.data?.error || "Failed to issue points",
       });
     }
   };
 
   const handleAssignReward = async () => {
     if (!customer?.id || !selectedRewardId) {
-      toast.show("Please select a reward", { type: "danger" });
+      Toast.show({
+        type: "error",
+        text1: "Please select a reward",
+      });
       return;
     }
 
@@ -129,20 +138,27 @@ const CashierPortal = () => {
         rewardId: selectedRewardId,
         notes: assignRewardNotes,
       });
-      toast.show("Reward assigned successfully", { type: "success" });
+      Toast.show({
+        type: "success",
+        text1: "Reward assigned successfully",
+      });
       setAssignRewardOpen(false);
       setSelectedRewardId("");
       setAssignRewardNotes("");
     } catch (error) {
-      toast.show("Failed to assign reward", {
-        type: "danger",
+      Toast.show({
+        type: "error",
+        text1: "Failed to assign reward",
       });
     }
   };
 
   const handleRedeemCoupon = async () => {
     if (!couponCode) {
-      toast.show("Please enter a coupon code", { type: "danger" });
+      Toast.show({
+        type: "error",
+        text1: "Please enter a coupon code",
+      });
       return;
     }
     redeemRewardByShortCode.mutate(couponCode);
@@ -152,7 +168,10 @@ const CashierPortal = () => {
 
   const handleClaimReward = async () => {
     if (!fullPhoneNumber || !selectedRewardId) {
-      toast.show("Please select a reward", { type: "danger" });
+      Toast.show({
+        type: "error",
+        text1: "Please select a reward",
+      });
       return;
     }
 
@@ -164,8 +183,9 @@ const CashierPortal = () => {
       setClaimRewardOpen(false);
       setSelectedRewardId("");
     } catch (error: any) {
-      toast.show(error?.response?.data?.error || "Failed to claim reward", {
-        type: "danger",
+      Toast.show({
+        type: "error",
+        text1: error?.response?.data?.error || "Failed to claim reward",
       });
     }
   };

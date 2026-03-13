@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { useResponseCount } from "@/src/api/response/response.query";
-import { useGetSurveyStats } from "@/src/api/survey/survey.query";
+import { useResponseCount } from "@/api/response/response.query";
+import { useGetSurveyStats } from "@/api/survey/survey.query";
 import { Text, View } from "react-native";
 
 const SurveyStatsWebForm = ({ surveyId }: { surveyId: string }) => {

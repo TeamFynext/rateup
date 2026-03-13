@@ -14,11 +14,10 @@ import {
   generateInternalMessageId,
   namePreview,
 } from "../../utils/chatbox_utils";
-import { closeChat } from "@/src/api/inbox/contacts/contacts.api";
+import { closeChat } from "@/api/inbox/contacts/contacts.api";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useChatAssignStatusStore } from "@/src/utils/store";
-import { useToast } from "react-native-toast-notifications";
+import { useChatAssignStatusStore } from "@/utils/store";
 import AssignToUser from "./chatFooter/AssignToUser";
 import {
   ArrowLeft,
@@ -26,10 +25,10 @@ import {
   MoreVertical,
   Pencil,
 } from "lucide-react-native";
-import { useEditContactMutation } from "@/src/api/inbox/contacts/contacts.query";
-import { WaMessageClosedStatus } from "@/src/constants/constants";
-import { WaMessageAssignStatus } from "@/src/api/inbox/types";
-import { getClosedIcon } from "@/src/util";
+import { useEditContactMutation } from "@/api/inbox/contacts/contacts.query";
+import { WaMessageClosedStatus } from "@/constants/constants";
+import { WaMessageAssignStatus } from "@/api/inbox/types";
+import { getClosedIcon } from "@/util";
 
 const { width: screenWidth } = Dimensions.get("window");
 let contactId: string;
@@ -233,7 +232,7 @@ const ChatHeader = ({
   const minutesLeft = diffInMinutes % 60;
 
   return (
-    <View className="flex-row items-center justify-between px-6 py-4 bg-white dark:bg-slate-950 shadow-md gap-3">
+    <View className="flex-row items-center justify-between px-6 pb-4 bg-white dark:bg-slate-950 shadow-md gap-3">
       <View className="flex-row items-center gap-3">
         <TouchableOpacity onPress={() => router.back()} className="p-1">
           <ArrowLeft color={isDark ? "white" : "black"} />

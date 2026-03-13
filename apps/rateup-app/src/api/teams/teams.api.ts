@@ -1,5 +1,5 @@
-import axios from "@/src/config/axios";
-import { MembersResponse } from "@/src/context/type";
+import axios from "@/config/axios";
+import { MembersResponse } from "@/context/type";
 
 export async function getTeamsByUser() {
   let teams = await axios.get("/api/team/user");

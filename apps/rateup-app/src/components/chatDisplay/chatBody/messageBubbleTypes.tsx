@@ -1,5 +1,6 @@
-import { useGetMediaFile } from "@/src/api/inbox/messages/message.query";
-import { getFileUrlFromKey } from "@/src/utils/fileUpload";
+import { Toast } from "toastify-react-native";
+import { useGetMediaFile } from "@/api/inbox/messages/message.query";
+import { getFileUrlFromKey } from "@/utils/fileUpload";
 import {
   Download,
   Headphones,
@@ -12,27 +13,27 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Linking,
   Text,
   TouchableOpacity,
   View,
   Modal,
   Pressable,
+  Platform,
 } from "react-native";
-import RNFS from "react-native-fs";
+import * as FileSystem from "expo-file-system/legacy";
 import Video from "react-native-video";
 import { fromByteArray } from "base64-js";
-import { useToast } from "react-native-toast-notifications";
-import { Linking } from "react-native";
-import FileViewer from "react-native-file-viewer";
-import { WaSendMessageBody } from "@/src/api/inbox/types";
+import { WaSendMessageBody } from "@/api/inbox/types";
 import { Buffer } from "buffer";
 import {
   WaTemplateComponent,
   WaTemplateFetchBody,
   WaTemplateFetchBodyComponent,
-} from "@/src/context/type";
-import TextWithFormatting from "@/src/utils/TextFormatting";
+} from "@/context/type";
+import TextWithFormatting from "@/utils/TextFormatting";
 import { useAudioPlayer } from "expo-audio";
+import * as IntentLauncher from "expo-intent-launcher";
 
 export default function WaInboxText({
   messageContent,
@@ -122,21 +123,23 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
   const [localPath, setLocalPath] = useState<string | null>(null);
   const [id, caption] = messageContent.split("_caption_");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const appFolderPath = `${RNFS.DocumentDirectoryPath}/wa_media`;
+  const appFolderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
   const downloadPath = `${appFolderPath}/${id}.mp4`;
 
   const link = id.startsWith("http") ? id : null;
-  const toast = useToast();
   // Check if file already exists on mount
   useEffect(() => {
     const checkLocalFile = async () => {
-      const appFolderExists = await RNFS.exists(appFolderPath);
+      const appFolderExists = (await FileSystem.getInfoAsync(appFolderPath))
+        .exists;
       if (!appFolderExists) {
-        await RNFS.mkdir(appFolderPath);
+        await FileSystem.makeDirectoryAsync(appFolderPath, {
+          intermediates: true,
+        });
       }
-      const exists = await RNFS.exists(downloadPath);
+      const exists = (await FileSystem.getInfoAsync(downloadPath)).exists;
       if (exists) {
-        setLocalPath("file://" + downloadPath);
+        setLocalPath(downloadPath);
       }
     };
     checkLocalFile();
@@ -144,9 +147,9 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
 
   const handleDownload = async () => {
     // Recheck existence before downloading
-    const exists = await RNFS.exists(downloadPath);
+    const exists = (await FileSystem.getInfoAsync(downloadPath)).exists;
     if (exists) {
-      setLocalPath("file://" + downloadPath);
+      setLocalPath(downloadPath);
       return;
     }
 
@@ -156,14 +159,19 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
         const base64Data = fromByteArray(byteArray);
 
         try {
-          await RNFS.writeFile(downloadPath, base64Data, "base64");
-          setLocalPath("file://" + downloadPath);
+          await FileSystem.writeAsStringAsync(downloadPath, base64Data, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          setLocalPath(downloadPath);
         } catch (error) {
           console.error("File write failed:", error);
         }
       },
       onError: () => {
-        toast.show("Video download failed.", { type: "danger" });
+        Toast.show({
+          type: "error",
+          text1: "Video download failed.",
+        });
       },
     });
   };
@@ -174,7 +182,6 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
   return (
     <View className="space-y-2">
       {isPending && <ActivityIndicator />}
-
       {/* Video Available */}
       {link || localPath ? (
         <TouchableOpacity
@@ -203,10 +210,8 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
           <Text className="text-sm text-gray-600 mt-2">Download video</Text>
         </TouchableOpacity>
       )}
-
       {/* Caption */}
       {caption ? <Text className="text-sm text-center">{caption}</Text> : null}
-
       {/* Fullscreen Modal */}
       <Modal
         animationType="fade"
@@ -257,10 +262,9 @@ export function WaInboxAudio({
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
-  const appFolderPath = `${RNFS.DocumentDirectoryPath}/wa_media`;
+  const appFolderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
   const downloadPath = `${appFolderPath}/${id}.mp3`;
   const link = id.startsWith("http") ? id : null;
-  const toast = useToast();
   const source = localPath || link || null;
   const player = useAudioPlayer(source ? { uri: source } : null);
 
@@ -295,20 +299,25 @@ export function WaInboxAudio({
 
   useEffect(() => {
     const checkLocalFile = async () => {
-      const appFolderExists = await RNFS.exists(appFolderPath);
-      if (!appFolderExists) await RNFS.mkdir(appFolderPath);
-      const exists = await RNFS.exists(downloadPath);
+      const appFolderExists = (await FileSystem.getInfoAsync(appFolderPath))
+        .exists;
+      if (!appFolderExists) {
+        await FileSystem.makeDirectoryAsync(appFolderPath, {
+          intermediates: true,
+        });
+      }
+      const exists = (await FileSystem.getInfoAsync(downloadPath)).exists;
       if (exists) {
-        setLocalPath("file://" + downloadPath);
+        setLocalPath(downloadPath);
       }
     };
     checkLocalFile();
   }, [downloadPath]);
 
   const handleDownload = async () => {
-    const exists = await RNFS.exists(downloadPath);
+    const exists = (await FileSystem.getInfoAsync(downloadPath)).exists;
     if (exists) {
-      setLocalPath("file://" + downloadPath);
+      setLocalPath(downloadPath);
       return;
     }
 
@@ -317,14 +326,19 @@ export function WaInboxAudio({
         const byteArray = new Uint8Array(arrayBufferData);
         const base64Data = fromByteArray(byteArray);
         try {
-          await RNFS.writeFile(downloadPath, base64Data, "base64");
-          setLocalPath("file://" + downloadPath);
+          await FileSystem.writeAsStringAsync(downloadPath, base64Data, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          setLocalPath(downloadPath);
         } catch (error) {
           console.error("Audio file write failed:", error);
         }
       },
       onError: () => {
-        toast.show("Audio download failed.", { type: "danger" });
+        Toast.show({
+          type: "error",
+          text1: "Audio download failed.",
+        });
       },
     });
   };
@@ -436,27 +450,29 @@ export function WaInboxDocument({
 }: {
   messageContent: string;
 }) {
-  const toast = useToast();
   const [isPending, setIsPending] = useState(false);
   const [localPath, setLocalPath] = useState<string | null>(null);
 
   // Parse messageContent
   const [id, filename = "document.pdf", caption = ""] =
     messageContent.split("_caption_");
-  const appFolderPath = `${RNFS.DocumentDirectoryPath}/wa_media`;
+  const appFolderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
   const downloadPath = `${appFolderPath}/${filename}`;
 
   useEffect(() => {
     // Check if the document exists locally
     const checkLocalFile = async () => {
-      const appFolderExists = await RNFS.exists(appFolderPath);
+      const appFolderExists = (await FileSystem.getInfoAsync(appFolderPath))
+        .exists;
       if (!appFolderExists) {
-        await RNFS.mkdir(appFolderPath); // Ensure the folder exists
+        await FileSystem.makeDirectoryAsync(appFolderPath, {
+          intermediates: true,
+        }); // Ensure the folder exists
       }
 
-      const exists = await RNFS.exists(downloadPath); // Check if the document is already downloaded
+      const exists = (await FileSystem.getInfoAsync(downloadPath)).exists; // Check if the document is already downloaded
       if (exists) {
-        setLocalPath("file://" + downloadPath); // Set the local path
+        setLocalPath(downloadPath); // Set the local path
       }
     };
 
@@ -466,31 +482,30 @@ export function WaInboxDocument({
   const { mutateAsync } = useGetMediaFile();
 
   const handleDownload = async () => {
-    const folderPath = `${RNFS.DocumentDirectoryPath}/wa_media`;
+    const folderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
     const fullPath = `${folderPath}/${filename}`;
 
     if (id.startsWith("http")) {
-      const downloadOptions = {
-        fromUrl: id, // direct URL to the document
-        toFile: fullPath,
-        background: true,
-        discretionary: true,
-      };
-
       try {
         setIsPending(true);
-        const result = await RNFS.downloadFile(downloadOptions).promise;
-        if (result.statusCode === 200) {
+        const result = await FileSystem.downloadAsync(id, fullPath);
+        if (result.status === 200) {
           setIsPending(false);
-          setLocalPath("file://" + fullPath);
+          setLocalPath(fullPath);
         } else {
           setIsPending(false);
-          toast.show("Failed to download document.", { type: "danger" });
+          Toast.show({
+            type: "error",
+            text1: "Failed to download document.",
+          });
         }
       } catch (error) {
         setIsPending(false);
         console.error("Download error:", error);
-        toast.show("Error while downloading.", { type: "danger" });
+        Toast.show({
+          type: "error",
+          text1: "Error while downloading.",
+        });
       }
     } else {
       try {
@@ -499,17 +514,22 @@ export function WaInboxDocument({
         // 1. Get binary file from backend using media ID
         const fileData = await mutateAsync(id); // `id` is actually the mediaId
 
-        // 2. Write to filesystem using react-native-fs
-        await RNFS.writeFile(
+        // 2. Write to filesystem using expo-file-system
+        await FileSystem.writeAsStringAsync(
           downloadPath,
           Buffer.from(fileData).toString("base64"),
-          "base64",
+          {
+            encoding: FileSystem.EncodingType.Base64,
+          },
         );
 
-        setLocalPath("file://" + downloadPath);
+        setLocalPath(downloadPath);
       } catch (error) {
         console.error("Download error:", error);
-        toast.show("Failed to download document.", { type: "danger" });
+        Toast.show({
+          type: "error",
+          text1: "Failed to download document.",
+        });
       } finally {
         setIsPending(false);
       }
@@ -519,12 +539,25 @@ export function WaInboxDocument({
   const openDocument = async () => {
     if (localPath) {
       try {
-        await FileViewer.open(localPath, {
-          showOpenWithDialog: true,
-        });
+        if (Platform.OS === "android") {
+          const contentUri = await FileSystem.getContentUriAsync(localPath);
+
+          await IntentLauncher.startActivityAsync(
+            "android.intent.action.VIEW",
+            {
+              data: contentUri,
+              flags: 1,
+            },
+          );
+        } else {
+          await Linking.openURL(localPath);
+        }
       } catch (err) {
         console.error("Error opening file:", err);
-        toast.show("Unable to open the document.", { type: "danger" });
+        Toast.show({
+          type: "error",
+          text1: "Unable to open the document.",
+        });
       }
     }
   };

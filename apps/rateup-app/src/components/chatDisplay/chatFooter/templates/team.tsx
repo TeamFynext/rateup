@@ -1,5 +1,5 @@
-import { useWaFlowsFromDb } from "@/src/api/whatsapp/flow/flow.query";
-import { useWaTemplates } from "@/src/api/whatsapp/template/whatsapp.query";
+import { useWaFlowsFromDb } from "@/api/whatsapp/flow/flow.query";
+import { useWaTemplates } from "@/api/whatsapp/template/whatsapp.query";
 
 export default function useTemplatesAvailableForTeam(teamId: string) {
   const { data: templates } = useWaTemplates();

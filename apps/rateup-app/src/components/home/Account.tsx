@@ -1,8 +1,8 @@
+import { Toast } from "toastify-react-native";
 import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import React, { useState } from "react";
 import { namePreview } from "../../utils/chatbox_utils";
-import { signOut } from "@/src/api/api";
-import { useToast } from "react-native-toast-notifications";
+import { signOut } from "@/api/api";
 
 interface UserProfile {
   email: string;
@@ -22,14 +22,14 @@ const AccountBar = ({
   userName,
 }: UserProfile) => {
   const [loading, setLoading] = useState<boolean>(false);
-  const toast = useToast();
 
   const handleSignOut = async () => {
     setLoading(true);
     const res = await signOut();
     if (!res.success) {
-      return toast.show("Sign Out failed, please try again later", {
-        type: "danger",
+      return Toast.show({
+        type: "error",
+        text1: "Sign Out failed, please try again later"
       });
     }
     setLoading(false);

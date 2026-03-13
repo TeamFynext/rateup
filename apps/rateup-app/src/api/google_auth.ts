@@ -1,6 +1,6 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "@/src/config/axios";
+import axios from "@/config/axios";
 import SuperTokens from "supertokens-react-native";
 
 export const signInWithGoogle = async () => {

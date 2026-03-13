@@ -1,6 +1,6 @@
 import { View, Text as RNText } from "react-native";
 import React from "react";
-import { useHappyIndex } from "@/src/api/response/response.query";
+import { useHappyIndex } from "@/api/response/response.query";
 import { AngryIcon, LaughIcon, MehIcon } from "lucide-react-native";
 import Svg, { Path, G, Circle, Text as SvgText } from "react-native-svg";
 

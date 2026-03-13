@@ -8,8 +8,8 @@ import {
 import React from "react";
 import { Search, SlidersHorizontal } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import { useSearchFlowStore, useFlowFilterStore } from "@/src/utils/store";
-import { colors } from "@/src/constants/constants";
+import { useSearchFlowStore, useFlowFilterStore } from "@/utils/store";
+import { colors } from "@/constants/constants";
 
 const FlowSearchBar = () => {
   const colorScheme = useColorScheme();

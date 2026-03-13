@@ -1,10 +1,10 @@
+import { Toast } from "toastify-react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   getWaSettings,
   getWaTemplates,
   sendWaTemplateToUser,
 } from "./whatsapp.api";
-import { useToast } from "react-native-toast-notifications";
 
 export const useWaTemplates = (templateType?: any) =>
   useQuery({
@@ -13,7 +13,6 @@ export const useWaTemplates = (templateType?: any) =>
   });
 
 export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
-  const toast = useToast();
   return useMutation({
     mutationFn: ({
       templateId,
@@ -34,19 +33,19 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
         whatsappSettingsPhoneId
       ),
     onSuccess: () => {
-      toast.show("Template sent successfully", {
+      Toast.show({
         type: "success",
+        text1: "Template sent successfully"
       });
     },
     onError: (error: any) => {
-      toast.show(
-        typeof error?.response?.data === "string"
+      Toast.show({
+        type: "error",
+
+        text1: typeof error?.response?.data === "string"
           ? error?.response?.data
-          : "Error sending template!",
-        {
-          type: "danger",
-        }
-      );
+          : "Error sending template!"
+      });
     },
   });
 };

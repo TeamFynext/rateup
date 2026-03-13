@@ -7,7 +7,7 @@ import {
   MehIcon,
   AngryIcon,
 } from "lucide-react-native";
-import { useHappyIndex } from "@/src/api/response/response.query";
+import { useHappyIndex } from "@/api/response/response.query";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
 import { ProgressBar } from "react-native-paper";
 

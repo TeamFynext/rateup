@@ -1,18 +1,18 @@
 import { View, Text, ActivityIndicator } from "react-native";
-import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/src/api/inbox/types";
-import { useFilteredContacts } from "@/src/api/inbox/contacts/contacts.query";
+import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/api/inbox/types";
+import { useFilteredContacts } from "@/api/inbox/contacts/contacts.query";
 import { useRouter } from "expo-router";
 import dayjs from "dayjs";
-import { useChatFilterStore } from "@/src/utils/store";
+import { useChatFilterStore } from "@/utils/store";
 import {
   parseWaMessage_,
   returnMessageContentBasedOnParsedMessage,
-} from "@/src/api/inbox/messages/utils";
-import { useWsData } from "@/src/context/UserContext";
+} from "@/api/inbox/messages/utils";
+import { useWsData } from "@/context/UserContext";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
-import { WaMessageClosedStatus } from "@/src/constants/constants";
+import { WaMessageClosedStatus } from "@/constants/constants";
 import ChatBox from "../chatBox/ChatBox";
 
 type InboxProps = {

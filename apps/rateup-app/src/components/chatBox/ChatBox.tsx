@@ -1,10 +1,10 @@
 import React, { memo, useMemo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { ContactsWithLastMessage } from "@/src/api/inbox/types";
+import { ContactsWithLastMessage } from "@/api/inbox/types";
 import { namePreview } from "../../utils/chatbox_utils";
-import { MessagePlatform } from "@/src/constants/enums";
-import { getSoucePlatformIconAndColor } from "@/src/util";
-import { useLifecycleContext } from "@/src/context/LifecycleContext";
+import { MessagePlatform } from "@/constants/enums";
+import { getSoucePlatformIconAndColor } from "@/util";
+import { useLifecycleContext } from "@/context/LifecycleContext";
 
 const ChatBox: React.FC<
   ContactsWithLastMessage & { onPress?: () => void }

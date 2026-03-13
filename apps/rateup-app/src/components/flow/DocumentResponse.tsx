@@ -1,24 +1,23 @@
+import { Toast } from "toastify-react-native";
 import React, { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import RNFS from "react-native-fs";
-import FileViewer from "react-native-file-viewer";
-import requestStoragePermission from "@/src/utils/permission";
-import { useToast } from "react-native-toast-notifications";
+import { Linking, Platform, Text, TouchableOpacity, View } from "react-native";
+import * as FileSystem from "expo-file-system/legacy";
+import requestStoragePermission from "@/utils/permission";
 import { Download, Eye, File } from "lucide-react-native";
+import * as IntentLauncher from "expo-intent-launcher";
 
 const DocumentResponse = ({ info }: { info: string }) => {
-  const toast = useToast();
   const [fileExists, setFileExists] = useState(false);
 
   const fileUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${info}`;
   const fileName = info.split("/").pop();
-  const appFolderPath = `${RNFS.ExternalDirectoryPath}/wa_media`;
+  const appFolderPath = `${FileSystem.documentDirectory ?? ""}wa_media`;
   const localFilePath = `${appFolderPath}/${fileName}`;
 
   useEffect(() => {
     const checkIfExists = async () => {
-      const exists = await RNFS.exists(localFilePath);
-      setFileExists(exists);
+      const fileInfo = await FileSystem.getInfoAsync(localFilePath);
+      setFileExists(fileInfo.exists);
     };
     checkIfExists();
   }, [localFilePath]);
@@ -27,33 +26,60 @@ const DocumentResponse = ({ info }: { info: string }) => {
     try {
       const hasPermission = await requestStoragePermission();
       if (!hasPermission) {
-        toast.show("Storage permission denied.", { type: "warning" });
+        Toast.show({
+          type: "warning",
+          text1: "Storage permission denied."
+        });
         return;
       }
 
-      const dirExists = await RNFS.exists(appFolderPath);
-      if (!dirExists) await RNFS.mkdir(appFolderPath);
+      const dirInfo = await FileSystem.getInfoAsync(appFolderPath);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(appFolderPath, {
+          intermediates: true,
+        });
+      }
 
-      const fileExistsNow = await RNFS.exists(localFilePath);
+      const fileInfo = await FileSystem.getInfoAsync(localFilePath);
+      const fileExistsNow = fileInfo.exists;
       if (!fileExistsNow) {
-        toast.show("Downloading document...", { type: "normal" });
+        Toast.show({
+          type: "normal",
+          text1: "Downloading document..."
+        });
 
-        const downloadResult = await RNFS.downloadFile({
-          fromUrl: fileUrl,
-          toFile: localFilePath,
-        }).promise;
+        const downloadResult = await FileSystem.downloadAsync(
+          fileUrl,
+          localFilePath,
+        );
 
-        if (downloadResult.statusCode === 200) {
-          toast.show("Download complete!", { type: "success" });
+        if (downloadResult.status === 200) {
+          Toast.show({
+            type: "success",
+            text1: "Download complete!"
+          });
           setFileExists(true);
         } else {
           throw new Error("Download failed");
         }
       }
 
-      await FileViewer.open(localFilePath, { showOpenWithDialog: true });
+      if (Platform.OS === "android") {
+        const contentUri = await FileSystem.getContentUriAsync(localFilePath);
+
+        await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+          data: contentUri,
+          flags: 1,
+        });
+      } else {
+        await Linking.openURL(localFilePath);
+      }
     } catch (err) {
-      toast.show("Could not open the document.", { type: "danger" });
+      console.error("Error opening document:", err);
+      Toast.show({
+        type: "error",
+        text1: "Could not open the document."
+      });
     }
   };
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, Dimensions, ScrollView } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
-import { useAllResponseNPSForGraph } from "@/src/api/response/response.query";
+import { useAllResponseNPSForGraph } from "@/api/response/response.query";
 import {
   AngryIcon,
   LaughIcon,

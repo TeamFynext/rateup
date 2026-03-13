@@ -7,7 +7,7 @@ import {
   Keyboard,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { loggedUserDetails, signIn } from "@/src/api/api";
+import { loggedUserDetails, signIn } from "@/api/api";
 import ToggleSwitch from "toggle-switch-react-native";
 import { Eye, EyeClosed } from "lucide-react-native";
 import { useAuth } from "../context/AuthContext";
@@ -17,7 +17,7 @@ import { addToken } from "../api/notification";
 export default function SignInScreen({
   setError,
 }: {
-  setError: (msg: string) => void;
+  readonly setError: (msg: string) => void;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,7 +66,7 @@ export default function SignInScreen({
       setError("Failed to enable notifications");
     }
 
-    router.replace("/protected/Home");
+    router.replace("/protected/inbox");
   } catch (err) {
     console.error("Unexpected error during sign-in:", err);
     setError("Something went wrong. Please try again.");
