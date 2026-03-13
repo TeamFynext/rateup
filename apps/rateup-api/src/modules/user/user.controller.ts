@@ -12,6 +12,7 @@ import {
   updateUserAvailablityStatus,
   updateUserPrefLanguage,
   updateUserProfile,
+  updateUserProfileById,
   updateUserProfilePhoto,
   updateUserRecipe,
 } from "./user.service.js";
@@ -207,6 +208,27 @@ export async function updateProfileHandler(
 
   try {
     user = await updateUserProfile(body, request, reply);
+  } catch (e: any) {
+    console.error(e);
+    reply.code(500).send({ success: false, message: e.message });
+    return;
+  }
+
+  reply.code(201).send({ success: true, data: user });
+}
+
+export async function updateProfileByIdHandler(
+  request: FastifyRequest<{
+    Body: UpdateProfileSchema;
+    Params: IdParamInput;
+  }>,
+  reply: FastifyReply,
+) {
+  const body = request.body;
+  let user;
+
+  try {
+    user = await updateUserProfileById({ ...body, userId: request.params.id });
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
