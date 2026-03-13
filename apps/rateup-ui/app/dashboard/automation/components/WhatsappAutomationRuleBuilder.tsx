@@ -84,7 +84,14 @@ const WhatsappAutomationRuleBuilder: React.FC<
 
   const onSubmit = (data: CreateRule) => {
     if (isEditMode) {
-      updateMutation.mutate({ id: ruleId, ...data });
+      updateMutation.mutate(
+        { id: ruleId, ...data },
+        {
+          onSuccess: () => {
+            router.push(`/dashboard/automation`);
+          },
+        },
+      );
     } else {
       createMutation.mutate(data, {
         onSuccess: (data) => {

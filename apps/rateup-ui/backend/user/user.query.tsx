@@ -20,10 +20,12 @@ import {
   getAuditLogs,
   IChangePassword,
   ICreateGoogleUser,
+  IUpdateMemberProfile,
   IUpdateProfile,
   IUpdateProfilePhoto,
   IUpdateUserLanguage,
   updateActiveStatus,
+  updateMemberProfile,
   updateRecipeName,
   updateUserAvailabilityStatus,
   updateUserLanguage,
@@ -88,7 +90,7 @@ export function useChangePasswordMutation() {
   });
 }
 
-export function useUpdateProfileMutation(setIsLoading) {
+export function useUpdateProfileMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: IUpdateProfile) => updateUserProfile(values),
@@ -96,7 +98,6 @@ export function useUpdateProfileMutation(setIsLoading) {
       toast.success("Profile Updated Successfully!", {
         id: "load-data",
       });
-      setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
@@ -106,8 +107,20 @@ export function useUpdateProfileMutation(setIsLoading) {
       toast.error(error?.message, {
         id: "load-data",
       });
-
-      setIsLoading(false);
+    },
+  });
+}
+export function useUpdateMemberProfileMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values: { userId: string; data: IUpdateMemberProfile }) =>
+      updateMemberProfile(values.userId, values.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Error updating member profile");
     },
   });
 }
