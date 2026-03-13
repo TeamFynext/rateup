@@ -71,7 +71,7 @@ export default function FlowbotsPage() {
         canCreate
         createLabel={translations("Create Chatbot")}
         createDisabledText=""
-        docsUrl="whatsapp/flowbots"
+        docsUrl="whatsapp/chatbot"
         isLoading={isLoading}
         queryKeys={["allWaAutomatedReplies", "allInstagramAutomations"]}
         search={searchQuery}

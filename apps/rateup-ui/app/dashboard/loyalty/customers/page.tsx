@@ -38,6 +38,7 @@ import {
 } from "@/backend/loyalty/customer/customer.query";
 import { useRedeemReward } from "@/backend/loyalty/redeems/redeems.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
+import InfoButton from "@/components/Button/InfoButton";
 import { DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/context/UserContext";
+import { docsPath } from "@/utils/constants";
 import { formatDate } from "@/utils/dateTime";
 
 type CustomerDetails = {
@@ -521,31 +523,36 @@ const CustomerPage = () => {
               <p className="text-sm text-muted-foreground">
                 {t("Manage your loyalty program members")}
               </p>
+            </div>{" "}
+            <div className="flex items-start justify-between gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button disabled={exportMutation.isPending}>
+                    {exportMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
+                    {t("Export Data")}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => exportMutation.mutate("csv")}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    {t("Export as CSV")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => exportMutation.mutate("excel")}
+                  >
+                    <FileSpreadsheet className="w-4 h-4 mr-2" />
+                    {t("Export as Excel")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>{" "}
+              <InfoButton docUrl={`${docsPath}/loyality/customers`} />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button disabled={exportMutation.isPending}>
-                  {exportMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Download className="w-4 h-4 mr-2" />
-                  )}
-                  {t("Export Data")}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => exportMutation.mutate("csv")}>
-                  <FileText className="w-4 h-4 mr-2" />
-                  {t("Export as CSV")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => exportMutation.mutate("excel")}
-                >
-                  <FileSpreadsheet className="w-4 h-4 mr-2" />
-                  {t("Export as Excel")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
 
           {/* Search and Filter */}

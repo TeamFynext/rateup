@@ -39,6 +39,7 @@ import {
   useLoyaltyTiers,
   useUpdateLoyaltyTierMutation,
 } from "@/backend/loyalty/tiers.query";
+import InfoButton from "@/components/Button/InfoButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,6 +63,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { docsPath } from "@/utils/constants";
 
 // Validation schemas
 const tierSchema = z.object({
@@ -269,19 +271,21 @@ export default function EarningRulesPage() {
                 {t("description")}
               </p>
             </div>
-
-            <Button
-              className="bg-[#1873E8] hover:bg-[#1873E8]/90"
-              onClick={() => {
-                setEditingRuleId(null);
-                setEditingTierId(null);
-                resetCreateForm();
-                setEarningRulesViewMode("create");
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {t("addRule")}
-            </Button>
+            <div className="flex items-start justify-between gap-2">
+              <Button
+                className="bg-[#1873E8] hover:bg-[#1873E8]/90"
+                onClick={() => {
+                  setEditingRuleId(null);
+                  setEditingTierId(null);
+                  resetCreateForm();
+                  setEarningRulesViewMode("create");
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {t("addRule")}
+              </Button>
+              <InfoButton docUrl={`${docsPath}/loyality/earningRules`} />
+            </div>
           </div>
 
           <div className="space-y-6">

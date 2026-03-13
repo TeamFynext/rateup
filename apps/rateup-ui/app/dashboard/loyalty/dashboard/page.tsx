@@ -26,6 +26,7 @@ import {
 } from "recharts";
 
 import { useLoyaltyDashboardData } from "@/backend/loyalty/dashboard/dashboard.api";
+import InfoButton from "@/components/Button/InfoButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -35,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { docsPath } from "@/utils/constants";
 
 import { LoyaltyOnboarding } from "./LoyaltyOnboarding";
 
@@ -107,11 +109,14 @@ export default function LoyaltyPrograms() {
         <div className="space-y-6">
           <div className="space-y-6">
             {/* Header */}
-            <div>
-              <h1 className="text-2xl mb-1">Loyalty Overview</h1>
-              <p className="text-sm text-muted-foreground">
-                Track performance and customer engagement
-              </p>
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-2xl mb-1">Loyalty Overview</h1>
+                <p className="text-sm text-muted-foreground">
+                  Track performance and customer engagement
+                </p>
+              </div>
+              <InfoButton docUrl={`${docsPath}/loyality`} />
             </div>
 
             {/* Setup Banner for First Time Users */}

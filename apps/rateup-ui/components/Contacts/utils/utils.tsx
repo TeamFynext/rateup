@@ -145,11 +145,8 @@ export const getSourceBadge = (source: string) => {
       className: "bg-orange-100 text-orange-700",
     },
   };
-  const {
-    icon: Icon,
-    label,
-    className,
-  } = config[source as keyof typeof config];
+  const sourceConfig = config[source as keyof typeof config] ?? config.MANUAL;
+  const { icon: Icon, label, className } = sourceConfig;
   return (
     <Badge variant="outline" className={className}>
       <Icon className="w-3 h-3 mr-1" />

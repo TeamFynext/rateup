@@ -60,6 +60,7 @@ import {
   useUpsertWaSettingsMutation,
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
+import InfoButton from "@/components/Button/InfoButton";
 import {
   RateupButtonBlue,
   RateupButtonPrimary,
@@ -95,7 +96,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { SAVE_HOTKEY } from "@/utils/constants";
+import { docsPath, SAVE_HOTKEY } from "@/utils/constants";
 import { hasFeature } from "@/utils/subscription/subscription";
 
 function WhatsAppManualConfiguration({ waSettings }) {
@@ -682,37 +683,40 @@ export default function WhatsAppSettingsPage() {
         crossOrigin="anonymous"
       ></Script>
       <StyledTabs value={tab} onChange={setTab as any}>
-        <Tabs.List mb={"xs"}>
-          <Tooltip
-            label={
-              isManual
-                ? translations(
-                    "You need to delete the manually configured details to switch to Automated Configuration",
-                  )
-                : translations("Automated Configuration")
-            }
-            openDelay={300}
-          >
-            <Tabs.Tab value={WaConfigType.Automated} disabled={isManual}>
-              {translations("Automated")}
-            </Tabs.Tab>
-          </Tooltip>
-          <Tooltip
-            label={
-              isAutomated
-                ? translations(
-                    "You need to de-register from the automated onboarding through fb-login to switch to manual configuration",
-                  )
-                : translations("Manually Configure WhatsApp Business Account")
-            }
-            openDelay={300}
-          >
-            <Tabs.Tab value={WaConfigType.Manual} disabled={isAutomated}>
-              {translations("Manual")}
-            </Tabs.Tab>
-          </Tooltip>
-        </Tabs.List>
-
+        {" "}
+        <Flex justify="space-between" align="center" mb="xs">
+          <Tabs.List mb={"xs"}>
+            <Tooltip
+              label={
+                isManual
+                  ? translations(
+                      "You need to delete the manually configured details to switch to Automated Configuration",
+                    )
+                  : translations("Automated Configuration")
+              }
+              openDelay={300}
+            >
+              <Tabs.Tab value={WaConfigType.Automated} disabled={isManual}>
+                {translations("Automated")}
+              </Tabs.Tab>
+            </Tooltip>
+            <Tooltip
+              label={
+                isAutomated
+                  ? translations(
+                      "You need to de-register from the automated onboarding through fb-login to switch to manual configuration",
+                    )
+                  : translations("Manually Configure WhatsApp Business Account")
+              }
+              openDelay={300}
+            >
+              <Tabs.Tab value={WaConfigType.Manual} disabled={isAutomated}>
+                {translations("Manual")}
+              </Tabs.Tab>
+            </Tooltip>
+          </Tabs.List>
+          <InfoButton docUrl={`${docsPath}/whatsapp/settings`} />
+        </Flex>
         <Tabs.Panel value={WaConfigType.Automated}>
           <MetaLoginStatus waSettings={waSettings} />
         </Tabs.Panel>
