@@ -130,7 +130,7 @@ export default function Account() {
     { toggle: toggleCropDialog, close: closeCropDialog },
   ] = useDisclosure(false);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
-  const updateProfile = useUpdateProfileMutation(setIsLoadingUpload);
+  const updateProfile = useUpdateProfileMutation();
   const updateLogo = useUpdateOrgLogoMutation(setIsLoadingUpload);
   const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoadingUpload);
   const orgDetailsUpdate = useUpdateOrgDetailsMutation();

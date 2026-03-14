@@ -16,10 +16,12 @@ import {
   useGetApprovalRequests,
   useRejectApprovalRequest,
 } from "@/backend/loyalty/approval/approval.query";
+import InfoButton from "@/components/Button/InfoButton";
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { docsPath } from "@/utils/constants";
 
 // Helper function to format request type
 const formatRequestType = (type: ApprovalRequestType): string => {
@@ -264,6 +266,7 @@ export default function ApprovalsPage() {
             <Download className="w-4 h-4 mr-2" />
             {t("Export")}
           </Button>
+          <InfoButton docUrl={`${docsPath}/loyality/approvals`} />
         </div>
       </div>
 

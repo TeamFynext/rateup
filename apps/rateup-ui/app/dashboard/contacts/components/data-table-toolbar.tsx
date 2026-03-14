@@ -374,7 +374,7 @@ const ExportContacts = ({ table }) => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm">
           <Download className="w-4 h-4 mr-2" />
           <span className="font-medium text-sm">Export</span>

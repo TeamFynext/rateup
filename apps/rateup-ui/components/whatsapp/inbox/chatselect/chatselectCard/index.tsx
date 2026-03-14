@@ -23,6 +23,7 @@ import { useContactsStore } from "@/app/dashboard/inbox/store";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CreativeAvatar } from "@/components/ui/creative-avatar";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { WaMessageClosedStatus } from "@/utils/constants";
@@ -47,10 +48,16 @@ interface WaInboxChatSelectCardProps {
     category: string;
     emoji: string;
   }>;
+  isSelectionMode: boolean;
+  selectedChats: string[];
+  setSelectedChats: React.Dispatch<React.SetStateAction<string[]>>;
 }
 export default function WaInboxChatSelectCard({
   contact,
   lifeCycleLabels,
+  isSelectionMode,
+  selectedChats,
+  setSelectedChats,
 }: Readonly<WaInboxChatSelectCardProps>) {
   const params = useSearchParams();
   const lastMessage = contact?.lastMessage;
@@ -75,12 +82,36 @@ export default function WaInboxChatSelectCard({
     <div
       key={contact?.id}
       onClick={() => {
+        if (isSelectionMode) {
+          setSelectedChats((prev) =>
+            prev.includes(contact.id)
+              ? prev.filter((id) => id !== contact.id)
+              : [...prev, contact.id],
+          );
+          return;
+        }
         setSelectedContact(contact);
         setIsChatDisplayOpen(true);
       }}
       className={`p-3 cursor-pointer transition-all hover:bg-accent/50 ${selectedContact?.id === contact?.id && "bg-accent border-l-2 border-b-1 border-blue-600"} ${contact?.unReadMessageCount > 0 && "bg-blue-50/30"}`}
     >
       <div className="flex items-start space-x-2">
+        {isSelectionMode && (
+          <Checkbox
+            className="border border-muted-foreground shadow-sm"
+            onClick={(e) => e.stopPropagation()}
+            checked={selectedChats.includes(contact.id)}
+            onCheckedChange={(checked) => {
+              if (checked) {
+                setSelectedChats((prev) => [...prev, contact.id]);
+              } else {
+                setSelectedChats((prev) =>
+                  prev.filter((id) => id !== contact.id),
+                );
+              }
+            }}
+          />
+        )}
         <div className="relative shrink-0">
           <CreativeAvatar
             name={

@@ -78,7 +78,7 @@ function Flows() {
         createDisabledText={translations(
           "Connect a WhatsApp number in settings to create a Flow",
         )}
-        docsUrl="whatsappSurvey/flows"
+        docsUrl="automation/flows"
         isLoading={isLoading}
         queryKeys={["flow", "db"]}
         search={searchQuery}

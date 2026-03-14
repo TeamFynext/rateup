@@ -19,15 +19,21 @@ import {
   useAllWaCatalogs,
   useSyncCatalogs,
 } from "@/backend/whatsapp/catalog/catalog.query";
+import InfoButton from "@/components/Button/InfoButton";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import RateupLoader from "@/components/Loaders/RateupLoader";
+import { docsPath } from "@/utils/constants";
 
 const Catalog = () => {
   const sync = useSyncCatalogs();
   return (
     <Stack p={"xs"}>
       <Flex justify={"space-between"}>
-        <Title order={4}>Catalogs</Title>
+        <Flex align="center" gap="xs">
+          <Title order={4}>Catalogs</Title>
+          <InfoButton docUrl={`${docsPath}/whatsapp/catalogs`} />
+        </Flex>
+
         <RateupButtonPrimary
           title="Sync Catalogs"
           onClick={() => sync.mutate()}

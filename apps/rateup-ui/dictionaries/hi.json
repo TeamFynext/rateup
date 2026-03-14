@@ -2612,5 +2612,12 @@
   "Team Performance": "टीम प्रदर्शन",
   "Message Analytics": "संदेश विश्लेषण",
   "Team Activity": "टीम गतिविधि",
-  "Lower-case letters and underscores only": "केवल छोटे अक्षर और अंडरस्कोर (_)"
+  "Lower-case letters and underscores only": "केवल छोटे अक्षर और अंडरस्कोर (_)",
+  "Close selected chats": "चयनित चैट बंद करें",
+  "Are you sure you want to close the selected chats": "क्या आप वाकई चयनित चैट बंद करना चाहते हैं?",
+  "Assign selected chats": "चयनित चैट असाइन करें",
+  "Select a team member to assign the selected conversations": "चयनित बातचीत असाइन करने के लिए एक टीम सदस्य चुनें",
+  "Select Member": "सदस्य चुनें",
+  "Select team member": "टीम सदस्य चुनें",
+  "Assign Chats": "चैट असाइन करें"
 }

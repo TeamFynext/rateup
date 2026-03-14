@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import {
+  CheckSquare,
   Clock,
   Download,
   Filter,
@@ -49,6 +50,9 @@ const ChatselectPanelHeader = ({
   refetchFilteredContacts,
   onUnknownContactAddSuccess,
   tab,
+  isSelectionMode,
+  setIsSelectionMode,
+  setSelectedChats,
 }) => {
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [filterCount, setFilterCount] = useState(0);
@@ -184,6 +188,29 @@ const ChatselectPanelHeader = ({
             content={<p>Search</p>}
             side="bottom"
           />
+
+          <Popover>
+            <PopoverTrigger>
+              <CustomTooltip
+                trigger={
+                  <Button
+                    size="sm"
+                    variant={isSelectionMode ? "default" : "outline"}
+                    className="h-8 w-8 p-0"
+                    onClick={() => {
+                      setIsSelectionMode(!isSelectionMode);
+                      setSelectedChats([]);
+                    }}
+                  >
+                    <CheckSquare className="w-3.5 h-3.5" />
+                  </Button>
+                }
+                content={<p>Select Chats</p>}
+                side="bottom"
+              />
+            </PopoverTrigger>
+          </Popover>
+
           <Popover>
             <PopoverTrigger>
               <CustomTooltip

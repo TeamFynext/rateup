@@ -34,6 +34,7 @@ import {
 } from "@/backend/loyalty/redeems/redeems.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
 import { useLoyaltyTiers } from "@/backend/loyalty/tier.query";
+import InfoButton from "@/components/Button/InfoButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,6 +55,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { docsPath } from "@/utils/constants";
 
 export default function CashierPage() {
   const router = useRouter();
@@ -265,13 +267,15 @@ export default function CashierPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl mb-1">Cashier Portal</h1>
-        <p className="text-sm text-muted-foreground">
-          Quick customer lookup and transaction processing
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl mb-1">Cashier Portal</h1>
+          <p className="text-sm text-muted-foreground">
+            Quick customer lookup and transaction processing
+          </p>
+        </div>
+        <InfoButton docUrl={`${docsPath}/loyality/cashierPortal`} />
       </div>
-
       {/* Search Customer */}
       <Card>
         <CardContent>
@@ -321,7 +325,6 @@ export default function CashierPage() {
           </div>
         </CardContent>
       </Card>
-
       {/* Selected Customer Details */}
       {customer && (
         <div className="space-y-4">
@@ -631,7 +634,6 @@ export default function CashierPage() {
           )}
         </div>
       )}
-
       {/* Modals */}
       {/* Issue Points Modal */}
       <Dialog open={issuePointsOpen} onOpenChange={setIssuePointsOpen}>
@@ -687,7 +689,6 @@ export default function CashierPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Adjust Points Modal */}
       <Dialog open={adjustPointsOpen} onOpenChange={setAdjustPointsOpen}>
         <DialogContent>
@@ -744,7 +745,6 @@ export default function CashierPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Claim Reward Modal */}
       <Dialog open={claimRewardOpen} onOpenChange={setClaimRewardOpen}>
         <DialogContent>
@@ -810,7 +810,6 @@ export default function CashierPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Issue Reward Modal */}
       <Dialog open={assignRewardOpen} onOpenChange={setAssignRewardOpen}>
         <DialogContent>
@@ -878,7 +877,6 @@ export default function CashierPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Redeem Coupon Modal */}
       <Dialog open={redeemCouponOpen} onOpenChange={setRedeemCouponOpen}>
         <DialogContent>
@@ -916,7 +914,6 @@ export default function CashierPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Use Redemption Modal */}
       <Dialog open={useRedemptionOpen} onOpenChange={setUseRedemptionOpen}>
         <DialogContent>

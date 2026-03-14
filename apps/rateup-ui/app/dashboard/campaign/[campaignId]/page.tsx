@@ -573,7 +573,7 @@ export default function CampaignDetails() {
                       campaign.status === "ACTIVE"
                         ? "bg-green-500 dark:bg-green-600"
                         : "bg-slate-400 dark:bg-slate-600"
-                    } hover:bg-green-500 dark:hover:bg-green-600 text-white border-0 px-3 py-1`}
+                    } hover:bg-green-500 dark:hover:bg-green-600 text-white border-0 px-3 py-1 rounded-md`}
                   >
                     <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse" />
                     {campaign.status}
@@ -583,7 +583,7 @@ export default function CampaignDetails() {
                   {campaign.type !== CampaignType.DRIP && !isQueuing && (
                     <Button
                       variant="outline"
-                      className="rounded-full gap-2"
+                      className="rounded-md gap-2"
                       onClick={() => {
                         if (canSend) {
                           handleSend();
@@ -592,8 +592,8 @@ export default function CampaignDetails() {
                         }
                       }}
                     >
-                      {canSend ? t("actions.send") : t("actions.resend")}
                       <Send className="w-4 h-4" />
+                      {canSend ? t("actions.send") : t("actions.resend")}
                     </Button>
                   )}
                   {campaign.type !== CampaignType.DRIP &&

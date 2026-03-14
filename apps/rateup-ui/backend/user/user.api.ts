@@ -130,6 +130,17 @@ export async function updateUserPause({ userId, data }) {
   return await axiosClient.put(`user/pause/${userId}`, data);
 }
 
+export interface IUpdateMemberProfile {
+  title: string;
+  name: string;
+  phone: string;
+}
+
+export const updateMemberProfile = (
+  userId: string,
+  data: IUpdateMemberProfile,
+) => axiosClient.put(`user/update-profile/${userId}`, data);
+
 export enum UserAvailabilityStatus {
   offline = "offline",
   online = "online",

@@ -2611,5 +2611,12 @@
   "Team Performance": "Performance de l'équipe",
   "Message Analytics": "Analyse des messages",
   "Team Activity": "Activité de l'équipe",
-  "Lower-case letters and underscores only": "Uniquement des lettres minuscules et des underscores (_)"
+  "Lower-case letters and underscores only": "Uniquement des lettres minuscules et des underscores (_)",
+  "Close selected chats": "Fermer les conversations sélectionnées",
+  "Are you sure you want to close the selected chats": "Êtes-vous sûr de vouloir fermer les conversations sélectionnées ?",
+  "Assign selected chats": "Attribuer les conversations sélectionnées",
+  "Select a team member to assign the selected conversations": "Sélectionnez un membre de l’équipe pour lui attribuer les conversations sélectionnées",
+  "Select Member": "Sélectionner un membre",
+  "Select team member": "Sélectionner un membre de l’équipe",
+  "Assign Chats": "Attribuer les conversations"
 }
