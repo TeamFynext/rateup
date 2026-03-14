@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { $contactRef } from "./contact.schema.js";
 import {
   addCustomFieldHandler,
+  bulkUpdateWaMessageAssignStatusHandler,
   createContactHandler,
   createMultipleContactsHandler,
   deleteContactByIdHandler,
@@ -185,5 +186,15 @@ export async function contactRoutes(server: FastifyInstance) {
       },
     },
     updateLifecycleStageofContactsHandler,
+  );
+
+  server.put(
+    "/bulk-assign-status",
+    {
+      schema: {
+        body: $contactRef("bulkUpdateContactStatusSchema"),
+      },
+    },
+    bulkUpdateWaMessageAssignStatusHandler,
   );
 }

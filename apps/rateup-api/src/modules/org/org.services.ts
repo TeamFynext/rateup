@@ -120,6 +120,8 @@ export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
           profilePhoto: true,
           email: true,
           name: true,
+          phone: true,
+          gender: true,
           teamMember: {
             include: {
               team: true,
@@ -131,6 +133,9 @@ export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
       status: true,
       role: true,
     },
+    orderBy: {
+      createdAt: "asc",
+    },
   });
 
   // Transform into cleaner structure
@@ -141,6 +146,8 @@ export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
       email: m.user.email,
       profilePhoto: m.user.profilePhoto,
       role: m.role,
+      phone: m.user.phone,
+      gender: m.user.gender,
       teams: m.user.teamMember.map((tm) => ({
         team_id: tm.team.id,
         team_name: tm.team.name,

@@ -10,6 +10,7 @@ import {
   BlockUserBody,
   GenerateInboxResponseBody,
   PrivateWaMessageBody,
+  BulkWaMessageAssignBody,
 } from "./wamessage.schema.js";
 import {
   addNewWaMessage,
@@ -733,5 +734,44 @@ export async function createPrivateMessageHandler(
   } catch (error) {
     log.error("Error in creating private note: %o", error);
     reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function bulkAssignWaMessageHandler(
+  request: FastifyRequest<{
+    Body: BulkWaMessageAssignBody;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { contactIds, assignee, assignIfOnline, messageId } = request.body;
+
+    const results = [];
+
+    for (const contactId of contactIds) {
+      const res = await assignWaMessageToUser(
+        {
+          contactId,
+          assignees: [assignee],
+          assignIfOnline: assignIfOnline ?? false,
+          messageId,
+        },
+        request.user.orgId,
+        request.userId,
+      );
+
+      results.push(res);
+    }
+
+    return reply.code(200).send({
+      message: "Chats assigned successfully",
+      assignedCount: results.length,
+      results,
+    });
+  } catch (error) {
+    log.error(error);
+    return reply.code(500).send({
+      error: error?.message || "Something went wrong",
+    });
   }
 }

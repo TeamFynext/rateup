@@ -1283,3 +1283,131 @@ export async function updateLifecycleStageofContacts(lifecycleId, contactIds) {
     },
   });
 }
+
+export async function bulkUpdateWaMessageAssignStatus(
+  contactIds: string[],
+  waMessageAssignStatus: WaMessageAssignStatus,
+  userId?: string,
+  messageId?: string,
+) {
+  const contacts = await prisma.contact.findMany({
+    where: {
+      id: { in: contactIds },
+    },
+    select: {
+      id: true,
+      phone: true,
+      name: true,
+      orgId: true,
+      waMessageAssignStatus: true,
+    },
+  });
+
+  if (!contacts.length) return [];
+
+  const closing = WaMessageClosedStatus.includes(waMessageAssignStatus);
+
+  //  Bulk update
+  await prisma.contact.updateMany({
+    where: {
+      id: { in: contactIds },
+    },
+    data: {
+      waMessageAssignStatus,
+      ...(closing
+        ? {
+            closedAt: new Date(),
+            closedBy: userId,
+          }
+        : {}),
+    },
+  });
+
+  //  Execute triggers in parallel
+
+  await Promise.all(
+    contacts.map(async (contact) => {
+      if (waMessageAssignStatus === WaMessageAssignStatusTab.Closed) {
+        checkAndExecuteRuleByTriggerEvent("CHAT_CLOSED", {
+          orgId: contact.orgId,
+          phone: contact.phone,
+        });
+      } else if (waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED) {
+        checkAndExecuteRuleByTriggerEvent("CHAT_ASSIGNED", {
+          orgId: contact.orgId,
+          phone: contact.phone,
+        });
+      }
+
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_UPDATED,
+        { [ZapierTriggers.CONTACT_UPDATED]: contact },
+        contact.orgId,
+      );
+
+      if (closing) {
+        await addZapierTriggerToQueue(
+          ZapierTriggers.CONVERSATION_CLOSED,
+          { [ZapierTriggers.CONVERSATION_CLOSED]: contact },
+          contact.orgId,
+        );
+      }
+
+      if (!closing) return;
+
+      // Handle assigned users
+
+      const assignedUsers = await getAssignedUserForContact(contact.id);
+
+      await deleteAssignedUsersforContact(contact.id);
+
+      await Promise.all(
+        assignedUsers.map(async (assignee) => {
+          const notificationSetting = await getNotificationSettings(
+            assignee.assignedUserId,
+            contact.orgId,
+          );
+
+          if (notificationSetting?.waMessageClosedNotification) {
+            await notificationQueue.add("notification", {
+              systemNotificationData: {
+                userId: assignee.assignedUserId,
+                orgId: contact.orgId,
+                source: "whatsapp",
+                subSource: "chat-closed",
+                data: {
+                  contactId: contact.id,
+                  contactName: contact.name,
+                },
+              },
+            });
+          }
+        }),
+      );
+
+      if (waMessageAssignStatus) {
+        await createInternalWaMessage({
+          trigerredByUser: userId,
+          contactId: contact.id,
+          waMessageAssignStatus,
+          messageId,
+        });
+      }
+
+      // Close conversation
+      const conversation = await getLastCreatedConversationForContact(
+        contact.id,
+      );
+
+      if (conversation) {
+        await updateClosedConversationStatus(
+          conversation.id,
+          waMessageAssignStatus,
+          userId,
+        );
+      }
+    }),
+  );
+
+  return contacts;
+}

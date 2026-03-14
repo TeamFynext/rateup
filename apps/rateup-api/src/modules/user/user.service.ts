@@ -379,6 +379,23 @@ export async function updateUserProfile(
 
   return result;
 }
+export async function updateUserProfileById({
+  title,
+  name,
+  phone,
+  userId,
+}: UpdateProfileSchema & { userId: string }) {
+  const result = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      gender: title as Gender,
+      name,
+      phone,
+    },
+  });
+
+  return result;
+}
 
 export async function updateUserPrefLanguage(
   { prefLanguage }: updateUserLanguageSchema,

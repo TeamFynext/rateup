@@ -8,6 +8,7 @@ import {
   getLoggedUserInfoHandler,
   getLoggedUserProfileHandler,
   pauseUserHandler,
+  updateProfileByIdHandler,
   updateProfileHandler,
   updateProfilePhotoHandler,
   updateRecipeNameHandler,
@@ -46,6 +47,17 @@ export async function userRoutes(server: FastifyInstance) {
       },
     },
     updateProfileHandler,
+  );
+  server.put(
+    "/update-profile/:id",
+    {
+      preHandler: [verifySession()],
+      schema: {
+        params: $Sref("idParamsSchema"),
+        body: $UserRef("updateProfileSchema"),
+      },
+    },
+    updateProfileByIdHandler,
   );
 
   server.put(
