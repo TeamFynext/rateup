@@ -2615,5 +2615,10 @@
   "Select a team member to assign the selected conversations": "اختر عضوًا من الفريق لتعيين المحادثات المحددة له",
   "Select Member": "اختر عضوًا",
   "Select team member": "اختر عضو الفريق",
-  "Assign Chats": "تعيين المحادثات"
+  "Assign Chats": "تعيين المحادثات",
+  "Session Error": "خطأ في الجلسة",
+  "Your login session data appears to be corrupted": "يبدو أن بيانات جلسة تسجيل الدخول الخاصة بك تالفة",
+  "Unable to load user data": "تعذر تحميل بيانات المستخدم",
+  "Please retry loading the application, if the problem continues, you may need to logout and login again": "يرجى محاولة إعادة تحميل التطبيق. إذا استمرت المشكلة، قد تحتاج إلى تسجيل الخروج ثم تسجيل الدخول مرة أخرى",
+  "Reload": "إعادة التحميل"
 }

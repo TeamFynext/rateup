@@ -2620,5 +2620,10 @@
   "Select a team member to assign the selected conversations": "Wählen Sie ein Teammitglied aus, dem die ausgewählten Konversationen zugewiesen werden sollen",
   "Select Member": "Mitglied auswählen",
   "Select team member": "Teammitglied auswählen",
-  "Assign Chats": "Chats zuweisen"
+  "Assign Chats": "Chats zuweisen",
+  "Session Error": "Sitzungsfehler",
+  "Your login session data appears to be corrupted": "Ihre Anmeldesitzungsdaten scheinen beschädigt zu sein",
+  "Unable to load user data": "Benutzerdaten konnten nicht geladen werden",
+  "Please retry loading the application, if the problem continues, you may need to logout and login again": "Bitte versuchen Sie, die Anwendung erneut zu laden. Wenn das Problem weiterhin besteht, müssen Sie sich möglicherweise abmelden und erneut anmelden",
+  "Reload": "Neu laden"
 }

@@ -28,6 +28,7 @@ import NavbarSkeleton from "../../animation/skeleton/Navbar.Skeleton";
 import { SidebarProvider } from "../../ui/sidebar";
 import { useChatFilterStore } from "../../whatsapp/inbox/chatselect/chatFilter";
 import AppSidebar from "./app-sidebar";
+import CorruptedSessionScreen from "./corrupted-session";
 
 // WebSocketHandler Component
 const WebSocketHandler = () => {
@@ -86,6 +87,14 @@ export default function MainSidebar({ children }) {
     isPendingContactLabels ||
     isStaffLoading ||
     isTeamLoading;
+
+  if (
+    !isLoading &&
+    isFetched &&
+    (!userQueryData || !("data" in userQueryData) || !userQueryData.data)
+  ) {
+    return <CorruptedSessionScreen />;
+  }
 
   if (query.msg === "welcome") {
     refetch();
