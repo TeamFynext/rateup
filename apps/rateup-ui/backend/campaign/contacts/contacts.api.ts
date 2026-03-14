@@ -205,3 +205,11 @@ export const exportContacts = async (data: {
 
   return saveAs(blob, `contacts.${data.type}`);
 };
+
+export const bulkAssignStatus = async (data) => {
+  let res = await axiosClient.put(
+    `${CONTACT_BASE_URL}/bulk-assign-status`,
+    data,
+  );
+  return res;
+};

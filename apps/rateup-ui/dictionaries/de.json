@@ -2613,5 +2613,12 @@
   "Team Performance": "Teamleistung",
   "Message Analytics": "Nachrichtenanalyse",
   "Team Activity": "Teamaktivität",
-  "Lower-case letters and underscores only": "Nur Kleinbuchstaben und das Unterstrich-Zeichen (_)"
+  "Lower-case letters and underscores only": "Nur Kleinbuchstaben und das Unterstrich-Zeichen (_)",
+  "Close selected chats": "Ausgewählte Chats schließen",
+  "Are you sure you want to close the selected chats": "Sind Sie sicher, dass Sie die ausgewählten Chats schließen möchten?",
+  "Assign selected chats": "Ausgewählte Chats zuweisen",
+  "Select a team member to assign the selected conversations": "Wählen Sie ein Teammitglied aus, dem die ausgewählten Konversationen zugewiesen werden sollen",
+  "Select Member": "Mitglied auswählen",
+  "Select team member": "Teammitglied auswählen",
+  "Assign Chats": "Chats zuweisen"
 }

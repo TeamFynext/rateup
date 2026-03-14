@@ -3500,5 +3500,12 @@
   "Search by name or phone": "Search by name or phone...",
   "Copy referral code": "Copy referral code",
   "Copy referral link": "Copy referral link",
-  "View": "View"
+  "View": "View",
+  "Close selected chats": "Close selected chats",
+  "Are you sure you want to close the selected chats": "Are you sure you want to close the selected chats",
+  "Assign selected chats": "Assign selected chats",
+  "Select a team member to assign the selected conversations": "Select a team member to assign the selected conversations",
+  "Select Member": "Select Member",
+  "Select team member": "Select team member",
+  "Assign Chats": "Assign Chats"
 }

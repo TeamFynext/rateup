@@ -2608,5 +2608,12 @@
   "Team Performance": "أداء الفريق",
   "Message Analytics": "تحليلات الرسائل",
   "Team Activity": "نشاط الفريق",
-  "Lower-case letters and underscores only": "حروف صغيرة (_) والشرطة السفلية فقط"
+  "Lower-case letters and underscores only": "حروف صغيرة (_) والشرطة السفلية فقط",
+  "Close selected chats": "إغلاق المحادثات المحددة",
+  "Are you sure you want to close the selected chats": "هل أنت متأكد أنك تريد إغلاق المحادثات المحددة؟",
+  "Assign selected chats": "تعيين المحادثات المحددة",
+  "Select a team member to assign the selected conversations": "اختر عضوًا من الفريق لتعيين المحادثات المحددة له",
+  "Select Member": "اختر عضوًا",
+  "Select team member": "اختر عضو الفريق",
+  "Assign Chats": "تعيين المحادثات"
 }
