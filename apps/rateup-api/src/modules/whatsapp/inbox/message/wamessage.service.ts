@@ -794,15 +794,15 @@ export async function exportWhatsapChats(
       bodyFilterProps?.contactGroups &&
       bodyFilterProps?.contactGroups?.length > 0
     ) {
-      extendedWhereClause += `AND cg."id" IN (${bodyFilterProps?.contactGroups
-        ?.map((v: any) => `'${v?.value}'::uuid`)
+      extendedWhereClause += `AND cg."id" IN (${bodyFilterProps.contactGroups
+        ?.map((v: string) => `'${v}'::uuid`)
         .join(",")})`;
     }
 
     // Filter for campaigns when CampaignParticipant (cpt) is accessible
     if (bodyFilterProps?.campaigns && bodyFilterProps?.campaigns?.length > 0) {
       extendedWhereClause += `AND cpt."campaignId" IN (${bodyFilterProps?.campaigns
-        ?.map((v: any) => `'${v?.value}'::uuid`)
+        ?.map((v: string) => `'${v}'::uuid`)
         .join(",")})`;
     }
 
