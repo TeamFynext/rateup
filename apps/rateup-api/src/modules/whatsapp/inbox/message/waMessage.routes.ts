@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   assignWaMessageHandler,
   blockWhatsappUserHandler,
+  bulkAssignWaMessageHandler,
   createPrivateMessageHandler,
   exportWhatsappChatsHandler,
   generateChatAnalyticsHandler,
@@ -82,6 +83,16 @@ export async function waMessageRoutes(server: FastifyInstance) {
       },
     },
     assignWaMessageHandler,
+  );
+
+  server.post(
+    "/assign-bulk",
+    {
+      schema: {
+        body: $waMessage("bulkWaMessageAssignBody"),
+      },
+    },
+    bulkAssignWaMessageHandler,
   );
 
   server.post(

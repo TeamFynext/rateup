@@ -130,6 +130,16 @@ const blockUserSchema = z.object({
   phoneNumbersList: z.array(z.string()),
 });
 
+const bulkWaMessageAssignBody = z.object({
+  contactIds: z.array(z.string()),
+  assignee: z.object({
+    userId: z.string(),
+    teamId: z.string(),
+  }),
+  assignIfOnline: z.boolean().default(false),
+  messageId: z.string().optional(),
+});
+
 export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
   {
     NewWaMessageBody,
@@ -143,6 +153,7 @@ export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
     waMessageAssignBody,
     blockUserSchema,
     generateInboxResponseBody,
+    bulkWaMessageAssignBody,
   },
   { $id: "waMessage" },
 );
@@ -156,6 +167,7 @@ export type WaChatExportConstraints = z.infer<typeof waChatExportConstraints>;
 export type WaChatExportQuerySchema = z.infer<typeof waChatExportQuerySchema>;
 export type WaMediaFileByMediaIdBody = z.infer<typeof waMediaFileByMediaIdBody>;
 export type WaMessageAssignBody = z.infer<typeof waMessageAssignBody>;
+export type BulkWaMessageAssignBody = z.infer<typeof bulkWaMessageAssignBody>;
 export type BlockUserBody = z.infer<typeof blockUserSchema>;
 export type GenerateInboxResponseBody = z.infer<
   typeof generateInboxResponseBody
