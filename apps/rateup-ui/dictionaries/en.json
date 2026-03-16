@@ -3507,5 +3507,10 @@
   "Select a team member to assign the selected conversations": "Select a team member to assign the selected conversations",
   "Select Member": "Select Member",
   "Select team member": "Select team member",
-  "Assign Chats": "Assign Chats"
+  "Assign Chats": "Assign Chats",
+  "Session Error": "Session Error",
+  "Your login session data appears to be corrupted": "Your login session data appears to be corrupted",
+  "Unable to load user data": "Unable to load user data",
+  "Please retry loading the application, if the problem continues, you may need to logout and login again": "Please retry loading the application. If the problem continues, you may need to logout and login again",
+  "Reload": "Reload"
 }

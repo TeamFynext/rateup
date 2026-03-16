@@ -2618,5 +2618,10 @@
   "Select a team member to assign the selected conversations": "Sélectionnez un membre de l’équipe pour lui attribuer les conversations sélectionnées",
   "Select Member": "Sélectionner un membre",
   "Select team member": "Sélectionner un membre de l’équipe",
-  "Assign Chats": "Attribuer les conversations"
+  "Assign Chats": "Attribuer les conversations",
+  "Session Error": "Erreur de session",
+  "Your login session data appears to be corrupted": "Les données de votre session de connexion semblent être corrompues",
+  "Unable to load user data": "Impossible de charger les données utilisateur",
+  "Please retry loading the application, if the problem continues, you may need to logout and login again": "Veuillez réessayer de charger l'application. Si le problème persiste, vous devrez peut-être vous déconnecter et vous reconnecter",
+  "Reload": "Recharger"
 }
