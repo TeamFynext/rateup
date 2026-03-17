@@ -21,12 +21,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUser } from "@/context/UserContext";
 
 const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
+  const { user } = useUser();
   const { data: teamMembers, isLoading: membersLoading } =
     useTeamsMembersOfOrg();
   const { data: teamsRes, isLoading: teamsLoading } = useTeamsByUser();
   const { updateContactById } = useContactsStore();
+  const [actionType, setActionType] = useState<"assign" | "self" | null>(null);
   const t = useTranslations();
 
   const teams = teamsRes?.data ?? [];
@@ -47,6 +50,7 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
 
   const handleAssign = () => {
     if (!selectedTeam || !selectedUser) return;
+    setActionType("assign");
     bulkAssignMutation.mutate(
       {
         contactIds,
@@ -72,6 +76,44 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
             }));
           });
           onSuccess?.();
+          setActionType(null);
+        },
+        onError: () => {
+          setActionType(null);
+        },
+      },
+    );
+  };
+  const handleAssignToMe = () => {
+    setActionType("self");
+    bulkAssignMutation.mutate(
+      {
+        contactIds,
+        assignee: {
+          userId: user.userId,
+          teamId: user.teams?.[0],
+        },
+      },
+      {
+        onSuccess: () => {
+          contactIds.forEach((contactId) => {
+            updateContactById(contactId, (contact) => ({
+              ...contact,
+              waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+              assignedUsers: [
+                {
+                  id: user?.userId,
+                  name: user?.userName,
+                  teamId: user.teams?.[0],
+                },
+              ],
+            }));
+          });
+          onSuccess?.();
+          setActionType(null);
+        },
+        onError: () => {
+          setActionType(null);
         },
       },
     );
@@ -144,18 +186,41 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
       </div>
 
       {/* ASSIGN BUTTON */}
-      <Button
-        onClick={handleAssign}
-        disabled={
-          !selectedTeam || !selectedUser || bulkAssignMutation.isPending
-        }
-        className="w-full h-10 flex items-center gap-2"
-      >
-        {bulkAssignMutation.isPending && (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        )}
-        {t("Assign Chats")}
-      </Button>
+      <div className="flex flex-col gap-3 w-full">
+        {/* PRIMARY ACTION */}
+        <Button
+          onClick={handleAssign}
+          disabled={
+            !selectedTeam || !selectedUser || bulkAssignMutation.isPending
+          }
+          className="w-full h-10 flex items-center justify-center gap-2"
+        >
+          {bulkAssignMutation.isPending && actionType === "assign" && (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          )}
+          {t("Assign Chats")}
+        </Button>
+
+        {/* DIVIDER */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex-1 h-px bg-border" />
+          OR
+          <div className="flex-1 h-px bg-border" />
+        </div>
+
+        {/* SECONDARY ACTION */}
+        <Button
+          onClick={handleAssignToMe}
+          disabled={bulkAssignMutation.isPending}
+          variant="outline"
+          className="w-full h-10 flex items-center justify-center gap-2"
+        >
+          {bulkAssignMutation.isPending && actionType === "self" && (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          )}
+          {t("Assign To Me")}
+        </Button>
+      </div>
     </div>
   );
 };

@@ -2619,5 +2619,10 @@
   "Select a team member to assign the selected conversations": "चयनित बातचीत असाइन करने के लिए एक टीम सदस्य चुनें",
   "Select Member": "सदस्य चुनें",
   "Select team member": "टीम सदस्य चुनें",
-  "Assign Chats": "चैट असाइन करें"
+  "Assign Chats": "चैट असाइन करें",
+  "Session Error": "خطأ في الجلسة",
+  "Your login session data appears to be corrupted": "يبدو أن بيانات جلسة تسجيل الدخول الخاصة بك تالفة",
+  "Unable to load user data": "تعذر تحميل بيانات المستخدم",
+  "Please retry loading the application, if the problem continues, you may need to logout and login again": "يرجى محاولة إعادة تحميل التطبيق. إذا استمرت المشكلة، قد تحتاج إلى تسجيل الخروج ثم تسجيل الدخول مرة أخرى",
+  "Reload": "إعادة التحميل"
 }
