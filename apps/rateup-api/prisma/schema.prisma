@@ -802,20 +802,20 @@ model Campaign {
   status    String    @default("INACTIVE") // enums.ts: CampaignStatus
   type      String // enums.ts: CampaignType
 
-  team                    Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId                  String                @db.Uuid
-  waTemplate              WaTemplate?           @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
-  waTemplateId            String?               @db.Uuid
-  flowId                  String?
+  team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId               String                @db.Uuid
+  waTemplate           WaTemplate?           @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+  waTemplateId         String?               @db.Uuid
+  flowId               String?
   // TODO: add email template?
-  campaignParticipants    CampaignParticipant[]
-  campaignSentAt          DateTime?
-  scheduledStatuses       String[]              @default([])
-  errorMessage            String?
-  dynamicTags             String[]              @default([])
-  useUserConsent          Boolean               @default(true)
-  CampaignStats           CampaignStats?
-  CampaignDripStage       CampaignDripStage[]
+  campaignParticipants CampaignParticipant[]
+  campaignSentAt       DateTime?
+  scheduledStatuses    String[]              @default([])
+  errorMessage         String?
+  dynamicTags          String[]              @default([])
+  useUserConsent       Boolean               @default(true)
+  CampaignStats        CampaignStats?
+  CampaignDripStage    CampaignDripStage[]
 }
 
 model CampaignStats {
@@ -1742,12 +1742,13 @@ model LoyaltyProgram {
   whatsappSettingsId String?
 
   // Settings
-  pointsActivityAlerts   Boolean @default(true)
-  autoApproveAdjustments Boolean @default(false)
-  emailNotifications     Boolean @default(true)
-  whatsappNotifications  Boolean @default(true)
-  enablePointsExpiration Boolean @default(false)
-  pointsExpirationMonths Int     @default(12)
+  pointsActivityAlerts    Boolean @default(true)
+  autoApproveAdjustments  Boolean @default(false)
+  emailNotifications      Boolean @default(true)
+  whatsappNotifications   Boolean @default(true)
+  enablePointsExpiration  Boolean @default(false)
+  pointsExpirationMonths  Int     @default(12)
+  referralMessageTemplate Json    @default("[{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"🎉 Welcome {{1}}!\\nYou are now registered in our Loyalty Program.\\n🔗 Your referral code: {{2}}\\nShare & earn rewards\"}]}]")
 
   // Metadata
   createdAt DateTime @default(now())

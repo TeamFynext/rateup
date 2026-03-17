@@ -38,6 +38,7 @@ export async function createLoyaltyProgram(
       enablePointsExpiration: data.enablePointsExpiration,
       pointsExpirationMonths: data.pointsExpirationMonths,
       whatsappSettingsId: data.whatsappSettingsId,
+      referralMessageTemplate: data.referralMessageTemplate,
     },
     include: {
       tiers: true,

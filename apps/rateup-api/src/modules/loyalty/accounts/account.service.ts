@@ -179,9 +179,10 @@ You are now registered in our Loyalty Program.
 
 🔗 Your referral code: ${referralCode}
 
- Share & earn rewards: ${joinLink}
+ Share & earn rewards:
         `,
       );
+      await sendTextMessage({ phone, orgId }, null, joinLink);
     }
 
     // Dispatch Points Issued

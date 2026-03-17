@@ -19,6 +19,7 @@ export const loyaltyProgramSchema = z.object({
   whatsappNotifications: z.boolean().default(true),
   enablePointsExpiration: z.boolean().default(false),
   pointsExpirationMonths: z.number().default(12),
+  referralMessageTemplate: z.any(),
   whatsappSettingsId: z.string().optional().nullable(),
 });
 
