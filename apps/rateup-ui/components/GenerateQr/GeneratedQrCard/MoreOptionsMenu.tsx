@@ -14,7 +14,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useDeleteQrMutation } from "@/backend/generateQr/generateQr.query";
 import modalStyles from "@/styles/commonCssModules/modal.module.css";
@@ -27,7 +27,7 @@ function MoreOptionsMenu({ shortUrlId, name }) {
     useDisclosure();
 
   const deleteQrMutation = useDeleteQrMutation();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleDeleteClick = useCallback(async () => {
     // deleteLandingPageMutation.mutateAsync();
     modals.openConfirmModal({
@@ -76,7 +76,6 @@ function MoreOptionsMenu({ shortUrlId, name }) {
           </MenuItem>
         </MenuDropdown>
       </Menu>
-
       {isEditLandingPageModalOpen && (
         <CreateShortUrlModal
           opened={isEditLandingPageModalOpen}

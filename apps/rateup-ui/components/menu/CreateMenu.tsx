@@ -4,7 +4,7 @@ import { useContext, useEffect } from "react";
 
 import { LoadingOverlay, Stack, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useCreateMenuMutation,
@@ -26,7 +26,7 @@ export function CreateMenuModal({
   editingItem,
 }: CreateMenuModalProps) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const form = useForm({
     initialValues: editingItem || {
       name: "",

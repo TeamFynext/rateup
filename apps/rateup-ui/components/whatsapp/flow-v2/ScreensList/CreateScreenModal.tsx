@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -39,7 +39,7 @@ const formSchema = z.object({
 
 // Modal for creating new screens
 function CreateScreenModal({ opened, close }: CreateScreenModalProps) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { addScreenWithTitle } = useFlowStoreV3();
 
   const form = useForm<z.infer<typeof formSchema>>({

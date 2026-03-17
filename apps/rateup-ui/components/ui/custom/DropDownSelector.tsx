@@ -1,5 +1,5 @@
 import { CheckCheck, ChevronDown } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Button } from "../button";
 import {
@@ -22,7 +22,7 @@ const DropdownSelector = ({
     items: { value: string; label: string; icon?: any }[];
   }[];
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -92,7 +92,7 @@ const DropdownSelector = ({
               })
             ) : (
               <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                {translations("Nothing found")}
+                {translations("Nothing found...")}
               </div>
             )}
           </div>

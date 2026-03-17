@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useDebouncedState } from "@mantine/hooks";
 import { Table } from "@tanstack/react-table";
 import { Plus, Search, Trash2, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -35,7 +35,7 @@ export function DataTableToolbar<TData, TValue>({
   table,
 }: Readonly<DataTableToolbarProps<TData, TValue>>) {
   const [isOpenedAddModal, setIsOpenedAddModal] = useState(false);
-  const t = useTranslations();
+  const t = useExtracted();
   const { groupDetails, filter, setFilter } = useGroupTableStore();
   const removeContactsMutation = useRemoveContactsFromGroup(groupDetails?.id);
   const selectedMembers = Object.keys(table.getState().rowSelection);

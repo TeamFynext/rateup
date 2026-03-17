@@ -4,7 +4,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   usePushToWaMutation,
@@ -86,7 +86,7 @@ export const ShareFlow = ({
   }, [survey?.teams, surveyTeamMapId]);
 
   const pushToWaMutation = usePushToWaMutation();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const teamSelectData = survey?.teams?.map((team) => ({
     value: team?.mapId,

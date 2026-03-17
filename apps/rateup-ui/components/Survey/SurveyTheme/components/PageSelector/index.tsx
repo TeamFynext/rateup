@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 
 import { Tabs } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { ThemeTabEnum } from "../../SurveyTheme.enums";
 import {
@@ -15,7 +15,7 @@ import styles from "./PageSelector.module.css";
 function PageSelector({ survey }) {
   const selectedPageTab = useSelectedPageTab();
   const stateDispatch = useSurveyThemeStateDispatch();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleChange = useCallback((value) => {
     stateDispatch({
       type: "selected-page-tab-change",

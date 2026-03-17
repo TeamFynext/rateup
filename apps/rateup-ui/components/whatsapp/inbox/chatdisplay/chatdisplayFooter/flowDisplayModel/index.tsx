@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Badge, Group, Loader, Radio, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconSend } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { TeamSelector } from "@/components/input/TeamSelector";
 
@@ -34,7 +34,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
   const sendFlowToUser = useSendFlowToUser(props?.contact?.phone);
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   function onClose() {
     setSelectedDbFlowId("");
     props?.close();

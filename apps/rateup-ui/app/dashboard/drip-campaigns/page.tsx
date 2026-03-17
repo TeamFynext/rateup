@@ -7,7 +7,7 @@ import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { CampaignType } from "@/types/enums";
 import { useCampaignData } from "@/backend/campaign/campaign.query";
@@ -91,7 +91,7 @@ export default function DripCampaignList() {
   const [searchText, setSearchText] = useDebouncedState("", 200);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const {
     data: campaignData,
@@ -136,7 +136,6 @@ export default function DripCampaignList() {
         />
       </Flex>
       <Center></Center>
-
       <PaperLayout p={0} h={"100%"} mah={"850px"}>
         <TanstackTable
           columns={column}

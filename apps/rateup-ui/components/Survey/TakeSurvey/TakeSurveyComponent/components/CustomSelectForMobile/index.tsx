@@ -19,7 +19,7 @@ import {
 import { IconArrowLeft, IconCheck } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { motion, useAnimate } from "motion/react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useSurveyThemeData } from "../../../../../../context/SurveyThemeContext";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
@@ -65,7 +65,7 @@ function CustomSelectForMobile({
   });
 
   const [scope, animate] = useAnimate();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const optionsMotionDivRefs = useRef(null);
 
   const options = data
@@ -176,7 +176,6 @@ function CustomSelectForMobile({
           )}
         </InputBase>
       </Combobox.EventsTarget>
-
       {isOptionSelectionDivVisible && (
         <Portal {...portalProps}>
           <Stack
@@ -210,7 +209,7 @@ function CustomSelectForMobile({
                     options
                   ) : (
                     <Combobox.Empty>
-                      {translations("Nothing found")}
+                      {translations("Nothing found...")}
                     </Combobox.Empty>
                   )}
                 </Stack>

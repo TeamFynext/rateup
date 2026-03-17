@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { IconDots, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { TemplateType, WhatsappSettingsStatus } from "@/types/enums";
@@ -75,7 +75,7 @@ export default function Template() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [deleteDialogOpened, setDeleteDialogOpened] = useState(false);
   const { data } = useWaSettings();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search.trim(), 200);
   const [selectedAccountId, setSelectedAccountId] = useState("all");
@@ -247,7 +247,7 @@ export default function Template() {
         onConfirm={() => {
           if (selectedTemplate) {
             toast.loading(
-              translations("Hold on, Template is getting Deleted"),
+              translations("Hold on, Template is getting Deleted..."),
               {
                 id: "template-delete",
               },

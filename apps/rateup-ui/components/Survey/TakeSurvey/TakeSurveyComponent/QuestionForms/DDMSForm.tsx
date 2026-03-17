@@ -9,7 +9,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
@@ -57,7 +57,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
       : sampleChoices;
 
   const data = options?.map((op) => op?.value);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (response) {
       setSelectedOp(response?.map((r) => r?.value));

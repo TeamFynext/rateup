@@ -20,7 +20,7 @@ import { Dropzone, IMAGE_MIME_TYPE, PDF_MIME_TYPE } from "@mantine/dropzone";
 import { useForm } from "@mantine/form";
 import { useListState } from "@mantine/hooks";
 import { IconPhoto, IconRefresh, IconUpload, IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
@@ -105,7 +105,7 @@ function WaDropZoneInputComponent(props: Props) {
       return PDF_MIME_TYPE;
     }
   }
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Dropzone
       maxFiles={1}
@@ -173,7 +173,7 @@ function WaLocationInputComponent({
   const [longitude, setLongitude] = useState(defaultValue?.longitude || "");
   const [name, setName] = useState(defaultValue?.name || "");
   const [address, setAddress] = useState(defaultValue?.address || "");
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <ContainedTextField
@@ -271,7 +271,7 @@ function WaBodyVariableInputComponent({
       });
     }
   }, [exampleParams]);
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       {exampleParams?.map((_, i) => {

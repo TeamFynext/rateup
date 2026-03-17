@@ -10,7 +10,7 @@ import {
   ScrollAreaAutosize,
   Text,
 } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { QuestionType } from "../../../types/enums";
 import { extractText, isHtml } from "../../../utils";
@@ -24,7 +24,7 @@ export const HoverCardComponent = ({
   lineClamp = 1,
   questionType = null,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   if (questionType && !Object.values(QuestionType).includes(questionType))
     return (
       <Badge variant={"light"} color="red">

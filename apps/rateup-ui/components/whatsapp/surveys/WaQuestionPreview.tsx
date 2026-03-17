@@ -3,7 +3,7 @@
 import { useContext } from "react";
 
 import { Stack } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionType as Q } from "../../../types/enums";
@@ -28,7 +28,7 @@ export function WaQuestionPreview({
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const title = question.title[selectedLanguage];
   const description = question.description[selectedLanguage];
-  const translations = useTranslations();
+  const translations = useExtracted();
   switch (question.type) {
     case Q.Email:
     case Q.TextArea:
@@ -131,7 +131,7 @@ export function WaQuestionPreview({
           />
           <WaSentMessage
             body={translations(
-              "Absolutely loved this product! It exceeded my expectations - great quality, user-friendly, and worth every penny Highly recommend!",
+              "Absolutely loved this product! It exceeded my expectations - great quality, user-friendly, and worth every penny. Highly recommend!",
             )}
           />
           {features?.rating && (

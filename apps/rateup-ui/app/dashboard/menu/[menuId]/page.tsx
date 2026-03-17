@@ -10,7 +10,7 @@ import {
   IconLayersSubtract,
   IconPlus,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useCategories,
@@ -48,7 +48,7 @@ export default function MenuById({ categories: initialCategories }) {
 
   const [searchText, setSearchText] = useState("");
   const { update } = useRouteParams();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [openCreateModal, { close, open }] = useDisclosure(false);
   const [openUploadCsv, { close: closeUploadCsv, toggle }] =
     useDisclosure(false);
@@ -202,7 +202,7 @@ export default function MenuById({ categories: initialCategories }) {
                 mah={800}
               >
                 {filteredCategory?.length === 0 ? (
-                  <NothingFound text={translations("No Category available")} />
+                  <NothingFound text={translations("No Category available.")} />
                 ) : (
                   filteredCategory?.map((category) => (
                     <CategoryCard

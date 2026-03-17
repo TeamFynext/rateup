@@ -13,7 +13,7 @@ import {
   Package,
   Trash2,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
@@ -61,7 +61,7 @@ interface PlanTableData {
 const RazorpayPlans = () => {
   const planUpdateMutate = usePaymentPlanUpdate();
   const { data: rateupPlans } = useRateupPaymentsPlans();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const deletePaymentPlanMutation = useDeletePaymentPlanMutation();
 
@@ -362,7 +362,7 @@ const RazorpayPlans = () => {
         confirmLabel={translations("Delete")}
         headerTitle={translations("Delete RazorPay Plan")}
         onConfirm={() => {
-          toast.loading(translations("Hold onPlan is getting deleted"), {
+          toast.loading(translations("Hold on..Plan is getting deleted"), {
             id: "plan",
           });
           handleDeleteClick();

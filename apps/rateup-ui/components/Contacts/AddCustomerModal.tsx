@@ -19,7 +19,7 @@ import { useDebouncedState } from "@mantine/hooks";
 import { IconRefresh, IconSearch } from "@tabler/icons-react";
 import { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
 import { FilterSelect } from "@/app/dashboard/contacts/page";
@@ -66,7 +66,7 @@ const AddCustomerModal = ({
   const addExistingContactsMutation = useAddExistingContactMutation(groupId);
   const createNewContactMutation = useAddNewContactMutation(groupId);
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
@@ -289,8 +289,8 @@ const AddCustomerModal = ({
                       <Table.Th>{translations("Phone Number")}</Table.Th>
                       {type === ContactGroupType.LOYALTY && (
                         <>
-                          <Table.Th>{translations("email")}</Table.Th>
-                          <Table.Th>{translations("dob")}</Table.Th>
+                          <Table.Th>{translations("Email")}</Table.Th>
+                          <Table.Th>{translations("Date of Birth")}</Table.Th>
                         </>
                       )}
                     </Table.Tr>

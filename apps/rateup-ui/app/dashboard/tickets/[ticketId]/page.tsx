@@ -43,7 +43,7 @@ import {
 } from "@tabler/icons-react";
 import parse from "html-react-parser";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { z } from "zod/v4";
 
 import { QuestionType2 } from "@/types/enums";
@@ -390,7 +390,7 @@ const EditTicket = ({
   router;
   ticketId: string;
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { mutate } = useUpdateCardMutation();
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "idle">(
     "idle",
@@ -522,7 +522,6 @@ const EditTicket = ({
           </Group>
         </Group>
       </Container>
-
       <Container>
         <SimpleGrid cols={{ base: 2, lg: 4 }} spacing="sm">
           <ContainedTextField

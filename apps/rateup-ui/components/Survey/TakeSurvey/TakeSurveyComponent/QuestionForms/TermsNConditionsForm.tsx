@@ -12,7 +12,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
@@ -25,7 +25,7 @@ export function TermsNConditionsForm({ tncData }) {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
   const primaryColor = theme.colors[theme.primaryColor][8];
-  const translations = useTranslations();
+  const translations = useExtracted();
   const textColor =
     luminance(primaryColor) > 0.8
       ? `var(--mantine-color-gray-7)`

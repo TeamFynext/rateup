@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useSurveyTemplates } from "../../../../backend/surveys/surveys.query";
@@ -41,7 +41,7 @@ const Templates = ({ survey }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const router = useRouter();
   const [opened, { open, close }] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [
     createSurveyOpened,
     { open: openCreateSurvey, close: closeCreateSurvey },

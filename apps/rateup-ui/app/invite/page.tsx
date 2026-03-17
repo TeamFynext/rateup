@@ -18,7 +18,7 @@ import {
 } from "@mantine/core";
 import { IconArrowAutofitLeft, IconCheck } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { signOut } from "supertokens-auth-react/recipe/session";
 
@@ -34,7 +34,7 @@ const Invite = () => {
   const type = searchParams.get("type");
   const token = searchParams.get("token");
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   let title = "";
   if (type === "team") title = "Team";
   else if (type === "org") title = "Organization";
@@ -49,7 +49,7 @@ const Invite = () => {
     mutationFn: () => acceptInvite(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }); //update team list on add
-      toast.success(translations("Invite Accepted successfully"), {
+      toast.success(translations("Invite Accepted successfully."), {
         id: "load-data",
       });
     },
@@ -64,7 +64,7 @@ const Invite = () => {
 
   useEffect(() => {
     if (type === "team" && token) {
-      toast.loading(translations("Hold on, while validating your invite"), {
+      toast.loading(translations("Hold on, while validating your invite."), {
         id: "load-data",
       });
       setTimeout(() => {
@@ -121,7 +121,7 @@ const Invite = () => {
           </Text>
 
           {!type || !token ? (
-            <Container>{translations("Invite is not valid")}</Container>
+            <Container>{translations("Invite is not valid.")}</Container>
           ) : (
             <Container>
               {updateInviteMutation?.isPending || !updateInviteMutation.data ? (
@@ -167,10 +167,10 @@ const Invite = () => {
                   <Text ta={"center"}>
                     {updateInviteMutation.data?.data.data.isUser
                       ? translations(
-                          "Login to your existing account in this email and continue using the app",
+                          "Login to your existing account in this email and continue using the app.",
                         )
                       : translations(
-                          "Your account is ready, Create a new password and login to start using the app",
+                          "Your account is ready, Create a new password and login to start using the app.",
                         )}
                   </Text>
 
@@ -198,7 +198,7 @@ const Invite = () => {
 
           {updateInviteMutation.error && (
             <Stack>
-              <Text>{translations("Failed! Try another invitation")}</Text>
+              <Text>{translations("Failed..! Try another invitation.")}</Text>
 
               <Space h="xl" />
               <Space h="xl" />

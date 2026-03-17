@@ -11,7 +11,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import {
   Cell,
   Legend,
@@ -115,7 +115,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
   data,
   csatScore,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const chartData = [
     { name: "Detractors", value: data?.detractors, color: "#FF5C55" },
     { name: "Passives", value: data?.passives, color: "#FEDC4E" },

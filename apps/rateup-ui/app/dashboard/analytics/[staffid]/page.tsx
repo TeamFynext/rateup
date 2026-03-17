@@ -14,7 +14,7 @@ import {
   RefreshCcw,
   ThumbsUp,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -44,7 +44,7 @@ function page() {
   const { staffid } = useParams();
   const [day, setDay] = useState(7);
   const router = useRouter();
-  const t = useTranslations();
+  const t = useExtracted();
   const queryClient = useQueryClient();
   const { data: analytics, isLoading } =
     useGetStaffDetailedConversationAnalytics(staffid, {

@@ -21,11 +21,13 @@ import {
   IconMoodSmile,
   IconNavigationFilled,
 } from "@tabler/icons-react";
+import { useExtracted } from "next-intl";
 
 import { useHappyIndex } from "@/backend/surveys/response/response.query";
 import SurveyContext from "@/context/SurveyContext";
 
-const HappyIndex = ({ surveyId, translations }) => {
+const HappyIndex = ({ surveyId }) => {
+  const translations = useExtracted();
   const { filterTeams } = useContext(SurveyContext);
   const { data, isLoading } = useHappyIndex(surveyId, filterTeams);
   const h_index = Number(((data?.happinessIndex ?? 0) / 10).toFixed(1));

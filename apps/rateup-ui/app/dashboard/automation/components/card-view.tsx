@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { IconFolderCode } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Rule } from "@/types/rule";
 import { GenericCardGrid } from "@/components/common/generic-card";
@@ -42,7 +42,7 @@ export function CardView({
 }: Readonly<CardViewProps>) {
   const [deleteDialogOpened, setDeleteDialogOpened] = useState(false);
   const [ruleToDelete, setRuleToDelete] = useState<string | null>(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
 
   const columns = useMemo<ColumnDef<Rule>[]>(

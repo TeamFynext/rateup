@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Check, Download, Filter, Loader2, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   ApprovalRequest,
@@ -38,7 +38,7 @@ const formatPoints = (points: number | null | undefined): string => {
 };
 
 export default function ApprovalsPage() {
-  const t = useTranslations();
+  const t = useExtracted();
   const [statusFilter, setStatusFilter] = useState<ApprovalStatus | undefined>(
     "PENDING",
   );
@@ -115,7 +115,7 @@ export default function ApprovalsPage() {
             <Badge
               className={`${colors[requestType] || ""} hover:bg-opacity-10 border`}
             >
-              {t(formatRequestType(requestType))}
+              {formatRequestType(requestType)}
             </Badge>
           );
         },
@@ -198,7 +198,7 @@ export default function ApprovalsPage() {
               <Badge
                 className={`${statusColors[status as keyof typeof statusColors] || ""} hover:bg-opacity-10 border`}
               >
-                {t(status)}
+                {status}
               </Badge>
             );
           }
@@ -269,7 +269,6 @@ export default function ApprovalsPage() {
           <InfoButton docUrl={`${docsPath}/loyality/approvals`} />
         </div>
       </div>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -324,7 +323,6 @@ export default function ApprovalsPage() {
           </CardContent>
         </Card>
       </div>
-
       {/* DataTable */}
       {isLoading ? (
         <div className="flex items-center justify-center py-8">

@@ -127,7 +127,7 @@ export const useLoyaltyEarningRules = () =>
 
 - Dictionary files in `dictionaries/` (e.g., `en.json`, `es.json`)
 - Server-side: `await getMessages()` and `await getLocale()`
-- Client-side: `useMessages()`, `useTranslations()` hooks
+- Client-side: `useMessages()`, `useExtracted()` hooks
 - Messages provider wrapped in `app/providers.tsx`
 
 ### Environment Variables

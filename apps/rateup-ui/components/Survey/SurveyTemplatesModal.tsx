@@ -15,7 +15,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconFileBroken, IconListDetails } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import SurveyTemplates from "@/app/dashboard/surveys/templates/surveyTemplates";
 
@@ -61,7 +61,7 @@ const SurveyTemplatesModal = ({
   const bgTemp = {
     backgroundColor: "#fff",
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Box>
       <FormModalLayout
@@ -181,7 +181,7 @@ const SurveyTemplatesModal = ({
                   </Tabs>
                 ) : (
                   <NothingFound
-                    text={translations("No templates available!!")}
+                    text={translations("No templates available..!!")}
                   />
                 )}
               </Group>

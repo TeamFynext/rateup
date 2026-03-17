@@ -2,14 +2,14 @@
 
 import { Button, Select } from "@mantine/core";
 import { IconAnalyze } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { resourceOptions } from "./constants";
 import styles from "./ResourceSelector.module.css";
 import selectStyles from "./Select.module.css";
 
 function ResourceSelector({ resource, setResource, onGenerateBtnClick }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <div className={styles["resource-selector-dropdown-container"]}>
       <Select
@@ -19,7 +19,6 @@ function ResourceSelector({ resource, setResource, onGenerateBtnClick }) {
         onChange={setResource}
         value={resource}
       />
-
       <Button
         variant="filled"
         onClick={onGenerateBtnClick}

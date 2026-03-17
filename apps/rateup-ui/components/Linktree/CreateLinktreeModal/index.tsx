@@ -4,7 +4,7 @@ import { useCallback, useRef } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit, Info, LinkIcon, Plus } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -32,7 +32,7 @@ function CreateLinktreeModal({
   shortUrlId,
   initialName,
 }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const formSchema = z.object({
     name: z
       .string()

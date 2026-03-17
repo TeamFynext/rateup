@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 import { Box, Group, Stack, Switch } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useUpdateFlowMetaDataMutation } from "../../../backend/whatsapp/flow/flow.query";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
@@ -34,7 +34,7 @@ const FlowSettingsUpdate = ({
       dbFlowId,
     });
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <PaperLayout>
       <Stack align="center">

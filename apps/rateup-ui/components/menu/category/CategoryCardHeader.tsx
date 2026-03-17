@@ -8,7 +8,7 @@ import {
   IconReplace,
   IconTrash,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import ConfirmationModal from "../../Modal/ConfirmationModal";
@@ -29,7 +29,7 @@ export function CategoryCardHeader({
   toggleSwapOrder,
 }: CategoryCardHeaderProps) {
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Group
       justify="space-between"
@@ -54,7 +54,7 @@ export function CategoryCardHeader({
           confirmLabel={translations("Delete")}
           onConfirm={(e) => {
             toast.loading(
-              translations("Hold on, category is getting deleted"),
+              translations("Hold on, category is getting deleted..."),
               {
                 id: "delete-data-menu-category",
               },

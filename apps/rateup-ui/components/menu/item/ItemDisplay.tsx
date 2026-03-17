@@ -12,7 +12,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import classes2 from "@/app/m/[shortId]/gradientAnimation.module.css";
 
@@ -36,7 +36,7 @@ export function ItemDisplay({
   categoryDisabled = false,
   currency = "0",
 }: ItemDisplayProps) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <PaperLayout
       p="0"

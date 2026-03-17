@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { WaFlowStatus } from "@/types/enums";
@@ -73,7 +73,7 @@ function FlowCard({
     value: team?.id,
     label: team?.name,
   }));
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -81,9 +81,9 @@ function FlowCard({
       setTeamIdError("Must contain one team");
       return;
     }
-    toast.loading(translations("Clonning Flow"), {
+    toast.loading(translations("Clonning Flow.."), {
       id: "copy",
-      description: translations("Hold on, your flow is getting clonned"),
+      description: translations("Hold on, your flow is getting clonned..."),
     });
     cloneFlowsMutation.mutate({
       flowId: dbFlowId,
@@ -210,7 +210,6 @@ function FlowCard({
         }
         className="h-full cursor-pointer border transition-colors hover:border-blue-400 dark:border-gray-700 dark:hover:border-blue-600"
       />
-
       <ConfirmationModal
         forDeleteFunctionality
         opened={dialogOpened}
@@ -232,7 +231,7 @@ function FlowCard({
         opened={cloneAandRenewOpened}
         onClose={() => setCloneAandRenewOpened(false)}
         headerLabel={translations(
-          "Attention! Copying and renewing this workflow will permanently disable the original one A new, identical copy will be created, but you won't be able to use the old one anymore Think carefully before confirming!",
+          "Attention! Copying and renewing this workflow will permanently disable the original one. A new, identical copy will be created, but you won't be able to use the old one anymore. Think carefully before confirming!",
         )}
         headerTitle={translations("Copy & Renew Flow")}
         confirmLabel={translations("Copy & Renew Flow")}
@@ -240,14 +239,13 @@ function FlowCard({
           toast.loading(translations("Copy & Renew whatapp flow"), {
             id: "copy-renew",
             description: translations(
-              "Hold your flow data is getting Coping & Renew",
+              "Hold.. your flow data is getting Coping & Renew...",
             ),
           });
           cloneAndDeprecateFlowsMutation.mutate(dbFlowId);
           setCloneAandRenewOpened(false);
         }}
       />
-
       <FormModalLayout
         opened={cloneDialogOpened}
         onClose={() => {
@@ -264,7 +262,7 @@ function FlowCard({
         <div className="flex flex-col gap-4">
           <p className="text-muted-foreground">
             {translations(
-              "Select the team in which the whatsapp flow copy to be created",
+              "Select the team in which the whatsapp flow copy to be created.",
             )}
           </p>
           <ContainedSelection

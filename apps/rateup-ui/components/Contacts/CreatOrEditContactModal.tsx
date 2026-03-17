@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { useForm } from "@mantine/form";
 import { CheckCircle2, UserPlus } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
@@ -45,7 +45,7 @@ const CreateOrEditContactModal = ({
   type?: ContactGroupType;
   createNewContactMutation?: any;
 }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const { customFields = [] } = useCustomFieldsContext();
   const createContactMutation = useCreateContactMutation();
   const editContactMutation = useEditContactMutation();
@@ -91,7 +91,7 @@ const CreateOrEditContactModal = ({
           if (value && customField.type === "email") {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(value)) {
-              return t("Invalid email format");
+              return t("Invalid email format.");
             }
           }
 
@@ -193,7 +193,7 @@ const CreateOrEditContactModal = ({
           <DialogDescription>
             {initialValues
               ? t("Update contact information and preferences")
-              : t("Fill the details and click save")}
+              : t("Fill the details and click save.")}
           </DialogDescription>
         </DialogHeader>
         {initialValues && (

@@ -10,7 +10,7 @@ import {
   Clock,
   Send,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { CampaignParticipantStatus } from "@/types/enums";
@@ -91,7 +91,7 @@ export const ResendCampaignModal = ({
   stats = {},
   isFirstSend = false,
 }: ResendCampaignModalProps) => {
-  const t = useTranslations("campaign.resend");
+  const t = useExtracted("campaign.resend");
   const getToday = () => new Date().toISOString().split("T")[0];
   const [scheduleDate, setScheduleDate] = useState(getToday());
   const [scheduleTime, setScheduleTime] = useState("09:00");
@@ -117,12 +117,12 @@ export const ResendCampaignModal = ({
 
   const handleSubmit = () => {
     if (selectedStatuses.length === 0) {
-      toast.error(t("errors.selectStatus"));
+      toast.error(t("Select at least one status"));
       return;
     }
 
     if (sendMode === "SCHEDULED" && (!scheduleDate || !scheduleTime)) {
-      toast.error(t("errors.selectDateTime"));
+      toast.error(t("Select date and time"));
       return;
     }
 
@@ -139,19 +139,19 @@ export const ResendCampaignModal = ({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isFirstSend ? "Send Campaign" : t("title")}
+            {isFirstSend ? "Send Campaign" : t("Resend Campaign")}
           </DialogTitle>
           <DialogDescription>
             {isFirstSend
               ? "Choose when to send to participants"
-              : t("description")}
+              : t("Choose when to send and which participants to resend to")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* SEND MODE */}
           <div className="space-y-3">
-            <Label className="font-semibold">{t("sendMode.label")}</Label>
+            <Label className="font-semibold">{t("When to send")}</Label>
             <div className="inline-flex rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60 p-0.5">
               <ToggleGroup
                 type="single"
@@ -164,14 +164,14 @@ export const ResendCampaignModal = ({
                   className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm data-[state=on]:bg-white dark:data-[state=on]:bg-slate-700 data-[state=on]:shadow-sm data-[state=on]:text-slate-900 dark:data-[state=on]:text-slate-50 text-slate-500 dark:text-slate-400 transition-all duration-200 border-0 h-auto"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  {t("sendMode.now")}
+                  {t("Send Now")}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="SCHEDULED"
                   className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm data-[state=on]:bg-white dark:data-[state=on]:bg-slate-700 data-[state=on]:shadow-sm data-[state=on]:text-slate-900 dark:data-[state=on]:text-slate-50 text-slate-500 dark:text-slate-400 transition-all duration-200 border-0 h-auto"
                 >
                   <CalendarIcon className="w-3.5 h-3.5" />
-                  {t("sendMode.scheduled")}
+                  {t("Schedule Later")}
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
@@ -189,7 +189,7 @@ export const ResendCampaignModal = ({
                       <span className="text-sm font-medium">
                         {scheduleDate
                           ? format(new Date(scheduleDate), "PPP")
-                          : t("sendMode.date")}
+                          : t("Date")}
                       </span>
                       <ChevronDownIcon className="w-4 h-4" />
                     </Button>
@@ -230,9 +230,7 @@ export const ResendCampaignModal = ({
           {/* STATUS SELECTION - Only for resends */}
           {!isFirstSend && (
             <div className="space-y-2">
-              <Label className="font-semibold">
-                {t("participantStatus.label")}
-              </Label>
+              <Label className="font-semibold">{t("Participant Status")}</Label>
 
               <div className="flex flex-wrap gap-2">
                 {STATUS_OPTIONS.map((opt) => {
@@ -251,7 +249,7 @@ export const ResendCampaignModal = ({
                       <span
                         className={`w-2 h-2 rounded-full ${opt.color.replace("text-", "bg-")}`}
                       />
-                      <span className={opt.color}>{t(opt.labelKey)}</span>
+                      <span className={opt.color}>{opt.labelKey}</span>
                     </button>
                   );
                 })}
@@ -260,7 +258,7 @@ export const ResendCampaignModal = ({
               {selectedStatuses.length === 0 && (
                 <p className="text-xs text-destructive flex items-center gap-1.5">
                   <AlertCircle className="w-3 h-3" />
-                  {t("participantStatus.required")}
+                  {t("Select at least one status")}
                 </p>
               )}
             </div>
@@ -269,17 +267,17 @@ export const ResendCampaignModal = ({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            {t("actions.cancel")}
+            {t("Cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isLoading || selectedStatuses.length === 0}
           >
             {isLoading
-              ? t("actions.sending")
+              ? t("Sending...")
               : isFirstSend
                 ? "Send Campaign"
-                : t("actions.resend")}
+                : t("Resend Campaign")}
           </Button>
         </DialogFooter>
       </DialogContent>

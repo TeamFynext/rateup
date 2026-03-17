@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card, Stack, Text } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import classes from "./styles.module.css";
 
@@ -9,7 +9,7 @@ export default function CardTrigger(props: {
   phone: string;
   onClick: () => void;
 }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Card withBorder className={classes.wrapper}>
       <Stack className={classes.inner_text_wrapper}>

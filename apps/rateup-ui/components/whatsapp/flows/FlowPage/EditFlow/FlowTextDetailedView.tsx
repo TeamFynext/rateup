@@ -14,7 +14,7 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconDeviceSdCard } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -61,7 +61,7 @@ export function FlowTextDetailedView() {
       },
     },
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (form.isValid()) handleSaveElement();
   }, [form.values]);
@@ -199,7 +199,6 @@ export function FlowTextDetailedView() {
           </Stack>
         </Group>
       </ScrollArea>
-
       <Stack>
         <Divider />
         <Group justify="flex-end" p="xs" px={"sm"}>
@@ -224,7 +223,7 @@ function FlowTextElementEditor(
   },
 ) {
   const { fontNormal, fontSize, ...otherProp } = props;
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <TextareaWithLengthTracker
       fz={fontSize}

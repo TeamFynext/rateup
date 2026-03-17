@@ -6,7 +6,7 @@ import { Flex, Paper, Stack, Switch, Textarea, Tooltip } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { isEmptyObject } from "@tiptap/react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import classes from "./Style.module.css";
@@ -31,7 +31,7 @@ const TestimonialExtraProps = ({
   };
   const [selectedField, setSelectedField] = useState(null);
   const [text, setText] = useState("");
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   function updateFeatures(featurekey, value) {
     form.setFieldValue("features", {

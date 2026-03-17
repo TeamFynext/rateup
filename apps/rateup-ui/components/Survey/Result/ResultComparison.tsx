@@ -9,7 +9,7 @@ import {
   IconChartPieFilled,
   IconChartRadar,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -68,7 +68,7 @@ export default function ResultComparison({
     SelectedLanguageContext,
   );
   const allQuestions = version === 1 ? questions : flowQuestions;
-  const translations = useTranslations();
+  const translations = useExtracted();
   const {
     data: responseCountData,
     isPending: isPendingCount,
@@ -177,7 +177,7 @@ const TeamResponseActivitySection = ({
 }: {
   data: { teamCode: string; count: number }[];
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   enum ActivePlot {
     Radar = "radar",
@@ -262,7 +262,7 @@ const CombinedChart = ({
   questionResponses,
   question,
 }: CombinedChartProps) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const data = teams.map(({ code, id }) => {
     const responses = getResponseObjectByQuestionType(
       question.type as QuestionType,

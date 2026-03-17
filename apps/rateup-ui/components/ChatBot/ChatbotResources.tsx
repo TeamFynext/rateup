@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { ChatbotResourses } from "../../backend/chatbot/chatbot.api";
@@ -34,7 +34,7 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
     enableApi,
     selectedChatbotId,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [selectedSources, setSelectedSources] = useState<ChatbotResourses[]>(
     [],
   );
@@ -42,14 +42,14 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
   const deleteSourceMutation = useDeleteChatborResource();
   const deleteManySourceMutation = useDeleteManyChatborResource();
   const handleDelete = (source) => {
-    toast.loading(translations("Hold onSource getting deleted"), {
+    toast.loading(translations("Hold on..Source getting deleted"), {
       id: "source",
     });
     deleteSourceMutation.mutate(source);
   };
   const handleDeleteMany = () => {
     if (!selectedSources.length) return;
-    toast.loading(translations("Hold onSources getting deleted"), {
+    toast.loading(translations("Hold on..Sources getting deleted"), {
       id: "source",
     });
     deleteManySourceMutation.mutate(selectedSources, {

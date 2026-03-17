@@ -10,7 +10,7 @@ import {
   IconPlus,
   IconWaveSine,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import WaInboxAutomationDisplayModal from "../automationDisplayModal";
 import WaInboxFlowDisplayModal from "../flowDisplayModel";
@@ -40,7 +40,7 @@ export default function WaInboxFooterMenu(props: Props) {
     automationModalOpened,
     { close: automationModalClose, open: openAutomationModal },
   ] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <Menu

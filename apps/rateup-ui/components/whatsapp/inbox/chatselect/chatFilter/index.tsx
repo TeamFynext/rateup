@@ -13,7 +13,7 @@ import {
   Tag,
   User,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -68,7 +68,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
     previousFilterForTab,
   } = useChatFilterStore();
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   const searchParams = useSearchParams();
   const tab = (searchParams.get("tab") as string) ?? "New";
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
@@ -157,7 +157,6 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
           <span>{translations("Reset")}</span>
         </Button>
       </div>
-
       <div className="flex flex-col gap-3">
         {/* Account */}
         <div>
@@ -198,7 +197,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <div className="leading-tight">
-              {translations("Tags, Groups, Campaigns")}
+              {translations("Tags/ Groups/ Campaigns")}
             </div>
           </label>
 
@@ -219,7 +218,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
               //     }
               //   />
               // }
-              placeholder={translations("Tags, Groups, Campaigns")}
+              placeholder={translations("Tags/ Groups/ Campaigns")}
               data={data}
               value={allMultiSelectFilters?.map(
                 (val) => `${val.group}|-${val.value}`,

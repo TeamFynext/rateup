@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 import { useDisclosure } from "@mantine/hooks";
 import { Plus, RefreshCw } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useGetAllGeneratedQrsQuery } from "@/backend/generateQr/generateQr.query";
 
@@ -30,7 +30,7 @@ function GenerateQr() {
   } = useGetAllGeneratedQrsQuery();
 
   const [sortOption, setSortOption] = useState("latest");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleSortChange = (value) => {
     setSortOption(value);
   };
@@ -51,13 +51,13 @@ function GenerateQr() {
   } else if (isError) {
     componentToBeRendered = (
       <div className="flex w-full h-screen items-center justify-center">
-        <p>{translations("Unable to get data, please try again later")}</p>
+        <p>{translations("Unable to get data, please try again later.")}</p>
       </div>
     );
   } else if (!isPending && !isError && !generatedQrs.length) {
     componentToBeRendered = (
       <div className="flex w-full h-screen items-center justify-center">
-        <NothingFound text={translations("No QRs Found")} />
+        <NothingFound text={translations("No QRs Found.")} />
       </div>
     );
   } else {
@@ -91,9 +91,7 @@ function GenerateQr() {
           </Button>
         </div>
       </div>
-
       <div>{componentToBeRendered}</div>
-
       <div>
         {isCreateQrModalOpen && (
           <CreateQrModal

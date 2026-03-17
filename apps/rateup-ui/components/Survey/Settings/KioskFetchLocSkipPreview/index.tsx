@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -36,7 +36,7 @@ function KioskFetchLocSkipPreview({
   webSurveyAutoTransitionToNextQues,
   setwebSurveyAutoTransitionToNextQues,
 }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (hasGoogleReview && kioskMode) updateKioskMode(setKioskMode, editSurvey);
   }, [hasGoogleReview, kioskMode]);

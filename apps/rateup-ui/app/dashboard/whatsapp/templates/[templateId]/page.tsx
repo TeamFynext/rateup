@@ -27,7 +27,7 @@ import {
   IconInfoCircle,
 } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -97,7 +97,7 @@ import styles from "../templateId.module.css";
 export default function WhatsappTemplateById() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
   const params = useParams();
   let templateId = params.templateId as string;
@@ -483,7 +483,7 @@ export default function WhatsappTemplateById() {
         if (editingItem.data.status === WaTemplateStatus.PENDING) {
           toast.warning(
             translations(
-              "Cannot edit pending template Please wait for approval",
+              "Cannot edit pending template. Please wait for approval",
             ),
           );
           setIsSubmitting(false);

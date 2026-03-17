@@ -13,7 +13,7 @@ import {
 import { useForm } from "@mantine/form";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconPhoto } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { uploadFile } from "@/components/Linktree/LinktreeEditor/ThemeEditor/components/SaveChangesBtn/uploadFile";
@@ -22,7 +22,7 @@ import styles from "./InsertImage.module.css";
 
 function InsertBase64Image() {
   const { editor } = useRichTextEditorContext();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [isPopoveOpen, setIsPopoverOpen] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [base64Image, setBase64Image] = useState<string | null>(null);

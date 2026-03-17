@@ -11,7 +11,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useMediaQuery, useViewportSize } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import Confetti from "react-confetti";
 
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
@@ -41,7 +41,7 @@ export default function ThankYou({
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const searchParams = useSearchParams();
   let err = searchParams.get("err") && searchParams.get("err") === "oops";
   let k,

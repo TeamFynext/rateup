@@ -16,7 +16,7 @@ import {
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useTriggeringDownload,
@@ -29,7 +29,7 @@ import imageCropModalStyles from "../ImageCropModal/ImageCropModal.module.css";
 
 function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
   const { onImageSelected, aspectRatio } = innerProps;
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 600);
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -153,7 +153,7 @@ const UnsplashPhoto = ({
     setSearchQuery("");
     close();
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Card
       shadow="sm"

@@ -25,7 +25,7 @@ import { getHotkeyHandler } from "@mantine/hooks";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import _ from "lodash";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -179,7 +179,7 @@ function ElementEditor({
   const labelMaxLength = getFlowLabelLimit(
     questionTypeToFlowFormElementType(question.type as QuestionType),
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   function validateLabel(value: string) {
     if (!value) return translations("Label is required");
     if (value.trim().length > labelMaxLength) {
@@ -405,7 +405,7 @@ function ElementEditor({
 
   // Update existing question
   const updateExistingQuestion = () => {
-    toast.loading(translations("Hold on, your changes are getting updated"), {
+    toast.loading(translations("Hold on, your changes are getting updated.."), {
       id: "load-data",
     });
 
@@ -552,7 +552,6 @@ function ElementEditor({
           </Stack>
         </Group>
       </ScrollArea>
-
       <Stack>
         <Divider />
         <Group justify="space-between" p="xs" px={"sm"}>
@@ -671,7 +670,7 @@ function FlowQuestionExtraProps({
   extraConfigForm,
 }: ExtraPropsProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const translations = useTranslations();
+  const translations = useExtracted();
   switch (question.type) {
     case QuestionType.MCQ:
     case QuestionType.MSQ:
@@ -742,15 +741,14 @@ function FlowQuestionExtraProps({
         <SimpleGrid mt={"xs"} cols={2}>
           <Alert variant="light" color="blue" title="Info">
             {translations(
-              "No more than 10 images or documents can be sent as part of the response message",
+              "No more than 10 images or documents can be sent as part of the response message.",
             )}
           </Alert>
           <Alert variant="light" color="blue" title="Info">
             {translations(
-              "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB",
+              "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB.",
             )}
           </Alert>
-
           <ContainedSelection
             label={translations("Photo Source")}
             placeholder={translations("Select Photo Source")}
@@ -797,15 +795,14 @@ function FlowQuestionExtraProps({
         <SimpleGrid mt={"xs"} cols={2}>
           <Alert variant="light" color="blue" title="Info">
             {translations(
-              "No more than 10 images or documents can be sent as part of the response message",
+              "No more than 10 images or documents can be sent as part of the response message.",
             )}
           </Alert>
           <Alert variant="light" color="blue" title="Info">
             {translations(
-              "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB",
+              "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB.",
             )}
           </Alert>
-
           <ContainedNumberInput
             label={translations("max file size in kb")}
             description={translations(

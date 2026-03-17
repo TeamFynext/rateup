@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import { Box, Image, Switch } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useUpdateLinktreeMutation } from "../../../../backend/linktree/linktree.query";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
@@ -38,7 +38,7 @@ function SharePage() {
       });
     }
   }, [isPublished, links, shortUrlId, linktreeUpdateMutateAsync]);
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Box className={styles["share-linktree-root-div"]}>
       <PaperLayout>
@@ -49,7 +49,6 @@ function SharePage() {
           checked={isPublished}
         />
       </PaperLayout>
-
       <PaperLayout className={styles["share-options-container"]}>
         <Box className={styles["linktree-link-container"]}>
           <h2>{translations("Share Linktree")}</h2>
@@ -65,12 +64,10 @@ function SharePage() {
           />
         </Box>
       </PaperLayout>
-
       <PaperLayout className={styles["share-qr-card"]}>
         <h2>{translations("Share QR Code")}</h2>
         <ShareLinktree url={shareUrl} isPublished={isPublished} title={name} />
       </PaperLayout>
-
       <NoLinksFoundModal
         opened={isNoLinksFoundModalOpen}
         onClose={closeNoLinksFoundModal}

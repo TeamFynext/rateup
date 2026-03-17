@@ -3,7 +3,7 @@
 import { useContext, useEffect, useState } from "react";
 
 import { Center, Flex, Tabs, Text } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useQuestionCreateMutation } from "../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
@@ -70,7 +70,7 @@ export function EditWhatsappSurvey({
       setActiveTab(QuestionTabsEnum.Edit);
     });
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Flex w={"100%"} h={"100%"} p={5} gap={10} className={classes.root}>
       <PaperLayout

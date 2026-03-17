@@ -1,7 +1,7 @@
 import { useRouter } from "next/navigation";
 
 import { ArrowRight } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { useGetStaffPerformanceonConversation } from "@/backend/conversation/conversation.query";
@@ -65,7 +65,7 @@ export const StaffStatusBadge = ({ status }) => {
 };
 
 const ConversationStatsAgentPerformance = ({ dateRange }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const { data = [], isLoading } = useGetStaffPerformanceonConversation({
     dateKey: dateRange.key,
     dateRange: dateRange.range,

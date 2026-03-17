@@ -21,7 +21,7 @@ import { isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { isEmptyObject } from "@tiptap/react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
@@ -99,7 +99,7 @@ const ValidationRulesEditor = ({
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   const form = useForm<FormValues>({
     initialValues: {},
     validate: (values) => {
@@ -245,7 +245,7 @@ const ValidationRulesEditor = ({
       if (ruleType === "textType") {
         setFieldValue(ruleType, {
           type: "Letters_&_Numbers",
-          errorMessage: translations("Letters_&_Numbers only allowed"),
+          errorMessage: translations("Letters_&_Numbers only allowed."),
         });
       } else if (ruleType === "wordCount") {
         setFieldValue(ruleType, {
@@ -280,7 +280,7 @@ const ValidationRulesEditor = ({
         return;
       }
     }
-    toast.loading(translations("Hold on, your changes are getting updated"), {
+    toast.loading(translations("Hold on, your changes are getting updated.."), {
       id: "load-data",
     });
 
@@ -505,7 +505,7 @@ const ValidationRulesEditor = ({
         <Text c="gray">
           {" "}
           {translations(
-            "Add validation rules to the user input for this question",
+            "Add validation rules to the user input for this question.",
           )}
         </Text>
         <Divider />

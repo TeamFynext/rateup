@@ -14,7 +14,7 @@ import {
   Trash2,
   Type,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
@@ -65,7 +65,7 @@ const StripeProducts = () => {
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
   const [productId, setProductId] = useState("");
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const handleDeleteProduct = () => {
     const product =
@@ -378,7 +378,7 @@ const StripeProducts = () => {
         headerTitle={translations("Delete Stripe Product")}
         onConfirm={() => {
           toast.loading(
-            translations("Hold onStripe Product is getting deleted"),
+            translations("Hold on..Stripe Product is getting deleted"),
             {
               id: "stripe",
             },

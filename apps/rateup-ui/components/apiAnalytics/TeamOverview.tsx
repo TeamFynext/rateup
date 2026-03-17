@@ -1,11 +1,11 @@
 import { Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 
 function TeamOverview({ teamData, isLoading }) {
-  const t = useTranslations("apianalytics");
+  const t = useExtracted("apianalytics");
   const hasData = Array.isArray(teamData) && teamData.length > 0;
   return (
     <Card className="border shadow-sm">

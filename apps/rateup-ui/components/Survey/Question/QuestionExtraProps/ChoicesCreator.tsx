@@ -22,7 +22,7 @@ import { useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure, useHover } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -122,7 +122,7 @@ export function ChoicesCreator({
     },
     validate: zod4Resolver(choiceSchema),
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   const choices = form.values.choices?.[selectedLanguage] || [];
   const features = form.values.features?.[selectedLanguage] || {
     other: {
@@ -264,7 +264,6 @@ export function ChoicesCreator({
           />
         ))}
       </Stack>
-
       {(!maxChoiceCount || choices.length < maxChoiceCount) && (
         <Group
           className={maxCharCount && inputStyles.lengthTrackerParent}
@@ -536,7 +535,7 @@ function Choice({
   const resetRef = useRef<() => void>(null);
   let newWeightage = choice?.weightage;
   const choiceResetRef = useRef<() => void>(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (form?.values?.choices && isSubmited) {
       buttonRef?.current?.click();

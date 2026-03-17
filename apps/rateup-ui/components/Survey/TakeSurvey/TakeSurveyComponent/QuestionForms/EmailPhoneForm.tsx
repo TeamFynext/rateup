@@ -4,7 +4,7 @@ import { useContext, useRef } from "react";
 
 import { Stack, TextInput, useMantineTheme } from "@mantine/core";
 import { IconMail } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import PhoneInput from "react-phone-number-input";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
@@ -16,7 +16,7 @@ export function EmailPhoneForm() {
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateResponse({ ...response, email: e.currentTarget.value });
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   const emailRef = useRef(null);
   const theme = useMantineTheme();
   return (

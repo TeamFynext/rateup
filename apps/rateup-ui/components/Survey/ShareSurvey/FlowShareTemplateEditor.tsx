@@ -17,7 +17,7 @@ import {
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { IconCircleCheck, IconRefresh } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useSurvey } from "../../../backend/surveys/surveys.query";
@@ -104,7 +104,7 @@ export function FlowShareTemplateEditor({
     }
     setImageToUpload(event);
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [imageToUpload, setImageToUpload] = useState(null);
 
   // saving image
@@ -129,7 +129,6 @@ export function FlowShareTemplateEditor({
         <Title order={4}>{translations("Edit Template Message")}</Title>
         <SaveStatusIndicator status={status} />
       </Group>
-
       <Stack
         bg={"whitesmoke"}
         p="md"
@@ -226,14 +225,13 @@ export function FlowStartMessageEditor({
 
     return () => clearTimeout(timer);
   }, [form.values]);
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack gap={0}>
       <Group mb="4">
         <Title order={4}>{translations("Edit Start Message")}</Title>
         <SaveStatusIndicator status={status} />
       </Group>
-
       <Stack
         bg={"whitesmoke"}
         p="md"
@@ -276,7 +274,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
   const startMessageForm = useForm<WaFlowStartMessageConfig>({
     initialValues: startMessageInitialValues,
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <PaperLayout
       p="30px"

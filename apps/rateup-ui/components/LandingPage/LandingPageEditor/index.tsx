@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { Box, Button, Center, Flex, Loader } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useGetLandingPageWithShortId } from "../../../backend/landingPage/landingPage.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
@@ -18,7 +18,7 @@ function LandingPageEditor() {
   const params = useParams();
   const shortUrlId = params?.shortUrlId as string;
   const tab = searchParams.get("tab");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const defaultActiveTab = tab ? tab : "edit";
   const { isPending, isError, data } = useGetLandingPageWithShortId(shortUrlId);
   const [activeTab, setActiveTab] = useState(defaultActiveTab);
@@ -42,7 +42,7 @@ function LandingPageEditor() {
   if (isError) {
     componentToBeRendered = (
       <Center w={"100%"} h={"100%"}>
-        <p>{translations("Unable to get data, please try again later")}</p>
+        <p>{translations("Unable to get data, please try again later.")}</p>
       </Center>
     );
   }

@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 
 import { Clock, Edit } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useCreateBusinessHour,
@@ -28,7 +28,7 @@ type Props = {
 };
 
 export function BusinessHoursSection({ canManage }: Readonly<Props>) {
-  const t = useTranslations();
+  const t = useExtracted();
 
   const { data: businessHours, isLoading } = useGetAllBusinessHours();
   const createMutation = useCreateBusinessHour();
@@ -191,7 +191,7 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
                     <span
                       className={`text-sm ${schedule.isOpen ? "text-green-600" : "text-gray-500"}`}
                     >
-                      {formatDaySchedule(schedule, t)}
+                      {formatDaySchedule(schedule)}
                     </span>
                   </div>
                 ))}
@@ -210,7 +210,6 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
           )}
         </div>
       </Card>
-
       <BusinessHoursListDialog
         open={listOpen}
         onOpenChange={setListOpen}
@@ -220,7 +219,6 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
         onDelete={onDelete}
         canDelete={list.length > 1 && canManage}
       />
-
       <BusinessHoursEditorDialog
         open={editorOpen}
         onOpenChange={setEditorOpen}

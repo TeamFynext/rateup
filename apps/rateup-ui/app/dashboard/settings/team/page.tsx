@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import { Plus, RefreshCcw, User, Users, UserX } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { createTeam } from "@/backend/team/team.api";
@@ -40,7 +40,7 @@ import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
 
 const Team = () => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const searchParams = useSearchParams();
   const action = searchParams?.get("action");
   const { user } = useUser();
@@ -74,7 +74,7 @@ const Team = () => {
           const suggested = value.trim().replace(/\s+/g, "-");
           return (
             <p className="flex gap-1">
-              {translations("Spaces are not allowed, try")} "{suggested}"
+              {translations("Spaces are not allowed, try")}"{suggested}"
             </p>
           );
         }
@@ -419,7 +419,6 @@ const Team = () => {
                       editedColor={editedColor}
                       setIsManageTeamDialogOpen={setIsManageTeamDialogOpen}
                       setEditedColor={setEditedColor}
-                      translations={translations}
                     />
                   </TabsContent>
 
@@ -427,21 +426,16 @@ const Team = () => {
                     <AddMembers
                       selectedTeam={selectedTeam}
                       refetchTeams={refetchTeams}
-                      translations={translations}
                     />
                   </TabsContent>
 
                   <TabsContent value="channels">
-                    <TeamChannelPermissions
-                      selectedTeam={selectedTeam}
-                      translations={translations}
-                    />
+                    <TeamChannelPermissions selectedTeam={selectedTeam} />
                   </TabsContent>
 
                   <TabsContent value="settings" className="space-y-4">
                     <DeleteTeam
                       selectedTeam={selectedTeam}
-                      translations={translations}
                       setIsManageTeamDialogOpen={setIsManageTeamDialogOpen}
                     />
                   </TabsContent>

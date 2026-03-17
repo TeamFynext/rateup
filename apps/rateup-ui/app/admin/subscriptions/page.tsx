@@ -6,7 +6,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Building2, Calendar, CreditCard, Package, Star } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { SubscriptionFeaturePathName } from "@/types/enums";
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
@@ -57,7 +57,7 @@ export default function SubscriptionPage() {
     isLoading: isSubscriptionsLoading,
     isError: isSubscriptionsError,
   } = useAllSubscriptions();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: rateupPlans } = useRateupPaymentsPlans();
   const updateSubscriptionMutation = useUpdateSubscriptionMutation();
 
@@ -382,7 +382,6 @@ export default function SubscriptionPage() {
           </Card>
         </div>
       </div>
-
       <h2 className="text-xl font-semibold tracking-tight">
         Subscription Management
       </h2>
@@ -396,7 +395,6 @@ export default function SubscriptionPage() {
           DataTableToolbar={DataTableToolbar}
         />
       </div>
-
       <ConfirmationModal
         opened={openedDialog}
         onClose={closeDialog}

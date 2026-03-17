@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconMail } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -47,7 +47,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   const isMobile = useMediaQuery("(max-width: 480px)");
 
   const { response, updateResponse } = useContext(CurrentResponsesContext);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (response) {
       setEmail(response?.email);
@@ -90,7 +90,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
       },
       onError: (error) => {
         toast.error(
-          error?.message || translations("Something went wrong please retry"),
+          error?.message || translations("Something went wrong. please retry"),
         );
       },
     });

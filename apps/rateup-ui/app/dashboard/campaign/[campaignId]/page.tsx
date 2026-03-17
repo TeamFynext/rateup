@@ -22,7 +22,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -104,7 +104,7 @@ export default function CampaignDetails() {
     string | null
   >(null);
 
-  const t = useTranslations("campaign.details");
+  const t = useExtracted("campaign.details");
   const router = useRouter();
   const params = useParams();
   const { update } = useRouteParams();
@@ -183,7 +183,7 @@ export default function CampaignDetails() {
       // ───────────── Name ─────────────
       {
         accessorKey: "contact.name",
-        header: t("participants.table.name"),
+        header: t("Name"),
         cell: ({ row }) => (
           <div className="font-medium dark:text-slate-200">
             {row.original.contact?.name}
@@ -194,7 +194,7 @@ export default function CampaignDetails() {
       // ───────────── Phone ─────────────
       {
         accessorKey: "contact.phone",
-        header: t("participants.table.phone"),
+        header: t("Phone"),
         cell: ({ row }) => (
           <div className="text-slate-600 dark:text-slate-400 font-mono text-sm">
             {row.original.contact?.phone}
@@ -205,7 +205,7 @@ export default function CampaignDetails() {
       // ───────────── Status ─────────────
       {
         accessorKey: "status",
-        header: t("participants.table.status"),
+        header: t("Status"),
         cell: ({ row }) => (
           <StatusBadge
             status={row.original.status}
@@ -218,9 +218,7 @@ export default function CampaignDetails() {
       {
         accessorKey: "contact.consent",
         header: () => (
-          <div className="text-center font-medium">
-            {t("participants.table.consent")}
-          </div>
+          <div className="text-center font-medium">{t("Consent")}</div>
         ),
         cell: ({ row }) =>
           row.original.contact?.consent ? (
@@ -289,7 +287,7 @@ export default function CampaignDetails() {
   ) {
     return (
       <div className="h-screen flex items-center justify-center text-slate-600">
-        {t("loading.error")}
+        {t("We couldn't load this campaign.")}
       </div>
     );
   }
@@ -354,9 +352,9 @@ export default function CampaignDetails() {
         statsQuery.refetch(),
         participantsQuery.refetch(),
       ]);
-      toast.success(t("actions.refreshSuccess"));
+      toast.success(t("Campaign data refreshed"));
     } catch {
-      toast.error(t("actions.refreshError"));
+      toast.error(t("Failed to refresh campaign data"));
     }
   };
 
@@ -408,12 +406,14 @@ export default function CampaignDetails() {
         onSuccess: () => {
           toast.success(
             campaign.status === CampaignStatus.INACTIVE
-              ? t("messages.dripStarted")
-              : t("messages.dripPaused"),
+              ? t("Drip campaign started")
+              : t("Drip campaign paused"),
           );
         },
         onError: (error) => {
-          toast.error(error?.message || t("messages.dripError"));
+          toast.error(
+            error?.message || t("Failed to update drip campaign status"),
+          );
         },
       },
     );
@@ -490,7 +490,7 @@ export default function CampaignDetails() {
                   className="hover:bg-slate-100 dark:hover:bg-slate-800 gap-2 text-slate-600 dark:text-slate-400"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  {t("header.back")}
+                  {t("Back to Campaigns")}
                 </Button>
                 <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
                 <div>
@@ -498,7 +498,7 @@ export default function CampaignDetails() {
                     {campaign.name}
                   </h1>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {t("header.campaignId", { id: campaign.id })}
+                    {t("Campaign ID: #{id}", { id: campaign.id })}
                   </p>
                 </div>
               </div>
@@ -511,7 +511,7 @@ export default function CampaignDetails() {
                   className="gap-2 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
                   <Edit2 className="w-4 h-4" />
-                  {t("header.edit")}
+                  {t("Edit")}
                 </Button>
 
                 <DropdownMenu>
@@ -526,7 +526,7 @@ export default function CampaignDetails() {
                       className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      {t("header.delete")}
+                      {t("Delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -550,14 +550,14 @@ export default function CampaignDetails() {
                     className="border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:shadow-none! data-[state=active]:bg-transparent! data-[state=active]:text-primary data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-none px-4 py-2 transition-all cursor-pointer"
                   >
                     <TrendingUp className="w-4 h-4 mr-2" />
-                    {t("tabs.overview")}
+                    {t("Overview")}
                   </TabsTrigger>
                   <TabsTrigger
                     value="participants"
                     className="border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:shadow-none! data-[state=active]:bg-transparent! data-[state=active]:text-primary data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-none px-4 py-2 transition-all cursor-pointer"
                   >
                     <Users className="w-4 h-4 mr-2" />
-                    {t("tabs.participants")}
+                    {t("Participants")}
                     <Badge
                       variant="secondary"
                       className="ml-2 data-[state=active]:bg-white/20 data-[state=active]:text-white"
@@ -593,7 +593,7 @@ export default function CampaignDetails() {
                       }}
                     >
                       <Send className="w-4 h-4" />
-                      {canSend ? t("actions.send") : t("actions.resend")}
+                      {canSend ? t("Send") : t("Resend")}
                     </Button>
                   )}
                   {campaign.type !== CampaignType.DRIP &&
@@ -623,8 +623,8 @@ export default function CampaignDetails() {
                       className="rounded-full gap-2"
                     >
                       {campaign.status === CampaignStatus.INACTIVE
-                        ? t("actions.startDrip")
-                        : t("actions.pauseDrip")}
+                        ? t("Start Drip")
+                        : t("Pause Drip")}
                       <Send className="w-4 h-4" />
                     </Button>
                   )}
@@ -637,8 +637,8 @@ export default function CampaignDetails() {
                   >
                     <FileDown className="w-3.5 h-3.5" />
                     {deliveryReportMutation.isPending
-                      ? t("actions.generating")
-                      : t("actions.deliveryReport")}
+                      ? t("Generating...")
+                      : t("Delivery Report")}
                   </Button>
                 </div>
               </div>
@@ -678,7 +678,7 @@ export default function CampaignDetails() {
                             </div>
                             <div>
                               <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5">
-                                {t("overview.totalParticipants")}
+                                {t("Total Participants")}
                               </div>
                               <div className="text-2xl text-slate-900 dark:text-slate-50">
                                 {participantsQuery.data?.totalCount}
@@ -690,9 +690,7 @@ export default function CampaignDetails() {
                       <div className="flex items-center gap-4 text-sm">
                         <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                          <span className="font-medium">
-                            {t("overview.template")}
-                          </span>
+                          <span className="font-medium">{t("Template:")}</span>
                           <span>{campaignInfo?.template}</span>
                         </div>
                       </div>
@@ -737,7 +735,7 @@ export default function CampaignDetails() {
                         className="gap-2"
                       >
                         <Plus className="w-4 h-4" />
-                        {t("participants.add")}
+                        {t("Add Participant")}
                       </Button>
                       {selectedIds?.length > 0 && (
                         <Button
@@ -745,8 +743,8 @@ export default function CampaignDetails() {
                           disabled={selectedIds.length === 0}
                           onClick={() => setOpenDeleteModal(true)}
                         >
-                          {t("participants.deleteSelected", {
-                            count: selectedIds.length,
+                          {t("Delete Contacts ({count})", {
+                            count: selectedIds.length?.toString(),
                           })}
                         </Button>
                       )}
@@ -756,7 +754,7 @@ export default function CampaignDetails() {
                       <div className="relative w-80">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-600" />
                         <Input
-                          placeholder={t("participants.searchPlaceholder")}
+                          placeholder={t("Search by name or phone...")}
                           value={searchInput}
                           onChange={(e) => setSearchInput(e.target.value)}
                           className="pl-9 h-9 border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50"
@@ -770,7 +768,7 @@ export default function CampaignDetails() {
                         onClick={() => setSearchInput("")}
                       >
                         <RotateCcw className="w-4 h-4 mr-2" />
-                        {t("participants.reset")}
+                        {t("Reset")}
                       </Button>
                     </div>
                   </div>
@@ -792,7 +790,6 @@ export default function CampaignDetails() {
           </TabsContent>
         </Tabs>
       </div>
-
       {/* ── Dialogs (portalled, outside layout flow) ──────────────────── */}
       <AlertDialog
         open={isDeleteDialogOpen}
@@ -800,43 +797,39 @@ export default function CampaignDetails() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("dialogs.deleteCampaign.title")}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete Campaign")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("dialogs.deleteCampaign.description")}
+              {t(
+                "Are you sure you want to delete this campaign? This action cannot be undone.",
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>
-              {t("dialogs.deleteCampaign.cancel")}
-            </AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {t("dialogs.deleteCampaign.confirm")}
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
       <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("dialogs.deleteParticipants.title")}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete Participants")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("dialogs.deleteParticipants.description", {
-                count: selectedIds.length,
-              })}
+              {t(
+                "Are you sure you want to delete {count} selected participants? This action cannot be undone.",
+                {
+                  count: selectedIds.length?.toString(),
+                },
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>
-              {t("dialogs.deleteParticipants.cancel")}
-            </AlertDialogCancel>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90"
               onClick={() =>
@@ -846,12 +839,11 @@ export default function CampaignDetails() {
                 })
               }
             >
-              {t("dialogs.deleteParticipants.confirm")}
+              {t("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
       {isEditOpen && editingCampaign && (
         <CreateCampaignModal
           isEdit
@@ -860,7 +852,6 @@ export default function CampaignDetails() {
           campaignType={editingCampaign.type}
         />
       )}
-
       {isAddParticipantOpen && campaignQuery.data && (
         <AddParticipantModal
           close={() => setIsAddParticipantOpen(false)}
@@ -868,7 +859,6 @@ export default function CampaignDetails() {
           campaignType={campaignQuery.data.type}
         />
       )}
-
       <ResendCampaignModal
         isOpen={isResendModalOpen}
         onClose={() => setIsResendModalOpen(false)}

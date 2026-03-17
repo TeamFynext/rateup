@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { SubscriptionFeaturePathName } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
@@ -75,7 +75,7 @@ const Flow = () => {
   }, [flow]);
 
   const { update } = useRouteParams();
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     update({ dbFlowId: flow?.name });
   }, [flow, update]);
@@ -186,7 +186,6 @@ const Flow = () => {
                   setEncryptionPassword={() => {}}
                   survey={survey}
                   flowId={flow.flowId}
-                  translations={translations}
                   version={flow.version}
                   flow={flow}
                 />

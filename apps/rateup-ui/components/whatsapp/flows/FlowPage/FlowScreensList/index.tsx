@@ -7,7 +7,7 @@ import { Box, Group, Text, useMantineTheme } from "@mantine/core";
 import { useCounter, useDisclosure } from "@mantine/hooks";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { DragDropContext } from "@hello-pangea/dnd";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { WaFlowFormElement } from "@/types/global";
@@ -57,7 +57,7 @@ function FlowScreensList({
     isCreateFlowScreenModalOpen,
     { open: openCreateFlowScreenModal, close: closeCreateFlowScreenModal },
   ] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   function handleCreateScreenClick() {
     if (flowJson.screens.length >= FlowMaxScreens) {
       toast.error(`You can only have ${FlowMaxScreens} screens`);

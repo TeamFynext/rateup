@@ -6,7 +6,7 @@ import { Card, Flex, Image, LoadingOverlay, Stack, Text } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { IconGripVertical } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useUpdateSortOrderMenuCategoryMutation } from "../../../../backend/menu/category/mCategory.query";
 import { useUpdateSortOrderMenuItemMutation } from "../../../../backend/menu/item/mItem.query";
@@ -114,7 +114,7 @@ const SortDrawer = ({
       });
     }
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <FormModalLayout
       opened={opened}

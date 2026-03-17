@@ -18,7 +18,7 @@ import { useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -101,7 +101,7 @@ export function DataSourceInput(props) {
         },
     validate: zod4Resolver(choiceSchema),
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleAddChoice = async () => {
     const { hasErrors } = choiceForm.validate();
     if (hasErrors) return;
@@ -169,7 +169,6 @@ export function DataSourceInput(props) {
           />
         ))}
       </Stack>
-
       {(!maxChoiceCount || choices?.length < maxChoiceCount) && (
         <Group
           className={maxCharCount && inputStyles.lengthTrackerParent}
@@ -318,7 +317,7 @@ function Choice({
     useDisclosure(false);
   const resetRef = useRef<() => void>(null);
   const choiceResetRef = useRef<() => void>(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const choiceSchema = z.object(
     onlyTitle
       ? { title: z.string() }
@@ -434,7 +433,6 @@ function Choice({
           </>
         </Box>
       </Group>
-
       <ActionIcon
         variant="transparent"
         onClick={openEditModal}

@@ -6,7 +6,7 @@ import { TextInput } from "@mantine/core";
 import { useDebouncedState } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
@@ -57,7 +57,7 @@ export default function Contacts() {
   }, [filter]);
 
   const { customFields } = useCustomFieldsContext();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { user } = useUser();
   const column = useMemo(
     () => [
@@ -124,7 +124,7 @@ export default function Contacts() {
 }
 
 export const FilterSelect = ({ setFilterByTag, filterByTag, contactArray }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <ContainedMultiSelect
       data={[{ group: "Groups", items: contactArray ?? [] }]}

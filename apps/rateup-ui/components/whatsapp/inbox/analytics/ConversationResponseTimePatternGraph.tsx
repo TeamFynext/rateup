@@ -2,7 +2,7 @@ import { Space_Mono } from "next/font/google";
 
 import { Skeleton } from "@mantine/core";
 import { Clock } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import {
   CartesianGrid,
   LabelList,
@@ -30,7 +30,7 @@ import {
 import { formatDate, formatToCustomTime } from "@/utils/dateTime";
 
 const ConversationResponseTimePatternGraph = ({ dateRange }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const { data = [], isLoading } =
     useGetAverageConversationResponseTimeGraphData({
       dateKey: dateRange.key,

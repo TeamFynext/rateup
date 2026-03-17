@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from "react";
 
 import { Box, Button, Group, LoadingOverlay, NumberInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import Cropper, { ReactCropperElement } from "react-cropper";
 
 import { mimeTypesForImage } from "../../../../utils/constants";
@@ -17,7 +17,7 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
   const cropperRef = useRef<ReactCropperElement>(undefined);
   const [scale, setScale] = useState(0.4);
   const [isCropperReady, setIsCropperReady] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const fileExtension = imageName?.split(".")?.pop()?.toLowerCase() ?? "jpg";
   const isUnsplashImage = !imageUrl.startsWith("blob:");
 
@@ -92,7 +92,6 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
         decimalScale={1}
         fixedDecimalScale
       />
-
       <Box className={styles["cropper-container"]}>
         <LoadingOverlay
           visible={!isCropperReady}
@@ -122,7 +121,6 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
           ready={(e) => setIsCropperReady(true)}
         />
       </Box>
-
       <Group className={styles["cancel-save-btn-container"]} justify="right">
         <Button className={styles["cancel-btn"]} onClick={handleCancelBtnClick}>
           {translations("Cancel")}

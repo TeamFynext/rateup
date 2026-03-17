@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { getHotkeyHandler, useMediaQuery } from "@mantine/hooks";
 import { IconPlus, IconSend } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { ChatBotSource } from "../../types/enums";
 import { ChatBotMessage } from "../../types/global";
@@ -56,7 +56,7 @@ const ChatbotMessageContainer = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack style={styleProps}>
       <Flex justify={"flex-start"}>
@@ -151,7 +151,7 @@ const ChatbotMessageContainer = ({
               <Textarea
                 value={inputQuery}
                 onChange={(e) => setInputQuery(e.currentTarget.value)}
-                placeholder={translations("Type in")}
+                placeholder={translations("Type in..")}
                 variant="unstyled"
                 w={"90%"}
                 onKeyDown={getHotkeyHandler([["Enter", handleSendQuery]])}

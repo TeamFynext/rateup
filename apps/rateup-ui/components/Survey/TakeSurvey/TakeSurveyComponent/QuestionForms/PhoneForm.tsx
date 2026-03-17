@@ -3,7 +3,7 @@
 import { useContext } from "react";
 
 import { useMantineTheme } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import PhoneInput from "react-phone-number-input";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
@@ -13,7 +13,7 @@ import FormPaperLayout from "./layout/FormPaperLayout";
 export function PhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <FormPaperLayout>
       <PhoneInput

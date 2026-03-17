@@ -3,14 +3,14 @@
 import React, { useContext, useEffect, useState } from "react";
 
 import { Group, Input, Stack, Text, Textarea } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import classes from "./Style.module.css";
 
 const TncExtraProps = ({ form }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
-  const translations = useTranslations();
+  const translations = useExtracted();
   const tnc = form.values.tnc?.[selectedLanguage] || {
     title: translations("I agree to"),
     urlTitle: translations("terms and conditions"),
@@ -57,13 +57,12 @@ const TncExtraProps = ({ form }) => {
           className={classes["inputs"]}
         />
       </Group>
-
       <Group>
         <Text className={classes["labels"]} fw={600}>
           {translations("Terms Content :")}{" "}
         </Text>
         <Textarea
-          placeholder={translations("Terms & Conditions ")}
+          placeholder={translations("Terms & Conditions ..........")}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           className={classes["inputs"]}

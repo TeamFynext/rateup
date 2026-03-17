@@ -26,7 +26,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
@@ -110,7 +110,7 @@ export default function UsersPage() {
   const [copied, setCopied] = useState(false);
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<SelectedUser | null>(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const queryClient = useQueryClient();
   const { data } = useAllTeamsMembersOfOrg();
   const [searchQuery, setSearchQuery] = useState("");
@@ -240,7 +240,7 @@ export default function UsersPage() {
       toast.success(
         responseData?.existing
           ? translations("Staff added successfully")
-          : translations("Invite sent successfully"),
+          : translations("Invite sent successfully."),
       );
       userForm.reset();
       setIsAddUserDialogOpen(false);
@@ -282,7 +282,6 @@ export default function UsersPage() {
           {translations("Add and manage users with different access levels")}
         </p>
       </div>
-
       <Card className="p-4 w-full">
         <div className="flex items-center gap-3">
           <Dialog
@@ -561,7 +560,6 @@ export default function UsersPage() {
           </div>
         </div>
       </Card>
-
       <div className="flex flex-col w-full">
         {data?.data?.members?.length > 0 && (
           <>
@@ -749,7 +747,6 @@ export default function UsersPage() {
           </>
         )}
       </div>
-
       <EditMember
         isEditUserDialogOpen={isEditUserDialogOpen}
         setIsEditUserDialogOpen={setIsEditUserDialogOpen}
@@ -758,7 +755,6 @@ export default function UsersPage() {
         teams={teamsDataUser?.data ?? []}
         currentUserRole={currentUserRole}
         currentUserId={currentUserId}
-        translations={translations}
       />
     </div>
   );
@@ -783,8 +779,8 @@ function EditMember({
   teams,
   currentUserRole,
   currentUserId,
-  translations,
-}: EditMemberProps) {
+}) {
+  const translations = useExtracted();
   const queryClient = useQueryClient();
   const updatePauseStatus = useUpdateUserPause();
   const updateRole = useUpdateRoleMutation();
@@ -836,7 +832,7 @@ function EditMember({
   function onChangeRole(id: string, nextRole: string) {
     const roleData = { memberId: id, body: { role: nextRole } };
     updateRole.mutate(roleData);
-    toast.loading(translations("Hold on, your changes are getting updated"), {
+    toast.loading(translations("Hold on, your changes are getting updated.."), {
       id: "load-data",
     });
   }

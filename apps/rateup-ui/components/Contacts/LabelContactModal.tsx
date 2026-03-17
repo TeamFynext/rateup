@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { CircleCheck, Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useAssignContactLabelsToMultipleContacts } from "@/backend/campaign/contacts/contacts.query";
@@ -25,7 +25,7 @@ const LabelContactModal = ({
   contactIds,
   onSuccess = null,
 }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const [labelIds, setLabelIds] = useState([]);
   const assign = useAssignContactLabelsToMultipleContacts();
   function handleApplyLabels() {

@@ -21,7 +21,7 @@ import {
   Utensils,
   Zap,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Range } from "react-date-range";
 
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
@@ -136,7 +136,7 @@ export default function OrgById() {
   const { data: stats, isLoading, isError } = useOrgStats(orgId);
   const [orgDetails, setOrgDetails] = useState<any>(null);
   const updatePauseStatus = useUpdateOrgPause();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const updateSubscription = useUpdateSubscriptionMutation();
 
   useEffect(() => {
@@ -281,7 +281,6 @@ export default function OrgById() {
           </div>
         </div>
       </div>
-
       {/* Stats Sections */}
       <div className="space-y-8">
         {/* Organization Stats */}
@@ -454,7 +453,6 @@ export default function OrgById() {
           onClose={close}
         />
       )}
-
       <ConfirmationModal
         opened={openedConfirmModal}
         onClose={closeConfirmModal}

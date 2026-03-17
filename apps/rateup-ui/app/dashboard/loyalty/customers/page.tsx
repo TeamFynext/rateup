@@ -25,7 +25,7 @@ import {
   TrendingUp,
   UserCircle,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -139,7 +139,7 @@ type CustomerDetails = {
   }[];
 };
 const CustomerPage = () => {
-  const t = useTranslations();
+  const t = useExtracted();
   const [viewMode, setViewMode] = useState<"list" | "details">("list");
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerDetails | null>(null);
@@ -495,11 +495,9 @@ const CustomerPage = () => {
         setRewardForm({ reward: "", notes: "" });
       }
       toast.success(
-        t(
-          isAssigned
-            ? "Reward assigned successfully!"
-            : "Reward redeemed successfully!",
-        ),
+        isAssigned
+          ? t("Reward assigned successfully!")
+          : t("Reward redeemed successfully!"),
       );
     } catch (error) {
       console.error("Error redeeming/assigning reward:", error);
@@ -560,7 +558,7 @@ const CustomerPage = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder={t("Search by name or phone")}
+                placeholder={t("Search by name or phone...")}
                 className="pl-9"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -693,7 +691,7 @@ const CustomerPage = () => {
                       selectedCustomer?.currentTier?.color || "",
                     )}
                   >
-                    {t(selectedCustomer?.currentTier?.name || "")}
+                    {selectedCustomer?.currentTier?.name || ""}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {t("Member status")}

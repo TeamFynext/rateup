@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { useImmer } from "use-immer";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
@@ -44,7 +44,7 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
       });
     });
   }
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack gap="4px" p="sm" w="100%">
       {sections?.map(({ rows, title }, sIndex) => {
@@ -172,7 +172,7 @@ function WaListItem({
   const row = `s${sIndex}r${rIndex}`;
   const titleIndex = `${row}-title`;
   const descriptionIndex = `${row}-description`;
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { hovered, ref } = useHover();
 
   function handleDeleteItem() {

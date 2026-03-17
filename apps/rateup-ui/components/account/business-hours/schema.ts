@@ -135,10 +135,7 @@ export const buildDefaultSchedule = (): Schedule => ({
   },
 });
 
-export const formatDaySchedule = (
-  day: DaySchedule,
-  translate: (k: string) => string,
-) => {
-  if (!day.isOpen) return translate("Closed");
+export const formatDaySchedule = (day: DaySchedule) => {
+  if (!day.isOpen) return "Closed";
   return day.timeSlots.map((s) => `${s.openTime} - ${s.closeTime}`).join(", ");
 };

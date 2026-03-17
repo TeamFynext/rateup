@@ -1,7 +1,7 @@
 "use client";
 
 import { BackgroundImage, Flex, Stack, Text } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { PageType } from "@/types/enums";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
@@ -16,7 +16,7 @@ export default function TemplateCard({ survey }) {
   const surveyThemeObj = survey?.webSurveyTheme?.theme;
   const questionsArr = survey?.questions;
   const selectedPreview = useSelectedPreview();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const shouldUseSurveyTheme =
     webSurveyPagesTheme["welcomeTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme

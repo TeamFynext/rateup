@@ -15,7 +15,7 @@ import {
   CircleSlash,
   UserX,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { useSetIsChatDisplayOpen } from "@/app/dashboard/inbox/ChatDisplayContext";
@@ -61,7 +61,7 @@ export default function WaInboxChatSelectCard({
 }: Readonly<WaInboxChatSelectCardProps>) {
   const params = useSearchParams();
   const lastMessage = contact?.lastMessage;
-  const translations = useTranslations();
+  const translations = useExtracted();
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   let tab = params.get("tab") ?? "New";
 

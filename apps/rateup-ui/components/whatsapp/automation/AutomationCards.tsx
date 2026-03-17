@@ -11,7 +11,7 @@ import {
   IconMessageCircle,
   IconTrash,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { WaAutomatedReply } from "@/types/global";
 import {
@@ -141,7 +141,7 @@ function AutomationActions({
   const cloneWaMutation = useCloneWaAutomatedReplyMutation();
   const updateWaMutation = useUpdateWaAutomatedReplyMutation();
   const deleteIgMutation = useDeleteInstagramAutomationMutation();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const isInstagram = platform === "instagram";
   const isClonePending =
@@ -238,7 +238,6 @@ function AutomationActions({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteDialogOpened}
@@ -250,7 +249,6 @@ function AutomationActions({
         confirmLabel={translations("Delete")}
         onConfirm={handleDelete}
       />
-
       <Dialog open={cloneDialogOpened} onOpenChange={setCloneDialogOpened}>
         <DialogContent className="sm:max-w-112.5">
           <DialogHeader>

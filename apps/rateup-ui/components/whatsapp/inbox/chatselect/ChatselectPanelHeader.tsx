@@ -8,12 +8,10 @@ import {
   Filter,
   RefreshCcw,
   Search,
-  UserLock,
   UserPlus,
   X,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useSearchParam } from "react-use";
+import { useExtracted } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
@@ -37,13 +35,10 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@/components/ui/select";
-import { useUser } from "@/context/UserContext";
-import { UserRole } from "@/utils/enums";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal";
 import WaInboxChatExport from "./chatExport";
 import WaInboxChatFilter, { useChatFilterStore } from "./chatFilter";
-import WaInboxPermissions from "./permissions";
 
 const ChatselectPanelHeader = ({
   isRefetchingFilteredContacts,
@@ -73,8 +68,7 @@ const ChatselectPanelHeader = ({
     },
   ];
   const { filter, setFilter } = useChatFilterStore();
-  const translations = useTranslations();
-  const { user } = useUser();
+  const translations = useExtracted();
   useEffect(() => {
     if (filter.searchTerm.length && !showSearchBar) setShowSearchBar(true);
     function getFilterActiveCount() {
@@ -97,7 +91,7 @@ const ChatselectPanelHeader = ({
       if ((tab === "All" || tab === "Addressed") && filter.status?.length) {
         count += filter.status.length;
       }
-      if (["Assigned", "AssignedToMe"].includes(tab) && filter.assignedTeams) {
+      if (["Assigned", "AssignedToMe"]?.includes(tab) && filter.assignedTeams) {
         count += filter.assignedTeams.length;
       }
       return count;
@@ -137,17 +131,17 @@ const ChatselectPanelHeader = ({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Dialog>
-            <DialogTrigger>
-              <CustomTooltip
-                trigger={
+            <CustomTooltip
+              trigger={
+                <DialogTrigger asChild>
                   <Button size="sm" variant="outline" className="h-8 w-8 p-0">
                     <UserPlus className="w-3.5 h-3.5" />
                   </Button>
-                }
-                content={<p>New Contact</p>}
-                side="bottom"
-              />
-            </DialogTrigger>
+                </DialogTrigger>
+              }
+              content={<p>New Contact</p>}
+              side="bottom"
+            />
             <DialogContent>
               <DialogTitle>
                 <div className="flex flex-col items-start justify-center">
@@ -190,9 +184,9 @@ const ChatselectPanelHeader = ({
           />
 
           <Popover>
-            <PopoverTrigger>
-              <CustomTooltip
-                trigger={
+            <CustomTooltip
+              trigger={
+                <PopoverTrigger asChild>
                   <Button
                     size="sm"
                     variant={isSelectionMode ? "default" : "outline"}
@@ -204,17 +198,17 @@ const ChatselectPanelHeader = ({
                   >
                     <CheckSquare className="w-3.5 h-3.5" />
                   </Button>
-                }
-                content={<p>Select Chats</p>}
-                side="bottom"
-              />
-            </PopoverTrigger>
+                </PopoverTrigger>
+              }
+              content={<p>Select Chats</p>}
+              side="bottom"
+            />
           </Popover>
 
           <Popover>
-            <PopoverTrigger>
-              <CustomTooltip
-                trigger={
+            <CustomTooltip
+              trigger={
+                <PopoverTrigger asChild>
                   <Button
                     size="sm"
                     variant="outline"
@@ -225,27 +219,27 @@ const ChatselectPanelHeader = ({
                       {filterCount}
                     </div>
                   </Button>
-                }
-                content={<p>Advanced Filters</p>}
-                side="bottom"
-              />
-            </PopoverTrigger>
+                </PopoverTrigger>
+              }
+              content={<p>Advanced Filters</p>}
+              side="bottom"
+            />
             <PopoverContent className="w-full">
               <WaInboxChatFilter setFilterCount={setFilterCount} />
             </PopoverContent>
           </Popover>
           <Popover>
-            <PopoverTrigger>
-              <CustomTooltip
-                trigger={
+            <CustomTooltip
+              trigger={
+                <PopoverTrigger asChild>
                   <Button size="sm" variant="outline" className="h-8 w-8 p-0">
                     <Download className="w-3.5 h-3.5" />
                   </Button>
-                }
-                content={<p>Download Chats</p>}
-                side="bottom"
-              />
-            </PopoverTrigger>
+                </PopoverTrigger>
+              }
+              content={<p>Download Chats</p>}
+              side="bottom"
+            />
             <PopoverContent className="w-full">
               <WaInboxChatExport />
             </PopoverContent>

@@ -11,7 +11,7 @@ import {
   Trash2,
   UserCheck,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -47,7 +47,7 @@ const LifecycleSetup = ({
   canDeleteStage,
   handleDeleteStage,
 }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const [openAddLifecycleDialog, setOpenAddLifecycleDialog] = useState(false);
   const [activeStage, setActiveStage] = useState("");
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(

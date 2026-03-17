@@ -5,7 +5,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { ActionIcon, Divider, Flex, Stack, Tooltip } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Range } from "react-date-range";
 import { Margin, usePDF } from "react-to-pdf";
 
@@ -70,7 +70,7 @@ const WaResultsOverviewV2 = ({
     ),
   );
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [isExporting, setIsExporting] = useState(false);
   const { data: subscription } = useSubscription();
 

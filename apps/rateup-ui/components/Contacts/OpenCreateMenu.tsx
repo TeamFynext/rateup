@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
 import { ContactTabs } from "@/app/dashboard/contacts/page";
@@ -28,7 +28,7 @@ const OpenCreateMenu = ({
     useDisclosure(false);
   const [groupOpened, setGroupOpened] = useState(false);
   const importCSVContactMutation = useImportCSVContactMutation();
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <ContactImportErrorModal

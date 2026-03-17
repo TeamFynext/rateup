@@ -2,10 +2,10 @@
 
 import React from "react";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 const Error = () => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return <div>{translations("Error!")}</div>;
 };
 

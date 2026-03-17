@@ -20,7 +20,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Updater, useImmer } from "use-immer";
 
 import {
@@ -115,7 +115,7 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   const params = useParams();
   const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow, isLoading, isError } = useWaFlowFromDb(dbFlowId);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (
       dbFlow &&
@@ -232,7 +232,6 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
           </Button>
         </Stack>
       </ScrollAreaAutosize>
-
       <Stack>
         <Group
           justify="space-between"
@@ -295,7 +294,7 @@ function AtomicConditionBlock({
   const logicSupportedQuestionsInScreen = questionsInScreen.filter((q) =>
     logicSupportedTypes.includes(q.type as QuestionType),
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [selectedQId, setSelectedQId] = useState(
     condition?.questionId || editingQuestion?.id,
   );
@@ -471,7 +470,7 @@ function ConditionsActionMapBlock({
   ];
 
   const { colors } = useMantineTheme();
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     updateLogicJumps((draft) => {
       draft[index].action = isComponentLevel
@@ -590,7 +589,6 @@ function ConditionsActionMapBlock({
           )} */}
         </Stack>
       </Box>
-
       {/* Action Selector */}
       <Flex direction={"column"} miw={"250px"}>
         <Title

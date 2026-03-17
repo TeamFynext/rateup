@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Group, Stack } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
 
@@ -25,7 +25,7 @@ function ShareLandingPage({ url, isPublished, title }) {
     logoTabPanelReducer,
     initialLogoTabPanelState,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const params = useParams();
   const shortUrlId = params?.shortUrlId as string;
   const { mutateAsync: landingPageUpdateMutateAsync } =
@@ -73,7 +73,6 @@ function ShareLandingPage({ url, isPublished, title }) {
   return (
     <Group className={styles["logo-tab-panel-and-qr-container"]}>
       <LogoTabpanel state={logoTabPanelState} dispatch={logoTabPanelDispatch} />
-
       {url && (
         <Stack align="center">
           {/* Qr Preview */}

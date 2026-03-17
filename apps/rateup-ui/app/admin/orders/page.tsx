@@ -12,7 +12,7 @@ import {
   ShoppingCart,
   UserCheck,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { usePaymentOrders } from "@/backend/payment/payment.query";
 import RefreshButton from "@/components/Button/RefreshButton";
@@ -47,7 +47,7 @@ interface OrderTableData {
 
 const Orders = () => {
   const { data: allOrders, isFetched, isLoading, isError } = usePaymentOrders();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const [orderStats, setOrderStats] = useState({
     today: 0,
@@ -388,7 +388,6 @@ const Orders = () => {
           </Card>
         </div> */}
       </div>
-
       <h2 className="text-xl font-semibold tracking-tight">Order Management</h2>
       <p className="text-sm text-muted-foreground">
         Manage and view all payment orders in your system

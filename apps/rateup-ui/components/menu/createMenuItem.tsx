@@ -17,7 +17,7 @@ import {
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -66,7 +66,7 @@ export function CreateMenuItemModal({
   currency,
 }: CreateMenuItemModalProps) {
   const [imageLoading, setImageLoading] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [deleteImageArray, setDeleteImageArray] = useState<
     { Key: string | File | undefined }[]
   >([]);

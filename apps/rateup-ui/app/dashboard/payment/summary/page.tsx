@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { Flex, Paper, Stack, Text, Title } from "@mantine/core";
 import { IconChevronLeft } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useGetStripeCheckoutSession } from "../../../../backend/payment/stripe/stripe.query";
 import { RateupButtonPrimary } from "../../../../components/Button/RateupButtons";
@@ -14,7 +14,7 @@ const CheckoutReturn = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const session_id = searchParams.get("session_id");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: sessionData, refetch } =
     useGetStripeCheckoutSession(session_id);
 
@@ -41,7 +41,7 @@ const CheckoutReturn = () => {
           <Title order={2}>{translations("Thank You 🎉")}</Title>
 
           <Title order={2}>
-            {translations("Your Order is getting Processed")}
+            {translations("Your Order is getting Processed...")}
           </Title>
           <Text mb="xl">
             {translations("You will shortly receive an email confirmation,")}{" "}

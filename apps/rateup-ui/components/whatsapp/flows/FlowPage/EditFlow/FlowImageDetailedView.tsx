@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconDeviceSdCard } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { getWaFlowFormElementTypeLabel } from "../../../../../utils/enums";
@@ -49,7 +49,7 @@ export function FlowImageDetailedView() {
       src: (value) => (value?.length ? null : "Upload image to save"),
     },
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   // TODO: figure out why this can't be set in initialValues above
   // init
   useEffect(() => {
@@ -135,7 +135,7 @@ export function FlowImageDetailedView() {
 function FlowImageElementEditor({ onChange, src, height, width }) {
   const [file, setFile] = useState<File | null>(null);
   const [base64, setBase64] = useState("");
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     onChange({
       src: base64.split(",")[1],

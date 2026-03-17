@@ -18,7 +18,7 @@ import {
   IconVariable,
   IconX,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 import { z } from "zod/v4";
 
@@ -49,7 +49,7 @@ const ButtonInput = ({
   catalog,
   productRetailerIds,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   let { data: flows } = useWaFlowsFromDb(
     data.type === WHATSAPP_BUTTON_TYPE.FLOW,
   );
@@ -173,7 +173,11 @@ const ButtonInput = ({
                 rightSection={
                   <Group gap="xs">
                     {buttonState.showInsertIcon && (
-                      <Tooltip label={translations("Insert variable {{1}}")}>
+                      <Tooltip
+                        label={translations({
+                          message: "Insert variable {{1}}",
+                        })}
+                      >
                         <ActionIcon
                           size="sm"
                           variant="subtle"
@@ -208,7 +212,9 @@ const ButtonInput = ({
                       {translations("Example")}
                     </Text>
                   }
-                  placeholder={translations("Enter example for {{1}}")}
+                  placeholder={translations({
+                    message: "Enter example for {{1}}",
+                  })}
                   rightSection={
                     <LengthTracker
                       length={buttonState.combinedLength}
@@ -305,7 +311,6 @@ const ButtonInput = ({
             defaultValue={"otp"}
             readOnly
           />
-
           <ContainedTextField
             label={translations("Button text")}
             {...form.getInputProps(`buttons.${index}.text`)}
@@ -495,7 +500,6 @@ const ButtonInput = ({
               </Text>
             )}
           </Stack>
-
           <ContainedSelection
             data={productRetailerIds}
             label={

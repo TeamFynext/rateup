@@ -6,7 +6,7 @@ import { ActionIcon, Group, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useEditTeamMutation } from "../../../backend/team/team.query";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
@@ -14,7 +14,7 @@ import FormModalLayout from "../../Modal/FormModalLayout";
 import { ReviewPagePlatform } from "./QuestionReviewPageEditor";
 
 const AddGoogleReviewLinkForTeamModal = ({ team, surveyId, platform }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const form = useForm({
     initialValues: {
       url: team?.reviewPageLinks?.[platform] ?? "",

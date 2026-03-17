@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { Check, Copy } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ interface LinkWithCopyBtnProps {
 }
 
 function LinkWithCopyBtn({ link, label }: Readonly<LinkWithCopyBtnProps>) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {

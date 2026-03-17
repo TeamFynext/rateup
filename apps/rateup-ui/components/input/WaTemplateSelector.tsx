@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 
 import { SelectProps } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { TemplateType } from "@/types/enums";
 import useTemplatesAvailableForTeam from "@/hooks/team";
@@ -30,7 +30,7 @@ const WaTemplateSelector = ({
   templateType,
   ...props
 }: WaTemplateSelector) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: allTemplates, isLoading } = useWaTemplates(templateType);
   const templates = teamId
     ? useTemplatesAvailableForTeam(teamId)

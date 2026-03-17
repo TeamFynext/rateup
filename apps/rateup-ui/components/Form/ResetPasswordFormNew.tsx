@@ -10,7 +10,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -42,7 +42,7 @@ const ResetPasswordForm = ({ mode }) => {
   const [page, setPage] = useState(
     token && token.length > 0 ? ResetSteps.STEP_THREE : mode,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (token && token.length > 0) {
       setPage(ResetSteps.STEP_THREE);
@@ -175,7 +175,6 @@ const ResetPasswordForm = ({ mode }) => {
           className="w-18"
         />
       </div>
-
       {page !== ResetSteps.STEP_TWO ? (
         <Card className="border-none shadow-lg p-4 max-w-2xl sm:min-w-md flex flex-col gap-8">
           <div className="text-center space-y-2 flex flex-col  items-center justify-center gap-1">

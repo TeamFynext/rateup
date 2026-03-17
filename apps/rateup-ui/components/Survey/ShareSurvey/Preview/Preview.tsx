@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { IconDownload } from "@tabler/icons-react";
 import domtoimage from "dom-to-image-more";
 import { Sparkles } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ function Preview({
     useState(false);
 
   const previewContainerRef = useRef(undefined);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const logoSrc = getLogoSrc(qrBgImgLogo);
 
   useEffect(() => {

@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { IconChevronDown, IconDownload, IconFilter } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useResponseFilterStore } from "@/components/Survey/Response/store";
@@ -41,7 +41,7 @@ const FilterToggles = ({
   enableExport = false,
   onExport,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { setServerFilters } = useResponseFilterStore();
 
   const leafColumns = table

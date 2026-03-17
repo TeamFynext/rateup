@@ -13,7 +13,7 @@ import {
   Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useUpdateReviewLinkStatsOnSurveyMutation } from "@/backend/surveys/surveys.query";
 
@@ -46,7 +46,7 @@ function GoogleReview({
   const [fakeLoading, setFakeLoading] = useState(false);
   const [lastCopiedReview, setLastCopiedReview] =
     useState<ReviewSuggestion>(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (reviewSuggestions.length > 0) {
       setShuffledArray(shuffleArray(reviewSuggestions));

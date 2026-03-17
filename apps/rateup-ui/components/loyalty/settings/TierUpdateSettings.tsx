@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUpCircle, Loader2, Save, Send } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { UseFormReturn } from "react-hook-form";
 
 import { TemplateType } from "@/types/enums";
@@ -31,7 +31,7 @@ export function TierUpdateSettings({
   isModified,
   onModify,
 }: TierUpdateSettingsProps) {
-  const t = useTranslations();
+  const t = useExtracted();
   const templateInfo = getLoyaltyTemplateLabel(
     LoyaltyTemplateTypes.TierUpgraded,
     t,

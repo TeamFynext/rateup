@@ -13,7 +13,7 @@ import {
   Trash2,
   Zap,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
@@ -68,7 +68,7 @@ const RateupPlan = () => {
     openedDescriptonModal,
     { toggle: toggleDescriptonModal, close: closeDescriptonModal },
   ] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: plans, isPending, isError } = useRateupPaymentsPlans();
   const {
     data: razorPayPlans,
@@ -264,7 +264,7 @@ const RateupPlan = () => {
 
   const handleMutation = (updatedData: any) => {
     rateupPaymentsPlanUpdateMutation.mutate(updatedData);
-    toast.loading(translations("Hold your data is getting updated"), {
+    toast.loading(translations("Hold.. your data is getting updated..."), {
       id: "load-data",
     });
     setUpdatedField("");
@@ -394,7 +394,6 @@ const RateupPlan = () => {
           </Card>
         </div>
       </div>
-
       <h2 className="text-xl font-semibold tracking-tight">Plan Management</h2>
       <p className="text-sm text-muted-foreground">
         Manage and configure all RateUp plans in your system
@@ -408,9 +407,7 @@ const RateupPlan = () => {
           )}
         />
       </div>
-
       <RateupPlanModal opened={opened} close={close} planList={planList} />
-
       <FormModalLayout
         opened={openedDescriptonModal}
         onClose={() => {

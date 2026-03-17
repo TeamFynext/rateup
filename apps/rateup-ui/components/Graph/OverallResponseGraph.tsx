@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useExtracted } from "next-intl";
 import {
   Area,
   AreaChart,
@@ -35,10 +36,10 @@ const OverallResponseGraph = ({
   timePeriod,
   setTimePeriod,
   className,
-  translations,
   isLoading,
   onRefresh,
 }) => {
+  const translations = useExtracted();
   const total = useMemo(() => {
     return data?.reduce((total, item) => (total += item?.responses), 0);
   }, [data]);
@@ -131,14 +132,7 @@ const OverallResponseGraph = ({
               </defs>
               <XAxis dataKey="date" />
               <YAxis allowDecimals={false} />
-              <Tooltip
-                content={
-                  <CustomTooltip
-                    timePeriod={timePeriod}
-                    translations={translations}
-                  />
-                }
-              />
+              <Tooltip content={<CustomTooltip timePeriod={timePeriod} />} />
               {/* <Legend /> */}
               <CartesianGrid stroke="#f5f5f5" />
               <Area
@@ -171,15 +165,9 @@ interface iProps {
   payload?: any;
   label?: any;
   timePeriod?: any;
-  translations?: any;
 }
-const CustomTooltip = ({
-  active,
-  payload,
-  label,
-  timePeriod,
-  translations,
-}: iProps) => {
+const CustomTooltip = ({ active, payload, label, timePeriod }: iProps) => {
+  const translations = useExtracted();
   if (active && payload && payload?.length) {
     label =
       timePeriod === "hourly"

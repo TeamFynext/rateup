@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
 import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Plus, Trash2, Users, X } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -50,8 +51,8 @@ export function EditTeam({
   editedColor,
   setIsManageTeamDialogOpen,
   setEditedColor,
-  translations,
 }) {
+  const translations = useExtracted();
   const editTeamForm = useForm({
     initialValues: {
       name: "",
@@ -200,7 +201,8 @@ export function EditTeam({
   );
 }
 
-export function AddMembers({ selectedTeam, refetchTeams, translations }) {
+export function AddMembers({ selectedTeam, refetchTeams }) {
+  const translations = useExtracted();
   const teamID = selectedTeam.id;
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const { isLoading: isLoadingNotTeamsUser, data: notTeamMembersData } =
@@ -368,7 +370,6 @@ export function AddMembers({ selectedTeam, refetchTeams, translations }) {
                   member={member}
                   selectedTeam={selectedTeam}
                   refetchTeams={refetchTeams}
-                  translations={translations}
                 />
               </div>
             ))}
@@ -390,12 +391,8 @@ export function AddMembers({ selectedTeam, refetchTeams, translations }) {
   );
 }
 
-export function TeamMember({
-  member,
-  selectedTeam,
-  refetchTeams,
-  translations,
-}) {
+export function TeamMember({ member, selectedTeam, refetchTeams }) {
+  const translations = useExtracted();
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const removeteam = useRemoveUserFromTeam(selectedTeam.id);
@@ -475,11 +472,8 @@ export function TeamMember({
   );
 }
 
-export function DeleteTeam({
-  selectedTeam,
-  translations,
-  setIsManageTeamDialogOpen,
-}) {
+export function DeleteTeam({ selectedTeam, setIsManageTeamDialogOpen }) {
+  const translations = useExtracted();
   const teamId = selectedTeam.id;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -627,7 +621,8 @@ export function DeleteTeam({
   );
 }
 
-export function TeamChannelPermissions({ selectedTeam, translations }) {
+export function TeamChannelPermissions({ selectedTeam }) {
+  const translations = useExtracted();
   const { data: waSettings, isLoading: isLoadingSettings } = useWaSettings();
   const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);

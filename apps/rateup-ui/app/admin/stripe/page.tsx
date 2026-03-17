@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { CreditCard, Package, Receipt } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -11,7 +11,7 @@ import StripeProducts from "./StripeProducts";
 import StripeSubscription from "./StripeSubscription";
 
 const index = () => {
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   return (
     <div className="container mx-auto space-y-8">
@@ -24,11 +24,9 @@ const index = () => {
           </h1>
         </div>
       </div>
-
       <p className="text-sm text-muted-foreground">
         Manage your Stripe products and subscriptions from a unified dashboard
       </p>
-
       <Tabs defaultValue="products">
         <TabsList>
           <TabsTrigger value="products">

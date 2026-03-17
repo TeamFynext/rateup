@@ -3,7 +3,7 @@
 import { Box, Menu, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconChevronDown, IconSend, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useSendCampaign } from "../../backend/campaign/campaign.query";
 import { useRemoveCampaignParticipant } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
@@ -19,7 +19,7 @@ export const CampaignParticipantMenu = ({
 }) => {
   const removeCampainPartcipant = useRemoveCampaignParticipant(id);
   const sendMutation = useSendCampaign(id, teamId);
-  const t = useTranslations("campaign.participantMenu");
+  const t = useExtracted("campaign.participantMenu");
   function handleResendClick() {
     sendMutation.mutate({
       participantId,
@@ -29,12 +29,16 @@ export const CampaignParticipantMenu = ({
   }
   const openDeleteModal = () => {
     modals.openConfirmModal({
-      title: t("confirmRemove.title"),
+      title: t("Remove contact"),
       centered: true,
-      children: <Text size="sm">{t("confirmRemove.description")}</Text>,
+      children: (
+        <Text size="sm">
+          {t("Are you sure you want to remove this participant from campaign?")}
+        </Text>
+      ),
       labels: {
-        confirm: t("confirmRemove.confirm"),
-        cancel: t("confirmRemove.cancel"),
+        confirm: t("Ok"),
+        cancel: t("Cancel"),
       },
       confirmProps: { color: "red" },
       onCancel: () => modals.closeAll(),
@@ -51,21 +55,20 @@ export const CampaignParticipantMenu = ({
       <Menu.Target>
         <Box>
           <RateupButtonPrimary
-            title={t("trigger")}
+            title={t("Select action")}
             variant="light"
             rightIcon={<IconChevronDown size="16px" />}
             size="xs"
           />
         </Box>
       </Menu.Target>
-
       <Menu.Dropdown>
         <Menu.Item
           leftSection={<IconSend size={"16px"} />}
           onClick={handleResendClick}
           disabled={!consent}
         >
-          {t("actions.resend")}
+          {t("Resend")}
         </Menu.Item>
         <Menu.Divider />
         <Menu.Item
@@ -74,7 +77,7 @@ export const CampaignParticipantMenu = ({
           onClick={openDeleteModal}
           disabled={status == CampaignStatus.ACTIVE}
         >
-          {t("actions.remove")}
+          {t("Remove participant")}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

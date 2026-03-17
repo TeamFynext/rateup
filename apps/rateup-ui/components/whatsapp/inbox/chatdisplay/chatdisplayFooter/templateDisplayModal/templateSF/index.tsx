@@ -1,7 +1,7 @@
 "use client";
 
 import { Paper } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { ContainedTextField } from "../../../../../../input/ContainedInput/ContainedInput";
 import classes from "./styles.module.css";
@@ -11,7 +11,7 @@ interface Props {
   setSearchTerm: (searchTerm: string) => void;
 }
 export default function WaTemplateSF({ searchTerm, setSearchTerm }: Props) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Paper className={classes.wrapper}>
       <ContainedTextField

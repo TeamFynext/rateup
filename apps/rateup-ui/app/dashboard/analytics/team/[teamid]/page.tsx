@@ -12,7 +12,7 @@ import {
   Target,
   Users,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { useGetTeamDetailedMetrics } from "@/backend/conversation/conversation.query";
@@ -26,7 +26,7 @@ import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSel
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime";
 
 function page() {
-  const t = useTranslations();
+  const t = useExtracted();
   const [day, setDay] = useState(7);
   const queryClient = useQueryClient();
   const { teamid } = useParams();
@@ -97,7 +97,6 @@ function page() {
           </div>
         </CardContent>
       </Card>
-
       {/* Team Statistics */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -174,7 +173,6 @@ function page() {
           </Card>
         </div>
       )}
-
       {/* Team Members Grid */}
       {isLoading ? (
         <Card className="border">

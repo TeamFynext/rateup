@@ -17,7 +17,7 @@ import { useDisclosure, useHover } from "@mantine/hooks";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import { Draggable } from "@hello-pangea/dnd";
 import cx from "clsx";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { PageType } from "@/types/enums";
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
@@ -77,7 +77,7 @@ export function DraggableQuestionCard({
 
   const nonDeletablePagetypeStrs = ["Language", "GoogleReview"];
   const nonClickableQuestionTypeStrs = ["GoogleReview"];
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <ConfirmationModal

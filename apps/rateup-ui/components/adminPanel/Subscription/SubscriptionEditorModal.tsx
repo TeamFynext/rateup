@@ -7,7 +7,7 @@ import { Box, Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useRateupPaymentsPlanUpdateMutation } from "../../../backend/payment/payment.query";
@@ -31,7 +31,7 @@ export function SubscriptionEditorModal({
       expiresAt: subscription.expiresAt,
     },
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   const pathname = usePathname();
   const rateupPlanEnable = pathname === "/admin/rateup";
   const updateMutation = useUpdateSubscriptionMutation();
@@ -41,7 +41,7 @@ export function SubscriptionEditorModal({
     !rateupPlanEnable && subscription?.basePlan?.paymentPlanId;
   function handleSave() {
     if (rateupPlanEnable) {
-      toast.loading(translations("Plan is getting updated"), {
+      toast.loading(translations("Plan is getting updated.."), {
         id: "load-data",
       });
       const updatedData: any = {

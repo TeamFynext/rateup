@@ -10,7 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,7 @@ export const useSurveyResponseColumns = ({
   surveyId,
   typeWa = false,
 }: any) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const column: ColumnDef<any>[] = useMemo(
     () => [
@@ -245,7 +245,7 @@ function BadgeorTextorPreview({
   questionType: QuestionType;
   response: any;
 }>) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [previewModalOpened, setPreviewModalOpened] = useState(false);
   const open = () => setPreviewModalOpened(true);
   const close = () => setPreviewModalOpened(false);
@@ -366,7 +366,7 @@ export function ActionMenu({
   enableTicket,
 }: any) {
   const ticketExist = ticketData?.length > 0;
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <div className="px-2">
       <DropdownMenu>

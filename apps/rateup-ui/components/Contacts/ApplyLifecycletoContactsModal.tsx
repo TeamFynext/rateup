@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { CircleCheck, Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useUpdateLifecycleofMultipleContacts } from "@/backend/campaign/contacts/contacts.query";
@@ -25,7 +25,7 @@ const ApplyLifecycletoContactsModal = ({
   contactIds,
   onSuccess = null,
 }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const [lifecycleId, setLifecycleId] = useState("");
   const update = useUpdateLifecycleofMultipleContacts();
   function handleUpdateLifecycleStage() {

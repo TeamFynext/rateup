@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import { Box, Image, Switch } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useUpdateLandingPageMutation } from "../../../../backend/landingPage/landingPage.query";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
@@ -28,7 +28,7 @@ function SharePage() {
     useUpdateLandingPageMutation(shortUrlId);
 
   const editorInstance = useTiptapEditorInstance();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [
     isNoContentFoundModalOpen,
     { open: openNoContentFoundModal, close: closeNoContentFoundModal },
@@ -59,7 +59,6 @@ function SharePage() {
           checked={isPublished}
         />
       </PaperLayout>
-
       <PaperLayout className={styles["share-options-container"]}>
         <Box className={styles["landingPage-link-container"]}>
           <h2>{translations("Share Landing Page")}</h2>
@@ -75,7 +74,6 @@ function SharePage() {
           />
         </Box>
       </PaperLayout>
-
       <PaperLayout className={styles["share-qr-card"]}>
         <h2>{translations("Share QR Code")}</h2>
         <ShareLandingPage
@@ -84,7 +82,6 @@ function SharePage() {
           title={name}
         />
       </PaperLayout>
-
       <NoContentFoundModal
         opened={isNoContentFoundModalOpen}
         onClose={closeNoContentFoundModal}

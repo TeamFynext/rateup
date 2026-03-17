@@ -13,7 +13,7 @@ import { useDebouncedState } from "@mantine/hooks";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Range } from "react-date-range";
 import { toast } from "sonner";
 
@@ -140,7 +140,7 @@ const Responses = ({
     close,
     setIsDeleting,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   if (Array.isArray(surveyId)) {
     throw new TypeError(translations("surveyId is an array"));
   }
@@ -153,7 +153,7 @@ const Responses = ({
   );
   const exportContactMutation = useExportContactResponses(surveyId);
   const handleExportContacts = useCallback(() => {
-    toast.loading(translations("Exporting Contact responses to Contacts"), {
+    toast.loading(translations("Exporting Contact responses to Contacts..."), {
       id: "export-contacts",
     });
     exportContactMutation.mutate();
@@ -195,7 +195,7 @@ const Responses = ({
 
   const confirmDelete = (verifyEmail: string) => {
     if (user?.email === verifyEmail) {
-      toast.loading(translations("Hold on, response is getting deleted"), {
+      toast.loading(translations("Hold on, response is getting deleted..."), {
         id: "load-data",
       });
       setIsDeleting(true);
@@ -252,7 +252,7 @@ const Responses = ({
             if (error.response.data?.error === "invalid_grant") {
               setAlertMsg(
                 translations(
-                  "Your access has been revoked Please sign out and sign in again in the Apps & Services",
+                  "Your access has been revoked. Please sign out and sign in again in the Apps & Services",
                 ),
               );
               redirectModalOpen();
@@ -269,7 +269,7 @@ const Responses = ({
 
     setIsSyncing(false);
     setAlertMsg(
-      translations("Please sync your Google account in the App & Services"),
+      translations("Please sync your Google account in the App & Services."),
     );
     redirectModalOpen();
   };
@@ -326,13 +326,12 @@ const Responses = ({
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
       />
-
       <ConfirmationModal
         opened={alertModalOpened}
         onClose={alertModalClose}
         headerTitle={translations("Resync Google Sheet")}
         headerLabel={translations(
-          "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost",
+          "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost.",
         )}
         confirmLabel={translations("Yes")}
         onConfirm={handleSyncGoogleSheet}
@@ -347,7 +346,6 @@ const Responses = ({
           router.push("/dashboard/apps&services/googlesheet");
         }}
       />
-
       <DataTable
         data={responseData ? responseData?.responses : []}
         columns={
@@ -367,10 +365,8 @@ const Responses = ({
         isPending={isPending}
         DataTableToolbar={Toolbar}
       />
-
       <DeleteModal
         confirmDelete={confirmDelete}
-        translations={translations}
         opened={opened}
         close={close}
       />
@@ -380,7 +376,8 @@ const Responses = ({
 
 export default React.memo(Responses);
 
-const DeleteModal = ({ translations, confirmDelete, opened, close }: any) => {
+const DeleteModal = ({ confirmDelete, opened, close }) => {
+  const translations = useExtracted();
   const [verifyEmail, setVerifyEmail] = useState("");
   return (
     <FormModalLayout
@@ -397,7 +394,7 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }: any) => {
     >
       <div className="flex flex-col gap-4 py-2">
         <p className="text-sm text-gray-700 dark:text-gray-300">
-          {translations("To proceed further, verify your email id")}
+          {translations("To proceed further, verify your email id.")}
         </p>
         <ContainedTextField
           withAsterisk
@@ -408,7 +405,7 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }: any) => {
           onChange={(e: any) => setVerifyEmail(e.target.value)}
         />
         <p className="text-sm text-red-600 dark:text-red-400">
-          {translations("Once deleted, response entry data will be lost")}
+          {translations("Once deleted, response entry data will be lost.")}
         </p>
       </div>
     </FormModalLayout>

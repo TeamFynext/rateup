@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Gift, Loader2, Plus, Save, Tag, UserPlus } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -152,7 +152,7 @@ export default function RewardsPage() {
 
   // Form field states
   const { data: editingReward } = useLoyaltyRewardById(activeEditingRewardId);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const startEditingReward = (
     id: string,
     category: "point-rewards" | "coupons" | "free-gifts",
@@ -772,7 +772,6 @@ export default function RewardsPage() {
           </Tabs>
         </>
       )}
-
       {rewardsViewMode === "create" && (
         <RewardFormContainer
           category={rewardFormCategory}

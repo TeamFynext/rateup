@@ -37,7 +37,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -64,7 +64,7 @@ export default function LandingSurveysList() {
   const [createSurveyOpened, { open, close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
   const { user, setUser } = useUser();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
   const searchParams = useSearchParams();
   const LandingId = searchParams.get("LandingId");
@@ -210,9 +210,7 @@ export default function LandingSurveysList() {
           />
         </Flex>
       </Flex>
-
       <Space h="xl" />
-
       <SimpleGrid spacing={"lg"} cols={{ base: 4, sm: 1, md: 2, lg: 2, xl: 3 }}>
         {(specificTeamIsSelected
           ? surveysByTeam?.length > 0
@@ -253,7 +251,7 @@ export function SurveyCard({
   const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   const { user, setUser } = useUser();
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     setTimeSince(getTimeSince(survey.createdAt));
     const timeoutID = setInterval(
@@ -301,7 +299,6 @@ export function SurveyCard({
       </Group>
       <Space h="xl" />
       <Space h="lg" />
-
       <Flex justify={"space-between"} mt="xl" align={"center"}>
         <StatusBadge active={survey.active} />
         {/* <Text>Total Responses : #</Text> */}
@@ -329,7 +326,7 @@ interface SurveyMenuProps {
 function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [opened, { close, open }] = useDisclosure(false);
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const cloneSurvey = useCloneSurveyMutation({
@@ -382,7 +379,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
       >
         <Stack>
           <Text pr="xl" c="dark.2">
-            {translations("Select the team in which the copy to be created")}
+            {translations("Select the team in which the copy to be created.")}
           </Text>
           <Group mt="md" style={{ minHeight: "200px" }}>
             <Select
@@ -412,7 +409,6 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
           </Group>
         </Stack>
       </Modal>
-
       <Menu.Target>
         <ActionIcon
           onClick={(e) => {
@@ -477,7 +473,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
 }
 
 function StatusBadge({ active }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Badge color={active ? "green" : "yellow"}>
       {active ? translations("Active") : translations("Paused")}

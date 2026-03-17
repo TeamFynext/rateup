@@ -19,7 +19,7 @@ import {
   IconTrash,
   IconWashDrycleanOff,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { fallbackImage } from "../../../../utils/constants";
@@ -41,7 +41,7 @@ const TableRow = ({
   currency = "0",
 }) => {
   const [dialogOpened, { toggle, close }] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Table.Tr opacity={item?.disabled ? 0.5 : 1}>
       <Table.Td>
@@ -120,7 +120,7 @@ const TableRow = ({
             confirmLabel={translations("Delete")}
             onConfirm={(e) => {
               toast.loading(
-                translations("Hold on, menu item is getting deleted"),
+                translations("Hold on, menu item is getting deleted..."),
                 {
                   id: "delete-data-menu-item",
                 },
