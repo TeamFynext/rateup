@@ -8,6 +8,7 @@ import {
   GiftFormValues,
   PointRewardFormValues,
 } from "@/app/dashboard/loyalty/rewards/schemas";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -308,32 +309,28 @@ export function LoyaltyRewardForm({
                                 key={tier.id}
                                 className="flex items-center space-x-2"
                               >
-                                <input
-                                  type="checkbox"
+                                <Checkbox
                                   id={`tier-${tier.id}`}
                                   checked={field.value?.includes(tier.id)}
-                                  onChange={(e) => {
-                                    const updatedTiers = e.target.checked
+                                  onCheckedChange={(checked) => {
+                                    const updatedTiers = checked
                                       ? [...(field.value || []), tier.id]
                                       : field.value?.filter(
                                           (t) => t !== tier.id,
                                         ) || [];
                                     field.onChange(updatedTiers);
                                   }}
-                                  className="w-4 h-4 rounded border-gray-300 text-[#1873E8] focus:ring-[#1873E8]"
                                 />
-                                <label
+                                <Label
                                   htmlFor={`tier-${tier.id}`}
-                                  className="text-sm flex items-center gap-2 cursor-pointer"
+                                  className="text-sm flex items-center gap-2 cursor-pointer font-normal"
                                 >
                                   <div
                                     className="w-3 h-3 rounded-full"
-                                    style={{
-                                      backgroundColor: tier.color,
-                                    }}
+                                    style={{ backgroundColor: tier.color }}
                                   />
                                   <span>{tier.name}</span>
-                                </label>
+                                </Label>
                               </div>
                             ))}
                           </div>
@@ -581,32 +578,28 @@ export function LoyaltyRewardForm({
                               key={tier.id}
                               className="flex items-center space-x-2"
                             >
-                              <input
-                                type="checkbox"
+                              <Checkbox
                                 id={`coupon-create-tier-${tier.id}`}
                                 checked={field.value?.includes(tier.id)}
-                                onChange={(e) => {
-                                  const updatedTiers = e.target.checked
+                                onCheckedChange={(checked) => {
+                                  const updatedTiers = checked
                                     ? [...(field.value || []), tier.id]
                                     : field.value?.filter(
                                         (t) => t !== tier.id,
                                       ) || [];
                                   field.onChange(updatedTiers);
                                 }}
-                                className="w-4 h-4 rounded border-gray-300 text-[#1873E8] focus:ring-[#1873E8]"
                               />
-                              <label
+                              <Label
                                 htmlFor={`coupon-create-tier-${tier.id}`}
-                                className="text-sm flex items-center gap-2 cursor-pointer"
+                                className="text-sm flex items-center gap-2 cursor-pointer font-normal"
                               >
                                 <div
                                   className="w-3 h-3 rounded-full"
-                                  style={{
-                                    backgroundColor: tier.color,
-                                  }}
+                                  style={{ backgroundColor: tier.color }}
                                 />
                                 <span>{tier.name}</span>
-                              </label>
+                              </Label>
                             </div>
                           ))}
                         </div>
@@ -776,32 +769,28 @@ export function LoyaltyRewardForm({
                               key={tier.id}
                               className="flex items-center space-x-2"
                             >
-                              <input
-                                type="checkbox"
+                              <Checkbox
                                 id={`gift-create-tier-${tier.id}`}
                                 checked={field.value?.includes(tier.id)}
-                                onChange={(e) => {
-                                  const updatedTiers = e.target.checked
+                                onCheckedChange={(checked) => {
+                                  const updatedTiers = checked
                                     ? [...(field.value || []), tier.id]
                                     : field.value?.filter(
                                         (t) => t !== tier.id,
                                       ) || [];
                                   field.onChange(updatedTiers);
                                 }}
-                                className="w-4 h-4 rounded border-gray-300 text-[#1873E8] focus:ring-[#1873E8]"
                               />
-                              <label
+                              <Label
                                 htmlFor={`gift-create-tier-${tier.id}`}
-                                className="text-sm flex items-center gap-2 cursor-pointer"
+                                className="text-sm flex items-center gap-2 cursor-pointer font-normal"
                               >
                                 <div
                                   className="w-3 h-3 rounded-full"
-                                  style={{
-                                    backgroundColor: tier.color,
-                                  }}
+                                  style={{ backgroundColor: tier.color }}
                                 />
                                 <span>{tier.name}</span>
-                              </label>
+                              </Label>
                             </div>
                           ))}
                         </div>
