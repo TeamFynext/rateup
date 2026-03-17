@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { ColumnDef } from "@tanstack/react-table";
 import { Building2, Calendar, ShoppingBag, Store, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums";
@@ -34,7 +34,7 @@ const Shopify = () => {
   const [selectedShop, setSelectedShop] = useState("");
   const [opened, { open: openConfirmModal, close }] = useDisclosure(false);
   const deleteIntegration = useDeleteShopifyIntegrationByShop();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const columns: ColumnDef<ShopifyTableData>[] = [
     {
@@ -152,7 +152,6 @@ const Shopify = () => {
           </div>
         </div>
       </div>
-
       {/* Info Alert */}
       <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
         <CardHeader>
@@ -170,14 +169,12 @@ const Shopify = () => {
           </p>
         </CardContent>
       </Card>
-
       <h2 className="text-xl font-semibold tracking-tight">
         Integration Management
       </h2>
       <p className="text-sm text-muted-foreground">
         View and manage all Shopify store integrations
       </p>
-
       <div>
         <DataTable
           columns={columns}
@@ -185,7 +182,6 @@ const Shopify = () => {
           DataTableToolbar={DataTableToolbar}
         />
       </div>
-
       <ConfirmationModal
         confirmLabel={translations("Yes")}
         headerLabel={translations("Are you sure, you want to delete it?")}

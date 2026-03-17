@@ -23,7 +23,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { ChevronDownIcon, User } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
@@ -100,7 +100,7 @@ const CreateContactModal = ({
   const createContactMutation = useCreateContactMutation();
   const editContactMutation = useEditContactMutation(null);
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { customFields } = useCustomFieldsContext();
 
   const form = useForm({
@@ -141,7 +141,7 @@ const CreateContactModal = ({
           if (value && customField.type === "email") {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(value)) {
-              return translations("Invalid email format");
+              return translations("Invalid email format.");
             }
           }
 
@@ -345,7 +345,7 @@ const CreateContactModal = ({
                 mx={"lg"}
                 label=""
                 placeholder={translations(
-                  "Upload a csv file (csv) or excel file (xlsx)",
+                  "Upload a csv file (.csv) or excel file (.xlsx)",
                 )}
                 accept=".csv,.xlsx"
                 multiple={false}

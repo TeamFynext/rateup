@@ -14,7 +14,7 @@ import {
 import { useForm } from "@mantine/form";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconVideo } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 
@@ -31,7 +31,7 @@ function InsertVideo() {
     },
   });
   const ref = useRef(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleImageVideo = () => {
     try {
       const url = form.getValues().src;

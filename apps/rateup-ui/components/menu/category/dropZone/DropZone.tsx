@@ -3,7 +3,7 @@
 import { Group, rem, Stack, Text } from "@mantine/core";
 import { Dropzone, DropzoneProps, MIME_TYPES } from "@mantine/dropzone";
 import { IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 interface ExtendedDropzoneProps extends Partial<DropzoneProps> {
@@ -11,7 +11,7 @@ interface ExtendedDropzoneProps extends Partial<DropzoneProps> {
   description?: string;
 }
 export function DropZoneArea(props: Readonly<ExtendedDropzoneProps>) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   let { setCsvFile, description, ...otherProps } = props;
   return (
     <Dropzone

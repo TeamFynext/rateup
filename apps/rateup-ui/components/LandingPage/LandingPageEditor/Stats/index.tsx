@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Group, Stack } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import RefreshButton from "@/components/Button/RefreshButton";
 
@@ -17,7 +17,7 @@ function Stats() {
   const searchParams = useSearchParams();
   const shortUrlId = searchParams.get("shortUrlId");
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <PaperLayout className={styles["stats-page-root-div"]}>
       <Stack className={styles["stats-container"]}>

@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Download, Filter, Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useGetTransactions } from "@/backend/loyalty/redemption/redemption.query";
 import InfoButton from "@/components/Button/InfoButton";
@@ -28,13 +28,7 @@ const CustomerCell = ({ customerName }: { customerName: string }) => (
   <div className="font-medium">{customerName}</div>
 );
 
-const TypeCell = ({
-  type,
-  t,
-}: {
-  type: string;
-  t: (key: string) => string;
-}) => {
+const TypeCell = ({ type }) => {
   const colorMap: Record<string, string> = {
     Earn: "bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/10 border border-green-500/20",
     Redeem:
@@ -47,7 +41,7 @@ const TypeCell = ({
       "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-500/10 border border-yellow-500/20",
   };
 
-  return <Badge className={colorMap[type] || colorMap.Earn}>{t(type)}</Badge>;
+  return <Badge className={colorMap[type] || colorMap.Earn}>{type}</Badge>;
 };
 
 const PointsCell = ({ points }: { points: string }) => (
@@ -70,26 +64,8 @@ const DateCell = ({ createdAt }: { createdAt: Date }) => (
   <div className="text-muted-foreground">{dayjs(createdAt).fromNow()}</div>
 );
 
-const StatusCell = ({
-  status,
-  t,
-}: {
-  status: string;
-  t: (key: string) => string;
-}) => (
-  <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/10 border border-green-500/20">
-    {t(status)}
-  </Badge>
-);
-
-const ActionCell = ({ t }: { t: (key: string) => string }) => (
-  <Button variant="ghost" size="sm">
-    {t("View")}
-  </Button>
-);
-
 export default function TransactionsPage() {
-  const t = useTranslations();
+  const t = useExtracted();
   const [filters] = useState({});
 
   const { data: transactionsData, isLoading } = useGetTransactions(filters);
@@ -107,8 +83,7 @@ export default function TransactionsPage() {
       {
         accessorKey: "transactionType",
         header: createSortableHeader(t("Type")),
-        cell: ({ row }) =>
-          TypeCell({ type: row.getValue("transactionType"), t }),
+        cell: ({ row }) => TypeCell({ type: row.getValue("transactionType") }),
         meta: { title: t("Type") },
         filterFn: (row, id, value) => {
           return value.includes(row.getValue(id));

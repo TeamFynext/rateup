@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Grid, Menu, Text } from "@mantine/core";
 import { IconLanguage } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useUpdateUserLanguageMutation } from "../../backend/user/user.query";
 
@@ -13,7 +13,7 @@ const LanguageSelector = () => {
   const router = useRouter();
   const [language, setLanguage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const updateUserLanguageMutation =
     useUpdateUserLanguageMutation(setIsLoading);
 

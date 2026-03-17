@@ -1,7 +1,7 @@
 "use client";
 
 import { Edit2, Eye, MoreVertical, Trash2, Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -73,7 +73,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
     () => {},
     campaign.type,
   );
-  const t = useTranslations("campaign.card");
+  const t = useExtracted("campaign.card");
   const deleteCampaignMutation = useDeleteCampaignMutation(
     campaign.teamId,
     campaign.type,
@@ -97,9 +97,9 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
 
     try {
       await deleteCampaignMutation.mutateAsync(campaign.id);
-      toast.success(t("toast.deleteSuccess"));
+      toast.success(t("Campaign deleted successfully"));
     } catch {
-      toast.error(t("toast.deleteError"));
+      toast.error(t("Failed to delete campaign"));
     }
   };
 
@@ -126,7 +126,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
           }}
         >
           <Eye className="mr-2 h-4 w-4" />
-          {t("actions.view")}
+          {t("View Details")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={(event) => {
@@ -135,7 +135,7 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
           }}
         >
           <Edit2 className="mr-2 h-4 w-4" />
-          {t("actions.edit")}
+          {t("Edit")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <AlertDialog>
@@ -145,26 +145,29 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
               className="text-destructive dark:text-red-400 focus:text-destructive dark:focus:text-red-400"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              {t("actions.delete")}
+              {t("Delete")}
             </DropdownMenuItem>
           </AlertDialogTrigger>
 
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>{t("deleteModal.title")}</AlertDialogTitle>
+              <AlertDialogTitle>{t("Delete Campaign")}</AlertDialogTitle>
               <AlertDialogDescription>
-                {t("deleteModal.description", { name: campaign.name })}
+                {t(
+                  'Are you sure you want to delete "{name}"? This action cannot be undone.',
+                  { name: campaign.name },
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
 
             <AlertDialogFooter>
-              <AlertDialogCancel>{t("deleteModal.cancel")}</AlertDialogCancel>
+              <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
 
               <AlertDialogAction
                 onClick={handleDelete}
                 className="bg-destructive text-white hover:bg-destructive/90"
               >
-                {t("deleteModal.confirm")}
+                {t("Delete")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

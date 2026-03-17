@@ -3,7 +3,7 @@
 import React from "react";
 
 import { Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { WaQuestions } from "@/types/enums";
 
@@ -15,7 +15,7 @@ export const WaHoverCardComponent = ({
   lineClamp = 1,
   type,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <HoverCard
       width={"fit-content"}

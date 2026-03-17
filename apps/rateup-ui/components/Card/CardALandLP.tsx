@@ -2,14 +2,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Check, Clock, Copy, LinkIcon, MousePointerClick } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import TimeSinceText from "../DateAndTime/TimeSinceText";
 import { Button } from "../ui/button";
 
 function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
   const [copiedId, setCopiedId] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleCopy = (id, url) => {
     navigator.clipboard.writeText(url);
     setCopiedId(id);

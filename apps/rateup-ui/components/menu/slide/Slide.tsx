@@ -18,7 +18,7 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconMenu2, IconTrash, IconUpload } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { MenuItemPriceType } from "@/types/enums";
@@ -68,7 +68,7 @@ export const Slide = ({
     name: "",
   });
   const resetRef = useRef(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [
     openedCropDialog,
     { toggle: toggleCropDialog, close: closeCropDialog },
@@ -176,7 +176,7 @@ export const Slide = ({
   const handleDeleteMutation = () => {
     if (formValues?.id) {
       toast.loading(
-        translations("Hold on, Your Menu Banner Is Getting Deleted"),
+        translations("Hold on, Your Menu Banner Is Getting Deleted."),
         {
           id: "menu-banner-delete",
         },

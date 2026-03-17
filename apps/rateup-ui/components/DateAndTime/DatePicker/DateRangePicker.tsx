@@ -11,7 +11,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconCalendar, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { DateRangePicker, Range } from "react-date-range";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
@@ -26,7 +26,7 @@ export function DateRangePickerButton({
   ranges: Range[];
 }) {
   const [opened, { open, close }] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <Group align="center">
@@ -72,7 +72,7 @@ export function DateRangePickerButton({
 }
 
 export const DateRangePickerModal = ({ opened, onChange, ranges, close }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Modal
       opened={opened}

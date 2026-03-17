@@ -23,7 +23,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useCancelRazorpaySubscriptionMutation } from "@/backend/payment/payment.query";
@@ -69,7 +69,8 @@ export function UsageCard({ subscription }) {
   );
 }
 
-export function OrderHistory({ orders, refresh, isRefetching, translations }) {
+export function OrderHistory({ orders, refresh, isRefetching }) {
+  const translations = useExtracted();
   const [selectedOrder, setSelectedOrder] = useState([]);
   const [opened, setOpened] = useState(false);
   return (
@@ -146,7 +147,7 @@ export function OrderHistory({ orders, refresh, isRefetching, translations }) {
 }
 
 const OrderStatusBadge = ({ order }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   let color, statusText;
 
   switch (order?.status) {
@@ -159,16 +160,16 @@ const OrderStatusBadge = ({ order }) => {
         statusText = translations("FAILED");
       } else {
         color = "yellow";
-        statusText = translations(order?.status) || order?.status;
+        statusText = order?.status;
       }
       break;
     case "FAILED":
       color = "red";
-      statusText = translations(order?.status) || order?.status;
+      statusText = order?.status;
       break;
     default:
       color = "green";
-      statusText = translations(order?.status) || order?.status;
+      statusText = order?.status;
   }
 
   return <Badge style={{ backgroundColor: color }}>{statusText}</Badge>;
@@ -217,13 +218,16 @@ export const Billing = ({
 
   const CancelRazorpaySubscription = useCancelRazorpaySubscriptionMutation();
   const CancelStripeSubscription = useCancelStripeSubscriptionMutation();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
 
   const handleCancelSubscription = () => {
-    toast.loading(translations("Hold your subscription is getting cancelled"), {
-      id: "load-data",
-    });
+    toast.loading(
+      translations("Hold.. your subscription is getting cancelled..."),
+      {
+        id: "load-data",
+      },
+    );
 
     if (subscription?.basePlan?.stripeProduct) {
       CancelStripeSubscription.mutate(null, {
@@ -266,15 +270,17 @@ export const Billing = ({
               <div className="flex items-center justify-between gap-4 ml-2">
                 <div className="space-y-1">
                   <p className="font-semibold text-blue-900">
-                    {translations("Your plan activation is under process")}
+                    {translations("Your plan activation is under process.")}
                   </p>
                   <p className="text-sm text-blue-800">
                     {translations(
-                      "You will receive activation status via email shortly",
+                      "You will receive activation status via email shortly.",
                     )}
                   </p>
                   <p className="text-xs text-blue-700">
-                    {translations("Usually takes between 30seconds to 15 mins")}
+                    {translations(
+                      "Usually takes between 30seconds to 15 mins.",
+                    )}
                   </p>
                 </div>
                 <Button
@@ -556,7 +562,6 @@ export const Billing = ({
           </CardContent>
         </Card>
       </div>
-
       {/* Upgrade Modal */}
       <Dialog open={openedUpgradeModal} onOpenChange={setOpenedUpgradeModal}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -574,7 +579,6 @@ export const Billing = ({
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Cancel Result Modal */}
       <Dialog open={cancelResult} onOpenChange={setCancelResult}>
         <DialogContent className="max-w-md">
@@ -588,17 +592,17 @@ export const Billing = ({
             <div className="space-y-3 text-sm text-muted-foreground">
               <p>
                 {translations(
-                  "Your current Rateup plan subscription is successfully cancelled",
+                  "Your current Rateup plan subscription is successfully cancelled.",
                 )}
               </p>
               <p>
                 {translations(
-                  "You can still enjoy the premium features until the validity expires",
+                  "You can still enjoy the premium features until the validity expires.",
                 )}
               </p>
               <p>
                 {translations(
-                  "Also your existing base plan benefits will be replaced on an upgrade",
+                  "Also your existing base plan benefits will be replaced on an upgrade.",
                 )}
               </p>
             </div>
@@ -618,7 +622,6 @@ export const Billing = ({
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Custom Upgrade Modal */}
       <Dialog open={customUpgradeModal} onOpenChange={setCustomUpgradeModal}>
         <DialogContent className="max-w-md">
@@ -631,7 +634,7 @@ export const Billing = ({
           <div className="space-y-4 py-4">
             <div className="space-y-3 text-sm text-muted-foreground">
               <p>{translations("For Upgrading your Custom Plan,")}</p>
-              <p>{translations("Connect Rateup billing team via email")}</p>
+              <p>{translations("Connect Rateup billing team via email.")}</p>
             </div>
             <Separator />
             <div className="flex items-center justify-center gap-2 pt-2">
@@ -649,7 +652,6 @@ export const Billing = ({
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Cancel Confirmation Dialog */}
       <Dialog open={cancelDialogOpened} onOpenChange={setCancelDialogOpened}>
         <DialogContent className="max-w-md">
@@ -687,7 +689,7 @@ export const Billing = ({
 };
 
 const TeamStats = ({ stats, refetch, isRefetching, subscription }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const statsArray = [
     {
       count: stats?.teamsCount,
@@ -741,7 +743,7 @@ const TeamStats = ({ stats, refetch, isRefetching, subscription }) => {
 };
 
 const MenuStats = ({ stats, subscription }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const isActive = subscription?.features?.menu?.active;
   if (!isActive) return null;
 
@@ -810,7 +812,7 @@ const MenuStats = ({ stats, subscription }) => {
 };
 
 const SurveyStats = ({ stats, subscription }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const isActive = subscription?.features?.webSurvey?.active;
   if (!isActive) return null;
 
@@ -880,7 +882,7 @@ const SurveyStats = ({ stats, subscription }) => {
 };
 
 const WhatsappStats = ({ stats, subscription }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const isActive = subscription?.features?.whatsapp?.active;
   if (!isActive) return null;
 
@@ -967,7 +969,7 @@ const WhatsappStats = ({ stats, subscription }) => {
 };
 
 const AIStats = ({ stats, subscription }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const aiFeature = subscription?.features?.ai;
   if (!aiFeature || !aiFeature?.active) return null;
 
@@ -1032,7 +1034,7 @@ const AIStats = ({ stats, subscription }) => {
 };
 
 const LoyaltyStats = ({ stats, subscription }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const loyalty = subscription?.features?.loyalty;
   if (!loyalty || !loyalty?.active) return null;
 

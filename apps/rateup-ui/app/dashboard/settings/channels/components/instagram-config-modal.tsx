@@ -11,7 +11,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -37,7 +37,7 @@ export function InstagramConfigModal({
   const { data: metaAssets, isLoading } = useMetaAssets(selectedWaSettings?.id);
   const upsertMutation = useUpsertWaSettingsMutation();
   const syncfbpageMut = useSyncFbPages(selectedWaSettings?.id);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const initialConfig = { fbPageId: null, pageAccessToken: null, ibaId: null };
   const [config, setConfig] = useState(initialConfig);
 

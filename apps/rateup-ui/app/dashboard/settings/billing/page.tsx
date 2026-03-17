@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import dayjs from "dayjs";
 import { CheckCircle, Info, RefreshCw } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useCreateCheckoutSession,
@@ -54,7 +54,7 @@ export default function BillingPage() {
   const createCheckout = useCreateCheckoutSession(setIsLoading, setOrder);
   const { user } = useUser();
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const {
     data: subscription,
     isPending,
@@ -128,7 +128,7 @@ export default function BillingPage() {
         description: "Subscription Plans in Rateup",
         image: "https://djd7kjh9uwow0.cloudfront.net/images/logo.svg",
         handler: function (response) {
-          console.log(translations("Payment Successful!"));
+          console.log(translations("Payment Successful...!"));
           setProcessingPayment(false);
           if (order.hasTrial) {
             updateOrderMut.mutate({
@@ -238,7 +238,6 @@ export default function BillingPage() {
         orders={orders?.data}
         refresh={refreshOrders}
         isRefetching={isRefetchOrders}
-        translations={translations}
       />
       {/* Order Confirmation Modal */}
       <Dialog
@@ -305,7 +304,7 @@ export default function BillingPage() {
                 <AlertDescription className="ml-2">
                   <p className="text-sm text-blue-900">
                     {translations(
-                      "You have an active Base Plan already So you cannot buy another Rateup base plan But you can buy the available ADDON RateUp plan to get more features",
+                      "You have an active Base Plan already. So you cannot buy another Rateup base plan. But you can buy the available ADDON RateUp plan to get more features.",
                     )}
                   </p>
                 </AlertDescription>
@@ -394,21 +393,21 @@ export default function BillingPage() {
           <div className="py-6 space-y-4 min-w-[350px]">
             <div className="space-y-4">
               <p className="text-green-600 font-semibold text-lg">
-                {translations("Your payment was successful!")}
+                {translations("Your payment was successful..!")}
               </p>
 
               <div className="space-y-3 text-sm text-muted-foreground">
                 <p>
                   {translations(
-                    "Thank you for choosing Rateup Premium subscription",
+                    "Thank you for choosing Rateup Premium subscription.",
                   )}
                 </p>
                 <p>
                   {translations(
-                    "You can enjoy Rateup Premium features once your order is processed successfully",
+                    "You can enjoy Rateup Premium features once your order is processed successfully.",
                   )}
                 </p>
-                <p>{translations("You will be notified by email shortly")}</p>
+                <p>{translations("You will be notified by email shortly.")}</p>
               </div>
             </div>
           </div>

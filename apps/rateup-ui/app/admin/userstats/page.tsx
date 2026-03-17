@@ -14,7 +14,7 @@ import {
   UserCheck,
   Users,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
@@ -65,7 +65,7 @@ const index = () => {
   const { data: users, isLoading: usersLoading, isError } = useGetAllUsers();
   const updateRecipeMutation = useUpdateRecipeNameMutation();
   const updatePauseStatus = useUpdateUserPause();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const [userStats, setUserStats] = useState({
     today: 0,
@@ -430,7 +430,6 @@ const index = () => {
           </Card>
         </div>
       </div>
-
       <h2 className="text-xl font-semibold tracking-tight">
         {translations("Most Recent SignUps")}
       </h2>
@@ -449,7 +448,6 @@ const index = () => {
           }}
         />
       </div>
-
       <FormModalLayout
         centered
         opened={opened}
@@ -459,7 +457,6 @@ const index = () => {
       >
         <UserModal selectedUser={selectedUser} />
       </FormModalLayout>
-
       <ConfirmationModal
         opened={openedConfirmModal}
         onClose={closeConfirmModal}

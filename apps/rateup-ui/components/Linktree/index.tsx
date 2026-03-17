@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, RefreshCw, Search } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useLinktrees } from "../../backend/linktree/linktree.query";
 import LCard from "../Card/CardALandLP";
@@ -28,7 +28,7 @@ function LinktreeDashboard() {
   const { data, isPending, isError } = useLinktrees();
   const [linktrees, setLinktrees] = useState([]);
   const [sortOption, setSortOption] = useState("latest");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [searchTerm, setSearchTerm] = useState("");
   const shareUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/lt`;
   const baseURL = "/dashboard/quickAccessLinks";
@@ -67,13 +67,13 @@ function LinktreeDashboard() {
   } else if (isError) {
     componentToBeRendered = (
       <div className="flex w-full h-screen items-center justify-center">
-        <p>{translations("Unable to get data, please try again later")}</p>
+        <p>{translations("Unable to get data, please try again later.")}</p>
       </div>
     );
   } else if (!isPending && !isError && !linktrees.length) {
     componentToBeRendered = (
       <div className="flex w-full h-screen items-center justify-center">
-        <NothingFound text={translations("No Landing Pages Found")} />;
+        <NothingFound text={translations("No Landing Pages Found.")} />;
       </div>
     );
   } else {

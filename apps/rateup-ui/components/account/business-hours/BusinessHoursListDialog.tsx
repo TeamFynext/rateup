@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 
 import { Edit, Plus, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { IBusinessHour } from "@/backend/org/business-hours/business-hours.api";
 import {
@@ -45,7 +45,7 @@ export function BusinessHoursListDialog({
   onDelete,
   canDelete,
 }: Readonly<Props>) {
-  const t = useTranslations();
+  const t = useExtracted();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{
     id: string;
@@ -148,7 +148,6 @@ export function BusinessHoursListDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

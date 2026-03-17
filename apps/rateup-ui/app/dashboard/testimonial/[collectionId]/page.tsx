@@ -11,7 +11,7 @@ import {
   IconShare,
   IconTrash,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useAddMultipleTestimonialsToCollection,
@@ -214,7 +214,7 @@ function UtilityComponent({
     useDisclosure(false);
   const [openedShare, { open: openShare, close: closeShare }] =
     useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleSave = () => {
     addMultipleTestimonials.mutate(selectedTestimonialIds, {
       onSuccess: () => {

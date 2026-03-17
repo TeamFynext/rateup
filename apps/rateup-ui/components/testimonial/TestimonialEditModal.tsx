@@ -20,7 +20,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { useImmer } from "use-immer";
 
 import { useUpdateCollection } from "../../backend/testimonials/testimonial.query";
@@ -57,7 +57,7 @@ const TestimonialEditModal = ({
   theme,
 }: TestimonialEditModalProps) => {
   const [currentStyle, setCurrentstyle] = useImmer<TestimonialStyleType>(theme);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const testimonialSample: Testimonial = {
     testimonial: {
       name: "Profile Name",

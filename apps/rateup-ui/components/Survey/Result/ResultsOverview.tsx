@@ -4,7 +4,7 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import { Badge, Divider, Flex, Stack, Text } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Range } from "react-date-range";
 import { Margin, usePDF } from "react-to-pdf";
 
@@ -44,7 +44,7 @@ const ResultsOverview = ({
     SelectedLanguageContext,
   );
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [isExporting, setIsExporting] = useState(false);
   const { data: subscription } = useSubscription();
   const { toPDF, targetRef } = usePDF({
@@ -119,18 +119,9 @@ const ResultsOverview = ({
         )
       } */}
       <Flex gap={"xs"} direction={flowId ? "column" : "row"}>
-        {!flowId && (
-          <SurveyResponseStats
-            translations={translations}
-            flowId={flowId}
-            surveyId={surveyId}
-          />
-        )}
+        {!flowId && <SurveyResponseStats flowId={flowId} surveyId={surveyId} />}
         <div style={{ flex: 1 }}>
-          <ResponseGraphBySurvey
-            surveyId={surveyId}
-            translations={translations}
-          />
+          <ResponseGraphBySurvey surveyId={surveyId} />
         </div>
       </Flex>
       <PaperLayout p={"md"}>

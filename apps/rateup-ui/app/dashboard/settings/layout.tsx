@@ -16,7 +16,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { Separator } from "@/components/ui/separator";
@@ -42,7 +42,7 @@ const SettingsLayout = ({ children }) => {
   const [activeSection, setActiveSection] =
     useState<SettingsSection>("account");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const settingsSections = [
     {
@@ -180,7 +180,6 @@ const SettingsLayout = ({ children }) => {
           )}
         </button>
       </div>
-
       {sidebarOpen && (
         <div
           className="md:hidden fixed inset-0 bg-black/50 z-40 top-16"
@@ -188,7 +187,6 @@ const SettingsLayout = ({ children }) => {
           aria-hidden="true"
         />
       )}
-
       {/* Sidebar */}
       <nav
         className={`fixed md:static inset-y-0 left-0 z-50 w-64 border-r bg-card flex flex-col h-full transition-transform duration-300 ease-in-out md:translate-x-0 ${
@@ -270,7 +268,6 @@ const SettingsLayout = ({ children }) => {
           ))}
         </div>
       </nav>
-
       {/* Main Content */}
       {/* Add md:ml-64 so the main content sits to the right of the sidebar on medium+ screens */}
       <main className="flex-1 overflow-auto">

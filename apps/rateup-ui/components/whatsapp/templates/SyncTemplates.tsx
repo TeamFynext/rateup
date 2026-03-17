@@ -22,7 +22,7 @@ import {
   IconChevronRight,
   IconRefresh,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -45,7 +45,7 @@ export function SyncTemplatesModal({ opened, onClose, unregisteredTemplates }) {
   }>([]);
 
   const registerTemplateMutation = useRegisterTemplatesMutation();
-  const translations = useTranslations();
+  const translations = useExtracted();
   // When all templates are configured, send post request to backend to import templates.
   useEffect(() => {
     if (currentTemplateIndex === -1) return;
@@ -147,7 +147,7 @@ function ConfigureTemplate({
     });
     selectNextTemplate();
   }
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack>
       <Progress value={((templateIndex + 1) / totalTemplates) * 100} />
@@ -252,7 +252,7 @@ function DisplayTemplates({
     }
   }
   const allChecked = selectedTemplates.length === unregisteredTemplates?.length;
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Flex direction={"column"} h="80vh">
       <Table.ScrollContainer
@@ -327,7 +327,7 @@ function DisplayTemplates({
 
 export function ImportTemplatesButton() {
   const [openModal, { open, close }] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const {
     data: unregisteredTemplates,
     isLoading,
@@ -371,7 +371,7 @@ export function SyncTemplatesButton({
   whatsappSettingsPhoneIds?: string[];
 }>) {
   const syncMutation = useSyncTemplatesMutation();
-  const translations = useTranslations();
+  const translations = useExtracted();
   function handleSyncClick() {
     syncMutation.mutate(
       whatsappSettingsPhoneIds?.length

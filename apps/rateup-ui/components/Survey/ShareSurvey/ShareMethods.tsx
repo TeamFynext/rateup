@@ -2,7 +2,7 @@
 
 import { ActionIcon, Group, Image, Stack, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { SurveyType } from "../../../types/enums";
 import FormModalLayout from "../../Modal/FormModalLayout";
@@ -42,7 +42,7 @@ export function ShareMethods({
         break;
     }
   }
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   return (
     <Stack style={{ minWidth: 300, flex: 1 }} p="md">

@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, RefreshCw, Search } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useLandingPages } from "../../backend/landingPage/landingPage.query";
 import LCard from "../Card/CardALandLP";
@@ -32,7 +32,7 @@ function LandingPageDashboard() {
   const [landingPages, setLandingPages] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("latest");
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   useEffect(() => {
     if (data) {
@@ -68,13 +68,13 @@ function LandingPageDashboard() {
   } else if (isError) {
     componentToBeRendered = (
       <div className="flex w-full h-screen items-center justify-center">
-        <p>{translations("Unable to get data, please try again later")}</p>
+        <p>{translations("Unable to get data, please try again later.")}</p>
       </div>
     );
   } else if (!isPending && !isError && !landingPages.length) {
     componentToBeRendered = (
       <div className="flex w-full h-screen items-center justify-center">
-        <NothingFound text={translations("No Landing Pages Found")} />;
+        <NothingFound text={translations("No Landing Pages Found.")} />;
       </div>
     );
   } else {
@@ -140,7 +140,6 @@ function LandingPageDashboard() {
           </div>
         </div>
       </div>
-
       <div>{componentToBeRendered}</div>
       {isCreateLandingPageModalOpen && (
         <CreateLandingPageModal

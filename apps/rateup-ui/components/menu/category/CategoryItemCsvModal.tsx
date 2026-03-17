@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 import { Blockquote, LoadingOverlay, NavLink, Stack } from "@mantine/core";
 import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useCreateMenuItemUsingCsvMutation } from "../../../backend/menu/item/mItem.query";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
@@ -20,7 +20,7 @@ const CategoryItemCsvModal = ({ opened, close, menuId }) => {
       setCsvFile(null);
     },
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleCsvFileUpload = () => {
     const formData = new FormData();
     formData.append("menuId", menuId);

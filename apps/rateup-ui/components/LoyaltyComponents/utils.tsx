@@ -9,7 +9,7 @@ import {
   Text,
 } from "@mantine/core";
 import { IconAward } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { LoyaltyActionType } from "@/types/enums";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
@@ -21,7 +21,7 @@ import {
 } from "../input/ContainedInput/ContainedInput";
 
 export const LRSelector = (props: SelectProps) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: rewards, isLoading } = useGetLoyaltyRewards();
   const rewardList = rewards
     ? rewards?.map((r) => ({
@@ -50,7 +50,7 @@ export const LASelector = ({
   ...props
 }: LAProps) => {
   const { data: actions, isLoading } = useGetLoyaltyActions();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const actionList = actions
     ? actions
         .filter(
@@ -87,7 +87,7 @@ export const LReferralSelector = ({
   ...props
 }: LAProps) => {
   const { data: actions, isLoading } = useGetLoyaltyActions();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const actionList = actions
     ? actions
         .filter((a) => a.active && isLReferralAction(a.type))

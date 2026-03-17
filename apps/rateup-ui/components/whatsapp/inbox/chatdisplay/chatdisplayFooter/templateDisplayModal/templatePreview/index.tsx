@@ -7,7 +7,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { IconSend } from "@tabler/icons-react";
 import { UseMutationResult } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { useImmer } from "use-immer";
 
 import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
@@ -165,7 +165,7 @@ export default function WaInboxTemplatePreview(props: Props) {
 export function WaInboxTemplatePreviewNew(props: Props) {
   const [parameterData, setParameterData] = useImmer<any>([]);
   const [loading, setLoading] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const { data: dbTemplate } = useWaTemplateById(props?.selectedTemplateId);
 
@@ -238,7 +238,6 @@ export function WaInboxTemplatePreviewNew(props: Props) {
           template={props?.template}
         />
       </div>
-
       <div className="w-full flex items-center justify-end">
         <button
           className="px-4 py-2 rounded-md bg-green-500 flex items-center justify-center gap-1 disabled:opacity-50"

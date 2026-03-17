@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo } from "react";
 
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { QuestionType2 } from "@/types/enums";
 import {
@@ -57,7 +57,7 @@ export const ComponentLogicEditor = ({
   setBlocks,
 }: ComponentLogicEditorProps) => {
   const { getCurrentScreen, currentScreenId } = useFlowStoreV3();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const currentScreen = getCurrentScreen();
 
@@ -226,7 +226,6 @@ export const ComponentLogicEditor = ({
           {translations("Show or hide components based on conditions")}
         </p>
       </div>
-
       <Accordion type="multiple" className="w-full">
         {blocks.map((block, index) => (
           <AccordionItem value={`block-${index}`} key={index}>
@@ -618,7 +617,6 @@ export const ComponentLogicEditor = ({
           </AccordionItem>
         ))}
       </Accordion>
-
       <div className="grid grid-cols-2 gap-4 mt-6">
         <Button
           variant="outline"

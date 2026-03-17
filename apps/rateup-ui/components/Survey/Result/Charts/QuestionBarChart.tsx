@@ -3,7 +3,7 @@
 import React, { useContext } from "react";
 
 import { Badge, Flex, Group, Paper, Stack, Text, Title } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -45,7 +45,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   payload,
   label,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   if (active && payload && payload.length) {
     return (
       <Paper
@@ -101,7 +101,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
   responseCount,
   version = 1,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   return (
     <Stack miw={300}>
@@ -182,7 +182,7 @@ export const QuestionBarChart2 = ({
       choicesToUse = getResponseArrayByQuestionType(questionType);
     }
   }
-  const translations = useTranslations();
+  const translations = useExtracted();
   const choiceCounts = choicesToUse?.map((choice) => ({
     name: choice?.label,
     count: data?.filter((item) =>

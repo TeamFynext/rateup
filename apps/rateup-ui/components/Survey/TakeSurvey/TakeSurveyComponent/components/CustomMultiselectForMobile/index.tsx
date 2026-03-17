@@ -22,7 +22,7 @@ import {
 import { IconArrowLeft, IconCheck, IconDeselect } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { motion, useAnimate } from "motion/react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useSurveyThemeData } from "../../../../../../context/SurveyThemeContext";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
@@ -72,7 +72,7 @@ function CustomMultiselectForMobile({
       setSearch("");
     },
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleValueSelect = async (val) => {
     const valuesArr = value;
     const newValuesArr = value.includes(val)
@@ -216,7 +216,6 @@ function CustomMultiselectForMobile({
           <ComboboxChevron />
         </PillsInput>
       </Combobox.EventsTarget>
-
       {isOptionSelectionDivVisible && (
         <Portal {...portalProps}>
           <Stack
@@ -248,7 +247,7 @@ function CustomMultiselectForMobile({
                     options
                   ) : (
                     <Combobox.Empty>
-                      {translations("Nothing found")}
+                      {translations("Nothing found...")}
                     </Combobox.Empty>
                   )}
                 </Stack>

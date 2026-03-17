@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Button, Flex } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useUpdateLandingPageMutation } from "@/backend/landingPage/landingPage.query";
 
@@ -20,7 +20,7 @@ function SaveButton() {
   const shortUrlId = params?.shortUrlId as string;
   const { mutateAsync: landingPageUpdateMutateAsync } =
     useUpdateLandingPageMutation(shortUrlId);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleSaveBtnClick = useCallback(async () => {
     setIsSaving(true);
     if (editorInstance) {

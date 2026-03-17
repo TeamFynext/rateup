@@ -28,7 +28,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { CheckCircle, Loader, Loader2, UserCheck } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
@@ -106,7 +106,7 @@ const WaInboxChatSelect = () => {
 
   const queryClient = useQueryClient();
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   const checkIfAnyFilterisActive = useCallback((filters: any) => {
     return (
       filters.contactGroups.length > 0 ||
@@ -629,7 +629,6 @@ const WaInboxChatSelect = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/*bulk assign*/}
       <Dialog
         open={showBulkAssignDialog}

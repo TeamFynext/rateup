@@ -5,7 +5,7 @@ import React from "react";
 import { Badge, Group, Image, Rating, Stack, Text, Title } from "@mantine/core";
 import dayjs from "dayjs";
 import parse from "html-react-parser";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { SmileyResponseMap } from "@/utils/whatsapp/enumMap";
 
@@ -27,7 +27,7 @@ const SurveyResponsesView = ({
   no: number;
   language: string;
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <Group>
@@ -69,7 +69,7 @@ const SurveyResponsesView = ({
                       <Image radius="md" maw={240} mx="0px" src={imgUrl} />
                     ) : (
                       <Text pb="sm" c="dark.0" fz="xs">
-                        {translations(" not answered")}
+                        {translations("... not answered...")}
                       </Text>
                     );
                   case Q.MSQ:
@@ -221,7 +221,7 @@ const SurveyResponsesView = ({
             </Text>
           ) : (
             <Text c="dark.0" fz="xs">
-              {translations(" not answered")}
+              {translations("... not answered...")}
             </Text>
           )}
         </Stack>

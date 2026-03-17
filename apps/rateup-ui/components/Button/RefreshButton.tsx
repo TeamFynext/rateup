@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { IconRefresh } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -25,13 +25,13 @@ const RefreshButton = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const isRefreshing = loading || isLoading;
 
   const handleRefresh = async () => {
     if (isRefreshing) return;
     setLoading(true);
-    toast.loading(translations("Hold onData is refreshing"), {
+    toast.loading(translations("Hold on..Data is refreshing"), {
       id: "refreshing-data",
     });
     if (onClick) {

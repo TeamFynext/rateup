@@ -1,7 +1,7 @@
 "use client";
 
 import { Flex, Stack, Text } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { formatedTime } from "../../../utils/dateTime";
 import { ItemDisplay } from "../item/ItemDisplay";
@@ -18,7 +18,7 @@ export function CategoryDisplay({
     formattedStartTimeWithAmPm,
     formattedEndTimeWithAmPm,
   } = formatedTime(category);
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack
       ref={(el) => {

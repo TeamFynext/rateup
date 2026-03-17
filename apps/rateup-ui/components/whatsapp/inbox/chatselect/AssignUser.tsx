@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { WaMessageAssignStatus } from "@/types/enums";
 import { useContactsStore } from "@/app/dashboard/inbox/store";
@@ -30,7 +30,7 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
   const { data: teamsRes, isLoading: teamsLoading } = useTeamsByUser();
   const { updateContactById } = useContactsStore();
   const [actionType, setActionType] = useState<"assign" | "self" | null>(null);
-  const t = useTranslations();
+  const t = useExtracted();
 
   const teams = teamsRes?.data ?? [];
   const staffMembers = teamMembers?.data ?? [];
@@ -149,7 +149,6 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
           </Select>
         )}
       </div>
-
       {/* MEMBER SELECT */}
       <div className="space-y-2">
         <Label> {t("Select Member")} </Label>
@@ -184,7 +183,6 @@ const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
           </Select>
         )}
       </div>
-
       {/* ASSIGN BUTTON */}
       <div className="flex flex-col gap-3 w-full">
         {/* PRIMARY ACTION */}

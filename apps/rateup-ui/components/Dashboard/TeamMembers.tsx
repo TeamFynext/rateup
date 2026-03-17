@@ -6,7 +6,7 @@ import { Select } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useTeamMemberStats } from "@/backend/dashboard/dashboard.query";
 
@@ -15,7 +15,7 @@ import { useTeamsByUser } from "../../backend/team/team.query";
 dayjs.extend(relativeTime);
 
 function TeamMembers() {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: teamMemberData } = useTeamsByUser();
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const teams = useMemo(() => teamMemberData?.data || [], [teamMemberData]);
@@ -53,7 +53,6 @@ function TeamMembers() {
           searchable
         />
       </div>
-
       {/* Scrollable table with sticky header */}
       <div className="overflow-auto max-h-[400px] rounded">
         <table className="min-w-full table-fixed text-sm text-left text-[#7A8289]">

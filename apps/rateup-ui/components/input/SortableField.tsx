@@ -5,7 +5,7 @@ import {
   IconTriangleFilled,
   IconTriangleInvertedFilled,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { SortType } from "../../types/enums";
 
@@ -22,7 +22,7 @@ export function SortableField({
 }: SortableFieldProps & GroupProps) {
   let icon;
   const { children, style, ...rest } = props;
-  const translations = useTranslations();
+  const translations = useExtracted();
   if (sort.sortKey === sortKey) {
     switch (sort.sortType) {
       case SortType.ASC:

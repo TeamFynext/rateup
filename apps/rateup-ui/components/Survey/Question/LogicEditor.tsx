@@ -20,7 +20,7 @@ import {
 } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -58,7 +58,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
     surveyId,
   });
   const [currentLogicJumps, handlers] = useListState<LogicJump>([]);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (selectedQ && selectedQ.logic) {
       handlers.setState(selectedQ.logic);
@@ -78,7 +78,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
   };
 
   const handleSave = () => {
-    toast.loading(translations("Hold on, your changes are getting updated"), {
+    toast.loading(translations("Hold on, your changes are getting updated.."), {
       id: "load-data",
     });
     questionUpdateMutation
@@ -134,7 +134,6 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
           </Button>
         </Stack>
       </ScrollAreaAutosize>
-
       <Group justify="space-between">
         <RateupButtonSecondary
           title={translations("Cancel")}
@@ -193,7 +192,7 @@ function ConditionBlock({
   );
   const [selectedAction, setSelectedAction] = useState(currentLogicJump.action);
   const [matchData, setMatchData] = useState(currentLogicJump.response);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     setCurrentLogicJump({
       condition: selectedCondition,

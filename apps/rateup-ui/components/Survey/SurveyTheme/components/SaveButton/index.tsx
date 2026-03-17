@@ -5,7 +5,7 @@ import { useCallback, useState } from "react";
 import { Button, Group, Text } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
 import _ from "lodash";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useUpdateSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
@@ -44,7 +44,7 @@ function SaveButton({
   }
 
   const [isSaving, setIsSaving] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const updateSurveyTheme = useUpdateSurveyTheme(
     themeObjBeingEdited?.id,
     survey?.id,

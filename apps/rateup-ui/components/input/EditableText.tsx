@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconCheck, IconPencil } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { SAVE_HOTKEY } from "../../utils/constants";
 
@@ -48,7 +48,7 @@ export function EditableText({
 }: EditableTextProps) {
   const [tempText, setTempText] = useState(text ?? "");
   const [focusTrapToggle, setfocusTrapToggle] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   function handleSave() {
     setfocusTrapToggle(false);

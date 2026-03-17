@@ -11,7 +11,7 @@ import {
   UserRoundCheck,
   Users,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { WaMessageAssignStatus } from "@/types/enums";
 import useContactStore, {
@@ -61,7 +61,7 @@ const AssignUser = ({
   } = useTeamsByUser();
   const queryClient = useQueryClient();
   const { filterData } = useContactStore();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const prevAssignedRef = useRef<{ userId: string; teamId: string }[]>([]);
   const { user } = useUser();
   const { data: assignedUsers, isLoading: isAssignedLoading } =
@@ -391,7 +391,6 @@ const AssignUser = ({
           </div>
         </Button>
       </DropdownMenuTrigger>
-
       <DropdownMenuContent
         align="end"
         className="w-72 max-h-80 overflow-y-auto"
@@ -441,7 +440,6 @@ const AssignUser = ({
                   )}
                 </div>
               </DropdownMenuItem>
-
               {openTeams.includes(team.id) && (
                 <div className="ml-5 mt-1 mb-1 border-l pl-2 space-y-1">
                   <DropdownMenuItem

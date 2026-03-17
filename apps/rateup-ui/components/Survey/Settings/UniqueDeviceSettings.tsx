@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -20,7 +20,7 @@ const UniqueDeviceSettings = ({ survey, surveyId }) => {
     survey?.uniqueDeviceResponse,
   );
   const editSurvey = useEditSurveyMutation(surveyId);
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <div className="flex items-center space-x-4">
       <Tooltip>

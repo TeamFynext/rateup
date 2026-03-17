@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -37,7 +37,7 @@ import {
 export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const parsedTemplate = editingItem ? parseTemplate(editingItem) : null;
-  const translations = useTranslations();
+  const translations = useExtracted();
   const form = useForm({
     initialValues: parsedTemplate
       ? parsedTemplate
@@ -104,7 +104,9 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
     if (editingItem) {
       if (editingItem.data.status === WaTemplateStatus.PENDING) {
         toast.warning(
-          translations("Cannot edit pending template Please wait for approval"),
+          translations(
+            "Cannot edit pending template. Please wait for approval",
+          ),
         );
         setIsSubmitting(false);
         return;

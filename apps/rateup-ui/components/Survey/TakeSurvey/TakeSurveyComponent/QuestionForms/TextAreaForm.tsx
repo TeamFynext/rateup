@@ -3,7 +3,7 @@
 import { useContext, useState } from "react";
 
 import { useMantineTheme } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { ContainedTextArea } from "../../../../input/ContainedInput/ContainedInput";
@@ -23,7 +23,7 @@ export function TextAreaForm() {
     updateResponse(updatedResponse);
     setInputValue(newValue);
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <FormPaperLayout>
       <ContainedTextArea

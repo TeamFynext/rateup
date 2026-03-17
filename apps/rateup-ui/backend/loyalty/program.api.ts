@@ -40,7 +40,7 @@ export interface LoyaltyProgramInput {
   tiersEnabled?: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;
   defaultCountryCode?: string;
-  referralMessageTemplate?: string;
+  referralMessageTemplate?: any;
   pointsExpirationMonths?: number;
   customerNotifications?: boolean;
   autoApproveAdjustments?: boolean;

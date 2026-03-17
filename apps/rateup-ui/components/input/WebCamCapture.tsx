@@ -3,7 +3,7 @@
 import React, { useCallback, useRef, useState } from "react";
 
 import { Group, Image, Stack } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import Webcam from "react-webcam";
 
 import { RateupButtonBlue } from "../Button/RateupButtons";
@@ -29,7 +29,7 @@ const WebcamCapture = ({
 }: WebcamProps) => {
   const webcamRef = useRef(null);
   const [imgSrc, setImgSrc] = useState(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current.getScreenshot({
       width: 200,

@@ -13,7 +13,7 @@ import "cropperjs/dist/cropper.css";
 
 import { useCallback, useRef, useState } from "react";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import Cropper, { ReactCropperElement } from "react-cropper";
 
 import { mimeTypesForImage } from "../../utils/constants";
@@ -41,7 +41,7 @@ export const ImageCropModal = ({
   const cropperRef = useRef<ReactCropperElement>(undefined);
   const [scale, setScale] = useState(0.4);
   const [isCropperReady, setIsCropperReady] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const fileExtension = imageName?.split(".")?.pop()?.toLowerCase() ?? "jpg";
   const isUnsplashImage = !image?.startsWith("blob:");
 
@@ -121,7 +121,6 @@ export const ImageCropModal = ({
         decimalScale={1}
         fixedDecimalScale
       />
-
       <Box className={styles["cropper-container"]}>
         <LoadingOverlay
           visible={!isCropperReady}
@@ -151,7 +150,6 @@ export const ImageCropModal = ({
           ready={(e) => setIsCropperReady(true)}
         />
       </Box>
-
       <Group className={styles["cancel-save-btn-container"]} justify="right">
         <Button className={styles["cancel-btn"]} onClick={handleCancelBtnClick}>
           {translations("Cancel")}

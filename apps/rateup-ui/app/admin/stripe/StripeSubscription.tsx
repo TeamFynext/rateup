@@ -11,7 +11,7 @@ import {
   Play,
   Square,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +33,7 @@ interface SubscriptionTableData {
 }
 
 const StripeSubscription = () => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: subscriptions } = useGetAllStripeSubscriptions();
 
   const columns: ColumnDef<SubscriptionTableData>[] = [
@@ -178,7 +178,6 @@ const StripeSubscription = () => {
           </div>
         </CardHeader>
       </Card>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -218,7 +217,6 @@ const StripeSubscription = () => {
           </CardContent>
         </Card>
       </div>
-
       <DataTable
         columns={columns}
         data={tableData}

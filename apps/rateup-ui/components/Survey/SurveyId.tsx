@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 
 import { Center, Group, MultiSelect, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useNavControlContext } from "@/context/NavControlContext";
@@ -84,7 +84,7 @@ export default function SurveyID() {
   const [filterTags, setFilterTags] = useState([]);
   const [encryptionpassword, setEncryptionPassword] = useState("");
   const [variables, setVariables] = useState([]);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const [
     funToRunBeforeSurveyIdPageHeaderTabsChange,
@@ -268,7 +268,6 @@ export default function SurveyID() {
               setFilterTags={setFilterTags}
               encryptionpassword={encryptionpassword}
               setEncryptionPassword={setEncryptionPassword}
-              translations={translations}
               setActiveTab={setActiveTab}
               setFunToRunBeforeSurveyIdPageHeaderTabsChange={
                 setFunToRunBeforeSurveyIdPageHeaderTabsChange

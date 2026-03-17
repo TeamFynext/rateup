@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { Center, Stack, Text } from "@mantine/core";
 import { IconLoader } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import Session from "supertokens-auth-react/recipe/session";
 
 import { useUpdateShopifySession } from "@/backend/appsIntegration/shopify/shopify.query";
@@ -36,7 +36,7 @@ const ShopifyAuthCallback = ({
 
   const updateShopifySession = useUpdateShopifySession();
   const { reset, updateRouteAndCart } = useRouteAndCartStore();
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (!shop) {
       router.push("/login");
@@ -75,7 +75,7 @@ const ShopifyAuthCallback = ({
       {updateShopifySession.isPending && (
         <Stack justify="center" align="center">
           <IconLoader className={style.rotateInfinitely} display={"block"} />
-          <Text>{translations("WaitConnecting Shopify with Rateup")}</Text>
+          <Text>{translations("Wait..Connecting Shopify with Rateup")}</Text>
         </Stack>
       )}
     </Center>

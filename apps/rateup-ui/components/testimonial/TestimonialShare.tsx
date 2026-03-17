@@ -18,7 +18,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconChevronLeft, IconCopy, IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   RateupButtonBlue,
@@ -29,7 +29,7 @@ import TestimonialCard from "./TestimonialCard";
 
 const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
   const filteredTestimonials = selectedTestimonials;
-  const translations = useTranslations();
+  const translations = useExtracted();
   if (filteredTestimonials?.length <= 0)
     return (
       <Center mt={150}>
@@ -59,7 +59,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
   const iframe = `<iframe src="${shareUrl}" width="100%"></iframe>`;
 
   const [isPreview, setIsPreview] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Modal
       opened={opened}
@@ -128,7 +128,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
             </Stack>
             <Text c={"#494949"} fw={400}>
               {translations(
-                "Place this code in the desired section of your website to display the embed",
+                "Place this code in the desired section of your website to display the embed.",
               )}
             </Text>
             <RateupButtonBlue

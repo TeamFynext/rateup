@@ -26,7 +26,7 @@ import {
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -56,7 +56,7 @@ export function ReviewSuggestionModal({
   opened,
   onClose,
 }: ReviewSuggestionModalProps) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const {
     data: reviewSuggestions,
     isLoading,
@@ -178,7 +178,7 @@ function ImportJsonPanel({ handleClose, teamId }) {
       language: language,
     });
   }
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack>
       <TeamSurveyLanguageSelector
@@ -356,7 +356,7 @@ function CreateReviewSuggestionComponent({ teamId }) {
   const createReviewMutation = useCreateReviewSuggestionsMutation(teamId);
   const [newReview, setNewReview] = useState("");
   const [language, setLanguage] = useState("");
-  const translations = useTranslations();
+  const translations = useExtracted();
   function handleAddReview() {
     createReviewMutation.mutate({
       reviewSuggestions: [newReview],
@@ -403,7 +403,6 @@ function CreateReviewSuggestionComponent({ teamId }) {
           },
         }}
       />
-
       <Button
         style={{
           height: "inherit",
@@ -431,7 +430,7 @@ export function TeamSurveyLanguageSelector({
   ...props
 }: TeamSurveyLanguageSelectorProps) {
   const { data: languages } = useSurveyLanguagesFromTeam(teamId);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (!value && languages?.length > 0) {
       onChange(languages[0]);

@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
 import classNames from "classnames/bind";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import readXlsxFile from "read-excel-file/browser";
 import { toast } from "sonner";
 
@@ -28,7 +28,7 @@ function ImportChoices({
   handleSave,
 }) {
   const fileButtonResetRef = useRef<() => void>(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   // checks if excel rows has all surveyLanguages columns.
   const areAllSurveyLanguagesColumnsPresent = useCallback((headerRow) => {
     let result = true;
@@ -142,12 +142,12 @@ function ImportChoices({
           <Blockquote icon={<IconInfoCircle />} iconSize={"1.25rem"}>
             <span>
               {translations(
-                "Column headings in Excel file should be the selected language key",
+                "Column headings in Excel file should be the selected language key.",
               )}
             </span>
             <NavLink
               href={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/File/multiple-choice-questions-choices-demo.xlsx`}
-              label={translations("Download Demo xlsx File")}
+              label={translations("Download Demo .xlsx File")}
               leftSection={<IconDownload size="1rem" stroke={1.5} />}
               download
               active

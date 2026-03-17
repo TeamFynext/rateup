@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useResetResponsesStats } from "../../../backend/surveys/response/response.query";
@@ -31,7 +31,7 @@ const OtherSettings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const resetResponsesStats = useResetResponsesStats(
     surveyId,
     surveyTeamMapId,
@@ -45,7 +45,7 @@ const OtherSettings = () => {
 
   const confirmReset = () => {
     if (user?.email === verifyEmail) {
-      toast.loading(translations("Hold on, data is getting reset"), {
+      toast.loading(translations("Hold on, data is getting reset..."), {
         id: "load-data",
       });
       setIsLoading(true);
@@ -60,7 +60,7 @@ const OtherSettings = () => {
   const deleteSurveyMutation = useDeleteSurveyMutation();
 
   const confirmDeleteSurvey = () => {
-    toast.loading(translations("Hold on, survey is getting deleted"), {
+    toast.loading(translations("Hold on, survey is getting deleted..."), {
       id: "delete-survey",
     });
     setIsLoading(true);
@@ -110,7 +110,7 @@ const OtherSettings = () => {
             onChange={(e) => setVerifyEmail(e.target.value)}
           />
           <Text style={{ color: "red" }}>
-            {translations("Once reset, all response data will be lost")}
+            {translations("Once reset, all response data will be lost.")}
           </Text>
         </Stack>
       </FormModalLayout>
@@ -126,7 +126,7 @@ const OtherSettings = () => {
       >
         <Text style={{ color: "red" }}>
           {translations("Are you sure you want to delete this survey?")} <br />
-          {translations("This action cannot be undone!!")}
+          {translations("This action cannot be undone.!!")}
         </Text>
       </FormModalLayout>
     </>

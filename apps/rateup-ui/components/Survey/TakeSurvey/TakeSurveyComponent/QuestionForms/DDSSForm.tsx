@@ -4,7 +4,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 
 import { Select, useMantineTheme } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
@@ -28,7 +28,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   const selectedPreview = useSelectedPreview();
   const isMobile =
     useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
-  const translations = useTranslations();
+  const translations = useExtracted();
   const takeSurveyLayoutWebDomNodeRef = useRef(null);
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const { response, updateResponse } = useContext(CurrentResponsesContext);

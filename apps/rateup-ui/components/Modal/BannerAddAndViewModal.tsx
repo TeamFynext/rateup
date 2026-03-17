@@ -22,7 +22,7 @@ import {
   IconInfoCircle,
   IconPlus,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { MenuItemPriceType } from "@/types/enums";
@@ -63,7 +63,7 @@ export const BannerAddAndViewModal = ({
     decrement();
   });
   const { data, isPending } = useMenuBannerQuery(menuId);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (data) {
       handleCarouselControl(1, data?.length);
@@ -161,7 +161,7 @@ export const BannerAddAndViewModal = ({
           </Group>
           <Text fz={"md"} c={"var(--grey-color-4)"}>
             {translations(
-              "Sliding banners to be shown in top of menu You can add upto 4 banners",
+              "Sliding banners to be shown in top of menu. You can add upto 4 banners.",
             )}
           </Text>
         </Stack>
@@ -218,7 +218,7 @@ export const BannerAddAndViewModal = ({
                   if (!data?.[data?.length - 1]?.id) {
                     toast.error(
                       translations(
-                        "Save the form you just made, then click Add Banner button to make a new form",
+                        "Save the form you just made, then click Add Banner button to make a new form.",
                       ),
                     );
                     return;

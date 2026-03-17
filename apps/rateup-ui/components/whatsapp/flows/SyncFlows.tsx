@@ -22,7 +22,7 @@ import {
   IconChevronRight,
   IconRefresh,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -105,7 +105,7 @@ export function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const flow = flows[currentFlowIndex];
   const importMutation = useImportFlowsMutation();
-  const translations = useTranslations();
+  const translations = useExtracted();
   function handleNext() {
     if (currentFlowIndex !== flows.length - 1) {
       setCurrentFlowIndex(currentFlowIndex + 1);
@@ -194,7 +194,7 @@ function ConfigureFlow({
   handleNext: () => void;
 }) {
   const { data: flowJson, isLoading, error, isError } = useWaFlowJson(flow.id);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (flowJson) {
       let interactiveQCount = 0;
@@ -396,7 +396,7 @@ function DisplayTemplates({
     }
   }
   const allChecked = selectedTemplates.length === unregisteredTemplates?.length;
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Flex direction={"column"} h="80vh">
       <Table.ScrollContainer
@@ -480,7 +480,7 @@ export function SyncFlowsButton({ disabled = false }) {
     toast.error("Error syncing templates");
     console.error(error);
   }
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <Button

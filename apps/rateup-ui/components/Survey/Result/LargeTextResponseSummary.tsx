@@ -20,7 +20,7 @@ import {
   IconInfoCircle,
   IconX,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { QuestionType } from "@/types/enums";
@@ -64,7 +64,7 @@ const LargeTextResponseSummary = ({
   const { teams } = useContext(SurveyContext);
   const ref = useRef(null);
   const [height, setHeight] = useState(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const getResponseSummary = (questionId, teamId?) => {
     if (getSummary.isPending) return;
     toast.loading("loading", {

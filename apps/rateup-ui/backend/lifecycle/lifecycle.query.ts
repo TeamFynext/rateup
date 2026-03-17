@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -13,7 +13,7 @@ import {
 
 export function useCreateLifeCycleMutation() {
   const queryClient = useQueryClient();
-  const t = useTranslations();
+  const t = useExtracted();
   return useMutation({
     mutationFn: createLifeCycle,
     onSuccess: () => {
@@ -35,7 +35,7 @@ export function useCreateLifeCycleMutation() {
 
 export function useUpdateLifeCycleMutation() {
   const queryClient = useQueryClient();
-  const t = useTranslations();
+  const t = useExtracted();
   return useMutation({
     mutationFn: updateLifeCycle,
     onSuccess: () => {
@@ -56,7 +56,7 @@ export function useUpdateLifeCycleMutation() {
 }
 export function useDeleteLifeCycleMutation() {
   const queryClient = useQueryClient();
-  const t = useTranslations();
+  const t = useExtracted();
   return useMutation({
     mutationFn: deleteLifeCycle,
     onSuccess: () => {
@@ -84,7 +84,7 @@ export const useLifeCyclesQuery = () =>
 
 export function useReorderLifeCycleMutation() {
   const queryClient = useQueryClient();
-  const t = useTranslations();
+  const t = useExtracted();
   return useMutation({
     mutationFn: reorderLifeCycles,
     onSuccess: () => {

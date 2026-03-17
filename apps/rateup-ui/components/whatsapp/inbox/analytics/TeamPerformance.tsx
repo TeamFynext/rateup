@@ -1,7 +1,7 @@
 import { useRouter } from "next/navigation";
 
 import { ArrowRight, Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useGetTeamOverview } from "@/backend/conversation/conversation.query";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime";
 
 function TeamPerformance({ dateRange }) {
   const router = useRouter();
-  const t = useTranslations();
+  const t = useExtracted();
   const { data: teamsData, isLoading } = useGetTeamOverview({
     dateKey: dateRange.key,
     dateRange: dateRange.range,
@@ -24,7 +24,6 @@ function TeamPerformance({ dateRange }) {
           {t("Click on any team to view detailed statistics")}
         </p>
       </CardHeader>
-
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <table className="min-w-[900px] w-full">
@@ -110,7 +109,6 @@ function TeamPerformance({ dateRange }) {
                             </span>
                           </div>
                         </td>
-
                         <td className="hidden sm:table-cell p-4">
                           <div className="font-semibold">
                             {team.teamMembers}{" "}
@@ -120,17 +118,14 @@ function TeamPerformance({ dateRange }) {
                             {team.teamMembersOnline} {t("online")}
                           </div>
                         </td>
-
                         <td className="p-4 font-semibold text-primary">
                           {team.messagesSent}
                         </td>
-
                         <td className="hidden md:table-cell p-4 font-semibold">
                           {averageResponseTime
                             ? `${averageResponseTime.value} ${averageResponseTime.suffix}`
                             : "NA"}
                         </td>
-
                         <td className="hidden sm:table-cell p-4">
                           <Badge
                             variant="outline"
@@ -139,7 +134,6 @@ function TeamPerformance({ dateRange }) {
                             {team.assignedConversations}
                           </Badge>
                         </td>
-
                         <td className="p-4">
                           <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
                         </td>

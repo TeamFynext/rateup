@@ -19,7 +19,7 @@ import {
 } from "@mantine/core";
 import { IconChartBar } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useSurveys } from "../../backend/surveys/surveys.query";
@@ -31,7 +31,7 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
 
   const { isLoading, error, data: surveys } = useSurveys();
   const queryClient = useQueryClient();
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     //-----------callback function to get selected surveys to parent -------
     getSelectedSurveys(surveyidArray);
@@ -130,7 +130,7 @@ function SurveyCard({
   }, []);
 
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <Paper

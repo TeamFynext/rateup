@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useState } from "react";
 
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { useImmer } from "use-immer";
 
@@ -50,7 +50,7 @@ export const ScreenLogicEditor = () => {
   } = useFlowStore();
 
   const screen = getCurrentScreen();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const handleAddNewJump = () => {
     updateLogicJumps((draft) => {
@@ -135,7 +135,6 @@ export const ScreenLogicEditor = () => {
         </h3>
         <h3 className="text-xl font-medium text-green-600">{screen.title}</h3>
       </div>
-
       <ScrollArea className="grow">
         {/* Component-Level Logic Jumps */}
         <div className="mb-12 pb-4">
@@ -177,7 +176,6 @@ export const ScreenLogicEditor = () => {
           </Button>
         </div>
       </ScrollArea>
-
       <div className="mt-6 pt-4 border-t">
         <div className="flex justify-between">
           <Button
@@ -206,7 +204,7 @@ function AtomicConditionBlock({
   handleDelete,
 }: AtomicConditionBlockProps) {
   const { getCurrentScreen } = useFlowStore();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const selectedScreen = getCurrentScreen();
   const [selectedCondition, setSelectedCondition] = useState(
@@ -360,7 +358,7 @@ function ConditionsActionMapBlock({
   index,
 }: ConditionsActionMapBlockProps) {
   const { screens, currentScreenId } = useFlowStore();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const [selectedAction, setSelectedAction] = useState(
     logic.action || LogicAction.NextQ,
@@ -438,7 +436,6 @@ function ConditionsActionMapBlock({
           </Button>
         </div>
       </div>
-
       <div className="flex flex-col min-w-[300px] max-w-[350px]">
         <h5 className="text-base font-semibold text-center mb-4">
           {translations("Action")}

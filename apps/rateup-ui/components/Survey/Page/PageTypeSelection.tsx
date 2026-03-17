@@ -12,7 +12,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { hasFeature } from "@/utils/subscription/subscription";
 
@@ -34,7 +34,7 @@ const PageTypeSelection = ({
   const handleQuestionTypeClick = (type) => {
     handleTypeSelection(type);
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   const QuestionButton = ({ type, subscription }) => {
     const Icon = pageIcons[type];
     return (

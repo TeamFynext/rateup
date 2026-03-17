@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@mantine/core";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 
 const SubscriptionCard = () => {
   const { data: subscription, isLoading } = useSubscription();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
 
   if (isLoading || !subscription) {

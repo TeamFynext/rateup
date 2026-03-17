@@ -4,7 +4,7 @@ import React from "react";
 
 import { Box, Text } from "@mantine/core";
 import { IconChevronLeft } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
 import {
@@ -14,7 +14,7 @@ import {
 import styles from "./AuthForm.module.css";
 
 const PhoneNumberForm = ({ form, setSignUpTypeValue, isLoading, title }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <Box mb={"md"}>

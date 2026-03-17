@@ -3,7 +3,7 @@
 import { Center, Flex, Image, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandGoogleDrive } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { useLocalStorage } from "react-use";
 import { toast } from "sonner";
 
@@ -29,7 +29,7 @@ const GoogleSheet = () => {
   const deleteAccount = useDeleteIntegrationMutation(
     IntegratedApps.googlesheet,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: authUrl } = useGetGoogleSheetAuthorizationUrl();
   const [callbackRoute, setCallBackRoute] = useLocalStorage(
     "google-callback-route",
@@ -37,7 +37,7 @@ const GoogleSheet = () => {
   );
 
   const handleSignOutGoogleSync = () => {
-    toast.loading(translations("Hold on, Signing out from google sheet"), {
+    toast.loading(translations("Hold on, Signing out from google sheet.."), {
       id: "integration-delete",
     });
     deleteAccount.mutate();

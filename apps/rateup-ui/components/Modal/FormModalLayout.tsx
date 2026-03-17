@@ -11,7 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { SAVE_HOTKEY } from "../../utils/constants";
 import {
@@ -59,7 +59,7 @@ export default function FormModalLayout({
   submitButtonLeftIcon,
   zIndex,
 }: FormModalLayoutProps) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Modal
       centered={centered}

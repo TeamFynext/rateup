@@ -4,7 +4,7 @@ import { useContext, useEffect, useState } from "react";
 
 import { Box, Button } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
@@ -20,7 +20,7 @@ function NextBtn({ next, themeStyles, survey, isSavingResponses }) {
   const [isErrorInput, setIsErrorInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const { borderRadius, ...otherThemeStyles } = themeStyles;
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     // TODO: check if rebase was done correctly
 

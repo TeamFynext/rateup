@@ -55,6 +55,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useUser } from "@/context/UserContext";
 import { docsPath } from "@/utils/constants";
 
 export default function CashierPage() {
@@ -87,6 +88,9 @@ export default function CashierPage() {
   const { data: customerData, isLoading: isLoadingCustomer } =
     useCustomerRewardsByPhone(selectedPhone);
   const { data: allRewards } = useGetLoyaltyRewards();
+  const {
+    user: { orgId },
+  } = useUser();
   const { data: tiers } = useLoyaltyTiers();
 
   // Mutations
@@ -274,7 +278,19 @@ export default function CashierPage() {
             Quick customer lookup and transaction processing
           </p>
         </div>
-        <InfoButton docUrl={`${docsPath}/loyality/cashierPortal`} />
+
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => {
+              window.open(`/loyalty/${orgId}/register`, "_blank");
+            }}
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Register Customer
+          </Button>
+          <InfoButton docUrl={`${docsPath}/loyality/cashierPortal`} />
+        </div>
       </div>
       {/* Search Customer */}
       <Card>

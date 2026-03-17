@@ -5,7 +5,7 @@ import React, { useRef, useState } from "react";
 import { Box, Button, FileButton, Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
@@ -30,7 +30,7 @@ const ImageUploadSettings = ({
   const [imageType, setImageType] = useState("");
   const imageUploadBtnRef = useRef<HTMLButtonElement>(null);
   const resetLogoRef = useRef(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [
     openedMethodSelectionDialog,
     { toggle: toggleMethodSelectionDialog, close: closeMethodSelectionDialog },

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 import { modals } from "@mantine/modals";
 import { Edit, EllipsisVertical, Eye, Send, Trash } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useContactDeleteMutation } from "@/backend/campaign/contacts/contacts.query";
 
@@ -20,7 +20,7 @@ import CreateOrEditContactModal from "./CreatOrEditContactModal";
 import SendMessageModal from "./SendMessageModal";
 
 const ContactMenu = ({ contact, groupId }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [openedEditModal, setOpenedEditModal] = useState(false);
   const openDeleteModal = () => {
     modals.openConfirmModal({
@@ -99,7 +99,6 @@ const ContactMenu = ({ contact, groupId }) => {
         setOpened={setOpenedEditModal}
         initialValues={initialValues}
       />
-
       <ContactDetailedView
         setIsAddToGroupOpen={setIsAddToGroupOpen}
         opened={viewDetails}

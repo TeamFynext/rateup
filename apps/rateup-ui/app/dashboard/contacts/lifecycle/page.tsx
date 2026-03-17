@@ -26,7 +26,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -735,7 +735,7 @@ const LifecycleStageForm = ({
   onCancel = null,
   stage = null,
 }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const lifecycles = useLifecycleContext();
   const createLifecycle = useCreateLifeCycleMutation();
   const addStageForm = useForm<StageFormData>({

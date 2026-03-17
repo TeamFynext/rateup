@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { Stack } from "@mantine/core";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { uploadFileForEmbed } from "../../backend/chatbot/chatbot.api";
@@ -26,7 +26,7 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
   const uploadSourceForEmbedMutate = useUploadSourceForEmbed();
   const [file, setFile] = useState<File>(null);
   const queryClient = useQueryClient();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleUplaod = async () => {
     setIsUpload(true);
     switch (source) {
@@ -51,14 +51,14 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
         if (file.size > 1048576 * 10)
           toast.loading(
             translations(
-              "Hold onfile is getting uploaded It may take few minutes",
+              "Hold on..file is getting uploaded. It may take few minutes",
             ),
             {
               id: "file-upload",
             },
           );
         else
-          toast.loading(translations("Hold onfile is getting uploaded"), {
+          toast.loading(translations("Hold on..file is getting uploaded"), {
             id: "file-upload",
           });
         await uploadFileForEmbed(file, selectedChatbotId).then(
@@ -102,7 +102,7 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
             value={url}
             label={translations("Enter web url")}
             onChange={(e) => setUrl(e.currentTarget.value)}
-            placeholder={translations("Eg:https://wwwexamplecom")}
+            placeholder={translations("Eg:https://www.example.com")}
           />
         )}
         {source == ChatBotDataSourceType.FILE && (

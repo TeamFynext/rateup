@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { Divider, Group } from "@mantine/core";
 import { IconBrandInstagram } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useUpsertWaSettingsMutation } from "@/backend/whatsapp/settings/waSettings.query";
@@ -27,7 +27,7 @@ export function InstagramConnectionsList({
 }: Readonly<{
   waSettings: WaSettings | undefined;
 }>) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [selectedWaSettings, setSelectedWaSettings] =
     useState<WaSetting | null>(null);
   const [openedInstaConfigModal, setOpenedInstaConfigModal] = useState(false);

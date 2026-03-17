@@ -7,7 +7,7 @@ import {
   TextInputProps,
 } from "@mantine/core";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 interface LinkCopyElementProps extends TextInputProps {
   link: string;
@@ -17,7 +17,7 @@ export function LinkCopyElement({
   label,
   ...props
 }: LinkCopyElementProps) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <TextInput
       label={label ?? translations("Register URL")}

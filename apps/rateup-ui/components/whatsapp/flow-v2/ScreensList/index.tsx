@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import classNames from "classnames/bind";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ import styles from "./ScreensList.module.css";
 const cx = classNames.bind(styles);
 
 function ScreensList() {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [createModalOpened, setCreateModalOpened] = useState(false);
 
   const { screens, currentScreenId, setCurrentScreenId, deleteScreen } =
@@ -57,11 +57,9 @@ function ScreensList() {
           </TooltipContent>
         </Tooltip>
       </div>
-
       <p className="text-xs text-muted-foreground ">
         {translations("Build your flow step by step")}
       </p>
-
       <div className="space-y-2 mt-4">
         {screens.map((screen, index) => (
           <ScreenCard
@@ -74,7 +72,6 @@ function ScreensList() {
           />
         ))}
       </div>
-
       <CreateScreenModal
         opened={createModalOpened}
         close={() => setCreateModalOpened(false)}
@@ -98,7 +95,7 @@ function ScreenCard({
   onSelect,
   onDelete,
 }: ScreenCardProps) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
 
   const handleDelete = () => {
@@ -138,7 +135,6 @@ function ScreenCard({
           </Button>
         </div>
       </div>
-
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteModalOpened}

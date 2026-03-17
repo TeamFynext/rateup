@@ -2,14 +2,14 @@
 
 import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useRemoveContactsFromGroup } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 
 export const ParticipantMenu = ({ contactId, groupId }) => {
   const removeContactsMutation = useRemoveContactsFromGroup(groupId);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const openDeleteModal = () => {
     modals.openConfirmModal({
       title: translations("Remove member"),

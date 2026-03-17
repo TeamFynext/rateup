@@ -22,7 +22,7 @@ import {
 } from "@mantine/core";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconAddressBook } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
@@ -96,7 +96,7 @@ const SelectContacts = ({
   contactIds = [],
   groupIds = [],
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [selectedTab, setSelectedTab] = useState(ContactMethods.Individual);
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({

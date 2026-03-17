@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { isEmail, useForm } from "@mantine/form";
 import { IconCheck } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -33,7 +33,7 @@ function AuthTypeSignupForm({
     }
   }, [userInfo]);
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   const signupSchema = z.object({
     name: z.string().min(4, "Name should be at least 4 characters long"),
 
@@ -163,7 +163,6 @@ function AuthTypeSignupForm({
             <Step1
               formData={signupForm}
               handleNext={handleNext}
-              translations={translations}
               google={true}
             />
           )}
@@ -172,7 +171,6 @@ function AuthTypeSignupForm({
               formData={signupForm}
               handleBack={handleBack}
               handleNext={handleNext}
-              translations={translations}
             />
           )}
           {currentStep === 3 && (
@@ -181,7 +179,6 @@ function AuthTypeSignupForm({
               handleBack={handleBack}
               handleSubmit={handleSubmit}
               isLoading={isLoading}
-              translations={translations}
             />
           )}
           {/* {currentStep === 4 && <Step4 formData={signupForm} />} */}

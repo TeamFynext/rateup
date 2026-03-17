@@ -11,7 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useCreateMenuCategoryMutation,
@@ -38,7 +38,7 @@ export function CreateMenuCategoryModal({
   editingItem,
 }: CreateMenuCategoryModalProps) {
   const [isCreating, setIsCreating] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const form = useForm({
     initialValues: editingItem ?? {
       name: "",

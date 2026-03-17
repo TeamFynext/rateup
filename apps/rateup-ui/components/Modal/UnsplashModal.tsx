@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useTriggeringDownload,
@@ -59,7 +59,7 @@ export const UnsplashModal = ({
     root: lastImageRef?.current,
     threshold: 1,
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (entry?.isIntersecting) {
       unsplashPhotosList?.fetchNextPage();
@@ -169,7 +169,7 @@ const UnsplashPhoto = ({
     setSearchQuery("");
     close();
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Card
       shadow="sm"

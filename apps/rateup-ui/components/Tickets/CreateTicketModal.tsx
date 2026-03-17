@@ -7,7 +7,7 @@ import { Group, Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { IconPlus } from "@tabler/icons-react";
 import { List, NotebookTabs, Sparkles, Ticket, Type } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
@@ -58,7 +58,7 @@ const CreateTicketModal = ({
   surveyResponseId,
 }: iProps) => {
   let isCustomTicket = type === TicketType.CUSTOM;
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
   const form = useForm({
     initialValues: {
@@ -130,7 +130,7 @@ const CreateTicketModal = ({
       console.error(validationRes.errors);
       return;
     }
-    toast.loading(translations("Hold on, your ticket is getting created"), {
+    toast.loading(translations("Hold on, your ticket is getting created..."), {
       id: "load-data",
     });
 
@@ -256,7 +256,7 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
     useBoardQueries(hasTicketFeature);
   const { createCard, board, isLoading } = useBoard(selectedBoardId);
 
-  const t = useTranslations();
+  const t = useExtracted();
 
   const form = useForm({
     initialValues: {

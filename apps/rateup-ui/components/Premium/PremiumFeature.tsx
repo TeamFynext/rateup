@@ -4,11 +4,11 @@ import React from "react";
 
 import { Box, Overlay, Tooltip, useMantineColorScheme } from "@mantine/core";
 import { IconLockSquareRounded } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 const PremiumFeature = ({ isSubscribed, children }) => {
   const { colorScheme } = useMantineColorScheme();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const isDark = colorScheme === "dark";
   return (
     <Tooltip.Floating

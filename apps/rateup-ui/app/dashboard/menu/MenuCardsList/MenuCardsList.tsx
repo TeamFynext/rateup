@@ -5,7 +5,7 @@ import React, { useContext } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import clsx from "clsx";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useAllMenus } from "@/backend/menu/menu.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
@@ -19,7 +19,7 @@ import styles from "./MenuCardsList.module.css";
 
 function MenuCardsList({ handleEditClick, sortOption }) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { isError, isPending, data: menus, refetch } = useAllMenus();
   const smallScreen = useMediaQuery("(max-width: 40em)");
   if (isPending) return <MenuCardListSkeleton />;
@@ -57,7 +57,7 @@ function MenuCardsList({ handleEditClick, sortOption }) {
             gridColumn: smallScreen ? 1 : 2,
           }}
         >
-          <NothingFound text={translations("No menus available")} />
+          <NothingFound text={translations("No menus available.")} />
         </Stack>
       )}
     </Box>

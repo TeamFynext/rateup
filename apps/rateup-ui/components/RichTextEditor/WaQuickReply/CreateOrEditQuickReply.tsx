@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import z from "zod";
 
@@ -45,7 +45,7 @@ const CreateOrEditQuickReply = ({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const update = useUpdateReply();
   const create = useCreateWaQuickReply();
   const form = useForm<z.infer<typeof quickReplySchema>>({
@@ -127,7 +127,7 @@ const CreateOrEditQuickReply = ({
               {isEdit ? t("Edit Quick Reply") : t("Add Quick Reply")}{" "}
             </DialogTitle>
             <DialogDescription>
-              {t("Click save when you are done")}
+              {t("Click save when you are done.")}
             </DialogDescription>
           </DialogHeader>
           <div className="overflow-auto h-[500px]">

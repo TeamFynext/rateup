@@ -1,12 +1,12 @@
 "use client";
 
 import { Clock } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import TimeSinceText from "../TimeSinceText";
 
 function CreatedSinceText({ createdAt }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <div className="flex items-center justify-center gap-1">
       {/* <Clock className="w-4 h-4" /> */}

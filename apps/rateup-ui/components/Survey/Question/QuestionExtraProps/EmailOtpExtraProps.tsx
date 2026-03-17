@@ -14,7 +14,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { IconInfoCircle, IconPlus, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useImportEmailIdsMutation } from "../../../../backend/surveys/questions/questions.query";
@@ -56,7 +56,7 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
   const allChecked = allowedEmailIDs?.every((email) =>
     selectedEmailIds.includes(email),
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const indeterminate =
     allowedEmailIDs?.some((email) => selectedEmailIds.includes(email)) &&
     !allChecked;
@@ -153,7 +153,6 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
           defaultValue={AllowEmailForOTP.allEmail}
         />
       </Tooltip>
-
       {features.isRestricted && (
         <Stack>
           <PaperLayout display={!allowedEmailIDs?.length ? "none" : "block"}>
@@ -235,7 +234,7 @@ const ImportAllowedEmailIDs = ({ qId }) => {
   const [file, setFile] = useState<File | null>(null);
   const { surveyId } = useContext(SurveyContext);
   const importEmailIdsMutate = useImportEmailIdsMutation(surveyId);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleUploadFile = () => {
     if (!file) return;
     const formData = new FormData();
@@ -268,7 +267,7 @@ const ImportAllowedEmailIDs = ({ qId }) => {
         ml={10}
       >
         {translations(
-          "Upload CSV/XLSX file to generate allowed email Ids required field in the file: email",
+          "Upload CSV/XLSX file to generate allowed email Ids. required field in the file: email",
         )}
       </Blockquote>
       <Stack>

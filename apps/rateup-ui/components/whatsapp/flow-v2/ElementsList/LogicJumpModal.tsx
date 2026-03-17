@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { LogicAction, LogicCondition, QuestionType2 } from "@/types/enums";
 import { FlowLogicJump } from "@/types/global";
@@ -49,7 +49,7 @@ export function LogicJumpModal({
   onClose,
   elementId,
 }: LogicJumpModalProps) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { getCurrentScreen, getScreens, getLogicJumps, updateLogicJumps } =
     useFlowStoreV3();
 

@@ -9,7 +9,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { WaTemplateStatus } from "@/types/enums";
 
@@ -67,7 +67,7 @@ export default function WaInboxTemplateDisplayModal({
     filteredTemplates &&
     filteredTemplates?.length > 0 &&
     searchFilteredTemplates?.find((data) => data.id === selectedTemplateId);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   return (
     <SimpleModalLayout
@@ -98,7 +98,6 @@ export default function WaInboxTemplateDisplayModal({
           </div>
         </div>
       </div>
-
       {/* Top controls */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between mb-4">
         <div className="flex items-center gap-2 border rounded-xl max-w-xl w-full p-1.5">
@@ -116,7 +115,6 @@ export default function WaInboxTemplateDisplayModal({
           className="sm:max-w-xs w-full"
         />
       </div>
-
       {/* Main content: list + divider + preview */}
       <div className="flex flex-col sm:flex-row gap-6 items-start">
         {/* LEFT: templates list */}

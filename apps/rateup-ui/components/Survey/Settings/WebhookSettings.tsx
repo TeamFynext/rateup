@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { ActionIcon, Group, Input, Stack, Text, Tooltip } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useGetWebhookClientSecret } from "@/backend/org/org.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
@@ -27,7 +27,7 @@ const WebhookSettings = ({
   const { data: webhookSecret } = useGetWebhookClientSecret(
     responseWebhookEndpoint,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     setEndpointUrl(responseWebhookEndpoint ?? "");
   }, [responseWebhookEndpoint]);
@@ -41,7 +41,7 @@ const WebhookSettings = ({
     if (!(responseWebhookEndpoint && !endpointUrl.trim().length)) {
       if (!isValidUrl(endpointUrl)) {
         setError(
-          translations("Invalid Url, eg: https://examplecom/your-endpoint"),
+          translations("Invalid Url, eg: https://example.com/your-endpoint"),
         );
         return;
       }
@@ -84,7 +84,7 @@ const WebhookSettings = ({
               <ContainedTextField
                 value={endpointUrl}
                 type="url"
-                placeholder={translations("https://examplecom/webhook")}
+                placeholder={translations("https://example.com/webhook")}
                 onChange={(e) => {
                   setError("");
                   setEndpointUrl(e.currentTarget.value);

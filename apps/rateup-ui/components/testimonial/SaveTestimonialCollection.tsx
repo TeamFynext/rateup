@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useTeamsByUser } from "../../backend/team/team.query";
@@ -27,7 +27,7 @@ const SaveTestimonialCollection = ({ opened, close }) => {
     value: team?.id,
     label: team?.name,
   }));
-  const translations = useTranslations();
+  const translations = useExtracted();
   const form = useForm({
     initialValues: {
       name: "",
@@ -46,9 +46,12 @@ const SaveTestimonialCollection = ({ opened, close }) => {
   const saveCollection = useCreateTestimonialCollection();
   const onSubmit = () => {
     if (form.validate().hasErrors) return;
-    toast.loading(translations("Hold on, your collection is getting created"), {
-      id: "create-collection",
-    });
+    toast.loading(
+      translations("Hold on, your collection is getting created..."),
+      {
+        id: "create-collection",
+      },
+    );
     saveCollection.mutate(form.values, {
       onSuccess: (data) => {
         close();

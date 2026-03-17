@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Smartphone } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { QuestionType2 } from "@/types/enums";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ import useFlowStoreV3 from "../utils/store";
 import styles from "./WhatsAppPreview.module.css";
 
 function WhatsAppPreview() {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { getCurrentScreen } = useFlowStoreV3();
   const [formData, setFormData] = useState<Record<string, any>>({});
 
@@ -370,7 +370,6 @@ function WhatsAppPreview() {
           {translations("See how your flow looks on mobile")}
         </p>
       </div>
-
       {/* Phone Mockup */}
       <div className="flex-1 flex items-start justify-center p-4 overflow-auto">
         <div className={styles["phone-frame"]}>

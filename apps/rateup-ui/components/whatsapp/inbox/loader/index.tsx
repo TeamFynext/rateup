@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Flex, Group, Loader, Progress, Stack, Text } from "@mantine/core";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import classes from "./styles.module.css";
 
@@ -14,7 +14,7 @@ export default function WhatsAppInboxLoader({
   isLoading: boolean;
 }) {
   const [progress, setProgress] = useState(0);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isLoading) {
@@ -50,7 +50,7 @@ export default function WhatsAppInboxLoader({
         />
         <Group gap={"xs"}>
           <Loader size={10} />
-          <Text size="xs">{translations("Loading chats")}</Text>
+          <Text size="xs">{translations("Loading chats...")}</Text>
         </Group>
       </Stack>
     </Flex>

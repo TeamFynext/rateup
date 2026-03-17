@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
@@ -31,7 +31,7 @@ export default function AddUnknownContactModal(
 ) {
   const { successCallback, ...rest } = props;
   const [opened, { open, close: onClose }] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   return (
     <>
@@ -40,7 +40,6 @@ export default function AddUnknownContactModal(
       ) : (
         <ActionButtonTrigger onClick={open} />
       )}
-
       {opened && (
         <SimpleModalLayout
           {...{
@@ -68,7 +67,7 @@ export default function AddUnknownContactModal(
 export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
   const contactMutation = useCreateContactMutation();
   const [loading, setLoading] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const form = useForm({
     initialValues: {
@@ -211,7 +210,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
             <IconBrandWhatsapp color="white" size={28} />
             <span className="font-semibold">
               {loading
-                ? translations("Please wait")
+                ? translations("Please wait..")
                 : translations("Start Conversation")}
             </span>
           </Button>

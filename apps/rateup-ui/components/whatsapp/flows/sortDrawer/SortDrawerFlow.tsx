@@ -6,7 +6,7 @@ import { Card, Flex, Stack, Text } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { IconGripVertical } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import classes from "../../../menu/category/sortDrawer/DndListHandle.module.css";
 import FormModalLayout from "../../../Modal/FormModalLayout";
@@ -102,7 +102,7 @@ const SortDrawerFlow = ({
 
     close();
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <FormModalLayout
       opened={opened}

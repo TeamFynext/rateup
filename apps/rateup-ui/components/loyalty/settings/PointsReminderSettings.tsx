@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock, Info, Loader2, Save } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { UseFormReturn } from "react-hook-form";
 
 import { TemplateType } from "@/types/enums";
@@ -33,7 +33,7 @@ export function PointsReminderSettings({
   isModified,
   onModify,
 }: PointsReminderSettingsProps) {
-  const t = useTranslations();
+  const t = useExtracted();
   const templateInfo = getLoyaltyTemplateLabel(
     LoyaltyTemplateTypes.InactivityReminder,
     t,

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Group, Text } from "@mantine/core";
 import { IconExclamationCircle, IconPaperclip } from "@tabler/icons-react";
 import { MessageSquare } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -41,7 +41,7 @@ export default function WaInboxChatDisplay({
     [contact, user],
   );
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { isLoading } = useMessagesStore();
   const [showCustomerInfo, setShowCustomerInfo] = useState(false);
   const contactId = contact?.id;

@@ -4,7 +4,7 @@ import React from "react";
 
 import { Group } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import Heading from "../../../components/styled/Heading/Heading";
@@ -13,7 +13,7 @@ import { UserRole } from "../../../utils/enums";
 
 const Templates = () => {
   const { user } = useUser();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const openCreateBlank = () => {
     //do create blank
   };

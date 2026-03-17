@@ -14,7 +14,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
@@ -24,7 +24,7 @@ import styles from "./LandingPageCard.module.css";
 
 function MoreOptionsMenu({ shortUrlId, id, name }) {
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [isEditLandingPageModalOpen, editLandingPageModalHandlers] =
     useDisclosure();
 
@@ -85,7 +85,6 @@ function MoreOptionsMenu({ shortUrlId, id, name }) {
           </MenuItem>
         </MenuDropdown>
       </Menu>
-
       {isEditLandingPageModalOpen && (
         <CreateLandingPageModal
           opened={isEditLandingPageModalOpen}

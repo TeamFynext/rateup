@@ -18,7 +18,7 @@ import {
 } from "@mantine/core";
 import { hasLength, isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useEditSurveyMutation } from "../../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../../backend/team/team.query";
@@ -31,7 +31,7 @@ import styles from "./GeneralSettings.module.css";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const settingsForm = useForm({
     initialValues: {
       title: survey?.title || "",
@@ -98,7 +98,6 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
           {translations("Choose the teams to be added")}
         </p>
       </Box>
-
       <form
         onSubmit={settingsForm.onSubmit(handleSubmit)}
         onKeyDown={getHotkeyHandler([
@@ -184,7 +183,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
   const [data, setData] = useState(languages);
 
   const exactOptionMatch = data.some((item) => item === search);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleValueSelect = (val: string) => {
     if (val === "$create") {
       setData((current) => [...current, search]);
@@ -261,7 +260,6 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
           </Pill.Group>
         </PillsInput>
       </Combobox.DropdownTarget>
-
       <Combobox.Dropdown>
         <Combobox.Options>
           {options}

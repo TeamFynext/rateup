@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -28,10 +28,12 @@ import {
 import InfoButton from "@/components/Button/InfoButton";
 import { BasicSettings } from "@/components/loyalty/settings/BasicSettings";
 import { BirthdayReminderSettings } from "@/components/loyalty/settings/BirthdayReminderSettings";
+import { DEFAULT_JOIN_MESSAGE_TEMPLATE } from "@/components/loyalty/settings/constants";
 import { DangerZone } from "@/components/loyalty/settings/DangerZone";
 import { NotificationSettings } from "@/components/loyalty/settings/NotificationSettings";
 import { PointsExpirationSettings } from "@/components/loyalty/settings/PointsExpirationSettings";
 import { PointsReminderSettings } from "@/components/loyalty/settings/PointsReminderSettings";
+import { ReferralMessageSettings } from "@/components/loyalty/settings/ReferralMessageSettings";
 import {
   BasicSettingsSchema,
   EventTriggersFormSchema,
@@ -46,7 +48,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { docsPath } from "@/utils/constants";
 
 export default function LoyaltySettingsPage() {
-  const t = useTranslations();
+  const t = useExtracted();
   const router = useRouter();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
@@ -125,6 +127,7 @@ export default function LoyaltySettingsPage() {
       moneyCurrency: "AED",
       defaultCountryCode: "AE",
       whatsappSettingsId: undefined,
+      referralMessageTemplate: DEFAULT_JOIN_MESSAGE_TEMPLATE,
     },
   });
 
@@ -165,6 +168,8 @@ export default function LoyaltySettingsPage() {
         moneyCurrency: program.currencyCode || "AED",
         defaultCountryCode: program.defaultCountryCode || "AE",
         whatsappSettingsId: program.whatsappSettingsId,
+        referralMessageTemplate:
+          program.referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEMPLATE,
       });
 
       notificationsForm.reset({
@@ -260,6 +265,7 @@ export default function LoyaltySettingsPage() {
         currencyCode: data.moneyCurrency,
         defaultCountryCode: data.defaultCountryCode,
         whatsappSettingsId: data.whatsappSettingsId,
+        referralMessageTemplate: data.referralMessageTemplate,
       });
     }
   };
@@ -428,6 +434,12 @@ export default function LoyaltySettingsPage() {
               <NotificationSettings
                 form={notificationsForm}
                 onSave={handleSaveNotifications}
+              />
+
+              <ReferralMessageSettings
+                form={basicForm}
+                onSave={onSaveBasicSettings}
+                isPending={updateProgramMutation.isPending}
               />
             </div>
 

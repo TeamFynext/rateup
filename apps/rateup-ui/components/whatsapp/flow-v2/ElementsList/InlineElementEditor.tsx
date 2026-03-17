@@ -6,7 +6,7 @@ import Image from "next/image";
 import { IconDeviceFloppy } from "@tabler/icons-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Controller, useForm } from "react-hook-form";
 
 import { QuestionType2 } from "@/types/enums";
@@ -56,7 +56,7 @@ interface InlineElementEditorProps {
 
 // Inline editor for element properties with rich text support
 function InlineElementEditor({ element }: InlineElementEditorProps) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { updateComponentInScreen } = useFlowStore();
   const [logicJumpModalOpened, setLogicJumpModalOpened] = useState(false);
 
@@ -374,7 +374,6 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
           )}
         </div>
       </form>
-
       {/* Logic Jump Modal */}
       <LogicJumpModal
         opened={logicJumpModalOpened}

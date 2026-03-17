@@ -1,9 +1,9 @@
 import Image from "next/image";
 
 import { Center, Group, IndicatorProps, Text } from "@mantine/core";
-import { IconBrandWhatsapp, IconClock } from "@tabler/icons-react";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { Clock } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import {
@@ -37,13 +37,8 @@ import WaInboxTemplate from "./template";
 import WaInboxText from "./text";
 import WaInboxVideo from "./video";
 
-export const singleMessage = ({
-  message,
-  translations,
-}: {
-  message: WaGetMessagesBody;
-  translations: (e: string) => string;
-}) => {
+export const singleMessage = async ({ message }) => {
+  const translations = useExtracted();
   const { messageContent, messageType, template, interactive } =
     parseWaMessage(message);
   switch (messageType) {
@@ -206,7 +201,7 @@ export const TempMessageBody = ({ body, timestamp }) => {
 };
 
 export const EndofConversationComponent = () => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Center>
       <Group className={classes.indicator_wrapper}>

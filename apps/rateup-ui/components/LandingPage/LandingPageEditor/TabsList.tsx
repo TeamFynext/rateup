@@ -1,12 +1,12 @@
 "use client";
 
 import { Tabs, TabsList, TabsTab } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import styles from "../../Survey/SurveyTheme/components/PageSelector/PageSelector.module.css";
 
 function TabsListComp({ value, onChange }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Tabs
       value={value}

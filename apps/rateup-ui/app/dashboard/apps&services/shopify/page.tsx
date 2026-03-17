@@ -20,7 +20,7 @@ import {
   IconSettingsFilled,
   IconX,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums";
@@ -43,7 +43,7 @@ interface ActiveBadgeProps extends BadgeProps {
   active: boolean;
 }
 export const ActiveStatusBadge = ({ active, ...props }: ActiveBadgeProps) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Badge color={active ? "var(--active-green-2)" : "red"} {...props}>
       {active ? translations("ACTIVE") : translations("INACTIVE")}
@@ -63,7 +63,7 @@ const Shopify = () => {
   ) as { data: ShopifyIntegration; isLoading: boolean };
   const { data: templates, isPending, isError, refetch } = useWaTemplates();
   const { data: teams } = useTeamsByUser();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const session = shopifyInfo?.credential?.session;
   const [shopifyProducts, setShopifyProducts] = useState([]);
 

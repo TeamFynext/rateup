@@ -41,7 +41,7 @@ import {
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -93,7 +93,7 @@ export enum CampaignParticipantsTabs {
 const CampaignById = () => {
   const [searchText, setSearchText] = useDebouncedState("", 200);
   const [opened, { open, close }] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
@@ -343,7 +343,7 @@ const StartCampaignCard = ({
   totalCount = 0,
 }: StartCampaignCardProps) => {
   const [errorMsg, setErrorMsg] = useState("");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [opened, { toggle, close }] = useDisclosure(false);
   const startCampaign = campaign?.status === CampaignStatus.ACTIVE || false;
   const schema = z
@@ -457,7 +457,6 @@ const StartCampaignCard = ({
           {campaign?.status === CampaignStatus.INACTIVE ? "Start" : " Pause"}
         </Button>
       )}
-
       <Badge
         variant="light"
         p={"md"}
@@ -514,7 +513,7 @@ const StartCampaignCardRightSection = ({
   isPending,
   dynamicVariables,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
   const [editModalOpened, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
@@ -589,7 +588,6 @@ const StartCampaignCardRightSection = ({
           </Stack>
         </Group>
       </PaperLayout>
-
       <Modal
         opened={editModalOpened}
         onClose={closeEditModal}
@@ -612,7 +610,7 @@ const StartCampaignCardRightSection = ({
   );
 };
 const CampaignInfoCard = ({ participantCount, stats, flowId, isPending }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const statsArray = [
     {
       key: "participants",
@@ -731,7 +729,7 @@ function SendCampaignModal({
   form,
   handleCampaign,
 }: Readonly<SendCampaignModalProps>) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <FormModalLayout
       opened={opened}

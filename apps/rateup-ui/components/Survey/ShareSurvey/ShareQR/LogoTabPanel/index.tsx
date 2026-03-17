@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import SliderCompatible from "@/components/ui/sliderCompatible";
 function LogoTabpanel({ state, dispatch }) {
   const { qrBgColor, qrColor, logoSize, logoBorderRadius } = state;
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const ensureArray = (v: unknown, fallback: number) => {
@@ -74,7 +74,6 @@ function LogoTabpanel({ state, dispatch }) {
           </button>
         </div>
       </div>
-
       {/* Logo Size Slider */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -97,7 +96,6 @@ function LogoTabpanel({ state, dispatch }) {
           className="[&_.slider-track]:bg-red-500 [&_.slider-range]:bg-red-500 [&_.slider-thumb]:bg-red-500 [&_.slider-thumb]:border-red-500"
         />
       </div>
-
       {/* Logo Border Radius Slider */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -123,7 +121,6 @@ function LogoTabpanel({ state, dispatch }) {
           className="[&_.slider-track]:bg-red-500 [&_.slider-range]:bg-red-500 [&_.slider-thumb]:bg-red-500 [&_.slider-thumb]:border-red-500"
         />
       </div>
-
       {/* Background Section */}
       <div className="flex flex-col gap-2">
         <Label className="text-sm font-medium dark:text-gray-200">
@@ -204,7 +201,6 @@ function LogoTabpanel({ state, dispatch }) {
           />
         </div>
       </div>
-
       {/* QR Code Color Section */}
       <div className="flex flex-col gap-2">
         <Label className="text-sm font-medium dark:text-gray-200">

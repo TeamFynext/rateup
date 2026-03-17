@@ -4,7 +4,7 @@ import React from "react";
 
 import { Center, Group, Image, Text } from "@mantine/core";
 import { IconUpload } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import PaperLayout from "../styled/Layouts/PaperLayout";
@@ -28,7 +28,7 @@ export const ImageUploadMethodModal = ({
     }
     onClose();
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <FormModalLayout
       title={translations("Select Upload Method")}

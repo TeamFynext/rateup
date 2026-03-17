@@ -9,7 +9,7 @@ import { IconExclamationCircle } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { MessageSquare, Send, StickyNote } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { create } from "zustand";
 
@@ -58,7 +58,7 @@ export default function WaInboxChatDisplayFooter({
   const [activeTab, setActiveTab] = useState<"message" | "private">("message");
   const inputRef = useRef(null);
   const submiRef = useRef(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { user } = useUser();
   const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
   const currentUser = contact.assignedUsers?.find((c) => c.id === user?.userId);

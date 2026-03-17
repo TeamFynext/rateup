@@ -1,5 +1,5 @@
 import { CheckCircle2, FileText, Layers, XCircle, Zap } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { formatToRelativeTime } from "@/utils/dateTime";
 
@@ -12,7 +12,7 @@ function TemplateOverview({
   templatePerformance,
   isLoading,
 }) {
-  const t = useTranslations("apianalytics");
+  const t = useExtracted("apianalytics");
   return (
     <Card className="border shadow-sm">
       <CardHeader className="py-0">
@@ -138,7 +138,6 @@ function TemplateOverview({
                         </div>
                       </div>
                     </div>
-
                     {/* Progress Bar for Success Rate */}
                     <div className="mt-3">
                       <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">

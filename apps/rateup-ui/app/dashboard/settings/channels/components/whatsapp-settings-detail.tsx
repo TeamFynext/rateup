@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Group, Skeleton, Stack, Tooltip } from "@mantine/core";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { WaConfigType } from "@/types/enums";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -21,7 +21,7 @@ export function WhatsAppSettingsDetail({
   isLoading: boolean;
 }>) {
   const [tab, setTab] = useState<string>(WaConfigType.Automated);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   useEffect(() => {
     if (waSettings?.[0]?.type) {
@@ -38,7 +38,6 @@ export function WhatsAppSettingsDetail({
         <IconBrandWhatsapp className="h-5 w-5 text-green-500" />
         <h3 className="text-lg font-semibold">WhatsApp Settings</h3>
       </div>
-
       {isLoading ? (
         <Stack p="md">
           <Skeleton height={8} width="50%" />

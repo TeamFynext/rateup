@@ -12,7 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import cx from "clsx";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { SurveyType } from "@/types/enums";
 
@@ -39,7 +39,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [error, setError] = useState("");
   const [updateError, setUpdateError] = useState("");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleAddQuestion = () => {
     if (!newQuestion.trim().length) return;
     if (questions?.find((question) => question.trim() === newQuestion.trim())) {
@@ -176,7 +176,6 @@ const MCQGridExtraProps = ({ form, qId }) => {
           onClick={handleAddQuestion}
         />
       </Flex>
-
       <Title order={5}>Add Choices</Title>
       <ChoicesCreator form={form} qId={qId} surveyType={SurveyType.Web} />
       <FormModalLayout

@@ -1,7 +1,7 @@
 "use client";
 
 import { Cake, Info, Loader2, Save } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { UseFormReturn } from "react-hook-form";
 
 import { TemplateType } from "@/types/enums";
@@ -40,7 +40,7 @@ export function BirthdayReminderSettings({
   isModified,
   onModify,
 }: Readonly<BirthdayReminderSettingsProps>) {
-  const t = useTranslations();
+  const t = useExtracted();
   const templateInfo = getLoyaltyTemplateLabel(
     LoyaltyTemplateTypes.Birthday,
     t,

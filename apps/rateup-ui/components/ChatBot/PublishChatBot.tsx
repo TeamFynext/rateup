@@ -11,7 +11,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -34,9 +34,9 @@ const PublishChatbot = (selectedChatbotId) => {
   const [opened, { toggle }] = useDisclosure(false);
   const [isActive, setIsActive] = useState(false);
   const queryClient = useQueryClient();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const generateUrl = () => {
-    toast.loading(translations("Hold onUrl is getting generated"), {
+    toast.loading(translations("Hold on...Url is getting generated"), {
       id: "short-url",
     });
     createChatbotUrlMutate.mutate(null, {
@@ -55,8 +55,8 @@ const PublishChatbot = (selectedChatbotId) => {
 
   const handleChatbotStatus = () => {
     const loadingMessage = isActive
-      ? translations("Hold OnDeactivating public page")
-      : translations("Hold OnActivating public page");
+      ? translations("Hold On..Deactivating public page")
+      : translations("Hold On..Activating public page");
     const loadingTitle = isActive
       ? translations("Deactivating")
       : translations("Activating");
@@ -116,7 +116,7 @@ const PublishChatbot = (selectedChatbotId) => {
               chatbotDetails?.shortUrlId
                 ? translations("Show public url")
                 : createChatbotUrlMutate.isPending
-                  ? translations("Generating")
+                  ? translations("Generating..")
                   : translations("Generate Public Url")
             }
             onClick={chatbotDetails?.shortUrlId ? toggle : generateUrl}

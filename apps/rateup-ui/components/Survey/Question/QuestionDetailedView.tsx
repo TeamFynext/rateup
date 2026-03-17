@@ -15,7 +15,7 @@ import {
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconAlertOctagon, IconEye } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import HTMLEditor from "@/components/RichTextEditor/HTMLEditor";
@@ -94,7 +94,7 @@ export function QuestionDetailedView({
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: subscription } = useSubscription();
   const [isGoogleReviewFeatureActive, setIsGoogleReviewFeatureActive] =
     useState(false);
@@ -158,7 +158,7 @@ export function QuestionDetailedView({
           setSelectedLanguage(getIncompleteLanguages()[0]);
           toast.error(
             translations(
-              "Please Enter heading and choices for all languages before saving",
+              "Please Enter heading and choices for all languages before saving.",
             ),
           );
           setIsSaved(false);
@@ -184,7 +184,7 @@ export function QuestionDetailedView({
         } else {
           // Updating existing question
           toast.loading(
-            translations("Hold on, your changes are getting updated"),
+            translations("Hold on, your changes are getting updated.."),
             {
               id: "load-data",
             },
@@ -424,14 +424,14 @@ function ExtraProps({
 }
 
 const SurveyIssueAlert = ({ isSaved }: { isSaved: boolean }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   if (isSaved) {
     return null;
   }
 
   const issueMessage = translations(
-    "The survey contains incomplete questions Please fix the issue",
+    "The survey contains incomplete questions. Please fix the issue.",
   );
 
   return (

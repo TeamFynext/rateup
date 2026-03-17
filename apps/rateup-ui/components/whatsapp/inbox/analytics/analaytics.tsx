@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { BarChart, Filter, RefreshCcw } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import AuditLogs from "@/app/dashboard/analytics/audit-log/page";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import TeamPerformance from "./TeamPerformance";
 const Analytics = () => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") ?? "overview";
-  const t = useTranslations();
+  const t = useExtracted();
   const [dateRange, setDateRange] = useState({
     key: "last7days",
     range: [dayjs().subtract(7, "day").toDate(), new Date()],

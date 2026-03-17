@@ -29,7 +29,7 @@ import {
 } from "@tabler/icons-react";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import classNames from "classnames/bind";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -120,7 +120,7 @@ function ScreenListItem({
   const footerElement = getFlowFooterElementsFromScreen(
     screen,
   )?.[0] as WaFlowFormElement;
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [screenTitleInputState, setScreenTitleInputState] = useState(
     screen?.title,
   );
@@ -288,7 +288,7 @@ function ScreenListItem({
               opened={dialogOpened}
               onClose={closeDialog}
               headerLabel={translations(
-                "Are you sure you want to delete this Screen? It will also delete all the elements in this screen",
+                "Are you sure you want to delete this Screen? It will also delete all the elements in this screen.",
               )}
               headerTitle={translations("Delete Screen?")}
               confirmLabel={translations("Delete")}
@@ -397,7 +397,7 @@ function ScreenListItem({
                   label={
                     dbFlow.pendingSave
                       ? translations(
-                          "Save your flow to WhatsApp, so that you can test or share draft version before publishing",
+                          "Save your flow to WhatsApp, so that you can test or share draft version before publishing.",
                         )
                       : translations("No changes to save")
                   }

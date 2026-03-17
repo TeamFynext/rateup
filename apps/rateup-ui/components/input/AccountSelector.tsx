@@ -11,7 +11,7 @@ import {
   Text,
 } from "@mantine/core";
 import { X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
@@ -62,7 +62,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   } = props;
   const { data, isPending, isError } = useWaSettings();
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   let accountOptions = [];
   for (const account of data ?? []) {
     if (platform === "all" || platform === MessagePlatform.WHATSAPP) {

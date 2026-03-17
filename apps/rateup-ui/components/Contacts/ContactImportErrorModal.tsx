@@ -4,14 +4,14 @@ import React, { useEffect } from "react";
 
 import { ScrollAreaAutosize, Table } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import FormModalLayout from "../Modal/FormModalLayout";
 
 const ContactImportErrorModal = ({ isError = false, body }) => {
   let { error, data } = body ?? { error: "", data: "" };
   const [opened, { toggle, close }] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (isError && data?.length > 0) {
       toggle();

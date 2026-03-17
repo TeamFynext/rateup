@@ -19,7 +19,7 @@ import {
   IconPlus,
   IconRefresh,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useUpdateOrgDetailsMutation } from "../../../../backend/org/org.query";
@@ -37,7 +37,7 @@ import styles from "../setting.module.css";
 
 export default function ETESettings() {
   const searchParams = useSearchParams();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const highlighted = !!searchParams.get("highlighted") === true;
   const { user } = useUser();
   const orgDetailsUpdate = useUpdateOrgDetailsMutation();
@@ -74,7 +74,7 @@ export default function ETESettings() {
     },
   });
   const onPasswordResetSubmit = async (values) => {
-    toast.loading(translations("Hold your password is getting modified"), {
+    toast.loading(translations("Hold.. your password is getting modified..."), {
       id: "reset-encryption-password",
     });
     const { privateKey } = await decryptPrivateKey(
@@ -138,7 +138,7 @@ export default function ETESettings() {
           >
             <Text size="sm">
               {translations(
-                " Note: You are required to enter this password to view the results of any end-to-end encrypted survey This",
+                " Note: You are required to enter this password to view the results of any end-to-end encrypted survey.",
               )}
               <Mark px={5} bg={"white"} c={"red"} fw={"800"}>
                 {translations("Password is not recoverable")}

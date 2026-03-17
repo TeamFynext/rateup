@@ -4,7 +4,7 @@ import { Box, CloseButton, SimpleGrid } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDebouncedCallback } from "@mantine/hooks";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { z } from "zod/v4";
 
 import {
@@ -16,7 +16,7 @@ import {
 import { DEFAULT_WOP } from "../../TakeSurvey/TakeSurveyComponent/util";
 
 const WOPExtraProps = ({ form }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const schema = z
     .object({
       imageSrc: z.string().optional(),

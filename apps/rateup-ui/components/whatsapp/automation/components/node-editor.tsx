@@ -33,7 +33,7 @@ import {
 } from "@tabler/icons-react";
 import axios from "axios";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { useImmer } from "use-immer";
@@ -545,7 +545,7 @@ const MediaNodeEditor: React.FC<
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mediaError, setMediaError] = useState("");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [file, setFile] = useState<File | null>(null);
   const resetRef = useRef<() => void>(null);
 

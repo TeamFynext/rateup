@@ -26,7 +26,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -54,7 +54,7 @@ export function SurveyMenu({
   const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [opened, { close, open }] = useDisclosure(false);
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [teamChoice, setTeamChoice] = useState("all");
@@ -98,7 +98,7 @@ export function SurveyMenu({
       console.error(validationRes.errors);
       return;
     }
-    toast.loading(translations("Hold on, your survey is getting clonned"), {
+    toast.loading(translations("Hold on, your survey is getting clonned..."), {
       id: "load-data",
     });
     cloneSurvey.mutate({ id: survey?.id, teamIds: cloneForm.values.teamIds });
@@ -155,7 +155,7 @@ export function SurveyMenu({
         <Stack>
           <Text c="dimmed">
             {translations(
-              "Select the team/teams in which the survey copy to be created",
+              "Select the team/teams in which the survey copy to be created.",
             )}
           </Text>
           <Group>
@@ -195,7 +195,7 @@ export function SurveyMenu({
         headerTitle={translations("Delete Survey?")}
         confirmLabel={translations("Delete")}
         onConfirm={async (e) => {
-          toast.loading(translations("Hold on, survey is getting deleted"), {
+          toast.loading(translations("Hold on, survey is getting deleted..."), {
             id: "delete-data",
           });
           selectedTeamId && selectedTeamId !== "all"

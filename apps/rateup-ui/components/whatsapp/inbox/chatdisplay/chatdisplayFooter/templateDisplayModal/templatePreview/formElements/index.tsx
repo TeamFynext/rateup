@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 
 import { Divider, Paper, Stack, Text } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Updater } from "use-immer";
 
 import { WaTemplateFetchBody } from "@/types/global";
@@ -23,7 +23,7 @@ interface Props {
   };
 }
 export default function WaTemplateFormElements(props: Props) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const buildtemplatequerycomponent = useCallback(
     (
       component_type: "HEADER" | "BODY" | "FOOTER" | "BUTTONS",

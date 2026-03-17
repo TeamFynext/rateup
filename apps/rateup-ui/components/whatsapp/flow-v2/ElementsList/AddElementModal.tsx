@@ -19,7 +19,7 @@ import {
   IconTextSize,
   IconThumbUpFilled,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -77,7 +77,7 @@ interface AddElementModalProps {
 
 // Modal for adding new elements to the flow
 function AddElementModal({ opened, close }: AddElementModalProps) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { getCurrentScreen, getScreens, addComponentToScreen } =
     useFlowStoreV3();
 

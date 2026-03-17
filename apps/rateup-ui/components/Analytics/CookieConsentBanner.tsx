@@ -16,7 +16,7 @@ import {
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconCookie, IconShieldCheck, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { fbConsent } from "../../utils/fbpixel";
 import { setGAConsent } from "../../utils/gtag";
@@ -30,7 +30,7 @@ const CookieConsentBanner = () => {
   const [cookieConsent, setCookieConsent] = useState<boolean | null>(null);
   const [mounted, setMounted] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   useEffect(() => {
     setMounted(true);

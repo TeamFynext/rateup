@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Select, TagsInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import z from "zod";
 
 import {
@@ -29,7 +29,7 @@ export const CustomFieldForm = ({
   data?: any;
   onSubmitCallback: () => void;
 }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const updateCustomFieldMutation = useUpdateCustomFieldMutation();
   const createCustomFieldMutation = useCreateCustomFieldMutation();
 

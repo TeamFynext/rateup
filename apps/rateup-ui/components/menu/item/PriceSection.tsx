@@ -12,7 +12,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { IconMinus, IconPlus } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { MenuItemPriceType } from "../../../types/enums";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
@@ -25,7 +25,7 @@ export function PriceSection({
   readonly form: any;
   readonly currency: string;
 }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <Group>

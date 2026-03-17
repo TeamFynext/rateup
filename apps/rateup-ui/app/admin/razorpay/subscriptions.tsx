@@ -11,7 +11,7 @@ import {
   Play,
   Square,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { createSortableHeader, DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +35,7 @@ interface SubscriptionTableData {
 
 const RazorpaySubscriptions = () => {
   const { data: subscriptions, isFetched, isLoading } = usePaymentSubcription();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const columns: ColumnDef<SubscriptionTableData>[] = [
     {
@@ -177,7 +177,6 @@ const RazorpaySubscriptions = () => {
           </div>
         </CardHeader>
       </Card>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -230,7 +229,6 @@ const RazorpaySubscriptions = () => {
           </CardContent>
         </Card>
       </div>
-
       <DataTable
         columns={columns}
         data={tableData}

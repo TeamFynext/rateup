@@ -5,7 +5,7 @@ import { useForm } from "@mantine/form";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Key, Lock, Mail } from "lucide-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
 
@@ -20,7 +20,7 @@ import GoogleSignInButton from "./GoogleSigninButton";
 import { signUpType } from "./SignupFormNew";
 
 export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [signUpTypeValue, setSignUpTypeValue] = useState("");

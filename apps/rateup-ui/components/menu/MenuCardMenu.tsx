@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ActionIcon, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useDeleteMenuMutation } from "../../backend/menu/menu.query";
@@ -25,7 +25,7 @@ function MenuCardMenu({
   handleEditClick,
 }: MenuCardMenuProps) {
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const deleteMutation = useDeleteMenuMutation(
     teamId,
     () => {},
@@ -43,7 +43,7 @@ function MenuCardMenu({
         headerTitle={translations("Delete Menu?")}
         confirmLabel={translations("Delete")}
         onConfirm={(e) => {
-          toast.loading(translations("Hold on, menu is getting deleted"), {
+          toast.loading(translations("Hold on, menu is getting deleted..."), {
             id: "delete-data-menu",
           });
           deleteMutation.mutate(menuId);

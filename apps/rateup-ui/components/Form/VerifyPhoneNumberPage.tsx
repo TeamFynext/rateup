@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconArrowAutofitLeft, IconSend, IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import {
   clearLoginAttemptInfo,
@@ -34,7 +34,7 @@ function VerifyPhoneNumberPage() {
   const [otpNumber, setOtpNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { route } = useRouteAndCartStore();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   async function handleOTPInput() {
     try {
@@ -57,7 +57,7 @@ function VerifyPhoneNumberPage() {
         // the user entered an invalid OTP
         toast.error(
           translations(
-            "Wrong OTP! Please try again Number of attempts left: ",
+            "Wrong OTP! Please try again. Number of attempts left: ",
           ) +
             (response.maximumCodeInputAttempts -
               response.failedCodeInputAttemptCount),
@@ -68,7 +68,7 @@ function VerifyPhoneNumberPage() {
         // it was generated too long ago.
         toast.error(
           translations(
-            "Old OTP entered Please regenerate a new one and try again",
+            "Old OTP entered. Please regenerate a new one and try again",
           ),
           { id: "expired-otp" },
         );
@@ -100,7 +100,7 @@ function VerifyPhoneNumberPage() {
       </Title>
       <Text className={styles["verify-email-para"]}>
         {translations(
-          "Kindly enter the OTP we have sent via SMS to authenticate your phone number",
+          "Kindly enter the OTP we have sent via SMS to authenticate your phone number.",
         )}
       </Text>
       <form
@@ -137,7 +137,6 @@ function VerifyPhoneNumberPage() {
           />
         </Flex>
       </form>
-
       <Link href="/logout" style={{ textDecoration: "none" }}>
         <NavLink
           component="div"

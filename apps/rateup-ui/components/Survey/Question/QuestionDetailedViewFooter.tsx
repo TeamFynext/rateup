@@ -19,7 +19,7 @@ import {
   IconTicket,
   IconVariable,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { PageType, QuestionType } from "@/types/enums";
 import InfoButton from "@/components/Button/InfoButton";
@@ -49,7 +49,7 @@ function QuestionDetailedViewFooter({
   isSaving,
   enableAutoGenerateTicket,
 }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Group mt="sm" justify="space-between" gap="sm">
       <Group justify="flex-start" gap="md">
@@ -160,7 +160,9 @@ function QuestionDetailedViewFooter({
                     />
                   ) : (
                     <Tooltip
-                      label={translations("Upgrade your Plan for this feature")}
+                      label={translations(
+                        "Upgrade your Plan for this feature.",
+                      )}
                       disabled={isGoogleReviewFeatureActive}
                       color="yellow"
                     >
@@ -214,7 +216,7 @@ function QuestionDetailedViewFooter({
                     <Tooltip
                       label={
                         isTicketFeatureActive
-                          ? translations("Upgrade your Plan for this feature")
+                          ? translations("Upgrade your Plan for this feature.")
                           : translations(
                               "Auto-Generate Ticket is enabled on this survey",
                             )
@@ -240,7 +242,6 @@ function QuestionDetailedViewFooter({
           </Menu>
         </Stack>
       </Group>
-
       <Group>
         <RateupButtonBlue
           title={

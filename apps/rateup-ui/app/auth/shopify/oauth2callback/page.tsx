@@ -15,7 +15,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useCheckSession } from "@/hooks/checkSession";
 import { useCreateAuthToken } from "@/backend/appsIntegration/integration.query";
@@ -43,7 +43,7 @@ function AuthCallBack({
   const error = searchParams.get("error");
 
   const [callbackRoute, setCallBackRoute] = useState("/dashboard/settings");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [isLoading, setIsLoading] = useState(true);
   const mut = useCreateAuthToken();
   const session = useCheckSession();
@@ -77,7 +77,7 @@ function AuthCallBack({
       <Flex justify={"center"} align={"center"} mt={200}>
         {isLoading ? (
           <Stack justify="center" align="center">
-            <Text> {translations("Please wait")}</Text>
+            <Text> {translations("Please wait..")}</Text>
             <Loader />
           </Stack>
         ) : (

@@ -15,7 +15,7 @@ import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 import { toast } from "sonner";
 
@@ -57,7 +57,7 @@ const GeneralSettings = ({ editingItem }) => {
   const [logo, setLogo] = useState<File | null>(null);
   const [imageToDelete, setImageToDelete] = useState([]);
   const [updatingLoading, setUpdatingLoading] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const form = useForm({
     initialValues: formatedItemValue || {
       name: "",

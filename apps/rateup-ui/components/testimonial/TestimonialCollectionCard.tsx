@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ActionIcon, Group, Menu, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useDeleteTestimonialCollection } from "../../backend/testimonials/testimonial.query";
 import { formatDate } from "../../utils/dateTime";
@@ -20,7 +20,7 @@ const TestimonialCollectionCard = ({ collection }) => {
   function deleteCollection() {
     deleteCollectionMutation.mutate(collection?.id);
   }
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <PaperLayout
       hoveractive
@@ -60,7 +60,7 @@ const TestimonialCollectionCard = ({ collection }) => {
 
 const TestimonialCollectionCardMenu = ({ collectionId, openDialog }) => {
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Menu shadow="md" width={200}>
       <Menu.Target>

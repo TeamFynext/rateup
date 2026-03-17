@@ -14,7 +14,7 @@ import {
 import { isNotEmpty, matches, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useCreateSurveyVariableMutation,
@@ -46,7 +46,7 @@ const SurveyVariableEditor = ({ setActiveTab }) => {
   const handleDeleteVariable = (variable: SurveyVariable) => {
     deleteVariable.mutate({ variableId: variable.id });
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack w={"100%"}>
       <ScrollAreaAutosize h={430} scrollbarSize={6}>
@@ -144,7 +144,7 @@ const CreateSurveyVariableModal = ({
   const { surveyId, variables } = useContext(SurveyContext);
   const variableCreation = useCreateSurveyVariableMutation(surveyId);
   const variableUpdation = useUpdateSurveyVariableMutation(surveyId);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const form = useForm({
     initialValues: {
       name: variable?.name || "",

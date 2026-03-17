@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { Paper, Table, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useDeleteMenuItemMutation,
@@ -49,7 +49,7 @@ export function CategoryCard({
   const [createMenuItemModalOpened, { close, open }] = useDisclosure(false);
   const [swapOrderOpened, { close: closeSwapOrder, toggle: toggleSwapOrder }] =
     useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [
     swapOrderCategoryOpened,
     { close: closeSwapOrderCategory, toggle: toggleSwapOrderCategory },

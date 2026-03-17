@@ -15,7 +15,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
@@ -54,7 +54,7 @@ export default function Page() {
     useBoardQueries();
   const { data: teamRes, isPending: teamsLoading } = useTeamsByUser();
 
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const teams = teamRes?.data;
 
@@ -176,7 +176,6 @@ export default function Page() {
           </Group>
         </Group>
       )}
-
       {/* Board Cards Grid */}
       {selectedBoardId ? (
         <BoardContent
@@ -207,7 +206,6 @@ export default function Page() {
           )}
         </>
       )}
-
       {/* Create Board Modal */}
       <Modal
         opened={isCreateModalOpen}
@@ -243,7 +241,6 @@ export default function Page() {
           </Group>
         </Stack>
       </Modal>
-
       {/* Edit Board Modal */}
       <Modal
         opened={isEditModalOpen}
@@ -283,7 +280,6 @@ export default function Page() {
           </Group>
         </Stack>
       </Modal>
-
       <Modal
         opened={isDeleteModalOpen}
         onClose={() => {

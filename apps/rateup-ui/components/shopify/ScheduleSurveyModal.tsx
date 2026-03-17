@@ -13,7 +13,7 @@ import {
 } from "@tabler/icons-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -106,7 +106,7 @@ const ScheduleSurveyModal = ({
     { label: string; value: string }[]
   >([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const updateIntegration = useUpdateIntegrationMutation(
     IntegratedApps.shopify,
   );

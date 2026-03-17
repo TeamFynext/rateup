@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { UseFormReturn } from "react-hook-form";
 
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
@@ -45,7 +45,7 @@ export function TransactionNotifications({
   setRewardIssuedModified,
   setRewardRedeemedModified,
 }: TransactionNotificationsProps) {
-  const t = useTranslations();
+  const t = useExtracted();
 
   return (
     <Card>

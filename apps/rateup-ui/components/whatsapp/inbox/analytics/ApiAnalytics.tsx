@@ -3,7 +3,7 @@ import { useState } from "react";
 import dayjs from "dayjs";
 import isToday from "dayjs/plugin/isToday";
 import { CheckCircle2, Send, XCircle, Zap } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useGetApiAnlayticsOverview,
@@ -34,7 +34,7 @@ const formatTime = (time) => {
 };
 
 function ApiAnalytics({ dateRange }) {
-  const t = useTranslations("apianalytics");
+  const t = useExtracted("apianalytics");
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [granularity, setGranularity] = useState("hour");
   const [apiType, setApiType] = useState("all");
@@ -157,7 +157,6 @@ function ApiAnalytics({ dateRange }) {
           />
         </div>
       )}
-
       <ChartOverview messageTrendData={localTrend} isLoading={isTrendLoading} />
       <DailyTrend
         dailyMessageData={localWeekTrend}

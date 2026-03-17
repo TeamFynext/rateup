@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Box, Flex, Group, Select, Stack } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
@@ -27,7 +27,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
   );
   const [enableTicketWaMessageAlerts, setEnableTicketWaMessageAlerts] =
     useState(survey?.enableTicketWaMessageAlerts);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const editSurvey = useEditSurveyMutation(surveyId);
 
   useEffect(() => {

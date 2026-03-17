@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Check, Copy, Edit, Eye, QrCode } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -26,7 +26,7 @@ function GeneratedQrCard({
   }, [shortUrlId, router]);
 
   const [copied, setCopied] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(qrUrl);

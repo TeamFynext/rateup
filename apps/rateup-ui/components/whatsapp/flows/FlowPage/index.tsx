@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 
 import { Tabs } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { useImmer } from "use-immer";
 
@@ -62,7 +62,7 @@ function FlowPage() {
   const [tab, setTab] = useState(FlowTabEnum.Edit);
   const [previewOpened, setPreviewOpened] = useState(true);
   const { update } = useRouteParams();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   // initial data
   useEffect(() => {
@@ -291,7 +291,6 @@ function FlowPage() {
                     setEncryptionPassword={() => {}}
                     survey={survey}
                     flowId={flow.flowId}
-                    translations={translations}
                   />
                 </Tabs.Panel>
                 <Tabs.Panel value={FlowTabEnum.Share}>

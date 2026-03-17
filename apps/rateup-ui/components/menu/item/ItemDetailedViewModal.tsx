@@ -16,7 +16,7 @@ import {
   Text,
 } from "@mantine/core";
 import { IconArrowLeft } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { CreditsCard } from "@/components/Card/CreditsCard";
@@ -49,7 +49,7 @@ export function ItemDetailedViewModal({
     border: "unset",
     width: "100%",
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   const imageSlides = item?.images?.map((url: string) => (
     <Carousel.Slide key={url}>
       <CreditsCard

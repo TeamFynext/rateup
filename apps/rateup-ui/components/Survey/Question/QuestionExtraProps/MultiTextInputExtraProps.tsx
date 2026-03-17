@@ -6,7 +6,7 @@ import { Group, Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import {
@@ -23,7 +23,7 @@ import DraggableTable from "../../../styled/Table/DraggableTable";
 const MultiTextInputExtraProps = ({ form }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const features = form.values.features?.[selectedLanguage];
-  const translations = useTranslations();
+  const translations = useExtracted();
   const headers = [
     { headerKey: "fieldKey", headerValue: "Field Key" },
     { headerKey: "placeholderText", headerValue: "Display Text" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { Globe, MessageCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   Select,
@@ -18,7 +18,7 @@ interface ApiSelectorProps {
 }
 
 export function ApiSelector({ value, onChange, className }: ApiSelectorProps) {
-  const t = useTranslations("apianalytics");
+  const t = useExtracted("apianalytics");
   const apiOptions = [
     { value: "external", label: t("External"), icon: Globe },
     { value: "whatsapp", label: t("Campaign & Inbox"), icon: MessageCircle },

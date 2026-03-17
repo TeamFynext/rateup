@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { IconCheck, IconChevronLeft } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { QuestionType as Q } from "../../../../types/enums";
 import { extractText, isHtml } from "../../../../utils";
@@ -48,7 +48,7 @@ function ConfirmResponsesModal({
   largeScreen,
 }) {
   const theme = useMantineTheme();
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Modal
       className={styles["modal"]}
@@ -134,7 +134,7 @@ function ConfirmResponsesModal({
                               />
                             ) : (
                               <Text pb="sm" c="dark.0" fz="xs">
-                                {translations(" not answered")}
+                                {translations("... not answered...")}
                               </Text>
                             );
                           case Q.MSQ:
@@ -335,7 +335,7 @@ function ConfirmResponsesModal({
                     </Text>
                   ) : (
                     <Text pb="sm" c="dark.0" fz="xs">
-                      {translations(" not answered")}
+                      {translations("... not answered...")}
                     </Text>
                   )}
                   <Divider />

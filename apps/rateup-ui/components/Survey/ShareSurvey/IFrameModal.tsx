@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconCopy } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import {
@@ -60,7 +60,7 @@ const IFrameModal = ({ close, shareUrl }) => {
     const height = form.values.height + form.values.heightUnit;
     iframe = `<iframe src="${shareUrl}" width="${width}" height="${height}"></iframe>`;
   }
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Box>
       <Center>

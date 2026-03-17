@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useUpdateWaSettingsMutation,
@@ -22,7 +22,7 @@ export default function PaymentsPage() {
   const waSettings = waSettingsData?.[0];
   const updateMutation = useUpdateWaSettingsMutation(waSettings?.id);
   const [value, setValue] = useState(waSettings?.paymentMethod || "NATIVE");
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   useEffect(() => {
     if (waSettings?.paymentMethod) {
