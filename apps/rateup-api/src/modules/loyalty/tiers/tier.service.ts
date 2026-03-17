@@ -21,6 +21,11 @@ export async function createLoyaltyTier(
 export async function getLoyaltyTiers(programId: string) {
   return await prisma.loyaltyTier.findMany({
     where: { programId },
+    include: {
+      program: {
+        select: { currencyCode: true },
+      },
+    },
     orderBy: { threshold: "asc" },
   });
 }

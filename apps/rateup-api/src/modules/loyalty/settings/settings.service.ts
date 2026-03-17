@@ -24,6 +24,7 @@ import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey
 import {
   createListMessage,
   createReplyButtonsMessage,
+  generateWhatsAppJoinLink,
 } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
 import { redeemReward } from "../redemptions/redemption.service.js";
@@ -114,7 +115,7 @@ export async function handleLoyaltyWaCommand(
       await handleLoyaltyPointsCommand(phone, loyaltyWaCommand);
       break;
     case LoyaltyTemplateTypes.Referral:
-      // await handleReferralCommand(phone, loyaltyWaCommand);
+      await handleReferralCommand(phone, loyaltyWaCommand);
       break;
     case LoyaltyTemplateTypes.CustomerRemoval:
       await handleCustomerRemovalFromLoyalty(phone, loyaltyWaCommand);
@@ -180,6 +181,64 @@ async function handleIssuedRewardsCommand(phone, orgId, loyaltyWaCommand) {
   );
 
   await sendMessage(orgId, listMessage);
+}
+
+async function handleReferralCommand(phone, loyaltyWaCommand) {
+  const {
+    orgId,
+    responseType,
+    waTemplateId,
+    content,
+    whatsappSettingsPhoneId,
+  } = loyaltyWaCommand;
+
+  const customer = await getLCustomerByPhone(phone, orgId);
+  if (!customer || customer.status !== "active") {
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      "You are not an active member of our loyalty programme",
+    );
+    return;
+  }
+
+  const waSettings = whatsappSettingsPhoneId
+    ? await prisma.whatsappSettings.findFirst({
+        where: { phoneId: whatsappSettingsPhoneId },
+        select: { phone: true },
+      })
+    : null;
+
+  const referralCode = customer.referralCode;
+  const joinLink = waSettings?.phone
+    ? generateWhatsAppJoinLink({
+        waNumber: waSettings.phone,
+        referralCode,
+      })
+    : null;
+
+  if (responseType === WaAutomatedReplyResponseType.Template) {
+    const dynamicVariables = [referralCode, joinLink ?? referralCode];
+    return await handleSendTemplate(
+      waTemplateId,
+      orgId,
+      phone,
+      dynamicVariables,
+    );
+  } else if (responseType === WaAutomatedReplyResponseType.Text) {
+    const dynamicVariables = [referralCode, joinLink ?? referralCode];
+    const message = replacedContentByDynamicVariable(content, dynamicVariables);
+    await sendTextMessage({ phone, orgId }, null, message);
+  } else {
+    const linkText = joinLink
+      ? `\n\nShare your referral link: ${joinLink}`
+      : "";
+    await sendTextMessage(
+      { phone, orgId },
+      null,
+      `Your referral code is: ${referralCode}${linkText}`,
+    );
+  }
 }
 
 export async function handleLoyaltyRedeemInteraction(
@@ -434,7 +493,10 @@ export async function handleLoyaltyFeedback(phone, action) {
 }
 
 export function replacedContentByDynamicVariable(content, dynamicVariables) {
-  const contentCopy = [...content];
+  let contentArray = Array.isArray(content?.content)
+    ? content.content
+    : content;
+  const contentCopy = [...contentArray];
   for (const para of contentCopy) {
     const contents = para.content;
     if (contents) {
