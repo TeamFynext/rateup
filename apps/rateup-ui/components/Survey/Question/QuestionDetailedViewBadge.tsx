@@ -1,12 +1,12 @@
 "use client";
 
 import { Badge } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { getTypeLabel } from "@/utils/enums";
 
 function QuestionDetailedViewBadge({ question }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Badge
       variant={getTypeLabel(question.type) ? "outline" : "light"}

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { Table } from "@tanstack/react-table";
 import { Plus, Search } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { CustomFieldForm } from "@/components/Contacts/label-form";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option";
@@ -27,7 +27,7 @@ export function DataTableToolbar<TData>({
 }: Readonly<DataTableToolbarProps<TData>>) {
   const [isOpenedAddModal, setIsOpenedAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
-  const t = useTranslations();
+  const t = useExtracted();
   return (
     <Card className="p-2 mb-4">
       <div className="flex justify-between gap-2">
@@ -68,7 +68,7 @@ export function DataTableToolbar<TData>({
 }
 
 const AddCustomField = ({ opened, setOpened }) => {
-  const t = useTranslations();
+  const t = useExtracted();
 
   return (
     <Dialog open={opened} onOpenChange={setOpened}>

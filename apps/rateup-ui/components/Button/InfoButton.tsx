@@ -1,7 +1,7 @@
 "use client";
 
 import { IconBook } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 
 const InfoButton = ({ docUrl, className = "" }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Tooltip>
       <TooltipTrigger asChild>

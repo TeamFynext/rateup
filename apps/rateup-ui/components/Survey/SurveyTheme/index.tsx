@@ -3,7 +3,7 @@
 import { Box, Button, Center } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 import classNames from "classnames/bind";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useNavControlContext } from "@/context/NavControlContext";
 
@@ -22,7 +22,7 @@ function SurveyTheme({
 }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme;
 
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const { navOpened, setNavOpened } = useNavControlContext();
 

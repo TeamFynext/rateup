@@ -1,5 +1,5 @@
 import { Activity, BarChart3 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import {
   Area,
   AreaChart,
@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 
 function ChartOverview({ messageTrendData, isLoading }) {
-  const t = useTranslations("apianalytics");
+  const t = useExtracted("apianalytics");
   const hasData =
     Array.isArray(messageTrendData) && messageTrendData.length > 0;
 
@@ -100,7 +100,7 @@ function ChartOverview({ messageTrendData, isLoading }) {
 export default ChartOverview;
 
 export function DailyTrend({ dailyMessageData, isLoading }) {
-  const t = useTranslations("apianalytics");
+  const t = useExtracted("apianalytics");
   const hasData =
     Array.isArray(dailyMessageData) && dailyMessageData.length > 0;
 

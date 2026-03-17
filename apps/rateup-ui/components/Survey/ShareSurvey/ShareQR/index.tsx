@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from "react";
 
 import { Palette, Save } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
 
@@ -52,7 +52,7 @@ const ShareQR = ({
     resourceName,
     id,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     const qrSettingsFromApi = shareSettings?.data;
     if (qrSettingsFromApi) {

@@ -12,7 +12,7 @@ import {
   TextInputProps,
 } from "@mantine/core";
 import { IconChevronRight, IconPencil } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import styles from "./AutosaveInput.module.css";
@@ -39,7 +39,7 @@ function AutosaveInput({
   const [inputState, setInputState] = useState(value);
   const [isInputBeingEdited, setIsInputBeingEdited] = useState(false);
   const [isSavingText, setIsSavingText] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const inputRef = useRef(null);
 
   const handleEditBtnClick = useCallback(() => {

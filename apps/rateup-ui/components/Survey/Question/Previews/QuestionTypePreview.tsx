@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { PageType as Page, QuestionType as Q } from "../../../../types/enums";
 import CustomHTML from "../../Page/Previews/CustomHTML";
@@ -41,7 +41,7 @@ const QuestionTypePreview = ({
   wop,
   htmlContent = null,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   switch (type) {
     case Q.Text:
       return <TextForm />;

@@ -18,7 +18,7 @@ import {
   Phone,
   Upload,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
@@ -66,7 +66,7 @@ import { UserRole } from "@/utils/enums";
 import { uploadFile } from "@/utils/file-upload/upload";
 
 export default function Account() {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { isLoading: isProfileLoading, data: profileData } =
     useGetUserProfile();
   const { user } = useUser();
@@ -248,7 +248,7 @@ export default function Account() {
       businessmail: values?.businessmail ?? "",
     };
     toast.loading(
-      translations("Hold on, Organization info is getting updated"),
+      translations("Hold on, Organization info is getting updated.."),
       {
         id: "load-data",
       },
@@ -298,7 +298,6 @@ export default function Account() {
           )}
         </p>
       </div>
-
       {/* User Profile Section */}
       {isProfileLoading ? (
         <Card className="p-4 sm:p-6 shadow-sm border-gray-200 bg-linear-to-br from-white to-gray-50/50">
@@ -399,7 +398,6 @@ export default function Account() {
           </div>
         </Card>
       )}
-
       {/* Business Information Modal Trigger */}
       <Card className="p-6 shadow-sm border-gray-200 flex flex-col gap-4">
         <div className="flex items-center justify-between">
@@ -702,7 +700,6 @@ export default function Account() {
           </DialogContent>
         </Dialog>
       )}
-
       <Card className="p-5 shadow-sm border-gray-200">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
@@ -711,13 +708,12 @@ export default function Account() {
           <div>
             <h4 className="mb-0">{translations("Regional Settings")}</h4>
             <p className="text-xs text-muted-foreground">
-              {translations("language preferences")}
+              {translations("Language Preferences")}
             </p>
           </div>
         </div>
         <LocaleSwitcher />
       </Card>
-
       {/* Image Crop Modal */}
       <ImageCropModal
         opened={openedCropDialog}
@@ -727,7 +723,6 @@ export default function Account() {
         image={selectedImage.url}
         aspect={1}
       />
-
       {/* Edit Profile Dialog */}
       <Dialog
         open={isEditProfileDialogOpen}
@@ -889,7 +884,6 @@ export default function Account() {
           </form>
         </DialogContent>
       </Dialog>
-
       {/* Business Hours Section */}
       <BusinessHoursSection canManage={user?.role === UserRole.SUPADM} />
     </div>

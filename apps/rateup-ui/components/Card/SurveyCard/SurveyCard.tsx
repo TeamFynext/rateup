@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 
 import { Clock, Star } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,7 +32,7 @@ export function SurveyCard({
   route,
   refetchSurveys,
 }: Readonly<SurveyCardProps>) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
   const pathname = usePathname();
   const totalResponses = survey?.teams?.reduce(

@@ -4,7 +4,7 @@ import { type ReactNode } from "react";
 
 import { Group, Skeleton, Stack } from "@mantine/core";
 import { IconBrandInstagram } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -18,7 +18,7 @@ export function InstagramSettingsDetail({
   waSettings: WaSettings | undefined;
   isLoading: boolean;
 }>) {
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   let content: ReactNode;
 

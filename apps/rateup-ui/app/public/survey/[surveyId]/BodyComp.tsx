@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { Group, Stack } from "@mantine/core";
 import { IconHome } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview";
@@ -18,7 +18,7 @@ function BodyComp({
   k,
   reviewPageLinks,
 }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack
       align="center"
@@ -39,7 +39,6 @@ function BodyComp({
           reviewPageLinks={reviewPageLinks}
         />
       )}
-
       {k === "cs" && (
         <Group m="xl" p="xl">
           <Link

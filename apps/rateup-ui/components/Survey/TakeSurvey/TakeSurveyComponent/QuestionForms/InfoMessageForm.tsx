@@ -2,11 +2,11 @@
 
 import { Alert } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 export function InfoMessage() {
   const icon = <IconInfoCircle />;
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Alert variant="light" color="blue" title="Use" icon={icon}>
       {translations("Insert non-respondable text into your survey!")}

@@ -11,7 +11,7 @@ import {
 } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import classNames from "classnames/bind";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { QuestionType2 } from "@/types/enums";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
@@ -31,7 +31,7 @@ import { ScreenLogicEditor } from "./ScreenLogicEditor";
 const cx = classNames.bind(styles);
 
 function ElementsList() {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [addModalOpened, setAddModalOpened] = useState(false);
   const [, setEditingTitle] = useState(false);
 
@@ -116,7 +116,6 @@ function ElementsList() {
           </div>
         </div>
       </div>
-
       {/* Elements Count */}
       <div className="flex items-center justify-between px-4 mb-3">
         <span className="text-sm font-medium">{translations("Questions")}</span>
@@ -124,7 +123,6 @@ function ElementsList() {
           {elements.length} {translations("questions")}
         </span>
       </div>
-
       {/* Elements List */}
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId={screen.id}>
@@ -153,7 +151,6 @@ function ElementsList() {
           )}
         </Droppable>
       </DragDropContext>
-
       {/* Add Element Button */}
       <div className="px-4 mt-2 mb-6">
         <RateupButtonBlue
@@ -164,7 +161,6 @@ function ElementsList() {
           rightIcon={<IconPlus size={16} />}
         />
       </div>
-
       <AddElementModal
         opened={addModalOpened}
         close={() => setAddModalOpened(false)}
@@ -188,7 +184,7 @@ function ElementCard({
   onToggle,
   onDelete,
 }: ElementCardProps) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
 
   const getElementLabel = () => {
@@ -282,7 +278,6 @@ function ElementCard({
           </div>
         )}
       </Draggable>
-
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteModalOpened}

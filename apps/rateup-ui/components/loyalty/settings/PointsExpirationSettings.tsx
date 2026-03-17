@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 
@@ -38,7 +38,7 @@ export function PointsExpirationSettings({
   onSave,
   isPending,
 }: PointsExpirationSettingsProps) {
-  const t = useTranslations();
+  const t = useExtracted();
 
   return (
     <Card>

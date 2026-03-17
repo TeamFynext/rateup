@@ -14,7 +14,7 @@ import {
   Text,
   useCombobox,
 } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { menuLabelWithText } from "../util/menuLabelData";
 
@@ -25,7 +25,7 @@ export function FoodLabelSelector({ form }) {
   });
 
   const [search, setSearch] = useState("");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleValueSelect = (val: string) => {
     form.setValues((prevValues) => {
       const updatedFoodLabels = prevValues?.foodLabels?.includes(val)
@@ -119,14 +119,15 @@ export function FoodLabelSelector({ form }) {
           </Pill.Group>
         </PillsInput>
       </Combobox.DropdownTarget>
-
       <Combobox.Dropdown>
         <ScrollAreaAutosize mah={300}>
           <Combobox.Options>
             {options.length > 0 ? (
               options
             ) : (
-              <Combobox.Empty>{translations("Nothing found")}</Combobox.Empty>
+              <Combobox.Empty>
+                {translations("Nothing found...")}
+              </Combobox.Empty>
             )}
           </Combobox.Options>
         </ScrollAreaAutosize>

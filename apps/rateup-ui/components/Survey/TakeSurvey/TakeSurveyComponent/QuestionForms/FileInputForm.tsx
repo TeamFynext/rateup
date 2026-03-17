@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { Dropzone, DropzoneProps } from "@mantine/dropzone";
 import { IconFileFilled, IconUpload, IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import {
@@ -34,7 +34,7 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState("");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const themePrimaryColor = theme.colors.primaryColor
     ? theme.colors.primaryColor[5]
     : "#1C518E";

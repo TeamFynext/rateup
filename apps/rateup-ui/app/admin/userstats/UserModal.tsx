@@ -1,12 +1,12 @@
 "use client";
 
 import { Avatar, Divider, Group, Stack, Text, Title } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 
 const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack gap={"xl"}>
       <Group justify="space-around">
@@ -45,7 +45,6 @@ const UserModal = ({ selectedUser }: { selectedUser: UserData }) => {
           </Group>
         </Stack>
       </Group>
-
       <PaperLayout>
         <Title order={3}>{translations("Organization")}</Title>
         <Divider my={"sm"} />

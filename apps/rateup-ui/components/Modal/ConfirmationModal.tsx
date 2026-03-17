@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { Blockquote, Group, Modal, Stack, Text } from "@mantine/core";
 import { IconAlertOctagon } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useUser } from "../../context/UserContext";
@@ -46,7 +46,7 @@ export default function ConfirmationModal({
 }: ConfirmationModalProps) {
   const [email, setEmail] = useState("");
   const { user } = useUser();
-  const translations = useTranslations();
+  const translations = useExtracted();
   function confirmation(e) {
     e.stopPropagation();
     if (includeEmailConfirmation) {

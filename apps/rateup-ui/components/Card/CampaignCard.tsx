@@ -3,7 +3,7 @@
 import { ActionIcon, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useDeleteCampaignMutation } from "../../backend/campaign/campaign.query";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
@@ -13,7 +13,7 @@ export const CampaignMenu = ({ teamId, id, campaignType }) => {
     teamId,
     campaignType,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const openDeleteModal = (e) => {
     e.stopPropagation();
     modals.openConfirmModal({

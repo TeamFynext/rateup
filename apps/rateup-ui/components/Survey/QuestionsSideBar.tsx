@@ -21,7 +21,7 @@ import { IconEdit, IconPlayerPlay, IconPlus } from "@tabler/icons-react";
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { PageType, QuestionType } from "@/types/enums";
@@ -79,7 +79,7 @@ export function QuestionsSideBar({
 
   const [questionsState, handlers] = useListState(questions);
   const { navOpened, setNavOpened } = useNavControlContext();
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     handlers.setState(questions);
 
@@ -156,7 +156,7 @@ export function QuestionsSideBar({
       Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
     ) {
       toast.error(
-        translations("Please Enter heading and choices for all languages"),
+        translations("Please Enter heading and choices for all languages."),
         {
           id: "missing-title-toast",
         },
@@ -269,7 +269,7 @@ export function QuestionsSideBar({
                 ) {
                   toast.error(
                     translations(
-                      "Please Enter heading and choices for all languages",
+                      "Please Enter heading and choices for all languages.",
                     ),
                     {
                       id: "missing-title-toast",

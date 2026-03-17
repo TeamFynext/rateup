@@ -28,7 +28,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -84,7 +84,7 @@ const ContactGroup = () => {
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
   const router = useRouter();

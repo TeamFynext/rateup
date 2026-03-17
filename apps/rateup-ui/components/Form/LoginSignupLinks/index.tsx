@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { Group } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import styles from "./LoginsignupLinks.module.css";
 
@@ -13,7 +13,7 @@ type LoginSignupLInksProps = {
 };
 
 function LoginSignupLinks({ isLogin, isSignup }: LoginSignupLInksProps) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Group justify="center" className={styles["login-signup-links-container"]}>
       <Link

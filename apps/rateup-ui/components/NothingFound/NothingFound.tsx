@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 interface NothingFoundProps {
   text: string;
@@ -13,7 +13,7 @@ export default function NothingFound({
   className,
   text,
 }: Readonly<NothingFoundProps>) {
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   return (
     <div
@@ -21,14 +21,13 @@ export default function NothingFound({
     >
       <Image
         src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/nodata.svg`}
-        alt={translations("Nothing_found")}
+        alt={translations("Nothing found")}
         width={140}
         height={140}
         className="opacity-35"
       />
-
       <p className="text-sm font-medium text-muted-foreground">
-        {text ?? translations("Nothing_found")}
+        {text ?? translations("Nothing found")}
       </p>
     </div>
   );

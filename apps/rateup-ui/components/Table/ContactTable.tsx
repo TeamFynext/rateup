@@ -19,7 +19,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { ContactGroupType } from "@/types/enums";
@@ -103,7 +103,7 @@ function ContactTable({
   const [filterVisibility, setFilterVisibility] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const largeScreen = useMediaQuery("(min-width: 40em)");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [
     dialogOpened,
     { toggle: toggleConfirmationModal, close: closeDialog },
@@ -271,7 +271,7 @@ function ContactTable({
                     <ActionIcon
                       variant="light"
                       onClick={async () => {
-                        toast.loading(translations("Data getting loaded"), {
+                        toast.loading(translations("Data getting loaded..."), {
                           id: "contacts",
                         });
                         await refetch();

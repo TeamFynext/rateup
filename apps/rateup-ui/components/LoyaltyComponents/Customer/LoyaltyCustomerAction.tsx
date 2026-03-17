@@ -1,14 +1,14 @@
 "use client";
 
 import { createColumnHelper } from "@tanstack/react-table";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import TanstackTable from "@/components/Table/TanstackTable";
 import { formatDateWithTime } from "@/utils/dateTime";
 
 const LoyaltyCustomerAction = ({ actions }) => {
   const columnHelper = createColumnHelper<LoyaltyAction>();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const columns = [
     columnHelper.accessor((row) => row.name, {

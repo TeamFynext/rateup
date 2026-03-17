@@ -4,7 +4,7 @@ import React from "react";
 
 import { ActionIcon, Group, Tooltip } from "@mantine/core";
 import { IconDatabasePlus } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { ContainedTagInput } from "../../input/ContainedInput/ContainedInput";
 
@@ -12,7 +12,7 @@ const GenerateTags = ({ tagSelectData, setTagSelectData, disabled }) => {
   const handleGenerateTag = () => {
     setTagSelectData((prev) => [...prev, generateRandomString(6)]);
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Group gap={4}>
       <ContainedTagInput

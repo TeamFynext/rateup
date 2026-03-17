@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { v4 as uuid } from "uuid";
 
 import { generateWaMessageUrl } from "../../../utils/whatsapp/wa_url";
@@ -15,7 +15,7 @@ const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL;
 function ShareQRPage() {
   const [resource, setResource] = useState<string>("Web Survey");
   const [link, setLink] = useState(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleGenerateBtnClick = useCallback(() => {
     switch (resource) {
       case "Web Survey": {

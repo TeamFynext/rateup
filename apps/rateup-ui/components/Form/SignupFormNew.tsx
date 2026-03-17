@@ -26,7 +26,7 @@ import {
   Zap,
 } from "lucide-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import SelectR from "react-select";
 import countryList from "react-select-country-list";
@@ -54,7 +54,7 @@ export const signUpType = {
 export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [signUpTypeValue, setSignUpTypeValue] = useState("");
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const signUpSchema =
     signUpTypeValue === signUpType.SIGNUP_WITH_PHONE
@@ -220,7 +220,6 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
             <Step1
               formData={signupForm}
               handleNext={handleNext}
-              translations={translations}
               google={false}
             />
           )}
@@ -229,7 +228,6 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
               formData={signupForm}
               handleBack={handleBack}
               handleNext={handleNext}
-              translations={translations}
             />
           )}
           {currentStep === 3 && (
@@ -238,7 +236,6 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
               handleBack={handleBack}
               handleSubmit={handleSubmit}
               isLoading={isLoading}
-              translations={translations}
             />
           )}
           {/* {currentStep === 4 && <Step4 formData={signupForm} />} */}
@@ -248,7 +245,8 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
   );
 }
 
-export function Step1({ formData, handleNext, translations, google }) {
+export function Step1({ formData, handleNext, google }) {
+  const translations = useExtracted();
   const checkEmailMutaion = useCheckEmailExistMutation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -358,7 +356,6 @@ export function Step1({ formData, handleNext, translations, google }) {
           buttonText={"Continue with Google"}
         />
       )}
-
       {!google && (
         <>
           {/* Divider */}
@@ -374,7 +371,6 @@ export function Step1({ formData, handleNext, translations, google }) {
           </div>
         </>
       )}
-
       <div className="space-y-2 sm:space-y-3">
         {/* Name field (always visible) */}
         <div className="space-y-0.5 sm:space-y-1">
@@ -601,7 +597,6 @@ export function Step1({ formData, handleNext, translations, google }) {
           </>
         )}
       </div>
-
       {/* Terms checkbox */}
       <div className="flex items-center space-x-2 sm:space-x-3">
         <Checkbox
@@ -630,7 +625,6 @@ export function Step1({ formData, handleNext, translations, google }) {
           </Link>
         </Label>
       </div>
-
       <div className="w-full text-center pt-1.5 sm:pt-2 border-t border-gray-200">
         <p className="text-xs sm:text-sm text-gray-600 text-center">
           {translations("Already have an account")}?{" "}
@@ -643,7 +637,6 @@ export function Step1({ formData, handleNext, translations, google }) {
           </button>
         </p>
       </div>
-
       {/* Footer actions */}
       <div className="flex justify-between pt-2 sm:pt-3 border-t border-gray-200 w-full">
         <Button
@@ -668,7 +661,8 @@ export function Step1({ formData, handleNext, translations, google }) {
   );
 }
 
-export function Step2({ formData, handleBack, handleNext, translations }) {
+export function Step2({ formData, handleBack, handleNext }) {
+  const translations = useExtracted();
   const countries = countryList().getData();
 
   const isFormComplete =
@@ -696,7 +690,6 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
           )}
         </p>
       </div>
-
       <div className="flex flex-col justify-center w-full gap-3 sm:gap-4">
         <div className="space-y-0.5 sm:space-y-1">
           <div className="relative">
@@ -745,7 +738,6 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
           />
         </div>
       </div>
-
       <div className="bg-linear-to-r from-orange-100 to-pink-100 border border-orange-300/60 rounded-lg p-2 sm:p-3 mt-3 sm:mt-4 shadow-sm backdrop-blur-sm">
         <div className="flex flex-col items-start gap-0.5 sm:gap-1">
           <div className="flex gap-1 items-start justify-center">
@@ -761,7 +753,6 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
           </p>
         </div>
       </div>
-
       <div className="flex justify-between pt-2 sm:pt-3 border-t border-gray-200 w-full">
         <Button
           variant="outline"
@@ -785,13 +776,8 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
   );
 }
 
-export function Step3({
-  formData,
-  handleBack,
-  handleSubmit,
-  isLoading,
-  translations,
-}) {
+export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
+  const translations = useExtracted();
   const businessGoals = [
     {
       id: "customer-support",

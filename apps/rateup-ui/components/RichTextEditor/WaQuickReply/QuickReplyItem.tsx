@@ -1,7 +1,7 @@
 import React from "react";
 
 import { Edit, Trash } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ const QuickReplyItem = ({
   onClick?: (value: string) => void;
   cursor?: boolean;
 }) => {
-  const t = useTranslations();
+  const t = useExtracted();
 
   const json = !isJSONString(reply.text)
     ? parseFromWhatsAppFormat(reply.text)

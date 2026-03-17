@@ -17,7 +17,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { SendMessageMock } from "../MessageComponents";
@@ -28,7 +28,7 @@ export const WhatsappChatPreview = ({ selectedQ }) => {
   const [listOpened, { open, close }] = useDisclosure(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const sections = selectedQ?.sections?.[selectedLanguage];
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <Title p="sm" order={3} c={"white"} className="bg-primary text-center">

@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 import getUnicodeFlagIcon from "country-flag-icons/unicode";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { getCountries, getCountryCallingCode } from "react-phone-number-input";
 import en from "react-phone-number-input/locale/en";
 
@@ -61,7 +61,7 @@ const ContactExtraProps = ({ form }) => {
 
   if (!form.values?.features?.[selectedLanguage]) updateFeatures(features);
   const questionTitle = form?.values?.title?.[selectedLanguage];
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack gap={"xl"}>
       <Flex justify={"flex-start"} columnGap={"lg"}>

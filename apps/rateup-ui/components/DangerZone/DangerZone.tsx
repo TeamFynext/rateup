@@ -3,14 +3,14 @@
 import React from "react";
 
 import { Divider, Stack, Text, Title } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { RateupButtonSecondary } from "../Button/RateupButtons";
 import Heading from "../styled/Heading/Heading";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 
 export default function DangerZone({ title, message, buttonText, onClick }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <>
       <Heading

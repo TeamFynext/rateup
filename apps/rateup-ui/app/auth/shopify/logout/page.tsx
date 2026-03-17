@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { LoadingOverlay, Paper, Text } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 //import { signOut } from "supertokens-auth-react/recipe/session";
 import Session from "supertokens-auth-react/recipe/session";
 
@@ -22,7 +22,7 @@ export default function Page() {
 const Logout = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     handleSignOut();
     router.push("/login");
@@ -67,7 +67,7 @@ const Logout = () => {
             textAlign: "center",
           }}
         >
-          {translations("Logging out")}
+          {translations("Logging out...")}
         </Text>
       </Paper>
     </div>

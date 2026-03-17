@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { Folder } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { ContactGroupType } from "@/types/enums";
@@ -51,7 +51,7 @@ const CreateGroupModal = ({
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const form = useForm({
     initialValues: groupDetails
       ? { ...groupDetails, contactType: [] }
@@ -139,7 +139,7 @@ const CreateGroupModal = ({
         setIsUploading(false);
       })
       .catch((err) => {
-        toast.error(translations("Error uploading icon Please try again"));
+        toast.error(translations("Error uploading icon. Please try again."));
         setIsUploading(false);
       });
   }, [file]);

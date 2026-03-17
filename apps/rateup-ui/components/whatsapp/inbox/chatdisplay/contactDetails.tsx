@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { motion } from "motion/react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
 
@@ -127,7 +127,7 @@ export default function WaInboxContactDetails({
   });
   const { data: contactLabels = [], isPending } = useContactLabels();
 
-  const t = useTranslations();
+  const t = useExtracted();
 
   useEffect(() => {
     form.setValues({
@@ -349,7 +349,6 @@ export default function WaInboxContactDetails({
             </Tooltip>
           </div>
         </motion.div>
-
         <motion.div
           className="text-center shrink-0"
           initial={{ opacity: 0, y: 10 }}
@@ -373,7 +372,6 @@ export default function WaInboxContactDetails({
             )}
           </div>
         </motion.div>
-
         <ScrollArea className="flex-1 h-[calc(100vh-250px)] py-4">
           <form onSubmit={form.onSubmit(handleSubmit)} className="p-3.5">
             <div className="flex flex-col gap-2">
@@ -602,7 +600,6 @@ export default function WaInboxContactDetails({
           </Tooltip>
         </div>
       </motion.div>
-
       <motion.div
         className="text-center"
         initial={{ opacity: 0, y: 10 }}
@@ -631,7 +628,6 @@ export default function WaInboxContactDetails({
           )}
         </div>
       </motion.div>
-
       <ScrollArea className="flex-1 h-[calc(100vh-180px)] py-4">
         <div className="p-3.5 flex flex-col gap-2">
           {/* Contact Information */}
@@ -947,7 +943,6 @@ export default function WaInboxContactDetails({
               </motion.div>
 
               <DeleteContactButton
-                t={t}
                 contact={contact}
                 deleteContactMutation={deleteContactMutation}
                 handleToggle={handleToggle}
@@ -960,12 +955,8 @@ export default function WaInboxContactDetails({
   );
 }
 
-function DeleteContactButton({
-  t,
-  contact,
-  deleteContactMutation,
-  handleToggle,
-}) {
+function DeleteContactButton({ contact, deleteContactMutation, handleToggle }) {
+  const t = useExtracted();
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -980,7 +971,6 @@ function DeleteContactButton({
           </Button>
         </motion.div>
       </AlertDialogTrigger>
-
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("Delete contact")}</AlertDialogTitle>

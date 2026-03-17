@@ -1,7 +1,7 @@
 "use client";
 
 import { Modal } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
@@ -12,7 +12,7 @@ import styles from "./UiTextTranslationsModal.module.css";
 function UiTextTranslationsModal({ opened, onClose, survey }) {
   const lanugages = survey?.languages;
   const uiTextTranslations = survey?.uiTextTranslations;
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   return (
     <Modal

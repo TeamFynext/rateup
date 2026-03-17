@@ -2,7 +2,7 @@
 
 import { Table } from "@tanstack/react-table";
 import { Shield } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import RefreshButton from "@/components/Button/RefreshButton";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option";
@@ -14,7 +14,7 @@ interface DataTableToolbarProps<TData> {
 export function DataTableToolbar<TData>({
   table,
 }: Readonly<DataTableToolbarProps<TData>>) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center gap-2">

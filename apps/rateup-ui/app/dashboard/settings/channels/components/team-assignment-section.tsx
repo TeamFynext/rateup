@@ -2,6 +2,7 @@
 
 import { Skeleton, Stack } from "@mantine/core";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { useExtracted } from "next-intl";
 
 import { useUpdateWaSettingsMutation } from "@/backend/whatsapp/settings/waSettings.query";
 import { MultiSelect } from "@/components/ui/multi-select";
@@ -11,18 +12,9 @@ export function TeamAssignmentSection({
   assignedTeamIds,
   teamOptions,
   isLoadingTeams,
-  translations: t,
   instagramConnectionData,
-}: Readonly<{
-  waSettingId: string;
-  assignedTeamIds: string[];
-  teamOptions: Array<{ value: string; label: string }>;
-  isLoadingTeams: boolean;
-  translations: any;
-  instagramConnectionData?: {
-    fbPageId?: string | null;
-  };
-}>) {
+}) {
+  const t = useExtracted();
   const updateMutation = useUpdateWaSettingsMutation(waSettingId);
 
   const handleUpdateTeams = (teamIds: string[]) => {

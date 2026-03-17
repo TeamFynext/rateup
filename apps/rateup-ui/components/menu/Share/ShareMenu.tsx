@@ -3,7 +3,7 @@
 import React from "react";
 
 import { Grid, LoadingOverlay, Stack, Switch } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useUpdateMenuMutation } from "../../../backend/menu/menu.query";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
@@ -27,7 +27,7 @@ const ShareMenu = ({ menu }: ShareMenuProps) => {
     () => {},
     () => {},
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const shareLink = menu.shortUrlId
     ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/m/${shortUrlId}`
     : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/m/${id}`;

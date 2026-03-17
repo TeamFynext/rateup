@@ -15,7 +15,7 @@ import {
   User,
   Zap,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useBookDemoMutation } from "@/backend/bookdemo/bookdemo.query";
@@ -35,7 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export function BookDemoComponent() {
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { mutate, isPending, isSuccess, error, reset } = useBookDemoMutation();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const fromData = useForm({

@@ -27,7 +27,7 @@ import {
   IconWaveSine,
   IconWorld,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { WHATSAPP_BUTTON_TYPE } from "../../../../utils/constants";
 
@@ -54,7 +54,7 @@ export const ButtonSelection = ({
   category,
   ...restProps
 }: ButtonSelectionProps) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack gap={4}>
       <Text fz={14} fw={500}>
@@ -65,7 +65,6 @@ export const ButtonSelection = ({
           "Insert buttons so your customers can take action and engage with your message!",
         )}
       </Text>
-
       <Menu shadow="md" width={200} {...restProps}>
         <Menu.Target>
           <Tooltip
@@ -75,7 +74,7 @@ export const ButtonSelection = ({
                     "Only authentication buttons are allowed for this template",
                   )
                 : translations(
-                    "Only one button is supported for this type of template The button text is not editable",
+                    "Only one button is supported for this type of template. The button text is not editable.",
                   )
             }
             disabled={!disabled}
@@ -416,7 +415,7 @@ export const ButtonSelection = ({
       <Group fz={14} gap={"xs"} wrap="nowrap">
         <IconBulb size={16} />
         {translations(
-          "If you add more than three buttons, they will appear in a list",
+          "If you add more than three buttons, they will appear in a list.",
         )}
       </Group>
       <Group fz={14} gap={"xs"} wrap="nowrap" c="blue">

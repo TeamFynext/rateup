@@ -22,7 +22,7 @@ import { useForm } from "@mantine/form";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconDownload } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import useContactStore from "@/app/dashboard/inbox/store";
@@ -39,7 +39,7 @@ enum DateType {
 export default function WaInboxChatExport() {
   const [chatsExporting, setChatsExporting] = useState(false);
   const exportChats = useExportWaChats();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { filterData } = useContactStore();
   const form = useForm({
     initialValues: {

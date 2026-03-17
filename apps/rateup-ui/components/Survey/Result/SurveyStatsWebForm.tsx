@@ -9,12 +9,14 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react";
 import { Percent } from "lucide-react";
+import { useExtracted } from "next-intl";
 
 import { useResponseCount } from "@/backend/surveys/response/response.query";
 import { useGetSurveyStats } from "@/backend/surveys/surveys.query";
 import SurveyContext from "@/context/SurveyContext";
 
-const SurveyStatsWebForm = ({ translations, surveyId }) => {
+const SurveyStatsWebForm = ({ surveyId }) => {
+  const translations = useExtracted();
   const { filterTeams } = useContext(SurveyContext);
 
   const { data: responseCountData } = useResponseCount(surveyId);

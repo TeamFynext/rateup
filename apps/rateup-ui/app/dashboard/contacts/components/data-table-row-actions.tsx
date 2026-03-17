@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ActionIcon, Menu, rem, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useDeleteCustomFieldMutation } from "@/backend/campaign/contacts/contacts.query";
 import { CustomFieldForm } from "@/components/Contacts/label-form";
@@ -27,7 +27,7 @@ export function DataTableRowActions<TData>({
   row,
 }: Readonly<DataTableRowActionsProps<TData>>) {
   const deleteCustomFieldMutation = useDeleteCustomFieldMutation();
-  const t = useTranslations();
+  const t = useExtracted();
   const [editOpen, setEditOpen] = useState(false);
 
   const openDeleteModal = () =>
@@ -86,7 +86,6 @@ export function DataTableRowActions<TData>({
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
-
       <EditCustomFieldModal
         opened={editOpen}
         setOpened={setEditOpen}
@@ -97,7 +96,7 @@ export function DataTableRowActions<TData>({
 }
 
 const EditCustomFieldModal = ({ opened, setOpened, customField }) => {
-  const t = useTranslations();
+  const t = useExtracted();
 
   return (
     <Dialog open={opened} onOpenChange={setOpened}>

@@ -51,6 +51,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import { useExtracted } from "next-intl";
 
 import { SubscriptionFeaturePathName as sfpn } from "@/types/enums";
 import { hasFeature } from "@/utils/subscription/subscription";
@@ -61,12 +62,12 @@ export function useNavMain({
   contactLabels,
   staff,
   teams,
-  t,
   chatFilterStore,
   hiddenModules,
   handleFilter,
   userId,
 }: any) {
+  const t = useExtracted();
   return useMemo(
     () => [
       // {

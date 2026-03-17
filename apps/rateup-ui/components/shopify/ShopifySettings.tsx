@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { IntegratedApps, ShopifyEvents } from "@/types/enums";
@@ -55,12 +55,12 @@ const ShopifySettings = ({
   const updateIntegration = useUpdateIntegrationMutation(
     IntegratedApps.shopify,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: webhooks } = useGetRegisteredWebhooks(showEvents);
   const session = shopifyInfo.credential.session;
   const handleDeleteWehooks = () => {
     if (!session) return;
-    toast.loading(translations("hold ondeleting webhooks"), {
+    toast.loading(translations("hold on..deleting webhooks"), {
       id: "webhooks",
     });
     deleteAllWebhooksmt.mutate(session.shop, {
@@ -71,13 +71,13 @@ const ShopifySettings = ({
   };
   const handleDeleteSession = () => {
     if (!session) return;
-    toast.loading(translations("hold ondeleting connection"), {
+    toast.loading(translations("hold on..deleting connection"), {
       id: "integration-delete",
     });
     deleteIntgration.mutate();
   };
   const registerWebhooks = () => {
-    toast.loading(translations("Hold OnRegistering webhooks"), {
+    toast.loading(translations("Hold On..Registering webhooks"), {
       id: "webhooks",
     });
     registerWebhooksmutate.mutate(null, {
@@ -101,7 +101,7 @@ const ShopifySettings = ({
       ...shopifyInfo.credential,
       shopifySurveys: [],
     };
-    toast.loading(translations("hold ondeleting surveys delivery settings"), {
+    toast.loading(translations("hold on..deleting surveys delivery settings"), {
       id: "integration-update",
     });
     updateIntegration.mutate({ credential: updateData });
@@ -116,7 +116,7 @@ const ShopifySettings = ({
       ...shopifyInfo.credential,
       shopifySurveys: shopifySurveys,
     };
-    toast.loading(translations("hold ondeleting schedules"), {
+    toast.loading(translations("hold on..deleting schedules"), {
       id: "integration-update",
     });
     updateIntegration.mutate({ credential: updateData });
@@ -124,7 +124,7 @@ const ShopifySettings = ({
 
   const handleChangeWebhookByTopic = (event, isEnabled) => {
     if (isEnabled) {
-      toast.loading(translations("Hold OnRegistering webhooks"), {
+      toast.loading(translations("Hold On..Registering webhooks"), {
         id: "webhooks",
       });
       registerWebhookByTopicMt.mutate({ topic: event.value });
@@ -142,7 +142,7 @@ const ShopifySettings = ({
   };
 
   const handleDeleteWebhookByTopic = (topic) => {
-    toast.loading(translations("hold ondeleting webhooks"), {
+    toast.loading(translations("hold on..deleting webhooks"), {
       id: "webhooks",
     });
     deleteWebhookbyTopicMt.mutate({ topic: topic });

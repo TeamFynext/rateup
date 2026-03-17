@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 import { CampaignParticipantStatus } from "@/types/enums";
 import { Badge } from "@/components/ui/badge";
@@ -18,15 +17,16 @@ interface StatusBadgeProps {
   errorMessage?: string;
 }
 
-export function StatusBadge({ status, errorMessage }: StatusBadgeProps) {
-  const t = useTranslations("campaign.statusBadge");
-
+export function StatusBadge({
+  status,
+  errorMessage,
+}: Readonly<StatusBadgeProps>) {
   const badge = (
     <Badge
       variant="outline"
       className={`text-xs font-medium ${getStatusBadgeStyle(status)}`}
     >
-      {t(`statuses.${status}`)}
+      {status}
     </Badge>
   );
 

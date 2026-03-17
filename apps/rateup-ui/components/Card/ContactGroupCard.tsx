@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Avatar, Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { IconUsersGroup } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useTeamsByUser } from "../../backend/team/team.query";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
@@ -24,7 +24,7 @@ export const ContactGroupCard = ({ group }) => {
     data: TeamsResponse;
     refetch: any;
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   const teamObj = teamsData?.data?.find((team) => {
     return team?.id === group?.teamId;
   });

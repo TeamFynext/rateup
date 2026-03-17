@@ -25,7 +25,7 @@ import {
   IconSelector,
 } from "@tabler/icons-react";
 import { flexRender, Header, Table as TableType } from "@tanstack/react-table";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { PAGE_SIZE } from "../../utils/constants";
 import {
@@ -103,7 +103,7 @@ const TableLayout = ({
   isPending,
 }: TableLayoutProps) => {
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack className={styles["table-and-pagination-container"]}>
       <Stack justify="space-between" className={styles["table-container"]}>

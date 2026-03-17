@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   Select,
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/tooltip";
 
 export function StatusFilterMenu({ filterParam, setFilterParam }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -37,7 +37,6 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
           </SelectContent>
         </Select>
       </TooltipTrigger>
-
       <TooltipContent side="top">
         {translations("Status") ?? "Status"}
       </TooltipContent>

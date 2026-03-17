@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { Button, FileButton, Group, Image } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconBrandUnsplash, IconUpload } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { mmImageCropModalClassnames } from "../../../../utils/constants";
 import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
@@ -16,7 +16,7 @@ import styles from "./ImageSourceSelectorModal.module.css";
 function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
   const { onImageSelected, forDevice } = innerProps;
   const aspectRatio = forDevice === "desktop" ? 16 / 9 : 9 / 16;
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleFileBtnValueChange = useCallback(
     (fileObj) => {
       if (!fileObj) {
@@ -74,7 +74,6 @@ function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
           );
         }}
       </FileButton>
-
       <Button
         className={styles["card"]}
         rightSection={<IconBrandUnsplash size={16} />}

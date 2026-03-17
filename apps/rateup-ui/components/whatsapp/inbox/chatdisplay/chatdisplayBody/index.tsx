@@ -12,7 +12,7 @@ import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { IgReceiveMessageBody } from "@/types/global";
@@ -264,7 +264,7 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
 export default WaInboxChatDisplayBody;
 
 const MessageItem = ({ message, selectedContact, nextMessage }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   if (!message) return null;
   const { exchangeProcess, receive } = message.messageBody;
   const { messagesByKey, selectedKey } = useMessagesStore();
@@ -292,7 +292,7 @@ const MessageItem = ({ message, selectedContact, nextMessage }) => {
         messageObject={message}
         reaction={reaction}
       >
-        {singleMessage({ message, translations })}
+        {singleMessage({ message })}
       </WaInboxSingleMessageLayout>
     </React.Fragment>
   );

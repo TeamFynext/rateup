@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Box, Group, Stack } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import RateupSwitch from "@/components/Switch/RateupSwitch";
 
@@ -18,7 +18,7 @@ const PasswordSettings = ({ survey, surveyId }) => {
   const [passwordProtection, setPasswordProtection] = useState(
     survey?.isProtected,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [isPasswordInputInvalid, setIsPasswordInputInvalid] = useState<
     boolean | string
   >(false);

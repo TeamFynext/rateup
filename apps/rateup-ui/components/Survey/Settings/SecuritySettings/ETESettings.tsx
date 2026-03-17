@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconKey } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import RateupSwitch from "@/components/Switch/RateupSwitch";
@@ -38,7 +38,7 @@ export default function ETESettings(props: ETESettingsInterface) {
   const [endtoendencryption, setEndToEndEncryption] = useState(
     survey?.isEncrypted,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [alertModalOpened, { open, close }] = useDisclosure(false);
   const editSurvey = useEditSurveyMutation(survey?.id);
   const { data: responses } = useAllResponses(survey?.id);
@@ -62,7 +62,7 @@ export default function ETESettings(props: ETESettingsInterface) {
         onClose={close}
         headerTitle={translations("End-to-End Encryption")}
         headerLabel={translations(
-          "Are you sure you want to enable end-to-end encryption? Once enabled it cannot be disabled",
+          "Are you sure you want to enable end-to-end encryption? Once enabled it cannot be disabled.",
         )}
         confirmLabel={translations("Confirm")}
         onConfirm={() =>

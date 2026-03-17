@@ -9,13 +9,12 @@ import {
   IconBold,
   IconCode,
   IconItalic,
-  IconMoodHappy,
   IconPlus,
   IconStrikethrough,
 } from "@tabler/icons-react";
 import { EmojiClickData } from "emoji-picker-react";
 import { Smile } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
@@ -39,7 +38,7 @@ export const TextFormateToolBar = ({
   dynamicVariables: any[];
 }) => {
   const [variableCount, setVariableCount] = useState(1);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (dynamicVariables?.length) {
       setVariableCount(dynamicVariables?.length + 1);
@@ -100,7 +99,7 @@ export const TextFormateToolBar = ({
             size={"xs"}
             onClick={() => {
               applyFormatting(`{{${variableCount}}}`);
-              setVariableCount((count) => (count += 1));
+              setVariableCount((count) => count + 1);
             }}
           >
             <IconPlus color="var(--grey-color)" size={14} />
@@ -125,19 +124,19 @@ export const PopoverEmojiPicker = ({
   showIcon?: React.ReactNode;
   size?: "xs" | "sm" | "md" | "lg";
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Popover>
-      <PopoverTrigger>
-        <CustomTooltip
-          trigger={
+      <CustomTooltip
+        trigger={
+          <PopoverTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
               {showIcon ?? <Smile className="w-5 h-5" />}
             </Button>
-          }
-          content={<span>{translations("Insert an emoji")}</span>}
-        />
-      </PopoverTrigger>
+          </PopoverTrigger>
+        }
+        content={<span>{translations("Insert an emoji")}</span>}
+      />
       <PopoverContent className="w-full">
         <Suspense
           fallback={

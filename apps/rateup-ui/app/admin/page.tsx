@@ -13,7 +13,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   Card,
@@ -25,7 +25,7 @@ import {
 
 export default function Page() {
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const NavigationCard = ({
     title,
@@ -76,7 +76,6 @@ export default function Page() {
           centralized dashboard
         </p>
       </div>
-
       {/* Organization & User Management */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
@@ -109,7 +108,6 @@ export default function Page() {
           />
         </div>
       </div>
-
       {/* Payment & Billing */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
@@ -150,7 +148,6 @@ export default function Page() {
           />
         </div>
       </div>
-
       {/* System Management */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
@@ -183,7 +180,6 @@ export default function Page() {
           />
         </div>
       </div>
-
       {/* Quick Stats */}
       <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
         <CardHeader className="pb-3">

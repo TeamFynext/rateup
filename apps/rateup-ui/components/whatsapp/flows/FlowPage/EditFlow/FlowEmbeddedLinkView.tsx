@@ -13,7 +13,7 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconDeviceSdCard } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { WaFlowFormElementType } from "../../../../../types/enums";
@@ -41,7 +41,7 @@ export function FlowEmbeddedLinkDetailedView() {
       ? WaFlowFormElementType.textHeading
       : selectedFormElement.type,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const form = useForm({
     initialValues: {
       text: selectedFormElement.text || "",
@@ -147,7 +147,6 @@ export function FlowEmbeddedLinkDetailedView() {
           </Stack>
         </Group>
       </ScrollArea>
-
       <Stack>
         <Divider />
         <Group justify="space-between" p="xs" px={"sm"}>
@@ -171,7 +170,7 @@ function FlowTextElementEditor(
   },
 ) {
   const { fontNormal, ...otherProp } = props;
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <TextareaWithLengthTracker
       fz="lg"

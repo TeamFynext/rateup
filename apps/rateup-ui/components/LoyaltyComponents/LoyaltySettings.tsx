@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { TemplateType, WaAutomatedReplyResponseType } from "@/types/enums";
 import {
@@ -79,13 +79,11 @@ const LoyaltySettings = () => {
 
   const [selectedConfig, setSelectedConfig] =
     useState<LoyaltyTemplateConfig | null>(null);
-  const translations = useTranslations();
-
-  const columns = generateColumnsForLoyaltyTemplate(
+  const translations = useExtracted();
+  const columns = useLoyaltyTemplateColumns(
     setSelectedConfig,
     open,
     openDialog,
-    translations,
   );
 
   const deleteMutation = useDeleteLoyaltyTemplate();
@@ -168,7 +166,10 @@ export const LoyaltyWaTemplateConfig = ({
   const templateMut = useCreateLoyaltyTemplate();
   const updateTempMut = useUpdateLoyaltyTemplate(config?.id);
   const { data: loyaltyTemplates } = useWaTemplates(TemplateType.LOYALTY);
-  const translations = useTranslations();
+  const translations = useExtracted();
+  const getLoyaltyTemplateLabel = useLoyaltyTemplateLabel();
+  const getLoyaltyTemplateVariableMeta = useLoyaltyTemplateVariableMeta();
+  const getSampleReplyMessage = useSampleReplyMessage();
 
   const initialValues: LoyaltyTemplateFormValues = {
     type: LoyaltyTemplateTypes.PointInformation,
@@ -232,13 +233,10 @@ export const LoyaltyWaTemplateConfig = ({
 
   const typeData = Object.values(LoyaltyTemplateTypes).map((t) => ({
     value: t,
-    label: getLoyaltyTemplateLabel(t, translations).label,
+    label: getLoyaltyTemplateLabel(t).label,
   }));
 
-  const variableMeta = getLoyaltyTemplateVariableMeta(
-    form.values.type,
-    translations,
-  );
+  const variableMeta = getLoyaltyTemplateVariableMeta(form.values.type);
   const selectedTemplate = loyaltyTemplates?.find(
     (template) => template.id === form.values.waTemplateId,
   );
@@ -248,7 +246,6 @@ export const LoyaltyWaTemplateConfig = ({
     waTemplateId: form.values.waTemplateId,
     selectedTemplate,
     variableMeta,
-    translations,
   });
   const requestMessageError =
     typeof form.errors.requestMessage === "string"
@@ -387,11 +384,10 @@ export const LoyaltyWaTemplateConfig = ({
                       templateType={TemplateType.LOYALTY}
                       comboboxProps={{ withinPortal: false }}
                       label={
-                        getLoyaltyTemplateLabel(form.values.type, translations)
-                          ?.templateLabel
+                        getLoyaltyTemplateLabel(form.values.type)?.templateLabel
                       }
                       description={
-                        getLoyaltyTemplateLabel(form.values.type, translations)
+                        getLoyaltyTemplateLabel(form.values.type)
                           ?.templateDescription
                       }
                       value={form.values.waTemplateId}
@@ -406,10 +402,8 @@ export const LoyaltyWaTemplateConfig = ({
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {
-                          getLoyaltyTemplateLabel(
-                            form.values.type,
-                            translations,
-                          ).templateDescription
+                          getLoyaltyTemplateLabel(form.values.type)
+                            .templateDescription
                         }
                       </p>
                       <WaTextEditor
@@ -499,43 +493,52 @@ export const LoyaltyWaTemplateConfig = ({
   );
 };
 
-function getLoyaltyTemplateLabel(type: string, translations: any) {
-  switch (type) {
-    case LoyaltyTemplateTypes.CustomerRegistration:
-      return {
-        label: translations("Customer Registration"),
-        templateLabel: translations(
-          "WhatsApp Template for Successful Customer Registration",
-        ),
-        templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")}`,
-      };
-    case LoyaltyTemplateTypes.PointInformation:
-      return {
-        label: translations("Point Information"),
-        templateLabel: translations("WhatsApp Template for Point Information"),
-        templateDescription: `Dynamic variables - {{1}} - ${translations("Current point balance")} , {{2}} - ${translations("Redeemed points")}, {{3}} - ${translations("Total earned points")}`,
-      };
-    case LoyaltyTemplateTypes.Referral:
-      return {
-        label: translations("Referral"),
-        templateLabel: translations("WhatsApp Template for Referral"),
-        templateDescription: `Dynamic variables - {{1}} - ${translations("referral code")}, {{2}} - ${translations("referral link")}`,
-      };
-    case LoyaltyTemplateTypes.CustomerRemoval:
-      return {
-        label: translations("Customer Removal from Loyalty"),
-      };
-    case LoyaltyTemplateTypes.RewardsIssued:
-      return {
-        label: translations("Rewards Issue list"),
-      };
-    default:
-      return {
-        label: "",
-        templateLabel: "",
-        templateDescription: "",
-      };
-  }
+function useLoyaltyTemplateLabel() {
+  const translations = useExtracted();
+
+  return useCallback(
+    (type: string) => {
+      switch (type) {
+        case LoyaltyTemplateTypes.CustomerRegistration:
+          return {
+            label: translations("Customer Registration"),
+            templateLabel: translations(
+              "WhatsApp Template for Successful Customer Registration",
+            ),
+            templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")}`,
+          };
+        case LoyaltyTemplateTypes.PointInformation:
+          return {
+            label: translations("Point Information"),
+            templateLabel: translations(
+              "WhatsApp Template for Point Information",
+            ),
+            templateDescription: `Dynamic variables - {{1}} - ${translations("Current point balance")} , {{2}} - ${translations("Redeemed points")}, {{3}} - ${translations("Total earned points")}`,
+          };
+        case LoyaltyTemplateTypes.Referral:
+          return {
+            label: translations("Referral"),
+            templateLabel: translations("WhatsApp Template for Referral"),
+            templateDescription: `Dynamic variables - {{1}} - ${translations("referral code")}, {{2}} - ${translations("referral link")}`,
+          };
+        case LoyaltyTemplateTypes.CustomerRemoval:
+          return {
+            label: translations("Customer Removal from Loyalty"),
+          };
+        case LoyaltyTemplateTypes.RewardsIssued:
+          return {
+            label: translations("Rewards Issue list"),
+          };
+        default:
+          return {
+            label: "",
+            templateLabel: "",
+            templateDescription: "",
+          };
+      }
+    },
+    [translations],
+  );
 }
 
 type LoyaltyTemplate = {
@@ -544,72 +547,82 @@ type LoyaltyTemplate = {
   responseType: string;
   id?: string;
 };
-function generateColumnsForLoyaltyTemplate(
+function useLoyaltyTemplateColumns(
   setSelectedConfig: (value: LoyaltyTemplateConfig | null) => void,
   open: () => void,
   openDialog: () => void,
-  translations: any,
 ) {
+  const translations = useExtracted();
+  const getLoyaltyTemplateLabel = useLoyaltyTemplateLabel();
   const columnHelper = createColumnHelper<LoyaltyTemplate>();
 
-  return [
-    columnHelper.accessor(
-      (row) => getLoyaltyTemplateLabel(row.type, translations).label,
-      {
+  return useMemo(
+    () => [
+      columnHelper.accessor((row) => getLoyaltyTemplateLabel(row.type).label, {
         id: "type",
         header: () => <span>Type</span>,
-      },
-    ),
-    columnHelper.accessor((row) => row.requestMessage, {
-      id: "requestMessage",
-      header: translations("Request Message"),
-    }),
-    columnHelper.accessor((row) => row.responseType, {
-      id: "responseType",
-      header: () => <span>{translations("Response Type")}</span>,
-      cell: ({ getValue }) => {
-        return (
-          <Badge
-            variant="outline"
-            className={getResponseTypeBadgeClass(getValue())}
-          >
-            {getValue()}
-          </Badge>
-        );
-      },
-    }),
-    columnHelper.accessor((row) => row, {
-      id: "action",
-      header: "",
-      cell: ({ getValue }) => {
-        return (
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => {
-                setSelectedConfig(getValue());
-                open();
-              }}
+      }),
+      columnHelper.accessor((row) => row.requestMessage, {
+        id: "requestMessage",
+        header: translations("Request Message"),
+      }),
+      columnHelper.accessor((row) => row.responseType, {
+        id: "responseType",
+        header: () => <span>{translations("Response Type")}</span>,
+        cell: ({ getValue }) => {
+          return (
+            <Badge
+              variant="outline"
+              className={getResponseTypeBadgeClass(getValue())}
             >
-              <IconEdit className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => {
-                setSelectedConfig(getValue());
-                openDialog();
-              }}
-              className="text-destructive hover:text-destructive"
-            >
-              <IconTrash className="size-4" />
-            </Button>
-          </div>
-        );
-      },
-    }),
-  ];
+              {getValue()}
+            </Badge>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: "action",
+        header: "",
+        cell: ({ row }) => {
+          const selectedRow = row.original;
+
+          return (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => {
+                  setSelectedConfig(selectedRow);
+                  open();
+                }}
+              >
+                <IconEdit className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => {
+                  setSelectedConfig(selectedRow);
+                  openDialog();
+                }}
+                className="text-destructive hover:text-destructive"
+              >
+                <IconTrash className="size-4" />
+              </Button>
+            </div>
+          );
+        },
+      }),
+    ],
+    [
+      columnHelper,
+      getLoyaltyTemplateLabel,
+      open,
+      openDialog,
+      setSelectedConfig,
+      translations,
+    ],
+  );
 }
 
 function getResponseTypeBadgeClass(value: string) {
@@ -660,50 +673,57 @@ function normalizeResponseType(value?: string): WaAutomatedReplyResponseType {
   return WaAutomatedReplyResponseType.Template;
 }
 
-function getLoyaltyTemplateVariableMeta(type: string, translations: any) {
-  switch (type) {
-    case LoyaltyTemplateTypes.CustomerRegistration:
-      return [
-        {
-          token: "{{1}}",
-          label: translations("customer name"),
-          sample: "Alex Morgan",
-        },
-      ];
-    case LoyaltyTemplateTypes.PointInformation:
-      return [
-        {
-          token: "{{1}}",
-          label: translations("Current point balance"),
-          sample: "1280",
-        },
-        {
-          token: "{{2}}",
-          label: translations("Redeemed points"),
-          sample: "120",
-        },
-        {
-          token: "{{3}}",
-          label: translations("Total earned points"),
-          sample: "1400",
-        },
-      ];
-    case LoyaltyTemplateTypes.Referral:
-      return [
-        {
-          token: "{{1}}",
-          label: translations("referral code"),
-          sample: "RATEUP50",
-        },
-        {
-          token: "{{2}}",
-          label: translations("referral link"),
-          sample: "https://rateup.shop/refer/RATEUP50",
-        },
-      ];
-    default:
-      return [];
-  }
+function useLoyaltyTemplateVariableMeta() {
+  const translations = useExtracted();
+
+  return useCallback(
+    (type: string) => {
+      switch (type) {
+        case LoyaltyTemplateTypes.CustomerRegistration:
+          return [
+            {
+              token: "{{1}}",
+              label: translations("customer name"),
+              sample: "Alex Morgan",
+            },
+          ];
+        case LoyaltyTemplateTypes.PointInformation:
+          return [
+            {
+              token: "{{1}}",
+              label: translations("Current point balance"),
+              sample: "1280",
+            },
+            {
+              token: "{{2}}",
+              label: translations("Redeemed points"),
+              sample: "120",
+            },
+            {
+              token: "{{3}}",
+              label: translations("Total earned points"),
+              sample: "1400",
+            },
+          ];
+        case LoyaltyTemplateTypes.Referral:
+          return [
+            {
+              token: "{{1}}",
+              label: translations("referral code"),
+              sample: "RATEUP50",
+            },
+            {
+              token: "{{2}}",
+              label: translations("referral link"),
+              sample: "https://rateup.shop/refer/RATEUP50",
+            },
+          ];
+        default:
+          return [];
+      }
+    },
+    [translations],
+  );
 }
 
 function replaceDynamicVariables({
@@ -741,57 +761,56 @@ function getPlainTextFromRichContent(content: any): string {
   return "";
 }
 
-function getSampleReplyMessage({
-  responseType,
-  content,
-  waTemplateId,
-  selectedTemplate,
-  variableMeta,
-  translations,
-}: {
-  responseType: string;
-  content?: string;
-  waTemplateId?: string;
-  selectedTemplate?: any;
-  variableMeta: Array<{ token: string; sample: string }>;
-  translations: any;
-}) {
-  if (responseType === WaAutomatedReplyResponseType.Template) {
-    const templateName = selectedTemplate?.data?.name;
-    const templateBody = getWaTemplateBodyText(
-      selectedTemplate?.data?.components,
-    );
+function useSampleReplyMessage() {
+  const translations = useExtracted();
 
-    if (templateBody?.trim().length) {
-      const previewBody = replaceDynamicVariables({
-        message: templateBody,
+  return useCallback(
+    ({
+      responseType,
+      content,
+      waTemplateId,
+      selectedTemplate,
+      variableMeta,
+    }) => {
+      if (responseType === WaAutomatedReplyResponseType.Template) {
+        const templateName = selectedTemplate?.data?.name;
+        const templateBody = getWaTemplateBodyText(
+          selectedTemplate?.data?.components,
+        );
+
+        if (templateBody?.trim().length) {
+          const previewBody = replaceDynamicVariables({
+            message: templateBody,
+            variableMeta,
+          });
+
+          return templateName?.trim().length
+            ? `${templateName}\n\n${previewBody}`
+            : previewBody;
+        }
+
+        if (!waTemplateId?.trim().length) {
+          return translations("Template not selected yet");
+        }
+
+        if (templateName?.trim().length) {
+          return `${translations("Template selected")}: ${templateName}`;
+        }
+
+        return `${translations("Template selected")}: ${waTemplateId}`;
+      }
+
+      if (!content?.trim().length) {
+        return translations("No response content yet");
+      }
+
+      return replaceDynamicVariables({
+        message: content,
         variableMeta,
       });
-
-      return templateName?.trim().length
-        ? `${templateName}\n\n${previewBody}`
-        : previewBody;
-    }
-
-    if (!waTemplateId?.trim().length) {
-      return translations("Template not selected yet");
-    }
-
-    if (templateName?.trim().length) {
-      return `${translations("Template selected")}: ${templateName}`;
-    }
-
-    return `${translations("Template selected")}: ${waTemplateId}`;
-  }
-
-  if (!content?.trim().length) {
-    return translations("No response content yet");
-  }
-
-  return replaceDynamicVariables({
-    message: content,
-    variableMeta,
-  });
+    },
+    [translations],
+  );
 }
 
 function getWaTemplateBodyText(templateComponents?: Array<any>) {

@@ -4,7 +4,7 @@ import { useCallback, useRef } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit, Info, Plus, QrCode } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const formSchema = z.object({
     name: z
       .string()
@@ -44,7 +44,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
         if (!value) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: translations("URL is required"),
+            message: translations("URL is required."),
           });
           return;
         }
@@ -55,7 +55,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
         } catch {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: translations("Please enter a valid url"),
+            message: translations("Please enter a valid url."),
           });
         }
       }
@@ -68,7 +68,7 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
           } catch {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: translations("Please enter a valid url"),
+              message: translations("Please enter a valid url."),
             });
           }
         }

@@ -27,7 +27,7 @@ import {
   Trash,
   X,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { MessagePlatform } from "@/types/enums";
@@ -99,7 +99,7 @@ const ContactGroupMenu = ({ groupId }) => {
 
   const deleteGroupMutation = useDeleteGroupMutation();
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const openDeleteModal = (e) => {
     e.stopPropagation();
     modals.openConfirmModal({
@@ -152,7 +152,6 @@ const ContactGroupMenu = ({ groupId }) => {
           {translations("Delete contact Group")}
         </DropdownMenuItem>
       </DropdownMenuContent>
-
       <CreateGroupModal
         opened={openedEditModal}
         setOpened={setOpenedEditModal}

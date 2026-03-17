@@ -4,7 +4,7 @@ import { useContext } from "react";
 
 import { Stack, Text, TextInput, useMantineTheme } from "@mantine/core";
 import { IconMail } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
@@ -18,7 +18,7 @@ const ContactForm = ({ features }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const selectedFeature = features?.[selectedLanguage];
   const theme = useMantineTheme();
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack w={"100%"} gap={"lg"}>
       {selectedFeature?.name.isEnabled && (

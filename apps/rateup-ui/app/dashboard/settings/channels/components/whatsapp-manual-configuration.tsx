@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 import { isNotEmpty, useForm } from "@mantine/form";
 import { IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -31,7 +31,7 @@ type WaSetting = WaSettings[number];
 export function WhatsAppManualConfiguration({
   waSettings,
 }: Readonly<{ waSettings: WaSetting | undefined }>) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: teamsRes, isLoading: isLoadingTeams } = useTeamsByUser();
 
   const teams = teamsRes?.data || [];
@@ -163,7 +163,6 @@ export function WhatsAppManualConfiguration({
                 assignedTeamIds={assignedTeamIds}
                 teamOptions={teamOptions}
                 isLoadingTeams={isLoadingTeams}
-                translations={translations}
                 instagramConnectionData={{
                   fbPageId: waSettings?.fbPageId,
                 }}

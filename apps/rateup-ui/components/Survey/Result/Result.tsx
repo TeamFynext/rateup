@@ -4,7 +4,7 @@ import React, { useCallback, useContext, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { IconArrowLeft } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { QuestionType2 } from "@/types/enums";
@@ -37,10 +37,10 @@ const Result = ({
   setEncryptionPassword,
   subscription = null,
   flowId = null,
-  translations,
   flow = null,
   version = 1,
 }) => {
+  const translations = useExtracted();
   const { selectedTeamId } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
@@ -137,7 +137,7 @@ function EncryptionPasswordModal({
   const {
     user: { encryptionKeys },
   } = useUser();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
   const [encryptionpassword, setEncryptionPassword] = useState("");
 

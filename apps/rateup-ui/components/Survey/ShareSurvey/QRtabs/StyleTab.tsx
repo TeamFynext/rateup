@@ -15,7 +15,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { uploadFile } from "../../../../utils/file-upload/upload";
 import { RateupButtonSecondary } from "../../../Button/RateupButtons";
@@ -38,7 +38,7 @@ const StyleTab = ({
   setActiveBgStyle,
 }) => {
   const [file, setFile] = useState<File | null>(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     //For server upload - template setup
 
@@ -191,7 +191,6 @@ const StyleTab = ({
           </div>
         </Tabs.Panel>
       </Tabs>
-
       <Group align="center" mt="sm">
         <Title order={3} mt="xl" style={{ maxWidth: "150px" }}>
           {" "}

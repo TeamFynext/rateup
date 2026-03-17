@@ -25,7 +25,7 @@ import {
   IconEye,
   IconX,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -77,7 +77,7 @@ export function WaQuestionDetailedView({
   const [enableTitle, setEnableTitle] = useState(
     !!question?.title?.[selectedLanguage],
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (!enableTitle) {
       form.setFieldValue(
@@ -161,7 +161,7 @@ export function WaQuestionDetailedView({
       } else {
         // Updating existing question
         toast.loading(
-          translations("Hold on, your changes are getting updated"),
+          translations("Hold on, your changes are getting updated.."),
           {
             id: "load-data",
           },
@@ -272,7 +272,6 @@ export function WaQuestionDetailedView({
           />
         </Group>
       </ScrollArea>
-
       <Stack>
         <Divider />
         <Group justify="space-between" p="xs" px={"sm"}>
@@ -332,7 +331,6 @@ export function WaQuestionDetailedView({
           />
         </Group>
       </Stack>
-
       <Popover
         position="left"
         opened={previewOpened}

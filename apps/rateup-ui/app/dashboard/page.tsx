@@ -16,7 +16,7 @@ import {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { MoveRight, PanelsTopLeft } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useActiveSurveyStats,
@@ -39,7 +39,7 @@ export default function DashboardHome() {
   const router = useRouter();
   // const { data: overallData, isLoading: overallStatsLoading } =
   //   useOverallStats();
-  // const translations = useTranslations();
+  // const translations = useExtracted();
   useEffect(() => {
     router.replace("/dashboard/inbox?tab=New");
   }, [router]);

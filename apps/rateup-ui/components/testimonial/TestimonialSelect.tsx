@@ -10,7 +10,7 @@ import {
   ScrollAreaAutosize,
   Stack,
 } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { filterType } from "@/app/dashboard/testimonial/[collectionId]/page";
 
@@ -43,7 +43,7 @@ const TestimonialSelect = ({
     filters,
     type,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
   function checkIfTestimonialIdsAreIncludedInAllTestimonials(
     idtocheck: string,

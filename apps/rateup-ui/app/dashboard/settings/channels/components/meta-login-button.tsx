@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Button as MantineButton } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useRegisterBusinessClientMutation } from "@/backend/whatsapp/settings/waSettings.query";
@@ -38,7 +38,7 @@ export function MetaLoginButton({
     setWaData({ phone_number_id: "", waba_id: "" });
     setCode("");
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   useEffect(() => {
     if (waData.waba_id && code) {

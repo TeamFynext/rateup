@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { TrendingUp } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { useGetResolvedConversationStats } from "@/backend/conversation/conversation.query";
@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/utils/dateTime";
 
 const ConversationTrendsGraph = ({ dateRange }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const { data, isLoading } = useGetResolvedConversationStats({
     days: 7,
     dateKey: dateRange.key,

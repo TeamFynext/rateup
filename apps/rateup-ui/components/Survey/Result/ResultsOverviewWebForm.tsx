@@ -7,7 +7,7 @@ import { IconTableExport } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import html2canvas from "html2canvas-pro";
 import jsPDF from "jspdf";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Range } from "react-date-range";
 
 import { QuestionType, WaQuestions } from "@/types/enums";
@@ -43,7 +43,7 @@ const ResultsOverviewWebForm = ({
     SelectedLanguageContext,
   );
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [isExporting, setIsExporting] = useState(false);
   const targetRef = useRef<HTMLDivElement>(null);
 
@@ -150,9 +150,7 @@ const ResultsOverviewWebForm = ({
           <NothingFound text={translations("No Data available for Analysis")} />
         )
       )}
-      {!flowId && (
-        <SurveyStatsWebForm translations={translations} surveyId={surveyId} />
-      )}
+      {!flowId && <SurveyStatsWebForm surveyId={surveyId} />}
       <PaperLayout p={"md"}>
         <Flex justify={"space-between"}>
           <RateupButtonPrimary
@@ -165,7 +163,7 @@ const ResultsOverviewWebForm = ({
         </Flex>
       </PaperLayout>
       <div ref={targetRef} className="flex flex-col gap-6">
-        <HappyIndex translations={translations} surveyId={surveyId} />
+        <HappyIndex surveyId={surveyId} />
         <OverallResponseGraphWebForm
           data={graphResponse}
           timePeriod={timePeriod}

@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 
 import { Badge, Group, RingProgress, Stack, Text } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useGetSurveyStatsBySurveyTeamMapId } from "../../../backend/surveys/surveys.query";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
@@ -18,7 +18,7 @@ const MenuAnalytics = ({
   surveyId,
   subscription,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const {
     data: survayStats,
     isPending,

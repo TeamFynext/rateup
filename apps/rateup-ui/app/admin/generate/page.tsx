@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { Database, MessageCircle, Zap } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useGenerateInboxResponse } from "@/backend/whatsapp/inbox/message/wamessage.query";
@@ -29,10 +29,10 @@ const GenerateData = () => {
   const [messagesPerContact, setMessagesPerContact] = useState(1);
   const generateResponse = useGenerateResponse(selectedSurveyTeamMapId);
   const generateInboxResponse = useGenerateInboxResponse();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const handleSubmit = () => {
-    toast.loading(translations("Hold on, response is getting generated"), {
+    toast.loading(translations("Hold on, response is getting generated..."), {
       id: "generateResponse",
     });
     generateResponse.mutate({
@@ -72,7 +72,6 @@ const GenerateData = () => {
           Generate test data for development and testing purposes
         </p>
       </div>
-
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Generate Survey Response Card */}
@@ -251,7 +250,6 @@ const GenerateData = () => {
           </CardContent>
         </Card>
       </div>
-
       {/* Info Section */}
       <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
         <CardHeader className="pb-3">

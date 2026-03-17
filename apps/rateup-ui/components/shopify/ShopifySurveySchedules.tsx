@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { ActionIcon, Badge, Group, Menu, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums";
@@ -37,7 +37,7 @@ const ShopifySurveySchedules = ({
   waTemplates: WaTemplate[];
   teams: TeamData[];
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const columns = [
     { key: "event", value: "Event" },
     { key: "whatsapp_template", value: translations("WhatsApp Template") },
@@ -129,7 +129,7 @@ const ActionMenu = ({
   );
   const [opened, { open, close }] = useDisclosure(false);
   const [deleteCase, setDeleteCase] = useState(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const updateSurveySchedule = () => {
     const allSchedules = shopifyInfo.credential.shopifySurveys.filter(
       (s) => s.event !== selectedRow.event,
@@ -139,7 +139,7 @@ const ActionMenu = ({
       active: !selectedRow.active,
     };
     allSchedules.push(updateRow);
-    toast.loading(translations("Updating survey schedules"), {
+    toast.loading(translations("Updating survey schedules.."), {
       id: "integration-update",
     });
     updateIntegration.mutate({
@@ -151,7 +151,7 @@ const ActionMenu = ({
     const allSchedules = shopifyInfo.credential.shopifySurveys.filter(
       (s) => s.event !== selectedRow.event,
     );
-    toast.loading(translations("Deleting survey schedules"), {
+    toast.loading(translations("Deleting survey schedules.."), {
       id: "integration-update",
     });
     updateIntegration.mutate({

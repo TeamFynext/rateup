@@ -13,7 +13,7 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { IntegratedApps, ShopifySendAfter } from "@/types/enums";
@@ -45,7 +45,7 @@ const index = () => {
   const updateIntegration = useUpdateIntegrationMutation(
     IntegratedApps.petpooja,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   return (
     <Stack>
@@ -57,7 +57,6 @@ const index = () => {
         <WaTemplateSendSettings
           integration={integration}
           updateIntegration={updateIntegration}
-          translations={translations}
         />
       </SimpleGrid>
       <Divider mt={"md"} />
@@ -153,11 +152,8 @@ const PetpoojaConfig = ({ integration, updateIntegration }) => {
   );
 };
 
-const WaTemplateSendSettings = ({
-  integration,
-  updateIntegration,
-  translations,
-}) => {
+const WaTemplateSendSettings = ({ integration, updateIntegration }) => {
+  const translations = useExtracted();
   const form = useForm({
     initialValues: {
       teamId: null,

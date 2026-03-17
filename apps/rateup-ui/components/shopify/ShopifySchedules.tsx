@@ -7,7 +7,7 @@ import { Anchor, Badge, Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEye } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   ShopifyIntegration,
@@ -46,7 +46,7 @@ const ShopifySchedules = ({
     useDisclosure(false);
   const [selectedSchedule, setSelectedSchedule] =
     useState<ShopifySchedule>(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const templateAndteam = {
     templateName: waTemplates?.find(
       (t) => t.id === selectedShopifySurveyEvent?.waTemplateId,
@@ -130,7 +130,6 @@ const ShopifySchedules = ({
       <PaperLayout>
         <TableLayoutSecondary columns={columns} rows={rows} maxHeight={500} />
       </PaperLayout>
-
       <EventDetailsModal
         opened={opened}
         close={close}
@@ -152,7 +151,7 @@ const EventDetailsModal = ({
   shopifySurvey,
   templateAndTeam,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <FormModalLayout opened={opened} onClose={close} title="" centered>
       <Stack>

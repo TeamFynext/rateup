@@ -1,7 +1,7 @@
 "use client";
 
 import { Text } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "../../../../utils/constants";
 import { getLabel } from "../../../../utils/file-upload/upload";
@@ -12,7 +12,7 @@ import {
 import { LengthTracker } from "../../../input/LengthTracker";
 
 export const BroadCastTypeValue = ({ form, type }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const style = {
     maxWidth: 400,
   };

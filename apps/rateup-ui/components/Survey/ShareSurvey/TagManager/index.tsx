@@ -12,7 +12,7 @@ import {
   Download,
   Tags,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useGetShareSettings } from "../../../../backend/surveyShareSettings/surveyShareSettings.query";
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
@@ -58,7 +58,7 @@ function TagManager({
   const [pageSize, setPageSize] = useState(5);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const dataGridCompRef = useRef(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const downloadFiles = useCallback(
     async (domNodeArr) => {
@@ -178,7 +178,6 @@ function TagManager({
           <p>{translations("Manage URL Tags")}</p>
         </TooltipContent>
       </Tooltip>
-
       <Dialog open={tagManagerOpened} onOpenChange={setTagManagerOpened}>
         <DialogContent className="min-w-4xl max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader className="space-y-4">

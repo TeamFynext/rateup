@@ -21,7 +21,7 @@ import {
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { CreateSurveyResponse } from "../../backend/surveys/survey.api";
@@ -69,7 +69,7 @@ export function CreateSurveyModal({
   const [teamChoice, setTeamChoice] = useState("all");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [prevOpen, setPrevOpen] = useState(false);
   const searchParams = useSearchParams();
   const tmp = searchParams.get("tmp");
@@ -201,7 +201,7 @@ export function CreateSurveyModal({
       console.error(validationRes.errors);
       return;
     }
-    toast.loading(translations("Hold on, your survey is getting created"), {
+    toast.loading(translations("Hold on, your survey is getting created..."), {
       id: "load-data",
     });
     createSurveyMutation.mutate(
@@ -340,7 +340,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
     onDropdownClose: () => combobox.resetSelectedOption(),
     onDropdownOpen: () => combobox.updateSelectedOptionIndex("active"),
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     console.log(errors);
   }, [errors]);
@@ -430,7 +430,6 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
           </Pill.Group>
         </PillsInput>
       </Combobox.DropdownTarget>
-
       <Combobox.Dropdown>
         <Combobox.Options>
           {options}
@@ -444,7 +443,9 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
           {exactOptionMatch &&
             search.trim().length > 0 &&
             options.length === 0 && (
-              <Combobox.Empty>{translations("Nothing found")}</Combobox.Empty>
+              <Combobox.Empty>
+                {translations("Nothing found...")}
+              </Combobox.Empty>
             )}
         </Combobox.Options>
       </Combobox.Dropdown>

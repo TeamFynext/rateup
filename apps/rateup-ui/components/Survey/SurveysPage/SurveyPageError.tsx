@@ -2,12 +2,12 @@
 
 import { Stack, Text } from "@mantine/core";
 import { IconReload } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 
 export function SurveysPageError({ refetch }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack>
       <Text>{translations("An error occurred!")}</Text>

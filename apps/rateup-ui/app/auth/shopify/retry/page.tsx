@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { Anchor, Center, Stack, Text } from "@mantine/core";
 import { IconMoodSad, IconReload } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import RateupLoader from "@/components/Loaders/RateupLoader";
@@ -32,13 +32,13 @@ const ShopifyCallbackRetry = ({
 }) => {
   const router = useRouter();
   const shop = searchParams.get("shop");
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Center h={"100vh"}>
       <PaperLayout w={400} p={"xl"}>
         <Stack justify="center" align="center">
           <IconMoodSad size={"5rem"} stroke={1} />
-          <Text>{translations("Something went wrong")}</Text>
+          <Text>{translations("Something went wrong..")}</Text>
           <RateupButtonBlue
             title={translations("Retry")}
             onClick={() => {

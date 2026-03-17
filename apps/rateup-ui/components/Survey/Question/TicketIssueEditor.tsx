@@ -16,7 +16,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { IconInfoCircle, IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
@@ -90,7 +90,7 @@ const TicketIssueEditor = ({
   const [submissionTicket, setSubmissionTicket] = useState(
     !!selectedQ?.ticketIssue?.submissionTicket,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [minRating, setMinRating] = useState(
     selectedQ?.ticketIssue?.minRating || 3,
   );
@@ -194,7 +194,7 @@ const TicketIssueEditor = ({
   };
 
   const handleSave = async () => {
-    toast.loading(translations("Hold on, your changes are getting updated"), {
+    toast.loading(translations("Hold on, your changes are getting updated.."), {
       id: "load-data",
     });
 
@@ -208,7 +208,7 @@ const TicketIssueEditor = ({
   const handleError = (error) => {
     console.error("Failed to update", error);
     toast.error(
-      ` ${translations("Failed to update try again Error:")} ${error.message}`,
+      ` ${translations("Failed to update.. try again. Error:")} ${error.message}`,
       {
         id: "load-data",
       },
@@ -252,7 +252,7 @@ const TicketIssueEditor = ({
           <Switch
             label={translations("Enable Auto-Ticket Creation")}
             description={translations(
-              "Setup automated ticket creation for negative responses",
+              "Setup automated ticket creation for negative responses.",
             )}
             labelPosition="left"
             checked={enableTicketIssue}
@@ -422,7 +422,7 @@ const TicketIssueEditor = ({
                               <Text pt="sm" fz="sm" c="dimmed">
                                 {" "}
                                 {translations("For")} {minOpinion}{" "}
-                                {translations("and below")}
+                                {translations("and below.")}
                               </Text>
                             </Stack>
                           </SimpleGrid>
@@ -511,7 +511,6 @@ const TicketIssueEditor = ({
           )}
         </>
       </Stack>
-
       <Group justify="space-between">
         <RateupButtonSecondary
           title={translations("Cancel")}

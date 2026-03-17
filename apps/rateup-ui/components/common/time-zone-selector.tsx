@@ -1,7 +1,7 @@
 import React from "react";
 
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import timezones from "timezones-list";
 
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 const TimeZoneSelector = ({ value, onChange }) => {
   const [timezoneOpen, setTimezoneOpen] = React.useState(false);
-  const t = useTranslations();
+  const t = useExtracted();
   return (
     <Popover open={timezoneOpen} onOpenChange={setTimezoneOpen} modal>
       <PopoverTrigger asChild>

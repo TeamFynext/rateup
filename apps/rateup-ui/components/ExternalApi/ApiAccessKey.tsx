@@ -11,7 +11,7 @@ import {
   IconServer,
   IconTrash,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ export default function ApiAccessKeyPage() {
   const generateMutation = useCreateLoyaltyApiKey();
   const [apiKey, setApiKey] = useState("");
   const { user } = useUser();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const apiEndpoint =
     process.env.NEXT_PUBLIC_API_URL +
@@ -67,7 +67,6 @@ export default function ApiAccessKeyPage() {
           Manage your API access keys and view connection details.
         </p>
       </div>
-
       <div className="grid gap-6">
         {/* API Access Key Card */}
         <Card>
@@ -109,7 +108,7 @@ export default function ApiAccessKeyPage() {
                     <IconAlertCircle className="h-4 w-4 !text-amber-600 dark:!text-amber-400" />
                     <AlertDescription>
                       {translations(
-                        "You can only view access key at the time of creation If you lost the key, you can regenerate it",
+                        "You can only view access key at the time of creation. If you lost the key, you can regenerate it.",
                       )}
                     </AlertDescription>
                   </Alert>
@@ -126,7 +125,7 @@ export default function ApiAccessKeyPage() {
                   </p>
                   <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                     {translations(
-                      "You have not generated an API Access Key yet API Access Key is required to access the all API endpoints",
+                      "You have not generated an API Access Key yet. API Access Key is required to access the all API endpoints.",
                     )}
                   </p>
                 </div>
@@ -182,7 +181,7 @@ export default function ApiAccessKeyPage() {
 
 export function ApiCopyButton({ value }: Readonly<{ value: string }>) {
   const [copied, setCopied] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(value);
@@ -211,7 +210,7 @@ function ApiRegenerateButton({
   onRegenerate,
 }: Readonly<ApiRegenerateButtonProps>) {
   const regenerateMutation = useRegenerateLoyaltyApiKey();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   function handleRegenerate() {
@@ -234,7 +233,6 @@ function ApiRegenerateButton({
       >
         <IconReload size={16} />
       </Button>
-
       <ConfirmationModal
         opened={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -257,7 +255,7 @@ interface ApiDeleteButtonProps {
 
 function ApiDeleteButton({ onDelete }: Readonly<ApiDeleteButtonProps>) {
   const deleteMutation = useDeleteLoyaltyApiKey();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   function handleDelete() {
@@ -280,7 +278,6 @@ function ApiDeleteButton({ onDelete }: Readonly<ApiDeleteButtonProps>) {
       >
         <IconTrash size={16} />
       </Button>
-
       <ConfirmationModal
         opened={isModalOpen}
         onClose={() => setIsModalOpen(false)}

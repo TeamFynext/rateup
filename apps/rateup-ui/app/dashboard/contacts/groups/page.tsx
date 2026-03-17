@@ -18,7 +18,7 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { ContactGroupType } from "@/types/enums";
@@ -59,7 +59,7 @@ const GroupPage = () => {
     isRefetching: isRefetchingGroups,
     isError: isErrorGroup,
   } = useContactGroup();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
       ? contactGroupData?.filter(

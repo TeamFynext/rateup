@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext";
 
@@ -56,7 +56,7 @@ function NextPrev({
     submitBtnLabel = "Submit";
   }
   const selectedQuestionPosition = getSelectedQPos(survey, selectedQ);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const themeStyles = surveyThemeData?.surveyTheme?.button?.styles;
   const inputColor = surveyThemeData?.surveyTheme?.input?.primaryColor;
 
@@ -137,7 +137,6 @@ function NextPrev({
           )}
         </Portal>
       )}
-
       <Stack className={styles["next-prev-btns-and-progress-container"]}>
         <Group justify="flex-end">
           <ActionIcon

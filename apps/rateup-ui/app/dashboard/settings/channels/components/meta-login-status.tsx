@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconLogout, IconPencilMinus } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -41,7 +41,7 @@ export function MetaLoginStatus({
     useState<WaSetting | null>(null);
   const [openedEdit, { open: openEdit, close: closeEdit }] =
     useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: teamsRes, isLoading: isLoadingTeams } = useTeamsByUser();
 
   const teams = teamsRes?.data || [];
@@ -82,7 +82,6 @@ export function MetaLoginStatus({
         </div>
         <ConnectMetaAccountButton />
       </div>
-
       <div className="grid gap-4">
         {waSettings.map((setting) => {
           const assignedTeamIds =
@@ -184,7 +183,6 @@ export function MetaLoginStatus({
                       assignedTeamIds={assignedTeamIds}
                       teamOptions={teamOptions}
                       isLoadingTeams={isLoadingTeams}
-                      translations={translations}
                       instagramConnectionData={{
                         fbPageId: setting?.fbPageId,
                       }}
@@ -196,7 +194,6 @@ export function MetaLoginStatus({
           );
         })}
       </div>
-
       <ConfirmationModal
         forDeleteFunctionality
         deleteQuotion={translations(
@@ -209,7 +206,6 @@ export function MetaLoginStatus({
         headerLabel={translations("DeRegister WhatsApp Business Account")}
         headerTitle={translations("Confirmation Dialog")}
       />
-
       <WaSettingEditModal
         opened={openedEdit}
         close={closeEdit}

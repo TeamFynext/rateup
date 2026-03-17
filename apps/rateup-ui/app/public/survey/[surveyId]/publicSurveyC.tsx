@@ -5,7 +5,7 @@ import Head from "next/head";
 import Link from "next/link";
 
 import { Button, Image } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview";
 
@@ -18,7 +18,7 @@ import errorPageStyles from "../../../ws/[shortId]/ws.module.css";
 export default function Page({ survey, error_occured, fromShortUrl = false }) {
   // empty if its not review page, contains surveyLanguage if its review page
   const [isReviewPage, setIsReviewPage] = useState<string>("");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: gReview } = usePublicReviewSuggestions(
     !!isReviewPage && !!survey?.surveyTeamMapId,
     survey?.surveyTeamMapId,

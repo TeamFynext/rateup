@@ -4,14 +4,14 @@ import { useCallback } from "react";
 
 import { Button, Center, Modal } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import styles from "../../../Modal/ImageCropModal.module.css";
 import { useSetLandingPageEditorTab } from "../LandingPageContext/LandingPageContext";
 
 function NoContentFoundModal({ opened, onClose }) {
   const setLandingPageEditorTab = useSetLandingPageEditorTab();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleGotoEditPageBtnClick = useCallback(() => {
     setLandingPageEditorTab("edit");
     onClose();

@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Search } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,7 @@ export function SurveyHeader({
   refetch,
 }) {
   const { user } = useUser();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   return (
     <div className="border-b px-4 sm:px-6 py-3">

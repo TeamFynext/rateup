@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 
@@ -31,7 +31,7 @@ export function ReferralMessageSettings({
   onSave,
   isPending,
 }: Readonly<ReferralMessageSettingsProps>) {
-  const t = useTranslations();
+  const t = useExtracted();
   const referralMessageTemplate = form.watch("referralMessageTemplate");
   const normalizedTemplate = normalizeTemplateValue(
     referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEMPLATE,
@@ -82,7 +82,7 @@ export function ReferralMessageSettings({
                       }}
                       disabled={hasContactNameVariable}
                     >
-                      {t("Insert {{1}}")}
+                      {t({ message: `Insert '{{1}}'` })}
                     </Button>
                     <Button
                       type="button"
@@ -104,7 +104,7 @@ export function ReferralMessageSettings({
                       }}
                       disabled={hasReferralCodeVariable}
                     >
-                      {t("Insert {{2}}")}
+                      {t({ message: "Insert '{{2}}'" })}
                     </Button>
                     <Button
                       type="button"

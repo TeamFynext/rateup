@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { Avatar, Group, SimpleGrid, Text, Title } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { IntegratedApps } from "@/types/enums";
 import { getIntegrationDisplayName } from "@/utils/integration";
@@ -13,7 +13,7 @@ import classes from "./ActionGrid.module.css";
 
 export function ActionsGrid({ getAppIconImageUrl }) {
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const items = Object.entries(IntegratedApps).map(([key, value]) => {
     const { src } = getAppIconImageUrl(value);
     return (

@@ -36,7 +36,7 @@ import {
   IconUser,
   IconX,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -146,7 +146,7 @@ function WhatsAppManualConfiguration({ waSettings }) {
   const handleDelete = () => {
     deleteMutation.mutate(waSettings?.phoneId);
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   const fbPages = metaAssets
     ? metaAssets.pages.map((page) => ({ value: page.id, label: page.name }))
     : [];
@@ -352,7 +352,6 @@ function WhatsAppManualConfiguration({ waSettings }) {
           </form>
         </CardContent>
       </Card>
-
       {/* Webhook Information */}
       <div className="space-y-4">
         <Card>
@@ -466,7 +465,7 @@ function MetaLoginButton({
     setWData({ phone_number_id: "", waba_id: "" });
     setCode("");
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   useEffect(() => {
     if (waData?.waba_id && code) {
@@ -660,7 +659,7 @@ function ConnectMetaAccountButton() {
 export default function WhatsAppSettingsPage() {
   const { data: waSettings, isLoading } = useWaSettings();
   const [tab, setTab] = useState<string>(WaConfigType.Automated);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     if (waSettings) {
       setTab(waSettings?.[0]?.type);
@@ -777,7 +776,7 @@ function MetaLoginStatus({ waSettings }) {
   const deRegisterMutation = useDeregisterBusinessClientMutation();
   const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [openDeleteConfirmation, { open, close }] = useDisclosure(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [selectedWaSettings, setSelectedWaSettings] = useState(null);
   const [
     openedInstaConfigModal,
@@ -1083,7 +1082,7 @@ function MetaLoginStatusLoaderSkeleton() {
 
 export function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
   const { data: chatbot, isLoading } = useGetChatbotDetails(selectedChatbotId);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const updateChatbotdetMut = useUpdateChatbot();
   const { data: subscription } = useSubscription();
 

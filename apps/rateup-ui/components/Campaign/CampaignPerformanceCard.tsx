@@ -1,5 +1,5 @@
 import { CheckCircle, Clock, Send, XCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +15,7 @@ interface CampaignPerformanceProps {
 }
 
 export function CampaignPerformance({ data }: CampaignPerformanceProps) {
-  const t = useTranslations("campaign.performance");
+  const t = useExtracted("campaign.performance");
   const { sent, delivered, read, pending, failed } = data;
 
   const percent = (value: number) =>
@@ -24,18 +24,19 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-lg text-muted-foreground">{t("title")}</h2>
+        <h2 className="text-lg text-muted-foreground">
+          {t("Campaign Performance")}
+        </h2>
         <Badge variant="outline" className="text-xs">
-          {t("lastUpdated")}
+          {t("Last updated: Just now")}
         </Badge>
       </div>
-
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Sent */}
         <MetricCard
           icon={<Send className="w-5 h-5 text-primary" />}
           value={sent}
-          label={t("metrics.sent")}
+          label={t("Sent")}
           badge="100%"
           badgeColor={"sent"}
           iconColor={"sentBadge"}
@@ -45,7 +46,7 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
         <MetricCard
           icon={<CheckCircle className="w-5 h-5 text-green-600" />}
           value={delivered}
-          label={t("metrics.delivered")}
+          label={t("Delivered")}
           badge={`${percent(delivered)}%`}
           badgeColor={"delivered"}
           iconColor={"delBadge"}
@@ -55,7 +56,7 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
         <MetricCard
           icon={<CheckCircle className="w-5 h-5 text-emerald-600" />}
           value={read}
-          label={t("metrics.read")}
+          label={t("Read")}
           badge={`${percent(read)}%`}
           badgeColor={"read"}
           iconColor={"readBadge"}
@@ -65,7 +66,7 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
         <MetricCard
           icon={<Clock className="w-5 h-5 text-amber-600" />}
           value={pending}
-          label={t("metrics.pending")}
+          label={t("Pending")}
           badge={pending.toString()}
           badgeColor={"pending"}
           iconColor={"pendingBadge"}
@@ -75,7 +76,7 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
         <MetricCard
           icon={<XCircle className="w-5 h-5 text-red-600" />}
           value={failed}
-          label={t("metrics.failed")}
+          label={t("Failed")}
           badge={`${percent(failed)}%`}
           badgeColor={"failed"}
           iconColor={"faildBadge"}

@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import { Badge, Box, Group } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import CreatedSinceText from "../../DateAndTime/CreatedSinceText";
 import styles from "./LinktreeCard.module.css";
@@ -12,7 +12,7 @@ import MoreOptionsMenu from "./MoreOptionsMenu";
 
 function LinktreeCard({ name, shortUrlId, id, createdAt, isPublished }) {
   const router = useRouter();
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleCardClick = useCallback(() => {
     router.push(`/dashboard/quickAccessLinks/${shortUrlId}`);
   }, [shortUrlId, router]);
@@ -23,9 +23,7 @@ function LinktreeCard({ name, shortUrlId, id, createdAt, isPublished }) {
         <h2>{name}</h2>
         <MoreOptionsMenu shortUrlId={shortUrlId} id={id} name={name} />
       </Group>
-
       <CreatedSinceText createdAt={createdAt} />
-
       <Group className={styles["active-inactive-badge-container"]}>
         <Badge
           className={`${isPublished ? styles["active-badge"] : styles["inactive-badge"]}`}

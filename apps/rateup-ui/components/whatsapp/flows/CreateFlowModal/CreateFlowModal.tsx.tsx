@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Box, Button, Modal, MultiSelect, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 
@@ -33,7 +33,7 @@ function CreateFlowModal({ opened, onClose }) {
         value.length === 0 ? "Please select a category" : null,
     },
   });
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
   const { data: teamRes } = useTeamsByUser();
   const teamOptions = teamRes?.data?.map((team) => ({
@@ -109,7 +109,6 @@ function CreateFlowModal({ opened, onClose }) {
           error={form.errors.teamId}
         />
       </Box>
-
       <Box className={styles["create-flow-modal-footer"]}>
         <Button variant="default" onClick={handleModalClose}>
           {translations("Cancel")}

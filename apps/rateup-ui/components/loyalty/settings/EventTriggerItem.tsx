@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Save } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { UseFormReturn } from "react-hook-form";
 
 import { TemplateType } from "@/types/enums";
@@ -38,7 +38,7 @@ export function EventTriggerItem({
   onToggle,
   isPending,
 }: EventTriggerItemProps) {
-  const t = useTranslations();
+  const t = useExtracted();
   const templateInfo = getLoyaltyTemplateLabel(templateType, t);
 
   return (
@@ -61,7 +61,6 @@ export function EventTriggerItem({
           </div>
         )}
       />
-
       {form.watch(`${eventType}.enabled`) && (
         <div className="space-y-3 pt-2 border-t border-border mt-2">
           <FormField

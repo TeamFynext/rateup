@@ -44,7 +44,7 @@ import {
   IconThumbUpFilled,
   IconWheel,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   QuestionType,
@@ -72,7 +72,7 @@ export function QuestionTypeSelection({
     handleTypeSelection(type);
     setIsGoogleReviewSupported(false);
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   const QuestionButton = ({ type }) => {
     const { hovered, ref } = useHover();
     const Icon = questionIcons[type];
@@ -127,7 +127,6 @@ export function QuestionTypeSelection({
                   </Badge>
                 ) : null}
               </Group>
-
               <Grid px={"lg"}>
                 {qtype?.questionTypes?.map((type, index) => {
                   return (

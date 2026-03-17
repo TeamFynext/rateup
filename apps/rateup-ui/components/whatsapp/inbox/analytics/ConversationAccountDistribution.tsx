@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import { MessageCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { useGetConversationAccountDistribution } from "@/backend/conversation/conversation.query";
@@ -23,7 +23,7 @@ function getMessageSourcePlatformColor(platform: MessagePlatform) {
 }
 
 const ConversationAccountDistribution = ({ dateRange }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const { data: channelDistribution = [], isLoading } =
     useGetConversationAccountDistribution({
       dateRange: dateRange.range,

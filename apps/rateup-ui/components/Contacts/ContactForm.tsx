@@ -1,7 +1,7 @@
 import React from "react";
 
 import { ChevronDownIcon } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
 import { ContactGroupType } from "@/types/enums";
@@ -26,7 +26,7 @@ import { UserSelector } from "./CreateContactModal";
 import { LifecycleSelector } from "./LifecycleSelector";
 
 const ContactForm = ({ form, customFields, type }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { data: labels = [], isPending } = useContactLabels();
 
   const getCustomFieldValue = (fieldId) => {
@@ -199,9 +199,9 @@ const ContactForm = ({ form, customFields, type }) => {
         {form?.errors?.phone && <FieldError>*{form?.errors?.phone}</FieldError>}
       </Field>
       <Field className="flex flex-col gap-1">
-        <FieldLabel>{translations("email")}</FieldLabel>
+        <FieldLabel>{translations("Email")}</FieldLabel>
         <Input
-          placeholder={translations("email@example")}
+          placeholder={translations("email@example.com")}
           type="email"
           {...form.getInputProps("email")}
           className="bg-accent border-none placeholder:text-sm"
@@ -247,11 +247,10 @@ const ContactForm = ({ form, customFields, type }) => {
           </Field>
         </>
       )}
-
       {type === ContactGroupType.LOYALTY && (
         <>
           <Field className="flex flex-col gap-1">
-            <FieldLabel>{translations("dob")}</FieldLabel>
+            <FieldLabel>{translations("Date of Birth")}</FieldLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <Button

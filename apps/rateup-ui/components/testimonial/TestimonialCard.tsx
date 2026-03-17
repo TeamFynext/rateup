@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Testimonial } from "../../types/global";
 import { formatDate } from "../../utils/dateTime";
@@ -77,7 +77,7 @@ const TestimonialContent = ({
   close,
 }) => {
   const isProfileRemoved = currentStyle?.profileBlock.profilePic.isRemoved;
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Stack gap={0} bg={currentStyle?.root?.bg}>
       <Stack bg={currentStyle?.profileBlock.bg} gap={0}>
@@ -110,7 +110,6 @@ const TestimonialContent = ({
           </Stack>
         </Group>
       </Stack>
-
       <Stack
         gap={0}
         pl={"xl"}

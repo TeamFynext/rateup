@@ -20,7 +20,7 @@ import {
   IconTrash,
   IconTrashFilled,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { IntegratedApps, ZapierTriggers } from "@/types/enums";
 import { ZapierIntegration } from "@/types/global";
@@ -77,7 +77,7 @@ const Zapier = () => {
 
 const APIKeyGenerate = ({ integration }) => {
   const [apiKey, setApiKey] = useState(undefined);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const user = useUser();
   const updateKey = useUpdateIntegrationMutation(IntegratedApps.zapier);
   const deleteMut = useDeleteIntegrationMutation(IntegratedApps.zapier);
@@ -121,7 +121,7 @@ const APIKeyGenerate = ({ integration }) => {
               apiKey
                 ? translations("Api Access Key")
                 : translations(
-                    "You can only view access key at the time of creation If you lost the key, you can regenerate it",
+                    "You can only view access key at the time of creation. If you lost the key, you can regenerate it.",
                   )
             }
           >

@@ -1,7 +1,7 @@
 "use client";
 
 import { Zap } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useGetWaQuickReplies } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
 import { Spinner } from "@/components/ui/spinner";
@@ -20,7 +20,7 @@ export const WaQuickReply = ({
   searchQuery?: string;
 }) => {
   const waQuickReplies = useGetWaQuickReplies();
-  const t = useTranslations();
+  const t = useExtracted();
 
   const quickReplies = waQuickReplies?.data ? waQuickReplies?.data : [];
 

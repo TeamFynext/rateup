@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Controller, useForm } from "react-hook-form";
 
 import TimeZoneSelector from "@/components/common/time-zone-selector";
@@ -65,7 +65,7 @@ type TimeSlotRowProps = {
     value: string,
   ) => void;
   removeTimeSlot: (day: DayKey, slotIndex: number) => void;
-  t: ReturnType<typeof useTranslations>;
+  t: ReturnType<typeof useExtracted>;
 };
 
 function TimeSlotRow({
@@ -76,8 +76,8 @@ function TimeSlotRow({
   slotError,
   handleTimeSlotChange,
   removeTimeSlot,
-  t,
-}: Readonly<TimeSlotRowProps>) {
+}) {
+  const t = useExtracted();
   return (
     <div key={slotIndex} className="flex flex-col gap-1">
       <div className="flex items-center gap-3">
@@ -148,7 +148,7 @@ export function BusinessHoursEditorDialog({
   onSave,
   editing,
 }: Readonly<Props>) {
-  const t = useTranslations();
+  const t = useExtracted();
 
   const form = useForm<BusinessHoursFormValues>({
     resolver: zodResolver(businessHoursFormSchema),
@@ -388,7 +388,6 @@ export function BusinessHoursEditorDialog({
                               </Button>
                             )}
                           </div>
-
                           {daySchedule.isOpen && (
                             <div className="ml-28 space-y-2">
                               {daySchedule.timeSlots.map(
@@ -406,7 +405,6 @@ export function BusinessHoursEditorDialog({
                                     slotError={dayErrors?.[slotIndex]}
                                     handleTimeSlotChange={handleTimeSlotChange}
                                     removeTimeSlot={removeTimeSlot}
-                                    t={t}
                                   />
                                 ),
                               )}

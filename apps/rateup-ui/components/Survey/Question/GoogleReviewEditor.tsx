@@ -18,7 +18,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconInfoCircle, IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import useFlowStore, {
@@ -81,7 +81,7 @@ const GoogleReviewEditor = ({
   const updateGoogleReview = (googleReview: any) => {
     selectedQ && setSelectedQ({ ...selectedQ, googleReview });
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   const switchCondition = waFlowSave ? selectedQ?.metaType : selectedQ?.type;
   useEffect(() => {
     if (
@@ -157,9 +157,12 @@ const GoogleReviewEditor = ({
       return;
     }
     if (!waFlowSave)
-      toast.loading(translations("Hold on, your changes are getting updated"), {
-        id: "load-data",
-      });
+      toast.loading(
+        translations("Hold on, your changes are getting updated.."),
+        {
+          id: "load-data",
+        },
+      );
 
     try {
       setLinkUpdateStatus(true);
@@ -171,7 +174,7 @@ const GoogleReviewEditor = ({
   const handleError = (error) => {
     console.error("Failed to update", error);
     toast.error(
-      `${translations("Failed to update try again Error:")} ${error.message}`,
+      `${translations("Failed to update.. try again. Error:")} ${error.message}`,
       {
         id: "load-data",
       },
@@ -207,7 +210,7 @@ const GoogleReviewEditor = ({
           <>
             <Switch
               label={translations("Google Reviews")}
-              description={translations("Setup Google Page review for users")}
+              description={translations("Setup Google Page review for users.")}
               labelPosition="left"
               checked={enableGoogleReview}
               onChange={(event) => handleSwitch(event)}
@@ -277,7 +280,7 @@ const GoogleReviewEditor = ({
                                 />
                                 <Text>
                                   {" "}
-                                  {minRating} {translations("stars and above")}
+                                  {minRating} {translations("stars and above.")}
                                 </Text>
                               </Stack>
                             </SimpleGrid>

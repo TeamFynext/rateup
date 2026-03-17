@@ -15,7 +15,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { deleteOrg } from "@/backend/org/org.api";
@@ -38,7 +38,7 @@ import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
 
 export default function Security() {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -399,7 +399,7 @@ export default function Security() {
                 onClick={async () => {
                   toast.loading(
                     translations(
-                      "Hold on, your organization is getting deleted",
+                      "Hold on, your organization is getting deleted...",
                     ),
                     {
                       id: "delete-data",

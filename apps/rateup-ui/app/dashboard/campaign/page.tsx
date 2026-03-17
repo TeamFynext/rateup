@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Filter, MessageSquare, RotateCcw, Send } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { CampaignType } from "@/types/enums";
 import {
@@ -35,7 +35,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function CampaignsPage() {
-  const t = useTranslations("campaign.list");
+  const t = useExtracted("campaign.list");
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<CampaignType>(
@@ -106,14 +106,14 @@ export default function CampaignsPage() {
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm">
           <Filter className="mr-2 h-4 w-4" />
-          {t("filters.title")}
+          {t("Filters")}
         </Button>
       </PopoverTrigger>
 
       <PopoverContent align="end" className="w-72">
         <div className="space-y-4">
           <div>
-            <label className="text-xs">{t("filters.team")}</label>
+            <label className="text-xs">{t("Team")}</label>
             <TeamSelector
               value={selectedTeam}
               onChange={setSelectedTeam}
@@ -122,28 +122,18 @@ export default function CampaignsPage() {
           </div>
 
           <div>
-            <label className="text-xs">{t("filters.status")}</label>
+            <label className="text-xs">{t("Status")}</label>
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t("filters.statuses.all")}</SelectItem>
-                <SelectItem value="ACTIVE">
-                  {t("filters.statuses.ACTIVE")}
-                </SelectItem>
-                <SelectItem value="INACTIVE">
-                  {t("filters.statuses.INACTIVE")}
-                </SelectItem>
-                <SelectItem value="DRAFT">
-                  {t("filters.statuses.DRAFT")}
-                </SelectItem>
-                <SelectItem value="SCHEDULED">
-                  {t("filters.statuses.SCHEDULED")}
-                </SelectItem>
-                <SelectItem value="COMPLETED">
-                  {t("filters.statuses.COMPLETED")}
-                </SelectItem>
+                <SelectItem value="all">{t("All Statuses")}</SelectItem>
+                <SelectItem value="ACTIVE">{t("Active")}</SelectItem>
+                <SelectItem value="INACTIVE">{t("Inactive")}</SelectItem>
+                <SelectItem value="DRAFT">{t("Draft")}</SelectItem>
+                <SelectItem value="SCHEDULED">{t("Scheduled")}</SelectItem>
+                <SelectItem value="COMPLETED">{t("Completed")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -156,14 +146,14 @@ export default function CampaignsPage() {
               onClick={resetFilters}
             >
               <RotateCcw className="mr-2 h-3 w-3" />
-              {t("filters.actions.reset")}
+              {t("Reset")}
             </Button>
             <Button
               size="sm"
               className="flex-1"
               onClick={() => setShowFilters(false)}
             >
-              {t("filters.actions.apply")}
+              {t("Apply")}
             </Button>
           </div>
         </div>
@@ -179,7 +169,7 @@ export default function CampaignsPage() {
       <TabsList>
         <TabsTrigger value={CampaignType.WHATSAPP}>
           <MessageSquare className="mr-2 h-4 w-4" />
-          {t("tabs.broadcast")}
+          {t("Broadcast")}
           <Badge className="ml-2">
             {whatsappQuery.data?.data?.length ?? 0}
           </Badge>
@@ -187,7 +177,7 @@ export default function CampaignsPage() {
 
         <TabsTrigger value={CampaignType.DRIP}>
           <Send className="mr-2 h-4 w-4" />
-          {t("tabs.drip")}
+          {t("Drip")}
           <Badge className="ml-2">{dripQuery.data?.data?.length ?? 0}</Badge>
         </TabsTrigger>
       </TabsList>
@@ -198,13 +188,13 @@ export default function CampaignsPage() {
     <>
       <ListPageLayout
         canCreate
-        createLabel={t("header.create")}
+        createLabel={t("Create Campaign")}
         createDisabledText=""
         docsUrl="campaign"
         isLoading={isPending}
         queryKeys={["campaigns"]}
         search={search}
-        searchPlaceholder={t("search.placeholder")}
+        searchPlaceholder={t("Search campaigns...")}
         tourSteps={[]}
         onCreate={openCreateCampaign}
         onSearchChange={setSearch}
@@ -224,7 +214,6 @@ export default function CampaignsPage() {
           onView={handleViewDetails}
         />
       </ListPageLayout>
-
       {isCreateOpen && (
         <CreateCampaignModal
           close={closeCreateCampaign}

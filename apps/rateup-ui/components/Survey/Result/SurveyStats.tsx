@@ -13,6 +13,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
+import { useExtracted } from "next-intl";
 import { Bounds, Map, Marker, ZoomControl } from "pigeon-maps";
 
 import RefreshButton from "@/components/Button/RefreshButton";
@@ -43,11 +44,8 @@ enum LocationType {
 const maxZoom = 15;
 const minZoom = 2;
 
-export const SurveyResponseStats = ({
-  translations,
-  flowId = null,
-  surveyId,
-}) => {
+export const SurveyResponseStats = ({ flowId = null, surveyId }) => {
+  const translations = useExtracted();
   const { filterTeams } = useContext(SurveyContext);
   const {
     data: responseCountData,
@@ -150,7 +148,8 @@ export const SurveyResponseStats = ({
     </PaperLayout>
   );
 };
-export const ResponseGraphBySurvey = ({ translations, surveyId }) => {
+export const ResponseGraphBySurvey = ({ surveyId }) => {
+  const translations = useExtracted();
   const { filterTeams } = useContext(SurveyContext);
   const [timePeriod, setTimePeriod] = useState("daily");
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -166,7 +165,6 @@ export const ResponseGraphBySurvey = ({ translations, surveyId }) => {
       data={graphResponse}
       timePeriod={timePeriod}
       setTimePeriod={setTimePeriod}
-      translations={translations}
       isLoading={isrLoading || isRefetching}
       onRefresh={async () => {
         await queryClient.invalidateQueries({
@@ -185,7 +183,8 @@ export const ResponseGraphBySurvey = ({ translations, surveyId }) => {
     />
   );
 };
-const SurveyStats = ({ survey, flowId = null, translations }) => {
+const SurveyStats = ({ survey, flowId = null }) => {
+  const translations = useExtracted();
   const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
   const {
     data: responses,
@@ -433,7 +432,6 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
           data={graphResponse}
           timePeriod={timePeriod}
           setTimePeriod={setTimePeriod}
-          translations={translations}
           isLoading={isrLoading || isRefetching}
           onRefresh={async () => {
             await queryClient.invalidateQueries({

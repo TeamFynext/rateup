@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ interface DangerZoneProps {
 }
 
 export function DangerZone({ onReset, onDelete }: DangerZoneProps) {
-  const t = useTranslations();
+  const t = useExtracted();
 
   return (
     <Card className="border-2 border-red-200 shadow-sm bg-red-50/30">

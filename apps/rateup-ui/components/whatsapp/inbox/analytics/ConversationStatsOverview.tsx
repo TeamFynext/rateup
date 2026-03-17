@@ -13,7 +13,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useGetConversationOverView,
@@ -30,7 +30,7 @@ import ConversationResponseTimePatternGraph from "./ConversationResponseTimePatt
 import ConversationTrendsGraph from "./ConversationTrendsGraph";
 
 const ConversationStatsOverview = ({ dateRange }) => {
-  const t = useTranslations();
+  const t = useExtracted();
   const { data, isLoading, error, refetch, isRefetching } =
     useGetConversationOverView({
       dateKey: dateRange.key,
@@ -147,7 +147,6 @@ const ConversationStatsOverview = ({ dateRange }) => {
           </div>
         </CardContent>
       </Card>
-
       <Card className="border shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
@@ -248,7 +247,6 @@ const ConversationStatsOverview = ({ dateRange }) => {
           </div>
         </CardContent>
       </Card>
-
       <div className="flex flex-col gap-4">
         <ConversationTrendsGraph dateRange={dateRange} />
         <ConversationResponseTimePatternGraph dateRange={dateRange} />

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 import { Card, Group, SelectProps, Skeleton, Text } from "@mantine/core";
 import { Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useTeamsByUser } from "../../backend/team/team.query";
 import {
@@ -40,7 +40,7 @@ export function TeamSelector({
     error,
   } = useTeamsByUser();
 
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const teams = teamRes?.data;
 

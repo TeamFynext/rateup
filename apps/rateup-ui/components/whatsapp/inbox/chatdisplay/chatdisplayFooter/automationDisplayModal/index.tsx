@@ -13,7 +13,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconSend } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useAllWaAutomatedReplies,
@@ -45,7 +45,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
     setSelectedAutomationId("");
     props?.close();
   }
-  const translations = useTranslations();
+  const translations = useExtracted();
   function handleSendAutomatedReply() {
     initiate.mutate(
       { phone: props?.contact?.phone },

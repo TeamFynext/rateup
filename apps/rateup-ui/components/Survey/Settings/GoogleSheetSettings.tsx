@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
@@ -8,7 +8,7 @@ import { ContainedTextField } from "@/components/input/ContainedInput/ContainedI
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 const GoogleSheetSettings = ({ spreadSheetId }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const url = spreadSheetId
     ? `https://docs.google.com/spreadsheets/d/${spreadSheetId}`
     : null;

@@ -32,7 +32,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import RateupSwitch from "@/components/Switch/RateupSwitch";
@@ -106,7 +106,7 @@ const ShareSurvey = ({
   const [errors, setErrors] = useState<Array<any> | { error: string } | null>(
     null,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [selectTeamDropdownState, setSelectTeamDropdownState] = useState("0");
   const [editPublish, setEditPublish] = useState(null);
 
@@ -254,7 +254,7 @@ const ShareSurvey = ({
               checked={isScheduled}
               onChange={(event) => {
                 toast.loading(
-                  translations("Hold your survey is getting unpublished"),
+                  translations("Hold.. your survey is getting unpublished..."),
                   {
                     id: "load-data",
                   },
@@ -282,7 +282,9 @@ const ShareSurvey = ({
                   openPublishSettings();
                 } else {
                   toast.loading(
-                    translations("Hold your survey is getting UnPublished"),
+                    translations(
+                      "Hold.. your survey is getting UnPublished...",
+                    ),
                     {
                       id: "load-data",
                     },
@@ -679,7 +681,7 @@ const PubliShSettingsModal = ({
   surveyUpdateMutation,
   survey,
 }) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [publishChoice, setPublishChoice] = useState<any>(PublishEnum.NOW);
   const [surveyExpiry, setSurveyExpiry] = useState<any>(ExpiryEnum.NO_EXPIRY);
   const form = useForm({
@@ -700,14 +702,14 @@ const PubliShSettingsModal = ({
         const minPublishDate = new Date(new Date().getTime() + 60 * 60 * 1000);
         const publishDate = form.values.surveyPublishAt;
         return value < publishDate
-          ? translations("End date must be after the publish date")
+          ? translations("End date must be after the publish date.")
           : null;
       },
       surveyEndAt: (value) => {
         const minEndDate = new Date(new Date().getTime() + 2 * 60 * 60 * 1000);
         return surveyExpiry === ExpiryEnum.CUSTOM_DATE && value < minEndDate
           ? translations(
-              "End date must be at least 2 hours ahead of current time",
+              "End date must be at least 2 hours ahead of current time.",
             )
           : null;
       },
@@ -833,7 +835,7 @@ const PubliShSettingsModal = ({
                   * {translations("*Time will be rounded to nearest hours ")}
                   <br />*{" "}
                   {translations(
-                    "Publish time must be at least 1 hour ahead of current time",
+                    "Publish time must be at least 1 hour ahead of current time.",
                   )}
                 </Text>
               </Stack>
@@ -883,7 +885,7 @@ const PubliShSettingsModal = ({
                   }
                 />
                 <Text c="red" size="xs">
-                  * {translations("End date must be after the publish date")}
+                  * {translations("End date must be after the publish date.")}
                 </Text>
               </Stack>
             )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 
@@ -26,7 +26,7 @@ export function NotificationSettings({
   form,
   onSave,
 }: NotificationSettingsProps) {
-  const t = useTranslations();
+  const t = useExtracted();
 
   return (
     <Card>

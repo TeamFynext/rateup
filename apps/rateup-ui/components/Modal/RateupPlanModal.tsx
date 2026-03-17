@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Chip, Group, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -29,7 +29,7 @@ enum PaymentPlans {
 }
 const RateupPlanModal = ({ opened, close, planList }) => {
   const [checked, setChecked] = useState(false);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const rateupPaymentsPlanMutation = useRateupPaymentsPlanMutation(close);
   const schema = z.object({
     name: z
@@ -104,7 +104,7 @@ const RateupPlanModal = ({ opened, close, planList }) => {
 
   const handleSubmit = (values) => {
     rateupPaymentsPlanMutation.mutate(values);
-    toast.loading(translations("Hold your data is getting created"), {
+    toast.loading(translations("Hold.. your data is getting created..."), {
       id: "load-data",
     });
     setChecked(false);

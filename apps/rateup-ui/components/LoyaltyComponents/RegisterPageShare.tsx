@@ -3,7 +3,7 @@
 import React from "react";
 
 import { Stack, Text, Title } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useUserInfo } from "@/backend/user/user.query";
 import { CopyLinkComponent } from "@/components/Survey/ShareSurvey/ShareSurvey";
@@ -14,7 +14,7 @@ const RegisterPageShare = () => {
 
   const orgId = user?.data?.orgId;
 
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   return (
     <Stack>

@@ -17,7 +17,7 @@ import {
 } from "@mantine/core";
 import { IconRestore } from "@tabler/icons-react";
 import { produce } from "immer";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   filterType,
@@ -49,7 +49,7 @@ const TestimonialFilter = ({
       filters?.teams?.length > 0 ? filters?.teams?.includes(teamId) : true,
     )
     .map(({ survey }) => ({ label: survey?.name, value: survey?.id }));
-  const translations = useTranslations();
+  const translations = useExtracted();
   function removeDuplicates(surveyMultiSelectOptions) {
     const uniqueArray = [];
     const encounteredIds = [];

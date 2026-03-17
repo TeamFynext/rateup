@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { Box, Skeleton } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 export default function YoutubeEmbed({ embedId, sx }) {
   const [loading, setLoading] = useState(true);
@@ -11,7 +11,7 @@ export default function YoutubeEmbed({ embedId, sx }) {
   const handleLoad = () => {
     setLoading(false);
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Box>
       {loading && <Skeleton style={{ aspectRatio: 3 / 2, borderRadius: 12 }} />}

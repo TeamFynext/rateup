@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 interface StatCardProps {
   label: string;
@@ -22,7 +22,7 @@ export const StatCards = ({
   iconBgColor,
   OnClickAction,
 }: StatCardProps) => {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const router = useRouter();
   return (
     <div

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 
 import { Copy, Edit, ExternalLink, Sparkles, TrendingUp } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   useGetQrWithShortUrlId,
@@ -20,7 +20,7 @@ function GeneratedQrPage({}) {
   const params = useParams();
   const shortUrlId = params.shortUrlId as string;
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   const { isPending, isError, data } = useGetQrWithShortUrlId(shortUrlId);
   const updateQrMutation = useUpdateQrMutation(shortUrlId);
 
@@ -74,7 +74,7 @@ function GeneratedQrPage({}) {
   if (isError) {
     componentToBeRendered = (
       <div className="w-full h-screen flex items-center justify-center">
-        <p>{translations("Unable to get data, please try again later")}</p>
+        <p>{translations("Unable to get data, please try again later.")}</p>
       </div>
     );
   }

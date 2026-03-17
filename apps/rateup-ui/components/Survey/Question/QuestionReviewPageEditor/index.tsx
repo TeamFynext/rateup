@@ -17,7 +17,7 @@ import {
 import { useForm } from "@mantine/form";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import classNames from "classnames/bind";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { QuestionType } from "@/types/enums";
@@ -82,7 +82,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
     },
   });
 
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const { data: teamsRes } = useTeamsByUser();
   const teamsToDisplay = teamsRes?.data?.filter((t) =>

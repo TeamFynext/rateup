@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { ChevronRight, ExternalLink, TriangleAlert } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -369,7 +369,7 @@ export default function AppSidebar({
   const hiddenModules =
     process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
 
-  const t = useTranslations();
+  const t = useExtracted();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchString = searchParams.toString();
@@ -413,7 +413,6 @@ export default function AppSidebar({
     contactLabels,
     staff,
     teams,
-    t,
     chatFilterStore,
     hiddenModules,
     handleFilter,

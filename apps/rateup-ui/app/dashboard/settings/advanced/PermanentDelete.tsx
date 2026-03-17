@@ -7,7 +7,7 @@ import { Group, rem, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { deleteOrg } from "../../../../backend/org/org.api";
@@ -20,7 +20,7 @@ const PermanentDelete = ({ orgId }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const router = useRouter();
   const queryClient = useQueryClient();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const orgDeleteMutation = useMutation({
     mutationFn: ({ id }: { id: string }) => deleteOrg(id),
@@ -72,7 +72,7 @@ const PermanentDelete = ({ orgId }) => {
         includeEmailConfirmation={true}
         onConfirm={async (e) => {
           toast.loading(
-            translations("Hold on, your organization is getting deleted"),
+            translations("Hold on, your organization is getting deleted..."),
             {
               id: "delete-data",
             },
@@ -85,7 +85,7 @@ const PermanentDelete = ({ orgId }) => {
         onConfirm={() => router.push("/logout")}
         confirmLabel={translations("Continue")}
         headerLabel={translations(
-          "Your Organization and all its related users, data has been permanently deleted",
+          "Your Organization and all its related users, data has been permanently deleted.",
         )}
         headerTitle={translations("Delete Success")}
         excludeCancelButton={true}

@@ -16,7 +16,7 @@ import { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Range } from "react-date-range";
 import { toast } from "sonner";
 
@@ -160,7 +160,7 @@ const WaResponses = ({
     close,
     setIsDeleting,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   useEffect(() => {
     if (ranges.length === 0) {
@@ -176,7 +176,7 @@ const WaResponses = ({
 
   const downloadExcelResponse = useDownloadExcelResponse();
   const handleExportContacts = useCallback(() => {
-    toast.loading(translations("Exporting Contact responses to Contacts"), {
+    toast.loading(translations("Exporting Contact responses to Contacts..."), {
       id: "export-contacts",
     });
     exportContactMutation.mutate();
@@ -218,7 +218,7 @@ const WaResponses = ({
   }, [createTicketOpened]);
 
   const confirmDelete = useCallback(() => {
-    toast.loading(translations("Hold on, response is getting deleted"), {
+    toast.loading(translations("Hold on, response is getting deleted..."), {
       id: "load-data",
     });
     setIsDeleting(true);
@@ -342,7 +342,7 @@ const WaResponses = ({
     if (!googleAccessToken) {
       setIsSyncing(false);
       setAlertMsg(
-        translations("Please sync your Google account in the App & Services"),
+        translations("Please sync your Google account in the App & Services."),
       );
       redirectModalOpen();
     } else {
@@ -365,7 +365,7 @@ const WaResponses = ({
             if (error.response.data?.error === "invalid_grant") {
               setAlertMsg(
                 translations(
-                  "Your access has been revoked Please sign out and sign in again in the Apps & Services",
+                  "Your access has been revoked. Please sign out and sign in again in the Apps & Services",
                 ),
               );
               redirectModalOpen();
@@ -468,7 +468,6 @@ const WaResponses = ({
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
       />
-
       <div className="h-full px-6 p-2">
         <DataTable
           data={data ?? []}
@@ -488,10 +487,8 @@ const WaResponses = ({
           DataTableToolbar={Toolbar}
         />
       </div>
-
       <DeleteModal
         confirmDelete={confirmDelete}
-        translations={translations}
         opened={opened}
         close={close}
       />
@@ -501,7 +498,8 @@ const WaResponses = ({
 
 export default React.memo(WaResponses);
 
-const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
+const DeleteModal = ({ confirmDelete, opened, close }) => {
+  const translations = useExtracted();
   return (
     <FormModalLayout
       opened={opened}
@@ -519,7 +517,7 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
           {translations("Are you sure you want to delete this response?")}
         </p>
         <p className="text-sm text-red-600 dark:text-red-400">
-          {translations("Once deleted, response entry data will be lost")}
+          {translations("Once deleted, response entry data will be lost.")}
         </p>
       </div>
     </FormModalLayout>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { Plus, RefreshCcw } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import z from "zod";
 
@@ -22,7 +22,7 @@ const WaQuickReplySettings = () => {
     refetch,
     isRefetching,
   } = useGetWaQuickReplies();
-  const t = useTranslations();
+  const t = useExtracted();
   const [opened, setOpened] = useState(false);
   const deleteReply = useDeleteReply();
 

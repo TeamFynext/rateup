@@ -6,7 +6,7 @@ import { luminance, useMantineTheme } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useOs } from "@mantine/hooks";
 import { IconCalendarEvent } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
@@ -32,7 +32,7 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
     os === "android" || os === "ios" || selectedPreview === "mobile";
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const takeSurveyLayoutWebDomNodeRef = useRef(null);
-  const translations = useTranslations();
+  const translations = useExtracted();
   useEffect(() => {
     const takeSurveyLayoutWebRootDiv = document.querySelector(
       ".take-survey-layout-web-root-div",

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { useDisclosure } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { SurveyCard } from "@/components/Card/SurveyCard/SurveyCard";
@@ -54,7 +54,7 @@ export function SurveysPage({
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const [template, setTemplate] = useState(null);
 
@@ -134,7 +134,6 @@ export function SurveysPage({
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />
-
       {surveys?.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
           {filteredSurvey
@@ -172,7 +171,6 @@ export function SurveysPage({
           setTemplate={setTemplate}
         />
       )}
-
       {surveyTemplatesOpened && (
         <SurveyTemplatesModal
           opened={surveyTemplatesOpened}

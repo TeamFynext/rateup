@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { WaAutomatedReply } from "@/types/global";
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
@@ -37,7 +37,7 @@ export default function FlowbotsPage() {
   const [opened, setOpened] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("latest");
-  const translations = useTranslations();
+  const translations = useExtracted();
   const debouncedSearchQuery = useDebounce(searchQuery.trim(), 200);
 
   const isLoading = waPending || igPending;

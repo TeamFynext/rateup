@@ -16,7 +16,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -116,7 +116,7 @@ function getRuleIcon(rule: LoyaltyEarningRule) {
 }
 
 export default function EarningRulesPage() {
-  const t = useTranslations("loyalty.earningRules");
+  const t = useExtracted("loyalty.earningRules");
 
   const [earningRulesViewMode, setEarningRulesViewMode] = useState<
     "list" | "create"
@@ -153,14 +153,14 @@ export default function EarningRulesPage() {
 
   // Tier mutations
   const createTierMutation = useCreateLoyaltyTierMutation(() => {
-    toast.success(t("tierAdded"));
+    toast.success(t("New tier added"));
   });
   const deleteTierMutation = useDeleteLoyaltyTierMutation();
 
   // Rule mutations (create + delete only; update/toggle handled per-card)
   const createRuleMutation = useCreateLoyaltyEarningRuleMutation(() => {
     setEarningRulesViewMode("list");
-    toast.success(t("createSuccess"));
+    toast.success(t("Earning rule created successfully"));
   });
   const deleteRuleMutation = useDeleteLoyaltyEarningRuleMutation();
 
@@ -211,9 +211,9 @@ export default function EarningRulesPage() {
   };
 
   const handleDeleteRule = (ruleId: string) => {
-    if (confirm(t("deleteConfirm"))) {
+    if (confirm(t("Are you sure you want to delete this earning rule?"))) {
       deleteRuleMutation.mutate(ruleId, {
-        onSuccess: () => toast.success(t("deleteSuccess")),
+        onSuccess: () => toast.success(t("Earning rule deleted successfully")),
       });
     }
   };
@@ -221,7 +221,8 @@ export default function EarningRulesPage() {
   const handleTierDelete = (tierId: string, tierName: string) => {
     if (confirm(t("deleteTierConfirm"))) {
       deleteTierMutation.mutate(tierId, {
-        onSuccess: () => toast.success(t("tierDeleted", { name: tierName })),
+        onSuccess: () =>
+          toast.success(t("{name} tier deleted", { name: tierName })),
       });
     }
   };
@@ -232,7 +233,7 @@ export default function EarningRulesPage() {
       0,
     );
     const newTierData: LoyaltyTierInput = {
-      name: t("newTier"),
+      name: t("New Tier"),
       color: "#1873E8",
       pointsMultiplier: 10,
       threshold: maxPoints + 1000,
@@ -253,7 +254,9 @@ export default function EarningRulesPage() {
     return (
       <div className="p-6">
         <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
-          <p className="text-sm text-destructive">{t("loadError")}</p>
+          <p className="text-sm text-destructive">
+            {t("Error loading earning rules")}
+          </p>
         </div>
       </div>
     );
@@ -266,9 +269,13 @@ export default function EarningRulesPage() {
           {/* Header */}
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="mb-1 text-2xl font-semibold">{t("title")}</h1>
+              <h1 className="mb-1 text-2xl font-semibold">
+                {t("Point Earning Rules")}
+              </h1>
               <p className="text-sm text-muted-foreground">
-                {t("description")}
+                {t(
+                  "Define how customers earn points through purchases and activities",
+                )}
               </p>
             </div>
             <div className="flex items-start justify-between gap-2">
@@ -282,7 +289,7 @@ export default function EarningRulesPage() {
                 }}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {t("addRule")}
+                {t("Add Rule")}
               </Button>
               <InfoButton docUrl={`${docsPath}/loyality/earningRules`} />
             </div>
@@ -293,7 +300,9 @@ export default function EarningRulesPage() {
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold">{t("tierBasedRates")}</h3>
+                  <h3 className="font-semibold">
+                    {t("Tier-Based Earning Rates")}
+                  </h3>
                   <Badge variant="outline" className="text-xs">
                     {loyaltyTiers.length} {t("tiers")}
                   </Badge>
@@ -311,7 +320,7 @@ export default function EarningRulesPage() {
                   ) : (
                     <Plus className="mr-1.5 h-4 w-4" />
                   )}
-                  {t("addTier")}
+                  {t("Add Tier")}
                 </Button>
               </div>
 
@@ -334,7 +343,6 @@ export default function EarningRulesPage() {
                         handleTierDelete(id, name);
                         setEditingTierId(null);
                       }}
-                      t={t}
                     />
                   ))}
               </div>
@@ -343,7 +351,9 @@ export default function EarningRulesPage() {
             {/* Additional Earning Rules */}
             <div>
               <div className="mb-3 flex items-center gap-2">
-                <h3 className="font-semibold">{t("additionalRules")}</h3>
+                <h3 className="font-semibold">
+                  {t("Additional Earning Rules")}
+                </h3>
                 <Badge variant="outline" className="text-xs">
                   {additionalRules.length} {t("rules")}
                 </Badge>
@@ -362,7 +372,6 @@ export default function EarningRulesPage() {
                     onCancelEdit={() => setEditingRuleId(null)}
                     onDelete={() => rule.id && handleDeleteRule(rule.id)}
                     isDeleting={deleteRuleMutation.isPending}
-                    t={t}
                   />
                 ))}
 
@@ -372,9 +381,13 @@ export default function EarningRulesPage() {
                       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
                         <Plus className="h-6 w-6 text-gray-400" />
                       </div>
-                      <h4 className="mb-1 font-semibold">{t("noRulesYet")}</h4>
+                      <h4 className="mb-1 font-semibold">
+                        {t("No additional rules yet")}
+                      </h4>
                       <p className="mb-4 text-sm text-muted-foreground">
-                        {t("noRulesDescription")}
+                        {t(
+                          "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials",
+                        )}
                       </p>
                       <Button
                         variant="outline"
@@ -385,7 +398,7 @@ export default function EarningRulesPage() {
                         className="border-[#1873E8] text-[#1873E8] hover:bg-blue-50"
                       >
                         <Plus className="mr-2 h-4 w-4" />
-                        {t("createFirstRule")}
+                        {t("Create Your First Rule")}
                       </Button>
                     </CardContent>
                   </Card>
@@ -395,7 +408,6 @@ export default function EarningRulesPage() {
           </div>
         </div>
       )}
-
       {earningRulesViewMode === "create" && (
         <div className="space-y-6">
           {/* Back button */}
@@ -410,7 +422,7 @@ export default function EarningRulesPage() {
               className="text-gray-600 hover:text-gray-900"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              {t("back")}
+              {t("Back")}
             </Button>
           </div>
 
@@ -435,11 +447,13 @@ export default function EarningRulesPage() {
                     name="name"
                     render={({ field }) => (
                       <FormItem className="space-y-2">
-                        <FormLabel>{t("ruleName")}</FormLabel>
+                        <FormLabel>{t("Rule Name")}</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder={t("ruleNamePlaceholder")}
+                            placeholder={t(
+                              "e.g., Happy Hour Bonus, Weekend Multiplier, Birthday Bonus",
+                            )}
                           />
                         </FormControl>
                         <FormMessage />
@@ -453,12 +467,18 @@ export default function EarningRulesPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem className="space-y-2">
-                        <FormLabel>{t("description")}</FormLabel>
+                        <FormLabel>
+                          {t(
+                            "Define how customers earn points through purchases and activities",
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
                             className="min-h-20 resize-none"
-                            placeholder={t("descriptionPlaceholder")}
+                            placeholder={t(
+                              "Describe when and how this rule applies...",
+                            )}
                           />
                         </FormControl>
                         <FormMessage />
@@ -508,7 +528,7 @@ export default function EarningRulesPage() {
                       name="multiplier"
                       render={({ field }) => (
                         <FormItem className="space-y-2">
-                          <FormLabel>{t("multiplier")}</FormLabel>
+                          <FormLabel>{t("Multiplier")}</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -519,7 +539,7 @@ export default function EarningRulesPage() {
                             />
                           </FormControl>
                           <FormDescription>
-                            {t("multiplierHint")}
+                            {t("e.g., 2.0 = Double points, 1.5 = 50% more")}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -530,7 +550,7 @@ export default function EarningRulesPage() {
                       name="bonusPoints"
                       render={({ field }) => (
                         <FormItem className="space-y-2">
-                          <FormLabel>{t("bonusPoints")}</FormLabel>
+                          <FormLabel>{t("Bonus Points")}</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -540,7 +560,7 @@ export default function EarningRulesPage() {
                             />
                           </FormControl>
                           <FormDescription>
-                            {t("bonusPointsHint")}
+                            {t("Additional points on top of standard rate")}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -691,7 +711,7 @@ export default function EarningRulesPage() {
                         resetCreateForm();
                       }}
                     >
-                      {t("cancel")}
+                      {t("Cancel")}
                     </Button>
                     <Button
                       type="submit"
@@ -701,12 +721,12 @@ export default function EarningRulesPage() {
                       {createRuleMutation.isPending ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          {t("creating")}
+                          {t("Creating...")}
                         </>
                       ) : (
                         <>
                           <Plus className="mr-2 h-4 w-4" />
-                          {t("createRule")}
+                          {t("Create Earning Rule")}
                         </>
                       )}
                     </Button>
@@ -728,25 +748,8 @@ function TierCard({
   onStartEdit,
   onCancelEdit,
   onDelete,
-  t,
-}: Readonly<{
-  tier: {
-    id: string;
-    name: string;
-    color: string;
-    pointsMultiplier: number | string;
-    threshold: number;
-    program: {
-      currencyCode: string;
-    };
-  };
-  index: number;
-  isEditing: boolean;
-  onStartEdit: () => void;
-  onCancelEdit: () => void;
-  onDelete: (id: string, name: string) => void;
-  t: any;
-}>) {
+}) {
+  const t = useExtracted();
   const tierForm = useForm<TierFormValues>({
     resolver: zodResolver(tierSchema),
     defaultValues: {
@@ -758,7 +761,9 @@ function TierCard({
   });
 
   const updateTierMutation = useUpdateLoyaltyTierMutation(tier.id, () => {
-    toast.success(t("tierSaved", { name: tierForm.getValues("name") }));
+    toast.success(
+      t("{name} tier settings saved", { name: tierForm.getValues("name") }),
+    );
   });
 
   const onSubmit = (values: TierFormValues) => {
@@ -799,7 +804,7 @@ function TierCard({
 
               <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5">
                 <p className="text-xs text-muted-foreground">
-                  {t("earningRate")}
+                  {t("Earning Rate")}
                 </p>
                 <p className="text-sm font-semibold text-[#1873E8]">
                   {Number(tier.pointsMultiplier)} pts/
@@ -875,7 +880,7 @@ function TierCard({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">{t("tierName")}</FormLabel>
+                    <FormLabel className="text-xs">{t("Tier Name")}</FormLabel>
                     <FormControl>
                       <Input {...field} className="mt-1 h-9 font-semibold" />
                     </FormControl>
@@ -889,7 +894,7 @@ function TierCard({
                 name="color"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">{t("color")}</FormLabel>
+                    <FormLabel className="text-xs">{t("Color")}</FormLabel>
                     <FormControl>
                       <Input {...field} type="color" className="mt-1 h-9" />
                     </FormControl>
@@ -904,7 +909,7 @@ function TierCard({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      {t("earningRate")}
+                      {t("Earning Rate")}
                     </FormLabel>
                     <div className="mt-1 flex items-center gap-1">
                       <FormControl>
@@ -930,7 +935,7 @@ function TierCard({
                 name="threshold"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">{t("threshold")}</FormLabel>
+                    <FormLabel className="text-xs">{t("Threshold")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -952,12 +957,17 @@ function TierCard({
                 {tier.threshold === 0 ? (
                   <>
                     <Info className="mr-1 inline h-3 w-3" />
-                    {t("baseTierInfo")}
+                    {t(
+                      "Base tier - All new customers start here. Cannot be deleted.",
+                    )}
                   </>
                 ) : (
-                  t("tierReachInfo", {
-                    points: tier.threshold.toLocaleString(),
-                  })
+                  t(
+                    "Customers reach this tier after earning {points} lifetime points",
+                    {
+                      points: tier.threshold.toLocaleString(),
+                    },
+                  )
                 )}
               </div>
 
@@ -988,16 +998,8 @@ function RuleCard({
   onCancelEdit,
   onDelete,
   isDeleting,
-  t,
-}: Readonly<{
-  rule: LoyaltyEarningRule;
-  isEditing: boolean;
-  onStartEdit: () => void;
-  onCancelEdit: () => void;
-  onDelete: () => void;
-  isDeleting: boolean;
-  t: any;
-}>) {
+}) {
+  const t = useExtracted();
   const ruleForm = useForm<EarningRuleFormValues>({
     resolver: zodResolver(earningRuleSchema),
     defaultValues: {
@@ -1019,7 +1021,7 @@ function RuleCard({
   const updateRuleMutation = useUpdateLoyaltyEarningRuleMutation(
     rule.id || "",
     () => {
-      toast.success(t("updateSuccess"));
+      toast.success(t("Earning rule updated successfully"));
     },
   );
 
@@ -1038,7 +1040,7 @@ function RuleCard({
   const onToggle = (checked: boolean) => {
     toggleStatusMutation.mutate(
       { status: checked ? "active" : "inactive" },
-      { onSuccess: () => toast.success(t("statusUpdated")) },
+      { onSuccess: () => toast.success(t("Rule status updated")) },
     );
   };
 
@@ -1055,7 +1057,7 @@ function RuleCard({
                   {rule.name}
                 </h4>
                 <p className="truncate text-xs text-muted-foreground">
-                  {rule.description || t("noDescription")}
+                  {rule.description || t("No description provided")}
                 </p>
               </div>
             </div>
@@ -1122,11 +1124,11 @@ function RuleCard({
                   <span>
                     {rule.validFrom
                       ? new Date(rule.validFrom).toLocaleDateString()
-                      : t("start")}
+                      : t("Start")}
                     {" - "}
                     {rule.validUntil
                       ? new Date(rule.validUntil).toLocaleDateString()
-                      : t("end")}
+                      : t("End")}
                   </span>
                 </div>
               )}
@@ -1181,7 +1183,9 @@ function RuleCard({
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">{t("ruleName")}</FormLabel>
+                      <FormLabel className="text-xs">
+                        {t("Rule Name")}
+                      </FormLabel>
                       <FormControl>
                         <Input {...field} className="mt-1 h-9" />
                       </FormControl>
@@ -1198,7 +1202,9 @@ function RuleCard({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs">
-                        {t("description")}
+                        {t(
+                          "Define how customers earn points through purchases and activities",
+                        )}
                       </FormLabel>
                       <FormControl>
                         <Textarea
@@ -1218,7 +1224,7 @@ function RuleCard({
                 name="multiplier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">{t("multiplier")}</FormLabel>
+                    <FormLabel className="text-xs">{t("Multiplier")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -1239,7 +1245,7 @@ function RuleCard({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">
-                      {t("bonusPoints")}
+                      {t("Bonus Points")}
                     </FormLabel>
                     <FormControl>
                       <Input

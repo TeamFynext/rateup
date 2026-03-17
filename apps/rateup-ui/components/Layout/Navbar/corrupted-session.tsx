@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AlertTriangle } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import {
 
 export default function CorruptedSessionScreen() {
   const router = useRouter();
-  const t = useTranslations();
+  const t = useExtracted();
 
   const handleRetry = () => {
     localStorage.removeItem("userInfo");
@@ -48,7 +48,7 @@ export default function CorruptedSessionScreen() {
             <AlertTitle>{t("Unable to load user data")}</AlertTitle>
             <AlertDescription>
               {t(
-                "Please retry loading the application, if the problem continues, you may need to logout and login again",
+                "Please retry loading the application. If the problem continues, you may need to logout and login again",
               )}
               .
             </AlertDescription>

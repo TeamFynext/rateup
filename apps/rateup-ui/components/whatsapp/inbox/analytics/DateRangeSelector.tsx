@@ -2,7 +2,7 @@ import { Activity } from "react";
 
 import dayjs from "dayjs";
 import { CalendarIcon, ChevronDown, Filter } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -101,7 +101,7 @@ const DateRangeSelector = ({ value, onChange }) => {
 export default DateRangeSelector;
 
 export function DateSelector({ days, setDays }) {
-  const t = useTranslations();
+  const t = useExtracted();
   return (
     <div className="flex items-center gap-1 flex-col sm:flex-row">
       <div className="flex items-center gap-1 ">

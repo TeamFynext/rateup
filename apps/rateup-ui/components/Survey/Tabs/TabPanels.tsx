@@ -1,5 +1,7 @@
 "use client";
 
+import { useExtracted } from "next-intl";
+
 import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,10 +25,10 @@ function TabPanelsComp({
   setFilterTags,
   encryptionpassword,
   setEncryptionPassword,
-  translations,
   setActiveTab,
   setFunToRunBeforeSurveyIdPageHeaderTabsChange,
 }) {
+  const translations = useExtracted();
   const { data: subscription } = useSubscription();
 
   return (
@@ -101,7 +103,6 @@ function TabPanelsComp({
               encryptionpassword={encryptionpassword}
               setEncryptionPassword={setEncryptionPassword}
               subscription={subscription}
-              translations={translations}
             />
           </TabsContent>
           <TabsContent value="analytics" className="min-h-0">

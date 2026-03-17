@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Box, Group, Stack, Switch, Text, Title } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import RateupSwitch from "@/components/Switch/RateupSwitch";
 
@@ -20,7 +20,7 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
   const [notificationEmail, setNotificationEmail] = useState(
     survey?.notificationEmail,
   );
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [error, setError] = useState("");
   const editSurvey = useEditSurveyMutation(surveyId);
   useEffect(() => {
@@ -55,7 +55,7 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
         {!survey?.notificationEmail?.length && (
           <Text c="var(--tertiary-color)" fz={15}>
             {translations(
-              "Please Enter Email ID and Save to complete the process",
+              "Please Enter Email ID and Save to complete the process.",
             )}
           </Text>
         )}

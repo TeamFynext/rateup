@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 export enum LoyaltyTemplateTypes {
   CustomerRegistration = "CustomerRegistration",

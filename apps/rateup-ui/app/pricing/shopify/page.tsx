@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { Center, Stack, Text } from "@mantine/core";
 import { IconArrowRight, IconLoader } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import Session from "supertokens-auth-react/recipe/session";
 
 import { useUserOrgOrders } from "@/backend/payment/payment.query";
@@ -29,7 +29,7 @@ const ShopifySubscriptionApprovalCallback = () => {
   const shop = searchParams.get("shop");
   const plan = searchParams.get("plan");
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [isSessionExist, setIsSessionExist] = useState(false);
   useEffect(() => {
     if (!charge_id || !shop || !plan) {
@@ -76,7 +76,9 @@ const ShopifySubscriptionApprovalCallback = () => {
       <Center h={"100vh"}>
         <Stack justify="center" align="center">
           <IconLoader className={style.rotateInfinitely} display={"block"} />
-          <Text>{translations("WaitProcessing your subscription order")}</Text>
+          <Text>
+            {translations("Wait..Processing your subscription order")}
+          </Text>
         </Stack>
       </Center>
     );

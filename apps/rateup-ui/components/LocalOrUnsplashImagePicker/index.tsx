@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { ActionIcon, Box, Button, Group } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import mmCommonStyles from "../Modal/ModalManagerModals/mmCommonStyles.module.css";
 import styles from "./LocalOrUnsplashImagePicker.module.css";
@@ -16,7 +16,7 @@ function LocalOrUnsplashImagePicker({
   forDevice,
   onImageSelected,
 }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleUploadBtnClick = useCallback(() => {
     modals.openContextModal({
       modal: "imageSourceSelectorModal",

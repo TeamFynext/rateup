@@ -22,7 +22,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -168,7 +168,7 @@ export function DataTableToolbar<TData>({
 }: Readonly<DataTableToolbarProps<TData>>) {
   const isFiltered = table.getState().columnFilters.length > 0;
   const { filter, setFilter } = useContactTableStore();
-  const t = useTranslations();
+  const t = useExtracted();
 
   const [isOpenedAddContactModal, setIsOpenedAddContactModal] = useState(false);
 
@@ -312,7 +312,6 @@ export function DataTableToolbar<TData>({
           </div>
         )}
       </div>
-
       <CreateOrEditContactModal
         opened={isOpenedAddContactModal}
         setOpened={setIsOpenedAddContactModal}
@@ -393,7 +392,7 @@ const ExportContacts = ({ table }) => {
 };
 
 const ImportContactModal = ({ opened, setOpened }) => {
-  const t = useTranslations();
+  const t = useExtracted();
 
   const handleDownloadDemo = () => {
     // Example: download a text file (you can replace this with any file URL)
@@ -463,7 +462,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
           <DialogTitle className="text-md">{t("Import Contacts")}</DialogTitle>
           <DialogDescription>
             {t(
-              "Import contacts from a CSV file to add them to your contact list",
+              "Import contacts from a CSV file to add them to your contact list.",
             )}
           </DialogDescription>
         </DialogHeader>

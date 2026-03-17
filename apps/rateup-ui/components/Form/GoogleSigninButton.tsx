@@ -2,7 +2,7 @@
 
 import { Button } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-react/recipe/thirdparty";
 
@@ -14,7 +14,7 @@ type GoogleSignInButtonProps = {
 };
 
 function GoogleSignInButton({ buttonText, className }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   async function googleSignInClicked() {
     try {
       const authUrl = await getAuthorisationURLWithQueryParamsAndSetState({
@@ -39,7 +39,7 @@ function GoogleSignInButton({ buttonText, className }) {
           id: "load-data",
         });
       } else {
-        toast.error(translations("Oops! Something went wrong") + err, {
+        toast.error(translations("Oops! Something went wrong...") + err, {
           id: "load-data",
         });
       }

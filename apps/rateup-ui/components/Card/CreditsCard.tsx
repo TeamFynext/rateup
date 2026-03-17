@@ -4,7 +4,7 @@ import React from "react";
 
 import { Anchor, Box, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 type CreditsCardProps = {
   enableCredits: boolean;
@@ -31,7 +31,7 @@ export const CreditsCard = ({
     username = params.get("username");
   }
   const isMobile = useMediaQuery("(max-width: 480px)");
-  const translations = useTranslations();
+  const translations = useExtracted();
   return (
     <Box pos={"relative"} p={0} m={0} w={"100%"} h={"100%"} style={sx}>
       {children}

@@ -16,7 +16,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
@@ -56,7 +56,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateResponse({ ...response, name: e.currentTarget.value });
   };
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleJobTitleChange = (e) => {
     updateResponse({ ...response, jobTitle: e.currentTarget.value });
   };
@@ -88,7 +88,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         setIsUploading(false);
       })
       .catch((err) => {
-        toast.error(translations("Error uploading icon Please try again"));
+        toast.error(translations("Error uploading icon. Please try again."));
         setIsUploading(false);
       });
   }, [file]);

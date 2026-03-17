@@ -14,7 +14,7 @@ import {
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
@@ -25,7 +25,7 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
   const params = useParams();
   const surveyId = params.surveyId as string;
 
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [opened, { open, close }] = useDisclosure();
 
   const form = useForm({
@@ -82,7 +82,6 @@ function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
           {translations("Create Theme")}
         </Button>
       </Tooltip>
-
       <Modal
         title={translations("Create New Theme")}
         opened={opened}

@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { Group, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import InfoButton from "../../../components/Button/InfoButton";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
@@ -30,7 +30,7 @@ export default function MenuPage() {
   const [sortOption, setSortOption] = useState("latest");
   const { user } = useUser();
   const tourSteps = DigitalMenuTourSteps({ styles });
-  const translations = useTranslations();
+  const translations = useExtracted();
   function handleEditClick(menu: Menu) {
     setEditingItem(menu);
     open();
@@ -79,7 +79,6 @@ export default function MenuPage() {
           </Group>
         </Group>
       </Group>
-
       <SelectedTeamContext.Provider
         value={React.useMemo(() => ({ selectedTeamId }), [selectedTeamId])}
       >

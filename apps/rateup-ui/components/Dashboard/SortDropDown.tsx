@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import {
   Select,
@@ -16,7 +16,7 @@ import {
 
 const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
   const [sortOption, setSortOption] = useState(defaultSortOption);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const handleSortChange = (value) => {
     setSortOption(value);
     onSortChange(value);

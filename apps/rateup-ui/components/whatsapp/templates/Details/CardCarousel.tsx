@@ -32,7 +32,7 @@ import {
   IconWorld,
   IconX,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -102,7 +102,7 @@ const CardCarousel = ({
       product_retailer_id: "",
     });
   }
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [selectedText, setSelectedText] = useState("");
   const contentHistory = useRef([]); // Ref to store content history
   const inputRefs = useRef<Array<HTMLTextAreaElement | null>>([]);

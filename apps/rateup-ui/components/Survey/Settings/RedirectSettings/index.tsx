@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Group, SimpleGrid, Stack } from "@mantine/core";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import RateupSwitch from "@/components/Switch/RateupSwitch";
 
@@ -24,7 +24,7 @@ function RedirectSettings({
   setRedirectError,
   debounced,
 }) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   function validateUrl(url: string) {
     try {
       if (url === "/") return false;

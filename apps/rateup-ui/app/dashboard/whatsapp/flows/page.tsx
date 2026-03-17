@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
@@ -25,7 +25,7 @@ import styles from "./flows.module.css";
 
 function Flows() {
   const searchParams = useSearchParams();
-  const translations = useTranslations();
+  const translations = useExtracted();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("latest");
@@ -135,7 +135,6 @@ function Flows() {
           <FlowCardsList flows={sortedFlows} teamsData={teamsData} />
         </div>
       </ListPageLayout>
-
       <CreateFlowModal
         opened={isCreateFlowModalOpened}
         onClose={handleCreateFlowModalClose}

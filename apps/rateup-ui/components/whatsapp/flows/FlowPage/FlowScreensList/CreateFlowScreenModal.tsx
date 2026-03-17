@@ -4,7 +4,7 @@ import { useCallback, useContext, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { useForm } from "@mantine/form";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
@@ -42,7 +42,7 @@ function CreateFlowScreenModal({
   const params = useParams();
   const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
-  const translations = useTranslations();
+  const translations = useExtracted();
   const form = useForm({
     initialValues: getInitialValues(flowJson.screens),
     validate: {
@@ -50,7 +50,7 @@ function CreateFlowScreenModal({
         if (!/^[a-zA-Z,_]*$/.test(value)) {
           toast.error(
             translations(
-              "Error Occured Please report this bug to the developer code: #flowsidval",
+              "Error Occured. Please report this bug to the developer. code: #flowsidval",
             ),
           );
           return "Id should contain only alphabets and _";

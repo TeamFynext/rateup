@@ -9,7 +9,7 @@ import {
 } from "@tabler/icons-react";
 import { Table } from "@tanstack/react-table";
 import { format, isValid, parse } from "date-fns";
-import { useTranslations } from "next-intl";
+import { useExtracted } from "next-intl";
 import { Range } from "react-date-range";
 import { useForm } from "react-hook-form";
 
@@ -73,7 +73,7 @@ export function ResponseTableToolbar<TData>({
   alertModalOpen,
   responseCount,
 }: Readonly<ResponseTableToolbarProps<TData>>) {
-  const translations = useTranslations();
+  const translations = useExtracted();
   const [openedExport, setOpenedExport] = useState(false);
   const { serverFilters, setServerFilters } = useResponseFilterStore();
   const filters = serverFilters as Record<string, any>; // Cast locally to avoid store change
