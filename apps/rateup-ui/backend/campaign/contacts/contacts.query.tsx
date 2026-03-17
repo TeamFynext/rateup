@@ -390,7 +390,7 @@ export const useUpdateLifecycleofMultipleContacts = () => {
   });
 };
 
-export const useBulkAssignStatusMutation = (filterData) => {
+export const useBulkAssignStatusMutation = (groupId) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -398,26 +398,16 @@ export const useBulkAssignStatusMutation = (filterData) => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-
       queryClient.invalidateQueries({
-        queryKey: ["contacts", "filtered", filterData],
+        queryKey: ["contactGroupById", groupId],
       });
-
       queryClient.invalidateQueries({
         queryKey: ["assignedInboxUser"],
       });
-
-      queryClient.invalidateQueries({
-        queryKey: ["contactInboxCount"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["notification"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["notificationCount"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["contactInboxCount"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
+      queryClient.invalidateQueries({ queryKey: ["notification"] });
+      queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
 
       toast.success("Chats updated successfully.", {
         id: "bulk-chat-update",
