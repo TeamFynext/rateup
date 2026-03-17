@@ -144,7 +144,7 @@ const WaInboxChatSelect = () => {
   const {
     mutate: bulkAssignStatusMutation,
     isPending: isBulkAssignStatusPending,
-  } = useBulkAssignStatusMutation(filterData);
+  } = useBulkAssignStatusMutation(null);
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
