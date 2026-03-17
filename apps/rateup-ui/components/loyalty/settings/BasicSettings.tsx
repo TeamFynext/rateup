@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 
-import { useUpdateLoyaltyProgramMutation } from "@/backend/loyalty/program.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +28,11 @@ interface BasicSettingsProps {
   isPending: boolean;
 }
 
-export function BasicSettings({ form, onSave, isPending }: BasicSettingsProps) {
+export function BasicSettings({
+  form,
+  onSave,
+  isPending,
+}: Readonly<BasicSettingsProps>) {
   const t = useTranslations();
 
   return (

@@ -279,7 +279,8 @@ export default function RewardsPage() {
         points: data.pointsCost,
       },
       waTemplateId: data.waTemplateId || undefined,
-      availableForTiers: data.tierIds?.length ? data.tierIds : undefined,
+      availableForTiers:
+        rewardTierRestriction && data.tierIds?.length ? data.tierIds : [],
       redemptionRules: {},
     };
 
@@ -302,7 +303,8 @@ export default function RewardsPage() {
       },
       stockQuantity: data.stockQuantity,
       waTemplateId: data.waTemplateId || undefined,
-      availableForTiers: data.tierIds?.length ? data.tierIds : undefined,
+      availableForTiers:
+        rewardTierRestriction && data.tierIds?.length ? data.tierIds : [],
       redemptionRules: {
         spend_requirements: {
           minimum_spend: data.minimumSpend,
@@ -328,7 +330,8 @@ export default function RewardsPage() {
       },
       stockQuantity: data.giftQuantity,
       waTemplateId: data.waTemplateId || undefined,
-      availableForTiers: data.tierIds?.length ? data.tierIds : undefined,
+      availableForTiers:
+        rewardTierRestriction && data.tierIds?.length ? data.tierIds : [],
       redemptionRules: {},
     };
 

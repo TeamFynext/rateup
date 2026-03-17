@@ -736,6 +736,9 @@ function TierCard({
     color: string;
     pointsMultiplier: number | string;
     threshold: number;
+    program: {
+      currencyCode: string;
+    };
   };
   index: number;
   isEditing: boolean;
@@ -799,7 +802,8 @@ function TierCard({
                   {t("earningRate")}
                 </p>
                 <p className="text-sm font-semibold text-[#1873E8]">
-                  {Number(tier.pointsMultiplier)} pts/AED
+                  {Number(tier.pointsMultiplier)} pts/
+                  {tier.program?.currencyCode}
                 </p>
               </div>
             </div>

@@ -47,7 +47,7 @@ export default function LoyaltyPrograms() {
   const { data: dashboardData, isLoading: isLoadingDashboard } =
     useLoyaltyDashboardData();
 
-  const isFirstTimeUser = !isLoadingDashboard && !dashboardData?.programExists;
+  const isFirstTimeUser = false; // !isLoadingDashboard && !dashboardData?.programExists;
 
   // Time filter state
   const [timeFilter, setTimeFilter] = useState("7days");

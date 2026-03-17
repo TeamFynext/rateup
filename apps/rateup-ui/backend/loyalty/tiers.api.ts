@@ -12,6 +12,9 @@ export interface LoyaltyTier {
   benefitsDescription?: string;
   priority: number;
   createdAt: string;
+  program: {
+    currencyCode: string;
+  };
 }
 
 export interface LoyaltyTierInput {
