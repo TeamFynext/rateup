@@ -31,13 +31,15 @@ interface PointsExpirationSettingsProps {
   form: UseFormReturn<z.infer<typeof ExpirationSettingsSchema>>;
   onSave: (data: z.infer<typeof ExpirationSettingsSchema>) => void;
   isPending: boolean;
+  disabled?: boolean;
 }
 
 export function PointsExpirationSettings({
   form,
   onSave,
   isPending,
-}: PointsExpirationSettingsProps) {
+  disabled = false,
+}: Readonly<PointsExpirationSettingsProps>) {
   const t = useExtracted();
 
   return (
@@ -64,7 +66,8 @@ export function PointsExpirationSettings({
                   <FormControl>
                     <Switch
                       checked={field.value}
-                      onCheckedChange={field.onChange}
+                      onCheckedChange={disabled ? undefined : field.onChange}
+                      disabled={disabled}
                     />
                   </FormControl>
                 </FormItem>
@@ -81,9 +84,12 @@ export function PointsExpirationSettings({
                   </FormLabel>
                   <Select
                     value={field.value.toString()}
-                    onValueChange={(val) =>
-                      field.onChange(Number.parseInt(val))
+                    onValueChange={
+                      disabled
+                        ? undefined
+                        : (val) => field.onChange(Number.parseInt(val))
                     }
+                    disabled={disabled}
                   >
                     <FormControl>
                       <SelectTrigger className="h-9">
@@ -106,7 +112,7 @@ export function PointsExpirationSettings({
               size="sm"
               className="w-full"
               type="submit"
-              disabled={isPending}
+              disabled={isPending || disabled}
             >
               {isPending ? (
                 <>

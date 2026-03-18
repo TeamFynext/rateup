@@ -23,6 +23,7 @@ interface PointsReminderSettingsProps {
   onSave: () => void;
   isModified: boolean;
   onModify: () => void;
+  disabled?: boolean;
 }
 
 export function PointsReminderSettings({
@@ -32,7 +33,8 @@ export function PointsReminderSettings({
   onSave,
   isModified,
   onModify,
-}: PointsReminderSettingsProps) {
+  disabled = false,
+}: Readonly<PointsReminderSettingsProps>) {
   const t = useExtracted();
   const templateInfo = getLoyaltyTemplateLabel(
     LoyaltyTemplateTypes.InactivityReminder,
@@ -64,8 +66,11 @@ export function PointsReminderSettings({
               <Switch
                 checked={field.value}
                 onCheckedChange={(val) => {
-                  onToggle(LoyaltyEventType.INACTIVITY_REMINDER, val);
+                  if (!disabled) {
+                    onToggle(LoyaltyEventType.INACTIVITY_REMINDER, val);
+                  }
                 }}
+                disabled={isPending || disabled}
               />
             </div>
           )}
@@ -87,12 +92,15 @@ export function PointsReminderSettings({
                       type="number"
                       value={field.value}
                       onChange={(e) => {
-                        field.onChange(e.target.value);
-                        onModify();
+                        if (!disabled) {
+                          field.onChange(e.target.value);
+                          onModify();
+                        }
                       }}
                       placeholder="30"
                       min="1"
                       className="h-10"
+                      disabled={disabled}
                     />
                     <p className="text-xs text-muted-foreground">
                       {t(
@@ -116,9 +124,12 @@ export function PointsReminderSettings({
                     description={templateInfo.templateDescription}
                     value={field.value}
                     onChange={(value) => {
-                      field.onChange(value);
-                      onModify();
+                      if (!disabled) {
+                        field.onChange(value);
+                        onModify();
+                      }
                     }}
+                    disabled={disabled}
                   />
                 )}
               />
@@ -142,7 +153,11 @@ export function PointsReminderSettings({
             </div>
 
             {isModified && (
-              <Button size="sm" onClick={onSave} disabled={isPending}>
+              <Button
+                size="sm"
+                onClick={onSave}
+                disabled={isPending || disabled}
+              >
                 {isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (

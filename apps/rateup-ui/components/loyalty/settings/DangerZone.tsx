@@ -8,9 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 interface DangerZoneProps {
   onReset: () => void;
   onDelete: () => void;
+  disabled?: boolean;
 }
 
-export function DangerZone({ onReset, onDelete }: DangerZoneProps) {
+export function DangerZone({
+  onReset,
+  onDelete,
+  disabled = false,
+}: Readonly<DangerZoneProps>) {
   const t = useExtracted();
 
   return (
@@ -35,6 +40,7 @@ export function DangerZone({ onReset, onDelete }: DangerZoneProps) {
             size="sm"
             className="h-8 border-red-300 text-red-600 hover:bg-red-50"
             onClick={onReset}
+            disabled={disabled}
           >
             {t("Reset")}
           </Button>
@@ -54,6 +60,7 @@ export function DangerZone({ onReset, onDelete }: DangerZoneProps) {
             size="sm"
             className="h-8 border-red-300 text-red-600 hover:bg-red-50"
             onClick={onDelete}
+            disabled={disabled}
           >
             {t("Delete")}
           </Button>

@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { useExtracted } from "next-intl";
 import { UseFormReturn } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor";
@@ -24,12 +25,14 @@ interface ReferralMessageSettingsProps {
   form: UseFormReturn<z.infer<typeof BasicSettingsSchema>>;
   onSave: (data: z.infer<typeof BasicSettingsSchema>) => void;
   isPending: boolean;
+  disabled?: boolean;
 }
 
 export function ReferralMessageSettings({
   form,
   onSave,
   isPending,
+  disabled = false,
 }: Readonly<ReferralMessageSettingsProps>) {
   const t = useExtracted();
   const referralMessageTemplate = form.watch("referralMessageTemplate");
@@ -67,7 +70,7 @@ export function ReferralMessageSettings({
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        if (!hasContactNameVariable) {
+                        if (!hasContactNameVariable && !disabled) {
                           const current = getPlainText(
                             form.getValues("referralMessageTemplate"),
                           );
@@ -80,7 +83,7 @@ export function ReferralMessageSettings({
                           );
                         }
                       }}
-                      disabled={hasContactNameVariable}
+                      disabled={hasContactNameVariable || disabled}
                     >
                       {t({ message: `Insert '{{1}}'` })}
                     </Button>
@@ -89,7 +92,7 @@ export function ReferralMessageSettings({
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        if (!hasReferralCodeVariable) {
+                        if (!hasReferralCodeVariable && !disabled) {
                           const current = getPlainText(
                             form.getValues("referralMessageTemplate"),
                           );
@@ -102,7 +105,7 @@ export function ReferralMessageSettings({
                           );
                         }
                       }}
-                      disabled={hasReferralCodeVariable}
+                      disabled={hasReferralCodeVariable || disabled}
                     >
                       {t({ message: "Insert '{{2}}'" })}
                     </Button>
@@ -111,14 +114,17 @@ export function ReferralMessageSettings({
                       size="sm"
                       variant="ghost"
                       onClick={() => {
-                        form.setValue(
-                          "referralMessageTemplate",
-                          DEFAULT_JOIN_MESSAGE_TEMPLATE,
-                          {
-                            shouldDirty: true,
-                          },
-                        );
+                        if (!disabled) {
+                          form.setValue(
+                            "referralMessageTemplate",
+                            DEFAULT_JOIN_MESSAGE_TEMPLATE,
+                            {
+                              shouldDirty: true,
+                            },
+                          );
+                        }
                       }}
+                      disabled={disabled}
                     >
                       {t("Reset to Default")}
                     </Button>
@@ -127,7 +133,9 @@ export function ReferralMessageSettings({
                     <FormControl>
                       <WaTextEditor
                         handleInputChange={(value) => {
-                          form.setValue("referralMessageTemplate", value);
+                          if (!disabled) {
+                            form.setValue("referralMessageTemplate", value);
+                          }
                         }}
                         content={editorContent}
                         mah={250}
@@ -157,7 +165,7 @@ export function ReferralMessageSettings({
               size="sm"
               className="w-[50%] mt-2"
               type="submit"
-              disabled={isPending}
+              disabled={isPending || disabled}
             >
               {isPending ? (
                 <>
