@@ -673,8 +673,12 @@ export async function handleWaJoinRegistration({
   sourceIdentifier: string;
 }) {
   const program = await getLoyaltyProgramByOrg(orgId);
-  if (!program) {
-    log.error("Loyalty program not found for orgId: %s", orgId);
+  if (!program || program.status !== "active") {
+    log.error(
+      "Loyalty program not found or inactive for orgId: %s, status: %s",
+      orgId,
+      program?.status,
+    );
     await sendTextMessage(
       { phone: from, orgId },
       null,

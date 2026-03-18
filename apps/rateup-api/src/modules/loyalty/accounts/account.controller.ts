@@ -38,6 +38,9 @@ export async function createCustomerAccountHandler(
     if (!program) {
       return reply.code(404).send({ error: "Loyalty program not found" });
     }
+    if (program.status !== "active") {
+      return reply.code(400).send({ error: "Loyalty program is not active" });
+    }
     const result = await createCustomerAccount(request.body, program.id, orgId);
     reply.code(201).send(result);
   } catch (e) {
@@ -53,7 +56,8 @@ export async function getCustomerAccountsHandler(
   try {
     const program = await getLoyaltyProgramByOrg(request.user.orgId);
     if (!program) {
-      return reply.code(404).send({ error: "Loyalty program not found" });
+      // if no program, return empty array to avoid 404s on frontend which expects an array in (all data get case)
+      return reply.code(200).send([]);
     }
     const result = await getCustomerAccounts(program.id);
     reply.code(200).send(result);

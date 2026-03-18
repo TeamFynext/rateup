@@ -33,7 +33,7 @@ export async function getLoyaltyProgramHandler(
   try {
     const result = await getLoyaltyProgramByOrg(request.user.orgId);
     if (!result) {
-      return reply.code(404).send({ error: "Loyalty program not found" });
+      return reply.code(200).send([]);
     }
     reply.code(200).send(result);
   } catch (e) {
