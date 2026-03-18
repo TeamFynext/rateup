@@ -91,6 +91,11 @@ export async function getLoyaltyWaCommandByRequestMessage(
         equals: requestMessage,
         mode: "insensitive",
       },
+      org: {
+        loyaltyProgram: {
+          status: "active",
+        },
+      },
     },
   });
 }
