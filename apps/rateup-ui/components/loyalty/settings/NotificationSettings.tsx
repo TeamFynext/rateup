@@ -20,12 +20,14 @@ import { NotificationsSettingsSchema } from "./schemas";
 interface NotificationSettingsProps {
   form: UseFormReturn<z.infer<typeof NotificationsSettingsSchema>>;
   onSave: (updates: any) => void;
+  disabled?: boolean;
 }
 
 export function NotificationSettings({
   form,
   onSave,
-}: NotificationSettingsProps) {
+  disabled = false,
+}: Readonly<NotificationSettingsProps>) {
   const t = useExtracted();
 
   return (
@@ -53,11 +55,14 @@ export function NotificationSettings({
                     <Switch
                       checked={field.value}
                       onCheckedChange={(val) => {
-                        field.onChange(val);
-                        onSave({
-                          status: val ? "active" : "paused",
-                        });
+                        if (!disabled) {
+                          field.onChange(val);
+                          onSave({
+                            status: val ? "active" : "paused",
+                          });
+                        }
                       }}
+                      disabled={disabled}
                     />
                   </FormControl>
                 </FormItem>
@@ -81,11 +86,14 @@ export function NotificationSettings({
                     <Switch
                       checked={field.value}
                       onCheckedChange={(val) => {
-                        field.onChange(val);
-                        onSave({
-                          customerNotifications: val,
-                        });
+                        if (!disabled) {
+                          field.onChange(val);
+                          onSave({
+                            customerNotifications: val,
+                          });
+                        }
                       }}
+                      disabled={disabled}
                     />
                   </FormControl>
                 </FormItem>
@@ -109,11 +117,14 @@ export function NotificationSettings({
                     <Switch
                       checked={field.value}
                       onCheckedChange={(val) => {
-                        field.onChange(val);
-                        onSave({
-                          autoApproveAdjustments: val,
-                        });
+                        if (!disabled) {
+                          field.onChange(val);
+                          onSave({
+                            autoApproveAdjustments: val,
+                          });
+                        }
                       }}
+                      disabled={disabled}
                     />
                   </FormControl>
                 </FormItem>
@@ -137,11 +148,14 @@ export function NotificationSettings({
                     <Switch
                       checked={field.value}
                       onCheckedChange={(val) => {
-                        field.onChange(val);
-                        onSave({
-                          emailNotifications: val,
-                        });
+                        if (!disabled) {
+                          field.onChange(val);
+                          onSave({
+                            emailNotifications: val,
+                          });
+                        }
                       }}
+                      disabled={disabled}
                     />
                   </FormControl>
                 </FormItem>
@@ -165,11 +179,14 @@ export function NotificationSettings({
                     <Switch
                       checked={field.value}
                       onCheckedChange={(val) => {
-                        field.onChange(val);
-                        onSave({
-                          whatsappNotifications: val,
-                        });
+                        if (!disabled) {
+                          field.onChange(val);
+                          onSave({
+                            whatsappNotifications: val,
+                          });
+                        }
                       }}
+                      disabled={disabled}
                     />
                   </FormControl>
                 </FormItem>

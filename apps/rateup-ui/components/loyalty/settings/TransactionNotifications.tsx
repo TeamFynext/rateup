@@ -26,6 +26,7 @@ interface TransactionNotificationsProps {
   setPointsAdjustedModified: (val: boolean) => void;
   setRewardIssuedModified: (val: boolean) => void;
   setRewardRedeemedModified: (val: boolean) => void;
+  disabled?: boolean;
 }
 
 export function TransactionNotifications({
@@ -44,6 +45,7 @@ export function TransactionNotifications({
   setPointsAdjustedModified,
   setRewardIssuedModified,
   setRewardRedeemedModified,
+  disabled = false,
 }: TransactionNotificationsProps) {
   const t = useExtracted();
 
@@ -68,6 +70,7 @@ export function TransactionNotifications({
             onSave={onSavePointsIssued}
             onToggle={(val) => onToggle(LoyaltyEventType.POINTS_ISSUED, val)}
             isPending={isPending}
+            disabled={disabled}
           />
 
           <EventTriggerItem
@@ -81,6 +84,7 @@ export function TransactionNotifications({
             onSave={onSavePointsAdjusted}
             onToggle={(val) => onToggle(LoyaltyEventType.POINTS_ADJUSTED, val)}
             isPending={isPending}
+            disabled={disabled}
           />
 
           <EventTriggerItem
@@ -94,6 +98,7 @@ export function TransactionNotifications({
             onSave={onSaveRewardIssued}
             onToggle={(val) => onToggle(LoyaltyEventType.REWARD_ISSUED, val)}
             isPending={isPending}
+            disabled={disabled}
           />
 
           <EventTriggerItem
@@ -107,6 +112,7 @@ export function TransactionNotifications({
             onSave={onSaveRewardRedeemed}
             onToggle={(val) => onToggle(LoyaltyEventType.REWARD_REDEEMED, val)}
             isPending={isPending}
+            disabled={disabled}
           />
         </div>
       </CardContent>

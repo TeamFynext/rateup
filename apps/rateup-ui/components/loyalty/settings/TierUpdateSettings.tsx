@@ -21,6 +21,7 @@ interface TierUpdateSettingsProps {
   onSave: () => void;
   isModified: boolean;
   onModify: () => void;
+  disabled?: boolean;
 }
 
 export function TierUpdateSettings({
@@ -30,7 +31,8 @@ export function TierUpdateSettings({
   onSave,
   isModified,
   onModify,
-}: TierUpdateSettingsProps) {
+  disabled = false,
+}: Readonly<TierUpdateSettingsProps>) {
   const t = useExtracted();
   const templateInfo = getLoyaltyTemplateLabel(
     LoyaltyTemplateTypes.TierUpgraded,
@@ -60,8 +62,11 @@ export function TierUpdateSettings({
               <Switch
                 checked={field.value}
                 onCheckedChange={(val) => {
-                  onToggle(LoyaltyEventType.TIER_UPGRADED, val);
+                  if (!disabled) {
+                    onToggle(LoyaltyEventType.TIER_UPGRADED, val);
+                  }
                 }}
+                disabled={isPending || disabled}
               />
             </div>
           )}
@@ -79,9 +84,12 @@ export function TierUpdateSettings({
                   description={templateInfo.templateDescription}
                   value={field.value}
                   onChange={(val) => {
-                    field.onChange(val);
-                    onModify();
+                    if (!disabled) {
+                      field.onChange(val);
+                      onModify();
+                    }
                   }}
+                  disabled={disabled}
                 />
               )}
             />
@@ -102,7 +110,11 @@ export function TierUpdateSettings({
               </div>
             </div>
             {isModified && (
-              <Button size="sm" onClick={onSave} disabled={isPending}>
+              <Button
+                size="sm"
+                onClick={onSave}
+                disabled={isPending || disabled}
+              >
                 {isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
