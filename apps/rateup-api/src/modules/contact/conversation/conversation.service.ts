@@ -529,8 +529,20 @@ export async function getOverAllQuickStatsOfConversations(orgId: string) {
     COUNT(*) FILTER (WHERE c."createdAt"::date = CURRENT_DATE)::INTEGER AS "conversationCreatedToday",
     COUNT(*)::INTEGER AS "totalConversation",
     COUNT(*) FILTER (WHERE c."status" = ${WaMessageAssignStatus.UNASSIGNED})::INTEGER AS "newConversations",
-    (SELECT COUNT(*)::INTEGER FROM "OrgMember" WHERE "orgId" = ${orgId} AND "status" = 'online') AS "staffOnline",
-    (SELECT COUNT(*)::INTEGER FROM "OrgMember" WHERE "orgId" = ${orgId}) AS "totalStaff"
+    (SELECT COUNT(*)::INTEGER
+ FROM "OrgMember" om
+ JOIN "User" u ON u.id = om."userId"
+ WHERE om."orgId" = ${orgId}
+   AND om."status" = 'online'
+   AND u."active" = true
+) AS "staffOnline",
+
+(SELECT COUNT(*)::INTEGER
+ FROM "OrgMember" om
+ JOIN "User" u ON u.id = om."userId"
+ WHERE om."orgId" = ${orgId}
+   AND u."active" = true
+) AS "totalStaff"
 FROM "Conversation" c
 JOIN "Contact" ct ON c."contactId" = ct.id
 WHERE ct."orgId" = ${orgId}::uuid;
@@ -766,7 +778,9 @@ LEFT JOIN assigned_stats a ON a."userId" = om."userId"
 LEFT JOIN closed_stats c ON c."userId" = om."userId"
 LEFT JOIN message_stats m ON m."userId" = om."userId"
 LEFT JOIN response_stats r ON r."userId" = om."userId"
-WHERE om."orgId" = ${orgId};
+WHERE om."orgId" = ${orgId}
+AND u."active" = true
+AND u."deletedAt" IS NULL;
   `;
   return result;
 }
@@ -1225,8 +1239,10 @@ export async function getTeamOverview(orgId: string, dateRange) {
         AND c."createdAt" >= COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
         AND c."createdAt" < COALESCE(${rangeEnd}, NOW())
     ) AS "averageResponseTime",
-   COUNT(DISTINCT tm."userId"):: INTEGER AS "teamMembers",
-   COUNT(DISTINCT tm."userId") FILTER (WHERE om."status" = 'online')::INTEGER AS "teamMembersOnline",
+  COUNT(DISTINCT u.id)::INTEGER AS "teamMembers",
+COUNT(DISTINCT u.id) FILTER (
+  WHERE om."status" = 'online'
+)::INTEGER AS "teamMembersOnline",
    COALESCE(mpt."messagesSent",0) AS "messagesSent"
   FROM "Team" t
   LEFT JOIN "ConversationAssignedUserTeamMap" cau ON cau."teamId" = t.id
@@ -1234,8 +1250,13 @@ export async function getTeamOverview(orgId: string, dateRange) {
   LEFT JOIN "Contact" ct ON ct.id = c."contactId"
   LEFT JOIN first_agent_message fam ON fam."conversationId" = c.id
   LEFT JOIN "TeamMember" tm ON tm."teamId" = t.id
-  LEFT JOIN "User" u ON tm."userId" = u.id
-  LEFT JOIN "OrgMember" om ON u."id" = om."userId"
+  LEFT JOIN "User" u 
+  ON tm."userId" = u.id
+ AND u."active" = true
+ AND u."deletedAt" IS NULL
+LEFT JOIN "OrgMember" om 
+  ON u."id" = om."userId"
+ AND om."orgId" = ${orgId}
   LEFT JOIN "messages_per_team" mpt ON mpt."teamId" = t.id
   WHERE t."orgId" = ${orgId}::uuid
   GROUP BY t.id, t.name,t."color", mpt."messagesSent"
@@ -1324,8 +1345,26 @@ export async function getTeamDetailedMetrics(
       THEN CASE WHEN AVG(EXTRACT(EPOCH FROM (tc.respondedAt - tc."createdAt"))) FILTER (WHERE tc.respondedAt >= ${sevenDaysAgo}) IS NOT NULL THEN 100 ELSE 0 END
       ELSE ((AVG(EXTRACT(EPOCH FROM (tc.respondedAt - tc."createdAt"))) FILTER (WHERE tc.respondedAt >= ${fourteenDaysAgo} AND tc.respondedAt < ${sevenDaysAgo}) - AVG(EXTRACT(EPOCH FROM (tc.respondedAt - tc."createdAt"))) FILTER (WHERE tc.respondedAt >= ${sevenDaysAgo})) / AVG(EXTRACT(EPOCH FROM (tc.respondedAt - tc."createdAt"))) FILTER (WHERE tc.respondedAt >= ${fourteenDaysAgo} AND tc.respondedAt < ${sevenDaysAgo})) * 100
     END AS "averageResponseTimeComparedToLastWeek",
-    (SELECT COUNT(DISTINCT tm."userId")::INTEGER FROM "TeamMember" tm WHERE tm."teamId" = ${teamId}::uuid) AS "teamMembers",
-    (SELECT COUNT(DISTINCT tm."userId")::INTEGER FROM "TeamMember" tm LEFT JOIN "OrgMember" om ON om."userId" = tm."userId" AND om."orgId" = ${orgId}::uuid WHERE tm."teamId" = ${teamId}::uuid AND om."status" = 'online') AS "teamMembersOnline",
+    (SELECT COUNT(DISTINCT u.id)::INTEGER
+ FROM "TeamMember" tm
+ JOIN "User" u 
+   ON u.id = tm."userId"
+  AND u."active" = true
+  AND u."deletedAt" IS NULL
+ WHERE tm."teamId" = ${teamId}::uuid
+) AS "teamMembers",
+   (SELECT COUNT(DISTINCT u.id)::INTEGER
+ FROM "TeamMember" tm
+ JOIN "User" u 
+   ON u.id = tm."userId"
+  AND u."active" = true
+  AND u."deletedAt" IS NULL
+ JOIN "OrgMember" om 
+   ON om."userId" = u.id
+  AND om."orgId" = ${orgId}::uuid
+ WHERE tm."teamId" = ${teamId}::uuid
+   AND om."status" = 'online'
+) AS "teamMembersOnline",
     (
       SELECT json_agg(json_build_object(
         'userId', ms."userId",
@@ -1343,12 +1382,14 @@ export async function getTeamDetailedMetrics(
           COUNT(DISTINCT cau."conversationId") FILTER (WHERE NOT (vc."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})))::INT AS "staffActiveChats",
           COUNT(DISTINCT wm.id)::INT AS "messagesHandled"
         FROM "TeamMember" tm
-        LEFT JOIN "User" u ON u.id = tm."userId"
+        JOIN "User" u ON u.id = tm."userId"
+        AND u."active" = true
+        AND u."deletedAt" IS NULL
         LEFT JOIN "OrgMember" om ON om."userId" = tm."userId" AND om."orgId" = ${orgId}::uuid
         LEFT JOIN "ConversationAssignedUserTeamMap" cau ON cau."userId" = tm."userId" AND cau."teamId" = ${teamId}::uuid
         LEFT JOIN "Conversation" vc ON vc.id = cau."conversationId"
         LEFT JOIN "WaMessage" wm ON wm."conversationId" = vc.id AND wm."sendBy" = tm."userId"
-        LEFT JOIN "Contact" c ON c.id = vc."contactId" AND c."orgId" = ${orgId}::uuid
+        JOIN "Contact" c ON c.id = vc."contactId" AND c."orgId" = ${orgId}::uuid
         WHERE tm."teamId" = ${teamId}::uuid
         GROUP BY tm."userId", u."name", om."status"
       ) ms
