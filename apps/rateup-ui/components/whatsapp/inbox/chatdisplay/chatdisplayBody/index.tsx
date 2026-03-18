@@ -33,7 +33,7 @@ import {
   DateComponent,
   EndofConversationComponent,
   getReactionMessage,
-  singleMessage,
+  SingleMessage,
   TempMessageBody,
 } from "./components/utils";
 import WaInboxSingleMessageLayout from "./layout/singleMessageLayout";
@@ -264,10 +264,9 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
 export default WaInboxChatDisplayBody;
 
 const MessageItem = ({ message, selectedContact, nextMessage }) => {
-  const translations = useExtracted();
+  const { messagesByKey, selectedKey } = useMessagesStore();
   if (!message) return null;
   const { exchangeProcess, receive } = message.messageBody;
-  const { messagesByKey, selectedKey } = useMessagesStore();
   const { messageType } = parseWaMessage(message);
   if (messageType === "reaction") return null;
   if (
@@ -292,7 +291,7 @@ const MessageItem = ({ message, selectedContact, nextMessage }) => {
         messageObject={message}
         reaction={reaction}
       >
-        {singleMessage({ message })}
+        <SingleMessage message={message} />
       </WaInboxSingleMessageLayout>
     </React.Fragment>
   );

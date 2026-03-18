@@ -37,7 +37,7 @@ import WaInboxTemplate from "./template";
 import WaInboxText from "./text";
 import WaInboxVideo from "./video";
 
-export const singleMessage = async ({ message }) => {
+export const SingleMessage = ({ message }) => {
   const translations = useExtracted();
   const { messageContent, messageType, template, interactive } =
     parseWaMessage(message);
