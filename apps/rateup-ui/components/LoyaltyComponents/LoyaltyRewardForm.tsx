@@ -70,7 +70,7 @@ export function LoyaltyRewardForm({
                   <FormLabel>Reward Name</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="e.g., AED 10 Cashback, Free Coffee, 20% OFF"
+                      placeholder={`e.g., ${loyaltyTiers?.[0]?.program?.currencyCode || "INR"} 10 Cashback, Free Coffee, 20% OFF`}
                       {...field}
                     />
                   </FormControl>
