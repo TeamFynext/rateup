@@ -20,6 +20,7 @@ import {
   useEventTriggers,
 } from "@/backend/loyalty/eventTriggers.query";
 import {
+  useCreateLoyaltyProgramMutation,
   useDeleteLoyaltyProgramMutation,
   useLoyaltyProgram,
   useResetLoyaltyProgramPointsMutation,
@@ -43,6 +44,7 @@ import {
 import { TierUpdateSettings } from "@/components/loyalty/settings/TierUpdateSettings";
 import { TransactionNotifications } from "@/components/loyalty/settings/TransactionNotifications";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Form } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { docsPath } from "@/utils/constants";
@@ -60,6 +62,7 @@ export default function LoyaltySettingsPage() {
   const updateProgramMutation = useUpdateLoyaltyProgramMutation(
     program?.id || "",
   );
+  const createProgramMutation = useCreateLoyaltyProgramMutation();
   const resetPointsMutation = useResetLoyaltyProgramPointsMutation();
   const deleteProgramMutation = useDeleteLoyaltyProgramMutation(() => {
     router.replace("/dashboard/loyalty/dashboard");
@@ -124,8 +127,8 @@ export default function LoyaltySettingsPage() {
     defaultValues: {
       programName: "",
       pointsCurrency: "Points",
-      moneyCurrency: "AED",
-      defaultCountryCode: "AE",
+      moneyCurrency: "INR",
+      defaultCountryCode: "IN",
       whatsappSettingsId: undefined,
       referralMessageTemplate: DEFAULT_JOIN_MESSAGE_TEMPLATE,
     },
@@ -163,10 +166,10 @@ export default function LoyaltySettingsPage() {
   useEffect(() => {
     if (program) {
       basicForm.reset({
-        programName: program.name || "RateUp Rewards",
+        programName: program.name || "",
         pointsCurrency: program.currencyName || "Points",
-        moneyCurrency: program.currencyCode || "AED",
-        defaultCountryCode: program.defaultCountryCode || "AE",
+        moneyCurrency: program.currencyCode || "INR",
+        defaultCountryCode: program.defaultCountryCode || "IN",
         whatsappSettingsId: program.whatsappSettingsId,
         referralMessageTemplate:
           program.referralMessageTemplate || DEFAULT_JOIN_MESSAGE_TEMPLATE,
@@ -258,15 +261,18 @@ export default function LoyaltySettingsPage() {
 
   // Save Handlers
   const onSaveBasicSettings = (data: z.infer<typeof BasicSettingsSchema>) => {
+    const payload = {
+      name: data.programName,
+      currencyName: data.pointsCurrency,
+      currencyCode: data.moneyCurrency,
+      defaultCountryCode: data.defaultCountryCode,
+      whatsappSettingsId: data.whatsappSettingsId,
+      referralMessageTemplate: data.referralMessageTemplate,
+    };
     if (program?.id) {
-      updateProgramMutation.mutate({
-        name: data.programName,
-        currencyName: data.pointsCurrency,
-        currencyCode: data.moneyCurrency,
-        defaultCountryCode: data.defaultCountryCode,
-        whatsappSettingsId: data.whatsappSettingsId,
-        referralMessageTemplate: data.referralMessageTemplate,
-      });
+      updateProgramMutation.mutate(payload);
+    } else {
+      createProgramMutation.mutate(payload);
     }
   };
 
@@ -398,6 +404,7 @@ export default function LoyaltySettingsPage() {
     );
   }
 
+  const noProgram = !program?.id;
   return (
     <div className="space-y-4 p-6 relative">
       {/* Header */}
@@ -410,6 +417,18 @@ export default function LoyaltySettingsPage() {
         </div>
         <InfoButton docUrl={`${docsPath}/loyality/settings`} />
       </div>
+
+      {noProgram && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>{t("No Loyalty Program Found")}</AlertTitle>
+          <AlertDescription>
+            {t(
+              "You need to create a loyalty program before configuring advanced settings. Please fill out the basic settings and save to create a program.",
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Tabs
         defaultValue={activeTab}
         className="w-full space-y-4"
@@ -429,17 +448,20 @@ export default function LoyaltySettingsPage() {
                 form={basicForm}
                 onSave={onSaveBasicSettings}
                 isPending={updateProgramMutation.isPending}
+                programId={program?.id}
               />
 
               <NotificationSettings
                 form={notificationsForm}
                 onSave={handleSaveNotifications}
+                disabled={noProgram}
               />
 
               <ReferralMessageSettings
                 form={basicForm}
                 onSave={onSaveBasicSettings}
                 isPending={updateProgramMutation.isPending}
+                disabled={noProgram}
               />
             </div>
 
@@ -448,11 +470,13 @@ export default function LoyaltySettingsPage() {
                 form={expirationForm}
                 onSave={onSaveExpiration}
                 isPending={updateProgramMutation.isPending}
+                disabled={noProgram}
               />
 
               <DangerZone
                 onReset={() => setResetModalOpen(true)}
                 onDelete={() => setDeleteModalOpen(true)}
+                disabled={noProgram}
               />
             </div>
           </>
@@ -477,6 +501,7 @@ export default function LoyaltySettingsPage() {
                 setPointsAdjustedModified={setPointsAdjustedModified}
                 setRewardIssuedModified={setRewardIssuedModified}
                 setRewardRedeemedModified={setRewardRedeemedModified}
+                disabled={noProgram}
               />
 
               <TierUpdateSettings
@@ -486,6 +511,7 @@ export default function LoyaltySettingsPage() {
                 onSave={handleSaveTierUpgraded}
                 isModified={tierUpgradedModified}
                 onModify={() => setTierUpgradedModified(true)}
+                disabled={noProgram}
               />
 
               <PointsReminderSettings
@@ -495,6 +521,7 @@ export default function LoyaltySettingsPage() {
                 onSave={handleSavePointsReminder}
                 isModified={pointsReminderModified}
                 onModify={() => setPointsReminderModified(true)}
+                disabled={noProgram}
               />
 
               <BirthdayReminderSettings
@@ -504,6 +531,7 @@ export default function LoyaltySettingsPage() {
                 onSave={handleSaveBirthdayReminder}
                 isModified={birthdayReminderModified}
                 onModify={() => setBirthdayReminderModified(true)}
+                disabled={noProgram}
               />
             </div>
           </Form>

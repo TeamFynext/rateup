@@ -24,6 +24,7 @@ interface EventTriggerItemProps {
   onSave: () => void;
   onToggle: (enabled: boolean) => void;
   isPending: boolean;
+  disabled?: boolean;
 }
 
 export function EventTriggerItem({
@@ -37,7 +38,8 @@ export function EventTriggerItem({
   onSave,
   onToggle,
   isPending,
-}: EventTriggerItemProps) {
+  disabled = false,
+}: Readonly<EventTriggerItemProps>) {
   const t = useExtracted();
   const templateInfo = getLoyaltyTemplateLabel(templateType, t);
 
@@ -57,6 +59,7 @@ export function EventTriggerItem({
             <Switch
               checked={field.value}
               onCheckedChange={(val) => onToggle(val)}
+              disabled={disabled}
             />
           </div>
         )}
@@ -76,6 +79,7 @@ export function EventTriggerItem({
                   field.onChange(val);
                   onModify();
                 }}
+                disabled={disabled}
               />
             )}
           />
@@ -84,7 +88,7 @@ export function EventTriggerItem({
             <Button
               size="sm"
               onClick={onSave}
-              disabled={isPending}
+              disabled={isPending || disabled}
               className="w-full"
             >
               {isPending ? (

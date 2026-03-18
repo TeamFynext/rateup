@@ -30,6 +30,7 @@ interface BirthdayReminderSettingsProps {
   onSave: () => void;
   isModified: boolean;
   onModify: () => void;
+  disabled?: boolean;
 }
 
 export function BirthdayReminderSettings({
@@ -39,6 +40,7 @@ export function BirthdayReminderSettings({
   onSave,
   isModified,
   onModify,
+  disabled = false,
 }: Readonly<BirthdayReminderSettingsProps>) {
   const t = useExtracted();
   const templateInfo = getLoyaltyTemplateLabel(
@@ -98,8 +100,11 @@ export function BirthdayReminderSettings({
               <Switch
                 checked={field.value}
                 onCheckedChange={(val) => {
-                  onToggle(LoyaltyEventType.BIRTHDAY, val);
+                  if (!disabled) {
+                    onToggle(LoyaltyEventType.BIRTHDAY, val);
+                  }
                 }}
+                disabled={isPending || disabled}
               />
             </div>
           )}
@@ -118,10 +123,15 @@ export function BirthdayReminderSettings({
                     </Label>
                     <Select
                       value={field.value}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        onModify();
-                      }}
+                      onValueChange={
+                        disabled
+                          ? undefined
+                          : (value) => {
+                              field.onChange(value);
+                              onModify();
+                            }
+                      }
+                      disabled={disabled}
                     >
                       <SelectTrigger id="birthday-gift" className="h-10">
                         <SelectValue placeholder={t("Select a gift")} />
@@ -149,9 +159,12 @@ export function BirthdayReminderSettings({
                     description={templateInfo.templateDescription}
                     value={field.value}
                     onChange={(value) => {
-                      field.onChange(value);
-                      onModify();
+                      if (!disabled) {
+                        field.onChange(value);
+                        onModify();
+                      }
                     }}
+                    disabled={disabled}
                   />
                 )}
               />
@@ -195,7 +208,11 @@ export function BirthdayReminderSettings({
             </div>
 
             {isModified && (
-              <Button size="sm" onClick={onSave} disabled={isPending}>
+              <Button
+                size="sm"
+                onClick={onSave}
+                disabled={isPending || disabled}
+              >
                 {isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (

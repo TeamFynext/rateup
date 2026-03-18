@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
+  AlertTriangle,
   CheckCircle2,
   Gift,
   Loader2,
@@ -85,8 +86,11 @@ export default function CashierPage() {
   const [assignRewardNotes, setAssignRewardNotes] = useState("");
 
   // Fetch data
-  const { data: customerData, isLoading: isLoadingCustomer } =
-    useCustomerRewardsByPhone(selectedPhone);
+  const {
+    data: customerData,
+    isLoading: isLoadingCustomer,
+    error,
+  } = useCustomerRewardsByPhone(selectedPhone);
   const { data: allRewards } = useGetLoyaltyRewards();
   const {
     user: { orgId },
@@ -342,6 +346,18 @@ export default function CashierPage() {
         </CardContent>
       </Card>
       {/* Selected Customer Details */}
+      {error && (
+        <div className="mb-4">
+          <Card className="bg-destructive/10 border-destructive">
+            <CardContent className="flex items-center gap-2 py-3">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              <span className="text-destructive text-sm">
+                {error?.message || "Failed to load customer data"}
+              </span>
+            </CardContent>
+          </Card>
+        </div>
+      )}
       {customer && (
         <div className="space-y-4">
           {/* Customer Info Card */}

@@ -1,8 +1,8 @@
-const fs = require("fs");
-const path = require("path");
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
-const DICT_DIR = path.join(process.cwd(), "dictionaries");
-const EN_PATH = path.join(DICT_DIR, "en.json");
+const DICT_DIR = join(process.cwd(), "dictionaries");
+const EN_PATH = join(DICT_DIR, "en.json");
 
 const TARGETS = [
   { file: "de.json", lang: "de" },
@@ -12,7 +12,7 @@ const TARGETS = [
 ];
 
 const PLACEHOLDER_REGEX =
-  /(\{\{[^{}]+\}\}|\{[^{}]+\}|%\d*\$?[sd]|:[a-zA-Z_][a-zA-Z0-9_]*)/g;
+  /(\{\{[^{}]+\}\}|\{[^{}]+\}|%\d*\$?[sd]|:[a-zA-Z_]\w*)/g;
 const SPLIT_TOKEN = "\n__SPLIT__\n";
 const MAX_BATCH_CHARS = 1200;
 
@@ -49,7 +49,7 @@ function setByPath(obj, pathStr, value) {
 
 function protectPlaceholders(text) {
   const placeholders = [];
-  const protectedText = String(text).replace(PLACEHOLDER_REGEX, (match) => {
+  const protectedText = String(text).replaceAll(PLACEHOLDER_REGEX, (match) => {
     const token = `__PH${placeholders.length}__`;
     placeholders.push(match);
     return token;
@@ -138,7 +138,7 @@ async function translateUniqueStrings(uniqueStrings, lang) {
 }
 
 async function main() {
-  const en = JSON.parse(fs.readFileSync(EN_PATH, "utf8"));
+  const en = JSON.parse(readFileSync(EN_PATH, "utf8"));
   const paths = getLeafPaths(en);
   const allEnglishStrings = paths
     .map((p) => getByPath(en, p))
@@ -150,34 +150,52 @@ async function main() {
   );
 
   for (const target of TARGETS) {
-    const outPath = path.join(DICT_DIR, target.file);
-    const existing = JSON.parse(fs.readFileSync(outPath, "utf8"));
+    const outPath = join(DICT_DIR, target.file);
+    const existing = JSON.parse(readFileSync(outPath, "utf8"));
 
+    // Find all keys that need translation: enValue is non-empty string, target value is exactly ""
+    const keysToTranslate = paths.filter((p) => {
+      const enValue = getByPath(en, p);
+      const targetValue = getByPath(existing, p);
+      return (
+        typeof enValue === "string" &&
+        enValue.trim().length > 0 &&
+        targetValue === ""
+      );
+    });
+
+    if (keysToTranslate.length === 0) {
+      console.log(`No empty keys to translate for ${target.file}`);
+      continue;
+    }
+
+    // Only translate the needed values
+    const enValuesToTranslate = keysToTranslate.map((p) => getByPath(en, p));
     console.log(`\nTranslating ${target.file} (${target.lang})...`);
     const translatedMap = await translateUniqueStrings(
-      uniqueStrings,
+      enValuesToTranslate,
       target.lang,
     );
 
-    for (const p of paths) {
-      const enValue = getByPath(en, p);
-      if (typeof enValue !== "string") continue;
-      if (enValue.trim().length === 0) {
-        setByPath(existing, p, enValue);
-        continue;
-      }
-      const translated = translatedMap.get(enValue) || enValue;
-      setByPath(existing, p, translated);
-    }
+    // Update only the empty keys
+    keysToTranslate.forEach((p, idx) => {
+      setByPath(
+        existing,
+        p,
+        translatedMap.get(enValuesToTranslate[idx]) || enValuesToTranslate[idx],
+      );
+    });
 
-    fs.writeFileSync(outPath, `${JSON.stringify(existing, null, 2)}\n`);
+    writeFileSync(outPath, `${JSON.stringify(existing, null, 2)}\n`);
     console.log(`Wrote ${target.file}`);
   }
 
   console.log("\nDone.");
 }
 
-main().catch((err) => {
-  console.error(err);
+try {
+  await main();
+} catch (error) {
+  console.error(error);
   process.exit(1);
-});
+}

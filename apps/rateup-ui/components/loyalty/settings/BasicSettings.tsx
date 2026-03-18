@@ -26,14 +26,30 @@ interface BasicSettingsProps {
   form: UseFormReturn<z.infer<typeof BasicSettingsSchema>>;
   onSave: (data: z.infer<typeof BasicSettingsSchema>) => void;
   isPending: boolean;
+  programId: string | null;
 }
 
 export function BasicSettings({
   form,
   onSave,
   isPending,
+  programId,
 }: Readonly<BasicSettingsProps>) {
   const t = useExtracted();
+
+  let buttonLabel: string | React.ReactNode;
+  if (isPending) {
+    buttonLabel = (
+      <>
+        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+        {t("Saving")}
+      </>
+    );
+  } else if (programId) {
+    buttonLabel = t("Save Changes");
+  } else {
+    buttonLabel = t("Create Program");
+  }
 
   return (
     <Card>
@@ -147,14 +163,7 @@ export function BasicSettings({
               type="submit"
               disabled={isPending}
             >
-              {isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t("Saving")}
-                </>
-              ) : (
-                t("Save Changes")
-              )}
+              {buttonLabel}
             </Button>
           </form>
         </Form>
