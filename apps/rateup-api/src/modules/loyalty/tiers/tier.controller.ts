@@ -38,7 +38,8 @@ export async function getLoyaltyTiersHandler(
   try {
     const program = await getLoyaltyProgramByOrg(request.user.orgId);
     if (!program) {
-      return reply.code(404).send({ error: "Loyalty program not found" });
+      // if no program, return empty array to avoid 404s on frontend which expects an array in (all data get case)
+      return reply.code(200).send([]);
     }
     const result = await getLoyaltyTiers(program.id);
     reply.code(200).send(result);
