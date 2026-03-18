@@ -38,6 +38,9 @@ export async function createCustomerAccountHandler(
     if (!program) {
       return reply.code(404).send({ error: "Loyalty program not found" });
     }
+    if (program.status !== "active") {
+      return reply.code(400).send({ error: "Loyalty program is not active" });
+    }
     const result = await createCustomerAccount(request.body, program.id, orgId);
     reply.code(201).send(result);
   } catch (e) {
