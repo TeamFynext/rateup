@@ -3,6 +3,8 @@ import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import React, { useState } from "react";
 import { namePreview } from "../../utils/chatbox_utils";
 import { signOut } from "@/api/api";
+import { Ionicons } from "@expo/vector-icons";
+import { Pressable } from "react-native";
 
 interface UserProfile {
   email: string;
@@ -21,108 +23,96 @@ const AccountBar = ({
   orgPhone,
   userName,
 }: UserProfile) => {
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSignOut = async () => {
     setLoading(true);
     const res = await signOut();
     if (!res.success) {
+      setLoading(false);
       return Toast.show({
         type: "error",
-        text1: "Sign Out failed, please try again later"
+        text1: "Sign Out failed, please try again later",
       });
     }
     setLoading(false);
   };
 
-  return (
-    <ScrollView
-      contentContainerStyle={{
-        paddingHorizontal: 24,
-        paddingTop: 10,
-        paddingBottom: 40,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Heading */}
-      <Text className="text-xl sm:text-2xl font-bold dark:text-white mb-6">
-        Account Details
-      </Text>
+  const Row = ({ icon, label, value }: any) => (
+    <Pressable className="flex-row items-center justify-between py-4">
+      <View className="flex-row items-center gap-3">
+        <Ionicons name={icon} size={20} color="#6b7280" />
+        <Text className="text-gray-700 dark:text-gray-500">{label}</Text>
+      </View>
 
-      {/* Top section: Role Badge + Profile Picture */}
-      <View className="flex-row items-start justify-between mb-6">
-        <View className="bg-yellow-500 px-3 py-1 rounded-full">
-          <Text className="text-white font-semibold text-xs sm:text-sm">
-            {role}
+      <View className="flex-row items-center gap-2">
+        <Text className="text-gray-500 dark:text-gray-200">{value}</Text>
+        <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+      </View>
+    </Pressable>
+  );
+
+  return (
+    <View className="flex-1 bg-white dark:bg-slate-950">
+      <ScrollView contentContainerStyle={{ padding: 20 }}>
+        {/* Header */}
+        <View className="flex-row justify-between items-center mb-6">
+          <Text className="text-lg font-semibold dark:text-white">
+            Account Details
           </Text>
         </View>
 
-        <View className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-chatAvatarBlue">
-          {profilePhoto ? (
-            <Image
-              source={{
-                uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}`,
-              }}
-              className="w-full h-full"
-              style={{ resizeMode: "cover" }}
-            />
-          ) : (
-            <View className="flex-1 justify-center items-center">
-              <Text className="text-white font-bold text-xl">
-                {namePreview(userName)}
-              </Text>
+        {/* Profile Section */}
+        <View className="items-center mb-6">
+          <View className="relative">
+            <View className="w-24 h-24 rounded-full overflow-hidden bg-blue-400">
+              {profilePhoto ? (
+                <Image
+                  source={{
+                    uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}`,
+                  }}
+                  className="w-full h-full"
+                />
+              ) : (
+                <View className="flex-1 justify-center items-center">
+                  <Text className="text-white text-2xl font-bold">
+                    {namePreview(userName)}
+                  </Text>
+                </View>
+              )}
             </View>
-          )}
-        </View>
-      </View>
+          </View>
 
-      {/* Details Section */}
-      <View className="flex flex-col gap-3 pb-20">
-        <View>
-          <Text className="text-gray-400 dark:text-white text-xs">Name</Text>
-          <Text className="text-gray-900 dark:text-white font-semibold text-base sm:text-lg">
+          <Text className="text-xl font-semibold mt-4 dark:text-white">
             {userName}
           </Text>
+
+          {/* Role Badge */}
+          <View className="mt-2 bg-blue-100 px-3 py-1 rounded-full">
+            <Text className="text-blue-600 text-xs font-semibold">{role}</Text>
+          </View>
         </View>
 
-        <View>
-          <Text className="text-gray-400 dark:text-white text-xs">
-            Organization Name
-          </Text>
-          <Text className="text-gray-900 dark:text-white font-semibold text-base sm:text-lg">
-            {orgName}
-          </Text>
+        {/* Card Section */}
+        <View className="bg-white dark:bg-slate-900 rounded-2xl px-4 shadow-sm">
+          <Row icon="person-outline" label="Name" value={userName} />
+          <Row icon="mail-outline" label="Email" value={email} />
+          <Row icon="business-outline" label="Organization" value={orgName} />
+          <Row icon="call-outline" label="Phone Number" value={orgPhone} />
         </View>
 
-        <View>
-          <Text className="text-gray-400 dark:text-white text-xs">
-            Phone Number
-          </Text>
-          <Text className="text-gray-900 dark:text-white font-semibold text-base sm:text-lg">
-            {orgPhone}
-          </Text>
-        </View>
-
-        <View>
-          <Text className="text-gray-400 dark:text-white text-xs">Email</Text>
-          <Text className="text-gray-900 dark:text-white font-semibold text-base sm:text-lg">
-            {email}
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          className={`rounded-lg flex items-center justify-center ${
-            loading ? "bg-gray-800" : "bg-gray-700"
-          }`}
+        {/* Logout */}
+        <Pressable
           onPress={handleSignOut}
           disabled={loading}
+          className="mt-6 border border-red-400 py-4 rounded-xl items-center"
         >
-          <Text className="text-white py-3 px-6 text-lg sm:text-xl font-bold">
+          <Text className="text-red-500 font-semibold">
             {loading ? "Logging Out..." : "Log Out"}
           </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        </Pressable>
+      </ScrollView>
+    </View>
   );
 };
 

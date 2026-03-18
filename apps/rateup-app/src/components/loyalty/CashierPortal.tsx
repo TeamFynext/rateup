@@ -259,7 +259,7 @@ const CashierPortal = () => {
   };
 
   return (
-    <View className="flex-1 w-full bg-gray-50 dark:bg-gray-900">
+    <View className="flex-1 w-full bg-white dark:bg-gray-900">
       {/* Header */}
       <View className="flex-row px-5 py-6 bg-primaryBlue items-start">
         <View className="flex-row items-start gap-3 flex-1">

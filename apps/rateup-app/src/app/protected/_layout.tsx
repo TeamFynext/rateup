@@ -10,20 +10,23 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { useColorScheme } from "react-native";
+import { useColorScheme, View } from "react-native";
 import { colors } from "@/constants/constants";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 function ProtectedLayout() {
   const colorScheme = useColorScheme();
-
   useFonts({
     Geist: require("@/assets/fonts/Geist-Regular.ttf"),
   });
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <NativeTabs tintColor={colors["primary-blue"]}>
+      <NativeTabs
+        tintColor={colors["primary-blue"]}
+        backgroundColor={colorScheme === "dark" ? colors["slate-950"] : colors["gray-50"] }
+        indicatorColor={"transparent"}
+      >
         <NativeTabs.Trigger name="inbox">
           <NativeTabs.Trigger.Icon sf="tray.fill" md="inbox" />
           <NativeTabs.Trigger.Label>Inbox</NativeTabs.Trigger.Label>
