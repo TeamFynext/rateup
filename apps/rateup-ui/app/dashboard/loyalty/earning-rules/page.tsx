@@ -922,7 +922,7 @@ function TierCard({
                         />
                       </FormControl>
                       <span className="whitespace-nowrap text-xs text-muted-foreground">
-                        pts/AED
+                        pts/{tier?.program?.currencyCode || "currency"}
                       </span>
                     </div>
                     <FormMessage />
