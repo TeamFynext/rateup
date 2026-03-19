@@ -32,6 +32,7 @@ const nextConfig: NextConfig = {
         }
       : {},
   // reactCompiler: true,
+  turbopack: { resolveAlias: { html2canvas: "html2canvas-pro" } },
   experimental: {
     // optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
   },

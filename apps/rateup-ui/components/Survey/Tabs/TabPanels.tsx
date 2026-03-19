@@ -1,5 +1,7 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import { useExtracted } from "next-intl";
 
 import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums";
@@ -10,10 +12,14 @@ import { hasFeature } from "@/utils/subscription/subscription";
 import { EditSurvey } from "../EditSurvey";
 import Result from "../Result/Result";
 import ResultComparison from "../Result/ResultComparison";
-import ResultsOverviewWebForm from "../Result/ResultsOverviewWebForm";
 import SurveySettings from "../Settings";
 import ShareSurvey from "../ShareSurvey/ShareSurvey";
 import { TabEnum } from "../SurveyId";
+
+const ResultsOverviewWebForm = dynamic(
+  () => import("../Result/ResultsOverviewWebForm"),
+  { ssr: false },
+);
 
 function TabPanelsComp({
   value,
