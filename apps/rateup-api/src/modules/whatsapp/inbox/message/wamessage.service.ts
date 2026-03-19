@@ -3,6 +3,7 @@ import {
   Contact,
   ContactGroup,
   PlatformType,
+  Prisma,
   WaAccountSettings,
   WaMessage,
 } from "../../../../../generated/prisma/client.js";
@@ -1829,4 +1830,117 @@ export async function createWaMessageOrgTeamMap(
       externalApi: data.externalApi,
     },
   });
+}
+
+export async function getWaMessageLogs(
+  orgId: string,
+  dateRange?: string[],
+  status?: string,
+  sourceMessage?: string,
+) {
+  let rangeStart: Date | null = null;
+  let rangeEnd: Date | null = null;
+
+  if (dateRange?.length === 2) {
+    rangeStart = new Date(dateRange[0]);
+    rangeEnd = new Date(dateRange[1]);
+  }
+
+  let statusFilter = Prisma.sql``;
+
+  if (status && status !== "all") {
+    if (status === "read") {
+      statusFilter = Prisma.sql`AND wm.stats->>'read' IS NOT NULL AND wm.stats->>'read' <> ''`;
+    } else if (status === "delivered") {
+      statusFilter = Prisma.sql`AND wm.stats->>'delivered' IS NOT NULL AND wm.stats->>'delivered' <> ''`;
+    } else if (status === "sent") {
+      statusFilter = Prisma.sql`AND wm.stats->>'sent' IS NOT NULL AND wm.stats->>'sent' <> ''`;
+    } else if (status === "failed") {
+      statusFilter = Prisma.sql`AND wm.stats->>'failed' IS NOT NULL AND wm.stats->>'failed' <> ''`;
+    }
+  }
+
+  const sourceFilter =
+    sourceMessage && sourceMessage !== "all"
+      ? Prisma.sql`AND wm."sourceMessage" = ${sourceMessage}`
+      : Prisma.sql``;
+
+  return prisma.$queryRaw`
+    SELECT 
+      wm.id,
+      wm."createdAt",
+      wm."sourceMessage",
+      wm."contactId",
+      c.phone,
+      wm.logs,
+
+      wm."messageBody"->'send'->>'type' AS "messageType",
+
+      CASE
+        WHEN wm."messageBody"->'send'->>'type' = 'text'
+          THEN wm."messageBody"->'send'->'text'->>'body'
+
+        WHEN wm."messageBody"->'send'->>'type' = 'template'
+          THEN COALESCE(
+            wm."messageBody"->'send'->'template'->>'name',
+            wm."messageBody"->'send'->'template'->'components'->0->>'text',
+            'template message'
+          )
+
+        WHEN wm."messageBody"->'send'->>'type' = 'image'
+          THEN COALESCE(
+            wm."messageBody"->'send'->'image'->>'caption',
+            'image file'
+          )
+
+        WHEN wm."messageBody"->'send'->>'type' = 'video'
+          THEN COALESCE(
+            wm."messageBody"->'send'->'video'->>'caption',
+            'video file'
+          )
+
+        WHEN wm."messageBody"->'send'->>'type' = 'audio'
+          THEN 'audio file'
+
+        WHEN wm."messageBody"->'send'->>'type' = 'document'
+          THEN COALESCE(
+            wm."messageBody"->'send'->'document'->>'caption',
+            wm."messageBody"->'send'->'document'->>'filename',
+            'document file'
+          )
+
+        WHEN wm."messageBody"->'send'->>'type' = 'contacts'
+          THEN 'contact card'
+
+        WHEN wm."messageBody"->'send'->>'type' = 'location'
+          THEN 'location'
+
+        ELSE 'unknown'
+      END AS "messagePreview",
+
+      CASE
+        WHEN wm.stats->>'read' IS NOT NULL AND wm.stats->>'read' <> '' THEN 'read'
+        WHEN wm.stats->>'delivered' IS NOT NULL AND wm.stats->>'delivered' <> '' THEN 'delivered'
+        WHEN wm.stats->>'sent' IS NOT NULL AND wm.stats->>'sent' <> '' THEN 'sent'
+        WHEN wm.stats->>'failed' IS NOT NULL AND wm.stats->>'failed' <> '' THEN 'failed'
+        ELSE NULL
+      END AS status
+
+    FROM "WaMessage" wm
+    INNER JOIN "Contact" c 
+      ON c.id = wm."contactId"
+
+    WHERE c."orgId" = ${orgId}
+      AND wm."messageBody"->>'exchangeProcess' = 'send'
+      ${statusFilter}
+      ${sourceFilter}
+
+      ${
+        rangeStart && rangeEnd
+          ? Prisma.sql`AND wm."createdAt" BETWEEN ${rangeStart} AND ${rangeEnd}`
+          : Prisma.sql``
+      }
+
+    ORDER BY wm."createdAt" DESC;
+  `;
 }
