@@ -241,6 +241,7 @@ export async function handleWaMessages(
       messageId,
       userId,
       failed,
+      messageType,
     );
 
     const teamID = teamId && teamId.trim() !== "" ? teamId : null;

@@ -72,6 +72,7 @@ export async function addNewWaMessage(
   messageId?: string,
   sendBy?: string,
   failed: boolean = false,
+  sourceMessage: string = "inbox",
 ) {
   const initialStats = {
     read: "",
@@ -104,6 +105,7 @@ export async function addNewWaMessage(
       sourceIdentifier,
       conversationId,
       ...statsData,
+      sourceMessage,
     },
     include: {
       sender: {
@@ -1717,6 +1719,7 @@ export async function createInternalWaMessage({
             assignedUsers: assignedUserDetails,
           },
         },
+        sourceMessage: "inbox",
       },
     });
     return wamessage;
@@ -1766,6 +1769,7 @@ export async function createInternalWaMessage({
             mentionedUser: mentionedUserDetails,
           },
         },
+        sourceMessage: "inbox",
       },
     });
 
