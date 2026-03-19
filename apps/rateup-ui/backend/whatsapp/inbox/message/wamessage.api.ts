@@ -230,3 +230,12 @@ export async function createPrivateMessage(contactId, data) {
     )
   ).data;
 }
+
+export async function getWaMessageLogs(filter) {
+  const query = Object.entries(filter)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
+  return (
+    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/message-logs?${query}`)
+  ).data;
+}
