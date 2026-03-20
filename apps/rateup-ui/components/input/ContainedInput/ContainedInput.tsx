@@ -59,6 +59,7 @@ export const ContainedTextField = React.forwardRef(function ContainedTextField(
       ref={ref}
       classNames={classes}
       {...props}
+      value={props.value ?? ""}
       styles={{
         input: {
           paddingRight: props.rightSection ? 70 : 0,
@@ -150,17 +151,26 @@ export function ContainedColorInput(props: ColorInputProps) {
 interface fileButtonPropsExtend extends FileButtonProps {
   label: string;
   error?: string;
+  helperText?: string;
 }
 export function ContainedFileButton(props: fileButtonPropsExtend) {
-  const { label, error, ...restProps } = props;
+  const { label, error, helperText, ...restProps } = props;
   return (
     <Box mt={"xs"}>
       <FileButton {...restProps}>
         {(props) => <Button {...props}>{label}</Button>}
       </FileButton>
-      <Text c={"var(--mantine-color-error)"} fz={"xs"}>
-        {error}
-      </Text>
+      {error ? (
+        <Text c="var(--mantine-color-error)" fz="xs">
+          {error}
+        </Text>
+      ) : (
+        helperText && (
+          <Text c="dimmed" fz="xs" mt={4}>
+            {helperText}
+          </Text>
+        )
+      )}
     </Box>
   );
 }

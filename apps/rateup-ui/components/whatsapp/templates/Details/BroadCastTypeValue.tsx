@@ -1,7 +1,10 @@
 "use client";
 
+import { useRef } from "react";
+
 import { Text } from "@mantine/core";
 import { useExtracted } from "next-intl";
+import { toast } from "sonner";
 
 import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "../../../../utils/constants";
 import { getLabel } from "../../../../utils/file-upload/upload";
@@ -11,66 +14,84 @@ import {
 } from "../../../input/ContainedInput/ContainedInput";
 import { LengthTracker } from "../../../input/LengthTracker";
 
+const FILE_CONFIG = {
+  [WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE]: {
+    accept: "image/jpeg,image/jpg,image/png",
+    maxSize: 5 * 1024 * 1024,
+    label: "Image",
+    helper: "Max file size is 5MB",
+    sizeText: "5MB",
+  },
+  [WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO]: {
+    accept: "video/mp4",
+    maxSize: 16 * 1024 * 1024,
+    label: "Video",
+    helper: "Max file size is 16MB",
+    sizeText: "16MB",
+  },
+  [WHATSAPP_TEMPLATE_BROADCAST_TYPE.DOCUMENT]: {
+    accept: "application/pdf",
+    maxSize: 100 * 1024 * 1024,
+    label: "Document",
+    helper: "Max file size is 100MB",
+    sizeText: "100MB",
+  },
+};
+
 export const BroadCastTypeValue = ({ form, type }) => {
   const translations = useExtracted();
+  const resetRef = useRef<() => void>(null);
   const style = {
     maxWidth: 400,
   };
-  switch (type) {
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT:
-      return (
-        <ContainedTextField
-          label={
-            <Text fz={14} fw={500}>
-              Text
-            </Text>
-          }
-          mt={"md"}
-          placeholder={translations("Header")}
-          {...form.getInputProps("header")}
-          rightSection={
-            <LengthTracker
-              length={form?.values?.header?.length}
-              maxValue={60}
-              atStart
-            />
-          }
-        />
-      );
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE:
-      return (
-        <ContainedFileButton
-          label={getLabel(form.values.header, "Image")}
-          mt={"xl"}
-          placeholder={translations("Select an image")}
-          {...form.getInputProps("header")}
-          accept="image/jpeg,image/jpg,image/png"
-          style={style}
-        />
-      );
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO:
-      return (
-        <ContainedFileButton
-          label={getLabel(form.values.header, "Video")}
-          mt={"xl"}
-          placeholder={translations("Select an Video")}
-          {...form.getInputProps("header")}
-          accept="video/mp4"
-          style={style}
-        />
-      );
-    case WHATSAPP_TEMPLATE_BROADCAST_TYPE.DOCUMENT:
-      return (
-        <ContainedFileButton
-          label={getLabel(form.values.header, "Document")}
-          mt={"xl"}
-          placeholder={"Select an Document"}
-          {...form.getInputProps("header")}
-          accept="application/pdf"
-          style={style}
-        />
-      );
-    default:
-      break;
+
+  if (type === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT) {
+    return (
+      <ContainedTextField
+        label={
+          <Text fz={14} fw={500}>
+            Text
+          </Text>
+        }
+        mt={"md"}
+        placeholder={translations("Header")}
+        {...form.getInputProps("header")}
+        rightSection={
+          <LengthTracker
+            length={form?.values?.header?.length}
+            maxValue={60}
+            atStart
+          />
+        }
+      />
+    );
   }
+  const config = FILE_CONFIG[type];
+  if (!config) return null;
+  return (
+    <ContainedFileButton
+      resetRef={resetRef}
+      label={getLabel(form.values.header, config.label)}
+      mt={"xl"}
+      placeholder={`Select a ${config.label}`}
+      {...form.getInputProps("header")}
+      accept={config.accept}
+      style={style}
+      helperText={config.helper}
+      onChange={(file) => {
+        if (!file) return;
+
+        if (file.size > config.maxSize) {
+          toast.error(
+            `${config.label} must be smaller than ${config.sizeText}`,
+          );
+          form.setFieldValue("header", null);
+          resetRef.current?.();
+          return;
+        }
+
+        form.setFieldValue("header", file);
+      }}
+    />
+  );
 };

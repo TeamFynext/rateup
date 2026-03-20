@@ -300,7 +300,22 @@ export default function WhatsappTemplateById() {
     )
       form.setFieldValue("defaultValues.catalog.catalogId", catalog.catalogId);
   }, [catalog]);
+  useEffect(() => {
+    const variables = parseStringWithVariables(form.values.body);
+    const current = form.values.example || [];
 
+    if (current.length === variables.length) return;
+
+    if (current.length > variables.length) {
+      form.setFieldValue("example", current.slice(0, variables.length));
+    } else {
+      const newExamples = [...current];
+      while (newExamples.length < variables.length) {
+        newExamples.push("");
+      }
+      form.setFieldValue("example", newExamples);
+    }
+  }, [form.values.body]);
   const updateTemplateMutation = useUpdateTemplateMutation(
     templateId,
     () => {
@@ -341,20 +356,24 @@ export default function WhatsappTemplateById() {
         return;
       }
     }
-    const dynamicVariableArray = parseStringWithVariables(form.values.body);
+    const dynamicVariableArray = parseStringWithVariables(
+      form.values.body || "",
+    );
+    const hasEmptyExamples = (form.values.example || []).some(
+      (val) => !val || val.trim() === "",
+    );
 
     if (dynamicVariableArray?.length > 0) {
       if (!isArrayInCorrectOrder(dynamicVariableArray)) {
         toast.error(
-          translations("Dynamic variables name should is numberic order"),
+          "Dynamic variables name should is sequential numeric order",
         );
         return;
       } else if (
-        form.values?.example?.length !== dynamicVariableArray?.length
+        form.values.example.length !== dynamicVariableArray.length ||
+        hasEmptyExamples
       ) {
-        toast.error(
-          translations("Dynamic variables example values should be given"),
-        );
+        toast.error("Please provide example values for all dynamic variables");
         return;
       }
     }
@@ -518,12 +537,17 @@ export default function WhatsappTemplateById() {
     const selectedText = selection.toString();
     setSelectedText(selectedText?.trim());
   };
+  const getNextVariable = () => {
+    const variables = parseStringWithVariables(form.values.body);
+    if (variables.length === 0) return "{{1}}";
+    const numbers = variables.map(Number);
+    const max = Math.max(...numbers);
+    return `{{${max + 1}}}`;
+  };
   const applyFormatting = (style) => {
     let content = form.values.body;
-
     if (style.startsWith("{{")) {
-      let newContent = content + style;
-      form.setFieldValue("body", newContent);
+      insertValue(getNextVariable());
       return;
     }
     if (!selectedText) return;
@@ -549,8 +573,10 @@ export default function WhatsappTemplateById() {
     const newText = text.substring(0, start) + value + text.substring(end);
     form.setFieldValue("body", newText);
     const newCursorPosition = start + value.length;
-    input.setSelectionRange(newCursorPosition, newCursorPosition);
-    input.focus();
+    requestAnimationFrame(() => {
+      input.setSelectionRange(newCursorPosition, newCursorPosition);
+      input.focus();
+    });
   };
   const handleMenuSelection = (e: string, text: string = "") => {
     let newObject;
@@ -887,11 +913,15 @@ export default function WhatsappTemplateById() {
                           }
                           placeholder={translations("Broadcast Type")}
                           onChange={(e) => {
-                            if (
-                              e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT &&
-                              form.values.header instanceof File
-                            ) {
-                              form.setFieldValue("header", "");
+                            const currentHeader = form.values.header;
+                            if (currentHeader) {
+                              const isFile = currentHeader instanceof File;
+                              if (
+                                e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT ||
+                                isFile
+                              ) {
+                                form.setFieldValue("header", null);
+                              }
                             }
                             form.setFieldValue("format", e);
                           }}
@@ -1284,7 +1314,7 @@ export default function WhatsappTemplateById() {
   );
 }
 export function parseStringWithVariables(string) {
-  const regex = /{{(.*?)}}/g;
+  const regex = /{{(\d+)}}/g;
   let match;
   const dynamicVariables = [];
 
