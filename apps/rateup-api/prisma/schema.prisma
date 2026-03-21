@@ -1507,6 +1507,9 @@ model WaMessage {
   conversationId                  String?                           @db.Uuid
   Conversation                    Conversation?                     @relation(fields: [conversationId], references: [id])
   waMessageOrgTeamMaps            WaMessageOrgTeamMap[]
+  logs                            Json?
+  /// Source of the message (e.g., api, inbox, campaign, automation)
+  sourceMessage                   String?
 
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])

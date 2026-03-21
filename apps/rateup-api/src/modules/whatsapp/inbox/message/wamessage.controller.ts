@@ -11,6 +11,7 @@ import {
   GenerateInboxResponseBody,
   PrivateWaMessageBody,
   BulkWaMessageAssignBody,
+  LogsQuery,
 } from "./wamessage.schema.js";
 import {
   addNewWaMessage,
@@ -30,6 +31,7 @@ import {
   generateInboxResponse,
   createInternalWaMessage,
   createWaMessageOrgTeamMap,
+  getWaMessageLogs,
 } from "./wamessage.service.js";
 import {
   ByContactIdParams,
@@ -241,6 +243,7 @@ export async function handleWaMessages(
       messageId,
       userId,
       failed,
+      messageType,
     );
 
     const teamID = teamId && teamId.trim() !== "" ? teamId : null;
@@ -772,6 +775,27 @@ export async function bulkAssignWaMessageHandler(
     log.error(error);
     return reply.code(500).send({
       error: error?.message || "Something went wrong",
+    });
+  }
+}
+
+export async function getWaMessageLogsHandler(
+  request: FastifyRequest<{
+    Querystring: LogsQuery;
+  }>,
+  reply: FastifyReply,
+) {
+  const { orgId } = request.user;
+  const dateRange = request.query.dateRange?.split(",") || [];
+  const status = request.query?.status ?? "all";
+  const sourceMessage = request.query?.source ?? "all";
+  try {
+    const res = await getWaMessageLogs(orgId, dateRange, status, sourceMessage);
+    reply.send(res);
+  } catch (e) {
+    log.error("Error fetching message logs :%o", e);
+    reply.status(500).send({
+      error: "An error occurred while fetching the message logs.",
     });
   }
 }

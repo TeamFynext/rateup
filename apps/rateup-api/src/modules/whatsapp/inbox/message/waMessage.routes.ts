@@ -12,6 +12,7 @@ import {
   getContactsCountByInboxTabHandler,
   getFilteredContactsHandler,
   getMediaFileByMediaId,
+  getWaMessageLogsHandler,
   getWaMessagesByContactIdHandler,
   markMessagesAsReadHandler,
   sendNewWaMessageHandler,
@@ -147,4 +148,5 @@ export async function waMessageRoutes(server: FastifyInstance) {
     },
     generateInboxResponseHandler,
   );
+  server.get("/message-logs", getWaMessageLogsHandler);
 }
