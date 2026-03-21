@@ -28,6 +28,7 @@ import {
   getInboxUserCount,
   getMessagesByContactId,
   getWaChatMediaFile,
+  getWaMessageLogs,
   markWaMessagesAsRead,
   sendNewWaMessage,
   unblockWhatsAppUser,
@@ -286,5 +287,12 @@ export function useCreatePrivateMessage(contactId) {
   return useMutation({
     mutationFn: ({ data }: CreatePrivateMessageVariables) =>
       createPrivateMessage(contactId, data),
+  });
+}
+
+export function useWaMessageLogs(filter) {
+  return useQuery({
+    queryKey: ["wa-message-logs", filter],
+    queryFn: () => getWaMessageLogs(filter),
   });
 }
