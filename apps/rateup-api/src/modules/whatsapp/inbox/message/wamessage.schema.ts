@@ -140,6 +140,14 @@ const bulkWaMessageAssignBody = z.object({
   messageId: z.string().optional(),
 });
 
+const logsQuerySchema = z.object({
+  dateKey: z.string().optional(),
+  dateRange: z.string().optional(),
+  days: z.number().optional(),
+  status: z.string().optional(),
+  source: z.string().optional(),
+});
+
 export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
   {
     NewWaMessageBody,
@@ -154,6 +162,7 @@ export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
     blockUserSchema,
     generateInboxResponseBody,
     bulkWaMessageAssignBody,
+    logsQuerySchema,
   },
   { $id: "waMessage" },
 );
@@ -169,6 +178,7 @@ export type WaMediaFileByMediaIdBody = z.infer<typeof waMediaFileByMediaIdBody>;
 export type WaMessageAssignBody = z.infer<typeof waMessageAssignBody>;
 export type BulkWaMessageAssignBody = z.infer<typeof bulkWaMessageAssignBody>;
 export type BlockUserBody = z.infer<typeof blockUserSchema>;
+export type LogsQuery = z.infer<typeof logsQuerySchema>;
 export type GenerateInboxResponseBody = z.infer<
   typeof generateInboxResponseBody
 >;
