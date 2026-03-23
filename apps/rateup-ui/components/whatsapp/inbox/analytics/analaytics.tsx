@@ -16,6 +16,7 @@ import ApiAnalytics from "./ApiAnalytics";
 import ConversationStatsAgentPerformance from "./ConversationStatsAgentPerformance";
 import ConversationStatsOverview from "./ConversationStatsOverview";
 import DateRangeSelector from "./DateRangeSelector";
+import MessageLogs from "./MessageLogs";
 import TeamPerformance from "./TeamPerformance";
 
 const Analytics = () => {
@@ -27,25 +28,13 @@ const Analytics = () => {
     range: [dayjs().subtract(7, "day").toDate(), new Date()],
   });
   const queryClient = useQueryClient();
+
   function refresh() {
-    queries.map((key) => queryClient.invalidateQueries({ queryKey: [key] }));
-    queryClient.invalidateQueries({ queryKey: ["conversationOverview"] });
-    queryClient.invalidateQueries({
-      queryKey: ["conversationAverageResponseTime"],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["ConversationAccountDistribution"],
-    });
-    queryClient.invalidateQueries({ queryKey: ["ConversationQuickStats"] });
-    queryClient.invalidateQueries({ queryKey: ["analyticsapiOverview"] });
-    queryClient.invalidateQueries({ queryKey: ["deliveredfailedtrend"] });
-    queryClient.invalidateQueries({ queryKey: ["templateapioverview"] });
-    queryClient.invalidateQueries({ queryKey: ["teamapioverview"] });
-    queryClient.invalidateQueries({ queryKey: ["teamoverview"] });
-    queryClient.invalidateQueries({
-      queryKey: ["StaffPerformanceonConversation"],
+    queries.forEach((key) => {
+      queryClient.invalidateQueries({ queryKey: key });
     });
   }
+
   const queries = [
     ["conversationOverview"],
     ["conversationAverageResponseTime"],
@@ -57,6 +46,7 @@ const Analytics = () => {
     ["deliveredfailedtrend"],
     ["templateapioverview"],
     ["teamapioverview"],
+    ["wa-message-logs"],
   ];
 
   const fetchCounts = queries.map((key) => useIsFetching({ queryKey: key }));
@@ -108,18 +98,6 @@ const Analytics = () => {
                 </span>
                 <DateRangeSelector value={dateRange} onChange={setDateRange} />
               </div>
-
-              {/* Export */}
-              {/* <div className="sm:pl-2 sm:border-l">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center h-8 px-3 w-full sm:w-auto"
-            >
-              <FileText className="w-3 h-3 mr-1" />
-              <span className="text-xs">Export</span>
-            </Button>
-          </div> */}
             </div>
           </Card>
 
@@ -134,6 +112,7 @@ const Analytics = () => {
               <TeamPerformance dateRange={dateRange} />
             )}
             {tab === "api-analytics" && <ApiAnalytics dateRange={dateRange} />}
+            {tab === "message-logs" && <MessageLogs dateRange={dateRange} />}
           </div>
         </div>
       )}

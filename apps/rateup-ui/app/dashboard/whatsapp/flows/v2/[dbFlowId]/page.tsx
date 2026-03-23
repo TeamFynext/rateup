@@ -1,19 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { useParams, useSearchParams } from "next/navigation";
 
 import { useExtracted } from "next-intl";
 
-import { SubscriptionFeaturePathName } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import Result from "@/components/Survey/Result/Result";
 import ResultComparison from "@/components/Survey/Result/ResultComparison";
-import ResultsOverviewWebForm from "@/components/Survey/Result/ResultsOverviewWebForm";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import EditFlow from "@/components/whatsapp/flow-v2/EditFlow";
 import { EditFlowContext } from "@/components/whatsapp/flows/FlowPage/EditFlow/EditFlowContext";
 import FlowPageHeader, {
@@ -23,9 +22,13 @@ import FlowSettings from "@/components/whatsapp/flows/FlowSettings";
 import FlowShare from "@/components/whatsapp/flows/FlowShare";
 import { useRouteParams } from "@/context/RouteParamsContext";
 import SurveyContext from "@/context/SurveyContext";
-import { hasFeature } from "@/utils/subscription/subscription";
 
 import styles from "../FlowPage.module.css";
+
+const ResultsOverviewWebForm = dynamic(
+  () => import("@/components/Survey/Result/ResultsOverviewWebForm"),
+  { ssr: false },
+);
 
 const Flow = () => {
   const [tab, setTab] = useState(FlowTabEnum.Edit);

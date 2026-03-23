@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useContext, useMemo, useState } from "react";
+import { useCallback, useContext, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { IconArrowLeft } from "@tabler/icons-react";
@@ -9,7 +9,6 @@ import { toast } from "sonner";
 
 import { QuestionType2 } from "@/types/enums";
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
-import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 
@@ -26,10 +25,6 @@ import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInpu
 import SimpleModalLayout from "../../Modal/SimpleModalLayout";
 import Responses from "../Response/Responses";
 import WaResponses from "../Response/WaResponses";
-import ResultsOverview from "./ResultsOverview";
-import ResultsOverviewWebForm from "./ResultsOverviewWebForm";
-import SurveyStats from "./SurveyStats";
-import WaResultsOverviewV2 from "./WaResultsOverview";
 
 const Result = ({
   survey,
@@ -40,7 +35,6 @@ const Result = ({
   flow = null,
   version = 1,
 }) => {
-  const translations = useExtracted();
   const { selectedTeamId } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
