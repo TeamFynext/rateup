@@ -77,6 +77,11 @@ export async function updateLoyaltyTierHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
+    if (e.code === "P2002") {
+      return reply
+        .code(400)
+        .send({ error: "Tier with this priority name already exists" });
+    }
     reply.code(500).send({ error: e.message });
   }
 }

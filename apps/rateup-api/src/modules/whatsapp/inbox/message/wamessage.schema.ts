@@ -146,6 +146,7 @@ const logsQuerySchema = z.object({
   days: z.number().optional(),
   status: z.string().optional(),
   source: z.string().optional(),
+  team: z.string().optional(),
 });
 
 export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(

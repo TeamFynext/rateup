@@ -789,8 +789,15 @@ export async function getWaMessageLogsHandler(
   const dateRange = request.query.dateRange?.split(",") || [];
   const status = request.query?.status ?? "all";
   const sourceMessage = request.query?.source ?? "all";
+  const team = request.query?.team ?? "all";
   try {
-    const res = await getWaMessageLogs(orgId, dateRange, status, sourceMessage);
+    const res = await getWaMessageLogs(
+      orgId,
+      dateRange,
+      status,
+      sourceMessage,
+      team,
+    );
     reply.send(res);
   } catch (e) {
     log.error("Error fetching message logs :%o", e);
