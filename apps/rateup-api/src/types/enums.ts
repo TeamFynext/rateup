@@ -175,6 +175,7 @@ export enum WaTemplateStatus {
   PENDING = "PENDING",
   REJECTED = "REJECTED",
   DRAFT = "DRAFT",
+  PENDING_DELETION = "PENDING_DELETION",
 }
 export enum WaFlowStatus {
   PUBLISHED = "PUBLISHED",
