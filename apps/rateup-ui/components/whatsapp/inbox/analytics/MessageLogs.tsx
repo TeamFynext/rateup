@@ -18,6 +18,7 @@ import {
 import { useExtracted } from "next-intl";
 
 import { useWaMessageLogs } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { TeamSelector } from "@/components/input/TeamSelector";
 import { DataTable } from "@/components/Table/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,12 +34,14 @@ function MessageLogs({ dateRange }) {
   const [search, setSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedSource, setSelectedSource] = useState("all");
+  const [selectedTeamId, setSelectedTeamId] = useState("all");
   const t = useExtracted();
-  const { data: messageLogsData } = useWaMessageLogs({
+  const { data: messageLogsData, isLoading } = useWaMessageLogs({
     dateKey: dateRange.key,
     dateRange: dateRange.range,
     status: selectedStatus,
     source: selectedSource,
+    team: selectedTeamId,
   });
 
   const filteredData = useMemo(() => {
@@ -177,24 +180,45 @@ function MessageLogs({ dateRange }) {
       {
         accessorKey: "createdAt",
         header: t("Timestamp"),
-        cell: ({ row }) => (
-          <div className="text-sm text-slate-600">
-            {dayjs(row.original.createdAt).format("DD/MM/YYYY hh:mm A")}
-          </div>
-        ),
+        cell: ({ row }) => {
+          if (row.original.isSkeleton) {
+            return (
+              <div className="h-4 w-32 bg-gray-200 animate-pulse rounded" />
+            );
+          }
+
+          return (
+            <div className="text-sm text-slate-600">
+              {dayjs(row.original.createdAt).format("DD/MM/YYYY hh:mm A")}
+            </div>
+          );
+        },
       },
 
       {
         accessorKey: "phone",
         header: t("Phone"),
-        cell: ({ row }) => (
-          <div className="font-mono text-sm">{row.original.phone}</div>
-        ),
+        cell: ({ row }) => {
+          if (row.original.isSkeleton) {
+            return (
+              <div className="h-4 w-24 bg-gray-200 animate-pulse rounded" />
+            );
+          }
+
+          return <div className="font-mono text-sm">{row.original.phone}</div>;
+        },
       },
+
       {
         accessorKey: "status",
         header: t("Status"),
         cell: ({ row }) => {
+          if (row.original.isSkeleton) {
+            return (
+              <div className="h-5 w-20 bg-gray-200 animate-pulse rounded" />
+            );
+          }
+
           const status = row.original.status;
           const { className, icon } = getStatusBadge(status);
 
@@ -213,6 +237,12 @@ function MessageLogs({ dateRange }) {
         accessorKey: "sourceMessage",
         header: t("Source"),
         cell: ({ row }) => {
+          if (row.original.isSkeleton) {
+            return (
+              <div className="h-5 w-24 bg-gray-200 animate-pulse rounded" />
+            );
+          }
+
           const source = row.original.sourceMessage;
           const { className, icon } = getSourceBadge(source);
 
@@ -230,33 +260,65 @@ function MessageLogs({ dateRange }) {
       {
         accessorKey: "messageType",
         header: t("Type"),
-        cell: ({ row }) => (
-          <div className="text-xs text-slate-500">
-            {row.original.messageType}
-          </div>
-        ),
+        cell: ({ row }) => {
+          if (row.original.isSkeleton) {
+            return (
+              <div className="h-4 w-16 bg-gray-200 animate-pulse rounded" />
+            );
+          }
+
+          return (
+            <div className="text-xs text-slate-500">
+              {row.original.messageType}
+            </div>
+          );
+        },
       },
 
       {
         accessorKey: "messagePreview",
         header: t("Message"),
-        cell: ({ row }) => (
-          <div className="max-w-75 truncate text-sm">
-            {row.original.messagePreview || "-"}
-          </div>
-        ),
+        cell: ({ row }) => {
+          if (row.original.isSkeleton) {
+            return (
+              <div className="h-4 w-48 bg-gray-200 animate-pulse rounded" />
+            );
+          }
+
+          return (
+            <div className="max-w-75 truncate text-sm">
+              {row.original.messagePreview || "-"}
+            </div>
+          );
+        },
       },
 
       {
         accessorKey: "logs",
         header: t("Logs"),
-        cell: ({ row }) => (
-          <div className="text-xs text-red-500">{row.original.logs || "-"}</div>
-        ),
+        cell: ({ row }) => {
+          if (row.original.isSkeleton) {
+            return (
+              <div className="h-4 w-32 bg-gray-200 animate-pulse rounded" />
+            );
+          }
+
+          return (
+            <div className="text-xs text-red-500">
+              {row.original.logs || "-"}
+            </div>
+          );
+        },
       },
     ],
     [],
   );
+
+  const skeletonData = Array.from({ length: 8 }).map((_, i) => ({
+    id: i,
+    isSkeleton: true,
+  }));
+
   return (
     <div className="h-full relative">
       <div className="p-3 border shadow-xs rounded-xl mb-4 bg-white dark:bg-transparent">
@@ -290,6 +352,7 @@ function MessageLogs({ dateRange }) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("All Status")}</SelectItem>
+              <SelectItem value="sent">{t("Sent")}</SelectItem>
               <SelectItem value="delivered">{t("Delivered")}</SelectItem>
               <SelectItem value="failed">{t("Failed")}</SelectItem>
               <SelectItem value="read">{t("Read")}</SelectItem>
@@ -308,8 +371,16 @@ function MessageLogs({ dateRange }) {
               <SelectItem value="INBOX">{t("Inbox")}</SelectItem>
               <SelectItem value="CAMPAIGN">{t("Campaign")}</SelectItem>
               <SelectItem value="TEMPLATE">{t("Template")}</SelectItem>
+              <SelectItem value="external">{t("External API")}</SelectItem>
             </SelectContent>
           </Select>
+
+          <TeamSelector
+            value={selectedTeamId}
+            onChange={(teamId) => setSelectedTeamId(teamId)}
+            enableAll={true}
+            className="h-8 w-full max-w-44"
+          />
 
           <Button
             variant="outline"
@@ -322,7 +393,10 @@ function MessageLogs({ dateRange }) {
           </Button>
         </div>
       </div>
-      <DataTable columns={columns} data={filteredData} />
+      <DataTable
+        columns={columns}
+        data={isLoading ? skeletonData : filteredData}
+      />
     </div>
   );
 }

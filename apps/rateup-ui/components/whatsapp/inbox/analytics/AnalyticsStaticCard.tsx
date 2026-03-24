@@ -57,3 +57,48 @@ export function AnalyticsStatCard({
     </Card>
   );
 }
+
+type PageHeaderCardProps = {
+  title: string;
+  description: string;
+  icon?: ReactNode;
+  actions?: ReactNode;
+};
+
+export function PageHeaderCard({
+  title,
+  description,
+  icon,
+  actions,
+}: PageHeaderCardProps) {
+  return (
+    <Card
+      className="flex flex-col gap-4 p-4 w-full shadow-sm border-2
+                 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div className="flex gap-2 items-center">
+        {icon && (
+          <div className="w-8 h-8 bg-primary rounded-lg items-center justify-center shrink-0 hidden sm:flex">
+            {icon}
+          </div>
+        )}
+
+        <div className="flex flex-col">
+          <h2 className="text-base sm:text-lg">{title}</h2>
+          <p className="text-muted-foreground text-xs sm:text-sm">
+            {description}
+          </p>
+        </div>
+      </div>
+
+      {actions && (
+        <div
+          className="flex flex-col gap-3
+                  sm:flex-row sm:items-center sm:gap-2"
+        >
+          {actions}
+        </div>
+      )}
+    </Card>
+  );
+}
