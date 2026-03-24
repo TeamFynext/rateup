@@ -1,17 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { BarChart, Filter, RefreshCcw } from "lucide-react";
+import {
+  Activity,
+  Award,
+  BarChart,
+  FileText,
+  Filter,
+  LineChart,
+  RefreshCcw,
+  Send,
+} from "lucide-react";
 import { useExtracted } from "next-intl";
 
 import AuditLogs from "@/app/dashboard/analytics/audit-log/page";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
+import { PageHeaderCard } from "./AnalyticsStaticCard";
 import ApiAnalytics from "./ApiAnalytics";
 import ConversationStatsAgentPerformance from "./ConversationStatsAgentPerformance";
 import ConversationStatsOverview from "./ConversationStatsOverview";
@@ -52,34 +62,68 @@ const Analytics = () => {
   const fetchCounts = queries.map((key) => useIsFetching({ queryKey: key }));
 
   const isFetching = fetchCounts.some((count) => count > 0);
+  const headerConfigMap = {
+    overview: {
+      title: t("Overview"),
+      description: t(
+        "Real-time overview of your team performance and activities",
+      ),
+      icon: <BarChart className="w-4 h-4 text-white" />,
+    },
+
+    "agent-performance": {
+      title: t("Agent Performance"),
+      description: t(
+        "Track individual agent metrics, response times, and customer satisfaction",
+      ),
+      icon: <Award className="w-4 h-4 text-white" />,
+    },
+
+    "team-performance": {
+      title: t("Team Performance"),
+      description: t(
+        "Monitor team-level statistics, collaboration, and productivity",
+      ),
+      icon: <Activity className="w-4 h-4 text-white" />,
+    },
+
+    "api-analytics": {
+      title: t("API Analytics"),
+      description: t(
+        "Analyze API usage, request patterns, and integration performance",
+      ),
+      icon: <LineChart className="w-4 h-4 text-white" />,
+    },
+
+    "message-logs": {
+      title: t("Message Logs"),
+      description: t(
+        "Complete history of all messages sent via API, Inbox, and Campaigns",
+      ),
+      icon: <Send className="w-4 h-4 text-white" />,
+    },
+
+    "team-activity": {
+      title: t("Team Activity"),
+      description: t(
+        "View detailed activity logs and actions performed by team members",
+      ),
+      icon: <FileText className="w-4 h-4 text-white" />,
+    },
+  };
+  const headerConfig =
+    headerConfigMap[tab as keyof typeof headerConfigMap] ||
+    headerConfigMap["overview"];
 
   return (
     <>
-      {tab !== "team-activity" && (
-        <div className="p-4 flex flex-col gap-4 w-full">
-          <Card
-            className="flex flex-col gap-4 p-4 w-full shadow-sm border-2
-                 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div className="flex gap-2 items-center">
-              <div className="w-8 h-8 bg-primary rounded-lg items-center justify-center shrink-0 hidden sm:flex">
-                <BarChart className="w-4 h-4 text-white" />
-              </div>
-
-              <div className="flex flex-col">
-                <h2 className="text-base sm:text-lg">{t("Dashboard")}</h2>
-                <p className="text-muted-foreground text-xs sm:text-sm">
-                  {t(
-                    "Real-time overview of your team performance and activities",
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div
-              className="flex flex-col gap-3
-                  sm:flex-row sm:items-center sm:gap-2"
-            >
+      <div className="p-4 flex flex-col gap-4 w-full">
+        <PageHeaderCard
+          title={headerConfig.title}
+          description={headerConfig.description}
+          icon={headerConfig.icon}
+          actions={
+            <>
               <Button
                 variant="ghost"
                 className="w-full sm:w-auto justify-center"
@@ -98,25 +142,25 @@ const Analytics = () => {
                 </span>
                 <DateRangeSelector value={dateRange} onChange={setDateRange} />
               </div>
-            </div>
-          </Card>
+            </>
+          }
+        />
 
-          <div>
-            {tab === "overview" && (
-              <ConversationStatsOverview dateRange={dateRange} />
-            )}
-            {tab === "agent-performance" && (
-              <ConversationStatsAgentPerformance dateRange={dateRange} />
-            )}
-            {tab === "team-performance" && (
-              <TeamPerformance dateRange={dateRange} />
-            )}
-            {tab === "api-analytics" && <ApiAnalytics dateRange={dateRange} />}
-            {tab === "message-logs" && <MessageLogs dateRange={dateRange} />}
-          </div>
+        <div>
+          {tab === "overview" && (
+            <ConversationStatsOverview dateRange={dateRange} />
+          )}
+          {tab === "agent-performance" && (
+            <ConversationStatsAgentPerformance dateRange={dateRange} />
+          )}
+          {tab === "team-performance" && (
+            <TeamPerformance dateRange={dateRange} />
+          )}
+          {tab === "api-analytics" && <ApiAnalytics dateRange={dateRange} />}
+          {tab === "message-logs" && <MessageLogs dateRange={dateRange} />}
+          {tab === "team-activity" && <AuditLogs />}
         </div>
-      )}
-      {tab === "team-activity" && <AuditLogs />}
+      </div>
     </>
   );
 };
