@@ -389,6 +389,11 @@ export function useNavMain({
                   icon: IconTerminal2,
                 },
                 {
+                  title: t("template"),
+                  url: "/dashboard/loyalty/template",
+                  icon: IconFileDescription,
+                },
+                {
                   title: t("Settings"),
                   url: "/dashboard/loyalty/settings",
                   icon: IconSettings,

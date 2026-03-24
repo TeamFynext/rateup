@@ -1,3 +1,5 @@
+import { useExtracted } from "next-intl";
+
 import { COORDINATESX, COORDINATESY } from "./constants";
 import { UserRole } from "./enums";
 
@@ -127,7 +129,8 @@ export function getUserRoleColor(role) {
   }
 }
 
-export function getUserRoleLabel(role, translations) {
+export function UserRoleLabel({ role }: { role: keyof typeof UserRole }) {
+  const translations = useExtracted();
   switch (role) {
     case UserRole.SUPADM:
       return translations("Super Admin");

@@ -94,7 +94,13 @@ import { parseTemplate } from "@/utils/whatsapp/templates";
 
 import styles from "../templateId.module.css";
 
-export default function WhatsappTemplateById() {
+export default function WhatsappTemplateByIdPage() {
+  return <WhatsappTemplateById />;
+}
+
+export function WhatsappTemplateById({
+  forceTemplateType,
+}: Readonly<{ forceTemplateType?: TemplateType }>) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
   const translations = useExtracted();
@@ -121,7 +127,7 @@ export default function WhatsappTemplateById() {
       buttons: [],
       status: WaTemplateStatus.DRAFT,
       example: [],
-      templateType: TemplateType.GENERAL_NOTIFICATION,
+      templateType: forceTemplateType || TemplateType.GENERAL_NOTIFICATION,
       mediaCarousel: [],
       productCarousel: [],
       whatsappSettingsPhoneId: "",
@@ -185,18 +191,20 @@ export default function WhatsappTemplateById() {
   const { data: subscription, isLoading } = useSubscription();
   const templateTypes = useMemo(
     () =>
-      Object.values(TemplateType).map((type) => ({
-        value: type,
-        label: type,
-        disabled:
-          type === TemplateType.CAROUSEL
-            ? !subscription ||
-              !hasFeature(
-                subscription,
-                SubscriptionFeaturePathName.CarouselTemplate,
-              )
-            : false,
-      })),
+      Object.values(forceTemplateType ? [forceTemplateType] : TemplateType).map(
+        (type) => ({
+          value: type,
+          label: type,
+          disabled:
+            type === TemplateType.CAROUSEL
+              ? !subscription ||
+                !hasFeature(
+                  subscription,
+                  SubscriptionFeaturePathName.CarouselTemplate,
+                )
+              : false,
+        }),
+      ),
     [subscription],
   );
 
