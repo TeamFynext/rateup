@@ -233,7 +233,7 @@ export default function EarningRulesPage() {
       0,
     );
     const newTierData: LoyaltyTierInput = {
-      name: t("New Tier"),
+      name: "New Tier " + (loyaltyTiers.length + 1),
       color: "#1873E8",
       pointsMultiplier: 10,
       threshold: maxPoints + 1000,
@@ -950,6 +950,22 @@ function TierCard({
                   </FormItem>
                 )}
               />
+              <div className="px-2 py-1.5 bg-blue-50 rounded border border-blue-200">
+                <p className="text-xs text-muted-foreground">
+                  Value per point:
+                </p>
+                <p className="font-semibold text-sm text-[#1873E8]">
+                  1 pt ={" "}
+                  {(() => {
+                    // Use the current form value for pointsMultiplier
+                    const points = Number(tierForm.watch("pointsMultiplier"));
+                    if (!points || points <= 0) return "-";
+                    const currency = 1;
+                    return (currency / points).toFixed(3);
+                  })()}{" "}
+                  {tier?.program?.currencyCode || "currency"}
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center justify-between border-t pt-3">

@@ -19,7 +19,7 @@ import {
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { z } from "zod/v4";
 
-import { getBrowserId } from "@/lib/utils";
+import { getBrowserId } from "@/lib/browserId";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -48,7 +48,9 @@ const NavHeader = ({ pathname }: { pathname: string }) => {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <ModeToggle />
+      <div className="mr-4">
+        <ModeToggle />
+      </div>
     </header>
   );
 };
