@@ -21,13 +21,17 @@ export function DataTableToolbar<TData>({
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <Shield className="h-5 w-5 text-primary" />
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  {translations("Team Activity")}
-                </h1>
+              <div className="flex flex-col items-start justify-center">
+                <div className="flex items-center gap-1">
+                  <h4 className="text-xl tracking-tight">
+                    {translations("Team Activity log")}
+                  </h4>
+                  <RefreshButton queryKeys={["userAuditLogs"]} />
+                </div>
+                <h6>
+                  {translations("Recent actions performed by team members")}
+                </h6>
               </div>
-              <RefreshButton queryKeys={["userAuditLogs"]} />
             </div>
           </div>
         </div>

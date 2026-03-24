@@ -217,14 +217,14 @@ export function useNavMain({
             icon: ChartLine,
           },
           {
-            title: t("Team Activity"),
-            url: "/dashboard/analytics?tab=team-activity",
-            icon: FileText,
-          },
-          {
             title: t("Message Logs"),
             url: "/dashboard/analytics?tab=message-logs",
             icon: Logs,
+          },
+          {
+            title: t("Team Activity"),
+            url: "/dashboard/analytics?tab=team-activity",
+            icon: FileText,
           },
         ],
       },
@@ -387,6 +387,11 @@ export function useNavMain({
                   title: t("commands"),
                   url: "/dashboard/loyalty/command",
                   icon: IconTerminal2,
+                },
+                {
+                  title: t("template"),
+                  url: "/dashboard/loyalty/template",
+                  icon: IconFileDescription,
                 },
                 {
                   title: t("Settings"),

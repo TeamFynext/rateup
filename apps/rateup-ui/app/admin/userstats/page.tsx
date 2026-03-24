@@ -28,6 +28,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { UserRole } from "@/utils/enums";
 
 import { useAllOrgs } from "../../../backend/org/org.query";
 import {
@@ -38,7 +39,7 @@ import {
 import RefreshButton from "../../../components/Button/RefreshButton";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import { getUserRoleColor, getUserRoleLabel } from "../../../utils";
+import { getUserRoleColor, UserRoleLabel } from "../../../utils";
 import {
   formatIsoDateStringWithTime,
   isInLastSevenDays,
@@ -120,7 +121,7 @@ const index = () => {
       accessorKey: "role",
       header: createSortableHeader("Role"),
       cell: ({ row }) => {
-        const role = row.getValue("role") as string;
+        const role: keyof typeof UserRole = row.getValue("role");
         return (
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-muted-foreground" />
@@ -128,7 +129,7 @@ const index = () => {
               variant="outline"
               className={`text-${getUserRoleColor(role)}-600`}
             >
-              {getUserRoleLabel(role, translations)}
+              <UserRoleLabel role={role} />
             </Badge>
           </div>
         );
