@@ -7,7 +7,7 @@ import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { getBrowserId } from "@/lib/utils";
+import { getBrowserId } from "@/lib/browserId";
 import {
   useContactsStore,
   useMessagesStore,

@@ -25,6 +25,7 @@ import { GoogleTagManager } from "@next/third-parties/google";
 import { getLocale, getMessages } from "next-intl/server";
 
 import { theme } from "@/config/mantineTheme";
+import { cn } from "@/lib/utils";
 import FacebookPixel from "@/components/Analytics/FacebookPixel";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { allModalManagerModalsObj } from "@/components/Modal/ModalManagerModals/allModalManagerModalsObj";
@@ -73,7 +74,12 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${inter.className},${notoColorEmogi.className}`}
+      className={cn(
+        inter.className,
+        notoColorEmogi.className,
+        "font-sans",
+        inter.variable,
+      )}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
       {...mantineHtmlProps}
