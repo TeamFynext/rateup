@@ -1837,6 +1837,7 @@ export async function getWaMessageLogs(
   dateRange?: string[],
   status?: string,
   sourceMessage?: string,
+  team?: string,
 ) {
   let rangeStart: Date | null = null;
   let rangeEnd: Date | null = null;
@@ -1846,24 +1847,63 @@ export async function getWaMessageLogs(
     rangeEnd = new Date(dateRange[1]);
   }
 
+  let teamFilter = Prisma.sql``;
+
+  if (team && team !== "all" && team !== "null") {
+    teamFilter = Prisma.sql`AND motm."teamId" = ${team}::uuid`;
+  }
+
   let statusFilter = Prisma.sql``;
 
   if (status && status !== "all") {
-    if (status === "read") {
-      statusFilter = Prisma.sql`AND wm.stats->>'read' IS NOT NULL AND wm.stats->>'read' <> ''`;
-    } else if (status === "delivered") {
-      statusFilter = Prisma.sql`AND wm.stats->>'delivered' IS NOT NULL AND wm.stats->>'delivered' <> ''`;
-    } else if (status === "sent") {
-      statusFilter = Prisma.sql`AND wm.stats->>'sent' IS NOT NULL AND wm.stats->>'sent' <> ''`;
-    } else if (status === "failed") {
-      statusFilter = Prisma.sql`AND wm.stats->>'failed' IS NOT NULL AND wm.stats->>'failed' <> ''`;
-    }
+    statusFilter = Prisma.sql`
+    AND (
+      CASE
+        WHEN NULLIF(wm.stats->>'failed','')::timestamp = GREATEST(
+          COALESCE(NULLIF(wm.stats->>'sent','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'delivered','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'read','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'failed','')::timestamp, 'epoch')
+        ) THEN 'failed'
+
+        WHEN NULLIF(wm.stats->>'read','')::timestamp = GREATEST(
+          COALESCE(NULLIF(wm.stats->>'sent','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'delivered','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'read','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'failed','')::timestamp, 'epoch')
+        ) THEN 'read'
+
+        WHEN NULLIF(wm.stats->>'delivered','')::timestamp = GREATEST(
+          COALESCE(NULLIF(wm.stats->>'sent','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'delivered','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'read','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'failed','')::timestamp, 'epoch')
+        ) THEN 'delivered'
+
+        WHEN NULLIF(wm.stats->>'sent','')::timestamp = GREATEST(
+          COALESCE(NULLIF(wm.stats->>'sent','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'delivered','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'read','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'failed','')::timestamp, 'epoch')
+        ) THEN 'sent'
+
+        ELSE NULL
+      END = ${status}
+    )
+  `;
   }
 
-  const sourceFilter =
-    sourceMessage && sourceMessage !== "all"
-      ? Prisma.sql`AND wm."sourceMessage" = ${sourceMessage}`
-      : Prisma.sql``;
+  let sourceFilter = Prisma.sql``;
+
+  if (sourceMessage && sourceMessage !== "all") {
+    if (sourceMessage === "external") {
+      sourceFilter = Prisma.sql`AND motm."externalApi" = true`;
+    } else if (sourceMessage === "TEMPLATE") {
+      sourceFilter = Prisma.sql`AND wm."sourceMessage" = ${sourceMessage} AND motm."externalApi" = false`;
+    } else {
+      sourceFilter = Prisma.sql`AND wm."sourceMessage" = ${sourceMessage}`;
+    }
+  }
 
   return prisma.$queryRaw`
     SELECT 
@@ -1919,21 +1959,47 @@ export async function getWaMessageLogs(
       END AS "messagePreview",
 
       CASE
-        WHEN wm.stats->>'read' IS NOT NULL AND wm.stats->>'read' <> '' THEN 'read'
-        WHEN wm.stats->>'delivered' IS NOT NULL AND wm.stats->>'delivered' <> '' THEN 'delivered'
-        WHEN wm.stats->>'sent' IS NOT NULL AND wm.stats->>'sent' <> '' THEN 'sent'
-        WHEN wm.stats->>'failed' IS NOT NULL AND wm.stats->>'failed' <> '' THEN 'failed'
+        WHEN NULLIF(wm.stats->>'failed','')::timestamp = GREATEST(
+          COALESCE(NULLIF(wm.stats->>'sent','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'delivered','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'read','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'failed','')::timestamp, 'epoch')
+        ) THEN 'failed'
+
+        WHEN NULLIF(wm.stats->>'read','')::timestamp = GREATEST(
+          COALESCE(NULLIF(wm.stats->>'sent','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'delivered','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'read','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'failed','')::timestamp, 'epoch')
+        ) THEN 'read'
+
+        WHEN NULLIF(wm.stats->>'delivered','')::timestamp = GREATEST(
+          COALESCE(NULLIF(wm.stats->>'sent','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'delivered','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'read','')::timestamp, 'epoch'),
+          COALESCE(NULLIF(wm.stats->>'failed','')::timestamp, 'epoch')
+        ) THEN 'delivered'
+
+        WHEN NULLIF(wm.stats->>'sent','')::timestamp = GREATEST(
+         COALESCE(NULLIF(wm.stats->>'sent','')::timestamp, 'epoch'),
+         COALESCE(NULLIF(wm.stats->>'delivered','')::timestamp, 'epoch'),
+         COALESCE(NULLIF(wm.stats->>'read','')::timestamp, 'epoch'),
+         COALESCE(NULLIF(wm.stats->>'failed','')::timestamp, 'epoch')
+        ) THEN 'sent'
+
         ELSE NULL
       END AS status
 
     FROM "WaMessage" wm
     INNER JOIN "Contact" c 
       ON c.id = wm."contactId"
-
+    INNER JOIN "WaMessageOrgTeamMap" motm
+      ON motm."messageId" = wm.id
     WHERE c."orgId" = ${orgId}
       AND wm."messageBody"->>'exchangeProcess' = 'send'
       ${statusFilter}
       ${sourceFilter}
+      ${teamFilter}
 
       ${
         rangeStart && rangeEnd
