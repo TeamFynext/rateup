@@ -123,24 +123,22 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
             <div className="flex items-center gap-4 justify-center">
               <Link
                 href={"/signup"}
-                className="px-4 text-[16px] relative py-2 rounded-sm border font-semibold 
-               border-rateup-blue-4 bg-rateup-blue-4
-              text-white transition"
+                className="px-4 text-[14px] relative py-2 rounded-xl border font-semibold border-rateup-blue-4 bg-rateup-blue-2 text-white transition"
               >
                 Start Free Trial
               </Link>
               <BookDemoModal>
-                <button className="bg-rateup-gold px-4 py-2 rounded-sm text-white cursor-pointer hover:bg-rateup-orange">
-                  <span className="font-semibold text-[16px]">Book A Demo</span>
+                <button className="bg-rateup-light-blue px-4 py-2 rounded-xl text-rateup-dark-blue cursor-pointer hover:bg-rateup-darkblue-2">
+                  <span className="font-semibold text-[14px]">Book A Demo</span>
                 </button>
               </BookDemoModal>
               <button
                 onClick={() => router.push("/login")}
-                className="px-8 flex items-center justify-center rounded-sm cursor-pointer
+                className="px-10 flex items-center justify-center rounded-xl cursor-pointer
              text-rateup-blue border border-rateup-light-blue hover:bg-rateup-blue-4
              hover:text-white transition bg-white py-2"
               >
-                <span className="font-semibold text-[16px]">Login</span>
+                <span className="font-semibold text-[14px]">Login</span>
               </button>
             </div>
           )}

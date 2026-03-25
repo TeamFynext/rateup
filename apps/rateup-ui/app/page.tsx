@@ -6,6 +6,7 @@ import ClientLogos from "@/components/RateupHomePage/helpers/ClientLogos";
 import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooterNew";
 import ScrollToTop from "@/components/RateupHomePage/helpers/ScrollToTop";
 import Layout from "@/components/RateupHomePage/Layout";
+import RateUpLanding from "@/components/RateupHomePage/RateUpLanding";
 import AutomateInteraction from "@/components/RateupHomePage/shared/AutomateInteraction";
 import Clients from "@/components/RateupHomePage/shared/ClientNew";
 import FeatureCards2 from "@/components/RateupHomePage/shared/FeatureCards2New";
@@ -25,22 +26,7 @@ const SupportWidget = dynamic(
 const page = () => {
   return (
     <Layout>
-      <HeroSection />
-      <HeroAnalytics />
-      <ClientLogos />
-      <FeatureCards2 />
-      <LoyalityAd />
-      <Features />
-      <AutomateInteraction />
-      {/* <Clients/> */}
-      <Integration />
-      <MobileAppSection />
-      <StartRateupHero />
-      <HomePageFooter />
-      <SupportWidget
-        orgId={process.env.NEXT_PUBLIC_ROOT_ORG}
-        token={process.env.NEXT_PUBLIC_ROOT_TOKEN}
-      />
+      <RateUpLanding />
     </Layout>
   );
 };
