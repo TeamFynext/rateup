@@ -1,9 +1,6 @@
 import { Inter, Noto_Color_Emoji, Sora } from "next/font/google";
 
-export const inter = Inter({
-  variable: "--font-inter",
-  preload: false,
-});
+export const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const notoColorEmogi = Noto_Color_Emoji({
   weight: ["400"],

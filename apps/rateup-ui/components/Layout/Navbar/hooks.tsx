@@ -389,8 +389,8 @@ export function useNavMain({
                   icon: IconTerminal2,
                 },
                 {
-                  title: t("template"),
-                  url: "/dashboard/loyalty/template",
+                  title: t("whatsapp templates"),
+                  url: "/dashboard/loyalty/templates",
                   icon: IconFileDescription,
                 },
                 {

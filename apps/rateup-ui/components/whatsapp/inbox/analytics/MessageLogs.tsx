@@ -16,6 +16,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useExtracted } from "next-intl";
+import { toast } from "sonner";
 
 import { useWaMessageLogs } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { TeamSelector } from "@/components/input/TeamSelector";
@@ -138,41 +139,65 @@ function MessageLogs({ dateRange }) {
   }
 
   function exportToCSV(data: any[], filename = "message_logs.csv") {
-    if (!data || data.length === 0) return;
+    try {
+      if (!data || data.length === 0) {
+        toast.warning("No data available to export");
+        return;
+      }
 
-    const headers = [
-      "Timestamp",
-      "Phone",
-      "Status",
-      "Source",
-      "Type",
-      "Message",
-      "Logs",
-    ];
+      const headers = [
+        "Timestamp",
+        "Phone",
+        "Status",
+        "Source",
+        "Type",
+        "Message",
+        "Logs",
+      ];
 
-    const rows = data.map((row) => [
-      dayjs(row.createdAt).format("DD/MM/YYYY hh:mm A"),
-      row.phone || "",
-      row.status || "",
-      formatLabel(row.sourceMessage),
-      row.messageType || "",
-      row.messagePreview || "",
-      typeof row.logs === "object" ? JSON.stringify(row.logs) : row.logs || "",
-    ]);
+      const rows = data.map((row) => {
+        const logs =
+          typeof row.logs === "object"
+            ? safeStringify(row.logs)
+            : row.logs || "";
 
-    const csvContent = [headers, ...rows]
-      .map((e) => e.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
+        return [
+          dayjs(row.createdAt).format("DD/MM/YYYY hh:mm A"),
+          row.phone || "",
+          row.status || "",
+          formatLabel(row.sourceMessage),
+          row.messageType || "",
+          row.messagePreview || "",
+          logs.replace(/\n/g, " ").replace(/"/g, '""'),
+        ];
+      });
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+      const csvContent = [headers, ...rows]
+        .map((e) =>
+          e.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","),
+        )
+        .join("\n");
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.dismiss();
+      toast.success("CSV exported successfully");
+    } catch (error) {
+      console.error(error);
+      toast.dismiss();
+      toast.error("Failed to export CSV");
+    }
   }
 
   const columns = useMemo<ColumnDef<any>[]>(
@@ -303,9 +328,14 @@ function MessageLogs({ dateRange }) {
             );
           }
 
+          const logs =
+            typeof row.original.logs === "object"
+              ? safeStringify(row.original.logs)
+              : row.original.logs || "-";
+
           return (
-            <div className="text-xs text-red-500">
-              {row.original.logs || "-"}
+            <div className="text-xs text-red-500 whitespace-pre-wrap max-w-80">
+              {logs}
             </div>
           );
         },
@@ -368,7 +398,6 @@ function MessageLogs({ dateRange }) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("All Sources")}</SelectItem>
-              <SelectItem value="INBOX">{t("Inbox")}</SelectItem>
               <SelectItem value="CAMPAIGN">{t("Campaign")}</SelectItem>
               <SelectItem value="TEMPLATE">{t("Template")}</SelectItem>
               <SelectItem value="external">{t("External API")}</SelectItem>
@@ -402,3 +431,11 @@ function MessageLogs({ dateRange }) {
 }
 
 export default MessageLogs;
+
+function safeStringify(obj: any) {
+  try {
+    return JSON.stringify(obj, null, 2);
+  } catch (e) {
+    return "[Unserializable Logs]";
+  }
+}

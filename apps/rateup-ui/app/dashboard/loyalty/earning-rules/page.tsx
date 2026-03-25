@@ -533,7 +533,6 @@ export default function EarningRulesPage() {
                             <Input
                               {...field}
                               value={field.value as number}
-                              type="number"
                               step="0.1"
                               min="1"
                             />
@@ -555,7 +554,6 @@ export default function EarningRulesPage() {
                             <Input
                               {...field}
                               value={field.value as number}
-                              type="number"
                               min="0"
                             />
                           </FormControl>
@@ -916,7 +914,6 @@ function TierCard({
                         <Input
                           {...field}
                           value={field.value as number}
-                          type="number"
                           className="h-9 font-semibold"
                           min="0"
                         />
@@ -939,7 +936,6 @@ function TierCard({
                     <FormControl>
                       <Input
                         {...field}
-                        type="number"
                         value={field.value as number}
                         className="mt-1 h-9"
                         min="0"
@@ -1245,7 +1241,6 @@ function RuleCard({
                       <Input
                         {...field}
                         value={field.value as number}
-                        type="number"
                         step="0.1"
                         className="mt-1 h-9"
                       />
@@ -1267,7 +1262,6 @@ function RuleCard({
                       <Input
                         {...field}
                         value={field.value as number}
-                        type="number"
                         className="mt-1 h-9"
                       />
                     </FormControl>
