@@ -1996,6 +1996,7 @@ export async function getWaMessageLogs(
     INNER JOIN "WaMessageOrgTeamMap" motm
       ON motm."messageId" = wm.id
     WHERE c."orgId" = ${orgId}
+      AND wm."sourceMessage" IN ('TEMPLATE', 'CAMPAIGN')
       AND wm."messageBody"->>'exchangeProcess' = 'send'
       ${statusFilter}
       ${sourceFilter}
