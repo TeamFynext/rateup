@@ -12,10 +12,10 @@ export const transactionFilterSchema = z.object({
     .optional(),
   source: z.string().optional(),
   customerId: z.string().optional(),
-  minPoints: z.number().optional(),
-  maxPoints: z.number().optional(),
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(20),
+  minPoints: z.coerce.number().optional(),
+  maxPoints: z.coerce.number().optional(),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(20),
   export: z.enum(["excel", "csv"]).optional(),
 });
 

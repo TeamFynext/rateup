@@ -120,8 +120,8 @@ const summarizeSchema = z.object({
 
 const responseFilterQuery = z
   .object({
-    page: z.number().optional(),
-    limit: z.number().optional(),
+    page: z.coerce.number().optional(),
+    limit: z.coerce.number().optional(),
     tag: z.string().optional(),
     language: z.string().optional(),
     surveyTeamMapIds: z.string().optional(),

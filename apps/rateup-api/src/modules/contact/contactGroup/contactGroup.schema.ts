@@ -26,12 +26,12 @@ const byContactGroupIdParamsSchema = z.object({
   contactGroupId: z.string(),
 });
 const paginationQuery = z.object({
-  page: z.number().optional(),
-  limit: z.number().optional(),
+  page: z.coerce.number().optional(),
+  limit: z.coerce.number().optional(),
   search: z.string().optional(),
   sort: z.string().optional(),
   desc: z.string().optional(),
-  phone: z.number().optional(),
+  phone: z.coerce.number().optional(),
   name: z.string().optional(),
   source: z.string().optional(),
   consent: z.string().optional(),

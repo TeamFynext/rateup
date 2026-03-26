@@ -43,7 +43,7 @@ const contactResponseSchema = z.object({
 const contactSearchResponseSchema = z.array(contactResponseSchema);
 
 const pageSchema = z.object({
-  page: z.number(),
+  page: z.coerce.number(),
 });
 
 const ticketCardResponseSchema = z.object({
