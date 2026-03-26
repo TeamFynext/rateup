@@ -5,7 +5,7 @@ import {
   getTeamMemberStatsHandler,
 } from "./dashboard.controller.js";
 import { checkSession } from "../../utils/checkSession.js";
-import { $Tref } from "../team/team.schema.js";
+import { byTeamIdParamsSchema } from "../team/team.schema.js";
 
 export async function dashboardRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -15,7 +15,7 @@ export async function dashboardRoutes(server: FastifyInstance) {
     "/teamStats/:teamId",
     {
       schema: {
-        params: $Tref("byTeamIdParamsSchema"),
+        params: byTeamIdParamsSchema,
       },
     },
     getTeamMemberStatsHandler,

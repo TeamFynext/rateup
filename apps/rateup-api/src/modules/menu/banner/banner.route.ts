@@ -6,9 +6,12 @@ import {
 } from "./banner.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
 
-import { $MBref } from "./banner.schema.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import {
+  ByMenuBannerIdParamsSchema,
+  createMenuBannerInputSchema,
+} from "./banner.schema.js";
 
 export async function menuBannerRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -22,8 +25,8 @@ export async function menuBannerRoutes(server: FastifyInstance) {
     "/:menuBannerId",
     {
       schema: {
-        params: $MBref("ByMenuBannerIdParamsSchema"),
-        body: $MBref("createMenuBannerInputSchema"),
+        params: ByMenuBannerIdParamsSchema,
+        body: createMenuBannerInputSchema,
       },
     },
     updateMenuBannerHandler,
@@ -32,7 +35,7 @@ export async function menuBannerRoutes(server: FastifyInstance) {
     "/:menuBannerId",
     {
       schema: {
-        params: $MBref("ByMenuBannerIdParamsSchema"),
+        params: ByMenuBannerIdParamsSchema,
       },
     },
     deleteMenuBannerHandler,

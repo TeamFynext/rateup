@@ -6,14 +6,18 @@ import {
   getLoyaltyTiersHandler,
   updateLoyaltyTierHandler,
 } from "./tier.controller.js";
-import { $tierRef } from "./tier.schema.js";
+import {
+  loyaltyTierSchema,
+  tierIdParamSchema,
+  loyaltyTierUpdateSchema,
+} from "./tier.schema.js";
 
 export async function loyaltyTierRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
       schema: {
-        body: $tierRef("loyaltyTierSchema"),
+        body: loyaltyTierSchema,
       },
     },
     createLoyaltyTierHandler,
@@ -25,7 +29,7 @@ export async function loyaltyTierRoutes(server: FastifyInstance) {
     "/:tierId",
     {
       schema: {
-        params: $tierRef("tierIdParamSchema"),
+        params: tierIdParamSchema,
       },
     },
     getLoyaltyTierByIdHandler,
@@ -35,8 +39,8 @@ export async function loyaltyTierRoutes(server: FastifyInstance) {
     "/:tierId",
     {
       schema: {
-        params: $tierRef("tierIdParamSchema"),
-        body: $tierRef("loyaltyTierUpdateSchema"),
+        params: tierIdParamSchema,
+        body: loyaltyTierUpdateSchema,
       },
     },
     updateLoyaltyTierHandler,
@@ -46,7 +50,7 @@ export async function loyaltyTierRoutes(server: FastifyInstance) {
     "/:tierId",
     {
       schema: {
-        params: $tierRef("tierIdParamSchema"),
+        params: tierIdParamSchema,
       },
     },
     deleteLoyaltyTierHandler,

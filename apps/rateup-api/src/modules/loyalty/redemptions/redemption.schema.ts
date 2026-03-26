@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 export const redemptionIdParamSchema = z.object({
@@ -19,17 +18,6 @@ export const transactionFilterSchema = z.object({
   limit: z.number().min(1).max(100).default(20),
   export: z.enum(["excel", "csv"]).optional(),
 });
-
-export const { schemas: redemptionSchemas, $ref: $redemptionRef } =
-  buildJsonSchemas(
-    {
-      redemptionIdParamSchema,
-      transactionFilterSchema,
-    },
-    {
-      $id: "redemptionSchema",
-    },
-  );
 
 export type RedemptionIdParam = z.infer<typeof redemptionIdParamSchema>;
 export type TransactionFilter = z.infer<typeof transactionFilterSchema>;

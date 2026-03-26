@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 import { ShopifyEvents } from "../../../types/enums.js";
 
@@ -10,20 +9,14 @@ const byShopParamsSchema = z.object({
 });
 
 const registerWebhookbyTopicSchema = z.object({
-  topic: z.nativeEnum(ShopifyEvents),
+  topic: z.enum(ShopifyEvents),
 });
-
-export const { schemas: shopifySchema, $ref: ShopifyRef } = buildJsonSchemas(
-  {
-    byIdParamsSchema,
-    byShopParamsSchema,
-    registerWebhookbyTopicSchema,
-  },
-  { $id: "shopifySchema" },
-);
 
 export type IdParamInput = z.infer<typeof byIdParamsSchema>;
 export type ShopParamInput = z.infer<typeof byShopParamsSchema>;
 export type registerWebhookbyTopicInput = z.infer<
   typeof registerWebhookbyTopicSchema
 >;
+
+// Auto-exported after fastify-zod migration
+export { byIdParamsSchema, byShopParamsSchema, registerWebhookbyTopicSchema };

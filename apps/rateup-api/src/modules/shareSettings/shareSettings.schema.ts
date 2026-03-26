@@ -1,3 +1,5 @@
+import z from "zod";
+
 const paramsSchema = {
   type: "object",
   required: ["id"],
@@ -30,7 +32,7 @@ const bodySchema = {
 };
 
 const responseSchema = {
-  "2xx": {
+  "2xx": z.fromJSONSchema({
     type: "object",
     properties: {
       qrBgColor: { type: "string" },
@@ -45,18 +47,18 @@ const responseSchema = {
       isLogoEnabled: { type: "boolean" },
     },
     nullable: true,
-  },
+  }),
 };
 
 const getSettingsSchema = {
-  params: paramsSchema,
+  params: z.fromJSONSchema(paramsSchema as any),
   response: responseSchema,
 };
 
 const saveAndUpdateSettingsSchema = {
   consumes: ["multipart/form-data"],
   ...getSettingsSchema,
-  body: bodySchema,
+  body: z.fromJSONSchema(bodySchema as any),
 };
 
 export { getSettingsSchema, saveAndUpdateSettingsSchema };

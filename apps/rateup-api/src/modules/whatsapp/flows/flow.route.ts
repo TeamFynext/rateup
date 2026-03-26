@@ -1,7 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { getFlowsFromWa } from "./flow.service.js";
 import { checkSession } from "../../../utils/checkSession.js";
-import { $waFlow } from "./flow.schema.js";
 import {
   cloneAndDeprecateFlowHandler,
   cloneFlowHandler,
@@ -26,6 +25,17 @@ import { verifyMessageMonthlyLimitRestriction } from "../messageTemplates/wa_tem
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { verifyFlowSubscriptionLimit } from "./flow.utils.js";
+import {
+  byDbFlowIdParams,
+  byWaFlowIdParams,
+  cloneFlowSchema,
+  createFlowInput,
+  importFlowsBody,
+  sendFlowBodySchema,
+  sourceQuery,
+  updateFlowInput,
+  updateFlowMetaInput,
+} from "./flow.schema.js";
 
 export async function flowRoutes(server: FastifyInstance) {
   server.addHook("onError", (req, res, err, done) => {
@@ -42,7 +52,7 @@ export async function flowRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        querystring: $waFlow("sourceQuery"),
+        querystring: sourceQuery,
       },
     },
     getFlowsHandler,
@@ -51,7 +61,7 @@ export async function flowRoutes(server: FastifyInstance) {
     "/:waFlowId",
     {
       schema: {
-        params: $waFlow("byWaFlowIdParams"),
+        params: byWaFlowIdParams,
       },
     },
     getFlowHandler,
@@ -60,7 +70,7 @@ export async function flowRoutes(server: FastifyInstance) {
     "/:waFlowId/json",
     {
       schema: {
-        params: $waFlow("byWaFlowIdParams"),
+        params: byWaFlowIdParams,
       },
     },
     getFlowJsonHandler,
@@ -69,7 +79,7 @@ export async function flowRoutes(server: FastifyInstance) {
     "/metrics/:waFlowId",
     {
       schema: {
-        params: $waFlow("byWaFlowIdParams"),
+        params: byWaFlowIdParams,
       },
     },
     getFlowMetricsHandler,
@@ -81,7 +91,7 @@ export async function flowRoutes(server: FastifyInstance) {
     "/import",
     {
       schema: {
-        body: $waFlow("importFlowsBody"),
+        body: importFlowsBody,
       },
     },
     importFlowsHandler,
@@ -92,7 +102,7 @@ export async function flowRoutes(server: FastifyInstance) {
     {
       preHandler: verifyFlowSubscriptionLimit,
       schema: {
-        body: $waFlow("createFlowInput"),
+        body: createFlowInput,
       },
     },
     createFlowHandler,
@@ -101,8 +111,8 @@ export async function flowRoutes(server: FastifyInstance) {
     "/:dbFlowId",
     {
       schema: {
-        params: $waFlow("byDbFlowIdParams"),
-        body: $waFlow("updateFlowInput"),
+        params: byDbFlowIdParams,
+        body: updateFlowInput,
       },
     },
     updateFlowHandler,
@@ -111,7 +121,7 @@ export async function flowRoutes(server: FastifyInstance) {
     "/:dbFlowId/push-to-wa",
     {
       schema: {
-        params: $waFlow("byDbFlowIdParams"),
+        params: byDbFlowIdParams,
       },
     },
     saveFlowJsonToWhatsappHandler,
@@ -120,8 +130,8 @@ export async function flowRoutes(server: FastifyInstance) {
     "/update-flow-metadata/:dbFlowId",
     {
       schema: {
-        params: $waFlow("byDbFlowIdParams"),
-        body: $waFlow("updateFlowMetaInput"),
+        params: byDbFlowIdParams,
+        body: updateFlowMetaInput,
       },
     },
     updateFlowMetaDataHandler,
@@ -131,7 +141,7 @@ export async function flowRoutes(server: FastifyInstance) {
     "/clone-and-deprecate/:dbFlowId",
     {
       schema: {
-        params: $waFlow("byDbFlowIdParams"),
+        params: byDbFlowIdParams,
       },
     },
     cloneAndDeprecateFlowHandler,
@@ -142,8 +152,8 @@ export async function flowRoutes(server: FastifyInstance) {
     "/clone/:dbFlowId",
     {
       schema: {
-        params: $waFlow("byDbFlowIdParams"),
-        body: $waFlow("cloneFlowSchema"),
+        params: byDbFlowIdParams,
+        body: cloneFlowSchema,
       },
     },
     cloneFlowHandler,
@@ -152,7 +162,7 @@ export async function flowRoutes(server: FastifyInstance) {
     "/:dbFlowId/preview",
     {
       schema: {
-        params: $waFlow("byDbFlowIdParams"),
+        params: byDbFlowIdParams,
       },
     },
     getFlowPreviewHandler,
@@ -162,7 +172,7 @@ export async function flowRoutes(server: FastifyInstance) {
     "/:dbFlowId",
     {
       schema: {
-        params: $waFlow("byDbFlowIdParams"),
+        params: byDbFlowIdParams,
       },
     },
     deleteFlowHandler,
@@ -172,7 +182,7 @@ export async function flowRoutes(server: FastifyInstance) {
     "/:dbFlowId/deprecate",
     {
       schema: {
-        params: $waFlow("byDbFlowIdParams"),
+        params: byDbFlowIdParams,
       },
     },
     deprecateFlowHandler,
@@ -182,7 +192,7 @@ export async function flowRoutes(server: FastifyInstance) {
     "/:dbFlowId/publish",
     {
       schema: {
-        params: $waFlow("byDbFlowIdParams"),
+        params: byDbFlowIdParams,
       },
     },
     publishFlowHandler,
@@ -193,8 +203,8 @@ export async function flowRoutes(server: FastifyInstance) {
     {
       preHandler: verifyMessageMonthlyLimitRestriction,
       schema: {
-        body: $waFlow("sendFlowBodySchema"),
-        params: $waFlow("byDbFlowIdParams"),
+        body: sendFlowBodySchema,
+        params: byDbFlowIdParams,
       },
     },
     sendFlowHandler,

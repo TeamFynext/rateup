@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import { MenuItemPriceType } from "../../../types/enums.js";
 
@@ -14,13 +13,13 @@ const CreateMenuBannerInput = {
       z
         .object({
           price: z.string().optional(),
-          type: z.nativeEnum(MenuItemPriceType).optional(),
+          type: z.enum(MenuItemPriceType).optional(),
           variants: z.array(MenuItemVariant).optional(),
         })
         .optional(),
       z
         .object({
-          type: z.nativeEnum(MenuItemPriceType).optional(),
+          type: z.enum(MenuItemPriceType).optional(),
           variants: z.array(MenuItemVariant).optional(),
           price: z.string().optional(),
         })
@@ -38,13 +37,8 @@ const ByMenuBannerIdParamsSchema = z.object({
   menuBannerId: z.string(),
 });
 
-export const { schemas: menuBannerSchemas, $ref: $MBref } = buildJsonSchemas(
-  {
-    createMenuBannerInputSchema,
-    ByMenuBannerIdParamsSchema,
-  },
-  { $id: "menuBannerSchema" },
-);
-
 export type CreateMenuBannerInput = z.infer<typeof createMenuBannerInputSchema>;
 export type ByMenuBannerIdParams = z.infer<typeof ByMenuBannerIdParamsSchema>;
+
+// Auto-exported after fastify-zod migration
+export { createMenuBannerInputSchema, ByMenuBannerIdParamsSchema };

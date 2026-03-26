@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z, { nativeEnum } from "zod";
 
 export const catalogProductCore = z.object({
@@ -59,7 +58,7 @@ export const catalogHotel = z.object({
   longitude: z.string(),
   url: z.string(),
   sale_price: z.string(),
-  address: z.record(z.string()),
+  address: z.record(z.string(), z.string()),
   base_price: z.number(), // on api base_price:string = price + currencyCode
   currencyCode: z.string(),
   tags: z.array(z.string().max(100)).max(5), // on api custom_label_0, custom_label_1,,,etc.
@@ -130,7 +129,7 @@ export const catalogProductResponseSchema =
       .optional(),
 
     category: z.string().optional(),
-    category_specific_fields: z.record(z.any()).optional(),
+    category_specific_fields: z.record(z.string(), z.any()).optional(),
     color: z.string().optional(),
 
     currency: z.string().optional(),
@@ -149,7 +148,7 @@ export const catalogProductResponseSchema =
     fb_product_category: z.string().optional(),
     gender: z.enum(["female", "male", "unisex"]).optional(),
     gtin: z.string().optional(),
-    importer_address: z.record(z.any()).optional(),
+    importer_address: z.record(z.string(), z.any()).optional(),
     importer_name: z.string().optional(),
     inventory: z.number().int().optional(),
     manufacturer_info: z.string().optional(),
@@ -201,14 +200,14 @@ export const catalogHotelRoom = z.object({
 });
 
 const catalogItemCore = z.object({
-  type: z.nativeEnum(CatalogProductTypes),
+  type: z.enum(CatalogProductTypes),
   PRODUCT_ITEM: catalogProductCore.optional(),
   HOTEL: catalogHotel.optional(),
   HOTEL_ROOM: catalogHotelRoom.optional(),
 });
 
 const catalogItemBatch = z.object({
-  type: z.nativeEnum(CatalogProductTypes),
+  type: z.enum(CatalogProductTypes),
   PRODUCT_ITEM: z.array(catalogProductCore).optional(),
   HOTEL: z.array(catalogHotel).optional(),
   HOTEL_ROOM: z.array(catalogHotelRoom).optional(),
@@ -228,18 +227,16 @@ const catalogProductIdsSchema = z.object({
   ),
 });
 
-export const { schemas: catalogProductSchema, $ref: $wCp } = buildJsonSchemas(
-  {
-    catalogItemCore,
-    catalogItemBatch,
-    catalogItemQueryFilter,
-    catalogProductIdsSchema,
-  },
-  { $id: "catalogProductSchema" },
-);
-
 export type catalogItemSchema = z.infer<typeof catalogItemCore>;
 export type catalogItemBatchSchema = z.infer<typeof catalogItemBatch>;
 export type CatalogItemQueryFilter = z.infer<typeof catalogItemQueryFilter>;
 export type CatalogResponseInput = z.infer<typeof catalogProductResponseSchema>;
 export type CatalogProductIdsSchema = z.infer<typeof catalogProductIdsSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  catalogItemCore,
+  catalogItemBatch,
+  catalogItemQueryFilter,
+  catalogProductIdsSchema,
+};

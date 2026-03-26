@@ -35,7 +35,7 @@ export async function createQuestion(
   }
 
   // rest.title is to be a non-empty object
-  const newQuestion = { ...rest, id: randomUUID() } as Question;
+  const newQuestion = { ...rest, id: randomUUID() } as unknown as Question;
 
   // 4. Insert new question at position
   questions.splice(position, 0, newQuestion);

@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify";
-import { $reviewSuggestionRef } from "./reviewSuggestion.schema.js";
-import { $Tref } from "../team/team.schema.js";
+import {
+  createReviewSuggestionsSchema,
+  byReviewSuggestionIdSchema,
+} from "./reviewSuggestion.schema.js";
 import {
   createReviewSuggestionsHandler,
   deleteReviewSuggestionHandler,
@@ -12,6 +14,10 @@ import {
 } from "./reviewSuggestion.controller.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { verifyTeamAccess } from "../team/team.auth.js";
+import {
+  bySurveyTeamMapIdParamsSchema,
+  byTeamIdParamsSchema,
+} from "../team/team.schema.js";
 
 export async function reviewSuggestionRoutes(server: FastifyInstance) {
   server.setErrorHandler(errorHandler);
@@ -20,7 +26,7 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
     {
       preHandler: [checkSession, verifyTeamAccess],
       schema: {
-        params: $Tref("byTeamIdParamsSchema"),
+        params: byTeamIdParamsSchema,
       },
     },
     getReviewsByTeamIdHandler,
@@ -29,7 +35,7 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
     "/public/:surveyTeamMapId",
     {
       schema: {
-        params: $Tref("bySurveyTeamMapIdParamsSchema"),
+        params: bySurveyTeamMapIdParamsSchema,
       },
     },
     getReviewsBySurveyTeamMapIdHandler,
@@ -39,7 +45,7 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
     {
       preHandler: [checkSession, verifyTeamAccess],
       schema: {
-        params: $Tref("byTeamIdParamsSchema"),
+        params: byTeamIdParamsSchema,
       },
     },
     getReviewsSuggestionCountByTeamIdHandler,
@@ -49,8 +55,8 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
     {
       preHandler: [checkSession, verifyTeamAccess],
       schema: {
-        params: $Tref("byTeamIdParamsSchema"),
-        body: $reviewSuggestionRef("createReviewSuggestionsSchema"),
+        params: byTeamIdParamsSchema,
+        body: createReviewSuggestionsSchema,
       },
     },
     createReviewSuggestionsHandler,
@@ -60,7 +66,7 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
     {
       preHandler: [checkSession],
       schema: {
-        params: $reviewSuggestionRef("byReviewSuggestionIdSchema"),
+        params: byReviewSuggestionIdSchema,
       },
     },
     updateReviewSuggestionHandler,
@@ -69,7 +75,7 @@ export async function reviewSuggestionRoutes(server: FastifyInstance) {
     "/:reviewSuggestionId",
     {
       schema: {
-        params: $reviewSuggestionRef("byReviewSuggestionIdSchema"),
+        params: byReviewSuggestionIdSchema,
       },
     },
     deleteReviewSuggestionHandler,

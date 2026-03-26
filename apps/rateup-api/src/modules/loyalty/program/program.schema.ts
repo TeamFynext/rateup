@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 export const loyaltyProgramSchema = z.object({
@@ -40,20 +39,6 @@ export const loyaltyProgramResponseSchema = loyaltyProgramSchema.extend({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
-
-export const { schemas: loyaltyProgramSchemas, $ref: $programRef } =
-  buildJsonSchemas(
-    {
-      loyaltyProgramSchema,
-      loyaltyProgramUpdateSchema,
-      programIdParamSchema,
-      deleteProgramQuerySchema,
-      loyaltyProgramResponseSchema,
-    },
-    {
-      $id: "loyaltyProgramSchema",
-    },
-  );
 
 export type LoyaltyProgramInput = z.infer<typeof loyaltyProgramSchema>;
 export type LoyaltyProgramUpdateInput = z.infer<

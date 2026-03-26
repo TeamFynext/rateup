@@ -10,9 +10,14 @@ import {
   updateStripeProductsHandler,
   webHookHandler,
 } from "./stripe.controller.js";
-import { $PSref } from "./stripe.schema.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import { checkRoleHandler } from "../../../utils/checkRoleHandler.js";
+import {
+  createStripeCheckoutSchema,
+  getSessionStatus,
+  productIdParamsSchema,
+  updateProductSchema,
+} from "./stripe.schema.js";
 
 export async function paymentStripeRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -38,7 +43,7 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
     "/create-checkout-session",
     {
       schema: {
-        body: $PSref("createStripeCheckoutSchema"),
+        body: createStripeCheckoutSchema,
       },
     },
     createCheckoutSessionHandler,
@@ -48,7 +53,7 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
     "/session-status",
     {
       schema: {
-        querystring: $PSref("getSessionStatus"),
+        querystring: getSessionStatus,
       },
     },
     getSessionStatusHandler,
@@ -71,7 +76,7 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
     "/product",
     {
       schema: {
-        body: $PSref("updateProductSchema"),
+        body: updateProductSchema,
       },
     },
     updateStripeProductsHandler,
@@ -80,7 +85,7 @@ export async function paymentStripeRoutes(server: FastifyInstance) {
     "/product/:productId",
     {
       schema: {
-        params: $PSref("productIdParamsSchema"),
+        params: productIdParamsSchema,
       },
     },
     deleteStripeProductsHandler,

@@ -21,7 +21,10 @@ export async function createWaQuickReplyHandler(
 ) {
   try {
     const res = await createWaQuickReply(
-      request.body as QuickReply,
+      {
+        ...request.body,
+        priority: 1,
+      },
       request.user.orgId,
     );
     reply.code(200).send(res);

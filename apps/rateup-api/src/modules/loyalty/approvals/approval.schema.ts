@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 // Enums
@@ -24,48 +23,59 @@ export const RequestedByTypeEnum = z.enum(["CUSTOMER", "STAFF", "SYSTEM"]);
 // Request schemas
 export const createApprovalRequestSchema = z.object({
   requestType: ApprovalRequestTypeEnum,
-  accountId: z.string().uuid(),
-  points: z.number().int().nullable().optional(),
+  accountId: z.uuid(),
+  points: z.int().nullable().optional(),
   reason: z.string().min(1),
-  requestData: z.record(z.any()).optional().default({}),
-  requestedBy: z.string().uuid().nullable().optional(),
+  requestData: z.record(z.string(), z.any()).optional().default({}),
+  requestedBy: z.uuid().nullable().optional(),
   requestedByType: RequestedByTypeEnum.optional().default("CUSTOMER"),
   requestedByName: z.string().nullable().optional(),
-  redemptionId: z.string().uuid().nullable().optional(),
-  transactionId: z.string().uuid().nullable().optional(),
-  expiresAt: z.string().datetime().nullable().optional(),
+  redemptionId: z.uuid().nullable().optional(),
+  transactionId: z.uuid().nullable().optional(),
+  expiresAt: z.iso.datetime().nullable().optional(),
 });
 
 export const getApprovalRequestsSchema = z.object({
   status: ApprovalStatusEnum.optional(),
   requestType: ApprovalRequestTypeEnum.optional(),
-  accountId: z.string().uuid().optional(),
-  fromDate: z.string().datetime().optional(),
-  toDate: z.string().datetime().optional(),
-  page: z.number().int().min(1).optional().default(1),
-  limit: z.number().int().min(1).max(100).optional().default(20),
+  accountId: z.uuid().optional(),
+  fromDate: z.iso.datetime().optional(),
+  toDate: z.iso.datetime().optional(),
+  page: z.int().min(1).optional().default(1),
+  limit: z.int().min(1).max(100).optional().default(20),
 });
 
 export const approvalIdParamSchema = z.object({
-  approvalId: z.string().uuid(),
+  approvalId: z.uuid(),
 });
 
 export const approveRequestSchema = z.object({
-  approvalId: z.string().uuid(),
-  reviewerId: z.string().uuid(),
+  approvalId: z.uuid(),
+  reviewerId: z.uuid(),
   reviewerName: z.string(),
   notes: z.string().optional(),
 });
 
 export const rejectRequestSchema = z.object({
-  approvalId: z.string().uuid(),
-  reviewerId: z.string().uuid(),
+  approvalId: z.uuid(),
+  reviewerId: z.uuid(),
   reviewerName: z.string(),
   reason: z.string().min(1),
 });
+export const reviewRequestSchema = z.object({
+  reviewerId: z.uuid(),
+  reviewerName: z.string(),
+  notes: z.string().optional(),
+});
 
+export const expireRequestSchema = z.object({
+  reviewerId: z.uuid(),
+  reviewerName: z.string(),
+  reason: z.string().min(1),
+});
+export type ExpireRequestInput = z.infer<typeof expireRequestSchema>;
 export const cancelRequestSchema = z.object({
-  approvalId: z.string().uuid(),
+  approvalId: z.uuid(),
   reason: z.string().min(1),
 });
 
@@ -82,17 +92,3 @@ export type RejectRequestInput = z.infer<typeof rejectRequestSchema>;
 export type CancelRequestInput = z.infer<typeof cancelRequestSchema>;
 
 // Build JSON schemas for Fastify
-export const { schemas: approvalSchemas, $ref: $approvalRef } =
-  buildJsonSchemas(
-    {
-      createApprovalRequestSchema,
-      getApprovalRequestsSchema,
-      approvalIdParamSchema,
-      approveRequestSchema,
-      rejectRequestSchema,
-      cancelRequestSchema,
-    },
-    {
-      $id: "approval",
-    },
-  );

@@ -216,7 +216,7 @@ export async function syncCatalogProducts(
         additional_image_link: additional_image_urls,
         image_link: image_url,
         ...rest,
-      } as CatalogProductCore;
+      } as unknown as CatalogProductCore;
       if (existing) {
         await prisma.waCatalogProduct.update({
           where: {

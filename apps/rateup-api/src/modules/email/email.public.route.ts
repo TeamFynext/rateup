@@ -4,14 +4,18 @@ import {
   sendOTPEmailHandler,
   validateOTPHandler,
 } from "./email.controller.js";
-import { $Eref } from "./email.schema.js";
+import {
+  GenerateOtpSchema,
+  sendEmailSchema,
+  validateOtpSchema,
+} from "./email.schema.js";
 
 export async function emailPublicRoutes(server: FastifyInstance) {
   server.post(
     "/send-email",
     {
       schema: {
-        body: $Eref("sendEmailSchema"),
+        body: sendEmailSchema,
       },
     },
     sendEmailHandler,
@@ -20,7 +24,7 @@ export async function emailPublicRoutes(server: FastifyInstance) {
     "/otp/send-email",
     {
       schema: {
-        body: $Eref("GenerateOtpSchema"),
+        body: GenerateOtpSchema,
       },
     },
     sendOTPEmailHandler,
@@ -30,7 +34,7 @@ export async function emailPublicRoutes(server: FastifyInstance) {
     "/otp/validate",
     {
       schema: {
-        body: $Eref("validateOtpSchema"),
+        body: validateOtpSchema,
       },
     },
     validateOTPHandler,

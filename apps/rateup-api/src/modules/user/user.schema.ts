@@ -1,17 +1,17 @@
 import { z } from "zod";
-import { buildJsonSchemas } from "fastify-zod";
+
 import { UserRecipes } from "../../types/enums.js";
 import { UserPresenceMode } from "../../../generated/prisma/enums.js";
 
 const userCore = {
-  id: z.string().uuid(),
+  id: z.uuid(),
   prefLanguage: z.string().optional(),
 };
 
 const createUserSchema = z.object({
   ...userCore,
-  email: z.string().email(),
-  recipeName: z.nativeEnum(UserRecipes),
+  email: z.email(),
+  recipeName: z.enum(UserRecipes),
 });
 
 const userInfoSchema = z.object({
@@ -20,15 +20,15 @@ const userInfoSchema = z.object({
 
 const createUserSignupSchema = z.object({
   ...userCore,
-  email: z.string().email(),
+  email: z.email(),
   name: z.string().min(1),
   orgName: z.string().min(1),
   phone: z.string(),
   phoneNumber: z.string().optional(),
-  recipeName: z.nativeEnum(UserRecipes),
+  recipeName: z.enum(UserRecipes),
   planId: z.string().optional(),
   location: z.string().optional(),
-  website: z.string().url().optional(),
+  website: z.url().optional(),
   industry: z.string().optional(),
   goals: z.array(z.string()).optional(),
   integrationsSelected: z.array(z.string()).optional(),
@@ -67,12 +67,12 @@ const updateProfilePhotoSchema = z.object({
     .string()
     .min(6)
     .refine((value) => value.includes("."), {
-      message: "Invalid photo.",
+      error: "Invalid photo.",
     }),
 });
 
 const userEmailCheckSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
 });
 
 export enum UserAvailabilityStatus {
@@ -82,24 +82,9 @@ export enum UserAvailabilityStatus {
 }
 
 const userStatusSchema = z.object({
-  status: z.nativeEnum(UserAvailabilityStatus),
-  presenceMode: z.nativeEnum(UserPresenceMode),
+  status: z.enum(UserAvailabilityStatus),
+  presenceMode: z.enum(UserPresenceMode),
 });
-
-export const { schemas: userSchemas, $ref: $UserRef } = buildJsonSchemas(
-  {
-    createUserSignupSchema,
-    createUserGoogleSchema,
-    changeUserPasswordSchema,
-    updateProfileSchema,
-    updateProfilePhotoSchema,
-    updateUserLanguageSchema,
-    userEmailCheckSchema,
-    pauseUserSchema,
-    userStatusSchema,
-  },
-  { $id: "userSchema" },
-);
 
 export type CreateUserParams = z.infer<typeof createUserSchema>;
 export type userInfoParams = z.infer<typeof userInfoSchema>;
@@ -112,3 +97,16 @@ export type UpdateProfilePhotoSchema = z.infer<typeof updateProfilePhotoSchema>;
 export type userEmailCheckSchemaInput = z.infer<typeof userEmailCheckSchema>;
 export type PauseUserInput = z.infer<typeof pauseUserSchema>;
 export type UserStatusSchema = z.infer<typeof userStatusSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  createUserSignupSchema,
+  createUserGoogleSchema,
+  changeUserPasswordSchema,
+  updateProfileSchema,
+  updateProfilePhotoSchema,
+  updateUserLanguageSchema,
+  userEmailCheckSchema,
+  pauseUserSchema,
+  userStatusSchema,
+};

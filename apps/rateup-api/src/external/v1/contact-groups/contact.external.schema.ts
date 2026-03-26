@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import { contactCoreSchema } from "../../../modules/contact/contact.schema.js";
 
@@ -9,16 +8,11 @@ const contactResponseSchema = createContactSchema.extend({
   createdAt: z.string(),
 });
 
-export const { schemas: extContactSchemas, $ref: $extContactSchema } =
-  buildJsonSchemas(
-    {
-      createContactSchema,
-      createMultipleContactSchema,
-      contactResponseSchema,
-    },
-    {
-      $id: "contactExternalSchema",
-    },
-  );
-
 export type ExtCreateContactSchema = z.infer<typeof createContactSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  createContactSchema,
+  createMultipleContactSchema,
+  contactResponseSchema,
+};

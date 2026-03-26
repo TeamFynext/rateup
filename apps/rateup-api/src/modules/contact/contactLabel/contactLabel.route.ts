@@ -1,6 +1,13 @@
 import { FastifyInstance } from "fastify";
-import { $contactLabelRef } from "./contactLabel.schema.js";
-import { $contactRef } from "../contact.schema.js";
+import {
+  createContactLabelSchema,
+  contactLabelResponseSchema,
+  byLabelIdSchema,
+  updateContactLabelSchema,
+  assignLabelsToContactSchema,
+  assignLabelsToContactsSchema,
+  assignLabelsToContactQuerySchema,
+} from "./contactLabel.schema.js";
 import {
   createContactLabelHandler,
   getAllContactLabelsHandler,
@@ -11,6 +18,7 @@ import {
   getContactsWithLabelsHandler,
   assignLabelsToContactsHandler,
 } from "./contactLabel.controller.js";
+import { byContactIdSchema } from "../contact.schema.js";
 
 export async function contactLabelRoutes(server: FastifyInstance) {
   // Create a new label
@@ -18,9 +26,9 @@ export async function contactLabelRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $contactLabelRef("createContactLabelSchema"),
+        body: createContactLabelSchema,
         response: {
-          201: $contactLabelRef("contactLabelResponseSchema"),
+          201: contactLabelResponseSchema,
         },
       },
     },
@@ -33,10 +41,7 @@ export async function contactLabelRoutes(server: FastifyInstance) {
     {
       schema: {
         response: {
-          200: {
-            type: "array",
-            items: $contactLabelRef("contactLabelResponseSchema"),
-          },
+          200: contactLabelResponseSchema.array(),
         },
       },
     },
@@ -48,15 +53,7 @@ export async function contactLabelRoutes(server: FastifyInstance) {
     "/contacts",
     {
       schema: {
-        querystring: {
-          type: "object",
-          properties: {
-            labelIds: {
-              type: "string",
-              description: "Comma-separated list of label IDs",
-            },
-          },
-        },
+        querystring: assignLabelsToContactQuerySchema,
       },
     },
     getContactsWithLabelsHandler,
@@ -67,9 +64,9 @@ export async function contactLabelRoutes(server: FastifyInstance) {
     "/:labelId",
     {
       schema: {
-        params: $contactLabelRef("byLabelIdSchema"),
+        params: byLabelIdSchema,
         response: {
-          200: $contactLabelRef("contactLabelResponseSchema"),
+          200: contactLabelResponseSchema,
         },
       },
     },
@@ -81,10 +78,10 @@ export async function contactLabelRoutes(server: FastifyInstance) {
     "/:labelId",
     {
       schema: {
-        params: $contactLabelRef("byLabelIdSchema"),
-        body: $contactLabelRef("updateContactLabelSchema"),
+        params: byLabelIdSchema,
+        body: updateContactLabelSchema,
         response: {
-          200: $contactLabelRef("contactLabelResponseSchema"),
+          200: contactLabelResponseSchema,
         },
       },
     },
@@ -96,7 +93,7 @@ export async function contactLabelRoutes(server: FastifyInstance) {
     "/:labelId",
     {
       schema: {
-        params: $contactLabelRef("byLabelIdSchema"),
+        params: byLabelIdSchema,
       },
     },
     deleteContactLabelHandler,
@@ -107,8 +104,8 @@ export async function contactLabelRoutes(server: FastifyInstance) {
     "/assign/:contactId",
     {
       schema: {
-        params: $contactRef("byContactIdSchema"),
-        body: $contactLabelRef("assignLabelsToContactSchema"),
+        params: byContactIdSchema,
+        body: assignLabelsToContactSchema,
       },
     },
     assignLabelsToContactHandler,
@@ -119,7 +116,7 @@ export async function contactLabelRoutes(server: FastifyInstance) {
     "/assign",
     {
       schema: {
-        body: $contactLabelRef("assignLabelsToContactsSchema"),
+        body: assignLabelsToContactsSchema,
       },
     },
     assignLabelsToContactsHandler,

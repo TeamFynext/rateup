@@ -10,14 +10,19 @@ import {
   sendCampaignHandler,
   updateCampaignByIdHandler,
 } from "./campaign.controller.js";
-import { $campaignRef } from "./campaign.schema.js";
 import { campaignParticipantRoutes } from "./campaignParticipants/campaignParticipants.route.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { verifyMessageMonthlyLimitRestrictionForCampaign } from "./campaign.auth.js";
-import { $surveyThemeRef } from "../surveyTheme/surveyTheme.schema.js";
 import { verifyCampaignMaxLimit } from "./campaign.util.js";
+import {
+  byCampaignIdParamsSchema,
+  createCampaignInputSchema,
+  getCampaignsQuerySchema,
+  updateCampaignInputSchema,
+} from "./campaign.schema.js";
+import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema.js";
 
 export async function campaignRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -36,7 +41,7 @@ export async function campaignRoutes(server: FastifyInstance) {
     {
       preHandler: verifyCampaignMaxLimit,
       schema: {
-        body: $campaignRef("createCampaignInputSchema"),
+        body: createCampaignInputSchema,
       },
     },
     createCampaignHandler,
@@ -45,7 +50,7 @@ export async function campaignRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        querystring: $campaignRef("getCampaignsQuerySchema"),
+        querystring: getCampaignsQuerySchema,
       },
     },
     getCampaignsHandler,
@@ -54,8 +59,8 @@ export async function campaignRoutes(server: FastifyInstance) {
     "/:campaignId",
     {
       schema: {
-        params: $campaignRef("byCampaignIdParamsSchema"),
-        body: $campaignRef("updateCampaignInputSchema"),
+        params: byCampaignIdParamsSchema,
+        body: updateCampaignInputSchema,
       },
     },
     updateCampaignByIdHandler,
@@ -64,7 +69,7 @@ export async function campaignRoutes(server: FastifyInstance) {
     "/:campaignId",
     {
       schema: {
-        params: $campaignRef("byCampaignIdParamsSchema"),
+        params: byCampaignIdParamsSchema,
       },
     },
     deleteCampaignByIdHandler,
@@ -74,21 +79,21 @@ export async function campaignRoutes(server: FastifyInstance) {
     {
       preHandler: verifyMessageMonthlyLimitRestrictionForCampaign,
       schema: {
-        params: $campaignRef("byCampaignIdParamsSchema"),
+        params: byCampaignIdParamsSchema,
       },
     },
     sendCampaignHandler,
   );
   server.get(
     "/flow/filter",
-    { schema: { querystring: $surveyThemeRef("bySurveyIdSchema") } },
+    { schema: { querystring: bySurveyIdSchema } },
     getCampaignFilterForFlowsHandler,
   );
   server.get(
     "/:campaignId/responses",
     {
       schema: {
-        params: $campaignRef("byCampaignIdParamsSchema"),
+        params: byCampaignIdParamsSchema,
       },
     },
     getResponseByCampaignByIdHandler,
@@ -97,7 +102,7 @@ export async function campaignRoutes(server: FastifyInstance) {
     "/:campaignId/download",
     {
       schema: {
-        params: $campaignRef("byCampaignIdParamsSchema"),
+        params: byCampaignIdParamsSchema,
       },
     },
     getResponseExcelByCampaignByIdHandler,
@@ -108,7 +113,7 @@ export async function campaignRoutes(server: FastifyInstance) {
     "/:campaignId/stats",
     {
       schema: {
-        params: $campaignRef("byCampaignIdParamsSchema"),
+        params: byCampaignIdParamsSchema,
       },
     },
     getCampaignStatsHandler,

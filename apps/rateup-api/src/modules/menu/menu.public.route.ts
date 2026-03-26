@@ -4,14 +4,17 @@ import {
   getMenuByIdHandler,
   visitedMenuLandingHandler,
 } from "./menu.controller.js";
-import { $Mref } from "./menu.schema.js";
+import {
+  ByMenuIdParamsSchema,
+  fullMenuPublicResponseSchema,
+} from "./menu.schema.js";
 
 export async function menuPublicRoutes(server: FastifyInstance) {
   server.get(
     "/:menuId",
     {
       schema: {
-        params: $Mref("ByMenuIdParamsSchema"),
+        params: ByMenuIdParamsSchema,
       },
     },
     getMenuByIdHandler,
@@ -20,9 +23,9 @@ export async function menuPublicRoutes(server: FastifyInstance) {
     "/full/:menuId",
     {
       schema: {
-        params: $Mref("ByMenuIdParamsSchema"),
+        params: ByMenuIdParamsSchema,
         response: {
-          200: $Mref("fullMenuPublicResponseSchema"),
+          200: fullMenuPublicResponseSchema,
         },
       },
     },
@@ -32,7 +35,7 @@ export async function menuPublicRoutes(server: FastifyInstance) {
     "/:menuId/visited",
     {
       schema: {
-        params: $Mref("ByMenuIdParamsSchema"),
+        params: ByMenuIdParamsSchema,
       },
     },
     visitedMenuLandingHandler,

@@ -12,12 +12,18 @@ import {
   updateTemplateHandler,
   uploadHandler,
 } from "./wa_templates.controller.js";
-import { $WTref } from "./wa_templates.schema.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import fastifyMultipart from "@fastify/multipart";
 import { verifyMessageMonthlyLimitRestriction } from "./wa_templates.auth.js";
+import {
+  byTemplateIdParamsSchema,
+  syncTemplatesSchema,
+  templateTypeParamsSchema,
+  waTemplateInputSchema,
+  waUserSendTemplateBodySchema,
+} from "./wa_templates.schema.js";
 
 export async function waTemplatesRoutes(server: FastifyInstance) {
   server.register(fastifyMultipart, {
@@ -38,7 +44,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        querystring: $WTref("templateTypeParamsSchema"),
+        querystring: templateTypeParamsSchema,
       },
     },
     getTemplatesHandler,
@@ -47,7 +53,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     "/:templateId",
     {
       schema: {
-        params: $WTref("byTemplateIdParamsSchema"),
+        params: byTemplateIdParamsSchema,
       },
     },
     getTemplateByIdHandler,
@@ -58,7 +64,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     {
       // preHandler: verifyTemplateSubscriptionLimit,
       schema: {
-        body: $WTref("waTemplateInputSchema"),
+        body: waTemplateInputSchema,
       },
     },
     createTemplateHandler,
@@ -68,7 +74,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     {
       // preHandler: verifyTemplateSubscriptionLimit,
       schema: {
-        body: $WTref("waTemplateInputSchema"),
+        body: waTemplateInputSchema,
       },
     },
     saveTemplateAsDraftHandler,
@@ -78,8 +84,8 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     "/:templateId",
     {
       schema: {
-        params: $WTref("byTemplateIdParamsSchema"),
-        body: $WTref("waTemplateInputSchema"),
+        params: byTemplateIdParamsSchema,
+        body: waTemplateInputSchema,
       },
     },
     updateTemplateHandler,
@@ -88,7 +94,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     "/:templateId",
     {
       schema: {
-        params: $WTref("byTemplateIdParamsSchema"),
+        params: byTemplateIdParamsSchema,
       },
     },
     deleteTemplateHandler,
@@ -98,7 +104,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     "/sync",
     {
       schema: {
-        body: $WTref("syncTemplatesSchema"),
+        body: syncTemplatesSchema,
       },
     },
     syncTemplatesHandler,
@@ -121,8 +127,8 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
     {
       preHandler: verifyMessageMonthlyLimitRestriction,
       schema: {
-        params: $WTref("byTemplateIdParamsSchema"),
-        body: $WTref("waUserSendTemplateBodySchema"),
+        params: byTemplateIdParamsSchema,
+        body: waUserSendTemplateBodySchema,
       },
     },
     sendTemplateToUserHandler,

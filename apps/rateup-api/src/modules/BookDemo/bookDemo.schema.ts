@@ -1,10 +1,9 @@
 import { z } from "zod";
-import { buildJsonSchemas } from "fastify-zod";
 
 const createBookDemoInputSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters long"),
   lastName: z.string().min(2, "Last name must be at least 2 characters long"),
-  workEmail: z.string().email("Invalid email address"),
+  workEmail: z.email("Invalid email address"),
   phoneNumber: z
     .string()
     .min(10, "Phone number must be at least 10 digits")
@@ -18,11 +17,7 @@ const createBookDemoInputSchema = z.object({
   additionalInfo: z.string().optional(),
 });
 
-export const { schemas: bookDemoSchemas, $ref: $Bref } = buildJsonSchemas(
-  {
-    createBookDemoInputSchema,
-  },
-  { $id: "bookDemoSchema" },
-);
-
 export type CreateBookDemoInput = z.infer<typeof createBookDemoInputSchema>;
+
+// Auto-exported after fastify-zod migration
+export { createBookDemoInputSchema };

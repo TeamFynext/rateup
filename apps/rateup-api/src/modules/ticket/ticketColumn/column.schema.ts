@@ -1,10 +1,9 @@
 import { z } from "zod";
-import { buildJsonSchemas } from "fastify-zod";
 
 // Base schema for column
 const columnCore = {
   title: z.string(),
-  ticketBoardId: z.string().uuid(),
+  ticketBoardId: z.uuid(),
   order: z.number().optional(),
 };
 
@@ -15,7 +14,7 @@ const createColumnRequestSchema = z.object({
 
 // Response schema for created column
 const createColumnResponseSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   ...columnCore,
 });
 
@@ -28,7 +27,7 @@ const updateColumnRequestSchema = z.object({
 const reorderColumnRequestSchema = z.object({
   columns: z.array(
     z.object({
-      id: z.string().uuid(),
+      id: z.uuid(),
       order: z.number(),
     }),
   ),
@@ -36,23 +35,22 @@ const reorderColumnRequestSchema = z.object({
 
 // Schema for id parameter in routes
 const idParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 // Schema for boardId parameter in routes
 const boardIdParamsSchema = z.object({
-  ticketBoardId: z.string().uuid(),
+  ticketBoardId: z.uuid(),
 });
 
 // Building JSON schemas for Fastify
-export const { schemas: columnSchemas, $ref: $ColumnRef } = buildJsonSchemas(
-  {
-    createColumnRequestSchema,
-    createColumnResponseSchema,
-    updateColumnRequestSchema,
-    reorderColumnRequestSchema,
-    idParamsSchema,
-    boardIdParamsSchema,
-  },
-  { $id: "columnSchemas" },
-);
+
+// Auto-exported after fastify-zod migration
+export {
+  createColumnRequestSchema,
+  createColumnResponseSchema,
+  updateColumnRequestSchema,
+  reorderColumnRequestSchema,
+  idParamsSchema,
+  boardIdParamsSchema,
+};

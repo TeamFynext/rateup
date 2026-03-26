@@ -1,7 +1,13 @@
 import { FastifyInstance } from "fastify";
 import {
-  $contactGroupRef,
-  contactGroupSchemas,
+  createContactGroupInputSchema,
+  contactGroupResponseSchema,
+  getContactGroupsQuerySchema,
+  byContactGroupIdWithOrgIdParamsSchema,
+  updateContactGroupInputSchema,
+  addExistingContactsToGroupInputSchema,
+  extAddNewContactsToGroupInputSchema,
+  removeGroupContactsSchema,
 } from "../../../modules/contact/contactGroup/contactGroup.schema.js";
 import {
   addExistingContactsToGroupExternalController,
@@ -13,29 +19,19 @@ import {
   removeContactsFromGroupExternalController,
   updateContactGroupExternalController,
 } from "./contact-groups.external.controller.js";
-import {
-  $extContactSchema,
-  extContactSchemas,
-} from "./contact.external.schema.js";
+import { contactResponseSchema } from "./contact.external.schema.js";
 
 export async function externalContactGroupRoutes(server: FastifyInstance) {
-  for (const schema of contactGroupSchemas) {
-    server.addSchema(schema);
-  }
-  for (const schema of extContactSchemas) {
-    server.addSchema(schema);
-  }
-
   server.post(
     "/",
     {
       schema: {
-        body: $contactGroupRef("createContactGroupInputSchema"),
+        body: createContactGroupInputSchema,
         description: "Create a contact group",
         summary: "Create a contact group",
         tags: ["Contacts/Groups"],
         response: {
-          200: $contactGroupRef("contactGroupResponseSchema"),
+          200: contactGroupResponseSchema,
         },
       },
     },
@@ -46,15 +42,12 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        querystring: $contactGroupRef("getContactGroupsQuerySchema"),
+        querystring: getContactGroupsQuerySchema,
         description: "Get all contact groups",
         summary: "Get all contact groups",
         tags: ["Contacts/Groups"],
         response: {
-          200: {
-            type: "array",
-            items: $contactGroupRef("contactGroupResponseSchema"),
-          },
+          200: contactGroupResponseSchema.array(),
         },
       },
     },
@@ -65,15 +58,12 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     "/:contactGroupId/contacts",
     {
       schema: {
-        params: $contactGroupRef("byContactGroupIdWithOrgIdParamsSchema"),
+        params: byContactGroupIdWithOrgIdParamsSchema,
         description: "Get contacts by contact group id",
         summary: "Get contacts by contact group id",
         tags: ["Contacts/Groups"],
         response: {
-          200: {
-            type: "array",
-            items: $extContactSchema("contactResponseSchema"),
-          },
+          200: contactResponseSchema.array(),
         },
       },
     },
@@ -84,8 +74,8 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     "/:contactGroupId",
     {
       schema: {
-        params: $contactGroupRef("byContactGroupIdWithOrgIdParamsSchema"),
-        body: $contactGroupRef("updateContactGroupInputSchema"),
+        params: byContactGroupIdWithOrgIdParamsSchema,
+        body: updateContactGroupInputSchema,
         description: "Update a contact group",
         summary: "Update a contact group",
         tags: ["Contacts/Groups"],
@@ -98,7 +88,7 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     "/:contactGroupId",
     {
       schema: {
-        params: $contactGroupRef("byContactGroupIdWithOrgIdParamsSchema"),
+        params: byContactGroupIdWithOrgIdParamsSchema,
         description: "Delete a contact group",
         summary: "Delete a contact group",
         tags: ["Contacts/Groups"],
@@ -111,8 +101,8 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     "/:contactGroupId/contacts/existing",
     {
       schema: {
-        params: $contactGroupRef("byContactGroupIdWithOrgIdParamsSchema"),
-        body: $contactGroupRef("addExistingContactsToGroupInputSchema"),
+        params: byContactGroupIdWithOrgIdParamsSchema,
+        body: addExistingContactsToGroupInputSchema,
         description: "Add existing contacts to a contact group",
         summary: "Add existing contacts to a contact group",
         tags: ["Contacts/Groups"],
@@ -125,8 +115,8 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     "/:contactGroupId/contacts/new",
     {
       schema: {
-        params: $contactGroupRef("byContactGroupIdWithOrgIdParamsSchema"),
-        body: $contactGroupRef("extAddNewContactsToGroupInputSchema"),
+        params: byContactGroupIdWithOrgIdParamsSchema,
+        body: extAddNewContactsToGroupInputSchema,
         description: "Add new contacts to a contact group",
         summary: "Add new contacts to a contact group",
         tags: ["Contacts/Groups"],
@@ -139,8 +129,8 @@ export async function externalContactGroupRoutes(server: FastifyInstance) {
     "/:contactGroupId/contacts",
     {
       schema: {
-        params: $contactGroupRef("byContactGroupIdWithOrgIdParamsSchema"),
-        body: $contactGroupRef("removeGroupContactsSchema"),
+        params: byContactGroupIdWithOrgIdParamsSchema,
+        body: removeGroupContactsSchema,
         description: "Remove contacts from a contact group",
         summary: "Remove contacts from a contact group",
         tags: ["Contacts/Groups"],

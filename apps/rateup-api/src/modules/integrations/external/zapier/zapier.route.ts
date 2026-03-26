@@ -19,10 +19,22 @@ import {
   zapierAuthenticationHandler,
 } from "./zapier.controller.js";
 import { createContactHandler } from "../../../contact/contact.controller.js";
-import { $zapier } from "./zapier.schema.js";
-import { $contactRef } from "../../../contact/contact.schema.js";
-import { $Tref } from "../../../team/team.schema.js";
-import { $BoardRef } from "../../../ticket/ticketBoard/board.schema.js";
+import {
+  boardQuerySchema,
+  contactLabelSchema,
+  contactResponseSchema,
+  contactSearchResponseSchema,
+  contactSearchSchema,
+  dropdownResponseSchema,
+  inviteMemberRequestSchema,
+  newMemberToGroupShema,
+  sendMessageSchema,
+  successSchema,
+  ticketCardResponseSchema,
+  ticketCardSchema,
+  ticketColumnSchema,
+  triggerSubscriptionBodySchema,
+} from "./zapier.schema.js";
 
 export async function zapierRoutes(server: FastifyInstance) {
   //auth
@@ -33,9 +45,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     {
       schema: {
         response: {
-          201: $zapier("successSchema"),
+          201: successSchema,
         },
-        body: $zapier("triggerSubscriptionBodySchema"),
+        body: triggerSubscriptionBodySchema,
       },
     },
     subscribeTriggerHandler,
@@ -45,7 +57,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     {
       schema: {
         response: {
-          201: $zapier("successSchema"),
+          201: successSchema,
         },
       },
     },
@@ -59,7 +71,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     {
       schema: {
         response: {
-          201: $zapier("dropdownResponseSchema"),
+          201: dropdownResponseSchema,
         },
       },
     },
@@ -69,9 +81,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/ticket-boards",
     {
       schema: {
-        querystring: $zapier("boardQuerySchema"),
+        querystring: boardQuerySchema,
         response: {
-          201: $zapier("dropdownResponseSchema"),
+          201: dropdownResponseSchema,
         },
       },
     },
@@ -81,9 +93,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/ticket-column",
     {
       schema: {
-        querystring: $zapier("ticketColumnSchema"),
+        querystring: ticketColumnSchema,
         response: {
-          201: $zapier("dropdownResponseSchema"),
+          201: dropdownResponseSchema,
         },
       },
     },
@@ -94,7 +106,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     {
       schema: {
         response: {
-          201: $zapier("dropdownResponseSchema"),
+          201: dropdownResponseSchema,
         },
       },
     },
@@ -107,9 +119,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/send-message",
     {
       schema: {
-        body: $zapier("sendMessageSchema"),
+        body: sendMessageSchema,
         response: {
-          201: $zapier("successSchema"),
+          201: successSchema,
         },
       },
     },
@@ -119,9 +131,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/contact-lifecycle",
     {
       schema: {
-        body: $zapier("contactLabelSchema"),
+        body: contactLabelSchema,
         response: {
-          201: $zapier("contactLabelSchema"),
+          201: contactLabelSchema,
         },
       },
     },
@@ -132,7 +144,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     {
       schema: {
         response: {
-          201: $zapier("contactResponseSchema"),
+          201: contactResponseSchema,
         },
       },
     },
@@ -143,7 +155,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     {
       schema: {
         response: {
-          201: $zapier("contactResponseSchema"),
+          201: contactResponseSchema,
         },
       },
     },
@@ -153,9 +165,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/contact",
     {
       schema: {
-        querystring: $zapier("contactSearchSchema"),
+        querystring: contactSearchSchema,
         response: {
-          201: $zapier("contactSearchResponseSchema"),
+          201: contactSearchResponseSchema,
         },
       },
     },
@@ -165,9 +177,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/contact",
     {
       schema: {
-        body: $zapier("contactSearchSchema"),
+        body: contactSearchSchema,
         response: {
-          201: $zapier("contactResponseSchema"),
+          201: contactResponseSchema,
         },
       },
     },
@@ -178,9 +190,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     {
       schema: {
         response: {
-          201: $zapier("ticketCardResponseSchema"),
+          201: ticketCardResponseSchema,
         },
-        body: $zapier("ticketCardSchema"),
+        body: ticketCardSchema,
       },
     },
     createTicketHandler,
@@ -190,9 +202,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/add-group-member",
     {
       schema: {
-        body: $zapier("newMemberToGroupShema"),
+        body: newMemberToGroupShema,
         response: {
-          201: $zapier("successSchema"),
+          201: successSchema,
         },
       },
     },
@@ -203,9 +215,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/invite-member",
     {
       schema: {
-        body: $zapier("inviteMemberRequestSchema"),
+        body: inviteMemberRequestSchema,
         response: {
-          201: $zapier("successSchema"),
+          201: successSchema,
         },
       },
     },

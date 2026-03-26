@@ -19,8 +19,16 @@ import {
   unblockWhatsappUserHandler,
 } from "./wamessage.controller.js";
 import { checkSession } from "../../../../utils/checkSession.js";
-import { $contactRef } from "../../../contact/contact.schema.js";
-import { $waMessage } from "./wamessage.schema.js";
+import { byContactIdSchema } from "../../../contact/contact.schema.js";
+import {
+  blockUserSchema,
+  bulkWaMessageAssignBody,
+  generateInboxResponseBody,
+  PaginateQuerySchema,
+  waChatExportQuerySchema,
+  waChatFilterQuerySchema,
+  waMessageAssignBody,
+} from "./wamessage.schema.js";
 
 export async function waMessageRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -28,8 +36,8 @@ export async function waMessageRoutes(server: FastifyInstance) {
     "/:contactId",
     {
       schema: {
-        params: $contactRef("byContactIdSchema"),
-        querystring: $waMessage("PaginateQuerySchema"),
+        params: byContactIdSchema,
+        querystring: PaginateQuerySchema,
       },
     },
     getWaMessagesByContactIdHandler,
@@ -38,8 +46,8 @@ export async function waMessageRoutes(server: FastifyInstance) {
     "/:contactId",
     {
       schema: {
-        params: $contactRef("byContactIdSchema"),
-        querystring: $waMessage("PaginateQuerySchema"),
+        params: byContactIdSchema,
+        querystring: PaginateQuerySchema,
       },
     },
     sendNewWaMessageHandler,
@@ -49,7 +57,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
     "/mark/:contactId",
     {
       schema: {
-        params: $contactRef("byContactIdSchema"),
+        params: byContactIdSchema,
       },
     },
     markMessagesAsReadHandler,
@@ -61,7 +69,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
     "/contactsfiltered",
     {
       schema: {
-        querystring: $waMessage("waChatFilterQuerySchema"),
+        querystring: waChatFilterQuerySchema,
       },
     },
     getFilteredContactsHandler,
@@ -70,7 +78,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
   server.post(
     "/exportmessages",
     {
-      schema: { querystring: $waMessage("waChatExportQuerySchema") },
+      schema: { querystring: waChatExportQuerySchema },
     },
     exportWhatsappChatsHandler,
   );
@@ -80,7 +88,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
     "/assign",
     {
       schema: {
-        body: $waMessage("waMessageAssignBody"),
+        body: waMessageAssignBody,
       },
     },
     assignWaMessageHandler,
@@ -90,7 +98,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
     "/assign-bulk",
     {
       schema: {
-        body: $waMessage("bulkWaMessageAssignBody"),
+        body: bulkWaMessageAssignBody,
       },
     },
     bulkAssignWaMessageHandler,
@@ -100,7 +108,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
     "/privatemessage/:contactId",
     {
       schema: {
-        params: $contactRef("byContactIdSchema"),
+        params: byContactIdSchema,
       },
     },
     createPrivateMessageHandler,
@@ -110,7 +118,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
     "/assign/:contactId",
     {
       schema: {
-        params: $contactRef("byContactIdSchema"),
+        params: byContactIdSchema,
       },
     },
     getAssignedUserForContactHandler,
@@ -122,7 +130,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
     "/block-user",
     {
       schema: {
-        body: $waMessage("blockUserSchema"),
+        body: blockUserSchema,
       },
     },
     blockWhatsappUserHandler,
@@ -132,7 +140,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
     "/unblock-user",
     {
       schema: {
-        body: $waMessage("blockUserSchema"),
+        body: blockUserSchema,
       },
     },
     unblockWhatsappUserHandler,
@@ -143,7 +151,7 @@ export async function waMessageRoutes(server: FastifyInstance) {
     "/generate-response",
     {
       schema: {
-        body: $waMessage("generateInboxResponseBody"),
+        body: generateInboxResponseBody,
       },
     },
     generateInboxResponseHandler,

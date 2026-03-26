@@ -6,7 +6,11 @@ import {
   deleteWaQuickReplyByIdHandler,
   updateWaQuickReplyByIdHandler,
 } from "./quickReply.controller.js";
-import { $quickReplyRef } from "./quickReply.schema.js";
+import {
+  quickReplyCore,
+  byQuickReplyIdParamSchema,
+  updateQuickReplyShema,
+} from "./quickReply.schema.js";
 import { checkSession } from "../../../../utils/checkSession.js";
 
 export async function waQuickReplyRoutes(server: FastifyInstance) {
@@ -15,7 +19,7 @@ export async function waQuickReplyRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $quickReplyRef("quickReplyCore"),
+        body: quickReplyCore,
       },
     },
     createWaQuickReplyHandler,
@@ -25,7 +29,7 @@ export async function waQuickReplyRoutes(server: FastifyInstance) {
     "/:quickReplyId",
     {
       schema: {
-        params: $quickReplyRef("byQuickReplyIdParamSchema"),
+        params: byQuickReplyIdParamSchema,
       },
     },
     getWaQuickReplyByIdHandler,
@@ -34,7 +38,7 @@ export async function waQuickReplyRoutes(server: FastifyInstance) {
     "/:quickReplyId",
     {
       schema: {
-        params: $quickReplyRef("byQuickReplyIdParamSchema"),
+        params: byQuickReplyIdParamSchema,
       },
     },
     deleteWaQuickReplyByIdHandler,
@@ -43,8 +47,8 @@ export async function waQuickReplyRoutes(server: FastifyInstance) {
     "/:quickReplyId",
     {
       schema: {
-        params: $quickReplyRef("byQuickReplyIdParamSchema"),
-        body: $quickReplyRef("updateQuickReplyShema"),
+        params: byQuickReplyIdParamSchema,
+        body: updateQuickReplyShema,
       },
     },
     updateWaQuickReplyByIdHandler,

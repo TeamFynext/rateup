@@ -749,6 +749,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
     platform: ResponsePlatform.WHATSAPP,
     contactId: contact?.id,
     tag: session.tag,
+    location: { coordinates: undefined },
   };
   const ticketIssued = session?.surveyTeamMap?.survey?.WaFlow
     ?.ticketIssued as unknown as FlowTicket[];

@@ -1,9 +1,9 @@
 import { ContactGroupType } from "../../../generated/prisma/client.js";
-import { buildJsonSchemas } from "fastify-zod";
+
 import { z } from "zod";
 import { WaMessageAssignStatus } from "../../types/enums.js";
 
-export const contactCoreSchema = z.object({
+const contactCoreSchema = z.object({
   name: z.string(),
   phone: z.string().optional(),
   customFields: z
@@ -20,18 +20,18 @@ export const contactCoreSchema = z.object({
   external_id: z.string().optional(),
   aiWaChat: z.boolean().optional(),
   igsId: z.string().optional(),
-  labels: z.array(z.string().uuid()).optional(),
+  labels: z.array(z.uuid()).optional(),
   contactGroupIds: z.array(z.string()).optional(),
   assignedUserIds: z.array(z.string()).optional(),
   lifecycleId: z.string().optional(),
   notes: z.string().optional(),
 });
 
-export const createMultipleContactSchema = z.array(contactCoreSchema);
+const createMultipleContactSchema = z.array(contactCoreSchema);
 
 const bulkUpdateContactStatusSchema = z.object({
-  contactIds: z.array(z.string().uuid()),
-  waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus),
+  contactIds: z.array(z.uuid()),
+  waMessageAssignStatus: z.enum(WaMessageAssignStatus),
   messageId: z.string().optional(), // for internal messages
 });
 
@@ -47,7 +47,7 @@ const updateContactSchema = z.object({
     )
     .optional(),
   aiWaChat: z.boolean().optional(),
-  waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus).optional(),
+  waMessageAssignStatus: z.enum(WaMessageAssignStatus).optional(),
   messageId: z.string().optional(), // for internal messages
   lastReceivedMessageTimeStamp: z.string().optional(),
   whatsappUserName: z.string().optional(),
@@ -62,7 +62,7 @@ const updateContactSchema = z.object({
   lastReceivedMetadata: z.any().optional(),
   lastSentMessageTimeStamp: z.string().optional(),
   lastMessageSourceIdentifier: z.string().optional(),
-  labels: z.array(z.string().uuid()).optional(),
+  labels: z.array(z.uuid()).optional(),
   contactGroupIds: z.array(z.string()).optional(),
   assignedUserIds: z.array(z.string()).optional(),
   lifecycleId: z.string().optional(),
@@ -72,13 +72,13 @@ const updateContactLabelsSchema = z.object({
   lifecycleId: z.string(),
 });
 
-export const paginationQuery = z.object({
+const paginationQuery = z.object({
   page: z.number().optional(),
   limit: z.number().optional(),
   search: z.string().optional(),
   sort: z.string().optional(),
   desc: z.string().optional(),
-  type: z.nativeEnum(ContactGroupType).optional(),
+  type: z.enum(ContactGroupType).optional(),
 });
 
 const byContactIdSchema = z.object({
@@ -103,27 +103,8 @@ const byFieldIdSchema = z.object({
 });
 
 const assignLabelsToContactSchema = z.object({
-  labelIds: z.array(z.string().uuid()),
+  labelIds: z.array(z.uuid()),
 });
-
-export const { schemas: contactSchemas, $ref: $contactRef } = buildJsonSchemas(
-  {
-    byContactIdSchema,
-    updateContactSchema,
-    createMultipleContactSchema,
-    deleteManyContactSchema,
-    contactCoreSchema,
-    paginationQuery,
-    updateContactLabelsSchema,
-    customFieldSchema,
-    byFieldIdSchema,
-    assignLabelsToContactSchema,
-    bulkUpdateContactStatusSchema,
-  },
-  {
-    $id: "contactSchema",
-  },
-);
 
 export type ContactCore = z.infer<typeof contactCoreSchema>;
 export type ByContactIdParams = z.infer<typeof byContactIdSchema>;
@@ -145,3 +126,18 @@ export type ByFieldIdSchema = z.infer<typeof byFieldIdSchema>;
 export type AssignLabelsToContactSchema = z.infer<
   typeof assignLabelsToContactSchema
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  byContactIdSchema,
+  updateContactSchema,
+  createMultipleContactSchema,
+  deleteManyContactSchema,
+  contactCoreSchema,
+  paginationQuery,
+  updateContactLabelsSchema,
+  customFieldSchema,
+  byFieldIdSchema,
+  assignLabelsToContactSchema,
+  bulkUpdateContactStatusSchema,
+};

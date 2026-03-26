@@ -8,7 +8,11 @@ import {
   reorderLabelsHandler,
   updateLifecycleHandler,
 } from "./lifecycle.controller.js";
-import { $LifecycleRef } from "./lifecycle.schema.js";
+import {
+  lifecycleBodySchema,
+  lifecycleReorderSchema,
+  lifecycleIdParamSchema,
+} from "./lifecycle.schema.js";
 
 export async function lifecycleRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -18,7 +22,7 @@ export async function lifecycleRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $LifecycleRef("lifecycleBodySchema"),
+        body: lifecycleBodySchema,
       },
     },
     createLifecycleHandler,
@@ -27,7 +31,7 @@ export async function lifecycleRoutes(server: FastifyInstance) {
     "/reorder",
     {
       schema: {
-        body: $LifecycleRef("lifecycleReorderSchema"),
+        body: lifecycleReorderSchema,
       },
     },
     reorderLabelsHandler,
@@ -36,8 +40,8 @@ export async function lifecycleRoutes(server: FastifyInstance) {
     "/:lifecycleId",
     {
       schema: {
-        body: $LifecycleRef("lifecycleBodySchema"),
-        params: $LifecycleRef("lifecycleIdParamSchema"),
+        body: lifecycleBodySchema,
+        params: lifecycleIdParamSchema,
       },
     },
     updateLifecycleHandler,
@@ -46,7 +50,7 @@ export async function lifecycleRoutes(server: FastifyInstance) {
     "/:lifecycleId",
     {
       schema: {
-        params: $LifecycleRef("lifecycleIdParamSchema"),
+        params: lifecycleIdParamSchema,
       },
     },
     deleteLifecycleByIdHandler,

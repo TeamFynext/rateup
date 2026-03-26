@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 const statsQuerySchema = z.object({
@@ -18,14 +17,8 @@ const trendQuerySchema = z.object({
   apiType: z.string().optional(),
 });
 
-export const { schemas: apiAnalyticsSchemas, $ref: $apiAnalyticsRef } =
-  buildJsonSchemas(
-    {
-      statsQuerySchema,
-      trendQuerySchema,
-    },
-    { $id: "ApiAnalyticsSchemas" },
-  );
-
 export type StatsQuerySchema = z.infer<typeof statsQuerySchema>;
 export type TrendQuerySchema = z.infer<typeof trendQuerySchema>;
+
+// Auto-exported after fastify-zod migration
+export { statsQuerySchema, trendQuerySchema };

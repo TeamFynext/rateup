@@ -5,6 +5,7 @@ import {
 } from "./support-user.controller.js";
 import { getChatByContactId } from "../inbox/message/wamessage.service.js";
 import { verifyApiAccessTokenHook } from "../../apiAccessToken/apiAccessToken.auth.js";
+import z from "zod";
 
 export async function supportUserWebhookRoutes(server: FastifyInstance) {
   // TODO: implement challanges for webhook
@@ -20,13 +21,13 @@ export async function supportUserWebhookRoutes(server: FastifyInstance) {
     {
       preHandler: verifyApiAccessTokenHook,
       schema: {
-        params: {
+        params: z.fromJSONSchema({
           type: "object",
           properties: {
             contactId: { type: "string", minLength: 1 },
           },
           required: ["contactId"],
-        },
+        }),
       },
     },
     getChatByContactId,

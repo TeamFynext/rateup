@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import {
   WaTemplateComponentType,
@@ -12,7 +11,7 @@ const waTemplateInput = {
   name: z
     .string()
     .regex(/^[a-z_0-9]+$/, {
-      message: "Name can only have lower-case letters and underscores",
+      error: "Name can only have lower-case letters and underscores",
     })
     .trim()
     .min(1)
@@ -134,7 +133,7 @@ const waTemplateInput = {
               type: z.string(),
               example: z.array(z.string().trim().min(1).max(2000)).optional(),
               phone_number: z.string().max(25).optional(),
-              url: z.string().trim().url().max(2000).optional(),
+              url: z.url().trim().max(2000).optional(),
             }),
           )
           .max(2)
@@ -149,14 +148,14 @@ const waTemplateInput = {
           text: z.string().max(25),
           type: z.string(),
           example: z.array(z.string().trim().min(1).max(2000)).optional(),
-          url: z.string().trim().url().max(2000).optional(),
+          url: z.url().trim().max(2000).optional(),
         }),
         product_retailer_id: z.string(),
       }),
     )
     .optional(),
   whatsappSettingsPhoneId: z.string(),
-  templateType: z.nativeEnum(TemplateType).optional(),
+  templateType: z.enum(TemplateType).optional(),
   config: z.any(),
 };
 
@@ -167,7 +166,7 @@ const waTemplateFormattedInput = {
     .min(1)
     .max(512)
     .refine((text) => !text.includes(" "), {
-      message: "Name cannot contain spaces. Replace it with underscore(_)",
+      error: "Name cannot contain spaces. Replace it with underscore(_)",
     }),
   components: z.array(
     z.union([
@@ -197,7 +196,7 @@ const waTemplateFormattedInput = {
     ]),
   ),
   language: z.string(),
-  category: z.nativeEnum(WaTemplateCategory),
+  category: z.enum(WaTemplateCategory),
   allow_category_change: z.boolean().optional().nullable(),
 };
 const waTemplateInputSchema = z.object(waTemplateInput);
@@ -226,7 +225,7 @@ const byTemplateIdParamsSchema = z.object({
   templateId: z.string(),
 });
 const templateTypeParamsSchema = z.object({
-  templateType: z.nativeEnum(TemplateType).optional(),
+  templateType: z.enum(TemplateType).optional(),
 });
 
 const registerTemplatesInDbBodySchema = z.array(
@@ -247,19 +246,6 @@ const syncTemplatesSchema = z.object({
   whatsappSettingsPhoneIds: z.array(z.string()).min(1),
 });
 
-export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas(
-  {
-    waTemplateInputSchema,
-    waTemplateSchema,
-    byTemplateIdParamsSchema,
-    templateTypeParamsSchema,
-    registerTemplatesInDbBodySchema,
-    waUserSendTemplateBodySchema,
-    syncTemplatesSchema,
-  },
-  { $id: "waTemplates" },
-);
-
 export type CreateWaTemplateInput = z.infer<typeof waTemplateInputSchema>;
 export type CreateWaTemplateFormattedInput = z.infer<
   typeof waTemplateFormattedInputSchema
@@ -274,3 +260,14 @@ export type RegisterTemplatesInDbBodySchema = z.infer<
 export type WaUserSendTemplateBodySchema = z.infer<
   typeof waUserSendTemplateBodySchema
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  waTemplateInputSchema,
+  waTemplateSchema,
+  byTemplateIdParamsSchema,
+  templateTypeParamsSchema,
+  registerTemplatesInDbBodySchema,
+  waUserSendTemplateBodySchema,
+  syncTemplatesSchema,
+};

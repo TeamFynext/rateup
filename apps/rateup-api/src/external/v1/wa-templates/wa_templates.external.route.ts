@@ -7,12 +7,18 @@ import {
   sendTemplateByNameToPhoneWithFileExternalController,
 } from "./wa_templates.external.controller.js";
 import fastifyMultipart from "@fastify/multipart";
-import { waTemplateSchemas } from "./wa_templates.schema.js";
 import {
-  $waTemplateExternalRef,
-  waTemplateExternalSchemas,
+  dbTemplateResponse,
+  sendTemplateByNameToPhone,
+  sendTemplateToContactParamsWithOrgId,
+  sendTemplateToContact,
+  sendTemplateToContactsParamsWithOrgId,
+  sendTemplatesToContacts,
+  errorLogsQuery,
+  messageStatusParams,
 } from "./wa_templates.external.schema.js";
 import { sendTemplatesToContactsHandler } from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
+import z from "zod";
 
 async function onFile(part) {
   const buff = await part.toBuffer();
@@ -26,13 +32,6 @@ async function onFile(part) {
 }
 
 export async function externalWaTemplateRoutes(server: FastifyInstance) {
-  for (const schema of waTemplateExternalSchemas) {
-    server.addSchema(schema);
-  }
-  for (const schema of waTemplateSchemas) {
-    server.addSchema(schema);
-  }
-
   server.register(fastifyMultipart, {
     limits: {
       fileSize: 1048576 * 100,
@@ -50,10 +49,7 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
         description: "Get all templates",
         summary: "Get all templates",
         response: {
-          200: {
-            type: "array",
-            items: $waTemplateExternalRef("dbTemplateResponse"),
-          },
+          200: dbTemplateResponse.array(),
         },
       },
     },
@@ -64,7 +60,7 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
     "/send",
     {
       schema: {
-        body: $waTemplateExternalRef("sendTemplateByNameToPhone"),
+        body: sendTemplateByNameToPhone,
         tags: ["WhatsApp/Template"],
         description:
           "Send a template to a phone number. Phone number should contain country code",
@@ -79,7 +75,7 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
     {
       schema: {
         consumes: ["multipart/form-data"],
-        body: {
+        body: z.fromJSONSchema({
           type: "object",
           required: ["templateName", "phone"],
           properties: {
@@ -130,7 +126,7 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
               deprecated: true,
             },
           },
-        },
+        }),
         tags: ["WhatsApp/Template"],
         description:
           "Send a template to a phone number. Phone number should contain country code",
@@ -144,8 +140,8 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
   //   "/:templateId/send/contact/:contactId",
   //   {
   //     schema: {
-  //       params: $waTemplateExternalRef("sendTemplateToContactParamsWithOrgId"),
-  //       body: $waTemplateExternalRef("sendTemplateToContact"),
+  //       params: sendTemplateToContactParamsWithOrgId,
+  //       body: sendTemplateToContact,
   //       tags: ["WhatsApp/Template"],
   //       description: "Send a template to a contact. Supports variables in body",
   //       summary: "Send a template to a contact",
@@ -158,8 +154,8 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
     "/:templateId/send/contacts",
     {
       schema: {
-        params: $waTemplateExternalRef("sendTemplateToContactsParamsWithOrgId"),
-        body: $waTemplateExternalRef("sendTemplatesToContacts"),
+        params: sendTemplateToContactsParamsWithOrgId,
+        body: sendTemplatesToContacts,
         tags: ["WhatsApp/Template"],
         description: "Send a template to contacts",
         summary: "Send a template to contacts",
@@ -172,7 +168,7 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
     "/errors",
     {
       schema: {
-        querystring: $waTemplateExternalRef("errorLogsQuery"),
+        querystring: errorLogsQuery,
         tags: ["WhatsApp/Template"],
         description: "Get all error logs with optional date filtering",
         summary: "Get error logs",
@@ -185,7 +181,7 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
     "/message/:messageId/status",
     {
       schema: {
-        params: $waTemplateExternalRef("messageStatusParams"),
+        params: messageStatusParams,
         tags: ["WhatsApp/Template"],
         description: "Get status of a message by messageId",
         summary: "Get message status",

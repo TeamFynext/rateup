@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import {
   WaButtonType,
@@ -11,7 +10,7 @@ const waTemplateInput = {
   name: z
     .string()
     .regex(/^[a-z_0-9]+$/, {
-      message: "Name can only have lower-case letters and underscores",
+      error: "Name can only have lower-case letters and underscores",
     })
     .trim()
     .min(1)
@@ -55,7 +54,7 @@ const waTemplateFormattedInput = {
     .min(1)
     .max(512)
     .refine((text) => !text.includes(" "), {
-      message: "Name cannot contain spaces. Replace it with underscore(_)",
+      error: "Name cannot contain spaces. Replace it with underscore(_)",
     }),
   components: z.array(
     z.union([
@@ -85,7 +84,7 @@ const waTemplateFormattedInput = {
     ]),
   ),
   language: z.string(),
-  category: z.nativeEnum(WaTemplateCategory),
+  category: z.enum(WaTemplateCategory),
 };
 const waTemplateInputSchema = z.object(waTemplateInput);
 export const waTemplateFormattedInputSchema = z.object(
@@ -109,7 +108,7 @@ const waTemplateFormattedCore = {
 const waTemplateSchema = z.object(waTemplateCore);
 export const waTemplateFormattedSchema = z.object(waTemplateFormattedCore);
 
-export const byTemplateIdParamsSchema = z.object({
+const byTemplateIdParamsSchema = z.object({
   templateId: z.string(),
 });
 
@@ -130,18 +129,6 @@ const waUserSendTemplateBodySchema = z.object({
   teamId: z.string().optional(),
 });
 
-export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas(
-  {
-    waTemplateInputSchema,
-    waTemplateSchema,
-    byTemplateIdParamsSchema,
-    byTemplateIdParamsWithOrg,
-    registerTemplatesInDbBodySchema,
-    waUserSendTemplateBodySchema,
-  },
-  { $id: "waTemplates" },
-);
-
 export type CreateWaTemplateInput = z.infer<typeof waTemplateInputSchema>;
 export type CreateWaTemplateFormattedInput = z.infer<
   typeof waTemplateFormattedInputSchema
@@ -155,3 +142,13 @@ export type RegisterTemplatesInDbBodySchema = z.infer<
 export type WaUserSendTemplateBodySchema = z.infer<
   typeof waUserSendTemplateBodySchema
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  waTemplateInputSchema,
+  waTemplateSchema,
+  byTemplateIdParamsSchema,
+  byTemplateIdParamsWithOrg,
+  registerTemplatesInDbBodySchema,
+  waUserSendTemplateBodySchema,
+};

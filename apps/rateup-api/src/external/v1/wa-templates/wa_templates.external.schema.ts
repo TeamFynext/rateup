@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import { byTemplateIdParamsSchema } from "./wa_templates.schema.js";
 
@@ -18,11 +17,11 @@ enum WaTemplateSendMediaTypes {
 }
 
 const templateHeaderComponent = z.object({
-  type: z.nativeEnum(WaTemplateAllowedComponentTypes),
+  type: z.enum(WaTemplateAllowedComponentTypes),
   parameters: z
     .array(
       z.object({
-        type: z.nativeEnum(WaTemplateSendMediaTypes),
+        type: z.enum(WaTemplateSendMediaTypes),
         image: z
           .object({
             link: z.string(),
@@ -48,7 +47,7 @@ const templateHeaderComponent = z.object({
 });
 
 const scheduleTemplate = z.object({
-  timeDelay: z.number().int().min(15).optional(),
+  timeDelay: z.int().min(15).optional(),
 });
 
 const sendTemplatesToContacts = scheduleTemplate.extend({
@@ -74,7 +73,7 @@ const sendTemplateByNameToPhone = scheduleTemplate.extend({
   parameterData: z
     .array(
       z.object({
-        type: z.nativeEnum(WaTemplateSendMediaTypes),
+        type: z.enum(WaTemplateSendMediaTypes),
         link: z.string(),
         filename: z.string().optional(),
       }),
@@ -86,11 +85,11 @@ const sendTemplateByNameToPhone = scheduleTemplate.extend({
 const sendTemplateWithFile = z.object({
   templateName: z.string(),
   phone: z.number().optional(),
-  timeDelay: z.number().int().optional(),
+  timeDelay: z.int().optional(),
   teamId: z.string().optional(),
   body_variables: z.array(z.string()).optional(),
   tag: z.string().optional(),
-  headerType: z.nativeEnum(WaTemplateSendMediaTypes).optional(),
+  headerType: z.enum(WaTemplateSendMediaTypes).optional(),
   filename: z.string().optional(),
   file: z.object({
     filename: z.string(),
@@ -142,7 +141,7 @@ const errorLogResponse = z.object({
   errorMessage: z.string(),
   errorCode: z.string().nullable(),
   timestamp: z.string(),
-  details: z.record(z.any()),
+  details: z.record(z.string(), z.any()),
 });
 
 const messageStatusParams = z.object({
@@ -163,28 +162,6 @@ const messageStatusResponse = z.object({
     })
     .nullable(),
 });
-
-export const {
-  schemas: waTemplateExternalSchemas,
-  $ref: $waTemplateExternalRef,
-} = buildJsonSchemas(
-  {
-    dbTemplateResponse,
-    sendTemplatesToContacts,
-    sendTemplatesToContactGroups,
-    sendTemplateToContact,
-    sendTemplateToContactParams,
-    sendTemplateToContactParamsWithOrgId,
-    sendTemplateToContactsParamsWithOrgId,
-    sendTemplateToContactGroupsParamsWithOrgId,
-    sendTemplateByNameToPhone,
-    errorLogsQuery,
-    errorLogResponse,
-    messageStatusParams,
-    messageStatusResponse,
-  },
-  { $id: "waTemplateExternal" },
-);
 
 export type SendTemplateToContacts = z.infer<typeof sendTemplatesToContacts>;
 export type SendTemplateToContact = z.infer<typeof sendTemplateToContact>;
@@ -208,3 +185,20 @@ export type SendTemplateWithFile = z.infer<typeof sendTemplateWithFile>;
 export type SendTemplateToContactParamsWithOrgId = z.infer<
   typeof sendTemplateToContactParamsWithOrgId
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  dbTemplateResponse,
+  sendTemplatesToContacts,
+  sendTemplatesToContactGroups,
+  sendTemplateToContact,
+  sendTemplateToContactParams,
+  sendTemplateToContactParamsWithOrgId,
+  sendTemplateToContactsParamsWithOrgId,
+  sendTemplateToContactGroupsParamsWithOrgId,
+  sendTemplateByNameToPhone,
+  errorLogsQuery,
+  errorLogResponse,
+  messageStatusParams,
+  messageStatusResponse,
+};
