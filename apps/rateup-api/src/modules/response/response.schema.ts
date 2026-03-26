@@ -30,13 +30,13 @@ const responseCore = {
   encryptedResponses: z.string().optional(),
   shouldRaiseTicket: z.boolean().optional(),
   checkUniqueDevice: z.boolean().optional(),
-  selectedColumnId: z.string().optional(),
+  selectedColumnId: z.string().optional().nullable(),
 };
 
 const createResponseInputSchema = z.object({
   ...responseCore,
   platform: z.enum(ResponsePlatform).optional(),
-  tag: z.string().optional(),
+  tag: z.string().optional().nullable(),
   deviceData: z
     .object({
       brand: z.string().optional(),
