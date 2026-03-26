@@ -28,7 +28,7 @@ const UniqueDeviceSettings = ({ survey, surveyId }) => {
           <Switch
             id="unique-device"
             checked={enableUniqueDevice}
-            onChange={() =>
+            onCheckedChange={() =>
               updateUniqueDevice(setEnableUniqueDevice, editSurvey)
             }
           />
