@@ -45,6 +45,7 @@ export default function MainSidebar({ children }) {
     refetch,
   } = useUserInfo();
 
+  const router = useRouter();
   useEffect(() => {
     if (!isFetched || isLoadingUserInfo) return;
 
@@ -55,8 +56,10 @@ export default function MainSidebar({ children }) {
     ) {
       router.replace("/login/complete-login");
     }
+    // } else if (userQueryData["data"]?.onboardingChecklistCompleted === false) {
+    //   router.replace("/login/setup");
+    // }
   }, [userQueryData, isFetched, isLoadingUserInfo]);
-  const router = useRouter();
   const query = useSearchParams() as {
     msg?: string;
     tab?: string;
