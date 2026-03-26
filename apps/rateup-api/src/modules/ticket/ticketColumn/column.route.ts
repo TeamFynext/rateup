@@ -1,5 +1,12 @@
 import { FastifyInstance } from "fastify";
-import { $ColumnRef } from "./column.schema.js";
+import {
+  createColumnRequestSchema,
+  createColumnResponseSchema,
+  boardIdParamsSchema,
+  idParamsSchema,
+  updateColumnRequestSchema,
+  reorderColumnRequestSchema,
+} from "./column.schema.js";
 import {
   createColumnHandler,
   getAllColumnsHandler,
@@ -26,9 +33,9 @@ export async function columnRoutes(server: FastifyInstance) {
     "/create",
     {
       schema: {
-        body: $ColumnRef("createColumnRequestSchema"),
+        body: createColumnRequestSchema,
         response: {
-          201: $ColumnRef("createColumnResponseSchema"),
+          201: createColumnResponseSchema,
         },
       },
     },
@@ -41,7 +48,7 @@ export async function columnRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyBoardAccess],
       schema: {
-        params: $ColumnRef("boardIdParamsSchema"),
+        params: boardIdParamsSchema,
       },
     },
     getAllColumnsHandler,
@@ -53,7 +60,7 @@ export async function columnRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyColumnAccess],
       schema: {
-        params: $ColumnRef("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     getSingleColumnHandler,
@@ -65,8 +72,8 @@ export async function columnRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyColumnAccess],
       schema: {
-        params: $ColumnRef("idParamsSchema"),
-        body: $ColumnRef("updateColumnRequestSchema"),
+        params: idParamsSchema,
+        body: updateColumnRequestSchema,
       },
     },
     updateColumnHandler,
@@ -78,7 +85,7 @@ export async function columnRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyColumnAccess],
       schema: {
-        params: $ColumnRef("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     deleteColumnHandler,
@@ -89,7 +96,7 @@ export async function columnRoutes(server: FastifyInstance) {
     "/reorder",
     {
       schema: {
-        body: $ColumnRef("reorderColumnRequestSchema"),
+        body: reorderColumnRequestSchema,
       },
     },
     reorderColumnsHandler,

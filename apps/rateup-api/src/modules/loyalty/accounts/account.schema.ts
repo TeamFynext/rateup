@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 export enum CustomerAccountStatus {
@@ -7,7 +6,7 @@ export enum CustomerAccountStatus {
   CLOSED = "CLOSED",
 }
 
-export const customerLoyaltyAccountSchema = z.object({
+const customerLoyaltyAccountSchema = z.object({
   name: z.string().min(1),
   phone: z.string().min(1),
   email: z.string().optional(),
@@ -17,23 +16,23 @@ export const customerLoyaltyAccountSchema = z.object({
   dob: z.string().datetime().optional(),
 });
 
-export const customerLoyaltyAccountUpdateSchema = z.object({
+const customerLoyaltyAccountUpdateSchema = z.object({
   status: z.enum(["active", "suspended", "closed", "inactive"]).optional(),
 });
 
-export const customerIdParamSchema = z.object({
+const customerIdParamSchema = z.object({
   customerId: z.string(),
 });
 
-export const contactIdParamSchema = z.object({
+const contactIdParamSchema = z.object({
   contactId: z.string(),
 });
 
-export const phoneNumberParamSchema = z.object({
+const phoneNumberParamSchema = z.object({
   phoneNumber: z.string().min(1),
 });
 
-export const awardPointsSchema = z.object({
+const awardPointsSchema = z.object({
   contactId: z.string().min(1),
   purchaseAmount: z.number().min(0),
   locationId: z.string().optional(),
@@ -45,7 +44,7 @@ export const awardPointsSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const redeemRewardSchema = z.object({
+const redeemRewardSchema = z.object({
   customerId: z.string().min(1),
   rewardId: z.string().min(1),
   locationId: z.string().optional(),
@@ -53,47 +52,25 @@ export const redeemRewardSchema = z.object({
   notes: z.string().optional(),
 });
 
-export const verifyRedemptionSchema = z.object({
+const verifyRedemptionSchema = z.object({
   redemptionCode: z.string().min(1),
 });
 
-export const applyRedemptionSchema = z.object({
+const applyRedemptionSchema = z.object({
   redemptionCode: z.string().min(1),
   appliedBy: z.string().min(1),
   notes: z.string().optional(),
 });
 
-export const assignRewardSchema = z.object({
+const assignRewardSchema = z.object({
   customerId: z.string().min(1),
   rewardId: z.string().min(1),
   notes: z.string().optional(),
 });
 
-export const shortCodeParamSchema = z.object({
+const shortCodeParamSchema = z.object({
   shortCode: z.string().min(1),
 });
-
-export const {
-  schemas: customerLoyaltyAccountSchemas,
-  $ref: $customerAccountRef,
-} = buildJsonSchemas(
-  {
-    customerLoyaltyAccountSchema,
-    customerLoyaltyAccountUpdateSchema,
-    customerIdParamSchema,
-    contactIdParamSchema,
-    phoneNumberParamSchema,
-    awardPointsSchema,
-    redeemRewardSchema,
-    verifyRedemptionSchema,
-    applyRedemptionSchema,
-    assignRewardSchema,
-    shortCodeParamSchema,
-  },
-  {
-    $id: "customerLoyaltyAccountSchema",
-  },
-);
 
 export type CustomerLoyaltyAccountInput = z.infer<
   typeof customerLoyaltyAccountSchema
@@ -109,3 +86,18 @@ export type RedeemRewardInput = z.infer<typeof redeemRewardSchema>;
 export type VerifyRedemptionInput = z.infer<typeof verifyRedemptionSchema>;
 export type ApplyRedemptionInput = z.infer<typeof applyRedemptionSchema>;
 export type AssignRewardInput = z.infer<typeof assignRewardSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  customerLoyaltyAccountSchema,
+  customerLoyaltyAccountUpdateSchema,
+  customerIdParamSchema,
+  contactIdParamSchema,
+  phoneNumberParamSchema,
+  awardPointsSchema,
+  redeemRewardSchema,
+  verifyRedemptionSchema,
+  applyRedemptionSchema,
+  assignRewardSchema,
+  shortCodeParamSchema,
+};

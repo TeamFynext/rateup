@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { buildJsonSchemas } from "fastify-zod";
 
 export const allowedMimeTypes = [
   "image/jpeg",
@@ -32,10 +31,10 @@ export const dataExtractFileMimeTypes = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ];
 
-export const uploadFileSchema = z.object({
+const uploadFileSchema = z.object({
   file: z.any().refine((value) => allowedMimeTypes.includes(value), {
-    message: "Invalid file format",
     path: ["file"],
+    error: "Invalid file format",
   }),
 });
 
@@ -49,14 +48,9 @@ const fileDeleteInputSchema = z.object({
     .min(1),
 });
 
-export const { schemas: uploadSchemas, $ref: $Iref } = buildJsonSchemas(
-  {
-    uploadFileSchema,
-    fileDeleteInputSchema,
-  },
-  { $id: "uploadSchema" },
-);
-
 export type UploadFileInput = z.infer<typeof uploadFileSchema>;
 
 export type fileDeleteInput = z.infer<typeof fileDeleteInputSchema>;
+
+// Auto-exported after fastify-zod migration
+export { uploadFileSchema, fileDeleteInputSchema };

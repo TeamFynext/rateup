@@ -63,6 +63,7 @@ import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
 import { autoGenerateTicket } from "../ticket/ticketCard/card.service.js";
 import { Prisma } from "../../../generated/prisma/client.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
+import { ContactGroupType } from "../contact/contactGroup/contactGroup.schema.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -276,11 +277,16 @@ export async function downloadExcelResponse(
       item?.description[defaultLanguage] ||
       item?.label?.[defaultLanguage] ||
       "";
-    return visibleColumn.includes(
+    return (
       getReplacedTitleFromVariable({
         title: qsTitle,
-      }) || getContent(qsTitle),
+      }) || getContent(qsTitle)
     );
+    // return visibleColumn.includes(
+    //   getReplacedTitleFromVariable({
+    //     title: qsTitle,
+    //   }) || getContent(qsTitle),
+    // );
   });
 
   if (filteredSecondArray && responses) {
@@ -571,9 +577,10 @@ export async function downloadExcelResponseV2(
 ) {
   const responses = allResponses?.flatMap((data) => data?.responses) || [];
 
-  const filteredQuestions = questions.filter((item) =>
-    visibleColumn.includes(item?.label || ""),
-  );
+  const filteredQuestions = questions;
+  // .filter((item) =>
+  //   visibleColumn.includes(item?.label || ""),
+  // );
 
   if (filteredQuestions && responses.length) {
     const headerArray = filteredQuestions.map((question) =>
@@ -1730,8 +1737,19 @@ export async function exportContactResponseToContacts(surveyId, orgId) {
       if (!contacts.length) return;
       let contactGroup = await getContactGroupByNameAndTeam(groupName, teamId);
       if (!contactGroup)
-        contactGroup = await createContactGroup({ name: groupName, teamId });
-      await addNewContactsToGroup(contactGroup.id, contacts, orgId);
+        contactGroup = await createContactGroup({
+          name: groupName,
+          teamId,
+          tags: [],
+          type: ContactGroupType.NORMAL,
+        });
+      // Ensure each contact has required fields: name, source
+      const contactsWithRequired = contacts.map((c) => ({
+        name: c.name || "Unknown",
+        source: c.source || "imported",
+        ...c,
+      }));
+      await addNewContactsToGroup(contactGroup.id, contactsWithRequired, orgId);
     }),
   );
 }

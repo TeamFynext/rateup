@@ -1,57 +1,5 @@
 import { FastifyInstance } from "fastify";
 
-// Import all schemas
-import { orgSchemas } from "./modules/org/org.schema.js";
-import { questionSchemas } from "./modules/question/question.schema.js";
-import { responseSchemas } from "./modules/response/response.schema.js";
-import { surveySchemas } from "./modules/survey/survey.schema.js";
-import { teamSchemas } from "./modules/team/team.schema.js";
-import { uploadSchemas } from "./modules/fileUpload/fileUpload.schema.js";
-import { userSchemas } from "./modules/user/user.schema.js";
-import { menuSchemas } from "./modules/menu/menu.schema.js";
-import { menuCategorySchemas } from "./modules/menu/category/category.schema.js";
-import { menuItemSchemas } from "./modules/menu/item/item.schema.js";
-import { contactFormSchemas } from "./modules/contactForm/contact.schema.js";
-import { contactSchemas } from "./modules/contact/contact.schema.js";
-import { campaignSchemas } from "./modules/campaign/campaign.schema.js";
-import { reviewSuggestionSchemas } from "./modules/reviewSuggestion/reviewSuggestion.schema.js";
-import { menuBannerSchemas } from "./modules/menu/banner/banner.schema.js";
-import { unsplashSchemas } from "./modules/unsplash/unsplash.schema.js";
-import { surveyThemeSchemas } from "./modules/surveyTheme/surveyTheme.schema.js";
-import { paymentSchemas } from "./modules/payment/payment.schema.js";
-import { paymentStripeSchemas } from "./modules/payment/stripe/stripe.schema.js";
-import { testimonialSchemas } from "./modules/testimonial/testimonial.schema.js";
-import { testimonialCollectionSchemas } from "./modules/testimonial/testimonialCollection/testimonialCollection.schema.js";
-import { ticketSchemas } from "./modules/ticket/ticket.schema.js";
-import { subscriptionSchemas } from "./modules/subscription/subscription.schema.js";
-import { landingPageSchemas } from "./modules/landingPage/landingPage.schema.js";
-import { linktreeSchemas } from "./modules/linktree/linktree.schema.js";
-import { statsSchemas } from "./modules/stats/stats.schema.js";
-import { chatbotSchemas } from "./modules/chatbot/chatbot.schema.js";
-import { orgWsSchemas } from "./modules/org/ws/org.ws.schema.js";
-import { campaignParticipantsSchemas } from "./modules/campaign/campaignParticipants/campaignParticipants.schema.js";
-import { emailSchema } from "./modules/email/email.schema.js";
-import { generateQrSchemas } from "./modules/generateQr/generateQr.schema.js";
-import { integrationSchemas } from "./modules/integrations/integrations.schema.js";
-import { loyaltySettingSchemas } from "./modules/loyalty/settings/settings.schema.js";
-// New Loyalty System Schemas
-import { loyaltyProgramSchemas } from "./modules/loyalty/program/program.schema.js";
-import { loyaltyTierSchemas } from "./modules/loyalty/tiers/tier.schema.js";
-import { loyaltyEarningRuleSchemas } from "./modules/loyalty/earningRules/earningRule.schema.js";
-import { customerLoyaltyAccountSchemas } from "./modules/loyalty/accounts/account.schema.js";
-import { redemptionSchemas } from "./modules/loyalty/redemptions/redemption.schema.js";
-import { referralSchemas } from "./modules/loyalty/referrals/referral.schema.js";
-import { boardSchemas } from "./modules/ticket/ticketBoard/board.schema.js";
-import { columnSchemas } from "./modules/ticket/ticketColumn/column.schema.js";
-import { cardSchemas } from "./modules/ticket/ticketCard/card.schema.js";
-import { loyaltyApiSettingSchemas } from "./modules/loyalty/apiSetting/apiSetting.schema.js";
-import { expoSchemas } from "./modules/mobileNotification/mobile.schema.js";
-import { notificationSchema } from "./modules/notification/notification.schema.js";
-import { lifecycleSchema } from "./modules/lifecycle/lifecycle.schema.js";
-import { bookDemoSchemas } from "./modules/BookDemo/bookDemo.schema.js";
-import { zapierSchemas } from "./modules/integrations/external/zapier/zapier.schema.js";
-import { businessHourSchemas } from "./modules/org/businessHour.schema.js";
-
 // Import all routes
 import { orgRoutes } from "./modules/org/org.route.js";
 import { questionRoutes } from "./modules/question/question.route.js";
@@ -110,66 +58,8 @@ import { bookDemoRoutes } from "./modules/BookDemo/bookDemo.route.js";
 import { supportUserWebhookRoutes } from "./modules/whatsapp/support-user/suport-user.webhook.route.js";
 import { externalIntegrationRoutes } from "./modules/integrations/external/external.route.js";
 import healthRoutes from "./routes/health.js";
-import { approvalSchemas } from "./modules/loyalty/approvals/approval.schema.js";
 import { customerAccountPublicRoutes } from "./modules/loyalty/accounts/account.public.route.js";
-import { apiAnalyticsSchemas } from "./modules/apiAnalytics/apianalytics.schema.js";
 import { apiAnalyticsRoutes } from "./modules/apiAnalytics/apianalytics.routes.js";
-
-// Schema collections
-const schemaModules = [
-  surveySchemas,
-  questionSchemas,
-  orgSchemas,
-  teamSchemas,
-  responseSchemas,
-  uploadSchemas,
-  userSchemas,
-  menuSchemas,
-  menuCategorySchemas,
-  menuItemSchemas,
-  contactFormSchemas,
-  contactSchemas,
-  campaignSchemas,
-  reviewSuggestionSchemas,
-  menuBannerSchemas,
-  unsplashSchemas,
-  surveyThemeSchemas,
-  paymentSchemas,
-  paymentStripeSchemas,
-  testimonialSchemas,
-  testimonialCollectionSchemas,
-  ticketSchemas,
-  subscriptionSchemas,
-  landingPageSchemas,
-  linktreeSchemas,
-  statsSchemas,
-  chatbotSchemas,
-  orgWsSchemas,
-  campaignParticipantsSchemas,
-  emailSchema,
-  generateQrSchemas,
-  integrationSchemas,
-  loyaltySettingSchemas,
-  // New Loyalty System Schemas
-  loyaltyProgramSchemas,
-  loyaltyTierSchemas,
-  loyaltyEarningRuleSchemas,
-  customerLoyaltyAccountSchemas,
-  redemptionSchemas,
-  referralSchemas,
-  approvalSchemas,
-  boardSchemas,
-  columnSchemas,
-  cardSchemas,
-  loyaltyApiSettingSchemas,
-  expoSchemas,
-  notificationSchema,
-  lifecycleSchema,
-  bookDemoSchemas,
-  zapierSchemas,
-  businessHourSchemas,
-  apiAnalyticsSchemas,
-];
 
 // Route configurations
 const routeConfigs = [
@@ -195,7 +85,7 @@ const routeConfigs = [
     prefix: "/api/public/loyalty/accounts",
   },
 
-  // Protected routes
+  // // Protected routes
   { plugin: surveyRoutes, prefix: "/api/survey" },
   { plugin: shareSettingsRoutes, prefix: "/api/shareSettings" },
   { plugin: questionRoutes, prefix: "/api/question/:surveyId" },
@@ -222,7 +112,7 @@ const routeConfigs = [
     prefix: "/api/testimonial/collections",
   },
   { plugin: ticketRoutes, prefix: "/api/tickets" },
-  { plugin: loyaltyRoutes, prefix: "/api/loyalty/" },
+  { plugin: loyaltyRoutes, prefix: "/api/loyalty" },
   { plugin: landingPageRoutes, prefix: "/api/landingPages" },
   { plugin: linktreeRoutes, prefix: "/api/linktrees" },
   { plugin: statsRoutes, prefix: "/api/stats" },
@@ -244,18 +134,7 @@ const routeConfigs = [
   { plugin: apiAnalyticsRoutes, prefix: "/api/apianalytics" },
 ];
 
-async function registerSchemas(server: FastifyInstance): Promise<void> {
-  for (const schemas of schemaModules) {
-    for (const schema of schemas) {
-      server.addSchema(schema);
-    }
-  }
-}
-
 export async function registerRoutes(server: FastifyInstance): Promise<void> {
-  // Register all schemas first
-  await registerSchemas(server);
-
   // Register all routes
   for (const { plugin, prefix } of routeConfigs) {
     await server.register(plugin, { prefix });

@@ -7,28 +7,27 @@ import { externalCampaignRoutes } from "./campaigns/campaign.external.route.js";
 import { externalWaTemplateRoutes } from "./wa-templates/wa_templates.external.route.js";
 import { externalLoyaltyRoutes } from "./loyalty/loyalty.external.route.js";
 import { verifyApiAccessTokenHook } from "../../modules/apiAccessToken/apiAccessToken.auth.js";
+import z, { ZodObject } from "zod";
 
 export async function externalV1Routes(server: FastifyInstance) {
-  server.addHook("onRoute", (routeOptions) => {
-    if (!routeOptions.schema?.params) return;
-
-    const originalParams = routeOptions.schema.params as any;
-
-    const originalRequired: string[] = originalParams.required || [];
-    const originalProperties = originalParams.properties || {};
-
-    // If orgId already exists, do nothing
-    if (originalProperties.orgId) return;
-
-    routeOptions.schema.params = {
-      type: "object",
-      required: Array.from(new Set(["orgId", ...originalRequired])),
-      properties: {
-        orgId: { type: "string" },
-        ...originalProperties,
-      },
-    };
+  const OrgIdParamsSchema = z.object({
+    orgId: z.string(),
   });
+
+  server.addHook("onRoute", (routeOptions) => {
+    if (!routeOptions.schema) {
+      routeOptions.schema = {};
+    }
+
+    const params = routeOptions.schema.params;
+
+    if (params instanceof ZodObject) {
+      routeOptions.schema.params = OrgIdParamsSchema.extend(params.shape);
+    } else {
+      routeOptions.schema.params = OrgIdParamsSchema;
+    }
+  });
+
   server.addHook("preHandler", async (request, reply) => {
     const orgId = (request.params as { orgId?: string } | undefined)?.orgId;
     if (!orgId) {

@@ -366,6 +366,7 @@ export async function createSurveyFromFlow({
     languages: [lang], // TODO: add language support
     teamIds: teamIds,
     orgId,
+    active: true,
   };
 
   const surveyRes = (await createSurvey(survey, req)) as Survey;
@@ -393,6 +394,8 @@ export async function createSurveyFromFlow({
             })),
           }
         : undefined,
+      enableNpsAnalytics: false,
+      extraConfig: {},
     };
 
     const questionRes = await createQuestion(surveyRes.id, question);

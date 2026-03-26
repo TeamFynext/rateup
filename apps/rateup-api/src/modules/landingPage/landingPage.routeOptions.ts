@@ -9,13 +9,21 @@ import {
   updateLandingPageWithShortId,
   updatePageVisits,
 } from "./landingPage.controllers.js";
-import { landingPageSchemaRef } from "./landingPage.schema.js";
 import { CustomRouteShortHandOptionsWithHandler } from "../../types/global.js";
+import {
+  createLandingPageReqBody,
+  deleteLandingPageWithIddParams,
+  getLandingPagesResponse,
+  getLandingPageWithShortIdParams,
+  landingPageBaseSchema,
+  updateLandingPageReqBody,
+  updatePageVisitsReqParams,
+} from "./landingPage.schema.js";
 
 const getLandingPagesRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {
     response: {
-      "2xx": landingPageSchemaRef("getLandingPagesResponse"),
+      "2xx": getLandingPagesResponse,
     },
   },
   handler: asyncErrHandler(getLandingPages),
@@ -24,9 +32,9 @@ const getLandingPagesRouteOptions: RouteShorthandOptionsWithHandler = {
 const getLandingPageWithShortIdRouteOptions: RouteShorthandOptionsWithHandler =
   {
     schema: {
-      params: landingPageSchemaRef("getLandingPageWithShortIdParams"),
+      params: getLandingPageWithShortIdParams,
       response: {
-        "2xx": landingPageSchemaRef("landingPageBaseSchema"),
+        "2xx": landingPageBaseSchema,
       },
     },
     handler: asyncErrHandler(getLandingPageWithShortId),
@@ -34,9 +42,9 @@ const getLandingPageWithShortIdRouteOptions: RouteShorthandOptionsWithHandler =
 
 const createLandingPageRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {
-    body: landingPageSchemaRef("createLandingPageReqBody"),
+    body: createLandingPageReqBody,
     response: {
-      "2xx": landingPageSchemaRef("landingPageBaseSchema"),
+      "2xx": landingPageBaseSchema,
     },
   },
   handler: asyncErrHandler(createLandingPage),
@@ -45,9 +53,9 @@ const createLandingPageRouteOptions: RouteShorthandOptionsWithHandler = {
 const updateLandingPageWithShortIdRouteOptions: RouteShorthandOptionsWithHandler =
   {
     schema: {
-      body: landingPageSchemaRef("updateLandingPageReqBody"),
+      body: updateLandingPageReqBody,
       response: {
-        "2xx": landingPageSchemaRef("landingPageBaseSchema"),
+        "2xx": landingPageBaseSchema,
       },
     },
     handler: asyncErrHandler(updateLandingPageWithShortId),
@@ -55,7 +63,7 @@ const updateLandingPageWithShortIdRouteOptions: RouteShorthandOptionsWithHandler
 
 const deleteLandingPageByIdRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {
-    params: landingPageSchemaRef("deleteLandingPageWithIddParams"),
+    params: deleteLandingPageWithIddParams,
   },
   handler: asyncErrHandler(deleteLandingPageById),
 };
@@ -70,7 +78,7 @@ const getPublicLandingPageWithShortIdRouteOptions: CustomRouteShortHandOptionsWi
 const updatePageVisitsWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler =
   {
     schema: {
-      params: landingPageSchemaRef("updatePageVisitsReqParams"),
+      params: updatePageVisitsReqParams,
     },
     config: { isPublic: true },
     handler: asyncErrHandler(updatePageVisits),

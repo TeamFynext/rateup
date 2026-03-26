@@ -6,17 +6,15 @@ import {
   getContactByIdExternalController,
   updateContactByIdExternalController,
 } from "./contacts.external.controller.js";
-import { $contactRef } from "../../../modules/contact/contact.schema.js";
 import {
-  $extContactSchema,
-  extContactSchemas,
-} from "../contact-groups/contact.external.schema.js";
+  byContactIdSchema,
+  updateContactSchema,
+  createMultipleContactSchema,
+} from "../../../modules/contact/contact.schema.js";
+import { createContactSchema } from "../contact-groups/contact.external.schema.js";
+import z from "zod";
 
 export async function externalContactRoutes(server: FastifyInstance) {
-  for (const schema of extContactSchemas) {
-    server.addSchema(schema);
-  }
-
   server.post(
     "/",
     {
@@ -24,12 +22,7 @@ export async function externalContactRoutes(server: FastifyInstance) {
         description: "Create Multiple Contacts (or a single contact)",
         tags: ["Contacts"],
         summary: "Create Contacts",
-        body: {
-          oneOf: [
-            $extContactSchema("createContactSchema"),
-            $extContactSchema("createMultipleContactSchema"),
-          ],
-        },
+        body: z.union([createContactSchema, createMultipleContactSchema]),
       },
     },
     createContactsExternalController,
@@ -54,7 +47,7 @@ export async function externalContactRoutes(server: FastifyInstance) {
         description: "Get a contact by id",
         tags: ["Contacts"],
         summary: "Get a contact by id",
-        params: $contactRef("byContactIdSchema"),
+        params: byContactIdSchema,
       },
     },
     getContactByIdExternalController,
@@ -67,8 +60,8 @@ export async function externalContactRoutes(server: FastifyInstance) {
         description: "Update a contact by id",
         tags: ["Contacts"],
         summary: "Update a contact by id",
-        params: $contactRef("byContactIdSchema"),
-        body: $contactRef("updateContactSchema"),
+        params: byContactIdSchema,
+        body: updateContactSchema,
       },
     },
     updateContactByIdExternalController,
@@ -81,7 +74,7 @@ export async function externalContactRoutes(server: FastifyInstance) {
         description: "Delete a contact by id",
         tags: ["Contacts"],
         summary: "Delete a contact by id",
-        params: $contactRef("byContactIdSchema"),
+        params: byContactIdSchema,
       },
     },
     deleteContactByIdExternalController,

@@ -117,7 +117,11 @@ export async function createTemplateHandler(
       whatsappSettingsPhoneId,
       ...templateData
     } = request.body;
-    const formattedTemplate = generateTemplate(templateData);
+    const formattedTemplate = generateTemplate({
+      ...templateData,
+      whatsappSettingsPhoneId: whatsappSettingsPhoneId || "default_phone_id",
+      config: config || {},
+    });
     let fetchedTemplate;
     switch (request.body.templateType) {
       case TemplateType.GENERAL_NOTIFICATION:
@@ -159,7 +163,7 @@ export async function createTemplateHandler(
       await updateTemplateInDb(
         templateData.id,
         fetchedTemplate,
-        defaultValues as WaTemplateDefaultValues,
+        defaultValues as unknown as WaTemplateDefaultValues,
         templateType,
         config,
         whatsappSettingsPhoneId,
@@ -168,7 +172,7 @@ export async function createTemplateHandler(
       await saveTemplate(
         fetchedTemplate,
         orgId,
-        defaultValues as WaTemplateDefaultValues,
+        defaultValues as unknown as WaTemplateDefaultValues,
         templateType,
         config,
         whatsappSettingsPhoneId,
@@ -200,7 +204,10 @@ export async function saveTemplateAsDraftHandler(
       whatsappSettingsPhoneId,
       ...templateData
     } = request.body;
-    let formattedTemplate: any = generateTemplate(templateData);
+    let formattedTemplate: any = generateTemplate({
+      ...templateData,
+      whatsappSettingsPhoneId,
+    });
     formattedTemplate.status = WaTemplateStatus.DRAFT;
     if (request.body?.id) {
       const template = await getDbTemplate(request.body.id);
@@ -211,7 +218,7 @@ export async function saveTemplateAsDraftHandler(
       await updateTemplateInDb(
         request.body.id,
         template.data,
-        defaultValues as WaTemplateDefaultValues,
+        defaultValues as unknown as WaTemplateDefaultValues,
         templateType,
         undefined,
         whatsappSettingsPhoneId,
@@ -220,7 +227,7 @@ export async function saveTemplateAsDraftHandler(
       await saveTemplate(
         formattedTemplate,
         orgId,
-        defaultValues as WaTemplateDefaultValues,
+        defaultValues as unknown as WaTemplateDefaultValues,
         templateType,
         undefined,
         whatsappSettingsPhoneId,

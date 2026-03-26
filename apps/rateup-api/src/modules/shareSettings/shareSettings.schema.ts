@@ -1,62 +1,30 @@
-const paramsSchema = {
-  type: "object",
-  required: ["id"],
-  properties: {
-    resourceName: { type: "string" },
-    id: { type: "string" },
-  },
-};
+import z from "zod";
 
-const bodySchema = {
-  type: "object",
-  required: [
-    "logoSize",
-    "logoFillType",
-    "logoBorderRadius",
-    "qrBgColor",
-    "qrColor",
-  ],
-  properties: {
-    qrBgColor: { type: "string" },
-    qrColor: { type: "string" },
-    logoSize: { type: "number" },
-    logoFillType: { type: "string" },
-    logoBorderRadius: { type: "number" },
-    logoFile: {
-      anyOf: [{ type: "object" }, { type: "string" }],
-    },
-    isLogoEnabled: { type: "boolean" },
-  },
-};
+const paramsSchema = z.object({
+  resourceName: z.string().optional(),
+  id: z.string(),
+});
 
-const responseSchema = {
-  "2xx": {
-    type: "object",
-    properties: {
-      qrBgColor: { type: "string" },
-      qrColor: { type: "string" },
-      logoSize: { type: "number" },
-      logoFillType: { type: "string" },
-      logoBorderRadius: { type: "number" },
-      logoFile: {
-        type: "string",
-        nullable: true,
-      },
-      isLogoEnabled: { type: "boolean" },
-    },
-    nullable: true,
-  },
-};
+const bodySchema = z.object({
+  qrBgColor: z.string(),
+  qrColor: z.string(),
+  logoSize: z.number(),
+  logoFillType: z.string(),
+  logoBorderRadius: z.number(),
+  logoFile: z.union([z.object({}).loose(), z.string()]).optional(),
+  isLogoEnabled: z.boolean().optional(),
+});
 
-const getSettingsSchema = {
-  params: paramsSchema,
-  response: responseSchema,
-};
+const responseSchema = z
+  .object({
+    qrBgColor: z.string(),
+    qrColor: z.string(),
+    logoSize: z.number(),
+    logoFillType: z.string(),
+    logoBorderRadius: z.number(),
+    logoFile: z.string().nullable().optional(),
+    isLogoEnabled: z.boolean().optional(),
+  })
+  .nullable();
 
-const saveAndUpdateSettingsSchema = {
-  consumes: ["multipart/form-data"],
-  ...getSettingsSchema,
-  body: bodySchema,
-};
-
-export { getSettingsSchema, saveAndUpdateSettingsSchema };
+export { paramsSchema, bodySchema, responseSchema };

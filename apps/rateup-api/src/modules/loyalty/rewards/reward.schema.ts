@@ -94,7 +94,7 @@ const redemptionRulesSchema = z.object({
 export const loyaltyRewardSchema = z.object({
   name: z.string().min(1, "Reward name is required"),
   description: z.string().optional().nullable(),
-  rewardType: z.nativeEnum(LoyaltyRewardType),
+  rewardType: z.enum(LoyaltyRewardType),
   pointsCost: z.number().min(0),
   rewardValue: z.union([
     z.discriminatedUnion("type", [
@@ -102,9 +102,9 @@ export const loyaltyRewardSchema = z.object({
       discountPercentageValueSchema,
       freeItemValueSchema,
     ]),
-    z.record(z.unknown()),
+    z.record(z.string(), z.unknown()),
   ]),
-  status: z.nativeEnum(LoyaltyRewardStatus).default(LoyaltyRewardStatus.ACTIVE),
+  status: z.enum(LoyaltyRewardStatus).default(LoyaltyRewardStatus.ACTIVE),
   redemptionRules: redemptionRulesSchema.optional(),
   stockQuantity: z.number().optional().nullable(),
   availableForTiers: z.array(z.string()).optional(),

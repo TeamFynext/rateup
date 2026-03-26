@@ -2,7 +2,6 @@ import { FastifyInstance } from "fastify";
 import {
   createWaSettingsHandler,
   deleteWaSettingsHandler,
-  getContactTagHandler,
   getMetaAssetsHandler,
   getWaLogsHandler,
   getWaSettingsHandler,
@@ -12,12 +11,21 @@ import {
   syncFbPagesHandler,
   syncLeadgenFormQuestionsHandler,
   syncLeadgenFormsHandler,
-  updateContactTagHandler,
   updateWaSettingsByIdHandler,
   upsertWaSettingsHandler,
 } from "./wa_settings.controller.js";
-import { $WASettingsref } from "./wa_settings.schema.js";
 import { checkSession } from "../../../utils/checkSession.js";
+import {
+  byAdAccountIdParamsSchema,
+  byFbPageQuerySchema,
+  byLeadGenFormIdParamsSchema,
+  byWaSettingsIdParamsSchema,
+  createWaSettingsInputSchema,
+  getWaSettingsResponseSchema,
+  paginationQuery,
+  updateWaSettingsInputSchema,
+  whatsappSettingsIdParamSchema,
+} from "./wa_settings.schema.js";
 
 export async function waSettingsRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -26,7 +34,7 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     {
       schema: {
         response: {
-          200: $WASettingsref("getWaSettingsResponseSchema"),
+          200: getWaSettingsResponseSchema,
         },
       },
     },
@@ -36,7 +44,7 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $WASettingsref("createWaSettingsInputSchema"),
+        body: createWaSettingsInputSchema,
       },
     },
     createWaSettingsHandler,
@@ -45,7 +53,7 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $WASettingsref("updateWaSettingsInputSchema"),
+        body: updateWaSettingsInputSchema,
       },
     },
     upsertWaSettingsHandler,
@@ -55,8 +63,8 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     "/:whatsappSettingsId",
     {
       schema: {
-        params: $WASettingsref("whatsappSettingsIdParamSchema"),
-        body: $WASettingsref("updateWaSettingsInputSchema"),
+        params: whatsappSettingsIdParamSchema,
+        body: updateWaSettingsInputSchema,
       },
     },
     updateWaSettingsByIdHandler,
@@ -66,7 +74,7 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     "/:phoneId",
     {
       schema: {
-        params: $WASettingsref("byWaSettingsIdParamsSchema"),
+        params: byWaSettingsIdParamsSchema,
       },
     },
     deleteWaSettingsHandler,
@@ -76,7 +84,7 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     "/logs",
     {
       schema: {
-        querystring: $WASettingsref("paginationQuery"),
+        querystring: paginationQuery,
       },
     },
     getWaLogsHandler,
@@ -88,7 +96,7 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     "/sync/leadgen-forms/:whatsappSettingsId",
     {
       schema: {
-        body: $WASettingsref("byFbPageQuerySchema"),
+        body: byFbPageQuerySchema,
       },
     },
     syncLeadgenFormsHandler,
@@ -98,9 +106,9 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     "/sync/leadgen-form/:formId",
     {
       schema: {
-        body: $WASettingsref("byFbPageQuerySchema"),
-        params: $WASettingsref("byLeadGenFormIdParamsSchema"),
-        querystring: $WASettingsref("whatsappSettingsIdParamSchema"),
+        body: byFbPageQuerySchema,
+        params: byLeadGenFormIdParamsSchema,
+        querystring: whatsappSettingsIdParamSchema,
       },
     },
     syncLeadgenFormQuestionsHandler,
@@ -112,8 +120,8 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     "/sync/ads/:adAccountId",
     {
       schema: {
-        params: $WASettingsref("byAdAccountIdParamsSchema"),
-        querystring: $WASettingsref("whatsappSettingsIdParamSchema"),
+        params: byAdAccountIdParamsSchema,
+        querystring: whatsappSettingsIdParamSchema,
       },
     },
     syncAdsByAdAccountHandler,
@@ -123,8 +131,8 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     "/subscribe/:whatsappSettingsId",
     {
       schema: {
-        body: $WASettingsref("byFbPageQuerySchema"),
-        params: $WASettingsref("whatsappSettingsIdParamSchema"),
+        body: byFbPageQuerySchema,
+        params: whatsappSettingsIdParamSchema,
       },
     },
     subscribeFieldstoPageHandler,

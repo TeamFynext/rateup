@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { buildJsonSchemas } from "fastify-zod";
 
 const matchDataSchema = z.object({
   json: z.any(),
@@ -12,30 +11,17 @@ const createAutomatedReplySchema = z.object({
   platform: z.string().optional(),
 });
 
-export const byWaAutomatedReplyIdParams = z.object({
+const byWaAutomatedReplyIdParams = z.object({
   waAutomatedReplyId: z.string(),
 });
 
-export const cloneAutomatedReplyBody = z.object({
+const cloneAutomatedReplyBody = z.object({
   name: z.string().min(1).optional(),
 });
 
 const initiateAutomatedReplyBody = z.object({
   phone: z.string(),
 });
-
-export const { schemas: waAutomatedReplySchemas, $ref: $waAutomatedReplyRef } =
-  buildJsonSchemas(
-    {
-      createAutomatedReplySchema,
-      byWaAutomatedReplyIdParams,
-      cloneAutomatedReplyBody,
-      initiateAutomatedReplyBody,
-    },
-    {
-      $id: "waAutomatedReplySchemas",
-    },
-  );
 
 export type CreateAutomatedReplySchema = z.infer<
   typeof createAutomatedReplySchema
@@ -47,3 +33,11 @@ export type CloneAutomatedReplyBody = z.infer<typeof cloneAutomatedReplyBody>;
 export type InitiateAutomatedReplyBody = z.infer<
   typeof initiateAutomatedReplyBody
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  createAutomatedReplySchema,
+  byWaAutomatedReplyIdParams,
+  cloneAutomatedReplyBody,
+  initiateAutomatedReplyBody,
+};

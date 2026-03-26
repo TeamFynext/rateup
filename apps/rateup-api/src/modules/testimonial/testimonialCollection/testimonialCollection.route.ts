@@ -1,6 +1,12 @@
 import { FastifyInstance } from "fastify";
 import { checkSession } from "../../../utils/checkSession.js";
-import { $TestimonialCollectionRef } from "./testimonialCollection.schema.js";
+import {
+  createTestimonialCollectionSchema,
+  byIdParamsSchema,
+  updateTestimonialCollectionSchema,
+  testimonialCollectionQuerySchema,
+  MultipleTestimonialToCollectionSchema,
+} from "./testimonialCollection.schema.js";
 import {
   addMultipleTestimonialToCollectionHandler,
   createTestimonialCollectionHandler,
@@ -16,7 +22,7 @@ export async function testimonialCollectionRoutes(server: FastifyInstance) {
     "/create",
     {
       schema: {
-        body: $TestimonialCollectionRef("createTestimonialCollectionSchema"),
+        body: createTestimonialCollectionSchema,
       },
     },
     createTestimonialCollectionHandler,
@@ -26,9 +32,7 @@ export async function testimonialCollectionRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        querystring: $TestimonialCollectionRef(
-          "testimonialCollectionQuerySchema",
-        ),
+        querystring: testimonialCollectionQuerySchema,
       },
     },
     getTestimonialCollections,
@@ -37,8 +41,8 @@ export async function testimonialCollectionRoutes(server: FastifyInstance) {
     "/update/:id",
     {
       schema: {
-        params: $TestimonialCollectionRef("byIdParamsSchema"),
-        body: $TestimonialCollectionRef("updateTestimonialCollectionSchema"),
+        params: byIdParamsSchema,
+        body: updateTestimonialCollectionSchema,
       },
     },
     updateTestimonialCollectionHandler,
@@ -48,7 +52,7 @@ export async function testimonialCollectionRoutes(server: FastifyInstance) {
     "/:id",
     {
       schema: {
-        params: $TestimonialCollectionRef("byIdParamsSchema"),
+        params: byIdParamsSchema,
       },
     },
     deleteTestimonialCollectionHandler,
@@ -58,10 +62,8 @@ export async function testimonialCollectionRoutes(server: FastifyInstance) {
     "/:id/testimonials",
     {
       schema: {
-        params: $TestimonialCollectionRef("byIdParamsSchema"),
-        body: $TestimonialCollectionRef(
-          "MultipleTestimonialToCollectionSchema",
-        ),
+        params: byIdParamsSchema,
+        body: MultipleTestimonialToCollectionSchema,
       },
     },
     addMultipleTestimonialToCollectionHandler,
@@ -71,10 +73,8 @@ export async function testimonialCollectionRoutes(server: FastifyInstance) {
     "/:id/testimonials",
     {
       schema: {
-        params: $TestimonialCollectionRef("byIdParamsSchema"),
-        body: $TestimonialCollectionRef(
-          "MultipleTestimonialToCollectionSchema",
-        ),
+        params: byIdParamsSchema,
+        body: MultipleTestimonialToCollectionSchema,
       },
     },
     deleteMultipleTestimonialsFromCollectionHandler,

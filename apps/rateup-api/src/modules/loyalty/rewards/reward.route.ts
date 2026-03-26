@@ -11,14 +11,8 @@ import {
   loyaltyRewardUpdateSchema,
   rewardIdParamSchema,
 } from "./reward.schema.js";
-import {
-  serializerCompiler,
-  validatorCompiler,
-} from "fastify-type-provider-zod";
 
 export async function loyaltyRewardRoutes(server: FastifyInstance) {
-  server.setValidatorCompiler(validatorCompiler);
-  server.setSerializerCompiler(serializerCompiler);
   server.post(
     "/",
     {

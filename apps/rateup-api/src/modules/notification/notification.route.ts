@@ -8,7 +8,10 @@ import {
   getNotificationsHandler,
   updateNotificationSettingHandler,
 } from "./notification.controller.js";
-import { $NotifyRef } from "./notification.schema.js";
+import {
+  notificationSettingSchema,
+  notificationIdParamSchema,
+} from "./notification.schema.js";
 
 export async function notificationRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -18,7 +21,7 @@ export async function notificationRoutes(server: FastifyInstance) {
     "/settings",
     {
       schema: {
-        body: $NotifyRef("notificationSettingSchema"),
+        body: notificationSettingSchema,
       },
     },
     updateNotificationSettingHandler,
@@ -28,7 +31,7 @@ export async function notificationRoutes(server: FastifyInstance) {
     "/:notificationId",
     {
       schema: {
-        params: $NotifyRef("notificationIdParamSchema"),
+        params: notificationIdParamSchema,
       },
     },
     deleteNotificationByIdHandler,

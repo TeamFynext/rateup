@@ -10,13 +10,19 @@ import {
   incrementGenerateQrNoOfScans,
   updateGenerateQrRecordWithShortId,
 } from "./generateQr.controllers.js";
-import { generateQrSchemaRef } from "./generateQr.schema.js";
+import {
+  createGenerateQrRecordReqBody,
+  generateQrBaseSchema,
+  getAllGenerateQrRecordsResponse,
+  getGenerateQrRecordWithShortIdParams,
+  updateGenerateQrRecordReqBody,
+} from "./generateQr.schema.js";
 
 const createGenerateQrRecordRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {
-    body: generateQrSchemaRef("createGenerateQrRecordReqBody"),
+    body: createGenerateQrRecordReqBody,
     response: {
-      "2xx": generateQrSchemaRef("generateQrBaseSchema"),
+      "2xx": generateQrBaseSchema,
     },
   },
   handler: asyncErrHandler(createGenerateQrRecord),
@@ -32,9 +38,9 @@ const getPublicGenerateQrRecordWithShortIdRouteOptions: CustomRouteShortHandOpti
 const getGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHandler =
   {
     schema: {
-      params: generateQrSchemaRef("getGenerateQrRecordWithShortIdParams"),
+      params: getGenerateQrRecordWithShortIdParams,
       response: {
-        "2xx": generateQrSchemaRef("generateQrBaseSchema"),
+        "2xx": generateQrBaseSchema,
       },
     },
     handler: asyncErrHandler(getGenerateQrRecordWithShortId),
@@ -43,7 +49,7 @@ const getGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHandl
 const getAllGenerateQrRecordsRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {
     response: {
-      "2xx": generateQrSchemaRef("getAllGenerateQrRecordsResponse"),
+      "2xx": getAllGenerateQrRecordsResponse,
     },
   },
   handler: asyncErrHandler(getGenerateQrRecords),
@@ -52,9 +58,9 @@ const getAllGenerateQrRecordsRouteOptions: RouteShorthandOptionsWithHandler = {
 const updateGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHandler =
   {
     schema: {
-      body: generateQrSchemaRef("updateGenerateQrRecordReqBody"),
+      body: updateGenerateQrRecordReqBody,
       response: {
-        "2xx": generateQrSchemaRef("generateQrBaseSchema"),
+        "2xx": generateQrBaseSchema,
       },
     },
     handler: asyncErrHandler(updateGenerateQrRecordWithShortId),
@@ -63,7 +69,7 @@ const updateGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHa
 const deleteGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHandler =
   {
     schema: {
-      params: generateQrSchemaRef("getGenerateQrRecordWithShortIdParams"),
+      params: getGenerateQrRecordWithShortIdParams,
     },
     handler: asyncErrHandler(deleteGenerateQrRecordWithShortId),
   };
@@ -71,7 +77,7 @@ const deleteGenerateQrRecordWithShortIdRouteOptions: RouteShorthandOptionsWithHa
 const incrementGenerateQrNoOfScansRouteOptions: CustomRouteShortHandOptionsWithHandler =
   {
     schema: {
-      params: generateQrSchemaRef("getGenerateQrRecordWithShortIdParams"),
+      params: getGenerateQrRecordWithShortIdParams,
     },
     config: { isPublic: true },
     handler: asyncErrHandler(incrementGenerateQrNoOfScans),

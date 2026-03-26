@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 export const trackReferralSchema = z.object({
@@ -14,18 +13,6 @@ export const completeReferralSchema = z.object({
 export const referrerIdParamSchema = z.object({
   referrerId: z.string(),
 });
-
-export const { schemas: referralSchemas, $ref: $referralRef } =
-  buildJsonSchemas(
-    {
-      trackReferralSchema,
-      completeReferralSchema,
-      referrerIdParamSchema,
-    },
-    {
-      $id: "referralSchema",
-    },
-  );
 
 export type TrackReferralInput = z.infer<typeof trackReferralSchema>;
 export type CompleteReferralInput = z.infer<typeof completeReferralSchema>;

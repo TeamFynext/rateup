@@ -448,7 +448,7 @@ export async function addContactToGroupHandler(
     const { orgId } = request.query;
     const res = await addNewContactsToGroup(
       request.body.groupId,
-      request.body.contacts,
+      request.body.contacts as any,
       orgId,
     );
     reply.send({ success: true });

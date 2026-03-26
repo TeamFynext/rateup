@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import {
   LogicCondition,
@@ -7,7 +6,7 @@ import {
   QuestionType,
 } from "../../types/enums.js";
 
-export const logicConditionSchema = z.nativeEnum(LogicCondition);
+export const logicConditionSchema = z.enum(LogicCondition);
 
 const logicJumpSchema = z.object({
   condition: logicConditionSchema,
@@ -47,7 +46,7 @@ const questionCore = {
   label: z.record(z.string(), z.string()).optional(),
   required: z.boolean().default(false),
   enableNpsAnalytics: z.boolean().default(false),
-  type: z.nativeEnum(QuestionType).or(z.nativeEnum(PageType)),
+  type: z.enum(QuestionType).or(z.enum(PageType)),
   choices: z
     .record(
       z.string(),
@@ -66,7 +65,7 @@ const questionCore = {
               image: z.string().optional(),
             }),
           ]),
-          weightage: z.nativeEnum(NPSWeightage).optional(),
+          weightage: z.enum(NPSWeightage).optional(),
         }),
       ),
     )
@@ -116,6 +115,7 @@ const questionCore = {
     .optional(),
   tnc: z
     .record(
+      z.string(),
       z.object({
         title: z.string(),
         urlTitle: z.string(),
@@ -242,17 +242,6 @@ const updateQuestionRequestSchema = z.object({
 
 const updateQuestionsOrderRequestSchema = z.array(z.string());
 
-export const { schemas: questionSchemas, $ref: $Qref } = buildJsonSchemas(
-  {
-    createQuestionRequestSchema,
-    createQuestionResponseSchema,
-    updateQuestionsOrderRequestSchema,
-    updateQuestionRequestSchema,
-    questionRouteParamsSchema,
-    questionsRouteParamsSchema,
-  },
-  { $id: "questionSchema" },
-);
 export type CreateQuestionInput = z.infer<typeof createQuestionRequestSchema>;
 export type UpdateQuestionsOrderInput = z.infer<
   typeof updateQuestionsOrderRequestSchema
@@ -260,3 +249,13 @@ export type UpdateQuestionsOrderInput = z.infer<
 export type UpdateQuestionInput = z.infer<typeof updateQuestionRequestSchema>;
 export type QuestionRouteParams = z.infer<typeof questionRouteParamsSchema>;
 export type QuestionsRouteParams = z.infer<typeof questionsRouteParamsSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  createQuestionRequestSchema,
+  createQuestionResponseSchema,
+  updateQuestionsOrderRequestSchema,
+  updateQuestionRequestSchema,
+  questionRouteParamsSchema,
+  questionsRouteParamsSchema,
+};

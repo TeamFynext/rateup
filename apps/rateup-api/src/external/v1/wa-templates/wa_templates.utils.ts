@@ -293,7 +293,7 @@ export const templateFileUploadSchema = z
     const isMimeTypeKnown = allAllowedMimeTypes.includes(file.mimeType);
     if (!isMimeTypeKnown) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["mimeType"],
         message: `Unknown MIME type '${file.mimeType}'`,
       });
@@ -302,14 +302,15 @@ export const templateFileUploadSchema = z
     // Check if mimeType is allowed for the given type
     if (!config.mimeTypes.includes(file.mimeType)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["mimeType"],
         message: `MIME type '${file.mimeType}' is not valid for type '${file.type}'`,
       });
     }
     if (file.sizeInBytes > config.maxSize) {
       ctx.addIssue({
-        code: z.ZodIssueCode.too_big,
+        code: "too_big",
+        origin: "fileSize",
         maximum: config.maxSize,
         inclusive: true,
         type: "number",

@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 export const loyaltyTierSchema = z.object({
@@ -19,18 +18,6 @@ export const tierIdParamSchema = z.object({
 export const programIdParamSchema = z.object({
   programId: z.string(),
 });
-
-export const { schemas: loyaltyTierSchemas, $ref: $tierRef } = buildJsonSchemas(
-  {
-    loyaltyTierSchema,
-    loyaltyTierUpdateSchema,
-    tierIdParamSchema,
-    programIdParamSchema,
-  },
-  {
-    $id: "loyaltyTierSchema",
-  },
-);
 
 export type LoyaltyTierInput = z.infer<typeof loyaltyTierSchema>;
 export type LoyaltyTierUpdateInput = z.infer<typeof loyaltyTierUpdateSchema>;

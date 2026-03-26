@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $TestimonialCollectionRef } from "./testimonialCollection/testimonialCollection.schema.js";
+import { byIdParamsSchema } from "./testimonialCollection/testimonialCollection.schema.js";
 import { getTestimonialCollectionByIdHandler } from "./testimonialCollection/testimonialCollection.controller.js";
 
 export async function testimonialPublicRoutes(server: FastifyInstance) {
@@ -7,7 +7,7 @@ export async function testimonialPublicRoutes(server: FastifyInstance) {
     "/:id",
     {
       schema: {
-        params: $TestimonialCollectionRef("byIdParamsSchema"),
+        params: byIdParamsSchema,
       },
     },
     getTestimonialCollectionByIdHandler,

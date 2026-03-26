@@ -9,10 +9,17 @@ import {
   replaceQuestionsHandler,
   updateQuestionHandler,
 } from "./question.controller.js";
-import { $Qref } from "./question.schema.js";
 import { verifySurveyAccess } from "./question.auth.js";
 import { checkSession } from "../../utils/checkSession.js";
 import fastifyMultipart from "@fastify/multipart";
+import {
+  createQuestionRequestSchema,
+  createQuestionResponseSchema,
+  questionRouteParamsSchema,
+  questionsRouteParamsSchema,
+  updateQuestionRequestSchema,
+  updateQuestionsOrderRequestSchema,
+} from "./question.schema.js";
 
 // Base route: /api/question/:surveyId
 export async function questionRoutes(server: FastifyInstance) {
@@ -30,10 +37,10 @@ export async function questionRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $Qref("createQuestionRequestSchema"),
-        params: $Qref("questionsRouteParamsSchema"),
+        body: createQuestionRequestSchema,
+        params: questionsRouteParamsSchema,
         response: {
-          201: $Qref("createQuestionResponseSchema"),
+          201: createQuestionResponseSchema,
         },
       },
     },
@@ -45,7 +52,7 @@ export async function questionRoutes(server: FastifyInstance) {
     "/:id",
     {
       schema: {
-        params: $Qref("questionRouteParamsSchema"),
+        params: questionRouteParamsSchema,
       },
     },
     getQuestionByIdHandler,
@@ -56,7 +63,7 @@ export async function questionRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        params: $Qref("questionsRouteParamsSchema"),
+        params: questionsRouteParamsSchema,
       },
     },
     getQuestionsBySurveyIdHandler,
@@ -67,7 +74,7 @@ export async function questionRoutes(server: FastifyInstance) {
     "/:id",
     {
       schema: {
-        params: $Qref("questionRouteParamsSchema"),
+        params: questionRouteParamsSchema,
       },
     },
     deleteQuestionByIdHandler,
@@ -78,8 +85,8 @@ export async function questionRoutes(server: FastifyInstance) {
     "/reorder",
     {
       schema: {
-        body: $Qref("updateQuestionsOrderRequestSchema"),
-        params: $Qref("questionsRouteParamsSchema"),
+        body: updateQuestionsOrderRequestSchema,
+        params: questionsRouteParamsSchema,
       },
     },
     reorderQuestionsHandler,
@@ -90,8 +97,8 @@ export async function questionRoutes(server: FastifyInstance) {
     "/:id",
     {
       schema: {
-        params: $Qref("questionRouteParamsSchema"),
-        body: $Qref("updateQuestionRequestSchema"),
+        params: questionRouteParamsSchema,
+        body: updateQuestionRequestSchema,
       },
     },
     updateQuestionHandler,
@@ -103,7 +110,7 @@ export async function questionRoutes(server: FastifyInstance) {
     "/import-emails/:id",
     {
       schema: {
-        params: $Qref("questionRouteParamsSchema"),
+        params: questionRouteParamsSchema,
         consumes: ["multipart/form-data"],
       },
     },

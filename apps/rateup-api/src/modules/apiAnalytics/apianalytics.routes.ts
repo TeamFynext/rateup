@@ -6,7 +6,7 @@ import {
   getTeamPerformanceStatsHandler,
   getTemplateCategoryHandler,
 } from "./apianalytics.controller.js";
-import { $apiAnalyticsRef } from "./apianalytics.schema.js";
+import { statsQuerySchema, trendQuerySchema } from "./apianalytics.schema.js";
 
 export async function apiAnalyticsRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -14,7 +14,7 @@ export async function apiAnalyticsRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        querystring: $apiAnalyticsRef("statsQuerySchema"),
+        querystring: statsQuerySchema,
       },
     },
     getApiAnalyticsHandler,
@@ -23,7 +23,7 @@ export async function apiAnalyticsRoutes(server: FastifyInstance) {
     "/trend",
     {
       schema: {
-        querystring: $apiAnalyticsRef("trendQuerySchema"),
+        querystring: trendQuerySchema,
       },
     },
     getDeliveredFailedTrendHandler,
@@ -32,7 +32,7 @@ export async function apiAnalyticsRoutes(server: FastifyInstance) {
     "/template-overview",
     {
       schema: {
-        querystring: $apiAnalyticsRef("statsQuerySchema"),
+        querystring: statsQuerySchema,
       },
     },
     getTemplateCategoryHandler,
@@ -41,7 +41,7 @@ export async function apiAnalyticsRoutes(server: FastifyInstance) {
     "/team-overview",
     {
       schema: {
-        querystring: $apiAnalyticsRef("statsQuerySchema"),
+        querystring: statsQuerySchema,
       },
     },
     getTeamPerformanceStatsHandler,

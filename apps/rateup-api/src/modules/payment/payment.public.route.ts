@@ -4,7 +4,7 @@ import {
   sendEmailPlanSelectionDetailsHandler,
   verificationHandler,
 } from "./payment.controller.js";
-import { $Pref } from "./payment.schema.js";
+import { orgPlanEmailSchema } from "./payment.schema.js";
 
 export async function paymentPublicRoutes(server: FastifyInstance) {
   server.get("/rateup-plans", getAllRateupPaymentPlansHandler);
@@ -15,7 +15,7 @@ export async function paymentPublicRoutes(server: FastifyInstance) {
     "/mail",
     {
       schema: {
-        body: $Pref("orgPlanEmailSchema"),
+        body: orgPlanEmailSchema,
       },
     },
     sendEmailPlanSelectionDetailsHandler,

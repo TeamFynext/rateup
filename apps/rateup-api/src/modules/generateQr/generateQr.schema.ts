@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const generateQrBaseSchema = z.object({
@@ -41,15 +40,15 @@ type CreateGenerateQrRecordReqBody = z.infer<
   typeof createGenerateQrRecordReqBody
 >;
 
-const { schemas: generateQrSchemas, $ref: generateQrSchemaRef } =
-  buildJsonSchemas(models, { $id: "generateQrSchema" });
-
 export type updateGenerateQrRecordReqBodyType = z.infer<
   typeof updateGenerateQrRecordReqBody
 >;
 
 export {
-  generateQrSchemas,
-  generateQrSchemaRef,
+  generateQrBaseSchema,
+  getGenerateQrRecordWithShortIdParams,
+  getAllGenerateQrRecordsResponse,
+  updateGenerateQrRecordReqBody,
+  createGenerateQrRecordReqBody,
   CreateGenerateQrRecordReqBody,
 };

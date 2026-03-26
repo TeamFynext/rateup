@@ -8,17 +8,22 @@ import {
   getCampaignParticipantsByCampaignIdHandler,
   multipleDeleteCampaignParticipantHandler,
 } from "./campaignParticipants.controller.js";
-import { $campaignParticipantsRef } from "./campaignParticipants.schema.js";
-import { $campaignRef } from "../campaign.schema.js";
+import {
+  byCampaignParticipantIdParamsSchema,
+  createCampaignParticipantsFromContactsSchema,
+  createCampaignParticipantsFromGroupsSchema,
+  createCampaignParticipantsSchema,
+  deleteCampaignParticipantsSchema,
+  paginateQuerySchema,
+} from "./campaignParticipants.schema.js";
+import { byCampaignIdParamsSchema } from "../campaign.schema.js";
 
 export async function campaignParticipantRoutes(server: FastifyInstance) {
   server.post(
     "/contacts",
     {
       schema: {
-        body: $campaignParticipantsRef(
-          "createCampaignParticipantsFromContactsSchema",
-        ),
+        body: createCampaignParticipantsFromContactsSchema,
       },
     },
     createCampaignParticipantsFromContactsHandler,
@@ -27,9 +32,7 @@ export async function campaignParticipantRoutes(server: FastifyInstance) {
     "/groups",
     {
       schema: {
-        body: $campaignParticipantsRef(
-          "createCampaignParticipantsFromGroupsSchema",
-        ),
+        body: createCampaignParticipantsFromGroupsSchema,
       },
     },
     createCampaignParticipantsFromGroupHandler,
@@ -39,7 +42,7 @@ export async function campaignParticipantRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $campaignParticipantsRef("createCampaignParticipantsSchema"),
+        body: createCampaignParticipantsSchema,
       },
     },
     createCampaignParticipantsHandler,
@@ -49,7 +52,7 @@ export async function campaignParticipantRoutes(server: FastifyInstance) {
     "/:campaignParticipantId",
     {
       schema: {
-        params: $campaignParticipantsRef("byCampaignParticipantIdParamsSchema"),
+        params: byCampaignParticipantIdParamsSchema,
       },
     },
     deleteCampaignParticipantByIdHandler,
@@ -58,8 +61,8 @@ export async function campaignParticipantRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        params: $campaignRef("byCampaignIdParamsSchema"),
-        querystring: $campaignParticipantsRef("paginateQuerySchema"),
+        params: byCampaignIdParamsSchema,
+        querystring: paginateQuerySchema,
       },
     },
     getCampaignParticipantsByCampaignIdHandler,
@@ -68,7 +71,7 @@ export async function campaignParticipantRoutes(server: FastifyInstance) {
     "/:campaignParticipantId",
     {
       schema: {
-        params: $campaignParticipantsRef("byCampaignParticipantIdParamsSchema"),
+        params: byCampaignParticipantIdParamsSchema,
       },
     },
     getCampaignParticipantByIdHandler,
@@ -77,7 +80,7 @@ export async function campaignParticipantRoutes(server: FastifyInstance) {
     "/multiple-delete",
     {
       schema: {
-        body: $campaignParticipantsRef("deleteCampaignParticipantsSchema"),
+        body: deleteCampaignParticipantsSchema,
       },
     },
     multipleDeleteCampaignParticipantHandler,

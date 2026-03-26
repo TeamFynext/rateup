@@ -6,15 +6,20 @@ import {
   verifyRedemptionHandler,
   getTransactionsHandler,
 } from "./redemption.controller.js";
-import { $customerAccountRef } from "../accounts/account.schema.js";
-import { $redemptionRef } from "./redemption.schema.js";
+import {
+  redeemRewardSchema,
+  verifyRedemptionSchema,
+  applyRedemptionSchema,
+  customerIdParamSchema,
+} from "../accounts/account.schema.js";
+import { transactionFilterSchema } from "./redemption.schema.js";
 
 export async function redemptionRoutes(server: FastifyInstance) {
   server.post(
     "/redeem",
     {
       schema: {
-        body: $customerAccountRef("redeemRewardSchema"),
+        body: redeemRewardSchema,
       },
     },
     redeemRewardHandler,
@@ -24,7 +29,7 @@ export async function redemptionRoutes(server: FastifyInstance) {
     "/verify",
     {
       schema: {
-        body: $customerAccountRef("verifyRedemptionSchema"),
+        body: verifyRedemptionSchema,
       },
     },
     verifyRedemptionHandler,
@@ -34,7 +39,7 @@ export async function redemptionRoutes(server: FastifyInstance) {
     "/apply",
     {
       schema: {
-        body: $customerAccountRef("applyRedemptionSchema"),
+        body: applyRedemptionSchema,
       },
     },
     applyRedemptionHandler,
@@ -44,7 +49,7 @@ export async function redemptionRoutes(server: FastifyInstance) {
     "/customer/:customerId",
     {
       schema: {
-        params: $customerAccountRef("customerIdParamSchema"),
+        params: customerIdParamSchema,
       },
     },
     getRedemptionsByCustomerHandler,
@@ -54,7 +59,7 @@ export async function redemptionRoutes(server: FastifyInstance) {
     "/transactions",
     {
       schema: {
-        querystring: $redemptionRef("transactionFilterSchema"),
+        querystring: transactionFilterSchema,
       },
     },
     getTransactionsHandler,
