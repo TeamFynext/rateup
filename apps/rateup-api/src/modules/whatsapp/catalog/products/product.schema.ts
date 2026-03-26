@@ -215,7 +215,7 @@ const catalogItemBatch = z.object({
 
 const catalogItemQueryFilter = z.object({
   next: z.string().optional(),
-  limit: z.number().optional(),
+  limit: z.coerce.number().optional(),
 });
 
 const catalogProductIdsSchema = z.object({

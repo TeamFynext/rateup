@@ -13,7 +13,7 @@ const lifecycleBodySchema = z.object({
   description: z.string().optional(),
   emoji: z.string().optional(),
   isWon: z.boolean().optional(),
-  color: z.string(),
+  color: z.string().nullable(),
 });
 
 const lifecycleReorderSchema = z.object({

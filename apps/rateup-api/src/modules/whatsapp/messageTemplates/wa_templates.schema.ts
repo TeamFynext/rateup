@@ -16,7 +16,7 @@ const waTemplateInput = {
     .trim()
     .min(1)
     .max(512),
-  header: z.string(),
+  header: z.string().nullable(),
   body: z.string().max(1024).min(1),
   footer: z.string().max(60),
   category: z.string(),

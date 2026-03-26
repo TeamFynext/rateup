@@ -3,7 +3,7 @@ import { byTemplateIdParamsSchema } from "./wa_templates.schema.js";
 
 const dbTemplateResponse = z.object({
   id: z.string(),
-  createdAt: z.string(),
+  createdAt: z.date(),
   data: z.any(), // TODO: Add the correct schema here
 });
 

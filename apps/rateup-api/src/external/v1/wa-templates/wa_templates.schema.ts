@@ -90,6 +90,27 @@ const waTemplateInputSchema = z.object(waTemplateInput);
 export const waTemplateFormattedInputSchema = z.object(
   waTemplateFormattedInput,
 );
+export const sendWithFileSchema = z.object({
+  timeDelay: z.coerce.number().int().min(15).optional(),
+  templateName: z.string(),
+  phone: z.coerce.number(),
+  body_variables: z.array(z.string()).optional(),
+  teamId: z.string().optional(),
+  tag: z.string().optional(),
+  headerType: z.string().optional(),
+  filename: z.string().optional(),
+  file: z
+    .union([
+      z.string(), // for binary
+      z.object({}).loose(), // for object
+    ])
+    .optional(),
+  buttonVariable: z.string().optional(),
+  from: z
+    .string()
+    .optional()
+    .describe("WhatsApp phone number with country code (e.g. 1234567890)"),
+});
 
 // used for saving to db
 const waTemplateCore = {
@@ -124,7 +145,7 @@ const registerTemplatesInDbBodySchema = z.array(
 );
 
 const waUserSendTemplateBodySchema = z.object({
-  phone: z.string(),
+  phone: z.coerce.number(),
   parameterData: z.any(),
   teamId: z.string().optional(),
 });

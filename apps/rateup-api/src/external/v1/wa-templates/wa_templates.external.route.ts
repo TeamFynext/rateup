@@ -8,17 +8,15 @@ import {
 } from "./wa_templates.external.controller.js";
 import fastifyMultipart from "@fastify/multipart";
 import {
-  dbTemplateResponse,
   sendTemplateByNameToPhone,
-  sendTemplateToContactParamsWithOrgId,
-  sendTemplateToContact,
   sendTemplateToContactsParamsWithOrgId,
   sendTemplatesToContacts,
   errorLogsQuery,
   messageStatusParams,
+  dbTemplateResponse,
 } from "./wa_templates.external.schema.js";
 import { sendTemplatesToContactsHandler } from "../../../modules/whatsapp/messageTemplates/wa_templates.controller.js";
-import z from "zod";
+import { sendWithFileSchema } from "./wa_templates.schema.js";
 
 async function onFile(part) {
   const buff = await part.toBuffer();
@@ -75,58 +73,7 @@ export async function externalWaTemplateRoutes(server: FastifyInstance) {
     {
       schema: {
         consumes: ["multipart/form-data"],
-        body: z.fromJSONSchema({
-          type: "object",
-          required: ["templateName", "phone"],
-          properties: {
-            timeDelay: {
-              type: "integer",
-              minimum: 15,
-            },
-            templateName: {
-              type: "string",
-            },
-            phone: {
-              type: "number",
-            },
-            body_variables: {
-              type: "array",
-              items: { type: "string" },
-            },
-            teamId: {
-              type: "string",
-            },
-            tag: {
-              type: "string",
-            },
-            headerType: {
-              type: "string",
-            },
-            filename: {
-              type: "string",
-            },
-            file: {
-              oneOf: [
-                {
-                  format: "binary",
-                  type: "string",
-                },
-                {
-                  type: "object",
-                },
-              ],
-            },
-            buttonVariable: {
-              type: "string",
-            },
-            from: {
-              type: "string",
-              description:
-                "WhatsApp phone number with country code (e.g. 1234567890)",
-              deprecated: true,
-            },
-          },
-        }),
+        body: sendWithFileSchema,
         tags: ["WhatsApp/Template"],
         description:
           "Send a template to a phone number. Phone number should contain country code",

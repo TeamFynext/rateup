@@ -277,11 +277,16 @@ export async function downloadExcelResponse(
       item?.description[defaultLanguage] ||
       item?.label?.[defaultLanguage] ||
       "";
-    return visibleColumn.includes(
+    return (
       getReplacedTitleFromVariable({
         title: qsTitle,
-      }) || getContent(qsTitle),
+      }) || getContent(qsTitle)
     );
+    // return visibleColumn.includes(
+    //   getReplacedTitleFromVariable({
+    //     title: qsTitle,
+    //   }) || getContent(qsTitle),
+    // );
   });
 
   if (filteredSecondArray && responses) {
@@ -572,9 +577,10 @@ export async function downloadExcelResponseV2(
 ) {
   const responses = allResponses?.flatMap((data) => data?.responses) || [];
 
-  const filteredQuestions = questions.filter((item) =>
-    visibleColumn.includes(item?.label || ""),
-  );
+  const filteredQuestions = questions;
+  // .filter((item) =>
+  //   visibleColumn.includes(item?.label || ""),
+  // );
 
   if (filteredQuestions && responses.length) {
     const headerArray = filteredQuestions.map((question) =>

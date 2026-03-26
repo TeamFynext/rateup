@@ -41,8 +41,8 @@ export const getApprovalRequestsSchema = z.object({
   accountId: z.uuid().optional(),
   fromDate: z.iso.datetime().optional(),
   toDate: z.iso.datetime().optional(),
-  page: z.int().min(1).optional().default(1),
-  limit: z.int().min(1).max(100).optional().default(20),
+  page: z.coerce.number().min(1).optional().default(1),
+  limit: z.coerce.number().min(1).max(100).optional().default(20),
 });
 
 export const approvalIdParamSchema = z.object({

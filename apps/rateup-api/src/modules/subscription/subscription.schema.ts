@@ -2,8 +2,8 @@ import { z } from "zod";
 
 const updateSubscriptionInputSchema = z.object({
   features: z.any().optional(), // TODO: add validation
-  expiresAt: z.date().optional(),
-  renewedAt: z.date().optional(),
+  expiresAt: z.iso.datetime().optional(),
+  renewedAt: z.iso.datetime().optional(),
   basePlanId: z.uuid().optional(),
   isAnnualMessageLimit: z.boolean().optional(),
 });
