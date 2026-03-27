@@ -60,7 +60,7 @@ export async function updateSubscriptionHandler(
     else if (rateupPlan.name === "RATEUP TRIAL")
       updatedData.features = FreePlanSubscriptionFeatures;
     else updatedData.features = rateupPlan?.features;
-    updatedData.expiresAt = dayjs().add(30, "days").toDate();
+    updatedData.expiresAt = dayjs().add(30, "days").toISOString();
   }
   const subscription = await updateSubscription(orgId, updatedData);
   res.send(subscription);

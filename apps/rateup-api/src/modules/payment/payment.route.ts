@@ -14,10 +14,16 @@ import {
   updateRateUpPlanHandler,
   updateSubscriptionOrderHandler,
 } from "./payment.controller.js";
-import { $Pref } from "./payment.schema.js";
 import { assertRootOrg } from "../../utils/auth.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
+import {
+  createCheckoutRequestSchema,
+  createRateUpPlanSchema,
+  paymentPlanDeleteSchema,
+  rateupPlanParamSchema,
+  updateRateUpPlanSchema,
+} from "./payment.schema.js";
 
 export async function paymentRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -37,7 +43,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     {
       preHandler: [assertRootOrg],
       schema: {
-        body: $Pref("createRateUpPlanSchema"),
+        body: createRateUpPlanSchema,
       },
     },
     createRateUpPlanHandler,
@@ -48,7 +54,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     {
       preHandler: [assertRootOrg],
       schema: {
-        body: $Pref("updateRateUpPlanSchema"),
+        body: updateRateUpPlanSchema,
       },
     },
     updateRateUpPlanHandler,
@@ -58,7 +64,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     {
       preHandler: [assertRootOrg],
       schema: {
-        params: $Pref("rateupPlanParamSchema"),
+        params: rateupPlanParamSchema,
       },
     },
     deleteRateUpPlanHandler,
@@ -67,7 +73,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     "/create-checkout-session",
     {
       schema: {
-        body: $Pref("createCheckoutRequestSchema"),
+        body: createCheckoutRequestSchema,
       },
     },
     createCheckoutSessionHandler,
@@ -112,7 +118,7 @@ export async function paymentRoutes(server: FastifyInstance) {
     {
       preHandler: [assertRootOrg],
       schema: {
-        body: $Pref("paymentPlanDeleteSchema"),
+        body: paymentPlanDeleteSchema,
       },
     },
     deletePaymentPlanHandler,

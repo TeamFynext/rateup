@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 const menuInput = {
   name: z.string(),
@@ -132,21 +131,17 @@ const fullMenuPublicResponseSchema = z.object({
     .nullable(),
 });
 
-export const { schemas: menuSchemas, $ref: $Mref } = buildJsonSchemas(
-  {
-    menuInputSchema,
-    menuSchema,
-    updateMenuInputSchema,
-    ByMenuIdParamsSchema,
-    menuPublicResponseSchema,
-    fullMenuPublicResponseSchema,
-  },
-  {
-    $id: "menuSchema",
-  },
-);
-
 export type CreateMenuInput = z.infer<typeof menuInputSchema>;
 export type Menu = z.infer<typeof menuSchema>;
 export type UpdateMenuInput = z.infer<typeof updateMenuInputSchema>;
 export type ByMenuIdParams = z.infer<typeof ByMenuIdParamsSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  menuInputSchema,
+  menuSchema,
+  updateMenuInputSchema,
+  ByMenuIdParamsSchema,
+  menuPublicResponseSchema,
+  fullMenuPublicResponseSchema,
+};

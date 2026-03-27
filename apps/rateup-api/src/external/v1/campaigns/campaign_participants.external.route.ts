@@ -1,6 +1,9 @@
 import { FastifyInstance } from "fastify";
-import { $campaignRef } from "../../../modules/campaign/campaign.schema.js";
-import { $campaignParticipantsRef } from "../../../modules/campaign/campaignParticipants/campaignParticipants.schema.js";
+import { byCampaignIdParamsSchema } from "../../../modules/campaign/campaign.schema.js";
+import {
+  campaignParticipantResponseSchema,
+  createCampaignParticipantsFromContactsSchema,
+} from "../../../modules/campaign/campaignParticipants/campaignParticipants.schema.js";
 import {
   createCampaignParticipantsFromContactsExternalController,
   getCampaignParticipantsByCampaignIdExternalController,
@@ -16,12 +19,8 @@ export async function externalCampaignParticipantRoutes(
         tags: ["Campaign/Participants"],
         description: "Create participants from contacts",
         summary: "Create participants from contacts",
-        body: $campaignParticipantsRef(
-          "createCampaignParticipantsFromContactsSchema",
-        ),
-        response: {
-          200: $campaignParticipantsRef("campaignParticipantResponseSchema"),
-        },
+        body: createCampaignParticipantsFromContactsSchema,
+        response: campaignParticipantResponseSchema,
       },
     },
     createCampaignParticipantsFromContactsExternalController,
@@ -34,14 +33,9 @@ export async function externalCampaignParticipantRoutes(
         tags: ["Campaign/Participants"],
         description: "Get all participants of a campaign",
         summary: "Get all participants of a campaign",
-        params: $campaignRef("byCampaignIdParamsSchema"),
+        params: byCampaignIdParamsSchema,
         response: {
-          200: {
-            type: "array",
-            items: $campaignParticipantsRef(
-              "campaignParticipantResponseSchema",
-            ),
-          },
+          200: campaignParticipantResponseSchema.array(),
         },
       },
     },

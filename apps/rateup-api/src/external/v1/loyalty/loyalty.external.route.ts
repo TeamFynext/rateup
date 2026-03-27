@@ -1,5 +1,11 @@
 import { FastifyInstance } from "fastify";
-import { $customerAccountRef } from "../../../modules/loyalty/accounts/account.schema.js";
+import {
+  awardPointsSchema,
+  assignRewardSchema,
+  phoneNumberParamSchema,
+  redeemRewardSchema,
+  applyRedemptionSchema,
+} from "../../../modules/loyalty/accounts/account.schema.js";
 import {
   assignRewardExternalController,
   awardLoyaltyPointsExternalController,
@@ -10,12 +16,9 @@ import {
   redeemRewardExternalController,
   registerLoyaltyCustomerExternalController,
 } from "./loyalty.external.controller.js";
-import { $CLAreff, customerLoyaltyAccountSchemas } from "./loyalty.schema.js";
+import { customerLoyaltyAccountSchemaExternal } from "./loyalty.schema.js";
 
 export async function externalLoyaltyRoutes(server: FastifyInstance) {
-  for (const schema of customerLoyaltyAccountSchemas) {
-    server.addSchema(schema);
-  }
   server.post(
     "/customers/register",
     {
@@ -23,7 +26,7 @@ export async function externalLoyaltyRoutes(server: FastifyInstance) {
         tags: ["Loyalty"],
         description: "Register loyalty customer",
         summary: "Register customer",
-        body: $CLAreff("customerLoyaltyAccountSchemaExternal"),
+        body: customerLoyaltyAccountSchemaExternal,
       },
     },
     registerLoyaltyCustomerExternalController,
@@ -36,7 +39,7 @@ export async function externalLoyaltyRoutes(server: FastifyInstance) {
         tags: ["Loyalty"],
         description: "Add loyalty points for a customer",
         summary: "Add loyalty points",
-        body: $customerAccountRef("awardPointsSchema"),
+        body: awardPointsSchema,
       },
     },
     awardLoyaltyPointsExternalController,
@@ -49,7 +52,7 @@ export async function externalLoyaltyRoutes(server: FastifyInstance) {
         tags: ["Loyalty"],
         description: "Assign reward to customer",
         summary: "Assign reward",
-        body: $customerAccountRef("assignRewardSchema"),
+        body: assignRewardSchema,
       },
     },
     assignRewardExternalController,
@@ -74,7 +77,7 @@ export async function externalLoyaltyRoutes(server: FastifyInstance) {
         tags: ["Loyalty"],
         description: "Get loyalty points for a customer",
         summary: "Get loyalty points",
-        params: $customerAccountRef("phoneNumberParamSchema"),
+        params: phoneNumberParamSchema,
       },
     },
     getCustomerLoyaltyPointsExternalController,
@@ -99,7 +102,7 @@ export async function externalLoyaltyRoutes(server: FastifyInstance) {
         tags: ["Loyalty"],
         description: "Redeem a loyalty reward",
         summary: "Redeem reward",
-        body: $customerAccountRef("redeemRewardSchema"),
+        body: redeemRewardSchema,
       },
     },
     redeemRewardExternalController,
@@ -112,7 +115,7 @@ export async function externalLoyaltyRoutes(server: FastifyInstance) {
         tags: ["Loyalty"],
         description: "Redeem a coupon by redemption code",
         summary: "Redeem coupon",
-        body: $customerAccountRef("applyRedemptionSchema"),
+        body: applyRedemptionSchema,
       },
     },
     redeemCouponExternalController,

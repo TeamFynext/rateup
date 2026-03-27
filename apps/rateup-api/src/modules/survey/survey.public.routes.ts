@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { $Sref } from "./survey.schema.js";
 import {
   completedSurveyHandler,
   fetchGoogleUrlBySurveyIdHandler,
@@ -11,8 +10,9 @@ import {
   verifySurveyPasswordHandler,
   visitedSurveyHandler,
 } from "./survey.controller.js";
-import { $Tref } from "../team/team.schema.js";
 import { verifySurveyMonthlyLimitRestriction } from "./survey.auth.js";
+import { getSurveyByIdParamsSchema, idParamsSchema } from "./survey.schema.js";
+import { bySurveyTeamMapIdParamsSchema } from "../team/team.schema.js";
 
 export async function surveyPublicRoutes(server: FastifyInstance) {
   server.get(
@@ -20,7 +20,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySurveyMonthlyLimitRestriction],
       schema: {
-        params: $Sref("getSurveyByIdParamsSchema"),
+        params: getSurveyByIdParamsSchema,
       },
     },
     getPublicSurveyByIdHandler,
@@ -31,7 +31,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     "/check-password/:id",
     {
       schema: {
-        params: $Sref("idParamsSchema"),
+        params: getSurveyByIdParamsSchema,
       },
     },
     verifySurveyPasswordHandler,
@@ -41,7 +41,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     "/:id/visited",
     {
       schema: {
-        params: $Sref("idParamsSchema"),
+        params: getSurveyByIdParamsSchema,
       },
     },
     visitedSurveyHandler,
@@ -51,7 +51,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     "/:id/started",
     {
       schema: {
-        params: $Sref("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     startedSurveyHandler,
@@ -61,7 +61,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     "/:id/completed",
     {
       schema: {
-        params: $Sref("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     completedSurveyHandler,
@@ -71,7 +71,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     "/:id/review/visited",
     {
       schema: {
-        params: $Sref("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     reviewPageVisitedOnSurveyHandler,
@@ -81,7 +81,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     "/googlelink/:surveyTeamMapId",
     {
       schema: {
-        params: $Tref("bySurveyTeamMapIdParamsSchema"),
+        params: bySurveyTeamMapIdParamsSchema,
       },
     },
     fetchGoogleUrlBySurveyIdHandler,
@@ -91,7 +91,7 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
     "/survey-variables/:id",
     {
       schema: {
-        params: $Sref("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     getSurveyVariablesHandler,

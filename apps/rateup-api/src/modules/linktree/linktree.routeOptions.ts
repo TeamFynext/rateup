@@ -10,13 +10,21 @@ import {
   updateLinktreeWithShortId,
   updatePageVisitsOrLinkClicks,
 } from "./linktree.controllers.js";
-import { linktreeSchemaRef } from "./linktree.schema.js";
 import { CustomRouteShortHandOptionsWithHandler } from "../../types/global.js";
+import {
+  createLinktreeReqBody,
+  getLinktreesResponse,
+  getLinktreeWithShortIdParams,
+  linktreeBaseSchema,
+  updateLinktreeReqBody,
+  updatePageVisitsOrLinkClicksReqBody,
+  updatePageVisitsOrLinkClicksReqParams,
+} from "./linktree.schema.js";
 
 const getLinktreesRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {
     response: {
-      "2xx": linktreeSchemaRef("getLinktreesResponse"),
+      "2xx": getLinktreesResponse,
     },
   },
   handler: asyncErrHandler(getLinktrees),
@@ -24,9 +32,9 @@ const getLinktreesRouteOptions: RouteShorthandOptionsWithHandler = {
 
 const getLinktreeWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {
-    params: linktreeSchemaRef("getLinktreeWithShortIdParams"),
+    params: getLinktreeWithShortIdParams,
     response: {
-      "2xx": linktreeSchemaRef("linktreeBaseSchema"),
+      "2xx": linktreeBaseSchema,
     },
   },
   handler: asyncErrHandler(getLinktreeWithShortId),
@@ -34,9 +42,9 @@ const getLinktreeWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = {
 
 const createLinktreeRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {
-    body: linktreeSchemaRef("createLinktreeReqBody"),
+    body: createLinktreeReqBody,
     response: {
-      "2xx": linktreeSchemaRef("linktreeBaseSchema"),
+      "2xx": linktreeBaseSchema,
     },
   },
   handler: asyncErrHandler(createLinktree),
@@ -45,9 +53,9 @@ const createLinktreeRouteOptions: RouteShorthandOptionsWithHandler = {
 const updateLinktreeWithShortIdRouteOptions: RouteShorthandOptionsWithHandler =
   {
     schema: {
-      body: linktreeSchemaRef("updateLinktreeReqBody"),
+      body: updateLinktreeReqBody,
       response: {
-        "2xx": linktreeSchemaRef("linktreeBaseSchema"),
+        "2xx": linktreeBaseSchema,
       },
     },
     handler: asyncErrHandler(updateLinktreeWithShortId),
@@ -74,8 +82,8 @@ const getPublicLinktreeWithShortIdRouteOptions: CustomRouteShortHandOptionsWithH
 const updatePageVisitsOrLinkClicksOptions: CustomRouteShortHandOptionsWithHandler =
   {
     schema: {
-      body: linktreeSchemaRef("updatePageVisitsOrLinkClicksReqBody"),
-      params: linktreeSchemaRef("updatePageVisitsOrLinkClicksReqParams"),
+      body: updatePageVisitsOrLinkClicksReqBody,
+      params: updatePageVisitsOrLinkClicksReqParams,
     },
     config: { isPublic: true },
     handler: asyncErrHandler(updatePageVisitsOrLinkClicks),

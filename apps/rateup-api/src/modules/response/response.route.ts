@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { $Rref } from "./response.schema.js";
 import {
   deleteResponseHandler,
   downloadExcelResponseHandler,
@@ -20,6 +19,14 @@ import { verifyAccess } from "./response.auth.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { assertRootOrg } from "../../utils/auth.js";
+import {
+  deleteResponseParamsSchema,
+  generateBodySchema,
+  generateXlsxSchema,
+  getResponsesParamsSchema,
+  responseFilterQuery,
+  summarizeSchema,
+} from "./response.schema.js";
 
 export async function responseRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -29,7 +36,7 @@ export async function responseRoutes(server: FastifyInstance) {
     {
       // TODO: verifySurveyAccess
       schema: {
-        params: $Rref("getResponsesParamsSchema"),
+        params: getResponsesParamsSchema,
       },
     },
     getResponsesHandler,
@@ -41,7 +48,7 @@ export async function responseRoutes(server: FastifyInstance) {
     "/survey/:surveyId",
     {
       schema: {
-        querystring: $Rref("responseFilterQuery"),
+        querystring: responseFilterQuery,
       },
     },
     getSurveyResponseBySurveyIdHandler,
@@ -52,7 +59,7 @@ export async function responseRoutes(server: FastifyInstance) {
     "/download-response",
     {
       schema: {
-        body: $Rref("generateXlsxSchema"),
+        body: generateXlsxSchema,
       },
     },
     downloadExcelResponseHandler,
@@ -64,7 +71,7 @@ export async function responseRoutes(server: FastifyInstance) {
     {
       preHandler: [assertRootOrg],
       schema: {
-        body: $Rref("generateBodySchema"),
+        body: generateBodySchema,
       },
     },
     generateResponseHandler,
@@ -76,7 +83,7 @@ export async function responseRoutes(server: FastifyInstance) {
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
-        params: $Rref("getResponsesParamsSchema"),
+        params: getResponsesParamsSchema,
       },
     },
     resetResponsesHandler,
@@ -88,7 +95,7 @@ export async function responseRoutes(server: FastifyInstance) {
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
-        params: $Rref("deleteResponseParamsSchema"),
+        params: deleteResponseParamsSchema,
       },
     },
     deleteResponseHandler,
@@ -111,7 +118,7 @@ export async function responseRoutes(server: FastifyInstance) {
     "/summarize/:surveyId",
     {
       schema: {
-        body: $Rref("summarizeSchema"),
+        body: summarizeSchema,
       },
     },
     summarizeResponseHandler,

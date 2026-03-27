@@ -1,5 +1,12 @@
 import { FastifyInstance } from "fastify";
-import { $CardRef } from "./card.schema.js";
+import {
+  createCardRequestSchema,
+  columnIdParamsSchema,
+  idParamsSchema,
+  updateCardRequestSchema,
+  moveCardRequestSchema,
+  reorderCardRequestSchema,
+} from "./card.schema.js";
 import {
   createCardHandler,
   getAllCardsHandler,
@@ -29,9 +36,9 @@ export async function cardRoutes(server: FastifyInstance) {
     "/create",
     {
       schema: {
-        body: $CardRef("createCardRequestSchema"),
+        body: createCardRequestSchema,
         // response: {
-        //   201: $CardRef("createCardResponseSchema"),
+        //   201: createCardResponseSchema,
         // },
       },
     },
@@ -44,7 +51,7 @@ export async function cardRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyColumnAccess],
       schema: {
-        params: $CardRef("columnIdParamsSchema"),
+        params: columnIdParamsSchema,
       },
     },
     getAllCardsHandler,
@@ -56,7 +63,7 @@ export async function cardRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyCardAccess],
       schema: {
-        params: $CardRef("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     getSingleCardHandler,
@@ -66,7 +73,7 @@ export async function cardRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyCardAccess],
       schema: {
-        params: $CardRef("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     getSingleCardTeamMembersHandler,
@@ -78,8 +85,8 @@ export async function cardRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyCardAccess],
       schema: {
-        params: $CardRef("idParamsSchema"),
-        body: $CardRef("updateCardRequestSchema"),
+        params: idParamsSchema,
+        body: updateCardRequestSchema,
       },
     },
     updateCardHandler,
@@ -91,8 +98,8 @@ export async function cardRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyCardAccess],
       schema: {
-        params: $CardRef("idParamsSchema"),
-        body: $CardRef("moveCardRequestSchema"),
+        params: idParamsSchema,
+        body: moveCardRequestSchema,
       },
     },
     moveCardHandler,
@@ -103,7 +110,7 @@ export async function cardRoutes(server: FastifyInstance) {
     "/reorder",
     {
       schema: {
-        body: $CardRef("reorderCardRequestSchema"),
+        body: reorderCardRequestSchema,
       },
     },
     reorderCardsHandler,
@@ -115,7 +122,7 @@ export async function cardRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyCardAccess],
       schema: {
-        params: $CardRef("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     deleteCardHandler,
@@ -127,7 +134,7 @@ export async function cardRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyCardAccess],
       schema: {
-        params: $CardRef("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     getCardActivitiesHandler,

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { buildJsonSchemas } from "fastify-zod";
 
 const expoTokenField = z
   .string()
@@ -14,13 +13,8 @@ const deleteExpoTokenSchema = z.object({
   expoToken: expoTokenField,
 });
 
-export const { schemas: expoSchemas, $ref: $ExpoRef } = buildJsonSchemas(
-  {
-    addExpoTokenSchema,
-    deleteExpoTokenSchema,
-  },
-  { $id: "expoToken" },
-);
-
 export type AddExpoTokenSchema = z.infer<typeof addExpoTokenSchema>;
 export type DeleteExpoTokenSchema = z.infer<typeof deleteExpoTokenSchema>;
+
+// Auto-exported after fastify-zod migration
+export { addExpoTokenSchema, deleteExpoTokenSchema };

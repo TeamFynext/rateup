@@ -10,16 +10,20 @@ import {
   syncShopifyProductsFromShopifyHandler,
   updateCatalogProductsHandler,
 } from "./product.controller.js";
-import { $wCp } from "./product.schema.js";
-import { $WC } from "../catalog.schema.js";
+import {
+  catalogItemBatch,
+  catalogItemQueryFilter,
+  catalogProductIdsSchema,
+} from "./product.schema.js";
+import { catalogIdParams } from "../catalog.schema.js";
 
 export async function waCatalogProductRoutes(server: FastifyInstance) {
   server.post(
     "/:catalogId",
     {
       schema: {
-        params: $WC("catalogIdParams"),
-        body: $wCp("catalogItemBatch"),
+        params: catalogIdParams,
+        body: catalogItemBatch,
       },
     },
     createCatalogProductsBatchHandler,
@@ -29,8 +33,8 @@ export async function waCatalogProductRoutes(server: FastifyInstance) {
     "/sync/:catalogId",
     {
       schema: {
-        params: $WC("catalogIdParams"),
-        body: $wCp("catalogItemQueryFilter"),
+        params: catalogIdParams,
+        body: catalogItemQueryFilter,
       },
     },
     syncCatalogProductsHandler,
@@ -38,7 +42,7 @@ export async function waCatalogProductRoutes(server: FastifyInstance) {
 
   server.get(
     "/:catalogId",
-    { schema: { params: $WC("catalogIdParams") } },
+    { schema: { params: catalogIdParams } },
     getCatalogProductsHandler,
   );
 
@@ -46,8 +50,8 @@ export async function waCatalogProductRoutes(server: FastifyInstance) {
     "/:catalogId",
     {
       schema: {
-        params: $WC("catalogIdParams"),
-        body: $wCp("catalogProductIdsSchema"),
+        params: catalogIdParams,
+        body: catalogProductIdsSchema,
       },
     },
     deleteCatalogProductsHandler,
@@ -57,8 +61,8 @@ export async function waCatalogProductRoutes(server: FastifyInstance) {
     "/:catalogId",
     {
       schema: {
-        params: $WC("catalogIdParams"),
-        body: $wCp("catalogItemBatch"),
+        params: catalogIdParams,
+        body: catalogItemBatch,
       },
     },
     updateCatalogProductsHandler,
@@ -66,25 +70,25 @@ export async function waCatalogProductRoutes(server: FastifyInstance) {
 
   server.get(
     "/shopify-available/:catalogId",
-    { schema: { params: $WC("catalogIdParams") } },
+    { schema: { params: catalogIdParams } },
     getShopifyAvailableProductsHandler,
   );
 
   server.post(
     "/import-shopify/:catalogId",
-    { schema: { params: $WC("catalogIdParams") } },
+    { schema: { params: catalogIdParams } },
     importShopifyProductsHandler,
   );
 
   server.post(
     "/shopify-create/:catalogId",
-    { schema: { params: $WC("catalogIdParams") } },
+    { schema: { params: catalogIdParams } },
     createShopifyProductHandler,
   );
 
   server.post(
     "/shopify-sync/:catalogId",
-    { schema: { params: $WC("catalogIdParams") } },
+    { schema: { params: catalogIdParams } },
     syncShopifyProductsFromShopifyHandler,
   );
 }

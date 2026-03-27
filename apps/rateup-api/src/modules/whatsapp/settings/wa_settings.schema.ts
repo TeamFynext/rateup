@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import { WaConfigType } from "../../../types/enums.js";
 
@@ -14,12 +13,12 @@ enum sortOrder {
   desc = "desc",
 }
 const createWaSettingsInputSchema = z.object(createWaSettingsInput);
-export const paginationQuery = z.object({
-  page: z.number().optional(),
-  limit: z.number().optional(),
+const paginationQuery = z.object({
+  page: z.coerce.number().optional(),
+  limit: z.coerce.number().optional(),
   search: z.string().optional(),
   sort: z.string().optional(),
-  desc: z.nativeEnum(sortOrder).optional(),
+  desc: z.enum(sortOrder).optional(),
   phone: z.string().optional().nullable(),
 });
 
@@ -37,12 +36,12 @@ const updateWaSettingsInputSchema = z.object({
   phoneId: z.string().optional(),
   appId: z.string().optional(),
   webhookPassword: z.string().optional(),
-  fbPageId: z.string().optional(),
-  pageAccessToken: z.string().optional(),
-  ibaId: z.string().optional(),
-  igUserName: z.string().optional(),
-  igDisplayName: z.string().optional(),
-  phoneDisplayName: z.string().optional(),
+  fbPageId: z.string().optional().nullable(),
+  pageAccessToken: z.string().optional().nullable(),
+  ibaId: z.string().optional().nullable(),
+  igUserName: z.string().optional().nullable(),
+  igDisplayName: z.string().optional().nullable(),
+  phoneDisplayName: z.string().optional().nullable(),
   paymentMethod: z.string().optional(),
   teams: z.array(z.string()).optional(),
 });
@@ -60,13 +59,13 @@ const getWaSettingsResponseSchema = z.array(
     phoneId: z.string(),
     webhookPassword: z.string().optional(),
     accessToken: z.string(),
-    type: z.nativeEnum(WaConfigType),
-    fbPageId: z.string().optional(),
-    ibaId: z.string().optional(),
-    pageAccessToken: z.string().optional(),
-    igUserName: z.string().optional(),
-    igDisplayName: z.string(),
-    phoneDisplayName: z.string(),
+    type: z.enum(WaConfigType),
+    fbPageId: z.string().optional().nullable(),
+    ibaId: z.string().optional().nullable(),
+    pageAccessToken: z.string().optional().nullable(),
+    igUserName: z.string().optional().nullable(),
+    igDisplayName: z.string().optional().nullable(),
+    phoneDisplayName: z.string().optional().nullable(),
     assets: z.array(z.string()),
     paymentMethod: z.string().optional(),
     teams: z.array(z.object({ id: z.string(), name: z.string() })).optional(),
@@ -98,22 +97,6 @@ const byFbPageQuerySchema = z.object({
   fields: z.array(z.string()).optional(),
 });
 
-export const { schemas: waSettingsSchema, $ref: $WASettingsref } =
-  buildJsonSchemas(
-    {
-      createWaSettingsInputSchema,
-      updateWaSettingsInputSchema,
-      getWaSettingsResponseSchema,
-      contactTagSchema,
-      paginationQuery,
-      byWaSettingsIdParamsSchema,
-      byLeadGenFormIdParamsSchema,
-      byFbPageQuerySchema,
-      byAdAccountIdParamsSchema,
-      whatsappSettingsIdParamSchema,
-    },
-    { $id: "waSettingsSchema" },
-  );
 export type createWaSettingsInput = z.infer<typeof createWaSettingsInputSchema>;
 export type updateWaSettingsInput = z.infer<typeof updateWaSettingsInputSchema>;
 export type ContactTagSchema = z.infer<typeof contactTagSchema>;
@@ -131,3 +114,17 @@ export type ByAdAccountIdParamsSchema = z.infer<
 export type whatsappSettingsIdParamSchema = z.infer<
   typeof whatsappSettingsIdParamSchema
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  createWaSettingsInputSchema,
+  updateWaSettingsInputSchema,
+  getWaSettingsResponseSchema,
+  contactTagSchema,
+  paginationQuery,
+  byWaSettingsIdParamsSchema,
+  byLeadGenFormIdParamsSchema,
+  byFbPageQuerySchema,
+  byAdAccountIdParamsSchema,
+  whatsappSettingsIdParamSchema,
+};

@@ -22,11 +22,25 @@ import {
   getBusinessHourHandler,
   updateBusinessHourHandler,
 } from "./businessHour.controller.js";
-import { $Sref } from "./org.schema.js";
-import { $BusinessHourRef } from "./businessHour.schema.js";
+import {
+  createBusinessHourSchema,
+  businessHourResponseSchema,
+  businessHourParamsSchema,
+  updateBusinessHourSchema,
+} from "./businessHour.schema.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { assertRootOrg } from "../../utils/auth.js";
+import {
+  byOrgIdParams,
+  createOrgRequestSchema,
+  createOrgResponseSchema,
+  idParamRequestSchema,
+  pauseOrgSchema,
+  updateLogoSchema,
+  updateOrgDetailsSchema,
+  updateRoleSchema,
+} from "./org.schema.js";
 export async function orgRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
 
@@ -34,9 +48,9 @@ export async function orgRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $Sref("createOrgRequestSchema"),
+        body: createOrgRequestSchema,
         response: {
-          201: $Sref("createOrgResponseSchema"),
+          201: createOrgResponseSchema,
         },
       },
     },
@@ -55,7 +69,7 @@ export async function orgRoutes(server: FastifyInstance) {
     "/:orgId",
     {
       schema: {
-        params: $Sref("byOrgIdParams"),
+        params: byOrgIdParams,
       },
       preHandler: assertRootOrg,
     },
@@ -66,7 +80,7 @@ export async function orgRoutes(server: FastifyInstance) {
     "/:orgId",
     {
       schema: {
-        params: $Sref("byOrgIdParams"),
+        params: byOrgIdParams,
       },
       preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
     },
@@ -92,7 +106,7 @@ export async function orgRoutes(server: FastifyInstance) {
     "/update-logo",
     {
       schema: {
-        body: $Sref("updateLogoSchema"),
+        body: updateLogoSchema,
       },
     },
     updateLogoHandler,
@@ -101,7 +115,7 @@ export async function orgRoutes(server: FastifyInstance) {
     "/update-details",
     {
       schema: {
-        body: $Sref("updateOrgDetailsSchema"),
+        body: updateOrgDetailsSchema,
       },
     },
     updateOrgDetailsHandler,
@@ -112,8 +126,8 @@ export async function orgRoutes(server: FastifyInstance) {
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
-        params: $Sref("idParamRequestSchema"),
-        body: $Sref("updateRoleSchema"),
+        params: idParamRequestSchema,
+        body: updateRoleSchema,
       },
     },
     updateRoleController,
@@ -124,8 +138,8 @@ export async function orgRoutes(server: FastifyInstance) {
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
-        params: $Sref("idParamRequestSchema"),
-        body: $Sref("pauseOrgSchema"),
+        params: idParamRequestSchema,
+        body: pauseOrgSchema,
       },
     },
     pauseOrgHandler,
@@ -141,9 +155,9 @@ export async function orgRoutes(server: FastifyInstance) {
     "/business-hours",
     {
       schema: {
-        body: $BusinessHourRef("createBusinessHourSchema"),
+        body: createBusinessHourSchema,
         response: {
-          201: $BusinessHourRef("businessHourResponseSchema"),
+          201: businessHourResponseSchema,
         },
       },
     },
@@ -156,9 +170,9 @@ export async function orgRoutes(server: FastifyInstance) {
     "/business-hours/:id",
     {
       schema: {
-        params: $BusinessHourRef("businessHourParamsSchema"),
+        params: businessHourParamsSchema,
         response: {
-          200: $BusinessHourRef("businessHourResponseSchema"),
+          200: businessHourResponseSchema,
         },
       },
     },
@@ -169,10 +183,10 @@ export async function orgRoutes(server: FastifyInstance) {
     "/business-hours/:id",
     {
       schema: {
-        params: $BusinessHourRef("businessHourParamsSchema"),
-        body: $BusinessHourRef("updateBusinessHourSchema"),
+        params: businessHourParamsSchema,
+        body: updateBusinessHourSchema,
         response: {
-          200: $BusinessHourRef("businessHourResponseSchema"),
+          200: businessHourResponseSchema,
         },
       },
     },
@@ -183,7 +197,7 @@ export async function orgRoutes(server: FastifyInstance) {
     "/business-hours/:id",
     {
       schema: {
-        params: $BusinessHourRef("businessHourParamsSchema"),
+        params: businessHourParamsSchema,
       },
     },
     deleteBusinessHourHandler,

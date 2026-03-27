@@ -16,16 +16,19 @@ import {
   getWaPaymentConfigurationsHandler,
   updateIntegrationByNameHandler,
 } from "./integrations.controller.js";
-import { $integrationRef } from "./integrations.schema.js";
+import {
+  byNameSchema,
+  integrationSchema,
+  updateIntgrationSchema,
+  waPaymentCreateSchema,
+} from "./integrations.schema.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import { shopifyRoutes } from "./shopify/shopify.route.js";
-import { shopifySchema } from "./shopify/shopify.schema.js";
 
 export async function integrationsRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
 
   server.register(shopifyRoutes, { prefix: "/shopify" });
-  shopifySchema.forEach((schema) => server.addSchema(schema));
 
   server.get("/", {}, getAllIntegrationsByOrgHandler);
   server.get("/all", {}, getAllIntegrationsHandler);
@@ -33,7 +36,7 @@ export async function integrationsRoutes(server: FastifyInstance) {
     "/:name",
     {
       schema: {
-        params: $integrationRef("byNameSchema"),
+        params: byNameSchema,
       },
     },
     getIntegrationByNameHandler,
@@ -42,7 +45,7 @@ export async function integrationsRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $integrationRef("integrationSchema"),
+        body: integrationSchema,
       },
     },
     createIntegrationHandler,
@@ -51,8 +54,8 @@ export async function integrationsRoutes(server: FastifyInstance) {
     "/:name",
     {
       schema: {
-        params: $integrationRef("byNameSchema"),
-        body: $integrationRef("updateIntgrationSchema"),
+        params: byNameSchema,
+        body: updateIntgrationSchema,
       },
     },
     updateIntegrationByNameHandler,
@@ -61,7 +64,7 @@ export async function integrationsRoutes(server: FastifyInstance) {
     "/:name",
     {
       schema: {
-        params: $integrationRef("byNameSchema"),
+        params: byNameSchema,
       },
     },
     deleteIntegrationByNameHandler,
@@ -81,7 +84,7 @@ export async function integrationsRoutes(server: FastifyInstance) {
     "/regenerate_wa_payment_config_oauth/:name",
     {
       schema: {
-        params: $integrationRef("byNameSchema"),
+        params: byNameSchema,
       },
     },
     getRegenerateWaPaymentConfigOauthHandler,
@@ -90,7 +93,7 @@ export async function integrationsRoutes(server: FastifyInstance) {
     "/wa_payment_configuration/:name",
     {
       schema: {
-        params: $integrationRef("byNameSchema"),
+        params: byNameSchema,
       },
     },
     getWaPaymentConfigByNameHandler,
@@ -100,7 +103,7 @@ export async function integrationsRoutes(server: FastifyInstance) {
     "/wa_payment_configuration",
     {
       schema: {
-        body: $integrationRef("waPaymentCreateSchema"),
+        body: waPaymentCreateSchema,
       },
     },
     createWaPaymentConfigurationsHandler,
@@ -109,7 +112,7 @@ export async function integrationsRoutes(server: FastifyInstance) {
     "/wa_payment_configuration/:name",
     {
       schema: {
-        params: $integrationRef("byNameSchema"),
+        params: byNameSchema,
       },
     },
     deleteWaPaymentConfigurationHandler,

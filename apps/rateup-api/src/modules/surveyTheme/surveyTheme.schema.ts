@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const welcomeThemeSchema = z.object({
@@ -126,32 +125,23 @@ const thankyouThemeSchema = z.object({
 });
 
 const surveyThemeSchemaCore = z.object({
-  surveyId: z.string().uuid(),
+  surveyId: z.uuid(),
   welcomeTheme: welcomeThemeSchema.optional(),
   surveyTheme: surveyThemeSchema.optional(),
   thankyouTheme: thankyouThemeSchema.optional(),
 });
 
 const bySurveyIdSchema = z.object({
-  surveyId: z.string().uuid(),
+  surveyId: z.uuid(),
 });
 
 const bySurveyThemeIdSchema = z.object({
-  surveyThemeId: z.string().uuid(),
+  surveyThemeId: z.uuid(),
 });
-
-export const { schemas: surveyThemeSchemas, $ref: $surveyThemeRef } =
-  buildJsonSchemas(
-    {
-      surveyThemeSchemaCore,
-      bySurveyIdSchema,
-      bySurveyThemeIdSchema,
-    },
-    {
-      $id: "surveyTheme",
-    },
-  );
 
 export type surveyThemeSchemaCore = z.infer<typeof surveyThemeSchemaCore>;
 export type bySurveyIdSchema = z.infer<typeof bySurveyIdSchema>;
 export type bySurveyThemeIdSchema = z.infer<typeof bySurveyThemeIdSchema>;
+
+// Auto-exported after fastify-zod migration
+export { surveyThemeSchemaCore, bySurveyIdSchema, bySurveyThemeIdSchema };

@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const byIdParamsSchema = z.object({
@@ -62,21 +61,6 @@ const MultipleTestimonialToCollectionSchema = z.object({
   testimonialIds: z.array(z.string()),
 });
 
-export const {
-  schemas: testimonialCollectionSchemas,
-  $ref: $TestimonialCollectionRef,
-} = buildJsonSchemas(
-  {
-    byIdParamsSchema,
-    createTestimonialCollectionSchema,
-    testimonialCollectionQuerySchema,
-    updateTestimonialCollectionSchema,
-    //
-    MultipleTestimonialToCollectionSchema,
-  },
-  { $id: "testimonialCollectionSchema" },
-);
-
 export type ByCollectionIdParamsInput = z.infer<typeof byIdParamsSchema>;
 export type CreateTestimonialCollectionInput = z.infer<
   typeof createTestimonialCollectionSchema
@@ -92,3 +76,12 @@ export type UpdateTestimonialCollectionInput = z.infer<
 export type MultipleTestimonialToCollectionInput = z.infer<
   typeof MultipleTestimonialToCollectionSchema
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  byIdParamsSchema,
+  createTestimonialCollectionSchema,
+  testimonialCollectionQuerySchema,
+  updateTestimonialCollectionSchema,
+  MultipleTestimonialToCollectionSchema,
+};

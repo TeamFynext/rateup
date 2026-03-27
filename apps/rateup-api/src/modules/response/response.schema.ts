@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { buildJsonSchemas } from "fastify-zod";
+
 import {
   QuestionType,
   ResponseSummaryType,
@@ -10,8 +10,8 @@ import { ResponsePlatform } from "../../../generated/prisma/client.js";
 // Individual question response
 const questionResponseSchema = z.object({
   questionId: z.string(),
-  type: z.nativeEnum(QuestionType),
-  response: z.record(z.nativeEnum(QuestionType), z.any()),
+  type: z.enum(QuestionType),
+  response: z.partialRecord(z.enum(QuestionType), z.any()),
 });
 
 // Survey response
@@ -25,19 +25,18 @@ const responseCore = {
         latitude: z.number(),
         longitude: z.number(),
       })
-      .optional()
-      .default(undefined),
+      .optional(),
   }),
   encryptedResponses: z.string().optional(),
   shouldRaiseTicket: z.boolean().optional(),
   checkUniqueDevice: z.boolean().optional(),
-  selectedColumnId: z.string().optional(),
+  selectedColumnId: z.string().optional().nullable(),
 };
 
 const createResponseInputSchema = z.object({
   ...responseCore,
-  platform: z.nativeEnum(ResponsePlatform).optional(),
-  tag: z.string().optional(),
+  platform: z.enum(ResponsePlatform).optional(),
+  tag: z.string().optional().nullable(),
   deviceData: z
     .object({
       brand: z.string().optional(),
@@ -63,11 +62,11 @@ const createResponseInputSchema = z.object({
 
 const getResponsesParamsSchema = z.object({
   surveyTeamMapId: z.string(),
-  surveyId: z.string().uuid().optional(),
+  surveyId: z.uuid().optional(),
 });
 const getResponsesBySurveyParamsSchema = z.object({
-  orgId: z.string().uuid().optional(),
-  surveyId: z.string().uuid().optional(),
+  orgId: z.uuid().optional(),
+  surveyId: z.uuid().optional(),
 });
 const getResponsesBodySchema = z.object({
   surveyId: z.string().optional(),
@@ -76,7 +75,7 @@ const getResponsesBodySchema = z.object({
 const getSurveyListResponseSchema = z.object({
   id: z.string().optional(),
   title: z.string().optional(),
-  type: z.nativeEnum(SurveyType),
+  type: z.enum(SurveyType),
 });
 
 const idInputParamsSchema = z.object({
@@ -113,16 +112,16 @@ const generateXlsxSchema = z.object({
   }),
 });
 
-export const summarizeSchema = z.object({
-  type: z.nativeEnum(ResponseSummaryType),
+const summarizeSchema = z.object({
+  type: z.enum(ResponseSummaryType),
   questionId: z.string(),
   teamId: z.string().optional(),
 });
 
 const responseFilterQuery = z
   .object({
-    page: z.number().optional(),
-    limit: z.number().optional(),
+    page: z.coerce.number().optional(),
+    limit: z.coerce.number().optional(),
     tag: z.string().optional(),
     language: z.string().optional(),
     surveyTeamMapIds: z.string().optional(),
@@ -131,20 +130,6 @@ const responseFilterQuery = z
     campaignIds: z.string().optional(),
   })
   .catchall(z.any());
-
-export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
-  createResponseInputSchema,
-  getResponsesParamsSchema,
-  idInputParamsSchema,
-  deleteResponseParamsSchema,
-  generateBodySchema,
-  getResponsesBodySchema,
-  generateXlsxSchema,
-  summarizeSchema,
-  getResponsesBySurveyParamsSchema,
-  getSurveyListResponseSchema,
-  responseFilterQuery,
-});
 
 export type CreateResponseInput = z.infer<typeof createResponseInputSchema>;
 export type GetResponsesParams = z.infer<typeof getResponsesParamsSchema>;
@@ -157,3 +142,18 @@ export type getResponsesBody = z.infer<typeof getResponsesBodySchema>;
 export type generateXlsxBody = z.infer<typeof generateXlsxSchema>;
 export type SummarizeInput = z.infer<typeof summarizeSchema>;
 export type ResponseFilterQuery = z.infer<typeof responseFilterQuery>;
+
+// Auto-exported after fastify-zod migration
+export {
+  createResponseInputSchema,
+  getResponsesParamsSchema,
+  idInputParamsSchema,
+  deleteResponseParamsSchema,
+  generateBodySchema,
+  getResponsesBodySchema,
+  generateXlsxSchema,
+  summarizeSchema,
+  getResponsesBySurveyParamsSchema,
+  getSurveyListResponseSchema,
+  responseFilterQuery,
+};

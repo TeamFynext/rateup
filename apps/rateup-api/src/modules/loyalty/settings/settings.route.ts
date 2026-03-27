@@ -12,7 +12,14 @@ import {
   getAllEventTriggersHandler,
   deleteEventTriggerHandler,
 } from "./settings.controller.js";
-import { $lsRef } from "./settings.schema.js";
+import {
+  loyaltyTemplateSchema,
+  byIdSchema,
+  updateLoyaltyTemplateSchema,
+  eventTriggerSchema,
+  updateEventTriggerSchema,
+  programIdQuerySchema,
+} from "./settings.schema.js";
 
 export async function LoyaltySettingsRoutes(server: FastifyInstance) {
   server.post(
@@ -20,7 +27,7 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
     {
       preHandler: [checkIfCommandExistInAutomation],
       schema: {
-        body: $lsRef("loyaltyTemplateSchema"),
+        body: loyaltyTemplateSchema,
       },
     },
     createLoyaltyTemplateHandler,
@@ -30,8 +37,8 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
     "/template/:id",
     {
       schema: {
-        params: $lsRef("byIdSchema"),
-        body: $lsRef("updateLoyaltyTemplateSchema"),
+        params: byIdSchema,
+        body: updateLoyaltyTemplateSchema,
       },
     },
     updateLoyaltyTemplateHandler,
@@ -41,7 +48,7 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
     "/template/:id",
     {
       schema: {
-        params: $lsRef("byIdSchema"),
+        params: byIdSchema,
       },
     },
     deleteLoyaltyTemplateHandler,
@@ -51,7 +58,7 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
     "/template/:id",
     {
       schema: {
-        params: $lsRef("byIdSchema"),
+        params: byIdSchema,
       },
     },
     getLoyaltyTemplateHandler,
@@ -64,7 +71,7 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
     "/event-trigger",
     {
       schema: {
-        body: $lsRef("eventTriggerSchema"),
+        body: eventTriggerSchema,
       },
     },
     createEventTriggerHandler,
@@ -74,8 +81,8 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
     "/event-trigger/:id",
     {
       schema: {
-        params: $lsRef("byIdSchema"),
-        body: $lsRef("updateEventTriggerSchema"),
+        params: byIdSchema,
+        body: updateEventTriggerSchema,
       },
     },
     updateEventTriggerHandler,
@@ -85,7 +92,7 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
     "/event-trigger/:id",
     {
       schema: {
-        params: $lsRef("byIdSchema"),
+        params: byIdSchema,
       },
     },
     getEventTriggerHandler,
@@ -95,7 +102,7 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
     "/event-trigger/all",
     {
       schema: {
-        querystring: $lsRef("programIdQuerySchema"),
+        querystring: programIdQuerySchema,
       },
     },
     getAllEventTriggersHandler,
@@ -105,7 +112,7 @@ export async function LoyaltySettingsRoutes(server: FastifyInstance) {
     "/event-trigger/:id",
     {
       schema: {
-        params: $lsRef("byIdSchema"),
+        params: byIdSchema,
       },
     },
     deleteEventTriggerHandler,

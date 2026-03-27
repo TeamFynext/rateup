@@ -5,10 +5,6 @@
 
 import { FastifyInstance } from "fastify";
 import {
-  serializerCompiler,
-  validatorCompiler,
-} from "fastify-type-provider-zod";
-import {
   getInstagramAutomationsHandler,
   getInstagramAutomationByIdHandler,
   createInstagramAutomationHandler,
@@ -25,10 +21,6 @@ import {
 } from "./instagram_automatedReply.schema.js";
 
 export async function instagramAutomationRoutes(server: FastifyInstance) {
-  // Set up Zod validation
-  server.setValidatorCompiler(validatorCompiler);
-  server.setSerializerCompiler(serializerCompiler);
-
   // Add authentication check to all routes
   server.addHook("preHandler", checkSession);
 

@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import { QuestionType2 } from "../../../types/enums.js";
 
@@ -38,7 +37,7 @@ const updateFlowInput = z.object({
     .array(
       z.object({
         questionId: z.string(),
-        type: z.nativeEnum(QuestionType2),
+        type: z.enum(QuestionType2),
         selectedColumnId: z.string().optional(),
         selectedBoardId: z.string().optional(),
         condition: z.object({
@@ -58,7 +57,7 @@ const updateFlowMetaInput = z.object({
 });
 
 const cloneFlowSchema = z.object({
-  teamId: z.string().uuid(),
+  teamId: z.uuid(),
 });
 
 const sendFlowBodySchema = z.object({
@@ -67,22 +66,6 @@ const sendFlowBodySchema = z.object({
   flowId: z.string(),
   whatsappSettingsPhoneId: z.string().optional(),
 });
-export const { schemas: waFlowSchemas, $ref: $waFlow } = buildJsonSchemas(
-  {
-    sourceQuery,
-    byWaFlowIdParams,
-    importFlowsBody,
-    createFlowInput,
-    byDbFlowIdParams,
-    updateFlowInput,
-    cloneFlowSchema,
-    sendFlowBodySchema,
-    updateFlowMetaInput,
-  },
-  {
-    $id: "waFlow",
-  },
-);
 
 export type WaFlowSourceQuery = z.infer<typeof sourceQuery>;
 export type ByWaFlowIdParams = z.infer<typeof byWaFlowIdParams>;
@@ -93,3 +76,16 @@ export type UpdateFlowInput = z.infer<typeof updateFlowInput>;
 export type CloneFlowBody = z.infer<typeof cloneFlowSchema>;
 export type SendFlowBody = z.infer<typeof sendFlowBodySchema>;
 export type UpdateFlowMetaInput = z.infer<typeof updateFlowMetaInput>;
+
+// Auto-exported after fastify-zod migration
+export {
+  sourceQuery,
+  byWaFlowIdParams,
+  importFlowsBody,
+  createFlowInput,
+  byDbFlowIdParams,
+  updateFlowInput,
+  cloneFlowSchema,
+  sendFlowBodySchema,
+  updateFlowMetaInput,
+};

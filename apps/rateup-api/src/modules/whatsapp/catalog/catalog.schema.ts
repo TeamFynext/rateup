@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 const catalogIdParams = z.object({
@@ -25,17 +24,6 @@ const syncProductSetsSchema = z.object({
   catalogId: z.string(),
 });
 
-export const { schemas: waCatalogSchemas, $ref: $WC } = buildJsonSchemas(
-  {
-    catalogIdParams,
-    catalogWhatsappSettingSchema,
-    updateCatalogSchema,
-    productSetIdParamSchema,
-    syncProductSetsSchema,
-  },
-  { $id: "waCatalogSchemas" },
-);
-
 export type CatalogIdParam = z.infer<typeof catalogIdParams>;
 export type CatalogWhatsappSettingSchema = z.infer<
   typeof catalogWhatsappSettingSchema
@@ -43,3 +31,12 @@ export type CatalogWhatsappSettingSchema = z.infer<
 export type UpdateCatalogSchema = z.infer<typeof updateCatalogSchema>;
 export type ProductSetIdParam = z.infer<typeof productSetIdParamSchema>;
 export type SyncProductSetsSchema = z.infer<typeof syncProductSetsSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  catalogIdParams,
+  catalogWhatsappSettingSchema,
+  updateCatalogSchema,
+  productSetIdParamSchema,
+  syncProductSetsSchema,
+};

@@ -713,6 +713,7 @@ export async function handleWaJoinRegistration({
       name: userName,
       referCode: joinPayload.referralCode,
       source: joinPayload.source || "WHATSAPP",
+      orgId: orgId,
     },
     program.id,
     orgId,

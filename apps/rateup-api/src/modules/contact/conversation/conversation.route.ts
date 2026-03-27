@@ -1,5 +1,11 @@
 import { FastifyInstance } from "fastify";
-import { $conversationRef } from "./conversation.schema.js";
+import {
+  updateConversationSchema,
+  conversationParamsSchema,
+  statsQuerySchema,
+  staffIdParamsSchema,
+  teamIdParamsSchema,
+} from "./conversation.schema.js";
 import {
   getAverageConversationResponseTimeHandler,
   getConversationOnAccountDistributionHandler,
@@ -18,8 +24,8 @@ export async function conversationRoutes(server: FastifyInstance) {
     "/:conversationId",
     {
       schema: {
-        body: $conversationRef("updateConversationSchema"),
-        params: $conversationRef("conversationParamsSchema"),
+        body: updateConversationSchema,
+        params: conversationParamsSchema,
       },
     },
     updateConversationHandler,
@@ -29,7 +35,7 @@ export async function conversationRoutes(server: FastifyInstance) {
     "/overview",
     {
       schema: {
-        querystring: $conversationRef("statsQuerySchema"),
+        querystring: statsQuerySchema,
       },
     },
     getConversationOverviewHandler,
@@ -38,7 +44,7 @@ export async function conversationRoutes(server: FastifyInstance) {
     "/conversation-resolved-stats",
     {
       schema: {
-        querystring: $conversationRef("statsQuerySchema"),
+        querystring: statsQuerySchema,
       },
     },
     getResolvedConversationStatsHandler,
@@ -47,7 +53,7 @@ export async function conversationRoutes(server: FastifyInstance) {
     "/conversation-response-stats",
     {
       schema: {
-        querystring: $conversationRef("statsQuerySchema"),
+        querystring: statsQuerySchema,
       },
     },
     getAverageConversationResponseTimeHandler,
@@ -56,7 +62,7 @@ export async function conversationRoutes(server: FastifyInstance) {
     "/account-distribution",
     {
       schema: {
-        querystring: $conversationRef("statsQuerySchema"),
+        querystring: statsQuerySchema,
       },
     },
     getConversationOnAccountDistributionHandler,
@@ -65,7 +71,7 @@ export async function conversationRoutes(server: FastifyInstance) {
     "/staff-metrics",
     {
       schema: {
-        querystring: $conversationRef("statsQuerySchema"),
+        querystring: statsQuerySchema,
       },
     },
     getStaffConverSationMetricsHandler,
@@ -75,8 +81,8 @@ export async function conversationRoutes(server: FastifyInstance) {
     "/staff-detailed-analytics/:staffId",
     {
       schema: {
-        params: $conversationRef("staffIdParamsSchema"),
-        querystring: $conversationRef("statsQuerySchema"),
+        params: staffIdParamsSchema,
+        querystring: statsQuerySchema,
       },
     },
     getStaffDetailedConversationAnalyticsHandler,
@@ -85,7 +91,7 @@ export async function conversationRoutes(server: FastifyInstance) {
     "/team-overview",
     {
       schema: {
-        querystring: $conversationRef("statsQuerySchema"),
+        querystring: statsQuerySchema,
       },
     },
     getTeamOverviewHandler,
@@ -94,7 +100,7 @@ export async function conversationRoutes(server: FastifyInstance) {
     "/team-metrics/:teamId",
     {
       schema: {
-        params: $conversationRef("teamIdParamsSchema"),
+        params: teamIdParamsSchema,
       },
     },
     getTeamDetailedMetricsHandler,

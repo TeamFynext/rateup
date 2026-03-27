@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import {
   CampaignParticipantAddStatus,
@@ -7,33 +6,33 @@ import {
 import { paginationQuery } from "../../contact/contact.schema.js";
 
 const byCampaignParticipantIdParamsSchema = z.object({
-  campaignParticipantId: z.string().uuid(),
+  campaignParticipantId: z.uuid(),
 });
 
 const createCampaignParticipantsFromGroupsSchema = z.object({
-  groupIds: z.array(z.string().uuid()),
+  groupIds: z.array(z.uuid()),
 });
 
 const createCampaignParticipantsFromContactsSchema = z.object({
-  contactIds: z.array(z.string().uuid()),
+  contactIds: z.array(z.uuid()),
 });
 
 const createCampaignParticipantsSchema = z.object({
-  contactIds: z.array(z.string().uuid()),
-  groupIds: z.array(z.string().uuid()),
-  status: z.array(z.nativeEnum(CampaignParticipantAddStatus)),
-  campaignIds: z.array(z.string().uuid()),
+  contactIds: z.array(z.uuid()),
+  groupIds: z.array(z.uuid()),
+  status: z.array(z.enum(CampaignParticipantAddStatus)),
+  campaignIds: z.array(z.uuid()),
 });
 const deleteCampaignParticipantsSchema = z.object({
   ids: z.array(z.string()).min(1),
 });
 
 const campaignParticipantResponseSchema = z.object({
-  id: z.string().uuid(),
-  campaignId: z.string().uuid(),
-  contactId: z.string().uuid(),
+  id: z.uuid(),
+  campaignId: z.uuid(),
+  contactId: z.uuid(),
   createdAt: z.date(),
-  status: z.nativeEnum(CampaignParticipantStatus),
+  status: z.enum(CampaignParticipantStatus),
   sentAt: z.date().optional(),
 });
 
@@ -47,26 +46,8 @@ const campaginParticipantPaginateSchema = z.object({
   selectedDripStage: z.string().optional(),
 });
 
-const paginateQuerySchema = paginationQuery.merge(
-  campaginParticipantPaginateSchema,
-);
-
-export const {
-  schemas: campaignParticipantsSchemas,
-  $ref: $campaignParticipantsRef,
-} = buildJsonSchemas(
-  {
-    byCampaignParticipantIdParamsSchema,
-    createCampaignParticipantsFromGroupsSchema,
-    createCampaignParticipantsFromContactsSchema,
-    createCampaignParticipantsSchema,
-    campaignParticipantResponseSchema,
-    deleteCampaignParticipantsSchema,
-    paginateQuerySchema,
-  },
-  {
-    $id: "campaignParticipantsSchema",
-  },
+const paginateQuerySchema = paginationQuery.extend(
+  campaginParticipantPaginateSchema.shape,
 );
 
 export type ByCampaignParticipantIdParams = z.infer<
@@ -85,3 +66,14 @@ export type DeleteCampaignParticipantsInput = z.infer<
   typeof deleteCampaignParticipantsSchema
 >;
 export type PaginateQueryInput = z.infer<typeof paginateQuerySchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  byCampaignParticipantIdParamsSchema,
+  createCampaignParticipantsFromGroupsSchema,
+  createCampaignParticipantsFromContactsSchema,
+  createCampaignParticipantsSchema,
+  campaignParticipantResponseSchema,
+  deleteCampaignParticipantsSchema,
+  paginateQuerySchema,
+};

@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { string, z } from "zod";
 import { PlatformType } from "../../../../../generated/prisma/enums.js";
 
@@ -102,7 +101,7 @@ const waChatFilterQuerySchema = PaginateQuerySchema.extend({
 
 const waChatExportConstraints = z.object({
   date: z.object({
-    type: z.nativeEnum(DateType),
+    type: z.enum(DateType),
     inclusive: z.boolean().default(false),
     between: z.object({
       from: z.string(),
@@ -149,25 +148,6 @@ const logsQuerySchema = z.object({
   team: z.string().optional(),
 });
 
-export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
-  {
-    NewWaMessageBody,
-    PrivateWaMessageBody,
-    PaginateQuerySchema,
-    WaChatFilterSchema,
-    waChatFilterQuerySchema,
-    waChatExportConstraints,
-    waChatExportQuerySchema,
-    waMediaFileByMediaIdBody,
-    waMessageAssignBody,
-    blockUserSchema,
-    generateInboxResponseBody,
-    bulkWaMessageAssignBody,
-    logsQuerySchema,
-  },
-  { $id: "waMessage" },
-);
-
 export type NewWaMessageBody = z.infer<typeof NewWaMessageBody>;
 export type PrivateWaMessageBody = z.infer<typeof PrivateWaMessageBody>;
 export type PaginateQuerySchema = z.infer<typeof PaginateQuerySchema>;
@@ -176,10 +156,27 @@ export type WaChatFilterQuerySchema = z.infer<typeof waChatFilterQuerySchema>;
 export type WaChatExportConstraints = z.infer<typeof waChatExportConstraints>;
 export type WaChatExportQuerySchema = z.infer<typeof waChatExportQuerySchema>;
 export type WaMediaFileByMediaIdBody = z.infer<typeof waMediaFileByMediaIdBody>;
-export type WaMessageAssignBody = z.infer<typeof waMessageAssignBody>;
+export type WaMessageAssignBody = z.input<typeof waMessageAssignBody>;
 export type BulkWaMessageAssignBody = z.infer<typeof bulkWaMessageAssignBody>;
 export type BlockUserBody = z.infer<typeof blockUserSchema>;
 export type LogsQuery = z.infer<typeof logsQuerySchema>;
 export type GenerateInboxResponseBody = z.infer<
   typeof generateInboxResponseBody
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  NewWaMessageBody,
+  PrivateWaMessageBody,
+  PaginateQuerySchema,
+  WaChatFilterSchema,
+  waChatFilterQuerySchema,
+  waChatExportConstraints,
+  waChatExportQuerySchema,
+  waMediaFileByMediaIdBody,
+  waMessageAssignBody,
+  blockUserSchema,
+  generateInboxResponseBody,
+  bulkWaMessageAssignBody,
+  logsQuerySchema,
+};

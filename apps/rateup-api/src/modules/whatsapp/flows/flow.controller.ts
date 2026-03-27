@@ -190,6 +190,9 @@ export async function createFlowHandler(
         type: SurveyType.WaFlow,
         languages: ["en"],
         orgId,
+        active: true,
+        getLocation: false,
+        welcomePageEnabled: false,
       },
       req,
     )) as Survey;

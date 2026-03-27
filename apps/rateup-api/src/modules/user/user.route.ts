@@ -16,10 +16,18 @@ import {
   updateUserAvailabilityStatusHandler,
   updateUserPrefLanguageHandler,
 } from "./user.controller.js";
-import { $UserRef } from "./user.schema.js";
+import {
+  updateProfileSchema,
+  updateUserLanguageSchema,
+  updateProfilePhotoSchema,
+  changeUserPasswordSchema,
+  createUserGoogleSchema,
+  pauseUserSchema,
+  userStatusSchema,
+} from "./user.schema.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
-import { $Sref } from "../survey/survey.schema.js";
 import { checkSession } from "../../utils/checkSession.js";
+import { idParamsSchema } from "../stats/stats.schema.js";
 
 export async function userRoutes(server: FastifyInstance) {
   server.get(
@@ -43,7 +51,7 @@ export async function userRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySession()],
       schema: {
-        body: $UserRef("updateProfileSchema"),
+        body: updateProfileSchema,
       },
     },
     updateProfileHandler,
@@ -53,8 +61,8 @@ export async function userRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySession()],
       schema: {
-        params: $Sref("idParamsSchema"),
-        body: $UserRef("updateProfileSchema"),
+        params: idParamsSchema,
+        body: updateProfileSchema,
       },
     },
     updateProfileByIdHandler,
@@ -65,7 +73,7 @@ export async function userRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySession()],
       schema: {
-        body: $UserRef("updateUserLanguageSchema"),
+        body: updateUserLanguageSchema,
       },
     },
     updateUserPrefLanguageHandler,
@@ -76,7 +84,7 @@ export async function userRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySession()],
       schema: {
-        body: $UserRef("updateProfilePhotoSchema"),
+        body: updateProfilePhotoSchema,
       },
     },
     updateProfilePhotoHandler,
@@ -96,7 +104,7 @@ export async function userRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySession()],
       schema: {
-        body: $UserRef("changeUserPasswordSchema"),
+        body: changeUserPasswordSchema,
       },
     },
     changeUserPasswordHandler,
@@ -106,7 +114,7 @@ export async function userRoutes(server: FastifyInstance) {
     "/complete-google-signup",
     {
       schema: {
-        body: $UserRef("createUserGoogleSchema"),
+        body: createUserGoogleSchema,
       },
     },
     createGoogleUserHandler,
@@ -133,8 +141,8 @@ export async function userRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySession(), checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
-        params: $Sref("idParamsSchema"),
-        body: $UserRef("pauseUserSchema"),
+        params: idParamsSchema,
+        body: pauseUserSchema,
       },
     },
     pauseUserHandler,
@@ -145,7 +153,7 @@ export async function userRoutes(server: FastifyInstance) {
     {
       preHandler: [checkSession],
       schema: {
-        body: $UserRef("userStatusSchema"),
+        body: userStatusSchema,
       },
     },
     updateUserAvailabilityStatusHandler,

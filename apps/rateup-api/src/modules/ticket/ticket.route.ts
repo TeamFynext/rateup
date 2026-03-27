@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $TicketRef } from "./ticket.schema.js";
+import { createCommentRequestSchema } from "./ticket.schema.js";
 import {
   createCommentHandler,
   deleteCommentHandler,
@@ -32,7 +32,7 @@ export async function ticketRoutes(server: FastifyInstance) {
       // preHandler: [verifyTicketAccess],
 
       schema: {
-        body: $TicketRef("createCommentRequestSchema"),
+        body: createCommentRequestSchema,
       },
     },
     createCommentHandler,

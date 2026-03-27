@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 const conversationCoreSchema = z.object({
@@ -48,20 +47,6 @@ const teamIdParamsSchema = z.object({
   teamId: z.string(),
 });
 
-export const { schemas: conversationSchemas, $ref: $conversationRef } =
-  buildJsonSchemas(
-    {
-      conversationCoreSchema,
-      updateConversationSchema,
-      conversationParamsSchema,
-      conversationAssigneeUpdateSchema,
-      statsQuerySchema,
-      staffIdParamsSchema,
-      teamIdParamsSchema,
-    },
-    { $id: "ConversationSchemas" },
-  );
-
 export type ConversationCore = z.infer<typeof conversationCoreSchema>;
 export type UpdateConversationSchema = z.infer<typeof updateConversationSchema>;
 export type ConversationParamsSchema = z.infer<typeof conversationParamsSchema>;
@@ -71,3 +56,14 @@ export type ConversationAssigneeUpdateSchema = z.infer<
 export type StatsQuerySchema = z.infer<typeof statsQuerySchema>;
 export type StaffIdParamsSchema = z.infer<typeof staffIdParamsSchema>;
 export type TeamIdParamsSchema = z.infer<typeof teamIdParamsSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  conversationCoreSchema,
+  updateConversationSchema,
+  conversationParamsSchema,
+  conversationAssigneeUpdateSchema,
+  statsQuerySchema,
+  staffIdParamsSchema,
+  teamIdParamsSchema,
+};

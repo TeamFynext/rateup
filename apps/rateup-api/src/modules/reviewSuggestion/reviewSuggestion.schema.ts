@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const createReviewSuggestionsSchema = z.object({
@@ -12,20 +11,8 @@ const updateReviewSuggestionSchema = z.object({
 });
 
 const byReviewSuggestionIdSchema = z.object({
-  reviewSuggestionId: z.string().uuid(),
+  reviewSuggestionId: z.uuid(),
 });
-
-export const { schemas: reviewSuggestionSchemas, $ref: $reviewSuggestionRef } =
-  buildJsonSchemas(
-    {
-      updateReviewSuggestionSchema,
-      byReviewSuggestionIdSchema,
-      createReviewSuggestionsSchema,
-    },
-    {
-      $id: "reviewSuggestion",
-    },
-  );
 
 export type byReviewSuggestionIdSchema = z.infer<
   typeof byReviewSuggestionIdSchema
@@ -36,3 +23,10 @@ export type createReviewSuggestionsSchema = z.infer<
 export type updateReviewSuggestionSchema = z.infer<
   typeof updateReviewSuggestionSchema
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  updateReviewSuggestionSchema,
+  byReviewSuggestionIdSchema,
+  createReviewSuggestionsSchema,
+};

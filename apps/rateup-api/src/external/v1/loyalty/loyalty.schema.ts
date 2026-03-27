@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { customerLoyaltyAccountSchema } from "../../../modules/loyalty/accounts/account.schema.js";
 import z from "zod";
 
@@ -80,12 +79,9 @@ const customerLoyaltyAccountSchemaExternalArray = z.array(
   customerLoyaltyAccountResponseSchemaExternal,
 );
 
-export const { schemas: customerLoyaltyAccountSchemas, $ref: $CLAreff } =
-  buildJsonSchemas(
-    {
-      customerLoyaltyAccountSchemaExternal,
-      customerLoyaltyAccountResponseSchemaExternal,
-      customerLoyaltyAccountSchemaExternalArray,
-    },
-    { $id: "customerLoyaltyAccountSchemas" },
-  );
+// Auto-exported after fastify-zod migration
+export {
+  customerLoyaltyAccountSchemaExternal,
+  customerLoyaltyAccountResponseSchemaExternal,
+  customerLoyaltyAccountSchemaExternalArray,
+};

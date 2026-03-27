@@ -9,20 +9,20 @@ import {
 
 export const ruleConditionSchema = z.object({
   id: z.string().optional(),
-  field: z.nativeEnum(ConditionField),
-  operator: z.nativeEnum(ConditionOperator),
+  field: z.enum(ConditionField),
+  operator: z.enum(ConditionOperator),
   value: z.string().optional(),
 });
 
 export const ruleConditionGroupSchema = z.object({
   id: z.string().optional(),
-  operator: z.nativeEnum(RuleOperator).default("AND"),
+  operator: z.enum(RuleOperator).default("AND"),
   conditions: z.array(ruleConditionSchema).min(1),
 });
 
 export const ruleActionSchema = z.object({
   id: z.string().optional(),
-  type: z.nativeEnum(ActionType),
+  type: z.enum(ActionType),
   value: z.any().optional(),
 });
 
@@ -39,9 +39,9 @@ export const ruleOptionsSchema = z.object({
 export const createRuleSchema = z.object({
   whatsappSettingsPhoneIds: z.array(z.string()).min(1),
   name: z.string().min(1, "Rule name must be at least 1 characters long"),
-  operator: z.nativeEnum(RuleOperator).default("AND"),
+  operator: z.enum(RuleOperator).default("AND"),
   isActive: z.boolean().default(true),
-  triggerEvent: z.nativeEnum(TriggerEvent),
+  triggerEvent: z.enum(TriggerEvent),
   groups: z.array(ruleConditionGroupSchema).optional(),
   actions: z.array(ruleActionSchema).optional(),
   options: ruleOptionsSchema.optional(),

@@ -1,18 +1,21 @@
 import { FastifyInstance } from "fastify";
 import {
   deletePublicChatHistoryHandler,
-  getChatbotDetailsHandler,
   getChatbotPublicPageStatusHandler,
   publicChatbotMessageHandler,
 } from "./chatbot.controller.js";
-import { $chatbotRef } from "./chatbot.schema.js";
+import {
+  publicMessageSchema,
+  byUserIdSchema,
+  byChatbotIdSchema,
+} from "./chatbot.schema.js";
 
 export async function chatbotPublicRoute(server: FastifyInstance) {
   server.post(
     "/",
     {
       schema: {
-        body: $chatbotRef("publicMessageSchema"),
+        body: publicMessageSchema,
       },
     },
     publicChatbotMessageHandler,
@@ -22,7 +25,7 @@ export async function chatbotPublicRoute(server: FastifyInstance) {
     "/:userId",
     {
       schema: {
-        params: $chatbotRef("byUserIdSchema"),
+        params: byUserIdSchema,
       },
     },
     deletePublicChatHistoryHandler,
@@ -32,7 +35,7 @@ export async function chatbotPublicRoute(server: FastifyInstance) {
     "/:chatbotId",
     {
       schema: {
-        params: $chatbotRef("byChatbotIdSchema"),
+        params: byChatbotIdSchema,
       },
     },
     getChatbotPublicPageStatusHandler,

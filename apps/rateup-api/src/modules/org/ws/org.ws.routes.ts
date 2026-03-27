@@ -5,8 +5,7 @@ import {
   orgWsAuthCheckHandler,
 } from "./org.ws.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
-import { $orgWsRef } from "./org.ws.schema.js";
-
+import { afterAuthIdParamsSchema } from "./org.ws.schema.js";
 export async function orgWsRoutes(server: FastifyInstance) {
   server.get(
     "/auth",
@@ -25,7 +24,7 @@ export async function orgWsRoutes(server: FastifyInstance) {
       preHandler: checkSession,
       websocket: true,
       schema: {
-        params: $orgWsRef("afterAuthIdParamsSchema"),
+        params: afterAuthIdParamsSchema,
       },
     },
     handleWebSocketConnection,

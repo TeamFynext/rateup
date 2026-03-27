@@ -1,16 +1,11 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 const orderPaginateSchema = z.object({
-  page: z.number(),
-  limit: z.number(),
+  page: z.coerce.number(),
+  limit: z.coerce.number(),
 });
-export const { schemas: waCatalogOrderSchemas, $ref: $WCOrder } =
-  buildJsonSchemas(
-    {
-      orderPaginateSchema,
-    },
-    { $id: "waCatalogOrderSchemas" },
-  );
 
 export type OrderPaginateSchema = z.infer<typeof orderPaginateSchema>;
+
+// Auto-exported after fastify-zod migration
+export { orderPaginateSchema };

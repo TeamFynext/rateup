@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const landingPageBaseSchema = z.object({
@@ -38,7 +37,10 @@ const deleteLandingPageWithIddParams = z.object({
   id: z.string(),
 });
 
-const models = {
+type CreateLandingPageReqBody = z.infer<typeof createLandingPageReqBody>;
+
+export {
+  CreateLandingPageReqBody,
   landingPageBaseSchema,
   createLandingPageReqBody,
   getLandingPagesResponse,
@@ -47,10 +49,3 @@ const models = {
   deleteLandingPageWithIddParams,
   updatePageVisitsReqParams,
 };
-
-type CreateLandingPageReqBody = z.infer<typeof createLandingPageReqBody>;
-
-const { schemas: landingPageSchemas, $ref: landingPageSchemaRef } =
-  buildJsonSchemas(models, { $id: "landingPageSchema" });
-
-export { landingPageSchemas, landingPageSchemaRef, CreateLandingPageReqBody };

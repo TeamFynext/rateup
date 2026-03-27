@@ -10,14 +10,17 @@ import {
   testShopifyCronActionFnHandler,
   updateShopifyIntegrationByShopHandler,
 } from "./shopify.controller.js";
-import { ShopifyRef } from "./shopify.schema.js";
+import {
+  byShopParamsSchema,
+  registerWebhookbyTopicSchema,
+} from "./shopify.schema.js";
 
 export async function shopifyRoutes(server: FastifyInstance) {
   server.put(
     "/session/:shop",
     {
       schema: {
-        params: ShopifyRef("byShopParamsSchema"),
+        params: byShopParamsSchema,
       },
     },
     updateShopifyIntegrationByShopHandler,
@@ -35,7 +38,7 @@ export async function shopifyRoutes(server: FastifyInstance) {
     "/webhooks/topic",
     {
       schema: {
-        body: ShopifyRef("registerWebhookbyTopicSchema"),
+        body: registerWebhookbyTopicSchema,
       },
     },
     registerWebhookByTopicHandler,
@@ -45,7 +48,7 @@ export async function shopifyRoutes(server: FastifyInstance) {
     "/webhooks/topic",
     {
       schema: {
-        body: ShopifyRef("registerWebhookbyTopicSchema"),
+        body: registerWebhookbyTopicSchema,
       },
     },
     deleteWebhookByTopicHandler,
@@ -55,7 +58,7 @@ export async function shopifyRoutes(server: FastifyInstance) {
     "/:shop",
     {
       schema: {
-        params: ShopifyRef("byShopParamsSchema"),
+        params: byShopParamsSchema,
       },
     },
     deleteIntegrationByShopHandler,
