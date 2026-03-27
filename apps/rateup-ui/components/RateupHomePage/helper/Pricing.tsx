@@ -98,7 +98,7 @@ export function Pricing() {
       {/* Glow behind middle card */}
       <div className="pointer-events-none absolute left-1/2 top-[55%] -translate-x-1/2 -translate-y-1/2 w-[360px] h-[700px] rounded-full bg-[#004F98] opacity-25 blur-[100px] z-0" />
 
-      <div className="xl:max-w-6xl xl:mx-auto xl:w-[calc(100%-4rem)] px-8 xl:px-0 relative z-10">
+      <div className="xl:max-w-6xl xl:mx-auto xl:w-[calc(100%-4rem)] px-8 xl:px-0 relative z-10 mb-16">
         {/* Heading */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-[44px] font-bold text-white tracking-tight mb-3">

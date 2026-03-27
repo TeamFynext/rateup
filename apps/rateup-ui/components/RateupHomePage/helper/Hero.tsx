@@ -1,18 +1,23 @@
-// import { Check } from "lucide-react";
 import React from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
-import { geist, sora } from "@/utils/fonts";
+import { imagesPath } from "@/utils/constants";
+import { sora } from "@/utils/fonts";
 
 import { ArrowButton } from "../components/btn";
 import { SocialBadge } from "../components/socialBadge";
 
 const socialBadges = [
-  { src: "/images/landing/logos/ico-whatsapp.png", label: "WhatsApp" },
-  { src: "/images/landing/logos/ico-messenger.png", label: "Messenger" },
-  { src: "/images/landing/logos/ico-instagram.png", label: "Instagram" },
-  { src: "/images/landing/logos/ico-shopify.png", label: "Shopify" },
-  { src: "/images/landing/logos/ico-webchat.png", label: "Web Chat" },
-  { src: "/images/landing/logos/ico-woocommerce.png", label: "WooCommerce" },
+  { src: `${imagesPath}/landing/logos/ico-whatsapp.png`, label: "WhatsApp" },
+  { src: `${imagesPath}/landing/logos/ico-messenger.png`, label: "Messenger" },
+  { src: `${imagesPath}/landing/logos/ico-instagram.png`, label: "Instagram" },
+  { src: `${imagesPath}/landing/logos/ico-shopify.png`, label: "Shopify" },
+  { src: `${imagesPath}/landing/logos/ico-webchat.png`, label: "Web Chat" },
+  {
+    src: `${imagesPath}/landing/logos/ico-woocommerce.png`,
+    label: "WooCommerce",
+  },
 ];
 const gradientText: React.CSSProperties = {
   background: "linear-gradient(to right, #1873e8, #60a5fa)",
@@ -22,24 +27,10 @@ const gradientText: React.CSSProperties = {
   display: "inline-block",
 };
 
-// usage
-<span style={gradientText}>Customer Buys?</span>;
-const C = {
-  bg0: "#04091a",
-  bg1: "#070f24",
-  bg2: "#0b1530",
-  bg3: "#0f1d3a",
-  border: "rgba(255,255,255,0.07)",
-  blue: "#1873E8",
-  text1: "#ffffff",
-  text2: "#94a3b8",
-  text3: "#64748b",
-  yellow: "#facc15",
-};
-
 export default function Hero() {
+  const router = useRouter();
   return (
-    <section className="xl:max-w-6xl xl:mx-auto xl:w-[calc(100%-4rem)] px-8 xl:px-0 pt-16 sm:pt-20 pb-16 sm:pb-20 flex gap-14 items-center flex-wrap">
+    <section className="xl:max-w-6xl xl:mx-auto xl:w-[calc(100%-4rem)] px-8 xl:px-0 pt-16 sm:pt-20 pb-16 sm:pb-20 flex  items-center flex-col md:flex-row">
       {/* Left content */}
       <div className="w-full xl:flex-1 xl:basis-80">
         {/* Badge */}
@@ -77,13 +68,17 @@ export default function Hero() {
 
         {/* CTAs */}
         <div className="flex flex-wrap gap-3 mb-6">
-          <ArrowButton hoverText="hover:text-white" />
+          <ArrowButton
+            hoverText="hover:text-white"
+            onClick={() => router.push("/signup")}
+          />
           <ArrowButton
             label="Book A Demo"
             bg="bg-rateup-light-blue"
             hoverBg="hover:bg-rateup-darkblue-2"
             textColor="text-rateup-dark-blue-3"
             hoverText="hover:text-white"
+            onClick={() => router.push("/bookdemo")}
           />
         </div>
         <div className="flex flex-wrap items-center gap-6 mt-4">
@@ -114,14 +109,16 @@ export default function Hero() {
         </div>
       </div>
       {/* Right image */}
-      <div className="w-full xl:flex-1 xl:basis-72 xl:max-w-lg">
-        <div className="aspect-[4/3] rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center text-slate-400">
-          <img
-            src="https://www.svgrepo.com/show/246211/landscape-night.svg"
-            alt="placeholder"
-            className="w-full h-full object-contain"
-          />
-        </div>
+      {/* Right image */}
+      {/* Right image */}
+      <div className="w-full md:w-1/2 flex items-center justify-end">
+        <Image
+          src={`${imagesPath}/landing/cover.svg`}
+          alt="cover"
+          width={400}
+          height={400}
+          className="w-full max-w-[400px] h-auto"
+        />
       </div>
     </section>
   );

@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import { imagesPath } from "@/utils/constants";
+
 const C = {
   bg0: "#04091a",
   bg1: "#070f24",
@@ -278,7 +280,7 @@ function GooglePlayButton({ href = "#" }: { href?: string }) {
       }}
     >
       <Image
-        src="/images/landing/logos/ico-playstore.png"
+        src={`${imagesPath}/landing/logos/ico-playstore.png`}
         alt="Google Play"
         width={18}
         height={18}
@@ -329,7 +331,7 @@ function AppStoreButton({ href = "#" }: { href?: string }) {
       }}
     >
       <Image
-        src="/images/landing/logos/ico-apple.png"
+        src={`${imagesPath}/landing/logos/ico-apple.png`}
         alt="App Store"
         width={18}
         height={18}
@@ -359,7 +361,7 @@ function AppStoreButton({ href = "#" }: { href?: string }) {
 }
 
 export default function AppStoreButtons({
-  googlePlayHref = "#",
+  googlePlayHref = "https://play.google.com/store/apps/details?id=com.rateupapp.rateup&pcampaignid=web_share",
   appStoreHref = "#",
 }: {
   googlePlayHref?: string;

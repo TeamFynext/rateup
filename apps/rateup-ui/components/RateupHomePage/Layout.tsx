@@ -19,7 +19,7 @@ import {
 import CookieConsentBanner from "../Analytics/CookieConsentBanner";
 import { rateupLogoBlueTextUrl } from "../HomePage/constants";
 import { Button } from "../ui/button";
-import { BookDemoModal } from "./helpers/BookDemoModal";
+import { BookDemoModal } from "./helper/BookDemoModal";
 import DropDownMobileNavItems from "./helpers/DropDownMobileNavItems";
 
 interface LayoutProps {

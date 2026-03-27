@@ -10,7 +10,7 @@ import { imagePath } from "@/components/HomePage/pages/constants";
 import { Separator } from "@/components/ui/separator";
 import { sora } from "@/utils/fonts";
 
-import { BookDemoModal } from "../helpers/BookDemoModal";
+import { BookDemoModal } from "../helper/BookDemoModal";
 
 const heroGraphic = `${imagePath}/homepage/GRAPHICS.png`;
 

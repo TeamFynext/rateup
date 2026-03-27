@@ -16,7 +16,7 @@ import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import { currencyLabel } from "@/components/menu/util/currencyData";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
-import { BookDemoModal1 } from "@/components/RateupHomePage/helpers/BookDemoModal";
+import { BookDemoModal1 } from "@/components/RateupHomePage/helper/BookDemoModal";
 
 import PlanCardNew from "./Card/PlanCardNew";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore";

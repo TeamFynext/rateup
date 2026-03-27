@@ -10,6 +10,8 @@ import {
   GraduationCap,
 } from "lucide-react";
 
+import { imagesPath } from "@/utils/constants";
+
 import { GradientText } from "../components/btn";
 
 interface Testimonial {
@@ -27,7 +29,7 @@ interface Testimonial {
 
 const testimonials: Testimonial[] = [
   {
-    companyLogo: "/images/landing/customerLogos/entri-logo.png",
+    companyLogo: `${imagesPath}/landing/customerLogos/entri-logo.png`,
     companyName: "entri",
     category: "Education",
     logoSize: "h-12 w-25",
@@ -36,7 +38,7 @@ const testimonials: Testimonial[] = [
       "RateUp Made Collecting Feedback Effortless. The WhatsApp Flows Feel Natural, And Response Rates Improved Instantly.",
     author: "Rahul Menon",
     role: "Operations Head At Entri",
-    image: "/images/landing/customerLogos/entri-photo.png",
+    image: `${imagesPath}/landing/customerLogos/entri-photo.png`,
     stats: [
       { value: "77%", label: "Growth In Leads" },
       { value: "80%", label: "Business Growth Generation" },
@@ -44,7 +46,7 @@ const testimonials: Testimonial[] = [
     ],
   },
   {
-    companyLogo: "/images/landing/customerLogos/entri-logo.png",
+    companyLogo: `${imagesPath}/landing/customerLogos/entri-logo.png`,
     companyName: "entri",
     category: "Education",
     logoSize: "h-12 w-25",
@@ -53,15 +55,15 @@ const testimonials: Testimonial[] = [
       "RateUp Made Collecting Feedback Effortless. The WhatsApp Flows Feel Natural, And Response Rates Improved Instantly.",
     author: "Rahul Menon",
     role: "Operations Head At Entri",
-    image: "/images/landing/customerLogos/entri-photo.png",
+    image: `${imagesPath}/landing/customerLogos/entri-photo.png`,
     stats: [
       { value: "86%", label: "Growth In Leads" },
       { value: "79%", label: "Business Growth Generation" },
-      { value: "97", label: "Higher Team Productivity" },
+      { value: "97%", label: "Higher Team Productivity" }, // fixed missing %
     ],
   },
   {
-    companyLogo: "/images/landing/customerLogos/entri-logo.png",
+    companyLogo: `${imagesPath}/landing/customerLogos/entri-logo.png`,
     companyName: "entri",
     category: "Education",
     logoSize: "h-12 w-25",
@@ -70,7 +72,7 @@ const testimonials: Testimonial[] = [
       "RateUp Made Collecting Feedback Effortless. The WhatsApp Flows Feel Natural, And Response Rates Improved Instantly.",
     author: "Rahul Menon",
     role: "Operations Head At Entri",
-    image: "/images/landing/customerLogos/entri-photo.png",
+    image: `${imagesPath}/landing/customerLogos/entri-photo.png`,
     stats: [
       { value: "89%", label: "Growth In Leads" },
       { value: "90%", label: "Business Growth Generation" },
@@ -78,7 +80,6 @@ const testimonials: Testimonial[] = [
     ],
   },
 ];
-
 export function Testimonials() {
   const [current, setCurrent] = useState(0);
   const total = testimonials.length;
@@ -89,7 +90,7 @@ export function Testimonials() {
   const t = testimonials[current];
 
   return (
-    <section className="py-24 bg-rateup-dark-blue-3 relative overflow-hidden">
+    <section className="py-16 bg-rateup-dark-blue-3 relative overflow-hidden">
       <div className="xl:max-w-6xl xl:mx-auto xl:w-[calc(100%-4rem)] px-8 xl:px-0">
         {/* Heading */}
         <div className="text-center mb-12">

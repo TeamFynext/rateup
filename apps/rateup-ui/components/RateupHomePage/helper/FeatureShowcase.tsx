@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
+import { sr } from "date-fns/locale";
 import { Layers } from "lucide-react";
 
 import {
@@ -9,10 +12,12 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
+import { imagesPath } from "@/utils/constants";
 
 const slides = [
   {
     label: "Unified Omnichannel Inbox",
+    src: `${imagesPath}/landing/feature-1.png`,
     icon: (
       <svg
         width="20"
@@ -29,10 +34,12 @@ const slides = [
       </svg>
     ),
     title: "Unified\nOmnichannel Inbox",
+    chips: ["4 Channels", "Multi-agent login", "Lead lifecycle", "Teams"],
     desc: "WhatsApp, Instagram, Facebook Messenger, and Web Chat all in one place. Multi-agent login, team routing, lead lifecycle tagging, and full customer context on every conversation.",
   },
   {
-    label: "Smart Automation",
+    label: "loyalty & Referrals",
+    src: `${imagesPath}/landing/feature-2.png`,
     icon: (
       <svg
         width="20"
@@ -51,10 +58,17 @@ const slides = [
       </svg>
     ),
     title: "Smart\nAutomation",
-    desc: "Build no-code workflows that auto-assign conversations, send follow-ups, escalate tickets, and trigger CRM updates — all without writing a single line of code.",
+    chips: [
+      "WhatsApp Native",
+      "Referral Tracking",
+      "Instant Cashback",
+      "Milestone Rewards",
+    ],
+    desc: "Build a loyalty program that turns one-time buyers into your most vocal advocates. Instant cashback, milestone rewards, referral tracking — all running automatically on WhatsApp.",
   },
   {
-    label: "Team Collaboration",
+    label: "TSmart Automation Builder",
+    src: `${imagesPath}/landing/feature-3.png`,
     icon: (
       <svg
         width="20"
@@ -73,10 +87,12 @@ const slides = [
       </svg>
     ),
     title: "Team\nCollaboration",
-    desc: "Private notes, collision detection, real-time typing indicators, and shared views. Your entire team works as one — no duplicate replies, no dropped conversations.",
+    chips: ["No Code", "Drag & Drop", "WhatsApp Flow", "AI Automated Journeys"],
+    desc: "Design complex WhatsApp and Instagram flows with a drag-and-drop builder. Triggers, conditions, actions — no code, no developer, no waiting.",
   },
   {
-    label: "CRM Integration",
+    label: "Customer Profiles & Retention AI",
+    src: `${imagesPath}/landing/feature-4.png`,
     icon: (
       <svg
         width="20"
@@ -95,7 +111,13 @@ const slides = [
       </svg>
     ),
     title: "CRM\nIntegration",
-    desc: "Sync contacts, deals, and conversation history with your CRM automatically. Every lead captured, every touchpoint logged — your sales pipeline always up to date.",
+    chips: [
+      "WhatsApp Native",
+      "Referral Tracking",
+      "Instant Cashback",
+      "Milestone Rewards",
+    ],
+    desc: "From the first purchase to every feedback response, support ticket, and loyalty redemption — RateUp automatically captures, connects, and tags it all into a single live profile.",
   },
 ];
 
@@ -103,6 +125,7 @@ export function FeatureShowcase() {
   const [current, setCurrent] = useState(0);
   const [api, setApi] = useState(null);
   const timerRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!api) return;
@@ -224,38 +247,20 @@ export function FeatureShowcase() {
                   {slides.map((slide, index) => (
                     <CarouselItem key={index}>
                       {/* pt-10 so slide content clears the overlapping pill row */}
-                      <div className="flex flex-col lg:flex-row items-center gap-12 px-8 pb-10 pt-20 lg:px-12 relative min-h-[420px]">
+                      <div className="flex flex-col lg:flex-row items-center justify-between  gap-12 px-8 pb-10 pt-20 lg:px-12 relative min-h-[420px]">
                         {/* Glow */}
                         <div className="absolute top-0 right-0 -m-32 w-64 h-64 bg-rateup-blue/20 rounded-full blur-[80px] pointer-events-none" />
 
                         {/* Left image placeholder */}
-                        <div className="w-full lg:w-1/2 aspect-square lg:aspect-auto lg:h-[360px] rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center relative overflow-hidden group">
+                        <div>
                           <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="80"
-                            height="80"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="opacity-20 text-white"
-                          >
-                            <rect
-                              width="18"
-                              height="18"
-                              x="3"
-                              y="3"
-                              rx="2"
-                              ry="2"
-                            />
-                            <circle cx="9" cy="9" r="2" />
-                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                          </svg>
+                          <Image
+                            src={slide.src}
+                            alt={slide.label}
+                            width={460}
+                            height={460}
+                          />
                         </div>
-
                         {/* Right content */}
                         <div className="w-full lg:w-1/2 flex flex-col gap-5 z-10">
                           <h3 className="text-4xl lg:text-5xl font-bold text-white leading-tight whitespace-pre-line">
@@ -264,8 +269,37 @@ export function FeatureShowcase() {
                           <p className="text-base text-rateup-blue-2 leading-relaxed max-w-md">
                             {slide.desc}
                           </p>
+                          {/* Chips */}
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {slide.chips.map((chip, i) => (
+                              <div
+                                key={i}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium flex-shrink-0"
+                                style={{
+                                  backgroundColor: "#071a3e",
+                                  border: "1px solid rgba(255,255,255,0.15)",
+                                  color: "#22d3ee",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    width: "6px",
+                                    height: "6px",
+                                    borderRadius: "50%",
+                                    backgroundColor: "#22d3ee",
+                                    flexShrink: 0,
+                                    display: "inline-block",
+                                  }}
+                                />
+                                {chip}
+                              </div>
+                            ))}
+                          </div>
                           <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                            <button className="px-5 text-[14px] py-2.5 rounded-xl border font-semibold border-rateup-blue-4 bg-rateup-blue-2 text-white transition">
+                            <button
+                              className="px-5 text-[14px] py-2.5 rounded-xl border font-semibold border-rateup-blue-4 bg-rateup-blue-2 text-white transition"
+                              onClick={() => router.push("/login")}
+                            >
                               Get Started Now
                             </button>
                             <button className="bg-white/10 border border-white/20 px-5 py-2.5 rounded-xl text-white cursor-pointer hover:bg-white/15 transition">

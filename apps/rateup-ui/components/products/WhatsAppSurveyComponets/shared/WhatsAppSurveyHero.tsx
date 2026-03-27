@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helpers/BookDemoModal";
+import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 import { imagesPath } from "@/utils/constants";
 
 export default function WhatsAppSurveyHero() {

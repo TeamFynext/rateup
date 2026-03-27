@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { BookDemoModal1 } from "@/components/RateupHomePage/helpers/BookDemoModal";
+import { BookDemoModal1 } from "@/components/RateupHomePage/helper/BookDemoModal";
 import { imagesPath } from "@/utils/constants";
 
 function AboutUs() {

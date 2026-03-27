@@ -2,7 +2,7 @@
 
 import { ChevronRight } from "lucide-react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helpers/BookDemoModal";
+import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 import { Button } from "@/components/ui/button";
 
 const WhatsAppBroadcast = () => {

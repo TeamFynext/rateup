@@ -1,5 +1,7 @@
 import { Inbox, MessageSquare, Target, Zap } from "lucide-react";
 
+import { imagesPath } from "@/utils/constants";
+
 import AppStoreButtons from "../components/btn";
 
 export function FeaturesGrid() {
@@ -8,37 +10,37 @@ export function FeaturesGrid() {
       title: "WhatsApp AI Chatbot",
       description:
         "Train and deploy your chatbot. Handles FAQs, order queries, and feedback 24/7 in multiple languages. Escalates to a human when it matters.",
-      image: "/images/landing/grid/grid1.png",
+      image: `${imagesPath}/landing/grid/grid1.png`,
     },
     {
       title: "CX & Feedback Analytics",
       description:
         "AI-powered surveys and feedback with sentiment analysis, web status updates, NPS, and trust scores. Identify where experience breaks.",
-      image: "/images/landing/grid/grid2.png",
+      image: `${imagesPath}/landing/grid/grid2.png`,
     },
     {
       title: "Campaign Management",
       description:
         "Bulk WhatsApp messaging and personalized campaigns. Time-based, milestone-based, and drip triggers. Re-engage customers at the right moment.",
-      image: "/images/landing/grid/grid3.png",
+      image: `${imagesPath}/landing/grid/grid3.png`,
     },
     {
       title: "Ticketing & Escalation",
       description:
         "Convert chats into structured tickets. Auto-assign to the right team member or department. Resolve issues faster with full visibility.",
-      image: "/images/landing/grid/grid4.png",
+      image: `${imagesPath}/landing/grid/grid4.png`,
     },
     {
       title: "QR Studio",
       description:
         "Turn notices, posters, tables, and packaging into digital touchpoints. QR codes that trigger feedback flows, loyalty sign-ups, or offers.",
-      image: "/images/landing/grid/grid5.png",
+      image: `${imagesPath}/landing/grid/grid5.png`,
     },
     {
       title: "Your Analytics & Reports, on the go",
       description:
         "Manage your inbox, view live dashboards, track loyalty performance, and receive escalation alerts — from any device, in any time zone. Full platform power on iOS and Android.",
-      image: "/images/landing/grid/grid6.png",
+      image: `${imagesPath}/landing/grid/grid6.png`,
     },
   ];
 

@@ -3,16 +3,24 @@
 import React from "react";
 import Image from "next/image";
 
+import { imagesPath } from "@/utils/constants";
+
 import styles from "../components/landing.module.css";
 
 const logos = [
-  { name: "Elance", src: "/images/landing/customerLogos/Elance.svg" },
-  { name: "Entri", src: "/images/landing/customerLogos/entri.svg" },
-  { name: "FabUs", src: "/images/landing/customerLogos/FabUs.svg" },
-  { name: "Kerala SM", src: "/images/landing/customerLogos/kerala sm.svg" },
-  { name: "MYG", src: "/images/landing/customerLogos/MYG.svg" },
-  { name: "ShopDoc", src: "/images/landing/customerLogos/ShopDoc.svg" },
-  { name: "Voye Homes", src: "/images/landing/customerLogos/voye-homes.svg" },
+  { name: "Elance", src: `${imagesPath}/landing/customerLogos/Elance.svg` },
+  { name: "Entri", src: `${imagesPath}/landing/customerLogos/entri.svg` },
+  { name: "FabUs", src: `${imagesPath}/landing/customerLogos/FabUs.svg` },
+  {
+    name: "Kerala SM",
+    src: `${imagesPath}/landing/customerLogos/kerala sm.svg`,
+  },
+  { name: "MYG", src: `${imagesPath}/landing/customerLogos/MYG.svg` },
+  { name: "ShopDoc", src: `${imagesPath}/landing/customerLogos/ShopDoc.svg` },
+  {
+    name: "Voye Homes",
+    src: `${imagesPath}/landing/customerLogos/voye-homes.svg`,
+  },
 ];
 
 interface ClientsProps {
@@ -34,7 +42,7 @@ export default function Clients({ speed = 30, className = "" }: ClientsProps) {
           <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md bg-blue-500/40 scale-110" />
 
           <Image
-            src="/images/landing/logos/metabp.svg"
+            src={`${imagesPath}/landing/logos/metabp.svg`}
             alt="Meta Business Partner"
             width={280}
             height={80}

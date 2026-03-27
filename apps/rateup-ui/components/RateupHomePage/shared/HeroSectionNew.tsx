@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { imagesPath } from "@/utils/constants";
 import { sora } from "@/utils/fonts";
 
-import { BookDemoModal } from "../helpers/BookDemoModal";
+import { BookDemoModal } from "../helper/BookDemoModal";
 
 export default function HeroSection() {
   const router = useRouter();

@@ -416,7 +416,7 @@ const RadarBackground = () => (
 );
 export function CTA() {
   return (
-    <section className="w-full bg-rateup-dark-blue-3 px-4 py-8 sm:py-12 lg:py-16 flex items-center justify-center">
+    <section className="w-full bg-rateup-dark-blue-3 px-4 py-8 sm:py-12 lg:pb-16 lg:pt-0 flex items-center justify-center">
       {/* Card */}
       {/* dotteed bg */}
 
