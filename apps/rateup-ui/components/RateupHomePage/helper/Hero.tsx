@@ -39,9 +39,9 @@ const C = {
 
 export default function Hero() {
   return (
-    <section className="max-w-7xl mx-8 xl:mx-29 px-6 pt-20 pb-20 flex gap-14 items-center flex-wrap">
+    <section className="xl:max-w-6xl xl:mx-auto xl:w-[calc(100%-4rem)] px-8 xl:px-0 pt-16 sm:pt-20 pb-16 sm:pb-20 flex gap-14 items-center flex-wrap">
       {/* Left content */}
-      <div className="flex-1 basis-80  w-full">
+      <div className="w-full xl:flex-1 xl:basis-80">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 justify-between bg-blue-500/10 border border-blue-500/30 rounded-full px-3.5 py-1.5 mb-5">
           {/* <span className="w-1.5 h-1.5 bg-blue-400 rounded-full inline-block shrink-0" /> */}
@@ -52,7 +52,7 @@ export default function Hero() {
 
         {/* Heading */}
         <h1
-          className={`text-5xl font-semibold leading-tight ${sora.className}`}
+          className={`text-3xl sm:text-4xl xl:text-5xl font-semibold leading-tight ${sora.className}`}
         >
           <span className="text-light-blue-5">What Happens After A</span>
           <br />
@@ -82,7 +82,7 @@ export default function Hero() {
             label="Book A Demo"
             bg="bg-rateup-light-blue"
             hoverBg="hover:bg-rateup-darkblue-2"
-            textColor="text-rateup-dark-blue"
+            textColor="text-rateup-dark-blue-3"
             hoverText="hover:text-white"
           />
         </div>
@@ -113,9 +113,8 @@ export default function Hero() {
           )}
         </div>
       </div>
-
       {/* Right image */}
-      <div className="flex-1 basis-72 max-w-lg w-full">
+      <div className="w-full xl:flex-1 xl:basis-72 xl:max-w-lg">
         <div className="aspect-[4/3] rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center text-slate-400">
           <img
             src="https://www.svgrepo.com/show/246211/landscape-night.svg"

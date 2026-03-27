@@ -165,9 +165,9 @@ export function Footer() {
               }}
             />
             <img
-              src="/images/customerLogos/metaveve.png"
+              src="/images/landing/customerLogos/metaveve.png"
               alt="Meta Business Partner"
-              className="relative h-20 w-auto object-contain"
+              className="relative h-22 w-auto object-contain"
             />
           </div>
           {/* App Store badges */}

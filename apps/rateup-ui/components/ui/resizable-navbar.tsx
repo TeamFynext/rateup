@@ -102,7 +102,7 @@ export const NavBody = ({ children, className }: NavBodyProps) => {
         },
       }}
       className={cn(
-        " relative z-60 mx-8 xl:mx-29 hidden flex-row items-center justify-between self-start rounded-2xl bg-white px-4 py-2 xl:flex shadow-md",
+        "relative z-60 mx-auto hidden flex-row items-center justify-between self-start rounded-2xl bg-white px-4 py-2 xl:flex shadow-md max-w-6xl w-[calc(100%-4rem)]",
         className,
       )}
     >

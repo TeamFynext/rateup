@@ -4,63 +4,79 @@ import React from "react";
 import Image from "next/image";
 
 import styles from "../components/landing.module.css";
-import { MetaBadge } from "../components/metaBadge";
 
 const logos = [
-  { name: "Elance", src: "/images/customerLogos/Elance.svg" },
-  { name: "Entri", src: "/images/customerLogos/entri.svg" },
-  { name: "FabUs", src: "/images/customerLogos/FabUs.svg" },
-  { name: "Kerala SM", src: "/images/customerLogos/kerala sm.svg" },
-  { name: "MYG", src: "/images/customerLogos/MYG.svg" },
-  { name: "ShopDoc", src: "/images/customerLogos/ShopDoc.svg" },
-  { name: "Voye Homes", src: "/images/customerLogos/voye-homes.svg" },
+  { name: "Elance", src: "/images/landing/customerLogos/Elance.svg" },
+  { name: "Entri", src: "/images/landing/customerLogos/entri.svg" },
+  { name: "FabUs", src: "/images/landing/customerLogos/FabUs.svg" },
+  { name: "Kerala SM", src: "/images/landing/customerLogos/kerala sm.svg" },
+  { name: "MYG", src: "/images/landing/customerLogos/MYG.svg" },
+  { name: "ShopDoc", src: "/images/landing/customerLogos/ShopDoc.svg" },
+  { name: "Voye Homes", src: "/images/landing/customerLogos/voye-homes.svg" },
 ];
 
 interface ClientsProps {
-  speed?: number; // seconds for one full loop — lower = faster
+  speed?: number;
   className?: string;
 }
 
 export default function Clients({ speed = 30, className = "" }: ClientsProps) {
   const items = [...logos, ...logos];
+
   return (
-    <div className="max-w-7xl mx-8 xl:mx-29 flex items-center justify-center w-full py-10">
-      <div className="relative flex flex-col items-center justify-center w-full  ">
-        <MetaBadge />
-        <p className={`py-2 text-2xl font-semibold leading-tight `}>
+    <div className="w-full px-8 xl:px-0 xl:max-w-6xl xl:mx-auto xl:w-[calc(100%-4rem)] flex items-center justify-center py-10">
+      {" "}
+      <div className="relative flex flex-col items-center justify-center w-full gap-4">
+        {/* Meta Business Partner Badge */}
+        {/* <MetaBusinessPartnerBadge /> */}
+        <div className="group relative inline-flex cursor-default">
+          {/* Glow effect (kept same) */}
+          <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md bg-blue-500/40 scale-110" />
+
+          <Image
+            src="/images/landing/logos/metabp.svg"
+            alt="Meta Business Partner"
+            width={280}
+            height={80}
+            className="relative w-[200px] sm:w-[240px] md:w-[280px] h-auto
+               transition-transform duration-300 ease-out
+               group-hover:scale-105 group-hover:drop-shadow-[0_0_16px_rgba(0,129,251,0.6)]"
+          />
+        </div>
+        {/* Heading */}
+        <p className="py-2 text-lg sm:text-xl md:text-2xl font-semibold leading-tight text-center text-white">
           <span>Trusted by </span>
           <span className={styles.gradientText}>100+ </span>
           <span>ecommerce brands across </span>
           <span className={styles.gradientText}>30+ </span>
           <span>Countries</span>
         </p>
-
+        {/* Marquee */}
         <div
-          // clients marquee
           className={[
             "w-full overflow-hidden rounded-[30px]",
             "bg-[#004F98]/[0.12]",
             "border border-[#004F98]/30",
             "py-6 sm:py-8",
-            "mx-auto mt-6",
+            "mx-auto mt-2",
             "shadow-[0_0_40px_rgba(0,79,152,0.15)]",
             className,
           ].join(" ")}
         >
           <style>{`
-        @keyframes marquee {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .marquee-track {
-          display: flex;
-          width: max-content;
-          animation: marquee ${speed}s linear infinite;
-        }
-        .marquee-track:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
+            @keyframes marquee {
+              0%   { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .marquee-track {
+              display: flex;
+              width: max-content;
+              animation: marquee ${speed}s linear infinite;
+            }
+            .marquee-track:hover {
+              animation-play-state: paused;
+            }
+          `}</style>
 
           <div className="marquee-track">
             {items.map((logo, i) => (
@@ -73,7 +89,7 @@ export default function Clients({ speed = 30, className = "" }: ClientsProps) {
                   alt={logo.name}
                   width={100}
                   height={40}
-                  className="h-10 w-auto"
+                  className="h-8 sm:h-10 w-auto"
                 />
               </div>
             ))}

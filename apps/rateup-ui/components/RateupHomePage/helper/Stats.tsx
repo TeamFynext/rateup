@@ -1,3 +1,5 @@
+import { GradientText } from "../components/btn";
+
 type Stat = {
   value: string;
   label: string;
@@ -15,38 +17,24 @@ const defaultStats: Stat[] = [
   { value: "98%", label: "Customer Satisfaction", gradient: true },
 ];
 
-function GradientText({ children }: { children: React.ReactNode }) {
-  return (
-    <span
-      style={{
-        background: "linear-gradient(to right, #2D74E0, #66D7FF)",
-        WebkitBackgroundClip: "text",
-        WebkitTextFillColor: "transparent",
-        backgroundClip: "text",
-      }}
-    >
-      {children}
-    </span>
-  );
-}
 export default function Stats({
   stats = defaultStats,
   className = "",
 }: StatsProps) {
   return (
-    <section className="py-8">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
-        <div className="rounded-2xl border border-white/10 bg-black/60 backdrop-blur-md px-8 py-8 md:py-10 shadow-[0_0_50px_-12px_rgba(46,91,255,0.15)] overflow-hidden relative">
+    <section className="py-0 pb-4">
+      <div className="mx-8 xl:mx-auto xl:max-w-6xl xl:w-[calc(100%-4rem)]">
+        <div className="rounded-[32px] bg-[#000A1F] px-4 py-0 overflow-hidden relative">
           {/* Subtle glow behind the stats */}
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-rateup-blue/10 via-transparent to-transparent"></div>
+          {/* <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-rateup-blue/10 via-transparent to-transparent"></div> */}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-white/10 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 md:divide-x divide-[#004F98] text-center">
             {stats.map((stat, i) => (
               <div
                 key={i}
                 className={[
                   "flex flex-col items-center justify-center",
-                  "py-7 px-6 lg:py-0 lg:h-40",
+                  "py-5 px-6 lg:py-0 lg:h-28",
                   // remove top border on first two mobile items
                   i < 2 ? "border-t-0" : "",
                   // remove left border on left-column mobile items

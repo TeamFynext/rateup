@@ -13,6 +13,418 @@ import Stats from "./helper/Stats";
 import StatsBar from "./helper/StatsBar";
 import { Testimonials } from "./helper/Testimonials";
 
+const RadarBackground = () => (
+  <svg
+    viewBox="0 0 720 491"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-full h-full"
+    preserveAspectRatio="xMidYMax meet"
+    aria-hidden="true"
+  >
+    {/* Dashed concentric semicircles */}
+    <circle
+      cx="200"
+      cy="200"
+      r="199"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 160 290.784)"
+      stroke="url(#h_p0)"
+      strokeWidth="2"
+      strokeDasharray="3.48 3.48"
+    />
+    <circle
+      cx="190"
+      cy="190"
+      r="189.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 170 300.784)"
+      stroke="url(#h_p1)"
+      strokeDasharray="3.3 3.3"
+    />
+    <circle
+      cx="180"
+      cy="180"
+      r="179.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 180 310.784)"
+      stroke="url(#h_p2)"
+      strokeDasharray="3.13 3.13"
+    />
+    <circle
+      cx="170"
+      cy="170"
+      r="169.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 190 320.784)"
+      stroke="url(#h_p3)"
+      strokeDasharray="2.96 2.96"
+    />
+    <circle
+      cx="160"
+      cy="160"
+      r="159.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 200 330.784)"
+      stroke="url(#h_p4)"
+      strokeDasharray="2.78 2.78"
+    />
+    <circle
+      cx="150"
+      cy="150"
+      r="149.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 210 340.784)"
+      stroke="url(#h_p5)"
+      strokeDasharray="2.61 2.61"
+    />
+    <circle
+      cx="140"
+      cy="140"
+      r="139.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 220 350.784)"
+      stroke="url(#h_p6)"
+      strokeDasharray="2.43 2.43"
+    />
+    <circle
+      cx="130"
+      cy="130"
+      r="129.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 230 360.784)"
+      stroke="url(#h_p7)"
+      strokeDasharray="2.26 2.26"
+    />
+    <circle
+      cx="120"
+      cy="120"
+      r="119.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 240 370.784)"
+      stroke="url(#h_p8)"
+      strokeDasharray="2.09 2.09"
+    />
+    <circle
+      cx="110"
+      cy="110"
+      r="109.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 250 380.784)"
+      stroke="url(#h_p9)"
+      strokeDasharray="1.91 1.91"
+    />
+    <circle
+      cx="100"
+      cy="100"
+      r="99.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 260 390.784)"
+      stroke="url(#h_p10)"
+      strokeDasharray="1.74 1.74"
+    />
+    <circle
+      cx="90"
+      cy="90"
+      r="89.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 270 400.784)"
+      stroke="url(#h_p11)"
+      strokeDasharray="1.57 1.57"
+    />
+    <circle
+      cx="80"
+      cy="80"
+      r="79.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 280 410.784)"
+      stroke="url(#h_p12)"
+      strokeDasharray="1.39 1.39"
+    />
+    <circle
+      cx="190"
+      cy="190"
+      r="189.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 170 300.784)"
+      stroke="url(#h_p13)"
+      strokeDasharray="3.3 3.3"
+    />
+    <circle
+      cx="210"
+      cy="210"
+      r="209"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 150 280.784)"
+      stroke="url(#h_p14)"
+      strokeWidth="2"
+      strokeDasharray="3.65 3.65"
+    />
+    <circle
+      cx="220"
+      cy="220"
+      r="219"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 140 270.784)"
+      stroke="url(#h_p15)"
+      strokeWidth="2"
+      strokeDasharray="3.83 3.83"
+    />
+    <circle
+      cx="230"
+      cy="230"
+      r="229"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 130 260.784)"
+      stroke="url(#h_p16)"
+      strokeWidth="2"
+      strokeDasharray="4 4"
+    />
+    <circle
+      cx="240"
+      cy="240"
+      r="239"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 120 250.784)"
+      stroke="url(#h_p17)"
+      strokeWidth="2"
+      strokeDasharray="4.17 4.17"
+    />
+    <circle
+      cx="250"
+      cy="250"
+      r="249"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 110 240.784)"
+      stroke="url(#h_p18)"
+      strokeWidth="2"
+      strokeDasharray="4.35 4.35"
+    />
+    <circle
+      cx="260"
+      cy="260"
+      r="259"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 100 230.784)"
+      stroke="url(#h_p19)"
+      strokeWidth="2"
+      strokeDasharray="4.52 4.52"
+    />
+    <circle
+      cx="270"
+      cy="270"
+      r="268.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 90 220.784)"
+      stroke="url(#h_p20)"
+      strokeWidth="3"
+      strokeDasharray="4.7 4.7"
+    />
+    <circle
+      cx="280"
+      cy="280"
+      r="278.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 80 210.784)"
+      stroke="url(#h_p21)"
+      strokeWidth="3"
+      strokeDasharray="4.87 4.87"
+    />
+    <circle
+      cx="290"
+      cy="290"
+      r="288.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 70 200.784)"
+      stroke="url(#h_p22)"
+      strokeWidth="3"
+      strokeDasharray="5.04 5.04"
+    />
+    <circle
+      cx="300"
+      cy="300"
+      r="298.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 60 190.784)"
+      stroke="url(#h_p23)"
+      strokeWidth="3"
+      strokeDasharray="5.22 5.22"
+    />
+    <circle
+      cx="310"
+      cy="310"
+      r="308.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 50 180.784)"
+      stroke="url(#h_p24)"
+      strokeWidth="3"
+      strokeDasharray="5.39 5.39"
+    />
+    <circle
+      cx="320"
+      cy="320"
+      r="318.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 40 170.784)"
+      stroke="url(#h_p25)"
+      strokeWidth="3"
+      strokeDasharray="5.57 5.57"
+    />
+    <circle
+      cx="330"
+      cy="330"
+      r="328.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 30 160.784)"
+      stroke="url(#h_p26)"
+      strokeWidth="3"
+      strokeDasharray="5.74 5.74"
+    />
+    <circle
+      cx="340"
+      cy="340"
+      r="338.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 20 150.784)"
+      stroke="url(#h_p27)"
+      strokeWidth="3"
+      strokeDasharray="5.91 5.91"
+    />
+    <circle
+      cx="350"
+      cy="350"
+      r="348.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 10 140.784)"
+      stroke="url(#h_p28)"
+      strokeWidth="3"
+      strokeDasharray="6.09 6.09"
+    />
+    <circle
+      cx="360"
+      cy="360"
+      r="358.5"
+      transform="matrix(-4.37114e-08 1 1 4.37114e-08 0 130.784)"
+      stroke="url(#h_p29)"
+      strokeWidth="3"
+      strokeDasharray="6.26 6.26"
+    />
+
+    {/* Light beam layers */}
+    <g filter="url(#h_f0)">
+      <path
+        d="M280 506.731C366.434 413.698 352.579 114.543 352.579 52.7844L367.429 52.7844C367.429 114.543 353.573 413.368 440.008 506.731L280 506.731Z"
+        fill="url(#h_p30)"
+      />
+    </g>
+    <g filter="url(#h_f1)">
+      <path
+        d="M280 506.731C366.434 413.698 352.579 114.543 352.579 52.7844L367.429 52.7844C367.429 114.543 353.573 413.368 440.008 506.731L280 506.731Z"
+        fill="url(#h_p31)"
+      />
+    </g>
+    <g filter="url(#h_f2)">
+      <path
+        d="M280 506.731C366.434 413.698 352.579 114.543 352.579 52.7844L367.429 52.7844C367.429 114.543 353.573 413.368 440.008 506.731L280 506.731Z"
+        fill="url(#h_p32)"
+      />
+    </g>
+    <g filter="url(#h_f3)">
+      <path
+        d="M280 506.731C366.434 413.698 352.579 114.543 352.579 52.7844L367.429 52.7844C367.429 114.543 353.573 413.368 440.008 506.731L280 506.731Z"
+        fill="url(#h_p33)"
+      />
+    </g>
+
+    <defs>
+      {/* Filters */}
+      {[0, 1, 2].map((i) => (
+        <filter
+          key={i}
+          id={`h_f${i}`}
+          x="227.215"
+          y="-7.62939e-05"
+          width="265.577"
+          height="559.515"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feBlend
+            mode="normal"
+            in="SourceGraphic"
+            in2="BackgroundImageFix"
+            result="shape"
+          />
+          <feGaussianBlur
+            stdDeviation="26.3923"
+            result="effect1_foregroundBlur"
+          />
+        </filter>
+      ))}
+      <filter
+        id="h_f3"
+        x="253.608"
+        y="26.3922"
+        width="212.792"
+        height="506.731"
+        filterUnits="userSpaceOnUse"
+        colorInterpolationFilters="sRGB"
+      >
+        <feFlood floodOpacity="0" result="BackgroundImageFix" />
+        <feBlend
+          mode="normal"
+          in="SourceGraphic"
+          in2="BackgroundImageFix"
+          result="shape"
+        />
+        <feGaussianBlur
+          stdDeviation="13.1961"
+          result="effect1_foregroundBlur"
+        />
+      </filter>
+
+      {/* Circle gradients — all go from #004F98 to #001747 */}
+      {Array.from({ length: 30 }, (_, i) => {
+        const r = (i < 13 ? 20 - i : i === 13 ? 19 : 21 + (i - 14)) * 20;
+        const id = `h_p${i}`;
+        return (
+          <linearGradient
+            key={id}
+            id={id}
+            x1={r}
+            y1={r / 2}
+            x2="0"
+            y2={r / 2}
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#004F98" />
+            <stop offset="1" stopColor="#001747" />
+          </linearGradient>
+        );
+      })}
+
+      {/* Beam gradients */}
+      <linearGradient
+        id="h_p30"
+        x1="360.004"
+        y1="52.7844"
+        x2="360.004"
+        y2="506.731"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stopColor="#0045CC" stopOpacity="0" />
+        <stop offset="1" stopColor="#0045CC" />
+      </linearGradient>
+      <linearGradient
+        id="h_p31"
+        x1="360.004"
+        y1="52.7844"
+        x2="360.004"
+        y2="506.731"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stopColor="#0045CC" stopOpacity="0" />
+        <stop offset="1" stopColor="#0045CC" />
+      </linearGradient>
+      <linearGradient
+        id="h_p32"
+        x1="360.004"
+        y1="52.7844"
+        x2="360.004"
+        y2="506.731"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stopColor="#0045CC" stopOpacity="0" />
+        <stop offset="1" stopColor="#0045CC" />
+      </linearGradient>
+      <linearGradient
+        id="h_p33"
+        x1="360.004"
+        y1="52.7844"
+        x2="360.004"
+        y2="506.731"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0.4" stopColor="white" stopOpacity="0" />
+        <stop offset="0.88" stopColor="white" />
+        <stop offset="1" stopColor="white" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
 const C = {
   bg0: "#04091a",
   bg1: "#070f24",
@@ -25,129 +437,6 @@ const C = {
   text3: "#64748b",
   yellow: "#facc15",
 };
-
-const FEATURE_CARDS = [
-  {
-    title: "WhatsApp AI Chatbot",
-    desc: "Automate customer conversations with AI-powered WhatsApp chatbot that handles queries, bookings, and support 24/7 without human intervention.",
-  },
-  {
-    title: "CX & Feedback Analytics",
-    desc: "Get deep insights into customer experience with powerful analytics dashboards that track satisfaction scores, feedback trends, and team performance.",
-  },
-  {
-    title: "Campaign Manager",
-    desc: "Launch targeted marketing campaigns across multiple channels. Segment audiences, schedule messages, and track performance in real-time.",
-  },
-  {
-    title: "Ticketing & Escalation",
-    desc: "Smart ticketing system that automatically routes and escalates issues to the right team member based on priority and availability.",
-  },
-  {
-    title: "QR Studio",
-    desc: "Create branded QR codes for feedback collection, product info, and customer engagement. Track scans and conversions with built-in analytics.",
-  },
-  {
-    title: "Your Analytics & Reports, On The Go",
-    desc: "Access comprehensive business reports from anywhere. Real-time dashboards and automated insights delivered to your device.",
-    hasAppButtons: true,
-  },
-];
-
-const PRICING = [
-  {
-    name: "START",
-    price: "$49",
-    period: "/mo",
-    features: [
-      "Basic chatbot flows",
-      "Up to 1,000 conversations",
-      "Email support",
-      "Basic analytics",
-      "1 WhatsApp number",
-      "QR Studio (basic)",
-      "Campaign manager",
-      "API access",
-    ],
-    cta: "Get Started Free",
-    highlighted: false,
-  },
-  {
-    name: "POPULAR",
-    price: "$149",
-    period: "/mo",
-    features: [
-      "Advanced AI chatbot",
-      "Unlimited conversations",
-      "Priority support 24/7",
-      "Advanced analytics",
-      "5 WhatsApp numbers",
-      "Full QR Studio",
-      "Campaign manager Pro",
-      "Full API access",
-      "Custom integrations",
-      "Team collaboration",
-    ],
-    cta: "Get Started Free",
-    highlighted: true,
-  },
-  {
-    name: "BASICS",
-    price: "Custom",
-    period: "",
-    features: [
-      "Everything in Popular",
-      "Unlimited numbers",
-      "Dedicated account manager",
-      "Custom AI training",
-      "SLA guarantee",
-      "On-premise option",
-      "Custom reporting",
-      "White-label option",
-    ],
-    cta: "Contact Sales",
-    highlighted: false,
-  },
-];
-
-const FOOTER_COLS = [
-  {
-    title: "Features",
-    links: [
-      "WhatsApp Chatbot",
-      "CX Analytics",
-      "Campaign Manager",
-      "Ticketing",
-      "QR Studio",
-      "Inbox",
-    ],
-  },
-  {
-    title: "Company",
-    links: ["About Us", "Careers", "Blog", "Press", "Partners", "Contact"],
-  },
-  {
-    title: "Resources",
-    links: [
-      "Documentation",
-      "API Reference",
-      "Help Center",
-      "Community",
-      "Status",
-      "Changelog",
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      "Privacy Policy",
-      "Terms of Service",
-      "Cookie Policy",
-      "GDPR",
-      "Security",
-    ],
-  },
-];
 
 const card = {
   background: C.bg2,
@@ -247,190 +536,15 @@ export default function RateUpLanding() {
       }}
     >
       <Hero />
-      <StatsBar />
       <Stats />
       <Clients />
       <FeatureShowcase />
       <FeaturesGrid />
       <Integrations />
-      {/* ── TESTIMONIALS ── */}
       <Testimonials />
       <Pricing />
       <CTA />
       <Footer />
-      {/* ── FOOTER ── */}
-      {/* <footer
-        style={{
-          background: C.bg0,
-          borderTop: `1px solid ${C.border}`,
-          padding: "56px 24px 32px",
-        }}
-      >
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
-              gap: 40,
-              marginBottom: 48,
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 16,
-                }}
-              >
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    background: C.blue,
-                    borderRadius: 7,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: 900,
-                    fontSize: 13,
-                  }}
-                >
-                  R
-                </div>
-                <span style={{ fontWeight: 800, fontSize: 15 }}>RateUp</span>
-              </div>
-              <p
-                style={{
-                  color: C.text3,
-                  fontSize: 12,
-                  lineHeight: 1.7,
-                  marginBottom: 18,
-                  maxWidth: 240,
-                }}
-              >
-                The all-in-one post-purchase customer experience platform
-                helping businesses retain and grow their customer base.
-              </p>
-              <div style={{ display: "flex", gap: 8 }}>
-                {["T", "L", "Y", "I"].map((s) => (
-                  <div
-                    key={s}
-                    style={{
-                      width: 28,
-                      height: 28,
-                      background: "rgba(255,255,255,0.05)",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 10,
-                      color: C.text3,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {s}
-                  </div>
-                ))}
-              </div>
-            </div>
-            {FOOTER_COLS.map((col) => (
-              <div key={col.title}>
-                <h4
-                  style={{ margin: "0 0 16px", fontSize: 12, fontWeight: 700 }}
-                >
-                  {col.title}
-                </h4>
-                <ul
-                  style={{
-                    listStyle: "none",
-                    margin: 0,
-                    padding: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 10,
-                  }}
-                >
-                  {col.links.map((l) => (
-                    <li key={l}>
-                      <a
-                        href="#"
-                        style={{
-                          color: C.text3,
-                          fontSize: 12,
-                          textDecoration: "none",
-                        }}
-                      >
-                        {l}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div
-            style={{
-              borderTop: `1px solid ${C.border}`,
-              paddingTop: 24,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: 12,
-            }}
-          >
-            <p style={{ margin: 0, fontSize: 11, color: C.text3 }}>
-              © 2026 RateUp. All rights reserved.
-            </p>
-            <div style={{ display: "flex", gap: 20 }}>
-              {["Privacy Policy", "Terms of Service", "Cookie Policy"].map(
-                (l) => (
-                  <a
-                    key={l}
-                    href="#"
-                    style={{
-                      fontSize: 11,
-                      color: C.text3,
-                      textDecoration: "none",
-                    }}
-                  >
-                    {l}
-                  </a>
-                ),
-              )}
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {["App Store", "Google Play"].map((s) => (
-                <div
-                  key={s}
-                  style={{
-                    background: "#000",
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 7,
-                    padding: "5px 10px",
-                  }}
-                >
-                  <p style={{ margin: 0, fontSize: 9, color: C.text3 }}>
-                    Download on
-                  </p>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: C.text1,
-                    }}
-                  >
-                    {s}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer> */}
     </div>
   );
 }

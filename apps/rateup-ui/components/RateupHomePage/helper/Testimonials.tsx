@@ -10,9 +10,12 @@ import {
   GraduationCap,
 } from "lucide-react";
 
+import { GradientText } from "../components/btn";
+
 interface Testimonial {
   companyLogo: string;
   companyName: string;
+  logoSize: string;
   category: string;
   categoryIcon: React.ReactNode;
   quote: string;
@@ -24,19 +27,54 @@ interface Testimonial {
 
 const testimonials: Testimonial[] = [
   {
-    companyLogo: "/images/customerLogos/entri-logo.png",
+    companyLogo: "/images/landing/customerLogos/entri-logo.png",
     companyName: "entri",
     category: "Education",
+    logoSize: "h-12 w-25",
     categoryIcon: <GraduationCap className="w-4 h-4 text-white" />,
     quote:
       "RateUp Made Collecting Feedback Effortless. The WhatsApp Flows Feel Natural, And Response Rates Improved Instantly.",
     author: "Rahul Menon",
     role: "Operations Head At Entri",
-    image: "/images/customerLogos/entri-photo.png",
+    image: "/images/landing/customerLogos/entri-photo.png",
     stats: [
       { value: "77%", label: "Growth In Leads" },
       { value: "80%", label: "Business Growth Generation" },
       { value: "64%", label: "Higher Team Productivity" },
+    ],
+  },
+  {
+    companyLogo: "/images/landing/customerLogos/entri-logo.png",
+    companyName: "entri",
+    category: "Education",
+    logoSize: "h-12 w-25",
+    categoryIcon: <GraduationCap className="w-4 h-4 text-white" />,
+    quote:
+      "RateUp Made Collecting Feedback Effortless. The WhatsApp Flows Feel Natural, And Response Rates Improved Instantly.",
+    author: "Rahul Menon",
+    role: "Operations Head At Entri",
+    image: "/images/landing/customerLogos/entri-photo.png",
+    stats: [
+      { value: "86%", label: "Growth In Leads" },
+      { value: "79%", label: "Business Growth Generation" },
+      { value: "97", label: "Higher Team Productivity" },
+    ],
+  },
+  {
+    companyLogo: "/images/landing/customerLogos/entri-logo.png",
+    companyName: "entri",
+    category: "Education",
+    logoSize: "h-12 w-25",
+    categoryIcon: <GraduationCap className="w-4 h-4 text-white" />,
+    quote:
+      "RateUp Made Collecting Feedback Effortless. The WhatsApp Flows Feel Natural, And Response Rates Improved Instantly.",
+    author: "Rahul Menon",
+    role: "Operations Head At Entri",
+    image: "/images/landing/customerLogos/entri-photo.png",
+    stats: [
+      { value: "89%", label: "Growth In Leads" },
+      { value: "90%", label: "Business Growth Generation" },
+      { value: "74%", label: "Higher Team Productivity" },
     ],
   },
 ];
@@ -52,7 +90,7 @@ export function Testimonials() {
 
   return (
     <section className="py-24 bg-rateup-dark-blue-3 relative overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 ">
+      <div className="xl:max-w-6xl xl:mx-auto xl:w-[calc(100%-4rem)] px-8 xl:px-0">
         {/* Heading */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-[44px] font-semibold text-white leading-tight">
@@ -73,41 +111,37 @@ export function Testimonials() {
           </button>
 
           {/* Card */}
-          <div className="w-full rounded-[28px] bg-[#0a1629] border border-white/10 overflow-hidden shadow-2xl">
+          <div className="w-full rounded-[28px] bg-rateup-dark-blue border border-white/10 overflow-hidden shadow-2xl">
             <div className="flex flex-col md:flex-row">
               {/* Left: content */}
               <div className="flex-1 p-10 md:p-12 flex flex-col justify-between">
                 {/* Company logo */}
                 <div>
-                  <div className="inline-flex items-center gap-2 bg-white rounded-xl px-4 py-2 mb-8 w-fit">
+                  <div className="inline-flex items-center gap-2 bg-white rounded-xl px-5 py-3 mb-8 ">
                     <img
                       src={t.companyLogo}
                       alt={t.companyName}
-                      className="h-7 w-7 object-contain"
+                      className={`object-contain ${t.logoSize}`}
                     />
-                    <span className="text-[#111] font-semibold text-[17px]">
-                      {t.companyName}
-                    </span>
                   </div>
-
-                  {/* Big quotation marks */}
-                  <div className="text-[#2D74E0] text-5xl font-serif leading-none mb-3 select-none">
-                    "
-                  </div>
-
                   {/* Quote */}
-                  <p className="text-white text-[15px] leading-relaxed mb-4 max-w-sm">
-                    {t.quote}
+                  <p>
+                    <span className="text-[#2D74E0] text-5xl font-serif mb-0 pb-0">
+                      "
+                    </span>
+                    <span className="text-white text-[15px] leading-relaxed mb-4 max-w-sm">
+                      {t.quote}{" "}
+                    </span>
                   </p>
 
                   {/* Author */}
-                  <p className="text-white/50 text-sm mb-8">
+                  <p className="text-white/50 text-sm pt-2 mb-8">
                     - {t.author}, {t.role}
                   </p>
                 </div>
 
                 {/* Read Story */}
-                <div>
+                <div className="mt-3">
                   <button className="inline-flex items-center gap-2 bg-[#2D74E0] hover:bg-[#2D74E0]/90 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
                     Read Story <ArrowRight className="w-4 h-4" />
                   </button>
@@ -130,12 +164,12 @@ export function Testimonials() {
             </div>
 
             {/* Stats bar */}
-            <div className="grid grid-cols-3 divide-x divide-white/10 border-t border-white/10">
+            <div className="  grid grid-cols-3 divide-x divide-white/10 border-t border-white/10">
               {t.stats.map((stat) => (
                 <div key={stat.label} className="py-6 text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-[#2D74E0] mb-1">
-                    {stat.value}
-                  </div>
+                  <span className="text-3xl lg:text-4xl font-bold leading-tight tracking-tight">
+                    <GradientText>{stat.value}</GradientText>
+                  </span>
                   <div className="text-white text-sm font-medium">
                     {stat.label}
                   </div>

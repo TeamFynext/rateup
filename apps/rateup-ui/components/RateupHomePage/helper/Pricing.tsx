@@ -92,13 +92,13 @@ const plans: Plan[] = [
 export function Pricing() {
   return (
     <section
-      className="py-24 bg-[#001747] relative overflow-hidden"
+      className=" bg-rateup-dark-blue-3 relative overflow-hidden"
       id="pricing"
     >
       {/* Glow behind middle card */}
       <div className="pointer-events-none absolute left-1/2 top-[55%] -translate-x-1/2 -translate-y-1/2 w-[360px] h-[700px] rounded-full bg-[#004F98] opacity-25 blur-[100px] z-0" />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl relative z-10">
+      <div className="xl:max-w-6xl xl:mx-auto xl:w-[calc(100%-4rem)] px-8 xl:px-0 relative z-10">
         {/* Heading */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-[44px] font-bold text-white tracking-tight mb-3">
@@ -110,7 +110,7 @@ export function Pricing() {
         </div>
 
         {/* Cards grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {plans.map((plan) => (
             <div
               key={plan.badge}

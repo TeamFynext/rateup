@@ -1,55 +1,64 @@
 import { Inbox, MessageSquare, Target, Zap } from "lucide-react";
 
+import AppStoreButtons from "../components/btn";
+
 export function FeaturesGrid() {
   const features = [
     {
       title: "WhatsApp AI Chatbot",
       description:
-        "Engage customers 24/7 with human-like, AI-driven conversations that resolve queries instantly.",
-      icon: <MessageSquare className="h-6 w-6 text-green-400" />,
-      image: "WhatsApp AI Chatbot Interface",
+        "Train and deploy your chatbot. Handles FAQs, order queries, and feedback 24/7 in multiple languages. Escalates to a human when it matters.",
+      image: "/images/landing/grid/grid1.png",
     },
     {
-      title: "Automated Workflows",
+      title: "CX & Feedback Analytics",
       description:
-        "Build logic-based automation to route tickets, send abandoned cart reminders, and more.",
-      icon: <Zap className="h-6 w-6 text-yellow-400" />,
-      image: "Workflow Builder Interface",
+        "AI-powered surveys and feedback with sentiment analysis, web status updates, NPS, and trust scores. Identify where experience breaks.",
+      image: "/images/landing/grid/grid2.png",
     },
     {
-      title: "Campaign Manager",
+      title: "Campaign Management",
       description:
-        "Target segmented audiences with personalized marketing messages that drive conversions.",
-      icon: <Target className="h-6 w-6 text-red-400" />,
-      image: "Campaign Dashboard Interface",
+        "Bulk WhatsApp messaging and personalized campaigns. Time-based, milestone-based, and drip triggers. Re-engage customers at the right moment.",
+      image: "/images/landing/grid/grid3.png",
     },
     {
-      title: "Shared Inbox",
+      title: "Ticketing & Escalation",
       description:
-        "Collaborate seamlessly with your entire team. See who is replying to what in real-time.",
-      icon: <Inbox className="h-6 w-6 text-rateup-blue" />,
-      image: "Team Inbox Interface",
+        "Convert chats into structured tickets. Auto-assign to the right team member or department. Resolve issues faster with full visibility.",
+      image: "/images/landing/grid/grid4.png",
+    },
+    {
+      title: "QR Studio",
+      description:
+        "Turn notices, posters, tables, and packaging into digital touchpoints. QR codes that trigger feedback flows, loyalty sign-ups, or offers.",
+      image: "/images/landing/grid/grid5.png",
+    },
+    {
+      title: "Your Analytics & Reports, on the go",
+      description:
+        "Manage your inbox, view live dashboards, track loyalty performance, and receive escalation alerts — from any device, in any time zone. Full platform power on iOS and Android.",
+      image: "/images/landing/grid/grid6.png",
     },
   ];
 
   return (
-    <section className="py-24" id="features">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <section className="py-12" id="features">
+      <div className="w-full px-8 xl:px-0 xl:max-w-6xl xl:mx-auto xl:w-[calc(100%-4rem)]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group relative flex flex-col rounded-[2rem] border border-white/10 bg-rateup-dark-blue-3 overflow-hidden hover:border-rateup-blue/30 transition-all duration-300"
+              className="group relative flex flex-col rounded-[2rem] border border-white/10 bg-[#000A1F] overflow-hidden hover:border-rateup-blue/30 transition-all duration-300"
             >
-              {/* Card top - Image placeholder area */}
-              <div className="h-64 bg-gradient-to-b from-white/5 to-transparent relative overflow-hidden flex items-end justify-center p-6">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="w-full h-48 bg-black/40 rounded-t-2xl border border-white/10 border-b-0 backdrop-blur-sm flex flex-col items-center justify-center translate-y-4 group-hover:translate-y-2 transition-transform duration-300">
-                  {feature.icon}
-                  <span className="text-xs text-muted-foreground mt-4 block text-center px-4">
-                    {feature.image}
-                  </span>
-                </div>
+              {/* Card top - Image area */}
+              <div className="rounded-t-[2rem] overflow-hidden translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
+                <img
+                  src={feature.image}
+                  alt={feature.title}
+                  className="w-full h-full object-cover rounded-t-[2rem]"
+                />
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-rateup-dark-blue-3 to-transparent pointer-events-none z-10" />
               </div>
 
               {/* Card bottom - Text content */}
@@ -60,6 +69,8 @@ export function FeaturesGrid() {
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {feature.description}
                 </p>
+
+                {index === 5 && <AppStoreButtons />}
               </div>
             </div>
           ))}

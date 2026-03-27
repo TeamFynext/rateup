@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const C = {
   bg0: "#04091a",
   bg1: "#070f24",
@@ -257,5 +259,130 @@ export function ArrowButton({
         rounded="rounded-lg"
       />
     </button>
+  );
+}
+function GooglePlayButton({ href = "#" }: { href?: string }) {
+  return (
+    <a
+      href={href}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "6px",
+        padding: "6px 10px",
+        background: "#ffffff",
+        border: "1.5px solid #D1D5DB",
+        borderRadius: "8px",
+        textDecoration: "none",
+        flex: 1,
+      }}
+    >
+      <Image
+        src="/images/landing/logos/ico-playstore.png"
+        alt="Google Play"
+        width={18}
+        height={18}
+        className="object-contain"
+      />
+      <div
+        style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}
+      >
+        <span
+          style={{
+            fontSize: "8px",
+            color: "#374151",
+            letterSpacing: "0.03em",
+            whiteSpace: "nowrap", // ← add this
+          }}
+        >
+          GET IT ON
+        </span>
+        <span
+          style={{
+            fontSize: "13px",
+            fontWeight: 700,
+            color: "#111827",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Google Play
+        </span>
+      </div>
+    </a>
+  );
+}
+
+function AppStoreButton({ href = "#" }: { href?: string }) {
+  return (
+    <a
+      href={href}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "6px",
+        padding: "6px 10px",
+        background: "#ffffff",
+        border: "1.5px solid #D1D5DB",
+        borderRadius: "8px",
+        textDecoration: "none",
+        flex: 1,
+      }}
+    >
+      <Image
+        src="/images/landing/logos/ico-apple.png"
+        alt="App Store"
+        width={18}
+        height={18}
+        className="object-contain"
+      />
+      <div
+        style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}
+      >
+        <span
+          style={{ fontSize: "8px", color: "#374151", letterSpacing: "0.03em" }}
+        >
+          Download on the
+        </span>
+        <span
+          style={{
+            fontSize: "13px",
+            fontWeight: 700,
+            color: "#111827",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          App Store
+        </span>
+      </div>
+    </a>
+  );
+}
+
+export default function AppStoreButtons({
+  googlePlayHref = "#",
+  appStoreHref = "#",
+}: {
+  googlePlayHref?: string;
+  appStoreHref?: string;
+}) {
+  return (
+    <div style={{ display: "flex", gap: "8px", paddingTop: "22px" }}>
+      <GooglePlayButton href={googlePlayHref} />
+      <AppStoreButton href={appStoreHref} />
+    </div>
+  );
+}
+export function GradientText({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      style={{
+        background: "linear-gradient(to right, #2D74E0, #66D7FF)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        backgroundClip: "text",
+      }}
+    >
+      {children}
+    </span>
   );
 }
