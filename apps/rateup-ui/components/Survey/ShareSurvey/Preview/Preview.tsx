@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { IconDownload } from "@tabler/icons-react";
-import domtoimage from "dom-to-image-more";
+import { toPng } from "html-to-image";
 import { Sparkles } from "lucide-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
@@ -45,43 +45,28 @@ function Preview({
   }, []);
 
   const downloadQrCode = async () => {
-    const element: HTMLElement = previewContainerRef.current;
-    if (element) {
-      try {
-        setIsLogoDownloadProcessing(true);
-        const scale = 6;
-        const dataUrl = await domtoimage.toPng(element, {
-          width: element?.clientWidth * scale,
-          height: element?.clientHeight * scale,
-          style: {
-            transform: "scale(" + scale + ")",
-            transformOrigin: "top left",
-          },
-        });
-        let link = document.createElement("a");
-        link.download = `${surveyTitle ? surveyTitle : "surveylink-qr"}.png`;
-        link.href = dataUrl;
-        link.click();
-        setIsLogoDownloadProcessing(false);
-      } catch (err) {
-        toast.error(
-          translations("Unable to download QR, Please try again later"),
-          {
-            id: "download-qr",
-          },
-        );
-        setIsLogoDownloadProcessing(false);
-      }
-    } else {
-      toast.error(
-        translations("Unable to download QR, Please try again later"),
-        {
-          id: "download-qr",
-        },
-      );
+    const element = previewContainerRef.current;
+    if (!element) return;
+
+    try {
+      setIsLogoDownloadProcessing(true);
+
+      const dataUrl = await toPng(element, {
+        cacheBust: true,
+        pixelRatio: 4, // high quality
+      });
+
+      const link = document.createElement("a");
+      link.download = `${surveyTitle || "surveylink-qr"}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Download failed:", err);
+      toast.error("Unable to download QR");
+    } finally {
+      setIsLogoDownloadProcessing(false);
     }
   };
-
   return (
     <div className="flex flex-col items-center justify-center gap-4 w-full">
       <div className="flex flex-col items-center justify-center">

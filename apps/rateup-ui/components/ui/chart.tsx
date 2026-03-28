@@ -3,10 +3,7 @@
 import * as React from "react";
 
 import * as RechartsPrimitive from "recharts";
-import type {
-  NameType,
-  ValueType,
-} from "recharts/types/component/DefaultTooltipContent";
+import type { TooltipValueType } from "recharts";
 
 import { cn } from "@/lib/utils";
 
@@ -14,6 +11,7 @@ import { cn } from "@/lib/utils";
 const THEMES = { light: "", dark: ".dark" } as const;
 
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const;
+type TooltipNameType = number | string;
 
 export type ChartConfig = Record<
   string,
@@ -141,7 +139,10 @@ function ChartTooltipContent({
     nameKey?: string;
     labelKey?: string;
   } & Omit<
-    RechartsPrimitive.DefaultTooltipContentProps<ValueType, NameType>,
+    RechartsPrimitive.DefaultTooltipContentProps<
+      TooltipValueType,
+      TooltipNameType
+    >,
     "accessibilityLayer"
   >) {
   const { config } = useChart();
@@ -191,7 +192,7 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+        "grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
         className,
       )}
     >
@@ -327,7 +328,6 @@ function ChartLegendContent({
   );
 }
 
-// Helper to extract item config from a payload.
 function getPayloadConfigFromPayload(
   config: ChartConfig,
   payload: unknown,

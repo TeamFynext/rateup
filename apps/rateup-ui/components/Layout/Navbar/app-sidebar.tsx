@@ -52,7 +52,9 @@ import { WhatsAppSettingsModal } from "./utils";
 
 const sidebarIconProps = { className: "size-5!", strokeWidth: 1.7 };
 
-// ---------------------------------------------------------------------------
+const lightButtonStyle =
+  "hover:bg-sidebar-accent/20 active:bg-sidebar-accent/20 active:text-primary data-[state=open]:hover:bg-sidebar-accent/20 data-[state=open]:hover:text-primary data-[active=true]:bg-sidebar-accent/20 hover:text-primary data-[active=true]:text-primary";
+// ------- --------------------------------------------------------------------
 // Custom hook – chat filter logic
 // ---------------------------------------------------------------------------
 function useChatFilter() {
@@ -146,7 +148,7 @@ function NavSubItem({
         }}
         isActive={subItem?.isActive ?? fullPathname === subItem.url}
         aria-label={subItem.title}
-        variant="light"
+        className={lightButtonStyle}
       >
         <Link href={subItem.url || "#"}>
           {subItem.icon && (
@@ -181,7 +183,7 @@ function CollapsibleNavItem({
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
             tooltip={item.title}
-            variant="light"
+            className={lightButtonStyle}
             onClick={onExpandCollapsed}
           >
             {item.icon && <item.icon {...sidebarIconProps} />}
@@ -227,7 +229,7 @@ function SimpleNavItem({
           const allow = onRouteGuard(item.url);
           if (!allow) e.preventDefault();
         }}
-        variant="light"
+        className={lightButtonStyle}
       >
         <Link href={item.url || "#"}>
           {item.icon && <item.icon {...sidebarIconProps} />}
@@ -299,7 +301,7 @@ function GroupSection({
                     const allow = onRouteGuard(groupItem.url);
                     if (!allow) e.preventDefault();
                   }}
-                  variant="light"
+                  className={lightButtonStyle}
                 >
                   <Link href={groupItem.url || "#"}>
                     {groupItem.icon && <groupItem.icon {...sidebarIconProps} />}

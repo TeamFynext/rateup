@@ -2,8 +2,8 @@
 
 import { useCallback, useRef, useState } from "react";
 
-import domtoimage from "dom-to-image-more";
 import { saveAs } from "file-saver";
+import { toBlob } from "html-to-image";
 import {
   Check,
   ChevronLeft,
@@ -62,44 +62,39 @@ function TagManager({
 
   const downloadFiles = useCallback(
     async (domNodeArr) => {
-      const promises = [];
-      domNodeArr.forEach(async (qrDomNode) => {
-        const { tagname } = qrDomNode.dataset;
-        const fileName = `${surveyTitle}-${tagname}-qr`;
-        const scale = 6;
-        const promise = domtoimage.toBlob(qrDomNode, {
-          width: qrDomNode?.clientWidth * scale,
-          height: qrDomNode?.clientHeight * scale,
-          style: {
-            transform: "scale(" + scale + ")",
-            transformOrigin: "top left",
-          },
-        });
-        const blobFileNamePromise = promise.then((blob) => {
-          return {
-            blob,
-            fileName,
-          };
-        });
-        promises.push(blobFileNamePromise);
-      });
       try {
-        const fileBlobAndFileNameObjsArr = await Promise.all(promises);
-        fileBlobAndFileNameObjsArr.forEach((blobAndFileNameObj) => {
-          const { blob, fileName } = blobAndFileNameObj;
+        const results = [];
+
+        for (const qrDomNode of domNodeArr) {
+          const { tagname } = qrDomNode.dataset;
+          const fileName = `${surveyTitle}-${tagname}-qr`;
+
+          const blob = await toBlob(qrDomNode, {
+            cacheBust: true,
+            pixelRatio: 4,
+          });
+
+          if (blob) {
+            results.push({ blob, fileName });
+          }
+        }
+
+        results.forEach(({ blob, fileName }) => {
           saveAs(blob, fileName);
         });
+
+        return {
+          success: true,
+          message: translations("successfully downloaded files"),
+        };
       } catch (err) {
-        console.log("download files failed.");
+        console.error("Download failed:", err);
+
         return {
           success: false,
           message: translations("failed to download files"),
         };
       }
-      return {
-        success: true,
-        message: translations("successfully downloaded files"),
-      };
     },
     [surveyTitle],
   );
