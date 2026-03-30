@@ -71,7 +71,11 @@ export async function getWaSettingsHandler(
   if (!waSettings?.length) {
     return res.status(200).send([]);
   }
-  return res.status(200).send(waSettings);
+  const response = waSettings?.map((data) => ({
+    ...data,
+    encryption: undefined,
+  }));
+  return res.status(200).send(response);
 }
 
 export async function updateWaSettingsHandler(

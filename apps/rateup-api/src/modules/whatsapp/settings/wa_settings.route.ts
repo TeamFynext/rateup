@@ -29,17 +29,7 @@ import {
 
 export async function waSettingsRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.get(
-    "/",
-    {
-      schema: {
-        response: {
-          200: getWaSettingsResponseSchema,
-        },
-      },
-    },
-    getWaSettingsHandler,
-  );
+  server.get("/", getWaSettingsHandler);
   server.post(
     "/",
     {
