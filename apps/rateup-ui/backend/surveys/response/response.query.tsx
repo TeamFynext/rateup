@@ -76,7 +76,7 @@ export function useResetResponsesStats(
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => resetResponsesStats(surveyTeamMapId),
+    mutationFn: () => resetResponsesStats(surveyId),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["responses"] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
