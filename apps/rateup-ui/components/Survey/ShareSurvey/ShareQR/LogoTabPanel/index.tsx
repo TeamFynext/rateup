@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SliderCompatible from "@/components/ui/sliderCompatible";
+import { Switch } from "@/components/ui/switch";
 
 function LogoTabpanel({ state, dispatch }) {
-  const { qrBgColor, qrColor, logoSize, logoBorderRadius } = state;
+  const { qrBgColor, qrColor, logoSize, logoBorderRadius, isLogoEnabled } =
+    state;
 
   const translations = useExtracted();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -34,6 +36,12 @@ function LogoTabpanel({ state, dispatch }) {
       <div className="flex flex-col gap-2">
         <Label className="text-sm font-medium dark:text-gray-200">
           Logo (Optional)
+          <Switch
+            checked={isLogoEnabled}
+            onCheckedChange={(checked) =>
+              dispatch({ type: "logo-image-switch", payload: checked })
+            }
+          />
         </Label>
         <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors bg-gray-50 dark:bg-[#1a1a1a] dark:border-gray-600 dark:hover:border-primary">
           <Input
