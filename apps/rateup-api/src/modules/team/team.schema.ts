@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const teamCore = {
@@ -7,7 +6,7 @@ const teamCore = {
     .string()
     .min(2, "Team Code should be at least 2 characters long")
     .regex(/^[A-Za-z0-9-]+$/, {
-      message: "Team Code can contain only alphabets, numbers, and hyphens",
+      error: "Team Code can contain only alphabets, numbers, and hyphens",
     })
     .optional(),
   orgId: z.string(),
@@ -52,7 +51,7 @@ const inviteMemberRequestSchema = z.object({
   orgId: z.string(),
   teamId: z.string(),
   invitedBy: z.string(),
-  type: z.nativeEnum(InviteType),
+  type: z.enum(InviteType),
   email: z.string(),
   name: z.string(),
 });
@@ -82,7 +81,7 @@ const editTeamSchema = z.object({
     .string()
     .min(2, "Team Code should be at least 2 characters long")
     .regex(/^[A-Za-z0-9-]+$/, {
-      message: "Team Code can contain only alphabets, numbers, and hyphens",
+      error: "Team Code can contain only alphabets, numbers, and hyphens",
     })
     .optional(),
   googleLink: z.string().optional(),
@@ -108,26 +107,6 @@ const tagQuerySchema = z.object({
   onlytag: z.boolean(),
 });
 
-export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
-  {
-    createTeamRequestSchema,
-    createTeamResponseSchema,
-    getTeamsByOrgRequestSchema,
-    deleteTeamByIdRequestSchema,
-    inviteMemberRequestSchema,
-    inviteMemberRequestResponse,
-    getTeamMembersRequestSchema,
-    inviteCompleteRequestSchema,
-    editTeamSchema,
-    idParamRequestSchema,
-    byTeamIdParamsSchema,
-    bySurveyTeamMapIdParamsSchema,
-    deleteTeamMemberSchema,
-    addTeamMemberSchema,
-  },
-  { $id: "teamSchema" },
-);
-
 export type CreateTeamInput = z.infer<typeof createTeamRequestSchema>;
 export type GetTeamsByOrgInput = z.infer<typeof getTeamsByOrgRequestSchema>;
 export type DeleteTeamInput = z.infer<typeof deleteTeamByIdRequestSchema>;
@@ -141,3 +120,21 @@ export type tagQuerySchema = z.infer<typeof tagQuerySchema>;
 export type BySurveyTeamMapIdParams = z.infer<
   typeof bySurveyTeamMapIdParamsSchema
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  createTeamRequestSchema,
+  createTeamResponseSchema,
+  getTeamsByOrgRequestSchema,
+  deleteTeamByIdRequestSchema,
+  inviteMemberRequestSchema,
+  inviteMemberRequestResponse,
+  getTeamMembersRequestSchema,
+  inviteCompleteRequestSchema,
+  editTeamSchema,
+  idParamRequestSchema,
+  byTeamIdParamsSchema,
+  bySurveyTeamMapIdParamsSchema,
+  deleteTeamMemberSchema,
+  addTeamMemberSchema,
+};

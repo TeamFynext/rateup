@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import {
   CampaignParticipantStatus,
@@ -10,7 +9,7 @@ import {
 const coreCampaignSchema = z
   .object({
     name: z.string(),
-    type: z.nativeEnum(CampaignType),
+    type: z.enum(CampaignType),
     teamId: z.string(),
     waTemplateId: z.string().optional(),
     flowId: z.string().optional(),
@@ -18,7 +17,7 @@ const coreCampaignSchema = z
     dripStages: z
       .array(
         z.object({
-          templateId: z.string().uuid(),
+          templateId: z.uuid(),
           delay: z.number(),
           delayUnit: z.string(),
           sendAtTime: z.string().optional(),
@@ -35,9 +34,9 @@ const coreCampaignSchema = z
       }
     },
     {
-      message:
-        "If type is DRIP, dripStages is required with at least one item. Otherwise, waTemplateId is required.",
       path: ["type"],
+      error:
+        "If type is DRIP, dripStages is required with at least one item. Otherwise, waTemplateId is required.",
     },
   );
 
@@ -45,13 +44,13 @@ const createCampaignInputSchema = coreCampaignSchema;
 
 const updateCampaignInputSchema = z.object({
   name: z.string().optional(),
-  type: z.nativeEnum(CampaignType).optional(),
+  type: z.enum(CampaignType).optional(),
   waTemplateId: z.string().optional(),
-  status: z.nativeEnum(CampaignStatus).optional(),
+  status: z.enum(CampaignStatus).optional(),
   startedAt: z.coerce.date().optional(),
   campaignSentAt: z.date().optional().nullable(),
   scheduledStatuses: z
-    .array(z.nativeEnum(CampaignParticipantStatus))
+    .array(z.enum(CampaignParticipantStatus))
     .optional()
     .nullable(),
   errorMessage: z.string().optional(),
@@ -61,8 +60,8 @@ const updateCampaignInputSchema = z.object({
   dripStages: z
     .array(
       z.object({
-        id: z.string().uuid().optional(),
-        templateId: z.string().uuid(),
+        id: z.uuid().optional(),
+        templateId: z.uuid(),
         delay: z.number(),
         delayUnit: z.string(),
         sendAtTime: z.string().optional(),
@@ -81,7 +80,7 @@ const byFlowIdParamsSchema = z.object({
 const getCampaignsQuerySchema = z.object({
   campaignId: z.string().optional(),
   teamId: z.string().optional(),
-  type: z.nativeEnum(CampaignType).optional(),
+  type: z.enum(CampaignType).optional(),
 });
 const responseSchema = z.object({
   type: z.string(),
@@ -90,9 +89,9 @@ const responseSchema = z.object({
 });
 
 const campaignResponseByIdSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   createdAt: z.date(),
-  teamId: z.string().uuid(),
+  teamId: z.uuid(),
   language: z.string(),
   phone: z.string().optional(),
   tag: z.string().optional(),
@@ -102,39 +101,23 @@ const campaignResponseByIdSchema = z.object({
 const campaignResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
-  type: z.nativeEnum(CampaignType),
+  type: z.enum(CampaignType),
   teamId: z.string(),
   waTemplateId: z.string(),
-  status: z.nativeEnum(CampaignStatus),
+  status: z.enum(CampaignStatus),
   startedAt: z.date().optional(),
   createdAt: z.date(),
   endedAt: z.date().optional(),
 });
 
 const sendCampaignInputSchema = z.object({
-  sendToStatuses: z.array(z.nativeEnum(CampaignParticipantStatus)).min(1),
+  sendToStatuses: z.array(z.enum(CampaignParticipantStatus)).min(1),
   participantId: z.string().optional(),
   campaignSentAt: z.date().optional().nullable(),
-  sentCampaignChoice: z.nativeEnum(SentCampaignEnum),
-  status: z.nativeEnum(CampaignStatus).optional().nullable(),
+  sentCampaignChoice: z.enum(SentCampaignEnum),
+  status: z.enum(CampaignStatus).optional().nullable(),
   type: z.string().optional(),
 });
-export const { schemas: campaignSchemas, $ref: $campaignRef } =
-  buildJsonSchemas(
-    {
-      createCampaignInputSchema,
-      byCampaignIdParamsSchema,
-      updateCampaignInputSchema,
-      getCampaignsQuerySchema,
-      campaignResponseSchema,
-      sendCampaignInputSchema,
-      byFlowIdParamsSchema,
-      campaignResponseByIdSchema,
-    },
-    {
-      $id: "campaignSchema",
-    },
-  );
 
 export type GetCampaignsQuery = z.infer<typeof getCampaignsQuerySchema>;
 export type UpdateCampaignInput = z.infer<typeof updateCampaignInputSchema>;
@@ -145,3 +128,15 @@ export type ByFlowIdParams = z.infer<typeof byFlowIdParamsSchema>;
 export type CampaignResponseByIdSchema = z.infer<
   typeof campaignResponseByIdSchema
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  createCampaignInputSchema,
+  byCampaignIdParamsSchema,
+  updateCampaignInputSchema,
+  getCampaignsQuerySchema,
+  campaignResponseSchema,
+  sendCampaignInputSchema,
+  byFlowIdParamsSchema,
+  campaignResponseByIdSchema,
+};

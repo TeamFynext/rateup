@@ -8,14 +8,20 @@ import {
   sortMenuItemHandler,
   updateMenuItemHandler,
 } from "./item.controller.js";
-import { $MIref } from "./item.schema.js";
-import { $MCref } from "../category/category.schema.js";
 import { verifyMenuItemAccess } from "./item.auth.js";
 import { verifyMenuCategoryAccess } from "../category/category.auth.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import fastifyMultipart from "@fastify/multipart";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import {
+  ByMenuItemIdParamsSchema,
+  createMenuItemInputSchema,
+} from "./item.schema.js";
+import {
+  ByCategoryIdParamsSchema,
+  SortMenuCategoryInputSchema,
+} from "../category/category.schema.js";
 
 export async function menuItemRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -28,7 +34,7 @@ export async function menuItemRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $MIref("createMenuItemInputSchema"),
+        body: createMenuItemInputSchema,
       },
     },
     createMenuItemHandler,
@@ -38,7 +44,7 @@ export async function menuItemRoutes(server: FastifyInstance) {
     "/:menuItemId",
     {
       schema: {
-        params: $MIref("ByMenuItemIdParamsSchema"),
+        params: ByMenuItemIdParamsSchema,
       },
       preHandler: verifyMenuItemAccess,
     },
@@ -49,7 +55,7 @@ export async function menuItemRoutes(server: FastifyInstance) {
     "/all/:categoryId",
     {
       schema: {
-        params: $MCref("ByCategoryIdParamsSchema"),
+        params: ByCategoryIdParamsSchema,
       },
       preHandler: verifyMenuCategoryAccess,
     },
@@ -60,7 +66,7 @@ export async function menuItemRoutes(server: FastifyInstance) {
     "/:menuItemId",
     {
       schema: {
-        params: $MIref("ByMenuItemIdParamsSchema"),
+        params: ByMenuItemIdParamsSchema,
       },
       preHandler: verifyMenuItemAccess,
     },
@@ -71,8 +77,8 @@ export async function menuItemRoutes(server: FastifyInstance) {
     "/sort/:categoryId",
     {
       schema: {
-        params: $MCref("ByCategoryIdParamsSchema"),
-        body: $MCref("SortMenuCategoryInputSchema"),
+        params: ByCategoryIdParamsSchema,
+        body: SortMenuCategoryInputSchema,
       },
       preHandler: verifyMenuCategoryAccess,
     },
@@ -83,7 +89,7 @@ export async function menuItemRoutes(server: FastifyInstance) {
     "/:menuItemId",
     {
       schema: {
-        params: $MIref("ByMenuItemIdParamsSchema"),
+        params: ByMenuItemIdParamsSchema,
       },
       preHandler: verifyMenuItemAccess,
     },

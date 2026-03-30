@@ -7,7 +7,14 @@ import {
   rejectApprovalRequestHandler,
   cancelApprovalRequestHandler,
 } from "./approval.controller.js";
-import { $approvalRef } from "./approval.schema.js";
+import {
+  createApprovalRequestSchema,
+  getApprovalRequestsSchema,
+  approvalIdParamSchema,
+  reviewRequestSchema,
+  expireRequestSchema,
+  cancelRequestSchema,
+} from "./approval.schema.js";
 
 export async function approvalRoutes(server: FastifyInstance) {
   // Create a new approval request
@@ -15,7 +22,7 @@ export async function approvalRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $approvalRef("createApprovalRequestSchema"),
+        body: createApprovalRequestSchema,
       },
     },
     createApprovalRequestHandler,
@@ -26,7 +33,7 @@ export async function approvalRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        querystring: $approvalRef("getApprovalRequestsSchema"),
+        querystring: getApprovalRequestsSchema,
       },
     },
     getApprovalRequestsHandler,
@@ -37,7 +44,7 @@ export async function approvalRoutes(server: FastifyInstance) {
     "/:approvalId",
     {
       schema: {
-        params: $approvalRef("approvalIdParamSchema"),
+        params: approvalIdParamSchema,
       },
     },
     getApprovalRequestByIdHandler,
@@ -48,16 +55,8 @@ export async function approvalRoutes(server: FastifyInstance) {
     "/:approvalId/approve",
     {
       schema: {
-        params: $approvalRef("approvalIdParamSchema"),
-        body: {
-          type: "object",
-          properties: {
-            reviewerId: { type: "string", format: "uuid" },
-            reviewerName: { type: "string" },
-            notes: { type: "string" },
-          },
-          required: ["reviewerId", "reviewerName"],
-        },
+        params: approvalIdParamSchema,
+        body: reviewRequestSchema,
       },
     },
     approveApprovalRequestHandler,
@@ -68,16 +67,8 @@ export async function approvalRoutes(server: FastifyInstance) {
     "/:approvalId/reject",
     {
       schema: {
-        params: $approvalRef("approvalIdParamSchema"),
-        body: {
-          type: "object",
-          properties: {
-            reviewerId: { type: "string", format: "uuid" },
-            reviewerName: { type: "string" },
-            reason: { type: "string" },
-          },
-          required: ["reviewerId", "reviewerName", "reason"],
-        },
+        params: approvalIdParamSchema,
+        body: expireRequestSchema,
       },
     },
     rejectApprovalRequestHandler,
@@ -88,14 +79,8 @@ export async function approvalRoutes(server: FastifyInstance) {
     "/:approvalId/cancel",
     {
       schema: {
-        params: $approvalRef("approvalIdParamSchema"),
-        body: {
-          type: "object",
-          properties: {
-            reason: { type: "string" },
-          },
-          required: ["reason"],
-        },
+        params: approvalIdParamSchema,
+        body: cancelRequestSchema,
       },
     },
     cancelApprovalRequestHandler,

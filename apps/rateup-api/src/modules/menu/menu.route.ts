@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { $Mref } from "./menu.schema.js";
 import {
   createMenuHandler,
   deleteMenuHandler,
@@ -10,7 +9,6 @@ import {
   getMenuLandingHandler,
   updateMenuHandler,
 } from "./menu.controller.js";
-import { $Tref } from "../team/team.schema.js";
 import { verifyTeamAccess } from "../team/team.auth.js";
 import {
   verifyMenuAccess,
@@ -19,6 +17,12 @@ import {
 import { checkSession } from "../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import {
+  ByMenuIdParamsSchema,
+  menuInputSchema,
+  updateMenuInputSchema,
+} from "./menu.schema.js";
+import { byTeamIdParamsSchema } from "../team/team.schema.js";
 
 export async function menuRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -30,7 +34,7 @@ export async function menuRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $Mref("menuInputSchema"),
+        body: menuInputSchema,
       },
       preHandler: verifyMenuMaxCountRestriction,
     },
@@ -43,7 +47,7 @@ export async function menuRoutes(server: FastifyInstance) {
     "/all/:teamId",
     {
       schema: {
-        params: $Tref("byTeamIdParamsSchema"),
+        params: byTeamIdParamsSchema,
       },
       preHandler: verifyTeamAccess,
     },
@@ -54,7 +58,7 @@ export async function menuRoutes(server: FastifyInstance) {
     "/:menuId",
     {
       schema: {
-        params: $Mref("ByMenuIdParamsSchema"),
+        params: ByMenuIdParamsSchema,
       },
       preHandler: verifyMenuAccess,
     },
@@ -65,7 +69,7 @@ export async function menuRoutes(server: FastifyInstance) {
     "/full/:menuId",
     {
       schema: {
-        params: $Mref("ByMenuIdParamsSchema"),
+        params: ByMenuIdParamsSchema,
       },
       preHandler: verifyMenuAccess,
     },
@@ -76,8 +80,8 @@ export async function menuRoutes(server: FastifyInstance) {
     "/:menuId",
     {
       schema: {
-        body: $Mref("updateMenuInputSchema"),
-        params: $Mref("ByMenuIdParamsSchema"),
+        body: updateMenuInputSchema,
+        params: ByMenuIdParamsSchema,
       },
       preHandler: verifyMenuAccess,
     },
@@ -87,7 +91,7 @@ export async function menuRoutes(server: FastifyInstance) {
     "/:menuId",
     {
       schema: {
-        params: $Mref("ByMenuIdParamsSchema"),
+        params: ByMenuIdParamsSchema,
       },
       preHandler: verifyMenuAccess,
     },
@@ -97,7 +101,7 @@ export async function menuRoutes(server: FastifyInstance) {
     "/getLanding/:menuId",
     {
       schema: {
-        params: $Mref("ByMenuIdParamsSchema"),
+        params: ByMenuIdParamsSchema,
       },
       preHandler: verifyMenuAccess,
     },

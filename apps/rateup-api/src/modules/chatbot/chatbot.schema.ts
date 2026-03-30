@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import {
   ChatBotDataSourceType,
@@ -7,7 +6,7 @@ import {
 
 export const dataLoadSchema = z.object({
   source: z.string(),
-  type: z.nativeEnum(ChatBotDataSourceType),
+  type: z.enum(ChatBotDataSourceType),
   chatbotId: z.string(),
 });
 
@@ -37,28 +36,12 @@ export const byChatbotIdSchema = z.object({
 });
 
 export const updateChatbotSchema = z.object({
-  publicPageStatus: z.nativeEnum(ChatbotPublicPageStatus).optional(),
+  publicPageStatus: z.enum(ChatbotPublicPageStatus).optional(),
   enableWaChat: z.boolean().optional(),
   waCommand: z.string().optional(),
   waPrompt: z.string().optional(),
   enableAllWaChat: z.boolean().optional(),
 });
-
-export const { schemas: chatbotSchemas, $ref: $chatbotRef } = buildJsonSchemas(
-  {
-    dataLoadSchema,
-    chatbotMessageSchema,
-    deleteContentSchema,
-    deleteManyContentSchema,
-    publicMessageSchema,
-    byUserIdSchema,
-    byChatbotIdSchema,
-    updateChatbotSchema,
-  },
-  {
-    $id: "chatbotSchema",
-  },
-);
 
 export type dataSourceUploadInput = z.infer<typeof dataLoadSchema>;
 export type chatbotMessageInput = z.infer<typeof chatbotMessageSchema>;

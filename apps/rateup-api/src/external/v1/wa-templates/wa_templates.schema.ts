@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import {
   WaButtonType,
@@ -11,7 +10,7 @@ const waTemplateInput = {
   name: z
     .string()
     .regex(/^[a-z_0-9]+$/, {
-      message: "Name can only have lower-case letters and underscores",
+      error: "Name can only have lower-case letters and underscores",
     })
     .trim()
     .min(1)
@@ -55,7 +54,7 @@ const waTemplateFormattedInput = {
     .min(1)
     .max(512)
     .refine((text) => !text.includes(" "), {
-      message: "Name cannot contain spaces. Replace it with underscore(_)",
+      error: "Name cannot contain spaces. Replace it with underscore(_)",
     }),
   components: z.array(
     z.union([
@@ -85,12 +84,33 @@ const waTemplateFormattedInput = {
     ]),
   ),
   language: z.string(),
-  category: z.nativeEnum(WaTemplateCategory),
+  category: z.enum(WaTemplateCategory),
 };
 const waTemplateInputSchema = z.object(waTemplateInput);
 export const waTemplateFormattedInputSchema = z.object(
   waTemplateFormattedInput,
 );
+export const sendWithFileSchema = z.object({
+  timeDelay: z.coerce.number().int().min(15).optional(),
+  templateName: z.string(),
+  phone: z.coerce.number(),
+  body_variables: z.array(z.string()).optional(),
+  teamId: z.string().optional(),
+  tag: z.string().optional(),
+  headerType: z.string().optional(),
+  filename: z.string().optional(),
+  file: z
+    .union([
+      z.string(), // for binary
+      z.object({}).loose(), // for object
+    ])
+    .optional(),
+  buttonVariable: z.string().optional(),
+  from: z
+    .string()
+    .optional()
+    .describe("WhatsApp phone number with country code (e.g. 1234567890)"),
+});
 
 // used for saving to db
 const waTemplateCore = {
@@ -109,7 +129,7 @@ const waTemplateFormattedCore = {
 const waTemplateSchema = z.object(waTemplateCore);
 export const waTemplateFormattedSchema = z.object(waTemplateFormattedCore);
 
-export const byTemplateIdParamsSchema = z.object({
+const byTemplateIdParamsSchema = z.object({
   templateId: z.string(),
 });
 
@@ -125,22 +145,10 @@ const registerTemplatesInDbBodySchema = z.array(
 );
 
 const waUserSendTemplateBodySchema = z.object({
-  phone: z.string(),
+  phone: z.coerce.number(),
   parameterData: z.any(),
   teamId: z.string().optional(),
 });
-
-export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas(
-  {
-    waTemplateInputSchema,
-    waTemplateSchema,
-    byTemplateIdParamsSchema,
-    byTemplateIdParamsWithOrg,
-    registerTemplatesInDbBodySchema,
-    waUserSendTemplateBodySchema,
-  },
-  { $id: "waTemplates" },
-);
 
 export type CreateWaTemplateInput = z.infer<typeof waTemplateInputSchema>;
 export type CreateWaTemplateFormattedInput = z.infer<
@@ -155,3 +163,13 @@ export type RegisterTemplatesInDbBodySchema = z.infer<
 export type WaUserSendTemplateBodySchema = z.infer<
   typeof waUserSendTemplateBodySchema
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  waTemplateInputSchema,
+  waTemplateSchema,
+  byTemplateIdParamsSchema,
+  byTemplateIdParamsWithOrg,
+  registerTemplatesInDbBodySchema,
+  waUserSendTemplateBodySchema,
+};

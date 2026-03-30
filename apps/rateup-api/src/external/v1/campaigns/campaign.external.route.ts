@@ -1,6 +1,11 @@
 import { FastifyInstance } from "fastify";
 import { externalCampaignParticipantRoutes } from "./campaign_participants.external.route.js";
-import { $campaignRef } from "../../../modules/campaign/campaign.schema.js";
+import {
+  createCampaignInputSchema,
+  campaignResponseByIdSchema,
+  byCampaignIdParamsSchema,
+  sendCampaignInputSchema,
+} from "../../../modules/campaign/campaign.schema.js";
 import {
   createCampaignExternalController,
   deleteCampaignByIdExternalController,
@@ -17,7 +22,7 @@ export async function externalCampaignRoutes(server: FastifyInstance) {
         tags: ["Campaign"],
         description: "Create a new campaign",
         summary: "Create a new campaign",
-        body: $campaignRef("createCampaignInputSchema"),
+        body: createCampaignInputSchema,
       },
     },
     createCampaignExternalController,
@@ -42,11 +47,9 @@ export async function externalCampaignRoutes(server: FastifyInstance) {
         tags: ["Campaign"],
         description: "Get campaign responses by ID",
         summary: "Get campaign responses by ID",
+        params: byCampaignIdParamsSchema,
         response: {
-          200: {
-            type: "array",
-            items: $campaignRef("campaignResponseByIdSchema"),
-          },
+          200: campaignResponseByIdSchema.array(),
         },
       },
     },
@@ -60,6 +63,7 @@ export async function externalCampaignRoutes(server: FastifyInstance) {
         tags: ["Campaign"],
         description: "Delete a campaign by ID",
         summary: "Delete a campaign by ID",
+        params: byCampaignIdParamsSchema,
       },
     },
     deleteCampaignByIdExternalController,
@@ -72,14 +76,14 @@ export async function externalCampaignRoutes(server: FastifyInstance) {
         tags: ["Campaign"],
         description: "Send a campaign by ID",
         summary: "Send a campaign by ID",
-        params: $campaignRef("byCampaignIdParamsSchema"),
-        body: $campaignRef("sendCampaignInputSchema"),
+        params: byCampaignIdParamsSchema,
+        body: sendCampaignInputSchema,
       },
     },
     sendCampaignExternalController,
   );
 
-  server.register(externalCampaignParticipantRoutes, {
-    prefix: "/:campaignId/participants",
-  });
+  // server.register(externalCampaignParticipantRoutes, {
+  //   prefix: "/:campaignId/participants",
+  // });
 }

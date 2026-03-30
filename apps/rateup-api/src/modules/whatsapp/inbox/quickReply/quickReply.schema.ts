@@ -1,11 +1,10 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 const byQuickReplyIdParamSchema = z.object({
   quickReplyId: z.string(),
 });
 
-export const quickReplyCore = z.object({
+const quickReplyCore = z.object({
   text: z.string(),
   category: z.string(),
   topic: z.string(),
@@ -21,18 +20,15 @@ const updateOrderSchema = z.array(
   }),
 );
 
-export const { schemas: quickReplySchema, $ref: $quickReplyRef } =
-  buildJsonSchemas(
-    {
-      byQuickReplyIdParamSchema,
-      quickReplyCore,
-      updateQuickReplyShema,
-      updateOrderSchema,
-    },
-    { $id: "quickReplySchema" },
-  );
-
 export type UpdateQuickReplyInput = z.infer<typeof updateQuickReplyShema>;
 export type QuickReplyBody = z.infer<typeof quickReplyCore>;
 export type ByQuickReplyIdParam = z.infer<typeof byQuickReplyIdParamSchema>;
 export type UpdateOrderBody = z.infer<typeof updateOrderSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  byQuickReplyIdParamSchema,
+  quickReplyCore,
+  updateQuickReplyShema,
+  updateOrderSchema,
+};

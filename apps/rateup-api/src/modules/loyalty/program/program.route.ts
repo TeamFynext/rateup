@@ -6,16 +6,22 @@ import {
   resetProgramPointsHandler,
   updateLoyaltyProgramHandler,
 } from "./program.controller.js";
-import { $programRef } from "./program.schema.js";
+import {
+  loyaltyProgramSchema,
+  loyaltyProgramResponseSchema,
+  programIdParamSchema,
+  loyaltyProgramUpdateSchema,
+  deleteProgramQuerySchema,
+} from "./program.schema.js";
 
 export async function loyaltyProgramRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
       schema: {
-        body: $programRef("loyaltyProgramSchema"),
+        body: loyaltyProgramSchema,
         response: {
-          201: $programRef("loyaltyProgramResponseSchema"),
+          201: loyaltyProgramResponseSchema,
         },
       },
     },
@@ -26,7 +32,7 @@ export async function loyaltyProgramRoutes(server: FastifyInstance) {
     "/:programId/reset-points",
     {
       schema: {
-        params: $programRef("programIdParamSchema"),
+        params: programIdParamSchema,
       },
     },
     resetProgramPointsHandler,
@@ -38,8 +44,8 @@ export async function loyaltyProgramRoutes(server: FastifyInstance) {
     "/:programId",
     {
       schema: {
-        params: $programRef("programIdParamSchema"),
-        body: $programRef("loyaltyProgramUpdateSchema"),
+        params: programIdParamSchema,
+        body: loyaltyProgramUpdateSchema,
       },
     },
     updateLoyaltyProgramHandler,
@@ -49,8 +55,8 @@ export async function loyaltyProgramRoutes(server: FastifyInstance) {
     "/:programId",
     {
       schema: {
-        params: $programRef("programIdParamSchema"),
-        querystring: $programRef("deleteProgramQuerySchema"),
+        params: programIdParamSchema,
+        querystring: deleteProgramQuerySchema,
       },
     },
     deleteLoyaltyProgramHandler,

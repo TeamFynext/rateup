@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 import {
   LoyaltyTemplateTypes,
@@ -8,16 +7,16 @@ import {
 
 const loyaltyTemplateSchema = z.object({
   waTemplateId: z.string(),
-  type: z.nativeEnum(LoyaltyTemplateTypes),
+  type: z.enum(LoyaltyTemplateTypes),
   requestMessage: z.string(),
   content: z.any().optional(),
-  responseType: z.nativeEnum(WaAutomatedReplyResponseType).optional(),
+  responseType: z.enum(WaAutomatedReplyResponseType).optional(),
   actionId: z.string().optional(),
   whatsappSettingsPhoneId: z.string().optional(),
 });
 
 const byTypeQuerySchema = z.object({
-  type: z.nativeEnum(LoyaltyTemplateTypes),
+  type: z.enum(LoyaltyTemplateTypes),
 });
 
 const updateLoyaltyTemplateSchema = loyaltyTemplateSchema
@@ -30,7 +29,7 @@ const byIdSchema = z.object({
 
 const eventTriggerSchema = z.object({
   programId: z.string(),
-  eventType: z.nativeEnum(LoyaltyEventType),
+  eventType: z.enum(LoyaltyEventType),
   enabled: z.boolean().optional(),
   triggerDays: z.number().optional(),
   waTemplateId: z.string().optional(),
@@ -45,20 +44,6 @@ const programIdQuerySchema = z.object({
   programId: z.string().optional(),
 });
 
-export const { schemas: loyaltySettingSchemas, $ref: $lsRef } =
-  buildJsonSchemas(
-    {
-      loyaltyTemplateSchema,
-      byTypeQuerySchema,
-      updateLoyaltyTemplateSchema,
-      byIdSchema,
-      eventTriggerSchema,
-      updateEventTriggerSchema,
-      programIdQuerySchema,
-    },
-    { $id: "loyaltySettingSchemas" },
-  );
-
 export type LoyaltyTemplateInput = z.infer<typeof loyaltyTemplateSchema>;
 export type UpdateLoyaltyTemplateInput = z.infer<
   typeof updateLoyaltyTemplateSchema
@@ -68,3 +53,14 @@ export type IdParamInput = z.infer<typeof byIdSchema>;
 export type EventTriggerInput = z.infer<typeof eventTriggerSchema>;
 export type UpdateEventTriggerInput = z.infer<typeof updateEventTriggerSchema>;
 export type ProgramIdQueryInput = z.infer<typeof programIdQuerySchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  loyaltyTemplateSchema,
+  byTypeQuerySchema,
+  updateLoyaltyTemplateSchema,
+  byIdSchema,
+  eventTriggerSchema,
+  updateEventTriggerSchema,
+  programIdQuerySchema,
+};

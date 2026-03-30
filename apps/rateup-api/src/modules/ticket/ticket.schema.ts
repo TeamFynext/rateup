@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const ticketCore = {
@@ -57,20 +56,6 @@ const createCommentRequestSchema = z.object({
   msg: z.string(),
 });
 
-export const { schemas: ticketSchemas, $ref: $TicketRef } = buildJsonSchemas(
-  {
-    createTicketRequestSchema,
-    createTicketResponseSchema,
-    getTicketsByTeamRequestSchema,
-    getTicketsByUserRequestSchema,
-    idParamsSchema,
-    createCommentRequestSchema,
-    updateStatusRequestSchema,
-    updateTicketRequestSchema,
-  },
-  { $id: "ticketSchema" },
-);
-
 export type IdParamsSchema = z.infer<typeof idParamsSchema>;
 export type GetTicketsByTeamInput = z.infer<
   typeof getTicketsByTeamRequestSchema
@@ -84,3 +69,15 @@ export type CreateCommentInput = z.infer<typeof createCommentRequestSchema>;
 
 export type UpdateStatusInput = z.infer<typeof updateStatusRequestSchema>;
 export type UpdateTicketInput = z.infer<typeof updateTicketRequestSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  createTicketRequestSchema,
+  createTicketResponseSchema,
+  getTicketsByTeamRequestSchema,
+  getTicketsByUserRequestSchema,
+  idParamsSchema,
+  createCommentRequestSchema,
+  updateStatusRequestSchema,
+  updateTicketRequestSchema,
+};

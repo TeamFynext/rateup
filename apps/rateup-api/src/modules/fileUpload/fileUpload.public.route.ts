@@ -4,8 +4,8 @@ import {
   uploadController,
   uploadWithThumbnailsController,
 } from "./fileUpload.controller.js";
-import { $Iref } from "./fileUpload.schema.js";
 import FastifyMultipart from "@fastify/multipart";
+import { fileDeleteInputSchema } from "./fileUpload.schema.js";
 
 export async function fileUploadPublicRoutes(server: FastifyInstance) {
   server.register(FastifyMultipart, {
@@ -38,7 +38,7 @@ export async function fileUploadPublicRoutes(server: FastifyInstance) {
     "/file/delete",
     {
       schema: {
-        body: $Iref("fileDeleteInputSchema"),
+        body: fileDeleteInputSchema,
       },
     },
     deleteUploadedFileController,

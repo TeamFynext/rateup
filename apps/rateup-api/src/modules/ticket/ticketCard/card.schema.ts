@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { buildJsonSchemas } from "fastify-zod";
+
 import {
   TicketPriority,
   TicketType,
@@ -9,9 +9,9 @@ import {
 const cardCore = {
   title: z.string(),
   description: z.string().optional(),
-  ticketColumnId: z.string().uuid(),
+  ticketColumnId: z.uuid(),
   order: z.number().optional(),
-  type: z.nativeEnum(TicketType).optional(),
+  type: z.enum(TicketType).optional(),
 };
 
 // Schema for creating a card
@@ -21,21 +21,23 @@ const createCardRequestSchema = z.object({
 
 // Response schema for created card
 const createCardResponseSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   ...cardCore,
-  createdAt: z.string().datetime(),
+  createdAt: z.iso.datetime(),
 });
 
 // Schema for updating a card
 const updateCardRequestSchema = z.object({
   id: z.string(),
   title: z.string().min(1, "Title is required"),
-  assignedToIds: z.array(z.string().uuid()).optional(),
-  priority: z.nativeEnum(TicketPriority).optional().nullable(),
+  assignedToIds: z.array(z.uuid()).optional(),
+  priority: z.enum(TicketPriority).optional().nullable(),
   deadline: z
     .date({
-      required_error: "Deadline is required",
-      invalid_type_error: "Invalid date format",
+      error: (issue) =>
+        issue.input === undefined
+          ? "Deadline is required"
+          : "Invalid date format",
     })
     .nullable(),
   description: z.string().optional(),
@@ -43,7 +45,7 @@ const updateCardRequestSchema = z.object({
 
 // Schema for moving a card to another column
 const moveCardRequestSchema = z.object({
-  ticketColumnId: z.string().uuid(),
+  ticketColumnId: z.uuid(),
   order: z.number().optional(),
 });
 
@@ -51,7 +53,7 @@ const moveCardRequestSchema = z.object({
 const reorderCardRequestSchema = z.object({
   cards: z.array(
     z.object({
-      id: z.string().uuid(),
+      id: z.uuid(),
       order: z.number(),
     }),
   ),
@@ -59,26 +61,25 @@ const reorderCardRequestSchema = z.object({
 
 // Schema for id parameter in routes
 const idParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 // Schema for columnId parameter in routes
 const columnIdParamsSchema = z.object({
-  ticketColumnId: z.string().uuid(),
+  ticketColumnId: z.uuid(),
 });
 
 // Building JSON schemas for Fastify
-export const { schemas: cardSchemas, $ref: $CardRef } = buildJsonSchemas(
-  {
-    createCardRequestSchema,
-    createCardResponseSchema,
-    updateCardRequestSchema,
-    moveCardRequestSchema,
-    reorderCardRequestSchema,
-    idParamsSchema,
-    columnIdParamsSchema,
-  },
-  { $id: "cardSchemas" },
-);
 
 export type UpdateCardRequest = z.infer<typeof updateCardRequestSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  createCardRequestSchema,
+  createCardResponseSchema,
+  updateCardRequestSchema,
+  moveCardRequestSchema,
+  reorderCardRequestSchema,
+  idParamsSchema,
+  columnIdParamsSchema,
+};

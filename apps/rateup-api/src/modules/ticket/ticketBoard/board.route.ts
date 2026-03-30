@@ -1,5 +1,9 @@
 import { FastifyInstance } from "fastify";
-import { $BoardRef } from "./board.schema.js";
+import {
+  createBoardRequestSchema,
+  idParamsSchema,
+  updateBoardRequestSchema,
+} from "./board.schema.js";
 import {
   createBoardHandler,
   getAllBoardsHandler,
@@ -9,7 +13,6 @@ import {
   getBoardTeamMembersHandler,
 } from "./board.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
-import { verifyTeamAccess } from "../../team/team.auth.js";
 import { verifyBoardAccess } from "./board.auth.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
@@ -27,7 +30,7 @@ export async function boardRoutes(server: FastifyInstance) {
     {
       // preHandler: [verifyTeamAccess],
       schema: {
-        body: $BoardRef("createBoardRequestSchema"),
+        body: createBoardRequestSchema,
       },
     },
     createBoardHandler,
@@ -42,7 +45,7 @@ export async function boardRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyBoardAccess],
       schema: {
-        params: $BoardRef("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     getSingleBoardHandler,
@@ -54,8 +57,8 @@ export async function boardRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyBoardAccess],
       schema: {
-        params: $BoardRef("idParamsSchema"),
-        body: $BoardRef("updateBoardRequestSchema"),
+        params: idParamsSchema,
+        body: updateBoardRequestSchema,
       },
     },
     updateBoardHandler,
@@ -67,7 +70,7 @@ export async function boardRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyBoardAccess],
       schema: {
-        params: $BoardRef("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     deleteBoardHandler,
@@ -78,7 +81,7 @@ export async function boardRoutes(server: FastifyInstance) {
     {
       preHandler: [verifyBoardAccess],
       schema: {
-        params: $BoardRef("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     getBoardTeamMembersHandler,

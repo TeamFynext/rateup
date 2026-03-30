@@ -15,7 +15,6 @@ import {
   addMembertoTeamsHandler,
   getUsersNotInTeamHandler,
 } from "./team.controller.js";
-import { $Tref } from "./team.schema.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
   verifyTeamAccess,
@@ -27,6 +26,20 @@ import { checkSession } from "../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName as sf } from "../../types/enums.js";
 import { getSurveyLanguagesByTeamIdHandler } from "../survey/survey.controller.js";
+import {
+  addTeamMemberSchema,
+  createTeamRequestSchema,
+  createTeamResponseSchema,
+  deleteTeamByIdRequestSchema,
+  deleteTeamMemberSchema,
+  editTeamSchema,
+  getTeamMembersRequestSchema,
+  getTeamsByOrgRequestSchema,
+  idParamRequestSchema,
+  inviteCompleteRequestSchema,
+  inviteMemberRequestResponse,
+  inviteMemberRequestSchema,
+} from "./team.schema.js";
 
 // TODO: add checkSession as server.addHook instead of defining it in every route
 // move routes which doesn't need checkSession to another route (invitation)
@@ -41,9 +54,9 @@ export async function teamRoutes(server: FastifyInstance) {
         verifyTeamMaxCountRestriction,
       ],
       schema: {
-        body: $Tref("createTeamRequestSchema"),
+        body: createTeamRequestSchema,
         response: {
-          201: $Tref("createTeamResponseSchema"),
+          201: createTeamResponseSchema,
         },
       },
     },
@@ -59,7 +72,7 @@ export async function teamRoutes(server: FastifyInstance) {
         checkRoleHandler(["SUPER_ADMIN"]),
       ],
       schema: {
-        params: $Tref("getTeamsByOrgRequestSchema"),
+        params: getTeamsByOrgRequestSchema,
       },
     },
     getAllTeamsByOrgHandler,
@@ -83,7 +96,7 @@ export async function teamRoutes(server: FastifyInstance) {
         checkRoleHandler(["SUPER_ADMIN"]),
       ],
       schema: {
-        params: $Tref("deleteTeamByIdRequestSchema"),
+        params: deleteTeamByIdRequestSchema,
       },
     },
     deleteTeamByIdHandler,
@@ -94,8 +107,8 @@ export async function teamRoutes(server: FastifyInstance) {
     {
       preHandler: [checkSession, verifyTeamAdminAccess],
       schema: {
-        body: $Tref("editTeamSchema"),
-        params: $Tref("idParamRequestSchema"),
+        body: editTeamSchema,
+        params: idParamRequestSchema,
       },
     },
     editTeamHandler,
@@ -115,9 +128,9 @@ export async function teamRoutes(server: FastifyInstance) {
         verifyTeamMemberMaxCountRestriction,
       ],
       schema: {
-        body: $Tref("inviteMemberRequestSchema"),
+        body: inviteMemberRequestSchema,
         response: {
-          201: $Tref("inviteMemberRequestResponse"),
+          201: inviteMemberRequestResponse,
         },
       },
     },
@@ -132,7 +145,7 @@ export async function teamRoutes(server: FastifyInstance) {
         checkRoleHandler(["SUPER_ADMIN"]),
       ],
       schema: {
-        params: $Tref("idParamRequestSchema"),
+        params: idParamRequestSchema,
       },
     },
     resendInviteMemberHandler,
@@ -142,7 +155,7 @@ export async function teamRoutes(server: FastifyInstance) {
     "/complete-invite/:token",
     {
       schema: {
-        params: $Tref("inviteCompleteRequestSchema"),
+        params: inviteCompleteRequestSchema,
       },
     },
     completeInviteHandler,
@@ -157,7 +170,7 @@ export async function teamRoutes(server: FastifyInstance) {
         checkRoleHandler(["SUPER_ADMIN"]),
       ],
       schema: {
-        params: $Tref("deleteTeamByIdRequestSchema"),
+        params: deleteTeamByIdRequestSchema,
       },
     },
     deleteInviteHandler,
@@ -172,7 +185,7 @@ export async function teamRoutes(server: FastifyInstance) {
         checkRoleHandler(["SUPER_ADMIN"]),
       ],
       schema: {
-        params: $Tref("getTeamMembersRequestSchema"),
+        params: getTeamMembersRequestSchema,
       },
     },
     getTeamMembersHandler,
@@ -187,7 +200,7 @@ export async function teamRoutes(server: FastifyInstance) {
         checkRoleHandler(["SUPER_ADMIN"]),
       ],
       schema: {
-        params: $Tref("getTeamMembersRequestSchema"),
+        params: getTeamMembersRequestSchema,
       },
     },
     getUsersNotInTeamHandler,
@@ -203,7 +216,7 @@ export async function teamRoutes(server: FastifyInstance) {
         //TODO check team member
       ],
       schema: {
-        params: $Tref("getTeamMembersRequestSchema"),
+        params: getTeamMembersRequestSchema,
       },
     },
     getTeamMembersFromInviteHandler,
@@ -218,7 +231,7 @@ export async function teamRoutes(server: FastifyInstance) {
         verifyTeamAccess,
       ],
       schema: {
-        params: $Tref("getTeamMembersRequestSchema"),
+        params: getTeamMembersRequestSchema,
       },
     },
     getSurveyLanguagesByTeamIdHandler,
@@ -229,7 +242,7 @@ export async function teamRoutes(server: FastifyInstance) {
     {
       preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
-        querystring: $Tref("deleteTeamMemberSchema"),
+        querystring: deleteTeamMemberSchema,
       },
     },
     deleteTeamMemberHandler,
@@ -240,8 +253,8 @@ export async function teamRoutes(server: FastifyInstance) {
     {
       preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
       schema: {
-        params: $Tref("idParamRequestSchema"),
-        body: $Tref("addTeamMemberSchema"),
+        params: idParamRequestSchema,
+        body: addTeamMemberSchema,
       },
     },
     addMembertoTeamsHandler,

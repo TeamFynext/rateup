@@ -1,14 +1,21 @@
 import { z } from "zod";
-import { buildJsonSchemas } from "fastify-zod";
+
 import { questionSchema } from "../question/question.schema.js";
 
 const surveyCore = {
   title: z.string({
-    required_error: "Title is required",
-    invalid_type_error: "Title must be a string",
+    error: (issue) =>
+      issue.input === undefined
+        ? "Title is required"
+        : "Title must be a string",
   }),
   languages: z.array(z.string()),
-  teamIds: z.array(z.string({ required_error: "TeamId is required" })),
+  teamIds: z.array(
+    z.string({
+      error: (issue) =>
+        issue.input === undefined ? "TeamId is required" : undefined,
+    }),
+  ),
   active: z.boolean().default(true),
   type: z.string().default("web"),
   getLocation: z.boolean().default(false),
@@ -21,23 +28,31 @@ const createSurveyRequestSchema = z.object({
 });
 const createSurveyLandingRequestSchema = z.object({
   title: z.string({
-    required_error: "Title is required",
-    invalid_type_error: "Title must be a string",
+    error: (issue) =>
+      issue.input === undefined
+        ? "Title is required"
+        : "Title must be a string",
   }),
   header: z.string({
-    required_error: "Header is required",
-    invalid_type_error: "Header must be a string",
+    error: (issue) =>
+      issue.input === undefined
+        ? "Header is required"
+        : "Header must be a string",
   }),
   surveys: z.array(z.string()),
 });
 const createSurveyLandingResponseSchema = z.object({
   title: z.string({
-    required_error: "Title is required",
-    invalid_type_error: "Title must be a string",
+    error: (issue) =>
+      issue.input === undefined
+        ? "Title is required"
+        : "Title must be a string",
   }),
   header: z.string({
-    required_error: "Header is required",
-    invalid_type_error: "Header must be a string",
+    error: (issue) =>
+      issue.input === undefined
+        ? "Header is required"
+        : "Header must be a string",
   }),
   surveys: z.array(z.string()),
   id: z.string(),
@@ -54,16 +69,20 @@ const getSurveyTemplatesParamsSchema = z.object({
 });
 
 const deleteTeamSurveyRequestSchema = z.object({
-  teamId: z.string().uuid(),
+  teamId: z.uuid(),
 });
 
 const phoneParamsSchema = z.object({
   phoneNumber: z
     .string()
-    .min(10, { message: "Phone number must be at least 10 digits" })
-    .max(10, { message: "Phone number must not exceed 10 digits" })
+    .min(10, {
+      error: "Phone number must be at least 10 digits",
+    })
+    .max(10, {
+      error: "Phone number must not exceed 10 digits",
+    })
     .refine((value) => /^[+]?[0-9]+$/.test(value), {
-      message: "Must be a valid number",
+      error: "Must be a valid number",
     }),
 });
 
@@ -72,7 +91,7 @@ const idParamsSchema = z.object({
 });
 
 const cloneSurveySchema = z.object({
-  teamIds: z.array(z.string().uuid()),
+  teamIds: z.array(z.uuid()),
 });
 
 const getSurveyPublicResponseSchema = z.object({
@@ -107,8 +126,10 @@ const getSurveyPublicResponseSchema = z.object({
 const updateSurveyRequestSchema = z.object({
   title: z
     .string({
-      required_error: "Title is required",
-      invalid_type_error: "Title must be a string",
+      error: (issue) =>
+        issue.input === undefined
+          ? "Title is required"
+          : "Title must be a string",
     })
     .optional(),
   languages: z.array(z.string()).optional(),
@@ -120,7 +141,7 @@ const updateSurveyRequestSchema = z.object({
   skipPreview: z.boolean().optional(),
   getLocation: z.boolean().optional(),
   enableNotificationEmail: z.boolean().optional(),
-  notificationEmail: z.string().email().optional(),
+  notificationEmail: z.email().optional(),
   isEncrypted: z.boolean().optional(),
   enableTickets: z.boolean().optional(),
   enableTicketEmailAlerts: z.boolean().optional(),
@@ -148,14 +169,18 @@ const updateSurveyRequestSchema = z.object({
 const updateLandingPageRequestSchema = z.object({
   title: z
     .string({
-      required_error: "Title is required",
-      invalid_type_error: "Title must be a string",
+      error: (issue) =>
+        issue.input === undefined
+          ? "Title is required"
+          : "Title must be a string",
     })
     .optional(),
   header: z
     .string({
-      required_error: "Header is required",
-      invalid_type_error: "Header must be a string",
+      error: (issue) =>
+        issue.input === undefined
+          ? "Header is required"
+          : "Header must be a string",
     })
     .optional(),
   surveys: z.array(z.string()).optional(),
@@ -164,16 +189,20 @@ const updateLandingPageRequestSchema = z.object({
 
 const updateSurveyPasswordRequestSchema = z.object({
   password: z.string({
-    required_error: "Password is required",
-    invalid_type_error: "Password must be a string",
+    error: (issue) =>
+      issue.input === undefined
+        ? "Password is required"
+        : "Password must be a string",
   }),
 });
 
 const updateGoogleLinkRequestSchema = z.object({
   googleLink: z
     .string({
-      required_error: "Link is required",
-      invalid_type_error: "Link must be a string",
+      error: (issue) =>
+        issue.input === undefined
+          ? "Link is required"
+          : "Link must be a string",
     })
     .min(5, "Invalid link"),
 });
@@ -195,29 +224,6 @@ const graphResponseParamsSchema = z.object({
   surveyId: z.string().optional(),
   teamMapIds: z.string().optional(),
 });
-
-export const { schemas: surveySchemas, $ref: $Sref } = buildJsonSchemas(
-  {
-    createSurveyRequestSchema,
-    createSurveyLandingRequestSchema,
-    createSurveyLandingResponseSchema,
-    getSurveyByIdParamsSchema,
-    getSurveyTemplatesParamsSchema,
-    getSurveyLandingByIdParamsSchema,
-    updateSurveyRequestSchema,
-    getSurveyPublicResponseSchema,
-    updateSurveyPasswordRequestSchema,
-    idParamsSchema,
-    cloneSurveySchema,
-    updateGoogleLinkRequestSchema,
-    deleteTeamSurveyRequestSchema,
-    phoneParamsSchema,
-    surveyVariableSchema,
-    surveyVariableUpdateSchema,
-    graphResponseParamsSchema,
-  },
-  { $id: "surveySchema" },
-);
 
 export type PhoneParamInput = z.infer<typeof phoneParamsSchema>;
 
@@ -253,3 +259,24 @@ export type surveyVariableUpdateInput = z.infer<
   typeof surveyVariableUpdateSchema
 >;
 export type GraphResponseParams = z.infer<typeof graphResponseParamsSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  createSurveyRequestSchema,
+  createSurveyLandingRequestSchema,
+  createSurveyLandingResponseSchema,
+  getSurveyByIdParamsSchema,
+  getSurveyTemplatesParamsSchema,
+  getSurveyLandingByIdParamsSchema,
+  updateSurveyRequestSchema,
+  getSurveyPublicResponseSchema,
+  updateSurveyPasswordRequestSchema,
+  idParamsSchema,
+  cloneSurveySchema,
+  updateGoogleLinkRequestSchema,
+  deleteTeamSurveyRequestSchema,
+  phoneParamsSchema,
+  surveyVariableSchema,
+  surveyVariableUpdateSchema,
+  graphResponseParamsSchema,
+};

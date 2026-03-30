@@ -15,9 +15,15 @@ import {
   uploadFileForAIEmbedHandler,
   uploadSourceForEmbedHandler,
 } from "./chatbot.controller.js";
-import { $chatbotRef } from "./chatbot.schema.js";
 import FastifyMultipart from "@fastify/multipart";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
+import {
+  chatbotMessageSchema,
+  dataLoadSchema,
+  deleteContentSchema,
+  deleteManyContentSchema,
+  updateChatbotSchema,
+} from "./chatbot.schema.js";
 
 export async function chatbotRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -32,7 +38,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
-        body: $chatbotRef("dataLoadSchema"),
+        body: dataLoadSchema,
       },
     },
     uploadSourceForEmbedHandler,
@@ -53,7 +59,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $chatbotRef("chatbotMessageSchema"),
+        body: chatbotMessageSchema,
       },
     },
     chatbotMessageHandler,
@@ -66,7 +72,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
-        body: $chatbotRef("deleteContentSchema"),
+        body: deleteContentSchema,
       },
     },
     deleteEmbeddedSourceHandler,
@@ -77,7 +83,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
-        body: $chatbotRef("deleteManyContentSchema"),
+        body: deleteManyContentSchema,
       },
     },
     deleteManyEmbeddedSourcesHandler,
@@ -98,7 +104,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
-        body: $chatbotRef("updateChatbotSchema"),
+        body: updateChatbotSchema,
       },
     },
     updateChatbotDetailsHanlder,

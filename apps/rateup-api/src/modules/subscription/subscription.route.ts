@@ -8,8 +8,8 @@ import {
   updateSubscriptionHandler,
 } from "./subscription.controller.js";
 import { assertRootOrg } from "../../utils/auth.js";
-import { $subscriptionRef } from "./subscription.schema.js";
-import { $Sref } from "../org/org.schema.js";
+import { updateSubscriptionInputSchema } from "./subscription.schema.js";
+import { byOrgIdParams } from "../org/org.schema.js";
 
 export async function subscriptionRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -34,8 +34,8 @@ export async function subscriptionRoutes(server: FastifyInstance) {
     {
       preHandler: assertRootOrg,
       schema: {
-        params: $Sref("byOrgIdParams"),
-        body: $subscriptionRef("updateSubscriptionInputSchema"),
+        params: byOrgIdParams,
+        body: updateSubscriptionInputSchema,
       },
     },
     updateSubscriptionHandler,
@@ -45,8 +45,8 @@ export async function subscriptionRoutes(server: FastifyInstance) {
     "/menu/:orgId",
     {
       schema: {
-        params: $Sref("byOrgIdParams"),
-        body: $subscriptionRef("updateSubscriptionInputSchema"),
+        params: byOrgIdParams,
+        body: updateSubscriptionInputSchema,
       },
     },
     updateSubscriptionHandler,

@@ -1,12 +1,7 @@
 import prisma from "../../../../utils/prisma.js";
-import { UpdateOrderBody, UpdateQuickReplyInput } from "./quickReply.schema.js";
+import { QuickReplyBody, UpdateQuickReplyInput } from "./quickReply.schema.js";
 
-export type QuickReply = {
-  text: string;
-  priority: number;
-};
-
-export async function createWaQuickReply(data: QuickReply, orgId: string) {
+export async function createWaQuickReply(data: QuickReplyBody, orgId: string) {
   return await prisma.whatsappQuickReply.create({
     data: {
       ...data,

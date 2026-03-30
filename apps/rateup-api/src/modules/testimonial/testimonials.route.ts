@@ -1,10 +1,10 @@
 import { FastifyInstance } from "fastify";
 import { checkSession } from "../../utils/checkSession.js";
-import { $Testimonialref } from "./testimonial.schema.js";
 import {
   getAllTestimonialByOrgHandler,
   getAllTestimonialBySurveyIdHandler,
 } from "./testimonial.controller.js";
+import { bySurveyIdParamsSchema } from "./testimonial.schema.js";
 
 export async function testimonialRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -12,7 +12,7 @@ export async function testimonialRoutes(server: FastifyInstance) {
     "/:surveyId",
     {
       schema: {
-        params: $Testimonialref("bySurveyIdParamsSchema"),
+        params: bySurveyIdParamsSchema,
       },
     },
     getAllTestimonialBySurveyIdHandler,

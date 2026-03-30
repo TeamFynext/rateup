@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const createContactLabelSchema = z.object({
@@ -14,15 +13,17 @@ const updateContactLabelSchema = z.object({
 });
 
 const byLabelIdSchema = z.object({
-  labelId: z.string().uuid(),
+  labelId: z.uuid(),
 });
 
 const assignLabelsToContactSchema = z.object({
-  labelIds: z.array(z.string().uuid()),
+  labelIds: z.array(z.uuid()),
 });
-
+const assignLabelsToContactQuerySchema = z.object({
+  labelIds: z.string().describe("Comma-separated list of label IDs"),
+});
 const assignLabelsToContactsSchema = assignLabelsToContactSchema.extend({
-  contactIds: z.array(z.string().uuid()),
+  contactIds: z.array(z.uuid()),
 });
 
 const contactLabelResponseSchema = z.object({
@@ -39,21 +40,6 @@ const contactLabelResponseSchema = z.object({
     .optional(),
 });
 
-export const { schemas: contactLabelSchemas, $ref: $contactLabelRef } =
-  buildJsonSchemas(
-    {
-      createContactLabelSchema,
-      updateContactLabelSchema,
-      byLabelIdSchema,
-      assignLabelsToContactSchema,
-      contactLabelResponseSchema,
-      assignLabelsToContactsSchema,
-    },
-    {
-      $id: "contactLabelSchema",
-    },
-  );
-
 export type CreateContactLabelSchema = z.infer<typeof createContactLabelSchema>;
 export type UpdateContactLabelSchema = z.infer<typeof updateContactLabelSchema>;
 export type ByLabelIdSchema = z.infer<typeof byLabelIdSchema>;
@@ -63,3 +49,14 @@ export type AssignLabelsToContactSchema = z.infer<
 export type AssignLabelsToContactsSchema = z.infer<
   typeof assignLabelsToContactsSchema
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  createContactLabelSchema,
+  updateContactLabelSchema,
+  byLabelIdSchema,
+  assignLabelsToContactSchema,
+  contactLabelResponseSchema,
+  assignLabelsToContactsSchema,
+  assignLabelsToContactQuerySchema,
+};

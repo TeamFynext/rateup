@@ -108,7 +108,10 @@ export async function createGoogleUserHandler(
     recipeName: getUserRecipeName("thirdparty") ?? null,
   };
   try {
-    user = await createUserSignup(data);
+    user = await createUserSignup({
+      ...data,
+      phone: data.phoneNumber || "",
+    });
   } catch (e: any) {
     console.error(e);
     let message = e.message;

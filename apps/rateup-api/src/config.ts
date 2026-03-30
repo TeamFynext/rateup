@@ -21,6 +21,7 @@ import { sendResetPasswordMail } from "./utils/email/supertoken/passwordReset.js
 import { sendVerifyMail } from "./utils/email/supertoken/verifyEmail.js";
 import { log } from "./utils/logger.js";
 import { getUserInfo } from "./utils/supertoken/supertoken.js";
+import { jsonSchemaTransform } from "fastify-type-provider-zod";
 
 // Environment configuration
 export const appConfig = {
@@ -150,6 +151,7 @@ export const SuperTokensConfig: TypeInput = {
                     : integrationsSelected
                       ? [integrationsSelected]
                       : [],
+                  phone: phoneNumber,
                 });
               }
             }
@@ -383,4 +385,5 @@ export const swaggerConfig: SwaggerOptions = {
     security: [{ bearerAuth: [] }],
   },
   hideUntagged: true,
+  transform: jsonSchemaTransform,
 };

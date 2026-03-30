@@ -1,21 +1,13 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const getUnsplashImageQueryStringSchema = z.object({
-  page: z.number().optional(),
+  page: z.coerce.number().optional(),
   query: z.string().trim().optional(),
-  limit: z.number().optional(),
+  limit: z.coerce.number().optional(),
 });
 const triggerDownloadUnsplashImageSchema = z.object({
   downloadLocation: z.string(),
 });
-export const { schemas: unsplashSchemas, $ref: $Uref } = buildJsonSchemas(
-  {
-    getUnsplashImageQueryStringSchema,
-    triggerDownloadUnsplashImageSchema,
-  },
-  { $id: "unsplashSchema" },
-);
 
 export type getUnsplashImageQueryString = z.infer<
   typeof getUnsplashImageQueryStringSchema
@@ -24,3 +16,9 @@ export type getUnsplashImageQueryString = z.infer<
 export type triggerDownloadUnsplashBody = z.infer<
   typeof triggerDownloadUnsplashImageSchema
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  getUnsplashImageQueryStringSchema,
+  triggerDownloadUnsplashImageSchema,
+};

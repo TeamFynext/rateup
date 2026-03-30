@@ -1,13 +1,12 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 export const loyaltyProgramSchema = z.object({
   name: z.string().min(1, "Program name is required"),
   status: z.enum(["draft", "active", "paused"]).default("draft"),
   currencyName: z.string().default("Points"),
-  currencyCode: z.string().default("AED"),
-  currencySymbol: z.string().default("د.إ"),
-  defaultCountryCode: z.string().default("AE"),
+  currencyCode: z.string(),
+  currencySymbol: z.string().optional(),
+  defaultCountryCode: z.string(),
   signupBonus: z.number().default(0),
   referralBonus: z.number().default(0),
   refereeBonus: z.number().default(0),
@@ -40,20 +39,6 @@ export const loyaltyProgramResponseSchema = loyaltyProgramSchema.extend({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
-
-export const { schemas: loyaltyProgramSchemas, $ref: $programRef } =
-  buildJsonSchemas(
-    {
-      loyaltyProgramSchema,
-      loyaltyProgramUpdateSchema,
-      programIdParamSchema,
-      deleteProgramQuerySchema,
-      loyaltyProgramResponseSchema,
-    },
-    {
-      $id: "loyaltyProgramSchema",
-    },
-  );
 
 export type LoyaltyProgramInput = z.infer<typeof loyaltyProgramSchema>;
 export type LoyaltyProgramUpdateInput = z.infer<

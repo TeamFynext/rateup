@@ -34,14 +34,8 @@ import {
   byWaAutomatedReplyIdParams,
   cloneAutomatedReplyBody,
 } from "./wa_automatedReply.schema.js";
-import {
-  serializerCompiler,
-  validatorCompiler,
-} from "fastify-type-provider-zod";
 
 export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
-  fastify.setValidatorCompiler(validatorCompiler);
-  fastify.setSerializerCompiler(serializerCompiler);
   fastify.addHook("preHandler", checkSession);
   fastify.addHook(
     "preHandler",

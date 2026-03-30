@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const sendEmailSchema = z.object({
@@ -20,15 +19,9 @@ const validateOtpSchema = z.object({
   surveyId: z.string().optional(),
 });
 
-export const { schemas: emailSchema, $ref: $Eref } = buildJsonSchemas(
-  {
-    sendEmailSchema,
-    GenerateOtpSchema,
-    validateOtpSchema,
-  },
-  { $id: "emailSchema" },
-);
-
 export type SendEmailInput = z.infer<typeof sendEmailSchema>;
 export type GenerateOtpInput = z.infer<typeof GenerateOtpSchema>;
 export type validateOtpInput = z.infer<typeof validateOtpSchema>;
+
+// Auto-exported after fastify-zod migration
+export { sendEmailSchema, GenerateOtpSchema, validateOtpSchema };

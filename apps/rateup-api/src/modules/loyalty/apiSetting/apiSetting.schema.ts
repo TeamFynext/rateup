@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 const LApiSettingSchema = z.object({
@@ -25,17 +24,9 @@ const byLApiSettingIdParamSchema = z.object({
   id: z.string(),
 });
 
-export const { schemas: loyaltyApiSettingSchemas, $ref: $lApiSettingRef } =
-  buildJsonSchemas(
-    {
-      byLApiSettingIdParamSchema,
-      LApiSettingSchema,
-      updateApiSetting,
-    },
-    {
-      $id: "loyaltyApiSettingSchema",
-    },
-  );
 export type LApiSettingIdInput = z.infer<typeof byLApiSettingIdParamSchema>;
 export type LApiSettingInput = z.infer<typeof LApiSettingSchema>;
 export type UpdateApiSettingInput = z.infer<typeof updateApiSetting>;
+
+// Auto-exported after fastify-zod migration
+export { byLApiSettingIdParamSchema, LApiSettingSchema, updateApiSetting };

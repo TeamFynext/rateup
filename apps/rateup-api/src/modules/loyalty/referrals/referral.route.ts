@@ -5,14 +5,18 @@ import {
   getReferralsByReferrerHandler,
   trackReferralHandler,
 } from "./referral.controller.js";
-import { $referralRef } from "./referral.schema.js";
+import {
+  trackReferralSchema,
+  completeReferralSchema,
+  referrerIdParamSchema,
+} from "./referral.schema.js";
 
 export async function referralRoutes(server: FastifyInstance) {
   server.post(
     "/track",
     {
       schema: {
-        body: $referralRef("trackReferralSchema"),
+        body: trackReferralSchema,
       },
     },
     trackReferralHandler,
@@ -22,7 +26,7 @@ export async function referralRoutes(server: FastifyInstance) {
     "/complete",
     {
       schema: {
-        body: $referralRef("completeReferralSchema"),
+        body: completeReferralSchema,
       },
     },
     completeReferralHandler,
@@ -34,7 +38,7 @@ export async function referralRoutes(server: FastifyInstance) {
     "/referrer/:referrerId",
     {
       schema: {
-        params: $referralRef("referrerIdParamSchema"),
+        params: referrerIdParamSchema,
       },
     },
     getReferralsByReferrerHandler,

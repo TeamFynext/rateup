@@ -1,5 +1,16 @@
 import { FastifyInstance } from "fastify";
-import { $contactRef } from "./contact.schema.js";
+import {
+  contactCoreSchema,
+  createMultipleContactSchema,
+  paginationQuery,
+  byContactIdSchema,
+  updateContactSchema,
+  updateContactLabelsSchema,
+  deleteManyContactSchema,
+  customFieldSchema,
+  byFieldIdSchema,
+  bulkUpdateContactStatusSchema,
+} from "./contact.schema.js";
 import {
   addCustomFieldHandler,
   bulkUpdateWaMessageAssignStatusHandler,
@@ -19,28 +30,22 @@ import {
   updateLifecycleStageofContactsHandler,
 } from "./contact.controller.js";
 import { contactGroupRoutes } from "./contactGroup/contactGroup.route.js";
-import { contactGroupSchemas } from "./contactGroup/contactGroup.schema.js";
 import { contactLabelRoutes } from "./contactLabel/contactLabel.route.js";
-import { contactLabelSchemas } from "./contactLabel/contactLabel.schema.js";
 import { checkSession } from "../../utils/checkSession.js";
 import fastifyMultipart from "@fastify/multipart";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
-import { $LifecycleRef } from "../lifecycle/lifecycle.schema.js";
 import { conversationRoutes } from "./conversation/conversation.route.js";
-import { conversationSchemas } from "./conversation/conversation.schema.js";
 import { verifyLCustomerMaxCountRestrictionHandler } from "./contact.utils.js";
+import { lifecycleIdParamSchema } from "../lifecycle/lifecycle.schema.js";
 
 export async function contactRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
 
-  contactGroupSchemas.forEach((schema) => server.addSchema(schema));
   server.register(contactGroupRoutes, { prefix: "/group" });
 
-  contactLabelSchemas.forEach((schema) => server.addSchema(schema));
   server.register(contactLabelRoutes, { prefix: "/labels" });
 
-  conversationSchemas.forEach((schema) => server.addSchema(schema));
   server.register(conversationRoutes, { prefix: "/conversations" });
 
   server.register(fastifyMultipart, {
@@ -60,7 +65,7 @@ export async function contactRoutes(server: FastifyInstance) {
         verifyLCustomerMaxCountRestrictionHandler,
       ],
       schema: {
-        body: $contactRef("contactCoreSchema"),
+        body: contactCoreSchema,
       },
     },
     createContactHandler,
@@ -70,7 +75,7 @@ export async function contactRoutes(server: FastifyInstance) {
     "/importcontacts",
     {
       schema: {
-        body: $contactRef("createMultipleContactSchema"),
+        body: createMultipleContactSchema,
       },
     },
     createMultipleContactsHandler,
@@ -80,7 +85,7 @@ export async function contactRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        params: $contactRef("paginationQuery"),
+        params: paginationQuery,
       },
     },
     getAllContactsHandler,
@@ -89,7 +94,7 @@ export async function contactRoutes(server: FastifyInstance) {
     "/:contactId",
     {
       schema: {
-        params: $contactRef("byContactIdSchema"),
+        params: byContactIdSchema,
       },
     },
     getContactByIdHandler,
@@ -99,8 +104,8 @@ export async function contactRoutes(server: FastifyInstance) {
     "/:contactId",
     {
       schema: {
-        params: $contactRef("byContactIdSchema"),
-        body: $contactRef("updateContactSchema"),
+        params: byContactIdSchema,
+        body: updateContactSchema,
       },
     },
     updateContactByIdHandler,
@@ -109,8 +114,8 @@ export async function contactRoutes(server: FastifyInstance) {
     "/:contactId/labels",
     {
       schema: {
-        params: $contactRef("byContactIdSchema"),
-        body: $contactRef("updateContactLabelsSchema"),
+        params: byContactIdSchema,
+        body: updateContactLabelsSchema,
       },
     },
     updateContactLabelsByIdHandler,
@@ -120,7 +125,7 @@ export async function contactRoutes(server: FastifyInstance) {
     "/:contactId",
     {
       schema: {
-        params: $contactRef("byContactIdSchema"),
+        params: byContactIdSchema,
       },
     },
     deleteContactByIdHandler,
@@ -130,7 +135,7 @@ export async function contactRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $contactRef("deleteManyContactSchema"),
+        body: deleteManyContactSchema,
       },
     },
     deleteManyContactsHandler,
@@ -150,7 +155,7 @@ export async function contactRoutes(server: FastifyInstance) {
     "/custom-fields",
     {
       schema: {
-        body: $contactRef("customFieldSchema"),
+        body: customFieldSchema,
       },
     },
     addCustomFieldHandler,
@@ -159,8 +164,8 @@ export async function contactRoutes(server: FastifyInstance) {
     "/custom-fields/:fieldId",
     {
       schema: {
-        params: $contactRef("byFieldIdSchema"),
-        body: $contactRef("customFieldSchema"),
+        params: byFieldIdSchema,
+        body: customFieldSchema,
       },
     },
     updateCustomFieldHandler,
@@ -170,7 +175,7 @@ export async function contactRoutes(server: FastifyInstance) {
     "/custom-fields/:fieldId",
     {
       schema: {
-        params: $contactRef("byFieldIdSchema"),
+        params: byFieldIdSchema,
       },
     },
     deleteCustomFieldHandler,
@@ -181,8 +186,8 @@ export async function contactRoutes(server: FastifyInstance) {
     "/lifecycle-stage-update/:lifecycleId",
     {
       schema: {
-        params: $LifecycleRef("lifecycleIdParamSchema"),
-        body: $contactRef("deleteManyContactSchema"),
+        params: lifecycleIdParamSchema,
+        body: deleteManyContactSchema,
       },
     },
     updateLifecycleStageofContactsHandler,
@@ -192,7 +197,7 @@ export async function contactRoutes(server: FastifyInstance) {
     "/bulk-assign-status",
     {
       schema: {
-        body: $contactRef("bulkUpdateContactStatusSchema"),
+        body: bulkUpdateContactStatusSchema,
       },
     },
     bulkUpdateWaMessageAssignStatusHandler,

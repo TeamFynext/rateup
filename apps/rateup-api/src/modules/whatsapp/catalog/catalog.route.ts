@@ -9,13 +9,19 @@ import {
   syncCatalogsHandler,
   updateCatalogHandler,
 } from "./catalog.controller.js";
-import { $WC } from "./catalog.schema.js";
 import { waCatalogOrderRoutes } from "./orders/catalogOrder.route.js";
 import {
   syncProductSetsHandler,
   getProductSetsByCatalogHandler,
   getProductSetByIdHandler,
 } from "./productSet.controller.js";
+import {
+  catalogIdParams,
+  catalogWhatsappSettingSchema,
+  productSetIdParamSchema,
+  syncProductSetsSchema,
+  updateCatalogSchema,
+} from "./catalog.schema.js";
 
 export async function waCatalogRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -25,8 +31,8 @@ export async function waCatalogRoutes(server: FastifyInstance) {
     "/:catalogId",
     {
       schema: {
-        params: $WC("catalogIdParams"),
-        body: $WC("updateCatalogSchema"),
+        params: catalogIdParams,
+        body: updateCatalogSchema,
       },
     },
     updateCatalogHandler,
@@ -44,7 +50,7 @@ export async function waCatalogRoutes(server: FastifyInstance) {
     "/disconnect",
     {
       schema: {
-        body: $WC("catalogWhatsappSettingSchema"),
+        body: catalogWhatsappSettingSchema,
       },
     },
     disconnectCatalogFromWabaHandler,
@@ -54,7 +60,7 @@ export async function waCatalogRoutes(server: FastifyInstance) {
     "/product-sets/sync",
     {
       schema: {
-        body: $WC("syncProductSetsSchema"),
+        body: syncProductSetsSchema,
       },
     },
     syncProductSetsHandler,
@@ -69,7 +75,7 @@ export async function waCatalogRoutes(server: FastifyInstance) {
     "/product-sets/:productSetId",
     {
       schema: {
-        params: $WC("productSetIdParamSchema"),
+        params: productSetIdParamSchema,
       },
     },
     getProductSetByIdHandler,

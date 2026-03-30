@@ -6,14 +6,18 @@ import {
   getLoyaltyEarningRulesHandler,
   updateLoyaltyEarningRuleHandler,
 } from "./earningRule.controller.js";
-import { $earningRuleRef } from "./earningRule.schema.js";
+import {
+  loyaltyEarningRuleSchema,
+  ruleIdParamSchema,
+  loyaltyEarningRuleUpdateSchema,
+} from "./earningRule.schema.js";
 
 export async function loyaltyEarningRuleRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
       schema: {
-        body: $earningRuleRef("loyaltyEarningRuleSchema"),
+        body: loyaltyEarningRuleSchema,
       },
     },
     createLoyaltyEarningRuleHandler,
@@ -25,7 +29,7 @@ export async function loyaltyEarningRuleRoutes(server: FastifyInstance) {
     "/:ruleId",
     {
       schema: {
-        params: $earningRuleRef("ruleIdParamSchema"),
+        params: ruleIdParamSchema,
       },
     },
     getLoyaltyEarningRuleByIdHandler,
@@ -35,8 +39,8 @@ export async function loyaltyEarningRuleRoutes(server: FastifyInstance) {
     "/:ruleId",
     {
       schema: {
-        params: $earningRuleRef("ruleIdParamSchema"),
-        body: $earningRuleRef("loyaltyEarningRuleUpdateSchema"),
+        params: ruleIdParamSchema,
+        body: loyaltyEarningRuleUpdateSchema,
       },
     },
     updateLoyaltyEarningRuleHandler,
@@ -46,7 +50,7 @@ export async function loyaltyEarningRuleRoutes(server: FastifyInstance) {
     "/:ruleId",
     {
       schema: {
-        params: $earningRuleRef("ruleIdParamSchema"),
+        params: ruleIdParamSchema,
       },
     },
     deleteLoyaltyEarningRuleHandler,

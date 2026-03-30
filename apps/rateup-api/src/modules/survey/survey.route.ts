@@ -26,16 +26,28 @@ import {
   getSurveyStatsHandler,
   getNPSGraphHandler,
 } from "./survey.controller.js";
-import { $Sref } from "./survey.schema.js";
 import {
   verifySurveyMaxCountRestriction,
   verifySurveyAccess,
   verifySurveyCreateAccess,
 } from "./survey.auth.js";
 import { checkSession } from "../../utils/checkSession.js";
-import { $Rref } from "../response/response.schema.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
+import {
+  cloneSurveySchema,
+  createSurveyRequestSchema,
+  deleteTeamSurveyRequestSchema,
+  getSurveyByIdParamsSchema,
+  getSurveyTemplatesParamsSchema,
+  idParamsSchema,
+  surveyVariableSchema,
+  surveyVariableUpdateSchema,
+  updateGoogleLinkRequestSchema,
+  updateSurveyPasswordRequestSchema,
+  updateSurveyRequestSchema,
+} from "./survey.schema.js";
+import { getResponsesParamsSchema } from "../response/response.schema.js";
 
 export async function surveyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -50,7 +62,7 @@ export async function surveyRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySurveyCreateAccess, verifySurveyMaxCountRestriction],
       schema: {
-        body: $Sref("createSurveyRequestSchema"),
+        body: createSurveyRequestSchema,
       },
     },
     createSurveyHandler,
@@ -86,7 +98,7 @@ export async function surveyRoutes(server: FastifyInstance) {
     {
       preHandler: verifySurveyAccess,
       schema: {
-        params: $Sref("getSurveyByIdParamsSchema"),
+        params: getSurveyByIdParamsSchema,
       },
     },
     getSurveyByIdHandler,
@@ -97,7 +109,7 @@ export async function surveyRoutes(server: FastifyInstance) {
     "/templates/:surveyType",
     {
       schema: {
-        params: $Sref("getSurveyTemplatesParamsSchema"),
+        params: getSurveyTemplatesParamsSchema,
       },
     },
     getSurveyTemplatesHandler,
@@ -109,8 +121,8 @@ export async function surveyRoutes(server: FastifyInstance) {
     {
       preHandler: [verifySurveyAccess, verifySurveyMaxCountRestriction],
       schema: {
-        params: $Sref("getSurveyByIdParamsSchema"),
-        body: $Sref("cloneSurveySchema"),
+        params: getSurveyByIdParamsSchema,
+        body: cloneSurveySchema,
       },
     },
     cloneSurveyHandler,
@@ -124,7 +136,7 @@ export async function surveyRoutes(server: FastifyInstance) {
     "/team/:id",
     {
       schema: {
-        params: $Sref("getSurveyByIdParamsSchema"),
+        params: getSurveyByIdParamsSchema,
       },
     },
     getSurveyByTeamHandler,
@@ -134,7 +146,7 @@ export async function surveyRoutes(server: FastifyInstance) {
     "/surveyStats/:surveyTeamMapId",
     {
       schema: {
-        params: $Rref("getResponsesParamsSchema"),
+        params: getResponsesParamsSchema,
       },
     },
     getSurveyStatsBySurveyTeamMapIdHandler,
@@ -148,7 +160,7 @@ export async function surveyRoutes(server: FastifyInstance) {
     {
       preHandler: verifySurveyAccess,
       schema: {
-        params: $Sref("getSurveyByIdParamsSchema"),
+        params: getSurveyByIdParamsSchema,
       },
     },
     deleteSurveyByIdHandler,
@@ -160,8 +172,8 @@ export async function surveyRoutes(server: FastifyInstance) {
     {
       preHandler: verifySurveyAccess,
       schema: {
-        params: $Sref("getSurveyByIdParamsSchema"),
-        body: $Sref("deleteTeamSurveyRequestSchema"),
+        params: getSurveyByIdParamsSchema,
+        body: deleteTeamSurveyRequestSchema,
       },
     },
     deleteTeamSurveyHandler,
@@ -173,8 +185,8 @@ export async function surveyRoutes(server: FastifyInstance) {
     {
       preHandler: verifySurveyAccess,
       schema: {
-        params: $Sref("getSurveyByIdParamsSchema"),
-        body: $Sref("updateSurveyRequestSchema"),
+        params: getSurveyByIdParamsSchema,
+        body: updateSurveyRequestSchema,
       },
     },
     updateSurveyByIdHandler,
@@ -185,8 +197,8 @@ export async function surveyRoutes(server: FastifyInstance) {
     {
       preHandler: verifySurveyAccess,
       schema: {
-        params: $Sref("getSurveyByIdParamsSchema"),
-        body: $Sref("updateSurveyPasswordRequestSchema"),
+        params: getSurveyByIdParamsSchema,
+        body: updateSurveyPasswordRequestSchema,
       },
     },
     updateSurveyPasswordHandler,
@@ -197,8 +209,8 @@ export async function surveyRoutes(server: FastifyInstance) {
     {
       preHandler: verifySurveyAccess,
       schema: {
-        params: $Sref("idParamsSchema"),
-        body: $Sref("updateGoogleLinkRequestSchema"),
+        params: idParamsSchema,
+        body: updateGoogleLinkRequestSchema,
       },
     },
     updateGoogleLinkHandler,
@@ -208,8 +220,8 @@ export async function surveyRoutes(server: FastifyInstance) {
     "/survey-variables/:id",
     {
       schema: {
-        params: $Sref("idParamsSchema"),
-        body: $Sref("surveyVariableSchema"),
+        params: idParamsSchema,
+        body: surveyVariableSchema,
       },
     },
     createSurveyVariableHandler,
@@ -218,7 +230,7 @@ export async function surveyRoutes(server: FastifyInstance) {
     "/survey-variables/:id",
     {
       schema: {
-        params: $Sref("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     getSurveyVariablesHandler,
@@ -228,8 +240,8 @@ export async function surveyRoutes(server: FastifyInstance) {
     "/survey-variables/:id",
     {
       schema: {
-        params: $Sref("idParamsSchema"),
-        body: $Sref("surveyVariableUpdateSchema"),
+        params: idParamsSchema,
+        body: surveyVariableUpdateSchema,
       },
     },
     updateSurveyVariableHandler,
@@ -239,7 +251,7 @@ export async function surveyRoutes(server: FastifyInstance) {
     "/survey-variables/:id",
     {
       schema: {
-        params: $Sref("idParamsSchema"),
+        params: idParamsSchema,
       },
     },
     deleteSurveyVariableHandler,

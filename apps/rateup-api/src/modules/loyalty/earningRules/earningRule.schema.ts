@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 export enum LoyaltyEarningRuleStatus {
@@ -63,18 +62,6 @@ export const loyaltyEarningRuleUpdateSchema =
 export const ruleIdParamSchema = z.object({
   ruleId: z.string(),
 });
-
-export const { schemas: loyaltyEarningRuleSchemas, $ref: $earningRuleRef } =
-  buildJsonSchemas(
-    {
-      loyaltyEarningRuleSchema,
-      loyaltyEarningRuleUpdateSchema,
-      ruleIdParamSchema,
-    },
-    {
-      $id: "loyaltyEarningRuleSchema",
-    },
-  );
 
 export type LoyaltyEarningRuleInput = z.infer<typeof loyaltyEarningRuleSchema>;
 export type LoyaltyEarningRuleUpdateInput = z.infer<

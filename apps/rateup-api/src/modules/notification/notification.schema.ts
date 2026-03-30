@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 
 const notificationIdParamSchema = z.object({
@@ -11,18 +10,12 @@ const notificationSettingSchema = z.object({
   waMessageClosedNotification: z.boolean().optional(),
 });
 
-export const { schemas: notificationSchema, $ref: $NotifyRef } =
-  buildJsonSchemas(
-    {
-      notificationSettingSchema,
-      notificationIdParamSchema,
-    },
-    { $id: "notificationSchemas" },
-  );
-
 export type NotificationIdParamSchema = z.infer<
   typeof notificationIdParamSchema
 >;
 export type NotificationSettingSchema = z.infer<
   typeof notificationSettingSchema
 >;
+
+// Auto-exported after fastify-zod migration
+export { notificationSettingSchema, notificationIdParamSchema };

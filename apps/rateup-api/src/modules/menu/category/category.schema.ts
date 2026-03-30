@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const CreateMenuCategoryInput = {
@@ -30,17 +29,6 @@ const SortMenuCategoryInputSchema = z.object({
     }),
   ),
 });
-export const { schemas: menuCategorySchemas, $ref: $MCref } = buildJsonSchemas(
-  {
-    CreateMenuCategorySchema,
-    ByCategoryIdParamsSchema,
-    UpdateMenuCategoryInputSchema,
-    SortMenuCategoryInputSchema,
-  },
-  {
-    $id: "menuCategorySchema",
-  },
-);
 
 export type CreateMenuCategoryInput = z.infer<typeof CreateMenuCategorySchema>;
 export type ByCategoryIdParams = z.infer<typeof ByCategoryIdParamsSchema>;
@@ -48,3 +36,11 @@ export type UpdateMenuCategoryInput = z.infer<
   typeof UpdateMenuCategoryInputSchema
 >;
 export type SortMenuCategoryInput = z.infer<typeof SortMenuCategoryInputSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  CreateMenuCategorySchema,
+  ByCategoryIdParamsSchema,
+  UpdateMenuCategoryInputSchema,
+  SortMenuCategoryInputSchema,
+};

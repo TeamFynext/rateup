@@ -12,14 +12,23 @@ import {
   getRewardByShortCodeHandler,
   redeemRewardByShortCodeHandler,
 } from "./account.controller.js";
-import { $customerAccountRef } from "./account.schema.js";
+import {
+  customerLoyaltyAccountSchema,
+  customerIdParamSchema,
+  contactIdParamSchema,
+  phoneNumberParamSchema,
+  customerLoyaltyAccountUpdateSchema,
+  awardPointsSchema,
+  assignRewardSchema,
+  shortCodeParamSchema,
+} from "./account.schema.js";
 
 export async function customerAccountRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
       schema: {
-        body: $customerAccountRef("customerLoyaltyAccountSchema"),
+        body: customerLoyaltyAccountSchema,
       },
     },
     createCustomerAccountHandler,
@@ -31,7 +40,7 @@ export async function customerAccountRoutes(server: FastifyInstance) {
     "/:customerId",
     {
       schema: {
-        params: $customerAccountRef("customerIdParamSchema"),
+        params: customerIdParamSchema,
       },
     },
     getCustomerAccountByIdHandler,
@@ -41,7 +50,7 @@ export async function customerAccountRoutes(server: FastifyInstance) {
     "/contact/:contactId",
     {
       schema: {
-        params: $customerAccountRef("contactIdParamSchema"),
+        params: contactIdParamSchema,
       },
     },
     getCustomerAccountByContactHandler,
@@ -51,7 +60,7 @@ export async function customerAccountRoutes(server: FastifyInstance) {
     "/phone/:phoneNumber",
     {
       schema: {
-        params: $customerAccountRef("phoneNumberParamSchema"),
+        params: phoneNumberParamSchema,
       },
     },
     getCustomerAccountByPhoneHandler,
@@ -61,8 +70,8 @@ export async function customerAccountRoutes(server: FastifyInstance) {
     "/:customerId",
     {
       schema: {
-        params: $customerAccountRef("customerIdParamSchema"),
-        body: $customerAccountRef("customerLoyaltyAccountUpdateSchema"),
+        params: customerIdParamSchema,
+        body: customerLoyaltyAccountUpdateSchema,
       },
     },
     updateCustomerAccountHandler,
@@ -72,7 +81,7 @@ export async function customerAccountRoutes(server: FastifyInstance) {
     "/award-points",
     {
       schema: {
-        body: $customerAccountRef("awardPointsSchema"),
+        body: awardPointsSchema,
       },
     },
     awardPointsHandler,
@@ -82,8 +91,8 @@ export async function customerAccountRoutes(server: FastifyInstance) {
     "/:customerId/assign-reward",
     {
       schema: {
-        params: $customerAccountRef("customerIdParamSchema"),
-        body: $customerAccountRef("assignRewardSchema"),
+        params: customerIdParamSchema,
+        body: assignRewardSchema,
       },
     },
     assignRewardToCustomerHandler,
@@ -93,7 +102,7 @@ export async function customerAccountRoutes(server: FastifyInstance) {
     "/rewards/:shortCode",
     {
       schema: {
-        params: $customerAccountRef("shortCodeParamSchema"),
+        params: shortCodeParamSchema,
       },
     },
     getRewardByShortCodeHandler,
@@ -103,7 +112,7 @@ export async function customerAccountRoutes(server: FastifyInstance) {
     "/rewards/:shortCode/redeem",
     {
       schema: {
-        params: $customerAccountRef("shortCodeParamSchema"),
+        params: shortCodeParamSchema,
       },
     },
     redeemRewardByShortCodeHandler,

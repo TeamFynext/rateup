@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
 import { ZapierTriggers } from "./zapier.service.js";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
@@ -13,7 +12,7 @@ const successSchema = z.object({
 
 const triggerSubscriptionBodySchema = z.object({
   hookUrl: z.string(),
-  subscribed_field: z.nativeEnum(ZapierTriggers),
+  subscribed_field: z.enum(ZapierTriggers),
   zapId: z.string(),
 });
 
@@ -38,13 +37,13 @@ const contactResponseSchema = z.object({
   igsId: z.string(),
   email: z.string(),
   source: z.string(),
-  waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus),
+  waMessageAssignStatus: z.enum(WaMessageAssignStatus),
 });
 
 const contactSearchResponseSchema = z.array(contactResponseSchema);
 
 const pageSchema = z.object({
-  page: z.number(),
+  page: z.coerce.number(),
 });
 
 const ticketCardResponseSchema = z.object({
@@ -55,7 +54,7 @@ const ticketCardSchema = z.object({
   title: z.string(),
   description: z.string(),
   deadline: z.string().optional(),
-  priority: z.nativeEnum(TicketPriority).optional(),
+  priority: z.enum(TicketPriority).optional(),
   ticketColumnId: z.string(),
 });
 
@@ -108,29 +107,6 @@ const contactLabelSchema = z.object({
   lifecycleId: z.string(),
 });
 
-export const { schemas: zapierSchemas, $ref: $zapier } = buildJsonSchemas(
-  {
-    successSchema,
-    triggerSubscriptionBodySchema,
-    dropdownResponseSchema,
-    ticketBoardResponseSchema,
-    contactResponseSchema,
-    ticketCardResponseSchema,
-    ticketCardSchema,
-    newMemberToGroupShema,
-    inviteMemberRequestSchema,
-    sendMessageSchema,
-    contactLabelSchema,
-    pageSchema,
-    boardIdParamSchema,
-    contactSearchSchema,
-    contactSearchResponseSchema,
-    boardQuerySchema,
-    ticketColumnSchema,
-  },
-  { $id: "zapierSchemas" },
-);
-
 export type TriggerSubscriptionBodySchema = z.infer<
   typeof triggerSubscriptionBodySchema
 >;
@@ -144,3 +120,24 @@ export type ContactLabelSchema = z.infer<typeof contactLabelSchema>;
 export type PageSchema = z.infer<typeof pageSchema>;
 export type BoardQueryInput = z.infer<typeof boardQuerySchema>;
 export type TicketColumnQueryInput = z.infer<typeof ticketColumnSchema>;
+
+// Auto-exported after fastify-zod migration
+export {
+  successSchema,
+  triggerSubscriptionBodySchema,
+  dropdownResponseSchema,
+  ticketBoardResponseSchema,
+  contactResponseSchema,
+  ticketCardResponseSchema,
+  ticketCardSchema,
+  newMemberToGroupShema,
+  inviteMemberRequestSchema,
+  sendMessageSchema,
+  contactLabelSchema,
+  pageSchema,
+  boardIdParamSchema,
+  contactSearchSchema,
+  contactSearchResponseSchema,
+  boardQuerySchema,
+  ticketColumnSchema,
+};

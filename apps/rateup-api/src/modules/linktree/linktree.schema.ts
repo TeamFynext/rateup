@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 
 const linktreeBaseSchema = z.object({
@@ -41,7 +40,9 @@ const updatePageVisitsOrLinkClicksReqBody = z.object({
   linkId: z.string().optional(),
 });
 
-const models = {
+type CreateLinktreeReqBody = z.infer<typeof createLinktreeReqBody>;
+
+export {
   linktreeBaseSchema,
   createLinktreeReqBody,
   getLinktreesResponse,
@@ -49,13 +50,5 @@ const models = {
   updateLinktreeReqBody,
   updatePageVisitsOrLinkClicksReqBody,
   updatePageVisitsOrLinkClicksReqParams,
+  CreateLinktreeReqBody,
 };
-
-type CreateLinktreeReqBody = z.infer<typeof createLinktreeReqBody>;
-
-const { schemas: linktreeSchemas, $ref: linktreeSchemaRef } = buildJsonSchemas(
-  models,
-  { $id: "linktreeSchema" },
-);
-
-export { linktreeSchemas, linktreeSchemaRef, CreateLinktreeReqBody };

@@ -114,7 +114,17 @@ export async function cloneMenu(
 
     for (const item of menuItems) {
       let { id, createdAt, categoryId, ...rest } = item;
-      await createMenuItem({ ...rest, categoryId: newCat.id });
+      await createMenuItem({
+        ...rest,
+        categoryId: newCat.id,
+        description: item.description || "",
+        images: item.images || [],
+        name: item.name || "",
+        price: {
+          price: (item.price as any)?.price || "0",
+          type: (item.price as any)?.type || "FIXED",
+        },
+      });
     }
   }
 }

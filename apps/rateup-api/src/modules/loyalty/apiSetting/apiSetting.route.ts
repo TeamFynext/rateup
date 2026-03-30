@@ -1,5 +1,9 @@
 import { FastifyInstance } from "fastify";
-import { $lApiSettingRef } from "./apiSetting.schema.js";
+import {
+  byLApiSettingIdParamSchema,
+  LApiSettingSchema,
+  updateApiSetting,
+} from "./apiSetting.schema.js";
 import {
   getLoyaltyApiSettingsHandler,
   getLoyaltyApiSettingByIdHandler,
@@ -14,7 +18,7 @@ export async function loyaltyApiSettingRoutes(server: FastifyInstance) {
     "/:id",
     {
       schema: {
-        params: $lApiSettingRef("byLApiSettingIdParamSchema"),
+        params: byLApiSettingIdParamSchema,
       },
     },
     getLoyaltyApiSettingByIdHandler,
@@ -24,7 +28,7 @@ export async function loyaltyApiSettingRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $lApiSettingRef("LApiSettingSchema"),
+        body: LApiSettingSchema,
       },
     },
     createLoyaltyApiSettingHandler,
@@ -34,8 +38,8 @@ export async function loyaltyApiSettingRoutes(server: FastifyInstance) {
     "/:id",
     {
       schema: {
-        params: $lApiSettingRef("byLApiSettingIdParamSchema"),
-        body: $lApiSettingRef("updateApiSetting"),
+        params: byLApiSettingIdParamSchema,
+        body: updateApiSetting,
       },
     },
     updateLoyaltyApiSettingHandler,

@@ -1,4 +1,3 @@
-import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import { contactCoreSchema } from "../contact.schema.js";
 
@@ -14,7 +13,7 @@ export enum ContactGroupType {
 
 const createContactGroupInputSchema = coreContactGroupSchema.extend({
   teamId: z.string(),
-  type: z.nativeEnum(ContactGroupType),
+  type: z.enum(ContactGroupType),
 });
 
 const updateContactGroupInputSchema = z.object({
@@ -27,12 +26,12 @@ const byContactGroupIdParamsSchema = z.object({
   contactGroupId: z.string(),
 });
 const paginationQuery = z.object({
-  page: z.number().optional(),
-  limit: z.number().optional(),
+  page: z.coerce.number().optional(),
+  limit: z.coerce.number().optional(),
   search: z.string().optional(),
   sort: z.string().optional(),
   desc: z.string().optional(),
-  phone: z.number().optional(),
+  phone: z.coerce.number().optional(),
   name: z.string().optional(),
   source: z.string().optional(),
   consent: z.string().optional(),
@@ -54,7 +53,7 @@ const addExistingContactsToMultipleGroupsInputSchema =
 const getContactGroupsQuerySchema = z.object({
   contactGroupId: z.string().optional(),
   teamId: z.string().optional(),
-  type: z.nativeEnum(ContactGroupType).optional(),
+  type: z.enum(ContactGroupType).optional(),
 });
 
 const removeGroupContactsSchema = z.array(z.string());
@@ -83,30 +82,6 @@ const contactGroupByContactIdBody = z.object({
   removeGroupIds: z.array(z.string()).optional(),
 });
 
-export const { schemas: contactGroupSchemas, $ref: $contactGroupRef } =
-  buildJsonSchemas(
-    {
-      createContactGroupInputSchema,
-      byContactGroupIdParamsSchema,
-      updateContactGroupInputSchema,
-      addExistingContactsToGroupInputSchema,
-      addNewContactsToGroupInputSchema,
-      getContactGroupsQuerySchema,
-      removeGroupContactsSchema,
-      addExistingContactsToMultipleGroupsInputSchema,
-      deleteManyGroupSchema,
-      contactGroupResponseSchema,
-      byContactGroupIdWithOrgIdParamsSchema,
-      extAddNewContactsToGroupInputSchema,
-      paginationQuery,
-      contactGroupByContactId,
-      contactGroupByContactIdBody,
-    },
-    {
-      $id: "contactGroupSchema",
-    },
-  );
-
 export type GetContactGroupsQuery = z.infer<typeof getContactGroupsQuerySchema>;
 export type AddExistingContactsToGroupInput = z.infer<
   typeof addExistingContactsToGroupInputSchema
@@ -114,7 +89,7 @@ export type AddExistingContactsToGroupInput = z.infer<
 export type AddExistingContactsToMultipleGroupsInput = z.infer<
   typeof addExistingContactsToMultipleGroupsInputSchema
 >;
-export type AddNewContactsToGroupInput = z.infer<
+export type AddNewContactsToGroupInput = z.input<
   typeof addNewContactsToGroupInputSchema
 >;
 export type ByContactGroupIdParams = z.infer<
@@ -135,3 +110,22 @@ export type contactGroupByContactId = z.infer<typeof contactGroupByContactId>;
 export type ContactGroupByContactIdBody = z.infer<
   typeof contactGroupByContactIdBody
 >;
+
+// Auto-exported after fastify-zod migration
+export {
+  createContactGroupInputSchema,
+  byContactGroupIdParamsSchema,
+  updateContactGroupInputSchema,
+  addExistingContactsToGroupInputSchema,
+  addNewContactsToGroupInputSchema,
+  getContactGroupsQuerySchema,
+  removeGroupContactsSchema,
+  addExistingContactsToMultipleGroupsInputSchema,
+  deleteManyGroupSchema,
+  contactGroupResponseSchema,
+  byContactGroupIdWithOrgIdParamsSchema,
+  extAddNewContactsToGroupInputSchema,
+  paginationQuery,
+  contactGroupByContactId,
+  contactGroupByContactIdBody,
+};

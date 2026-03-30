@@ -5,7 +5,7 @@ import {
   deleteToken,
   getExpoTokens,
 } from "./mobile.controller.js";
-import { $ExpoRef } from "./mobile.schema.js";
+import { addExpoTokenSchema, deleteExpoTokenSchema } from "./mobile.schema.js";
 
 export async function mobileNotificationRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -14,7 +14,7 @@ export async function mobileNotificationRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $ExpoRef("addExpoTokenSchema"),
+        body: addExpoTokenSchema,
       },
     },
     addExpoToken,
@@ -26,7 +26,7 @@ export async function mobileNotificationRoutes(server: FastifyInstance) {
     "/",
     {
       schema: {
-        body: $ExpoRef("deleteExpoTokenSchema"),
+        body: deleteExpoTokenSchema,
       },
     },
     deleteToken,

@@ -1,43 +1,67 @@
-// Base node data interface with common properties
+// For compatibility with legacy code referencing Node
+export type Node =
+  | TextNodeData
+  | QuickReplyNodeData
+  | ImageNodeData
+  | ConditionalNodeData
+  | InputNodeData
+  | PauseNodeData
+  | MediaNodeData
+  | DocumentNodeData
+  | StartNodeData
+  | EndNodeData
+  | ButtonNodeData
+  | ListNodeData
+  | StickerNodeData
+  | CTAUrlNodeData
+  | TemplateNodeData
+  | ReactionNodeData
+  | LocationNodeData
+  | LocationRequestNodeData
+  | AddressNodeData
+  | ContactsNodeData
+  | FlowNodeData
+  | AiBotNodeData
+  | TicketNodeData
+  | AssignNodeData
+  | LeadgenNodeData
+  | CatalogNodeData;
+
+// Restore all required node data interfaces for WhatsApp Survey Flow
 export interface BaseNodeData {
   label: string;
 }
 
-// Text Node
 export interface TextNodeData extends BaseNodeData {
   body: string;
   previewUrl: boolean;
 }
 
-// Quick Reply Node
 export interface QuickReplyNodeData extends BaseNodeData {
   question: string;
   options: string[];
 }
 
-// Image Node
 export interface ImageNodeData extends BaseNodeData {
   link: string;
   caption?: string;
 }
 
-// Conditional Node
 export interface ConditionalNodeData extends BaseNodeData {
   condition: string;
 }
 
-// Input Nodes (shared structure)
 export interface InputNodeData extends BaseNodeData {
   question: string;
   variableName: string;
   validation?: string;
 }
 
-// Pause Node
 export interface PauseNodeData extends BaseNodeData {
   duration: number;
   unit: "seconds" | "minutes" | "hours";
 }
+// ...existing code...
 
 // Media Nodes
 export interface MediaNodeData extends BaseNodeData {
