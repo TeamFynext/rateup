@@ -61,8 +61,8 @@ const createResponseInputSchema = z.object({
 });
 
 const getResponsesParamsSchema = z.object({
-  surveyTeamMapId: z.string(),
-  surveyId: z.uuid().optional(),
+  surveyTeamMapId: z.string().optional(),
+  surveyId: z.uuid(),
 });
 const getResponsesBySurveyParamsSchema = z.object({
   orgId: z.uuid().optional(),
