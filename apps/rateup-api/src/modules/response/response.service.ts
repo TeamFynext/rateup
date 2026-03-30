@@ -681,21 +681,28 @@ function getMaxContentWidth(data, columnIndex: number) {
   }
   return maxWidth;
 }
-export async function resetResponsesStats(surveyTeamMapId: string) {
+
+export async function resetResponsesStats(surveyId: string) {
+  const maps = await prisma.surveyTeamMap.findMany({
+    where: { surveyId },
+    select: { id: true },
+  });
+
+  const mapIds = maps.map((m) => m.id);
+
   const deleteResponses = await prisma.surveyResponse.deleteMany({
     where: {
-      surveyTeamMapId,
+      surveyTeamMapId: { in: mapIds },
     },
   });
 
   const deleteStats = await prisma.surveyStats.deleteMany({
     where: {
-      surveyTeamMapId,
+      surveyTeamMapId: { in: mapIds },
     },
   });
 
-  const deletionMessage = `Deleted.. ${deleteResponses.count} survey responses for survey ID: ${surveyTeamMapId}`;
-  return deletionMessage;
+  return `Deleted ${deleteResponses.count} responses for surveyId: ${surveyId}`;
 }
 
 export async function deleteResponse(id: string) {

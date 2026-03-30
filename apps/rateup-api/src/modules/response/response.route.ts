@@ -79,7 +79,7 @@ export async function responseRoutes(server: FastifyInstance) {
 
   //to reset survey responses & stats
   server.delete(
-    "/reset/:surveyTeamMapId",
+    "/reset/:surveyId",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {

@@ -185,8 +185,8 @@ export async function resetResponsesHandler(
   reply: FastifyReply,
 ) {
   try {
-    const surveyTeamMapId = request.params.surveyTeamMapId;
-    const reset = await resetResponsesStats(surveyTeamMapId);
+    const surveyId = request.params.surveyId;
+    const reset = await resetResponsesStats(surveyId);
     reply.code(201).send({ success: true, data: reset });
   } catch (e) {
     console.error(e);
