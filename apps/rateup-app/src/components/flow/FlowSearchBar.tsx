@@ -48,7 +48,7 @@ const FlowSearchBar = () => {
       <View className="ml-3 w-9 h-9">
         <TouchableOpacity
           onPress={() => {
-            router.push("/protected/flows/FlowFilter");
+            router.push("/protected/flow/FlowFilter");
           }}
           className="w-full h-full rounded-full flex items-center justify-center"
         >

@@ -83,7 +83,7 @@ const WebForm = () => {
         className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-md flex flex-col space-y-2 mb-2"
         onPress={() =>
           router.push({
-            pathname: `/protected/webForms/${item.id}`,
+            pathname: `/protected/webform/${item.id}`,
             params: { webFormName: item.title },
           })
         }

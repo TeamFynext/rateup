@@ -105,7 +105,7 @@ const Flow = () => {
         onPress={() =>
           router.push({
             //@ts-ignore
-            pathname: `/protected/flows/${item.dbFlowId}`,
+            pathname: `/protected/flow/${item.dbFlowId}`,
             params: { flowName: item.name },
           })
         }

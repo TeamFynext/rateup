@@ -46,7 +46,7 @@ const WebFormSearchBar = () => {
       <View className="relative ml-3">
         <TouchableOpacity
           onPress={() => {
-            router.push("/protected/webForms/WebFormFilter");
+            router.push("/protected/webform/WebFormFilter");
           }}
           className="w-9 h-9 rounded-full flex items-center justify-center"
         >

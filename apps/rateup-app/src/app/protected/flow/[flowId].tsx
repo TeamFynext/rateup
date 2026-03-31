@@ -7,7 +7,6 @@ import {
   Text,
   View,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
@@ -70,89 +69,6 @@ const OverviewTab = ({
       </View>
     );
   }
-  // const hasNPS = Object.keys(data.nps || {}).length > 0;
-  // const hasChoiceWise = Object.keys(data.choiceWise || {}).length > 0;
-  // const totalResponses = Object.values(data.choiceWise || {}).reduce(
-  //   (acc: number, curr: any) => acc + (curr?.responseCount ? 1 : 0),
-  //   0
-  // );
-
-  // return (
-  //   <View className="flex-1 bg-white">
-  //     {/* Response Count Header */}
-  //     <View className="px-4 py-3 border-b border-gray-200 bg-rateUpGreen20 flex-row items-center justify-between">
-  //       <Text className="text-base font-semibold text-rateUpGreen">
-  //         Total Responded Questions
-  //       </Text>
-  //       <View className="bg-rateUpGreen px-2.5 py-1 rounded-full">
-  //         <Text className="text-white text-sm font-semibold">
-  //           {totalResponses}
-  //         </Text>
-  //       </View>
-  //     </View>
-
-  //     {/* Scrollable Content */}
-  //     <ScrollView className="p-4">
-  //       <View className="flex-col gap-8">
-  //         {/* ✅ NPS Overview Section */}
-  //         {hasNPS && (
-  //           <View className="flex gap-2">
-  //             <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
-  //               NPS Overview
-  //             </Text>
-  //             {Object.entries(data.nps).map(([questionId, npsEntry]: any) => (
-  //               <NPSOverview
-  //                 key={questionId}
-  //                 questionId={questionId}
-  //                 questions={question}
-  //                 version={version}
-  //                 flow={flow}
-  //                 data={{
-  //                   npsScore: npsEntry.npsData.npsScore,
-  //                   csatScore: npsEntry.csatScore,
-  //                   promoters: npsEntry.npsData.promoters,
-  //                   passives: npsEntry.npsData.passives,
-  //                   detractors: npsEntry.npsData.detractors,
-  //                   total: npsEntry.npsData.total,
-  //                 }}
-  //               />
-  //             ))}
-  //           </View>
-  //         )}
-
-  //         {/* ✅ ChoiceWise Response Section */}
-  //         {hasChoiceWise && (
-  //           <View className="flex gap-3">
-  //             <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
-  //               Question-wise Overview
-  //             </Text>
-  //             {Object.entries(data.choiceWise).map(
-  //               ([questionId, { data: choices }]) => (
-  //                 <ChoiceWise
-  //                   key={questionId}
-  //                   questionId={questionId}
-  //                   choices={choices}
-  //                   questions={question}
-  //                   version={version}
-  //                   flow={flow}
-  //                 />
-  //               )
-  //             )}
-  //           </View>
-  //         )}
-
-  //         {/* No data fallback */}
-  //         {!hasNPS && !hasChoiceWise && (
-  //           <View className="items-center justify-center py-10">
-  //             <Text className="text-gray-500 text-base">
-  //               No analytics data available.
-  //             </Text>
-  //           </View>
-  //         )}
-  //       </View>
-  //     </ScrollView>
-  //   </View>
-  // );
   return (
     <View className="flex-1 bg-white h-full">
       <SurveyStatsWebForm surveyId={surveyId} />
@@ -265,8 +181,8 @@ const ResponsesTab = ({
               setFlowData([flow]);
               const routeBase =
                 version === 1
-                  ? "/protected/flows/flowresponse"
-                  : "/protected/flows/flow2";
+                  ? "/protected/flow/flowresponse"
+                  : "/protected/flow/flow2";
               router.push({
                 pathname: `${routeBase}/${item.id}`,
                 params: { surveyId: surveyId, respondent: item.phone },
@@ -306,7 +222,7 @@ const FlowPage = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white p-2">
+    <View className="flex-1 bg-white p-2">
       {/* Header */}
       <View className="flex-row items-center mt-4 mb-4 gap-2">
         <Pressable onPress={() => router.back()}>
@@ -368,7 +284,7 @@ const FlowPage = () => {
           )}
         </Tab.Screen>
       </Tab.Navigator>
-    </SafeAreaView>
+    </View>
   );
 };
 

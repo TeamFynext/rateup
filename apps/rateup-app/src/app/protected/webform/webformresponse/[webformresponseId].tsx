@@ -23,9 +23,9 @@ const ResponseId = () => {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size={"large"}/>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -42,7 +42,7 @@ const ResponseId = () => {
   }, [questions]);
 
   return (
-    <SafeAreaView className="flex-1 bg-white px-4">
+    <View className="flex-1 bg-white px-4">
       {/* Header */}
       <View className="flex-row items-center gap-5 p-2">
         <TouchableOpacity
@@ -119,7 +119,7 @@ const ResponseId = () => {
           );
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

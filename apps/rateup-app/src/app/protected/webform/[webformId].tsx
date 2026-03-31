@@ -164,7 +164,7 @@ const ResponsesTab = ({ webformId }: { webformId?: string }) => {
             onPress={() => {
               setData([item]);
               router.push({
-                pathname: `/protected/webForms/webformresponse/${item.id}`,
+                pathname: `/protected/webform/webformresponse/${item.id}`,
                 params: { webformId: webformId, respondent: item.phone },
               });
             }}
@@ -193,7 +193,7 @@ const WebFormPage = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white p-2">
+    <View className="flex-1 bg-white p-2">
       <View className="flex-row items-center mt-4 mb-4 gap-2">
         <Pressable onPress={() => router.back()}>
           <ArrowLeft />
@@ -237,7 +237,7 @@ const WebFormPage = () => {
           {() => <ResponsesTab webformId={webformId} />}
         </Tab.Screen>
       </Tab.Navigator>
-    </SafeAreaView>
+    </View>
   );
 };
 

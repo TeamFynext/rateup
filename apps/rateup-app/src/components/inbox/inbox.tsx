@@ -134,7 +134,7 @@ export default function Inbox({
         onPress={() =>
           router.push({
             //@ts-ignore
-            pathname: `/protected/inbox/chat/${item.id}`,
+            pathname: `/protected/chat/${item.id}`,
             params: {
               name: item.name ? item.name : item.whatsappUserName,
               phone: item.phone,

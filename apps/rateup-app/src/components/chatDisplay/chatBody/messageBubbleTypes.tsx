@@ -618,11 +618,15 @@ interface Props1 {
   interactiveBody: WaSendMessageBody["interactive"];
 }
 
+
 export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
+  const [openSections, setOpenSections] = useState(false);
+
   return (
-    <View className="p-3 rounded-xl bg-muted/50 space-y-2">
+    <View className="p-3 rounded-xl bg-muted/50 space-y-3">
+      {/* Responded */}
       {messageContent ? (
-        <View className="flex-row items-center space-x-1">
+        <View className="flex-row items-center space-x-2">
           <LucideCheckCircle2 size={16} color="#4ade80" />
           <Text className="text-sm text-muted-foreground">
             {`${messageContent} responded`}
@@ -630,28 +634,112 @@ export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
         </View>
       ) : null}
 
+      {/* Header */}
       {interactiveBody?.header && (
         <WaInboxInteractiveHeader interactiveBody={interactiveBody} />
       )}
 
+      {/* Body */}
       {interactiveBody?.body?.text && (
-        <Text className="text-base text-foreground">
+        <Text className="text-base text-foreground leading-5">
           {interactiveBody.body.text}
         </Text>
       )}
 
+      {/* Footer */}
       {interactiveBody?.footer?.text && (
         <Text className="text-xs text-muted-foreground">
           {interactiveBody.footer.text}
         </Text>
       )}
 
-      {interactiveBody?.action && (
-        <TouchableOpacity className="bg-rateUpGreen rounded-md">
-          <Text className="p-2">
-            {interactiveBody.action?.parameters?.flow_cta}
+      {/* Buttons (wrap nicely like web) */}
+      {interactiveBody?.action?.buttons && interactiveBody?.action?.buttons?.length > 0 && (
+        <View className="flex gap-2">
+          {interactiveBody.action.buttons.map((button) => (
+            <Pressable
+              key={button?.reply?.id}
+              className="bg-rateUpGreen px-4 py-2 rounded-lg flex items-center justify-center"
+            >
+              <Text className="text-white text-sm font-medium">
+                {button?.reply?.title || button?.reply?.id}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
+      {/* Flow CTA */}
+      {interactiveBody?.action?.parameters?.flow_cta && (
+        <Pressable className="bg-rateUpGreen px-4 py-3 rounded-lg items-center">
+          <Text className="text-white font-medium">
+            {interactiveBody?.action?.parameters?.flow_cta}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
+      )}
+
+      {/* URL CTA */}
+      {interactiveBody?.action?.name === "cta_url" && (
+        <Pressable
+          className="bg-blue-500 px-4 py-3 rounded-lg items-center"
+          onPress={() => {
+            const url = interactiveBody?.action?.parameters?.url;
+            if (url) Linking.openURL(url);
+          }}
+        >
+          <Text className="text-white font-medium">
+            {interactiveBody?.action?.parameters?.display_text}
+          </Text>
+        </Pressable>
+      )}
+
+      {/* Sections */}
+      {interactiveBody?.action?.button && (
+        <View className="w-full">
+          {/* Main button */}
+          <Pressable
+            disabled={!interactiveBody?.action?.sections?.length}
+            onPress={() => setOpenSections((prev) => !prev)}
+            className="w-full bg-muted rounded-lg px-4 py-3 items-center"
+          >
+            <Text className="text-sm font-semibold">
+              {interactiveBody?.action?.button}
+            </Text>
+          </Pressable>
+
+          {/* Sections list */}
+          {openSections && (
+            <View className="mt-2 bg-white rounded-xl p-3 max-h-80">
+              {interactiveBody?.action?.sections?.map((section) => (
+                <View key={section.title} className="mb-4">
+                  <Text className="text-xs font-semibold text-muted-foreground mb-2">
+                    {section.title}
+                  </Text>
+
+                  <View className="h-[1px] bg-gray-200 mb-2" />
+
+                  {section?.rows?.map((r) => (
+                    <Pressable
+                      key={r.id}
+                      className="py-2"
+                      onPress={() => console.log("Selected:", r)}
+                    >
+                      <Text className="text-sm font-medium">{r.title}</Text>
+
+                      {r.description && (
+                        <Text className="text-xs text-muted-foreground mt-1">
+                          {r.description}
+                        </Text>
+                      )}
+
+                      <View className="h-[1px] bg-gray-200 mt-3" />
+                    </Pressable>
+                  ))}
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
       )}
     </View>
   );

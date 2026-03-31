@@ -66,7 +66,7 @@ const MoreOptions = ({
             onPress={() => {
               onClose();
               router.push({
-                pathname: "/protected/inbox/contact/Edit",
+                pathname: "/protected/chat/Edit",
                 params: { contactId },
               });
             }}
