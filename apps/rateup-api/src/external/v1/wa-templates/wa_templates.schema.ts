@@ -94,7 +94,21 @@ export const sendWithFileSchema = z.object({
   timeDelay: z.coerce.number().int().min(15).optional(),
   templateName: z.string(),
   phone: z.coerce.number(),
-  body_variables: z.array(z.string()).optional(),
+  body_variables: z
+    .preprocess((val) => {
+      if (typeof val === "string") {
+        try {
+          return JSON.parse(val);
+        } catch {
+          return [];
+        }
+      }
+      return val;
+    }, z.array(z.coerce.string()))
+    .optional()
+    .describe(
+      "Array of variables for the template body. Example: ['variable1','variable2']",
+    ),
   teamId: z.string().optional(),
   tag: z.string().optional(),
   headerType: z.string().optional(),
@@ -163,6 +177,8 @@ export type RegisterTemplatesInDbBodySchema = z.infer<
 export type WaUserSendTemplateBodySchema = z.infer<
   typeof waUserSendTemplateBodySchema
 >;
+
+export type SendWithFileSchema = z.infer<typeof sendWithFileSchema>;
 
 // Auto-exported after fastify-zod migration
 export {

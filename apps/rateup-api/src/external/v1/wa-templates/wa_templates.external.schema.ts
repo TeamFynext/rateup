@@ -67,7 +67,7 @@ const sendTemplateToContact = sendTemplatesToContacts
 const sendTemplateByNameToPhone = scheduleTemplate.extend({
   templateName: z.string(),
   phone: z.number(),
-  body_variables: z.array(z.string()).optional(),
+  body_variables: z.array(z.coerce.string()).optional(),
   teamId: z.string().optional(),
   tag: z.string().optional(),
   parameterData: z
