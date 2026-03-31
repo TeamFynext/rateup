@@ -213,7 +213,7 @@ export default function ThankYou({
           )}
         </Stack>
         <div className="flex">
-          {!enableGoogleReview && <RateupRedirectCard />}
+          {/* {!enableGoogleReview && <RateupRedirectCard />} */}
         </div>
       </Flex>
     </CreditsCard>
