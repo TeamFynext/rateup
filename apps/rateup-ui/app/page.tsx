@@ -1,7 +1,6 @@
-"use client";
-
 import dynamic from "next/dynamic";
 
+import { getAllRateupPaymentPlans } from "@/backend/payment/payment.api";
 import Clients from "@/components/RateupHomePage/helper/Clients";
 import { CTA } from "@/components/RateupHomePage/helper/CTA";
 import { FeaturesGrid } from "@/components/RateupHomePage/helper/FeaturesGrid";
@@ -14,12 +13,9 @@ import Stats from "@/components/RateupHomePage/helper/Stats";
 import { Testimonials } from "@/components/RateupHomePage/helper/Testimonials";
 import Layout from "@/components/RateupHomePage/Layout";
 
-const SupportWidget = dynamic(
-  () => import("@/components/app&services/support-widget"),
-  { ssr: false },
-);
+const page = async () => {
+  const plans = await getAllRateupPaymentPlans();
 
-const page = () => {
   return (
     <Layout>
       <div className="bg-rateup-dark-blue text-white min-h-screen leading-relaxed">
@@ -30,7 +26,7 @@ const page = () => {
         <FeaturesGrid />
         <Integrations />
         <Testimonials />
-        <Pricing />
+        <Pricing plans={plans} />
         <CTA />
         <Footer />
       </div>

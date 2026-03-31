@@ -18,8 +18,6 @@ import {
 import { imagesPath } from "@/utils/constants";
 
 import CookieConsentBanner from "../Analytics/CookieConsentBanner";
-import { rateupLogoBlueTextUrl } from "../HomePage/constants";
-import { Button } from "../ui/button";
 import { BookDemoModal } from "./helper/BookDemoModal";
 import DropDownMobileNavItems from "./helpers/DropDownMobileNavItems";
 
@@ -91,10 +89,10 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   const router = useRouter();
 
   return (
-    <div className={`${!isBlog && "bg-rateup-darkblue"} relative w-full py-2`}>
+    <div className={`${!isBlog && "bg-rateup-darkblue"} relative w-full `}>
       <Navbar>
         {/* Desktop Navigation */}
-        <NavBody className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <NavBody className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 ">
           <Link
             href="/"
             className="relative z-20 mr-4 flex items-center

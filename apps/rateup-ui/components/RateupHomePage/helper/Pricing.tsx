@@ -1,5 +1,19 @@
-import { ChevronRight } from "lucide-react";
+"use client";
 
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { Badge, Group, SegmentedControl, Text } from "@mantine/core";
+import { ChevronRight } from "lucide-react";
+import { useTimeZone } from "next-intl";
+
+import { useCheckSession } from "@/hooks/checkSession";
+import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
+import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore";
+import { currencyLabel } from "@/components/menu/util/currencyData";
+import { BookDemoModal1 } from "@/components/RateupHomePage/helper/BookDemoModal";
+
+// ─── Check Icon ───────────────────────────────────────────────────────────────
 const CheckIcon = () => (
   <svg
     width="20"
@@ -20,174 +34,287 @@ const CheckIcon = () => (
   </svg>
 );
 
-interface Plan {
-  badge: string;
-  price: string;
-  priceSuffix?: string;
-  features: string[];
-  cta: string;
-  isPopular?: boolean;
-  ctaVariant?: "primary" | "outline";
+// ─── Helper: parse a single description string ────────────────────────────────
+// Strips anything after "||" (e.g. "Nice plan||Discount!!" → "Nice plan")
+function parseFeature(raw: string): string {
+  return raw.split("||")[0].trim();
 }
 
-const plans: Plan[] = [
-  {
-    badge: "BASIC",
-    price: "$49",
-    priceSuffix: "/mo",
-    features: [
-      "Unified Inbox (WA + IG + FB + Web)",
-      "Up To 500 Customer Profiles/Mo",
-      "Post-Purchase Feedback Flow",
-      "Basic Loyalty Rewards",
-      "Mobile App Access",
-      "Website Widget",
-      "2 Agent Logins",
-      "AI Chatbot",
-      "Automation Builder",
-      "CX Intelligence",
-    ],
-    cta: "Get Started Free",
-    ctaVariant: "primary",
-  },
-  {
-    badge: "MOST POPULAR",
-    price: "$149",
-    priceSuffix: "/mo",
-    features: [
-      "Everything In Basic",
-      "Up To 2,500 Profiles/Mo",
-      "WhatsApp AI Chatbot (Multi-Language)",
-      "No-Code Automation Builder",
-      "Instagram & WhatsApp Automations",
-      "Campaign Manager (Bulk + Personalized)",
-      "CX Intelligence + AI Sentiment",
-      "Ticketing & Escalation Engine",
-      "QR Studio",
-      "10 Agent Logins",
-    ],
-    cta: "Get Started Free",
-    isPopular: true,
-    ctaVariant: "primary",
-  },
-  {
-    badge: "PREMIUM",
-    price: "Custom",
-    features: [
-      "Everything In Plus",
-      "Unlimited Profiles & Agents",
-      "Multi-Branch Management",
-      "Shopify + WooCommerce + Custom API",
-      "Salesforce & HubSpot Integration",
-      "GDPR Compliance Toolkit",
-      "Dedicated Success Manager",
-      "SLA & Uptime Guarantee",
-      "White-Label Option",
-    ],
-    cta: "Contact Sales",
-    ctaVariant: "outline",
-  },
-];
+// ─── Main Component ───────────────────────────────────────────────────────────
+export function Pricing({ onPlanSelect = null, plans }) {
+  const [period, setPeriod] = useState("yearly");
+  const router = useRouter();
+  const userTimeZone = useTimeZone();
+  const { updateRouteAndCart } = useRouteAndCartStore();
+  const sendMail = useSendMailPlanSelectDetails();
+  const session = useCheckSession();
 
-export function Pricing() {
+  const currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
+  const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
+  const isMiddleEast = [
+    "Asia/Dubai",
+    "Asia/Qatar",
+    "Asia/Riyadh",
+    "Asia/Muscat",
+  ].includes(userTimeZone);
+
+  const rateupPlans = useMemo(
+    () =>
+      plans
+        ? plans
+            .filter(
+              (plan) =>
+                plan.name === "FREE PLAN" ||
+                (plan.paymentPlan &&
+                  plan?.paymentPlan?.currency === currency &&
+                  plan.paymentPlan.period === period),
+            )
+            .filter((plan) => {
+              if (!isMiddleEast) return true;
+              return !plan?.displayName
+                ?.trim()
+                ?.toLowerCase()
+                .includes("starter");
+            })
+        : [],
+    [plans, currency, period, isMiddleEast],
+  );
+
+  function handlePlanSelection(plan) {
+    if (onPlanSelect) onPlanSelect();
+    if (plan.name === "FREE PLAN") {
+      router.push("/signup");
+      return;
+    }
+
+    const route = "/dashboard/settings/billing";
+    const cartData = {
+      id: plan.id,
+      amount: plan.paymentPlan.amount,
+      currency: plan.paymentPlan.currency,
+      currencySymbol:
+        currencyLabel.find((c) => c.label === plan.paymentPlan.currency)
+          ?.symbol ?? currencySymbol,
+      description: plan.description,
+      period: plan?.paymentPlan?.period,
+      planId: plan?.paymentPlan?.planId,
+      name: plan?.displayName,
+      gateway: "RAZORPAY",
+      priceId: "",
+    };
+
+    updateRouteAndCart(route, cartData);
+    localStorage.setItem(
+      "subscriptionRoutAndCart",
+      JSON.stringify({ route, cartData }),
+    );
+
+    const userInfo = localStorage.getItem("userInfo");
+    if (session && userInfo) {
+      const data = JSON.parse(userInfo);
+      sendMail.mutate({
+        email: data.data.email,
+        name: data.data.userName,
+        orgName: data.data.orgName,
+        planName: plan.name,
+        planId: plan.id,
+      });
+    }
+
+    router.push(route);
+  }
+
+  const periods = [
+    { label: "Monthly", value: "monthly" },
+    {
+      label: (
+        <Group gap="xs" p={0} w={140}>
+          <Text>Yearly</Text>
+          <Badge
+            color={period === "yearly" ? "white" : "#2D74E0"}
+            c={period === "yearly" ? "#2D74E0" : "white"}
+          >
+            Save 20%
+          </Badge>
+        </Group>
+      ),
+      value: "yearly",
+    },
+  ];
+
+  // Last plan in list = enterprise (no paymentPlan, not FREE PLAN)
+  const isEnterprisePlan = (plan) =>
+    !plan.paymentPlan && plan.name !== "FREE PLAN";
+
+  // Middle card = popular highlight
+  const isPopularPlan = (index: number) =>
+    rateupPlans.length === 3 ? index === 1 : false;
+
   return (
     <section
-      className=" bg-rateup-dark-blue-3 relative overflow-hidden"
+      className="bg-rateup-dark-blue-3 relative overflow-hidden pb-5 pt-2"
       id="pricing"
     >
-      {/* Glow behind middle card */}
+      {/* Ambient glow behind middle card */}
       <div className="pointer-events-none absolute left-1/2 top-[55%] -translate-x-1/2 -translate-y-1/2 w-[360px] h-[700px] rounded-full bg-[#004F98] opacity-25 blur-[100px] z-0" />
 
       <div className="xl:max-w-6xl xl:mx-auto xl:w-[calc(100%-4rem)] px-8 xl:px-0 relative z-10 mb-16">
         {/* Heading */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10">
           <h2 className="text-3xl md:text-[44px] font-bold text-white tracking-tight mb-3">
             Pricing Comparison
           </h2>
           <p className="text-[#C4D7F5] text-base md:text-[17px]">
-            Get more value with RateUp's transparent and competitive pricing
+            Get more value with RateUp&apos;s transparent and competitive
+            pricing
           </p>
         </div>
 
-        {/* Cards grid */}
+        {/* Monthly / Yearly toggle */}
+        <div className="flex flex-col items-center gap-2 mb-12">
+          <SegmentedControl
+            transitionDuration={500}
+            transitionTimingFunction="linear"
+            size="lg"
+            color="#2D74E0"
+            bg="#050f24"
+            styles={{
+              root: { border: "1px solid rgba(45,116,224,0.3)" },
+              label: { color: "#93C6F5" },
+            }}
+            data={periods}
+            value={period}
+            onChange={setPeriod}
+          />
+        </div>
+
+        {/* Plan cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-          {plans.map((plan) => (
-            <div
-              key={plan.badge}
-              className={`relative flex flex-col rounded-[24px] overflow-hidden
-                ${
-                  plan.isPopular
-                    ? "bg-[#000A1F] border border-[#2D74E0] shadow-[0_0_0_1px_#2D74E0,0_0_80px_-10px_#004F98]"
-                    : "bg-[#000A1F]/80 border border-[#2D74E0]/20"
-                }`}
-            >
-              {/* Badge */}
-              <div className="pt-8 px-8 pb-0 flex justify-center">
-                <span
-                  className={`text-[11px] font-bold tracking-[0.12em] uppercase px-4 py-1.5 rounded-full border
-                    ${
-                      plan.isPopular
-                        ? "bg-[#2D74E0] text-white border-[#2D74E0]"
-                        : "bg-transparent text-[#93C6F5] border-[#2D74E0]/40"
-                    }`}
-                >
-                  {plan.badge}
-                </span>
-              </div>
+          {rateupPlans.map((plan, index) => {
+            const isPopular = isPopularPlan(index);
+            const isEnterprise = isEnterprisePlan(plan);
 
-              {/* Price */}
-              <div className="px-8 pt-5 pb-6">
-                {plan.priceSuffix ? (
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-5xl md:text-6xl font-bold text-white">
-                      {plan.price}
-                    </span>
-                    <span className="text-[#93C6F5] text-base font-medium">
-                      {plan.priceSuffix}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="text-5xl md:text-6xl font-bold text-white">
-                    {plan.price}
-                  </div>
-                )}
-              </div>
+            // ── Price display ──────────────────────────────────────────────
+            const displayPrice = isEnterprise
+              ? "Custom"
+              : plan.name === "FREE PLAN"
+                ? "Free"
+                : `${currencySymbol}${plan.paymentPlan.amount.toLocaleString()}`;
 
-              {/* Divider */}
-              <div className="mx-8 h-px bg-[#2D74E0]/20 mb-6" />
+            const priceSuffix =
+              !isEnterprise && plan.name !== "FREE PLAN"
+                ? period === "monthly"
+                  ? "/mo"
+                  : "/yr"
+                : undefined;
 
-              {/* Features */}
-              <ul className="px-8 flex-1 space-y-3.5 mb-8">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-3">
-                    <CheckIcon />
-                    <span className="text-[#E2E5ED] text-sm leading-snug">
-                      {f}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+            // ── Features: from plan.description array, strip "||..." tags ──
+            const featureList: string[] = Array.isArray(plan.description)
+              ? plan.description.map(parseFeature)
+              : [];
 
-              {/* CTA */}
-              <div className="px-8 pb-8 mt-auto">
-                {plan.ctaVariant === "primary" ? (
-                  <button className="w-full flex items-center justify-center gap-2 bg-[#2D74E0] hover:bg-[#0045CC] text-white font-medium text-sm rounded-xl py-3.5 transition-colors group">
-                    {plan.cta}
-                    <div className="bg-[#001747] rounded-md w-6 h-6 flex items-center justify-center group-hover:bg-[#001747]/80 transition-colors">
-                      <ChevronRight className="w-3.5 h-3.5 text-white" />
+            // ── Badge: straight from API displayName ───────────────────────
+            const badgeLabel =
+              plan.displayName?.toUpperCase() ?? plan.name?.toUpperCase();
+
+            return (
+              <div
+                key={plan.id}
+                className={`relative flex flex-col rounded-[24px] overflow-hidden transition-all duration-300
+                  ${
+                    isPopular
+                      ? "bg-[#000A1F] border border-[#2D74E0] shadow-[0_0_0_1px_#2D74E0,0_0_80px_-10px_#004F98]"
+                      : "bg-[#000A1F]/80 border border-[#2D74E0]/20 hover:border-[#2D74E0]/50"
+                  }`}
+              >
+                {/* Badge */}
+                <div className="pt-8 px-8 pb-0 flex justify-center">
+                  <span
+                    className={`text-[11px] font-bold tracking-[0.12em] uppercase px-4 py-1.5 rounded-full border
+                      ${
+                        isPopular
+                          ? "bg-[#2D74E0] text-white border-[#2D74E0]"
+                          : "bg-transparent text-[#93C6F5] border-[#2D74E0]/40"
+                      }`}
+                  >
+                    {badgeLabel}
+                  </span>
+                </div>
+
+                {/* Price */}
+                <div className="px-8 pt-5 pb-6">
+                  {priceSuffix ? (
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-5xl md:text-6xl font-bold text-white">
+                        {displayPrice}
+                      </span>
+                      <span className="text-[#93C6F5] text-base font-medium">
+                        {priceSuffix}
+                      </span>
                     </div>
-                  </button>
-                ) : (
-                  <button className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 text-white font-medium text-sm rounded-xl py-3.5 border border-white/25 transition-colors group">
-                    {plan.cta}
-                    <ChevronRight className="w-4 h-4 text-white" />
-                  </button>
-                )}
+                  ) : (
+                    <div className="text-5xl md:text-6xl font-bold text-white">
+                      {displayPrice}
+                    </div>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div className="mx-8 h-px bg-[#2D74E0]/20 mb-6" />
+
+                {/* Features */}
+                <ul className="px-8 flex-1 space-y-3.5 mb-8">
+                  {featureList.length > 0 ? (
+                    featureList.map((f, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <CheckIcon />
+                        <span className="text-[#E2E5ED] text-sm leading-snug">
+                          {f}
+                        </span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-[#93C6F5] text-sm italic">
+                      Contact us for full feature details
+                    </li>
+                  )}
+                </ul>
+
+                {/* CTA */}
+                <div className="px-8 pb-8 mt-auto">
+                  {isEnterprise ? (
+                    <div className="w-full [&>button]:w-full [&>button]:rounded-xl [&>button]:py-3.5 [&>button]:border [&>button]:border-white/25 [&>button]:text-white [&>button]:text-sm [&>button]:font-medium [&>button]:hover:bg-white/5 [&>button]:transition-colors">
+                      <BookDemoModal1 />
+                    </div>
+                  ) : isPopular ? (
+                    <button
+                      onClick={() => handlePlanSelection(plan)}
+                      className="w-full flex items-center justify-center gap-2 bg-[#2D74E0] hover:bg-[#0045CC] text-white font-medium text-sm rounded-xl py-3.5 transition-colors group"
+                    >
+                      Get Started
+                      <div className="bg-[#001747] rounded-md w-6 h-6 flex items-center justify-center group-hover:bg-[#001747]/80 transition-colors">
+                        <ChevronRight className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handlePlanSelection(plan)}
+                      className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 text-white font-medium text-sm rounded-xl py-3.5 border border-white/25 transition-colors group"
+                    >
+                      {plan.name === "FREE PLAN"
+                        ? "Get Started Free"
+                        : "Get Started"}
+                      <ChevronRight className="w-4 h-4 text-white" />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
   );
 }
+
+export default Pricing;
