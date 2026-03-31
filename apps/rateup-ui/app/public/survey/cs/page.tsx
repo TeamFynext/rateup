@@ -52,7 +52,7 @@ const Page = () => {
             />
           )}
         </Container>
-        <RateupRedirectCard />
+        {/* <RateupRedirectCard /> */}
       </Paper>
     </Container>
   );
