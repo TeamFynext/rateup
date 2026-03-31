@@ -138,7 +138,7 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
       file,
       buttonVariable,
     } = req.body;
-    const bodyVariables = JSON.parse(body_variables?.[0] || "[]");
+    const bodyVariables = body_variables || [];
 
     const orgId = req.user.orgId;
     if (!orgId)
