@@ -15,6 +15,7 @@ import {
   NavBody,
   NavItems,
 } from "@/components/ui/resizable-navbar";
+import { imagesPath } from "@/utils/constants";
 
 import CookieConsentBanner from "../Analytics/CookieConsentBanner";
 import { rateupLogoBlueTextUrl } from "../HomePage/constants";
@@ -66,6 +67,7 @@ const homePageJsonLd = {
 
 export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   const hasSession = useCheckSession();
+  const rateupLogoUrl = `${imagesPath}/rateupLogo.svg`;
   const navItems = [
     {
       name: "Pricing",
@@ -99,11 +101,11 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
              space-x-2 px-2 py-1 text-sm font-normal text-black"
           >
             <Image
-              src={rateupLogoBlueTextUrl}
-              alt="logo"
-              width={70}
-              height={30}
-              className="w-14 h-14"
+              src={rateupLogoUrl}
+              alt="RateUp logo"
+              width={140}
+              height={60}
+              className="h-9 w-auto object-contain"
               priority
             />
           </Link>
@@ -153,7 +155,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
               space-x-2 lg:px-8 px-2 py-1 text-sm font-normal text-black"
             >
               <Image
-                src={rateupLogoBlueTextUrl}
+                src={rateupLogoUrl}
                 alt="logo"
                 width={70}
                 height={30}
@@ -177,12 +179,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
               }`}
             >
               <div className="flex justify-between items-center mb-6">
-                <Image
-                  src={rateupLogoBlueTextUrl}
-                  alt="logo"
-                  width={60}
-                  height={30}
-                />
+                <Image src={rateupLogoUrl} alt="logo" width={60} height={30} />
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="text-2xl font-bold"

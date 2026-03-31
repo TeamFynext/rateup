@@ -1,5 +1,3 @@
-import { Inbox, MessageSquare, Target, Zap } from "lucide-react";
-
 import { imagesPath } from "@/utils/constants";
 
 import AppStoreButtons from "../components/btn";

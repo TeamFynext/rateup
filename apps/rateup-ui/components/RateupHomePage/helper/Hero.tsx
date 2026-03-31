@@ -113,7 +113,7 @@ export default function Hero() {
       {/* Right image */}
       <div className="w-full md:w-1/2 flex items-center justify-end">
         <Image
-          src={`${imagesPath}/landing/cover.svg`}
+          src={`${imagesPath}/landing/cover-1.svg`}
           alt="cover"
           width={400}
           height={400}

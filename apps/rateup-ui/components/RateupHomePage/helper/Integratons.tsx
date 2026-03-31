@@ -1,8 +1,5 @@
-import { ArrowUpRight } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import { imagesPath } from "@/utils/constants";
-import { geist, sora } from "@/utils/fonts";
+import { sora } from "@/utils/fonts";
 
 import { ArrowButton } from "../components/btn";
 
@@ -29,7 +26,7 @@ export function Integrations() {
               Connect Rateup To Your Favourite Tools
             </h2>
             <h6
-              className={`text-rateup-light-blue-2 text-base sm:text-lg pb-4 max-w-xl mx-auto text-center ${geist.className}`}
+              className={`text-rateup-light-blue-2 text-base sm:text-lg pb-4 max-w-xl mx-auto text-center`}
             >
               Integrate with Shopify, WooCommerce, Zendesk, and 100+ other
               platforms to bring all your customer data into one unified

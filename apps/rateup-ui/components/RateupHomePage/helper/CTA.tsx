@@ -1,6 +1,3 @@
-import { Button } from "@/components/ui/button";
-import { sora } from "@/utils/fonts";
-
 import { ArrowButton, GradientText } from "../components/btn";
 
 const RadarBackground = () => (

@@ -25,9 +25,6 @@ export default function Stats({
     <section className="py-0 pb-4">
       <div className="mx-8 xl:mx-auto xl:max-w-6xl xl:w-[calc(100%-4rem)]">
         <div className="rounded-[32px] bg-[#000A1F] px-4 py-0 overflow-hidden relative">
-          {/* Subtle glow behind the stats */}
-          {/* <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-rateup-blue/10 via-transparent to-transparent"></div> */}
-
           <div className="grid grid-cols-2 md:grid-cols-4 md:divide-x divide-[#004F98] text-center">
             {stats.map((stat, i) => (
               <div
