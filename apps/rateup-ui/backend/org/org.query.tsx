@@ -7,6 +7,7 @@ import {
   completeOrgDetails,
   getAllOrgs,
   getAllTeamsMembersOfOrg,
+  getChecklist,
   getOrgStats,
   getTeamsMembersOfOrg,
   getWebhookClientSecret,
@@ -144,5 +145,12 @@ export function useOrgNameAndPhone() {
   return useQuery({
     queryKey: ["orgNameAndPhone"],
     queryFn: orgNameAndPhone,
+  });
+}
+
+export function useChecklist() {
+  return useQuery({
+    queryKey: ["onboarding-checklist"],
+    queryFn: getChecklist,
   });
 }

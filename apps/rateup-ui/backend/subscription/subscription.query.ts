@@ -14,7 +14,7 @@ export const useSubscription = (enabled = true) =>
     queryKey: ["subscription"],
     queryFn: getUserSubscription,
     enabled,
-    staleTime: Infinity,
+    staleTime: 0,
     gcTime: 1000 * 60 * 60 * 24,
   });
 export const useSubscriptionByOrgId = (orgId: string) =>

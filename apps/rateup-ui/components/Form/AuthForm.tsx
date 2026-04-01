@@ -14,8 +14,6 @@ import {
   useSignUp,
 } from "../../utils/auth";
 import { AuthMode } from "../../utils/enums";
-import { rateupLogoUrl } from "../HomePage/constants";
-import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import styles from "./AuthForm.module.css";
 import AuthTypeSignupForm from "./AuthTypeSignupFormNew";
 import SignInFlow from "./LoginFormNew";

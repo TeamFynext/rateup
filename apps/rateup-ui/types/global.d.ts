@@ -371,6 +371,7 @@ declare global {
     onboardingCompleted?: boolean;
     presenceMode: UserPresenceMode;
     showLifecycle: boolean;
+    onboardingChecklistCompleted: boolean;
   };
 
   interface UserInfoQueryData {

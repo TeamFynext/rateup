@@ -181,7 +181,6 @@ function AuthTypeSignupForm({
               isLoading={isLoading}
             />
           )}
-          {/* {currentStep === 4 && <Step4 formData={signupForm} />} */}
         </Card>
       </div>
     </div>
