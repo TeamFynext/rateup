@@ -344,286 +344,293 @@ export function Step1({ formData, handleNext, google }) {
   };
 
   return (
-    <div className="flex flex-col gap-2 sm:gap-3 w-full min-h-96">
-      {google ? (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center space-x-3">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <div>
-              <p className="text-sm font-medium text-green-800">
-                Account connected successfully!
-              </p>
-              <p className="text-xs text-gray-600 mt-1">
-                {formData.values.email}
-              </p>
+    <div className="flex flex-col justify-between gap-2 sm:gap-3 w-full min-h-96">
+      <div className="flex flex-col gap-2">
+        {google ? (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <div>
+                <p className="text-sm font-medium text-green-800">
+                  Account connected successfully!
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {formData.values.email}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <GoogleSignInButton
-          className="w-full h-8 py-2 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-800 hover:bg-gray-50 font-medium"
-          buttonText={"Continue with Google"}
-        />
-      )}
-      {!google && (
-        <>
-          {/* Divider */}
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-white px-3 text-gray-400 tracking-wider uppercase">
-                Or continue with email
-              </span>
-            </div>
-          </div>
-        </>
-      )}
-      <div className="space-y-2 sm:space-y-3">
-        <div className="space-y-1">
-          <Label htmlFor="email" className="text-xs font-medium text-gray-900">
-            Name
-          </Label>
-          <div className="relative">
-            <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              id="name"
-              type="text"
-              placeholder={translations("Name")}
-              className="pl-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
-              {...formData.getInputProps("name")}
-            />
-          </div>
-        </div>
-        {/* Email + Passwords (only if not Google signup) */}
+        ) : (
+          <GoogleSignInButton
+            className="w-full h-8 py-2 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-800 hover:bg-gray-50 font-medium"
+            buttonText={"Continue with Google"}
+          />
+        )}
         {!google && (
           <>
-            <div className="space-y-0.5 sm:space-y-1">
-              <div className="space-y-1">
-                <Label
-                  htmlFor="email"
-                  className="text-xs font-medium text-gray-900"
-                >
-                  Email Address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@company.com"
-                    {...formData.getInputProps("email")}
-                    className="pl-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
-                  />
+            {/* Divider */}
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white px-3 text-gray-400 tracking-wider uppercase">
+                  Or continue with email
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+        <div className="space-y-2 sm:space-y-3">
+          <div className="space-y-1">
+            <Label
+              htmlFor="email"
+              className="text-xs font-medium text-gray-900"
+            >
+              Name
+            </Label>
+            <div className="relative">
+              <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                id="name"
+                type="text"
+                placeholder={translations("Name")}
+                className="pl-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
+                {...formData.getInputProps("name")}
+              />
+            </div>
+          </div>
+          {/* Email + Passwords (only if not Google signup) */}
+          {!google && (
+            <>
+              <div className="space-y-0.5 sm:space-y-1">
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="email"
+                    className="text-xs font-medium text-gray-900"
+                  >
+                    Email Address
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="you@company.com"
+                      {...formData.getInputProps("email")}
+                      className="pl-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
+                    />
+                  </div>
                 </div>
+
+                {/* Animated Error Message */}
+                <AnimatePresence>
+                  {emailError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex items-center gap-1 mt-0.5 sm:mt-1 text-xs text-red-600 font-medium"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {translations("This account already exists")}.{" "}
+                      {translations("Please sign in to continue")}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
-              {/* Animated Error Message */}
-              <AnimatePresence>
-                {emailError && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex items-center gap-1 mt-0.5 sm:mt-1 text-xs text-red-600 font-medium"
+              {/* Password */}
+              <div className="space-y-1">
+                <Label
+                  htmlFor="password"
+                  className="text-xs font-medium text-gray-900"
+                >
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a strong password"
+                    {...formData.getInputProps("password")}
+                    onFocus={() => setIsPasswordFocused(true)}
+                    onBlur={() => setIsPasswordFocused(false)}
+                    className="pl-11 pr-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+              {/* Password Validation Errors */}
+              <AnimatePresence>
+                {formData.values.password &&
+                  !isPasswordValid(formData.values.password) && (
+                    <motion.div
+                      key="password-invalid"
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex items-center gap-1 mt-0.5 sm:mt-1 text-xs text-red-600 font-medium"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {translations("This account already exists")}.{" "}
-                    {translations("Please sign in to continue")}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {translations(
+                        "Your password must meet all security requirements",
+                      )}
+                    </motion.div>
+                  )}
+              </AnimatePresence>
+
+              {/* Password Rules */}
+              <AnimatePresence>
+                {isPasswordFocused && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="text-xs text-gray-500 mt-0.5 sm:mt-1 overflow-hidden"
+                  >
+                    {translations("Password must have")}:
+                    <ul className="list-none mt-0.5 sm:mt-1 space-y-0.5 sm:space-y-1">
+                      {rules.map((rule) => (
+                        <li
+                          key={rule.label}
+                          className="flex items-center space-x-1"
+                        >
+                          {rule.valid ? (
+                            <span className="text-green-600">
+                              <Check
+                                size={16}
+                                className="sm:w-[18px] sm:h-[18px]"
+                              />
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">
+                              <Dot
+                                size={16}
+                                className="sm:w-[18px] sm:h-[18px]"
+                              />
+                            </span>
+                          )}
+                          <span
+                            className={
+                              rule.valid ? "text-gray-800" : "text-gray-500"
+                            }
+                          >
+                            {rule.label}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-
-            {/* Password */}
-            <div className="space-y-1">
-              <Label
-                htmlFor="password"
-                className="text-xs font-medium text-gray-900"
-              >
-                Password
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a strong password"
-                  {...formData.getInputProps("password")}
-                  onFocus={() => setIsPasswordFocused(true)}
-                  onBlur={() => setIsPasswordFocused(false)}
-                  className="pl-11 pr-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-            {/* Password Validation Errors */}
-            <AnimatePresence>
-              {formData.values.password &&
-                !isPasswordValid(formData.values.password) && (
-                  <motion.div
-                    key="password-invalid"
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex items-center gap-1 mt-0.5 sm:mt-1 text-xs text-red-600 font-medium"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {translations(
-                      "Your password must meet all security requirements",
-                    )}
-                  </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Password Rules */}
-            <AnimatePresence>
-              {isPasswordFocused && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="text-xs text-gray-500 mt-0.5 sm:mt-1 overflow-hidden"
-                >
-                  {translations("Password must have")}:
-                  <ul className="list-none mt-0.5 sm:mt-1 space-y-0.5 sm:space-y-1">
-                    {rules.map((rule) => (
-                      <li
-                        key={rule.label}
-                        className="flex items-center space-x-1"
-                      >
-                        {rule.valid ? (
-                          <span className="text-green-600">
-                            <Check
-                              size={16}
-                              className="sm:w-[18px] sm:h-[18px]"
-                            />
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">
-                            <Dot
-                              size={16}
-                              className="sm:w-[18px] sm:h-[18px]"
-                            />
-                          </span>
-                        )}
-                        <span
-                          className={
-                            rule.valid ? "text-gray-800" : "text-gray-500"
-                          }
-                        >
-                          {rule.label}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
       {/* Terms checkbox */}
-      <div className="flex items-start space-x-3 pt-2">
-        <Checkbox
-          id="terms"
-          checked={agreesToTerms}
-          onCheckedChange={(checked) => setAgreesToTerms(checked as boolean)}
-          className="border-2 border-gray-300 h-4 w-4 shrink mt-0.5"
-        />
-        <Label
-          htmlFor="terms"
-          className="text-xs text-gray-600 leading-relaxed cursor-pointer"
-        >
-          I agree to the{" "}
-          <button
-            onClick={() => router.push("/terms-of-service")}
-            className="text-primary hover:underline"
+      <div className="flex flex-col gap-1">
+        <div className="flex items-start space-x-3 pt-2">
+          <Checkbox
+            id="terms"
+            checked={agreesToTerms}
+            onCheckedChange={(checked) => setAgreesToTerms(checked as boolean)}
+            className="border-2 border-gray-300 h-4 w-4 shrink mt-0.5"
+          />
+          <Label
+            htmlFor="terms"
+            className="text-xs text-gray-600 leading-relaxed cursor-pointer"
           >
-            Terms of Service
-          </button>{" "}
-          and{" "}
-          <button
-            onClick={() => router.push("/privacy-policy")}
-            className="text-primary hover:underline"
+            I agree to the{" "}
+            <button
+              onClick={() => router.push("/terms-of-service")}
+              className="text-primary hover:underline"
+            >
+              Terms of Service
+            </button>{" "}
+            and{" "}
+            <button
+              onClick={() => router.push("/privacy-policy")}
+              className="text-primary hover:underline"
+            >
+              Privacy Policy
+            </button>
+          </Label>
+        </div>
+
+        <div className="text-center">
+          <p className="text-xs text-gray-600">
+            Already have an account?{" "}
+            <span
+              onClick={() => router.push("/login")}
+              className="text-primary font-medium hover:underline cursor-pointer"
+            >
+              Sign in
+            </span>
+          </p>
+        </div>
+        {/* Footer actions */}
+
+        <div className="flex justify-between gap-4 mt-2">
+          <Button
+            variant="outline"
+            disabled={true}
+            className="flex items-center px-4 h-8 border-2 border-gray-300 hover:border-gray-400 text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            Privacy Policy
-          </button>
-        </Label>
-      </div>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
 
-      <div className="text-center">
-        <p className="text-xs text-gray-600">
-          Already have an account?{" "}
-          <span
-            onClick={() => router.push("/login")}
-            className="text-primary font-medium hover:underline cursor-pointer"
+          <Button
+            onClick={handleClick}
+            disabled={!isFormComplete}
+            className="flex items-center px-4 h-8 bg-primary hover:bg-primary/90 text-white font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sign in
-          </span>
-        </p>
-      </div>
-      {/* Footer actions */}
-
-      <div className="flex justify-between gap-4 mt-2">
-        <Button
-          variant="outline"
-          disabled={true}
-          className="flex items-center px-4 h-8 border-2 border-gray-300 hover:border-gray-400 text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-
-        <Button
-          onClick={handleClick}
-          disabled={!isFormComplete}
-          className="flex items-center px-4 h-8 bg-primary hover:bg-primary/90 text-white font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? <Loader /> : translations("Continue")}
-          <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
+            {loading ? <Loader /> : translations("Continue")}
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
       </div>
     </div>
   );

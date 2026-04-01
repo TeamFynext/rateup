@@ -98,6 +98,7 @@ function AuthTypeSignupForm({
       orgName: signupForm.values?.orgName,
       email: signupForm.values?.email,
       type: authType,
+      industry: signupForm.values?.industry,
       website: signupForm.values?.website,
       phoneNumber: signupForm.values?.phoneNumber,
       location: signupForm.values?.location,
@@ -158,7 +159,7 @@ function AuthTypeSignupForm({
             />
           </div>
         </div>
-        <Card className="flex flex-col items-center px-6 py-4 sm:min-w-lg max-w-2xl">
+        <Card className="flex flex-col items-center px-6 py-4 sm:min-w-md">
           {currentStep === 1 && (
             <Step1
               formData={signupForm}
