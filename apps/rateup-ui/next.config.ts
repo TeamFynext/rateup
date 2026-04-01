@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 import { SentryBuildOptions, withSentryConfig } from "@sentry/nextjs";
 import createNextIntlPlugin from "next-intl/plugin";
 
+import redirects from "./redirects";
+
 const nextConfig: NextConfig = {
   reactStrictMode: false,
   // typedRoutes: true,
@@ -37,32 +39,8 @@ const nextConfig: NextConfig = {
     // optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
     useLightningcss: true,
   },
-  async redirects(): Promise<any> {
-    return [
-      {
-        source: "/shipping-and-delivery",
-        destination: "/terms-of-service#shipping-and-delivery",
-        permanent: false,
-      },
-      {
-        source: "/cancellation-and-refund",
-        destination: "/terms-of-service#cancellation-and-refund",
-        permanent: false,
-      },
-      {
-        source: "/blog/about",
-        destination: "blog",
-        permanent: true,
-      },
-      {
-        source:
-          "/blog/whatsapp-based-loyalty-programs-the-smartest-way-to-reward-customers-in-2025",
-        destination:
-          "/blog/whatsapp-based-loyalty-programs-the-smartest-way-to-reward-customers",
-        permanent: true,
-        statusCode: 301,
-      },
-    ];
+  async redirects() {
+    return redirects;
   },
 };
 
