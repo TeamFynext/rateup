@@ -16,7 +16,7 @@ async function Price() {
   const plans = await getAllRateupPaymentPlans();
   if (plans?.error) {
     return (
-      <div style={{ padding: 20 }}>
+      <div className="flex flex-col items-center justify-center h-15 px-42">
         <h1>API Failed</h1>
         <p>{plans.error}</p>
       </div>

@@ -251,24 +251,23 @@ export function Footer() {
             </div>
           </div>
         </div>
-
-        {/* Bottom bar */}
-        <div className="bg-rateup-dark-blue-3 w-screen relative left-1/2 -translate-x-1/2 flex flex-col md:flex-row items-center justify-between gap-4 py-5 border-t border-white/10 lg:px-14">
-          <p className="text-[#93C6F5]/70 text-sm">
-            ©2025 RateUp. All rights reserved.
-          </p>
-          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-1">
-            {legalLinks.map((l) => (
-              <Link
-                key={l.title}
-                href={l.link}
-                className="text-[#93C6F5]/70 hover:text-white text-sm transition-colors"
-              >
-                {l.title}
-              </Link>
-            ))}
-          </nav>
-        </div>
+      </div>
+      {/* Bottom bar */}
+      <div className="bg-rateup-dark-blue-3 w-full flex flex-col md:flex-row items-center justify-between gap-4 py-5 border-t border-white/10 lg:px-14">
+        <p className="text-[#93C6F5]/70 text-sm">
+          ©2025 RateUp. All rights reserved.
+        </p>
+        <nav className="flex flex-wrap justify-center gap-x-6 gap-y-1">
+          {legalLinks.map((l) => (
+            <Link
+              key={l.title}
+              href={l.link}
+              className="text-[#93C6F5]/70 hover:text-white text-sm transition-colors"
+            >
+              {l.title}
+            </Link>
+          ))}
+        </nav>
       </div>
     </footer>
   );
