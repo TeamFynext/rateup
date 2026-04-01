@@ -12,7 +12,7 @@ const coreCampaignSchema = z
     type: z.enum(CampaignType),
     teamId: z.string(),
     waTemplateId: z.string().optional(),
-    flowId: z.string().optional(),
+    flowId: z.coerce.string().optional(),
     dynamicTags: z.array(z.string().nullable()).optional(),
     dripStages: z
       .array(
