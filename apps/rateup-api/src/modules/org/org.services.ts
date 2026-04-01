@@ -290,6 +290,8 @@ export async function updateOrgDetails(
     encryptionKeys,
     waAssignedChatPermission,
     showLifecycle,
+    onboardingChecklistCompleted,
+    onboardingChecklist,
   }: UpdateOrgDetailsInput,
   request: FastifyRequest,
   reply: FastifyReply,
@@ -299,10 +301,12 @@ export async function updateOrgDetails(
   let orgId = accessTokenPayload.orgId;
   const existingOrg = await prisma.org.findUnique({
     where: { id: orgId },
-    select: { onboarding: true },
+    select: { onboarding: true, onboardingChecklist: true },
   });
   const existingOnboarding =
     (existingOrg?.onboarding as Record<string, any>) ?? {};
+  const existingOnboardingChecklist =
+    (existingOrg?.onboardingChecklist as Record<string, any>) ?? {};
   const org = await prisma.org.update({
     where: { id: orgId },
     data: {
@@ -319,6 +323,11 @@ export async function updateOrgDetails(
         businessmail: businessmail,
       },
       showLifecycle,
+      onboardingChecklistCompleted,
+      onboardingChecklist: {
+        ...existingOnboardingChecklist,
+        ...onboardingChecklist,
+      },
     },
   });
   return org;
@@ -739,5 +748,21 @@ export async function getOrgNameAndUserPhone(userId: string) {
     userPhone: userWithOrg.phone,
     orgName: userWithOrg.org.length > 0 ? userWithOrg.org[0].name : null,
     nameOfUser: userWithOrg.name,
+  };
+}
+
+export async function getOnboardingChecklist(orgId) {
+  const org = await prisma.org.findUnique({
+    where: { id: orgId },
+    select: {
+      onboardingChecklist: true,
+      onboardingChecklistCompleted: true,
+    },
+  });
+
+  return {
+    onboardingChecklist:
+      (org?.onboardingChecklist as Record<string, boolean>) ?? {},
+    onboardingChecklistCompleted: org?.onboardingChecklistCompleted ?? false,
   };
 }

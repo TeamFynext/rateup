@@ -53,6 +53,21 @@ const updateOrgDetailsSchema = z.object({
     .optional(),
   waAssignedChatPermission: z.enum(WaAssignedChatPermission).optional(),
   showLifecycle: z.boolean().optional(),
+  onboardingChecklistCompleted: z.boolean().optional(),
+  onboardingChecklist: z
+    .object({
+      api: z.boolean().optional(),
+      verify: z.boolean().optional(),
+      invite: z.boolean().optional(),
+      auto: z.boolean().optional(),
+      points: z.boolean().optional(),
+      tiers: z.boolean().optional(),
+      rewards: z.boolean().optional(),
+      referral: z.boolean().optional(),
+      cmds: z.boolean().optional(),
+      loyaltyauto: z.boolean().optional(),
+    })
+    .optional(),
 });
 const byOrgIdParams = z.object({
   orgId: z.string(),
