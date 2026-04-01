@@ -102,7 +102,7 @@ export const NavBody = ({ children, className }: NavBodyProps) => {
         },
       }}
       className={cn(
-        "relative z-[60] mx-auto hidden w-full max-w-6xl flex-row items-center justify-between self-start rounded-2xl bg-white px-4 py-3 xl:flex shadow-md",
+        "relative z-60 mx-auto hidden flex-row items-center justify-between self-start rounded-2xl bg-white px-4 py-2 xl:flex shadow-md max-w-6xl w-[calc(100%-4rem)]",
         className,
       )}
     >
@@ -190,7 +190,7 @@ export const MobileNavHeader = ({
   return (
     <div
       className={cn(
-        "flex w-full flex-row items-center justify-between",
+        "mx-6 flex w-full flex-row items-center justify-between",
         className,
       )}
     >

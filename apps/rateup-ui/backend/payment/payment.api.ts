@@ -8,8 +8,14 @@ const PAYMENT_PUBLIC_URL = "/public/payment/";
 export const getAllPaymentPlans = async () =>
   (await axiosClient.get(`${PLAN_URL}`)).data;
 
-export const getAllRateupPaymentPlans = async () =>
-  (await axiosClient.get(`${PAYMENT_PUBLIC_URL}rateup-plans`)).data;
+export const getAllRateupPaymentPlans = async () => {
+  try {
+    return (await axiosClient.get(`${PAYMENT_PUBLIC_URL}rateup-plans`)).data;
+  } catch (error) {
+    console.error("Error fetching Rateup payment plans:", error);
+    return { error: "Failed to fetch Rateup payment plans" }; // Return an error object instead of throwing
+  }
+};
 
 export async function syncRazorPayPlans() {
   return (await axiosClient.post(`/payment/sync-plans`)).data;
