@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { Link, RichTextEditor } from "@mantine/tiptap";
 import { Color } from "@tiptap/extension-color";
+import Image from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Youtube from "@tiptap/extension-youtube";
@@ -24,6 +25,7 @@ export default function CustomTextEditor({ content, onUpdate }) {
       TextStyle,
       Youtube,
       Video,
+      Image,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
     shouldRerenderOnTransaction: true,
