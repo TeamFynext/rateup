@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
     // optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
     useLightningcss: true,
   },
-  async redirects() {
+  async redirects(): Promise<any> {
     return [
       {
         source: "/shipping-and-delivery",
@@ -53,6 +53,14 @@ const nextConfig: NextConfig = {
         source: "/blog/about",
         destination: "blog",
         permanent: true,
+      },
+      {
+        source:
+          "/blog/whatsapp-based-loyalty-programs-the-smartest-way-to-reward-customers-in-2025",
+        destination:
+          "/blog/whatsapp-based-loyalty-programs-the-smartest-way-to-reward-customers",
+        permanent: true,
+        statusCode: 301,
       },
     ];
   },
