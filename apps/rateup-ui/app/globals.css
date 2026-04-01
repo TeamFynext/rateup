@@ -124,6 +124,7 @@
   --rateup-lightgraytext: #7a8289;
   --rateup-dark-blue: #001747;
   --rateup-dark-blue-2: #052259;
+  --rateup-dark-blue-3: #000a1f;
   --rateup-blue: var(--primary);
   --rateup-blue-2: #2d74e0;
   --rateup-blue-3: #66d7ff;
@@ -214,6 +215,8 @@
   --color-rateup-blue: var(--rateup-blue);
   --color-rateup-blue-2: var(--rateup-blue-2);
   --color-rateup-blue-3: var(--rateup-blue-3);
+  --color-rateup-dark-blue-3: var(--rateup-dark-blue-3);
+  --color-rateup-dark-blue: var(--rateup-dark-blue);
   --color-rateup-blue-foreground: var(--rateup-blue-foreground);
   --color-rateup-graytext: var(--rateup-graytext);
   --color-rateup-lightgraytext: var(--rateup-lightgraytext);
@@ -233,6 +236,7 @@
   --color-active-green-3: var(--active-green-3);
   --color-rateup-blue-4: var(--rateup-blue-4);
   --color-shade-of-blue: var(--shade-of-blue);
+  --color-shade-of-blue-14: var(--shade-of-blue-14);
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
   --radius-2xl: calc(var(--radius) * 1.8);

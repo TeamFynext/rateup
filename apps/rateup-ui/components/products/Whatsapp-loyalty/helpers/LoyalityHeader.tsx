@@ -7,7 +7,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helpers/BookDemoModal";
+import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 import DropDownMobileNavItems from "@/components/RateupHomePage/helpers/DropDownMobileNavItems";
 import DropDownNavItems from "@/components/RateupHomePage/helpers/DropDownNavItems";
 import { Button } from "@/components/ui/button";

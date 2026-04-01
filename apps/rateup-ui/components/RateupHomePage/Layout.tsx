@@ -15,11 +15,10 @@ import {
   NavBody,
   NavItems,
 } from "@/components/ui/resizable-navbar";
+import { imagesPath } from "@/utils/constants";
 
 import CookieConsentBanner from "../Analytics/CookieConsentBanner";
-import { rateupLogoBlueTextUrl } from "../HomePage/constants";
-import { Button } from "../ui/button";
-import { BookDemoModal } from "./helpers/BookDemoModal";
+import { BookDemoModal } from "./helper/BookDemoModal";
 import DropDownMobileNavItems from "./helpers/DropDownMobileNavItems";
 
 interface LayoutProps {
@@ -66,6 +65,7 @@ const homePageJsonLd = {
 
 export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   const hasSession = useCheckSession();
+  const rateupLogoUrl = `${imagesPath}/rateupLogo.svg`;
   const navItems = [
     {
       name: "Pricing",
@@ -89,21 +89,21 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   const router = useRouter();
 
   return (
-    <div className={`${!isBlog && "bg-rateup-darkblue"} relative w-full py-8`}>
+    <div className={`${!isBlog && "bg-rateup-darkblue"} relative w-full `}>
       <Navbar>
         {/* Desktop Navigation */}
-        <NavBody>
+        <NavBody className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 ">
           <Link
             href="/"
             className="relative z-20 mr-4 flex items-center
              space-x-2 px-2 py-1 text-sm font-normal text-black"
           >
             <Image
-              src={rateupLogoBlueTextUrl}
-              alt="logo"
-              width={70}
-              height={30}
-              className="w-14 h-14"
+              src={rateupLogoUrl}
+              alt="RateUp logo"
+              width={140}
+              height={60}
+              className="h-9 w-auto object-contain"
               priority
             />
           </Link>
@@ -123,24 +123,22 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
             <div className="flex items-center gap-4 justify-center">
               <Link
                 href={"/signup"}
-                className="px-4 text-[16px] relative py-2 rounded-sm border font-semibold 
-               border-rateup-blue-4 bg-rateup-blue-4
-              text-white transition"
+                className="px-4 text-[14px] relative py-2 rounded-xl border font-semibold border-rateup-blue-4 bg-rateup-blue-2 text-white transition"
               >
                 Start Free Trial
               </Link>
               <BookDemoModal>
-                <button className="bg-rateup-gold px-4 py-2 rounded-sm text-white cursor-pointer hover:bg-rateup-orange">
-                  <span className="font-semibold text-[16px]">Book A Demo</span>
+                <button className="bg-rateup-light-blue px-4 py-2 rounded-xl text-rateup-dark-blue cursor-pointer hover:bg-rateup-darkblue-2">
+                  <span className="font-semibold text-[14px]">Book A Demo</span>
                 </button>
               </BookDemoModal>
               <button
                 onClick={() => router.push("/login")}
-                className="px-8 flex items-center justify-center rounded-sm cursor-pointer
+                className="px-10 flex items-center justify-center rounded-xl cursor-pointer
              text-rateup-blue border border-rateup-light-blue hover:bg-rateup-blue-4
              hover:text-white transition bg-white py-2"
               >
-                <span className="font-semibold text-[16px]">Login</span>
+                <span className="font-semibold text-[14px]">Login</span>
               </button>
             </div>
           )}
@@ -155,7 +153,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
               space-x-2 lg:px-8 px-2 py-1 text-sm font-normal text-black"
             >
               <Image
-                src={rateupLogoBlueTextUrl}
+                src={rateupLogoUrl}
                 alt="logo"
                 width={70}
                 height={30}
@@ -179,12 +177,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
               }`}
             >
               <div className="flex justify-between items-center mb-6">
-                <Image
-                  src={rateupLogoBlueTextUrl}
-                  alt="logo"
-                  width={60}
-                  height={30}
-                />
+                <Image src={rateupLogoUrl} alt="logo" width={60} height={30} />
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="text-2xl font-bold"

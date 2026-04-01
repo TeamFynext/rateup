@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helpers/BookDemoModal";
+import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 
 interface Colors {
   color1?: string;

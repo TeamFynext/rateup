@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ReactNode } from "react";
+import { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 export function BookDemoModal1() {

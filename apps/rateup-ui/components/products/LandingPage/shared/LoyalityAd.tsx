@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helpers/BookDemoModal";
+import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 
 export default function LoyalityAd() {
   return (
