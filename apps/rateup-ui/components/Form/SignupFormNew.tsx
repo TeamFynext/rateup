@@ -263,7 +263,10 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
               Terms of Service
             </span>
           </button>
-          <button className="hover:text-gray-600 uppercase tracking-wider text-xs">
+          <button
+            className="hover:text-gray-600 uppercase tracking-wider text-xs"
+            onClick={() => window.open("https://docs.rateup.app", "_blank")}
+          >
             <span className="uppercase tracking-wider text-xs">
               Help Center
             </span>

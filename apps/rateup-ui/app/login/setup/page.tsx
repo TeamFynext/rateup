@@ -263,6 +263,14 @@ export default function RateUpOnboarding() {
             variant="outline"
             size="sm"
             className="text-xs h-8 gap-1.5 border-gray-200"
+            onClick={() => {
+              const phone = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP;
+              const message = encodeURIComponent(
+                "Hi, I need help with support",
+              );
+
+              window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+            }}
           >
             <Headphones size={12} /> Support
           </Button>
