@@ -92,32 +92,32 @@ export const columns: Column[] = [
 const socialLinks = [
   {
     name: "YouTube",
-    src: `${imagesPath}/landing/icons/ico-youtube.png`,
+    src: `${imagesPath}/landing/icons/ico-youtube.svg`,
     href: "https://www.youtube.com/@TeamRateup",
   },
   {
     name: "Instagram",
-    src: `${imagesPath}/landing/icons/ico-instagram.png`,
+    src: `${imagesPath}/landing/icons/ico-instagram.svg`,
     href: "https://www.instagram.com/rateupsoftware",
   },
   {
     name: "Facebook",
-    src: `${imagesPath}/landing/icons/ico-facebook.png`,
+    src: `${imagesPath}/landing/icons/ico-facebook.svg`,
     href: "https://www.facebook.com/rateupsapp",
   },
   {
     name: "Threads",
-    src: `${imagesPath}/landing/icons/ico-threads.png`,
+    src: `${imagesPath}/landing/icons/ico-threads.svg`,
     href: "https://www.threads.com/@rateupsoftware",
   },
   {
     name: "X",
-    src: `${imagesPath}/landing/icons/ico-x.png`,
+    src: `${imagesPath}/landing/icons/ico-x.svg`,
     href: "https://x.com/rateup_app",
   },
   {
     name: "Pinterest",
-    src: `${imagesPath}/landing/icons/ico-pintrest.png`,
+    src: `${imagesPath}/landing/icons/ico-pintrest.svg`,
     href: "https://www.pinterest.com/rateupapp/",
   },
 ];
@@ -138,9 +138,9 @@ export function Footer() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-x-6 gap-y-10 mb-2">
           {columns.map((col) => (
             <div key={col.heading}>
-              <h4 className="text-shade-of-blue-14 font-semibold text-sm mb-4">
+              <p className="text-shade-of-blue-14 font-semibold text-sm mb-4">
                 {col.heading}
-              </h4>
+              </p>
               <ul className="space-y-2.5">
                 {col.links.map((link, i) => (
                   <li key={i}>
@@ -156,7 +156,7 @@ export function Footer() {
                   <li>
                     <Link
                       href="#"
-                      className="text-[#2D74E0] hover:text-white text-[13px] transition-colors"
+                      className="text-[#1a5bbf] hover:text-white text-[13px] transition-colors"
                     >
                       Show More
                     </Link>
@@ -184,6 +184,8 @@ export function Footer() {
               src={`${imagesPath}/landing/customerLogos/metaveve.png`}
               alt="Meta Business Partner"
               className="relative h-22 w-auto object-contain"
+              width="200"
+              height="88"
             />
           </div>
           {/* App Store badges */}
@@ -231,7 +233,7 @@ export function Footer() {
           {/* Social icons */}
 
           <div className="flex flex-col items-end gap-3">
-            <span className="text-[#93C6F5] text-sm font-medium pr-4">
+            <span className="text-[#1a5bbf] text-sm font-medium pr-4">
               Follow us on
             </span>
             <div className="flex items-center gap-2">
@@ -245,6 +247,8 @@ export function Footer() {
                     src={src}
                     alt={name}
                     className="w-6 h-6 object-contain"
+                    width="24"
+                    height="24"
                   />
                 </a>
               ))}

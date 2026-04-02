@@ -66,7 +66,7 @@ export function FeaturesGrid() {
                 <h3 className="text-xl font-bold text-white mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
+                <p className="text-gray-400 text-sm leading-relaxed">
                   {feature.description}
                 </p>
 

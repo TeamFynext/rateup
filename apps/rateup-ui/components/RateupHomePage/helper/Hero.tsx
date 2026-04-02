@@ -11,13 +11,13 @@ import { ArrowButton } from "../components/btn";
 import { SocialBadge } from "../components/socialBadge";
 
 const socialBadges = [
-  { src: `${imagesPath}/landing/logos/ico-whatsapp.png`, label: "WhatsApp" },
-  { src: `${imagesPath}/landing/logos/ico-messenger.png`, label: "Messenger" },
-  { src: `${imagesPath}/landing/logos/ico-instagram.png`, label: "Instagram" },
-  { src: `${imagesPath}/landing/logos/ico-shopify.png`, label: "Shopify" },
-  { src: `${imagesPath}/landing/logos/ico-webchat.png`, label: "Web Chat" },
+  { src: `${imagesPath}/landing/logos/ico-whatsapp.svg`, label: "WhatsApp" },
+  { src: `${imagesPath}/landing/logos/ico-messenger.svg`, label: "Messenger" },
+  { src: `${imagesPath}/landing/logos/ico-instagram.svg`, label: "Instagram" },
+  { src: `${imagesPath}/landing/logos/ico-shopify.svg`, label: "Shopify" },
+  { src: `${imagesPath}/landing/logos/ico-webchat.svg`, label: "Web Chat" },
   {
-    src: `${imagesPath}/landing/logos/ico-woocommerce.png`,
+    src: `${imagesPath}/landing/logos/ico-woocommerce.svg`,
     label: "WooCommerce",
   },
 ];
@@ -72,6 +72,7 @@ export default function Hero() {
         <div className="flex flex-wrap gap-3 mb-6">
           <ArrowButton
             hoverText="hover:text-white"
+            textColor="rateup-blue-5"
             onClick={() => router.push("/signup")}
           />
           <ArrowButton
