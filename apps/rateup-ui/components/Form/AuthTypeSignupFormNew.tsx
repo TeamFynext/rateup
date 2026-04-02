@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { isEmail, useForm } from "@mantine/form";
-import { IconCheck } from "@tabler/icons-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useExtracted } from "next-intl";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -56,7 +55,8 @@ function AuthTypeSignupForm({
     integrationsSelected: z.array(z.string()),
   });
   const signupForm = useForm({
-    initialValues: {
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
       email: "",
       name: "",
       orgName: "",
@@ -64,10 +64,9 @@ function AuthTypeSignupForm({
       phoneNumber: "",
       industry: "",
       location: "",
-      goals: [] as string[],
-      integrationsSelected: [] as string[],
+      goals: [],
+      integrationsSelected: [],
     },
-    validate: zod4Resolver(signupSchema),
   });
 
   const totalSteps = 3;
@@ -87,6 +86,7 @@ function AuthTypeSignupForm({
   const sendMail = useSendMailPlanSelectDetails();
 
   const handleSubmit = () => {
+    const values = signupForm.getValues();
     setIsLoading(true);
     if (isUserExist) {
       toast.success("Sign up process is already completed");
@@ -94,30 +94,31 @@ function AuthTypeSignupForm({
       return;
     }
     const data = {
-      name: signupForm.values?.name,
-      orgName: signupForm.values?.orgName,
-      email: signupForm.values?.email,
+      name: values?.name,
+      orgName: values?.orgName,
+      email: values?.email,
       type: authType,
-      website: signupForm.values?.website,
-      phoneNumber: signupForm.values?.phoneNumber,
-      location: signupForm.values?.location,
-      goals: signupForm.values?.goals,
-      integrationsSelected: signupForm.values?.integrationsSelected,
+      industry: values?.industry,
+      website: values?.website,
+      phoneNumber: values?.phoneNumber,
+      location: values?.location,
+      goals: values?.goals,
+      integrationsSelected: values?.integrationsSelected,
     };
     const planData = localStorage.getItem("subscriptionRoutAndCart");
     if (planData) {
       const { cartData } = JSON.parse(planData);
       sendMail.mutate({
-        email: signupForm.values.email,
-        name: signupForm.values.name,
-        orgName: signupForm.values?.orgName,
+        email: values.email,
+        name: values.name,
+        orgName: values?.orgName,
         planName: cartData?.name,
         planId: cartData?.planId,
-        website: signupForm.values?.website,
-        phoneNumber: signupForm.values?.phoneNumber,
-        location: signupForm.values?.location,
-        goals: signupForm.values?.goals,
-        integrationsSelected: signupForm.values?.integrationsSelected,
+        website: values?.website,
+        phoneNumber: values?.phoneNumber,
+        location: values?.location,
+        goals: values?.goals,
+        integrationsSelected: values?.integrationsSelected,
       });
     }
     createUserMutation.mutate(data);
@@ -158,7 +159,7 @@ function AuthTypeSignupForm({
             />
           </div>
         </div>
-        <Card className="flex flex-col items-center px-6 py-4 sm:min-w-lg max-w-2xl">
+        <Card className="flex flex-col items-center px-6 py-4 sm:min-w-md">
           {currentStep === 1 && (
             <Step1
               formData={signupForm}
@@ -181,7 +182,6 @@ function AuthTypeSignupForm({
               isLoading={isLoading}
             />
           )}
-          {/* {currentStep === 4 && <Step4 formData={signupForm} />} */}
         </Card>
       </div>
     </div>

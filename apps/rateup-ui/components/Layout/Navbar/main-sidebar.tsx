@@ -45,23 +45,28 @@ export default function MainSidebar({ children }) {
     refetch,
   } = useUserInfo();
 
+  const router = useRouter();
+  const pathname = usePathname();
+
   useEffect(() => {
     if (!isFetched || isLoadingUserInfo) return;
 
+    const user =
+      userQueryData && "data" in userQueryData ? userQueryData.data : null;
+    if (!user) return;
+
     if (
-      userQueryData &&
-      userQueryData["data"] &&
-      userQueryData["data"]?.onboardingCompleted === false
+      !user.onboardingCompleted &&
+      !pathname?.startsWith("/login/complete-login")
     ) {
       router.replace("/login/complete-login");
+      return;
     }
-  }, [userQueryData, isFetched, isLoadingUserInfo]);
-  const router = useRouter();
+  }, [userQueryData, isFetched, isLoadingUserInfo, pathname]);
   const query = useSearchParams() as {
     msg?: string;
     tab?: string;
   };
-  const pathname = usePathname();
   const [userInfo, setUserInfo] = useLocalStorage<IUserInfoApiResponse | null>(
     "userInfo",
     null,

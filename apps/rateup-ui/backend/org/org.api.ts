@@ -59,6 +59,8 @@ export interface IUpdateOrgDetails {
   encryptionKeys: EncryptionKeys;
   waAssignedChatPermission: WaAssignedChatPermission;
   showLifecycle: boolean;
+  onboardingChecklistCompleted: boolean;
+  onboardingChecklist: any;
 }
 export const updateOrgDetails = (data: Partial<IUpdateOrgDetails>) =>
   axiosClient.put("/org/update-details", data);
@@ -95,5 +97,10 @@ export async function completeOrgDetails(onboarding) {
 
 export async function orgNameAndPhone() {
   const res = await axiosClient.get("/org/orgnameandphone");
+  return res.data;
+}
+
+export async function getChecklist() {
+  const res = await axiosClient.get("/org/checklist");
   return res.data;
 }

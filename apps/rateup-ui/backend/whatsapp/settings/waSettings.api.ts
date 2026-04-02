@@ -218,3 +218,6 @@ export const getMetaAssets = async (waSettingsId) => {
   return (await axiosClient.get(`${SettingsUrl}/meta-assets/${waSettingsId}`))
     .data as MetaAssets;
 };
+export const getVerificationStatus = async () => {
+  return (await axiosClient.get(`${SettingsUrl}/verification-status`)).data;
+};
