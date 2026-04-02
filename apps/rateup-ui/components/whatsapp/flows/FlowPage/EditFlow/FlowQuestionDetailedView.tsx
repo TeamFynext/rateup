@@ -20,11 +20,10 @@ import {
   TextInputProps,
   useMantineTheme,
 } from "@mantine/core";
-import { useForm, UseFormReturnType } from "@mantine/form";
+import { schemaResolver, useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import _ from "lodash";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -275,7 +274,9 @@ function ElementEditor({
   };
 
   const extraConfigForm = useForm({
-    validate: zod4Resolver(fileSchema),
+    validate: schemaResolver(fileSchema, {
+      sync: true,
+    }),
     initialValues: {
       "photo-source": PhotoSource.cameraGallery,
       "max-file-size-kb": 5120,

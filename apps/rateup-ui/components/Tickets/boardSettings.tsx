@@ -14,9 +14,8 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { IconBell } from "@tabler/icons-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { z } from "zod/v4";
 
 import { MemberSelector } from "@/app/dashboard/tickets/[ticketId]/page";
@@ -72,7 +71,9 @@ export default function TicketSettings({
       title: selectedBoard?.title || "",
       teamIds: selectedBoard?.teams?.map((teams) => teams.teamId) || [],
     },
-    validate: zod4Resolver(notificationSchema),
+    validate: schemaResolver(notificationSchema, {
+      sync: true,
+    }),
   });
 
   const handleSubmit = form.onSubmit((values) => {

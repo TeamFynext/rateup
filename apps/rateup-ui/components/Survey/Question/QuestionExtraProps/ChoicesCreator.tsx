@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import {
   ActionIcon,
@@ -18,10 +18,9 @@ import {
   Switch,
   Text,
 } from "@mantine/core";
-import { useForm, UseFormReturnType } from "@mantine/form";
-import { getHotkeyHandler, useDisclosure, useHover } from "@mantine/hooks";
+import { schemaResolver, useForm, UseFormReturnType } from "@mantine/form";
+import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -120,7 +119,9 @@ export function ChoicesCreator({
       metadata: "",
       image: "",
     },
-    validate: zod4Resolver(choiceSchema),
+    validate: schemaResolver(choiceSchema, {
+      sync: true,
+    }),
   });
   const translations = useExtracted();
   const choices = form.values.choices?.[selectedLanguage] || [];
@@ -659,7 +660,9 @@ function Choice({
       metadata: "",
       image: "",
     },
-    validate: zod4Resolver(choiceSchema),
+    validate: schemaResolver(choiceSchema, {
+      sync: true,
+    }),
   });
   useEffect(() => {
     if (typeof choice.value === "object") choiceForm.setValues(choice.value);

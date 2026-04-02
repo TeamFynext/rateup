@@ -49,7 +49,7 @@ function TeamMembers() {
             transitionProps: { transition: "pop", duration: 200 },
           }}
           value={selectedTeamId}
-          onChange={setSelectedTeamId}
+          onChange={(value) => setSelectedTeamId(value)}
           searchable
         />
       </div>

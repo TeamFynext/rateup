@@ -108,7 +108,7 @@ export function WaListMessageItemsCreator({ initialSections, saveSections }) {
                 </ActionIcon>
               </Group>
             </Group>
-            <Collapse in={expanded === sIndex}>
+            <Collapse expanded={expanded === sIndex}>
               <Stack pl="md" py="xs">
                 {rows?.map((item, rIndex) => {
                   return (

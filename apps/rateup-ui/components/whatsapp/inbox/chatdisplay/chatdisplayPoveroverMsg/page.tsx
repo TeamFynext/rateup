@@ -180,7 +180,7 @@ const TicketInternalChatWaHeader = ({ close }) => {
                   {openedPriority ? <IconChevronUp /> : <IconChevronDown />}
                 </ActionIcon>
               </Group>
-              <Collapse in={openedPriority}>
+              <Collapse expanded={openedPriority}>
                 <Radio.Group
                   value={selectedTicket?.priority}
                   onChange={handlePriority}
@@ -203,7 +203,7 @@ const TicketInternalChatWaHeader = ({ close }) => {
                   {openedStatus ? <IconChevronUp /> : <IconChevronDown />}
                 </ActionIcon>
               </Group>
-              <Collapse in={openedStatus}>
+              <Collapse expanded={openedStatus}>
                 <Radio.Group
                   value={selectedTicket?.status}
                   onChange={handleStatus}

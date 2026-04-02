@@ -150,7 +150,7 @@ const Pricing = ({
           <SegmentedControl
             value={value}
             color="var(--shade-of-blue-7)"
-            onChange={setValue}
+            onChange={(value) => setValue(value)}
             classNames={classes}
             fw={500}
             data={[

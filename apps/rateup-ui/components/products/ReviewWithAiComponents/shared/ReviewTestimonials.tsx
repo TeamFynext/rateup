@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 
-import { easeOut, motion } from "framer-motion";
 import { Star } from "lucide-react";
+import { easeOut, motion } from "motion/react";
 
 import { clientIcons } from "../../TicketLandingComponets/TicketingConstants";
 import { testimonials } from "../../Whatsapp-loyalty/constants";

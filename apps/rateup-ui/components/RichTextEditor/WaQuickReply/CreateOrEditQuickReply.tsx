@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 
-import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { schemaResolver, useForm } from "@mantine/form";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import z from "zod";
@@ -55,7 +54,7 @@ const CreateOrEditQuickReply = ({
       topic: "General Inquiry",
       key: "",
     },
-    validate: zodResolver(quickReplySchema),
+    validate: schemaResolver(quickReplySchema),
   });
 
   useEffect(() => {

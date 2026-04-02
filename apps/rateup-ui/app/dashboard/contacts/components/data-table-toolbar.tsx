@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
 import { Table } from "@tanstack/react-table";
 import {
   Activity,
@@ -11,7 +11,6 @@ import {
   Folder,
   Globe,
   Info,
-  Instagram,
   Layers,
   Plus,
   Search,
@@ -84,7 +83,7 @@ const SourceSelector = ({ value, onChange }) => {
   const ContactSources = [
     { label: "All Sources", value: "all", icon: Layers },
     { label: "WhatsApp", value: "whatsapp", icon: IconBrandWhatsapp },
-    { label: "Instagram", value: "instagram", icon: Instagram },
+    { label: "Instagram", value: "instagram", icon: IconBrandInstagram },
     { label: "Web", value: "WEBCHAT", icon: Globe },
     { label: "Manual", value: "manual", icon: UserRoundPlus },
     { label: "Imported", value: "csv import", icon: Upload },

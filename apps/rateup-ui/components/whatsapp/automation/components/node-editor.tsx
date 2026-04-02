@@ -2082,8 +2082,9 @@ const AssignNodeEditor: React.FC<
       assignedUserIds: (value, values) =>
         values.choice === "manual" ? isNotEmpty("required")(value) : undefined,
     },
-    onValuesChange(values) {
-      if (form.validate().hasErrors) return;
+    onValuesChange: async (values) => {
+      const validationRes = await form.validate();
+      if (validationRes.hasErrors) return;
       const teamName =
         options?.data
           ?.flatMap((user) => user.teams)

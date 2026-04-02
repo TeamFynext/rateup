@@ -1,41 +1,70 @@
 import { useEffect } from "react";
 
-import { Select, TagsInput } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { TagsInput } from "@mantine/core";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useExtracted } from "next-intl";
+import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
 import {
   useCreateCustomFieldMutation,
   useUpdateCustomFieldMutation,
 } from "@/backend/campaign/contacts/contacts.query";
-
+import { Button } from "@/components/ui/button";
+import { DialogClose, DialogFooter } from "@/components/ui/dialog";
 import {
-  ContainedTextArea,
-  ContainedTextField,
-} from "../input/ContainedInput/ContainedInput";
-import { Button } from "../ui/button";
-import { DialogClose, DialogFooter } from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Spinner } from "../ui/spinner";
-import { Textarea } from "../ui/textarea";
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+
+type CustomFieldType = "multivalue" | "number" | "text" | "email";
+
+type CustomFieldFormValues = {
+  name: string;
+  slug: string;
+  description?: string;
+  type: CustomFieldType;
+  visibility: boolean;
+  listValues: string[];
+};
+
+type CustomFieldFormProps = Readonly<{
+  data?: any;
+  onSubmitCallback: () => void;
+}>;
+
+const buildSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]/g, "_")
+    .replaceAll(/_+/g, "_")
+    .replaceAll(/^_|_$/g, "");
 
 export const CustomFieldForm = ({
   data,
   onSubmitCallback,
-}: {
-  data?: any;
-  onSubmitCallback: () => void;
-}) => {
+}: CustomFieldFormProps) => {
   const t = useExtracted();
   const updateCustomFieldMutation = useUpdateCustomFieldMutation();
   const createCustomFieldMutation = useCreateCustomFieldMutation();
 
   const customFieldFormSchema = z.object({
-    name: z.string().min(1, t("Name is required")),
-    slug: z.string().min(1, t("Slug is required")),
+    name: z.string().trim().min(1, t("Name is required")),
+    slug: z.string().trim().min(1, t("Slug is required")),
     description: z.string().optional(),
     type: z.enum(["multivalue", "number", "text", "email"], {
       error: t("Invalid type selected"),
@@ -43,11 +72,12 @@ export const CustomFieldForm = ({
     visibility: z.boolean({
       error: t("Invalid visibility value"),
     }),
-    listValues: z.array(z.string()).optional(),
+    listValues: z.array(z.string()),
   });
 
-  const form = useForm<z.infer<typeof customFieldFormSchema>>({
-    initialValues: {
+  const form = useForm<CustomFieldFormValues>({
+    resolver: zodResolver(customFieldFormSchema),
+    defaultValues: {
       name: data?.name || "",
       slug: data?.slug || "",
       description: data?.description || "",
@@ -55,28 +85,39 @@ export const CustomFieldForm = ({
       visibility: data?.visibility ?? true,
       listValues: data?.listValues || [],
     },
-    validate: zodResolver(customFieldFormSchema),
   });
 
-  // Auto-generate fieldId from name
-  useEffect(() => {
-    const name = form.values.name;
-    if (name && !data) {
-      const slug = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "_")
-        .replace(/_+/g, "_")
-        .replace(/^_|_$/g, "");
-      form.setFieldValue("slug", slug);
-    }
-  }, [form.values.name, data]);
+  const nameValue = form.watch("name");
+  const typeValue = form.watch("type");
+  const isPending =
+    updateCustomFieldMutation.isPending || createCustomFieldMutation.isPending;
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    form.reset({
+      name: data?.name || "",
+      slug: data?.slug || "",
+      description: data?.description || "",
+      type: data?.type || "text",
+      visibility: data?.visibility ?? true,
+      listValues: data?.listValues || [],
+    });
+  }, [data, form]);
+
+  useEffect(() => {
+    if (nameValue && !data) {
+      form.setValue("slug", buildSlug(nameValue), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [data, form, nameValue]);
+
+  const handleSubmit = (values: CustomFieldFormValues) => {
     if (data) {
       updateCustomFieldMutation.mutate(
         {
           fieldId: data?.id,
-          data: form.getValues(),
+          data: values,
         },
         {
           onSettled() {
@@ -85,14 +126,15 @@ export const CustomFieldForm = ({
           },
         },
       );
-    } else {
-      createCustomFieldMutation.mutate(form.getValues(), {
-        onSettled() {
-          form.reset();
-          onSubmitCallback();
-        },
-      });
+      return;
     }
+
+    createCustomFieldMutation.mutate(values, {
+      onSettled() {
+        form.reset();
+        onSubmitCallback();
+      },
+    });
   };
 
   const typeOptions = [
@@ -100,81 +142,156 @@ export const CustomFieldForm = ({
     { value: "number", label: t("Number") },
     { value: "email", label: t("Email") },
     { value: "multivalue", label: t("Multi-value") },
-  ];
-
-  const visibilityOptions = [
-    { value: "true", label: t("Show") },
-    { value: "false", label: t("Hide") },
-  ];
+  ] as const;
 
   return (
-    <form onSubmit={form.onSubmit(handleSubmit)} style={{ width: "100%" }}>
-      <div className="flex flex-col gap-4">
-        <div className="space-y-1">
-          <Label>{t("Name")}</Label>
-          <Input
-            placeholder={t("Custom field name")}
-            required
-            {...form.getInputProps("name")}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label>{t("Field ID")}</Label>
-          <Input
-            placeholder={t("Auto-generated from name")}
-            required
-            disabled={!!data}
-            {...form.getInputProps("slug")}
-          />
-        </div>
-
-        <Select
-          label={t("Type")}
-          placeholder={t("Select field type")}
-          data={typeOptions}
-          required
-          {...form.getInputProps("type")}
+    <form onSubmit={form.handleSubmit(handleSubmit)}>
+      <FieldGroup className="gap-4">
+        <Controller
+          name="name"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>{t("Name")}</FieldLabel>
+              <Input
+                {...field}
+                id={field.name}
+                aria-invalid={fieldState.invalid}
+                placeholder={t("Custom field name")}
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
         />
-        {form.values.type === "multivalue" && (
-          <TagsInput
-            label={t("Input Values")}
-            placeholder={t("Enter values and press Enter")}
-            {...form.getInputProps("listValues")}
+
+        <Controller
+          name="slug"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>{t("Field ID")}</FieldLabel>
+              <Input
+                {...field}
+                id={field.name}
+                disabled={!!data}
+                aria-invalid={fieldState.invalid}
+                placeholder={t("Auto-generated from name")}
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        <Controller
+          name="type"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="custom-field-type">{t("Type")}</FieldLabel>
+              <Select
+                name={field.name}
+                value={field.value}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger
+                  id="custom-field-type"
+                  className="w-full"
+                  aria-invalid={fieldState.invalid}
+                >
+                  <SelectValue placeholder={t("Select field type")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {typeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
+        {typeValue === "multivalue" && (
+          <Controller
+            name="listValues"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="custom-field-list-values">
+                  {t("Input Values")}
+                </FieldLabel>
+                <TagsInput
+                  id="custom-field-list-values"
+                  value={field.value}
+                  onChange={field.onChange}
+                  aria-invalid={fieldState.invalid}
+                  placeholder={t("Enter values and press Enter")}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
           />
         )}
-        <Select
-          label={t("Visibility")}
-          placeholder={t("Select visibility")}
-          data={visibilityOptions}
-          required
-          value={form.values.visibility ? "true" : "false"}
-          onChange={(value) =>
-            form.setFieldValue("visibility", value === "true")
-          }
-          error={form.errors.visibility}
+
+        <Controller
+          name="visibility"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field orientation="horizontal" data-invalid={fieldState.invalid}>
+              <FieldContent>
+                <FieldLabel htmlFor="custom-field-visibility">
+                  {t("Visibility")}
+                </FieldLabel>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </FieldContent>
+              <Switch
+                id="custom-field-visibility"
+                name={field.name}
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                aria-invalid={fieldState.invalid}
+              />
+            </Field>
+          )}
         />
-        <div className="space-y-1">
-          <Label>{t("Description")}</Label>
-          <Textarea
-            placeholder={t("Describe this custom field")}
-            {...form.getInputProps("description")}
-          />
-        </div>
+
+        <Controller
+          name="description"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor={field.name}>{t("Description")}</FieldLabel>
+              <Textarea
+                {...field}
+                id={field.name}
+                aria-invalid={fieldState.invalid}
+                placeholder={t("Describe this custom field")}
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+
         <DialogFooter>
-          <DialogClose>
-            <Button variant="secondary">
+          <DialogClose asChild>
+            <Button variant="secondary" type="button">
               <span className="text-sm font-normal">{t("Cancel")}</span>
             </Button>
           </DialogClose>
-          <Button type="submit">
-            {(updateCustomFieldMutation.isPending ||
-              createCustomFieldMutation.isPending) && <Spinner />}
+          <Button type="submit" disabled={isPending}>
+            {isPending && <Spinner />}
             <span className="text-sm font-normal">
               {data ? t("Update Custom Field") : t("Create Custom Field")}
             </span>
           </Button>
         </DialogFooter>
-      </div>
+      </FieldGroup>
     </form>
   );
 };

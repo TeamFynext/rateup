@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
 import { Building, Check, ClipboardList, Sparkles, X, Zap } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 
 import WhatsAppSettingsPage from "@/app/dashboard/whatsapp/settings/page";
 import {

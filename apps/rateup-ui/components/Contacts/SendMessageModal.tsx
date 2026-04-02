@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
-import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { Instagram, Send } from "lucide-react";
+import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
+import { Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { MessagePlatform } from "@/types/enums";
@@ -73,7 +73,7 @@ const SendMessageModal = ({ opened, setOpened, selectedContact }) => {
                 </SelectItem>
                 <SelectItem value={MessagePlatform.INSTAGRAM}>
                   <div className="flex items-center gap-2">
-                    <Instagram className="w-4 h-4" />
+                    <IconBrandInstagram className="w-4 h-4" />
                     <span>Instagram</span>
                   </div>
                 </SelectItem>

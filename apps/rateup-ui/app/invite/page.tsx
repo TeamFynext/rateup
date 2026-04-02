@@ -138,7 +138,7 @@ const Invite = () => {
                   direction="column"
                   wrap="wrap"
                 >
-                  <Text color="green">
+                  <Text c="green">
                     {" "}
                     {updateInviteMutation.data?.data.message}
                   </Text>

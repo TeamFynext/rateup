@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Star } from "lucide-react";
+import { motion } from "motion/react";
 
 export const testimonials = [
   {

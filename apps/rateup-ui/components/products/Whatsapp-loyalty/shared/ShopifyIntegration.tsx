@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 
-import { easeOut, motion } from "framer-motion";
 import { ArrowRight, BarChart, MessageSquare, RefreshCcw } from "lucide-react";
+import { easeOut, motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 

@@ -184,10 +184,10 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           initialValues[key] = productData[key];
         });
         form.setInitialValues(initialValues);
-        form.setValues(initialValues);
+        form.setValues(initialValues as any); // Last resort if narrowing fails
       } else {
         form.setInitialValues(getInitialValues(type));
-        form.setValues(getInitialValues(type));
+        form.setValues(getInitialValues(type) as any);
       }
     }
   }, [catalogData, productData]);

@@ -119,8 +119,10 @@ const LoyaltyAPIForm = ({ apiInfo }) => {
 
   const router = useRouter();
 
-  function handleSubmit() {
-    if (form.validate().hasErrors) return;
+  async function handleSubmit() {
+    const validationRes = await form.validate();
+    if (validationRes.hasErrors) return;
+
     if (apiInfo) {
       update.mutate(form.values, {
         onSuccess: () => {},
@@ -190,7 +192,7 @@ const LoyaltyAPIForm = ({ apiInfo }) => {
               </ActionIcon>
             </Group>
 
-            <Collapse in={opened}>
+            <Collapse expanded={opened}>
               <Flex justify={"flex-end"}>
                 <RateupButtonPrimary
                   title="Add Field"

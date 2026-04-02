@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { motion, useInView } from "framer-motion";
+import { motion, useInView } from "motion/react";
 
 type Stat = {
   label: string;

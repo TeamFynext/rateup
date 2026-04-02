@@ -72,7 +72,7 @@ export function FeatureCard({
         </ActionIcon>
       </Group>
       <Collapse
-        in={opened}
+        expanded={opened}
         style={{
           marginLeft: "56px",
         }}

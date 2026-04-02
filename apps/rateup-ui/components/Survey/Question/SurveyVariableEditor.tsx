@@ -160,8 +160,9 @@ const CreateSurveyVariableModal = ({
       value: isNotEmpty("Assign a value to variable"),
     },
   });
-  const handleSubmit = () => {
-    if (form.validate().hasErrors) return;
+  const handleSubmit = async () => {
+    const validationRes = await form.validate();
+    if (validationRes.hasErrors) return;
     if (variables.find((v) => v?.name == form.values.name)) {
       form.setFieldError("name", "Variable already exist");
       return;
@@ -180,8 +181,9 @@ const CreateSurveyVariableModal = ({
       },
     );
   };
-  const handleUpdate = () => {
-    if (form.validate().hasErrors) return;
+  const handleUpdate = async () => {
+    const validationRes = await form.validate();
+    if (validationRes.hasErrors) return;
     if (
       variables.find((v) => v?.name == form.values.name) &&
       variable?.name !== form.values.name

@@ -132,7 +132,7 @@ const SelectContacts = ({
         <SegmentedControl
           data={Object.values(ContactMethods)}
           value={selectedTab}
-          onChange={(value) => setSelectedTab(value as ContactMethods)}
+          onChange={(value) => setSelectedTab(value)}
           color={"var(--mantine-color-whatsapp-green-filled)"}
           radius={"md"}
           defaultValue={ContactMethods.Individual}

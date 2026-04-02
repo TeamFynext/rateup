@@ -143,7 +143,7 @@ const SmileyExtraProps = ({ form }) => {
         </ActionIcon>
       </Group>
 
-      <Collapse in={opened}>
+      <Collapse expanded={opened}>
         {features?.iconStyle?.variant ===
         SmileyVariantStyle.Emojis ? null : features?.iconStyle?.variant ===
           SmileyVariantStyle.Custom ? (
