@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Mail, MessageSquare, Phone } from "lucide-react";
+import { motion } from "motion/react";
 
 export default function CustomerFeedbackSection() {
   return (

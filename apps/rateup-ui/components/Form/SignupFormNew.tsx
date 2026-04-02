@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,8 +18,8 @@ import {
   Target,
   User,
   Users,
-  Zap,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useExtracted } from "next-intl";
 import { Controller, useForm } from "react-hook-form";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";

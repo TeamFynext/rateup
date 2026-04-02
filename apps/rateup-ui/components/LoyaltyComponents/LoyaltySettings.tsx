@@ -199,8 +199,9 @@ export const LoyaltyWaTemplateConfig = ({
     },
   });
 
-  const hanldeTemplateConfig = () => {
-    if (form.validate().hasErrors) return;
+  const hanldeTemplateConfig = async () => {
+    const validationRes = await form.validate();
+    if (validationRes.hasErrors) return;
     const { type, ...rest } = form.values;
     if (config) {
       updateTempMut.mutate(rest, {

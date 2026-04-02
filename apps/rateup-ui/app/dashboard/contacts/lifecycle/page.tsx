@@ -10,7 +10,7 @@ import {
   Stack,
   TextInput,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   Activity,
@@ -25,7 +25,6 @@ import {
   X,
   XCircle,
 } from "lucide-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -551,7 +550,9 @@ const renderAddStageForm = ({ lifecycleStages, lostStages, onSave }) => {
   const [activeTab, setActiveTab] = useState<string>("lifecycle");
   // Add stage form
   const addStageForm = useForm<StageFormData>({
-    validate: zod4Resolver(stageSchema),
+    validate: schemaResolver(stageSchema, {
+      sync: true,
+    }),
     initialValues: {
       name: "",
       category: "active" as const,
@@ -739,7 +740,9 @@ const LifecycleStageForm = ({
   const lifecycles = useLifecycleContext();
   const createLifecycle = useCreateLifeCycleMutation();
   const addStageForm = useForm<StageFormData>({
-    validate: zod4Resolver(stageSchema),
+    validate: schemaResolver(stageSchema, {
+      sync: true,
+    }),
     initialValues: stage || {
       name: "",
       category: "active" as const,
@@ -954,7 +957,9 @@ const EditStageForm = ({
   onCancel?: () => void;
 }) => {
   const editStageForm = useForm<StageFormData>({
-    validate: zod4Resolver(stageSchema),
+    validate: schemaResolver(stageSchema, {
+      sync: true,
+    }),
     initialValues: {
       name: stage.name,
       category: stage.category,

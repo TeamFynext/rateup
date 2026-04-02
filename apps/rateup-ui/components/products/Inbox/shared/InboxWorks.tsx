@@ -1,7 +1,7 @@
 "use client";
 
-import { easeOut, motion } from "framer-motion";
 import { BarChart4, MessageSquareText, Settings2 } from "lucide-react";
+import { easeOut, motion } from "motion/react";
 
 const cardData = [
   {

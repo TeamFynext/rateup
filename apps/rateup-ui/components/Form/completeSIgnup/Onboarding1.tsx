@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -10,6 +9,7 @@ import {
   Crown,
   MessageSquare,
 } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

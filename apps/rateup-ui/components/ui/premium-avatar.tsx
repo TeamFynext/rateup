@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Instagram, MessageCircle } from "lucide-react";
+import { IconBrandInstagram } from "@tabler/icons-react";
 
 interface PremiumAvatarProps {
   name: string;
@@ -251,7 +251,7 @@ export function PremiumAvatar({
           {/* Inner Highlight */}
           <div className="absolute inset-0 rounded-full bg-linear-to-br from-white/30 to-transparent opacity-60" />
 
-          <Instagram
+          <IconBrandInstagram
             className={`
               ${sizes.sourceIcon} 
               text-white 

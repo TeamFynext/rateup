@@ -1,78 +1,79 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { useForm } from "@mantine/form";
-import { motion } from "framer-motion";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Key, Lock, Mail } from "lucide-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
+import { motion } from "motion/react";
 import { useExtracted } from "next-intl";
-import { isValidPhoneNumber } from "react-phone-number-input";
-import { z } from "zod/v4";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Checkbox } from "../ui/checkbox";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Loader } from "../ui/loader";
 import styles from "./AuthForm.module.css";
 import GoogleSignInButton from "./GoogleSigninButton";
-import { signUpType } from "./SignupFormNew";
 
-export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
+const loginSchema = z.object({
+  email: z.email().min(1, "Email is required"),
+  password: z
+    .string()
+    .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
+      error: "Password should contain at least one letter and one number",
+    })
+    .min(5, "Password should be at least 5 characters long"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
+type SignInFlowProps = Readonly<{
+  setIsLoading: (value: boolean) => void;
+  signIn: (
+    email?: string,
+    password?: string,
+    phoneNumber?: string,
+    prefLanguage?: string,
+  ) => Promise<unknown>;
+  isLoading: boolean;
+}>;
+
+export default function SignInFlow({
+  setIsLoading,
+  signIn,
+  isLoading,
+}: SignInFlowProps) {
   const translations = useExtracted();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [signUpTypeValue, setSignUpTypeValue] = useState("");
 
-  const loginSchema = z.object(
-    signUpTypeValue === signUpType.SIGNUP_WITH_PHONE
-      ? {
-          phoneNumber: z
-            .string()
-            .refine(
-              (val) =>
-                signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE ||
-                isValidPhoneNumber(val),
-              {
-                error: translations("Enter a valid phone number"),
-              },
-            ),
-        }
-      : {
-          email: z.email().min(1, translations("Email is required")),
-          password: z
-            .string()
-            .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
-              error: translations(
-                "Password should contain at least one letter and one number",
-              ),
-            })
-            .min(
-              5,
-              translations("Password should be at least 5 characters long"),
-            ),
-        },
-  );
-
-  const loginForm = useForm({
-    initialValues: {
-      email: "",
-      password: "",
-      phoneNumber: "",
-    },
-    validate: zod4Resolver(loginSchema),
+  const translatedLoginSchema = loginSchema.extend({
+    email: z.email().min(1, translations("Email is required")),
+    password: z
+      .string()
+      .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
+        error: translations(
+          "Password should contain at least one letter and one number",
+        ),
+      })
+      .min(5, translations("Password should be at least 5 characters long")),
   });
 
-  const handleSubmit = (values) => {
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(translatedLoginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const handleSubmit = (values: LoginFormValues) => {
     localStorage.removeItem("selected_plan");
     setIsLoading(true);
-    signIn(
-      values.email,
-      values.password,
-      values.phoneNumber,
-      values.prefLanguage,
-    ).finally(() => {
+    signIn(values.email, values.password, undefined, undefined).finally(() => {
       setIsLoading(false);
     });
   };
@@ -127,50 +128,78 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
 
         <form
           className="flex flex-col justify-center gap-1.5 sm:gap-2"
-          onSubmit={loginForm.onSubmit(handleSubmit)}
+          onSubmit={loginForm.handleSubmit(handleSubmit)}
         >
-          <div className="space-y-0.5 sm:space-y-1">
-            {/* <Label htmlFor="email" className="text-gray-700 text-sm">
-              Email
-            </Label> */}
-            <div className="relative">
-              <Mail className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="Email"
-                className="pl-8 sm:pl-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
-                {...loginForm.getInputProps("email")}
-              />
-            </div>
-          </div>
+          <FieldGroup className="gap-1.5 sm:gap-2">
+            <Controller
+              name="email"
+              control={loginForm.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name} className="sr-only">
+                    {translations("Email")}
+                  </FieldLabel>
+                  <div className="relative">
+                    <Mail className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type="email"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="Email"
+                      className="pl-8 sm:pl-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
+                    />
+                  </div>
+                  {fieldState.invalid && (
+                    <FieldError
+                      errors={[fieldState.error]}
+                      className="text-xs"
+                    />
+                  )}
+                </Field>
+              )}
+            />
 
-          <div className="space-y-0.5 sm:space-y-1">
-            {/* <Label htmlFor="password" className="text-gray-700 text-sm">
-              Password
-            </Label> */}
-            <div className="relative">
-              <Lock className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                className="pl-8 sm:pl-10 pr-8 sm:pr-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
-                {...loginForm.getInputProps("password")}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2.5 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                {showPassword ? (
-                  <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                ) : (
-                  <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                )}
-              </button>
-            </div>
-          </div>
+            <Controller
+              name="password"
+              control={loginForm.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name} className="sr-only">
+                    {translations("Password")}
+                  </FieldLabel>
+                  <div className="relative">
+                    <Lock className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type={showPassword ? "text" : "password"}
+                      aria-invalid={fieldState.invalid}
+                      placeholder="Password"
+                      className="pl-8 sm:pl-10 pr-8 sm:pr-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      )}
+                    </button>
+                  </div>
+                  {fieldState.invalid && (
+                    <FieldError
+                      errors={[fieldState.error]}
+                      className="text-xs"
+                    />
+                  )}
+                </Field>
+              )}
+            />
+          </FieldGroup>
 
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center space-x-2 sm:space-x-3">

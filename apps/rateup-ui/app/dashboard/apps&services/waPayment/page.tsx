@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 
 import {
@@ -14,28 +13,20 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconDots,
-  IconPlus,
-  IconRefresh,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconDots, IconRefresh, IconTrash } from "@tabler/icons-react";
 import clsx from "clsx";
 import dayjs from "dayjs";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { IntegratedApps } from "@/types/enums";
 import {
-  useCreateWaPaymentConfigurationMutation,
   useDeleteWaPaymentConfigurationMutation,
   useGetWaPaymentConfigurationByNameMutation,
   useIntegrationByType,
   useRegenerateWaPaymentConfigurationOauthMutation,
-  useWaPaymentConfigurations,
 } from "@/backend/appsIntegration/integration.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import {
@@ -105,14 +96,18 @@ const WhatsappPayment = () => {
       merchant_category_code: "0000",
       provider_name: Providers.razorpay,
     },
-    validate: zod4Resolver(schema),
+    validate: schemaResolver(schema, {
+      sync: true,
+    }),
   });
   const getConfigForm = useForm<z.infer<typeof getConfigSchema>>({
     mode: "uncontrolled",
     initialValues: {
       configuration_name: "",
     },
-    validate: zod4Resolver(getConfigSchema),
+    validate: schemaResolver(getConfigSchema, {
+      sync: true,
+    }),
   });
   if (isPending) <RateupLoader />;
   const handleSubmit = () => {

@@ -24,7 +24,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
   IconCalendar,
@@ -42,7 +42,6 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import parse from "html-react-parser";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useExtracted } from "next-intl";
 import { z } from "zod/v4";
 
@@ -412,7 +411,9 @@ const EditTicket = ({
   );
 
   const form = useForm<TicketFormValues>({
-    validate: zod4Resolver(ticketSchema),
+    validate: schemaResolver(ticketSchema, {
+      sync: true,
+    }),
     initialValues,
   });
 
@@ -578,7 +579,7 @@ const EditTicket = ({
             </Button>
           </Box>
         </SimpleGrid>
-        <Collapse in={showEditor}>
+        <Collapse expanded={showEditor}>
           <Box mt="md">
             <Text className={styles.label}>Description</Text>
             <TicketTextEditor

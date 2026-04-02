@@ -55,8 +55,9 @@ const MultiTextInputExtraProps = ({ form }) => {
     });
   };
 
-  const addField = () => {
-    if (fieldForm.validate().hasErrors) return;
+  const addField = async () => {
+    const validationRes = await fieldForm.validate();
+    if (validationRes.hasErrors) return;
     const existingFields =
       form.values.features?.[selectedLanguage]?.fields ?? [];
     if (existingFields?.find((f) => f.fieldKey === fieldForm.values.fieldKey))

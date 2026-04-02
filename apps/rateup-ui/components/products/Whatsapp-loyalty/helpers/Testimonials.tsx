@@ -1,7 +1,7 @@
 "use client";
 
-import { easeOut, motion } from "framer-motion";
 import { Star } from "lucide-react";
+import { easeOut, motion } from "motion/react";
 
 import { testimonials } from "../constants";
 

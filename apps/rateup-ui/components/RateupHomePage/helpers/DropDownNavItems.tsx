@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { AnimatePresence, motion } from "framer-motion";
 import {
   Bot,
   Box,
@@ -16,6 +15,7 @@ import {
   ScanLine,
   Star,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 
 export default function DropDownNavItems() {
   const [open, setOpen] = useState(false);

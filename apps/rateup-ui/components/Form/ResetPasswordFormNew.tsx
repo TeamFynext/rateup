@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { isEmail, useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { IconCheck, IconX } from "@tabler/icons-react";
-import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { AnimatePresence, motion } from "motion/react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -91,7 +89,7 @@ const ResetPasswordForm = ({ mode }) => {
       password: "",
     },
 
-    validate: zodResolver(emailSchema),
+    validate: schemaResolver(emailSchema),
   });
 
   const pwdForm = useForm<PwdSchemaType>({
@@ -99,7 +97,7 @@ const ResetPasswordForm = ({ mode }) => {
       password: "",
       confirmPassword: "",
     },
-    validate: zodResolver(pwdSchema),
+    validate: schemaResolver(pwdSchema),
   });
 
   const sendResetEmail = useSendResetEmail();

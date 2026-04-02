@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 
-import { easeInOut, motion } from "framer-motion";
 import {
   Bot,
   Languages,
@@ -11,6 +10,7 @@ import {
   Settings,
   Share2,
 } from "lucide-react";
+import { easeInOut, motion } from "motion/react";
 
 const features = [
   {

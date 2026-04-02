@@ -2,8 +2,7 @@
 
 import React, { useRef } from "react";
 
-import { useForm } from "@mantine/form";
-import { zod4Resolver } from "mantine-form-zod-resolver";
+import { schemaResolver, useForm } from "@mantine/form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -21,7 +20,9 @@ const ImageInput = (props) => {
     initialValues: {
       image: "",
     },
-    validate: zod4Resolver(choiceSchema),
+    validate: schemaResolver(choiceSchema, {
+      sync: true,
+    }),
   });
   const clearFile = () => {
     choiceForm.setFieldValue("image", null);

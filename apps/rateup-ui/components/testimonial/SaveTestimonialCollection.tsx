@@ -44,8 +44,9 @@ const SaveTestimonialCollection = ({ opened, close }) => {
   const pathname = usePathname();
 
   const saveCollection = useCreateTestimonialCollection();
-  const onSubmit = () => {
-    if (form.validate().hasErrors) return;
+  const onSubmit = async () => {
+    const validationRes = await form.validate();
+    if (validationRes.hasErrors) return;
     toast.loading(
       translations("Hold on, your collection is getting created..."),
       {

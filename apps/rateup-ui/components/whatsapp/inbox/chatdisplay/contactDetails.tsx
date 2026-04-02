@@ -10,7 +10,7 @@ import {
   Stack,
   TextInput,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import {
@@ -29,7 +29,6 @@ import {
   UserCheck,
   X,
 } from "lucide-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { motion } from "motion/react";
 import { useExtracted } from "next-intl";
 import { isValidPhoneNumber } from "react-phone-number-input";
@@ -114,7 +113,9 @@ export default function WaInboxContactDetails({
     contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const labels = contact?.contactLabels?.map((label) => label?.id);
   const form = useForm<ContactFormValues>({
-    validate: zod4Resolver(contactSchema),
+    validate: schemaResolver(contactSchema, {
+      sync: true,
+    }),
     initialValues: {
       name: contact?.name || "",
       phone: "+" + contact?.phone || "",

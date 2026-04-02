@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Badge, Group, SegmentedControl, Stack, Text } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { IconArrowRight } from "@tabler/icons-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useTimeZone } from "next-intl";
 
 import { useCheckSession } from "@/hooks/checkSession";
@@ -147,7 +147,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
           bg="#cce1ee"
           data={periods}
           value={period}
-          onChange={setPeriod}
+          onChange={(value) => setPeriod(value)}
         />
       </Stack>
 
@@ -216,8 +216,10 @@ const MailForm = ({ opened, close, plan, currencySymbol }) => {
     },
   });
 
-  function handleSubmit() {
-    if (form.validate().hasErrors) return;
+  async function handleSubmit() {
+    const validationRes = await form.validate();
+    if (validationRes.hasErrors) return;
+
     const data = {
       ...form.values,
       planName: plan?.displayName,

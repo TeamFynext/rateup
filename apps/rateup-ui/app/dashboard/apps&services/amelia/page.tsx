@@ -2,10 +2,9 @@
 
 import { useEffect } from "react";
 
-import { ActionIcon, Box, Group, Skeleton, Stack, Title } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { ActionIcon, Group, Skeleton, Stack, Title } from "@mantine/core";
+import { schemaResolver, useForm } from "@mantine/form";
 import { IconTrash } from "@tabler/icons-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -41,7 +40,7 @@ const WpAmelia = () => {
   const translations = useExtracted();
   const schema = z.object({
     apiKey: z.string(),
-    baseUrl: z.string().trim().url(),
+    baseUrl: z.url(),
     serviceId: z.number(),
   });
   const initialValues = {
@@ -51,7 +50,7 @@ const WpAmelia = () => {
   };
   const form = useForm<z.infer<typeof schema>>({
     initialValues: initialValues,
-    validate: zod4Resolver(schema),
+    validate: schemaResolver(schema, { sync: true }),
   });
 
   useEffect(() => {

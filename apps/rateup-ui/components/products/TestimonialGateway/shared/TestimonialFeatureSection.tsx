@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Camera, CheckCircle, Heart, MessageSquare, Star } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Card } from "@/components/ui/card";
 

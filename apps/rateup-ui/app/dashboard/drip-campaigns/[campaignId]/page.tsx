@@ -23,7 +23,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import {
   IconEye,
@@ -40,7 +40,6 @@ import {
 } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -369,7 +368,9 @@ const StartCampaignCard = ({
       statuses: [CampaignParticipantStatus.FAILED],
       sentCampaignChoice: SentCampaignEnum.NOW,
     },
-    validate: zod4Resolver(schema),
+    validate: schemaResolver(schema, {
+      sync: true,
+    }),
     onValuesChange: (values) => {
       if (
         values.sentCampaignChoice === SentCampaignEnum.NOW &&

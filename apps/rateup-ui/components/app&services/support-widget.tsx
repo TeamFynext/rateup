@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { useClickOutside, useScrollIntoView } from "@mantine/hooks";
 import axios from "axios";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -16,7 +16,6 @@ import {
   Send,
   Smile,
 } from "lucide-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { z } from "zod/v4";
 
 import { getBrowserId } from "@/lib/browserId";
@@ -108,7 +107,9 @@ export default function SupportWidget({
       phone: "",
       email: "",
     },
-    validate: zod4Resolver(supportSchema),
+    validate: schemaResolver(supportSchema, {
+      sync: true,
+    }),
   });
   const [messages, setMessages] = useState<Message[]>([
     {

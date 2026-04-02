@@ -34,7 +34,7 @@ export function CountSectionContainer({ label, children }) {
           {opened ? <IconChevronUp /> : <IconChevronDown />}
         </ActionIcon>
       </Group>
-      <Collapse in={opened}>
+      <Collapse expanded={opened}>
         <Group wrap="nowrap">{children}</Group>
       </Collapse>
     </Stack>

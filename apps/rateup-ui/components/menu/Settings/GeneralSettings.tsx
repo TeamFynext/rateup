@@ -11,10 +11,9 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconMinus, IconPlus } from "@tabler/icons-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useExtracted } from "next-intl";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 import { toast } from "sonner";
@@ -74,7 +73,9 @@ const GeneralSettings = ({ editingItem }) => {
       locationUrl: "",
       locationText: "",
     },
-    validate: zod4Resolver(schema),
+    validate: schemaResolver(schema, {
+      sync: true,
+    }),
   });
 
   const { isPending, mutate } = useUpdateMenuMutation(

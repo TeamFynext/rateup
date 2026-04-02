@@ -331,7 +331,7 @@ function AtomicConditionBlock({
             value: q.id,
           }))}
           value={selectedQId}
-          onChange={setSelectedQId}
+          onChange={(value) => setSelectedQId(value)}
           style={{
             flexShrink: 0,
           }}

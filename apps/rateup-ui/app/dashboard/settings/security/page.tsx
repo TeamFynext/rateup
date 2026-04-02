@@ -85,9 +85,9 @@ export default function Security() {
     },
   });
 
-  const onPasswordSubmit = (values) => {
+  const onPasswordSubmit = async (values) => {
     setIsLoading(true);
-    const validation = passwordForm.validate();
+    const validation = await passwordForm.validate();
     if (validation.hasErrors) return;
     const data = {
       existingPassword: values.existingPassword,
