@@ -416,3 +416,39 @@ export async function getMetaAssetsHandler(
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
+
+export async function getWaSettingsForOrgHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const data = await getWaSettings(orgId);
+    const accessToken = data?.accessToken;
+    const businessId = data?.wabaId;
+    let verificationStatus = null;
+
+    if (accessToken && businessId) {
+      const res = await callWhatsappApi(
+        `/${businessId}`,
+        "GET",
+        accessToken,
+        undefined,
+        {},
+        {},
+        {
+          fields: "business_verification_status",
+        },
+      );
+
+      verificationStatus = res.data?.business_verification_status;
+    }
+
+    reply.code(200).send({
+      verificationStatus,
+    });
+  } catch (error) {
+    log.error("Error while getting meta assets %o", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}

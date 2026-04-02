@@ -1,16 +1,21 @@
 import dayjs from "dayjs";
 import prisma from "../../utils/prisma.js";
-import { FreePlanSubscriptionFeatures } from "./subscription.data.js";
+import {
+  FreePlanSubscriptionFeatures,
+  getFreeSubscriptionFeatures,
+} from "./subscription.data.js";
 import { updateSubscriptionInput } from "./subscription.schema.js";
 import { PaymentPlanType } from "../../../generated/prisma/client.js";
 import { createStats } from "../stats/stats.service.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
+import merge from "lodash/merge.js";
 
 export async function createFreePlanSubscription(
   orgId: string,
   pClient = prisma,
   planId?: string,
+  overrides?: Partial<SubscriptionFeatures>,
 ) {
   let rateupPlan;
   if (planId) {
@@ -60,12 +65,22 @@ export async function createFreePlanSubscription(
 
     rateupPlan = rateupFreePlan;
   }
+  let finalFeatures;
+  if (planId && rateupPlan) {
+    // Paid/custom plan
+    finalFeatures = overrides
+      ? merge({}, rateupPlan.features, overrides)
+      : rateupPlan.features;
+  } else {
+    //Free plan
+    finalFeatures = getFreeSubscriptionFeatures(overrides);
+  }
 
   await pClient.subscription.create({
     data: {
       orgId,
       basePlanId: rateupPlan.id,
-      features: rateupPlan.features,
+      features: finalFeatures,
       expiresAt: dayjs().add(100, "year").toDate(),
     },
   });

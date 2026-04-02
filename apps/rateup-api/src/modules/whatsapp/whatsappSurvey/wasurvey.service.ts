@@ -204,6 +204,24 @@ export async function sendMessage(
     if (e instanceof GraphApiError) {
       errorMessage = getGraphApiErrorMessage(e);
     }
+
+    await handleWaMessages(
+      "send",
+      messageData,
+      to,
+      orgId,
+      platform,
+      sourceIdentifier,
+      userName,
+      null,
+      userId,
+      true,
+      teamId ?? null,
+      messageType,
+      isAutomated,
+      externalApi,
+      e?.error,
+    );
     return {
       status: false,
       message: errorMessage,

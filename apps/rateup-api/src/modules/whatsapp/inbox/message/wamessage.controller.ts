@@ -108,6 +108,7 @@ export async function handleWaMessages(
     | "FLOW" = "INBOX",
   isAutomated: boolean = false,
   externalApi: boolean = false,
+  logs = {},
 ) {
   try {
     // Prepare message body
@@ -244,6 +245,7 @@ export async function handleWaMessages(
       userId,
       failed,
       messageType,
+      logs,
     );
 
     const teamID = teamId && teamId.trim() !== "" ? teamId : null;

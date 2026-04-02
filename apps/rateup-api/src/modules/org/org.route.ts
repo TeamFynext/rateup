@@ -7,6 +7,7 @@ import {
   getAllMembersWithTeamsHandler,
   getAllOrgsHandler,
   getAllTeamsAndMembers,
+  getOnboardingChecklistHandler,
   getOrgStatsHandler,
   getWebhookClientSecretHandler,
   orgNameAndPhoneNumber,
@@ -202,4 +203,6 @@ export async function orgRoutes(server: FastifyInstance) {
     },
     deleteBusinessHourHandler,
   );
+
+  server.get("/checklist", getOnboardingChecklistHandler);
 }

@@ -36,6 +36,7 @@ import {
   deleteSuperTokenUserForId,
   getUserInfo,
 } from "../../utils/supertoken/supertoken.js";
+import { UserRecipes } from "../../types/enums.js";
 
 export async function getLoggedUserInfoHandler(
   request: FastifyRequest,
@@ -99,18 +100,44 @@ export async function createGoogleUserHandler(
     userInfo.emails[0] = request?.body?.email;
     userInfo.phoneNumbers[0] = request?.body?.phoneNumber;
   }
-  let data = {
+  const body = request.body;
+
+  const payload = {
     id: userId,
-    email: userInfo?.emails[0] !== undefined ? userInfo?.emails[0] : "",
-    phoneNumber: request?.body?.phoneNumber,
-    name: request?.body?.name,
-    orgName: request?.body?.orgName,
-    recipeName: getUserRecipeName("thirdparty") ?? null,
+    email: userInfo?.emails?.[0] ?? "",
+    name: body.name ?? "",
+    orgName: body.orgName ?? "",
+    phoneNumber: body.phoneNumber ?? "",
+    phone: body.phoneNumber ?? "",
+    recipeName: UserRecipes.ThirdPartyGoogle,
+    location: body.location ?? "",
+    industry: body.industry ?? "",
+    website:
+      body.website && body.website.startsWith("http")
+        ? body.website
+        : body.website
+          ? `https://${body.website}`
+          : undefined,
+
+    goals: Array.isArray(body.goals) ? body.goals : [],
+    integrationsSelected: Array.isArray(body.integrationsSelected)
+      ? body.integrationsSelected
+      : [],
   };
   try {
     user = await createUserSignup({
-      ...data,
-      phone: data.phoneNumber || "",
+      id: payload.id,
+      email: payload.email,
+      name: payload.name,
+      orgName: payload.orgName,
+      phoneNumber: payload.phoneNumber,
+      phone: payload.phone,
+      recipeName: payload.recipeName,
+      location: payload.location,
+      industry: payload.industry,
+      website: payload.website,
+      goals: payload.goals,
+      integrationsSelected: payload.integrationsSelected,
     });
   } catch (e: any) {
     console.error(e);

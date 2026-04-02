@@ -59,6 +59,7 @@ export async function createUserSignup({
   planId,
   location,
   website,
+  industry,
   goals,
   integrationsSelected,
 }: CreateUserSignupSchema) {
@@ -84,6 +85,7 @@ export async function createUserSignup({
           ownerId: newUser.id,
           phone: phoneNumber,
           onboarding: {
+            industry: industry || null,
             location: location || null,
             website: website || null,
             goals: goals?.length ? goals : null,
@@ -123,7 +125,25 @@ export async function createUserSignup({
         },
       });
       // creating free plan subscription
-      await createFreePlanSubscription(org.id, prisma as any, planId);
+      let overrides: Partial<SubscriptionFeatures> | undefined;
+
+      if (goals?.length > 0 && goals.includes("loyalty-program")) {
+        overrides = {
+          loyalty: {
+            active: true,
+            action: { count: { max: 1 }, active: true },
+            reward: { count: { max: 1 }, active: true },
+            customer: { count: { max: 1 }, active: true },
+          },
+        };
+      }
+
+      await createFreePlanSubscription(
+        org.id,
+        prisma as any,
+        planId,
+        overrides,
+      );
     });
 
     if (team.id && teamMember.userId) {
@@ -277,6 +297,7 @@ export async function getLoggedUserInfo(
         },
       },
       showLifecycle: true,
+      onboardingChecklistCompleted: true,
     },
   });
   return {
@@ -305,6 +326,7 @@ export async function getLoggedUserInfo(
     onboarding: orgData?.onboarding,
     presenceMode: profile?.presenceMode,
     showLifecycle: orgData?.showLifecycle,
+    onboardingChecklistCompleted: orgData?.onboardingChecklistCompleted,
   };
 }
 

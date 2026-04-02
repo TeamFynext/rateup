@@ -6,6 +6,7 @@ import {
   getAllMembersWithTeams,
   getAllMembersWithTeamsAndInvitation,
   getAllOrgs,
+  getOnboardingChecklist,
   getOrgNameAndUserPhone,
   getOrgStats,
   getTeamsMembers,
@@ -314,6 +315,21 @@ export async function orgNameAndPhoneNumber(
     const userId = request.user.userId;
     const updates = await getOrgNameAndUserPhone(userId);
     reply.code(200).send(updates);
+  } catch (e) {
+    reply.code(500).send(e);
+  }
+}
+
+export async function getOnboardingChecklistHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    let session = await Session.getSession(request, reply);
+    const accessTokenPayload = session.getAccessTokenPayload();
+    const orgId = accessTokenPayload.orgId;
+    const data = await getOnboardingChecklist(orgId);
+    reply.code(200).send(data);
   } catch (e) {
     reply.code(500).send(e);
   }

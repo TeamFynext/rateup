@@ -4,6 +4,7 @@ import {
   deleteWaSettingsHandler,
   getMetaAssetsHandler,
   getWaLogsHandler,
+  getWaSettingsForOrgHandler,
   getWaSettingsHandler,
   subscribeFieldstoPageHandler,
   syncAdAccountsHandler,
@@ -129,4 +130,5 @@ export async function waSettingsRoutes(server: FastifyInstance) {
   );
 
   server.get("/meta-assets/:whatsappSettingsId", getMetaAssetsHandler);
+  server.get("/verification-status", getWaSettingsForOrgHandler);
 }

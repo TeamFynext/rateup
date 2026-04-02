@@ -40,11 +40,17 @@ const pauseUserSchema = z.object({
 });
 
 const createUserGoogleSchema = z.object({
-  name: z.string().min(4),
-  orgName: z.string().min(4),
+  name: z.string().min(1),
+  orgName: z.string().min(1),
+  phone: z.string().optional(),
   phoneNumber: z.string(),
   type: z.string(),
   email: z.string().optional(),
+  goals: z.array(z.string()).optional(),
+  integrationsSelected: z.array(z.string()).optional(),
+  location: z.string().optional(),
+  website: z.string().optional(),
+  industry: z.string().optional(),
 });
 
 const changeUserPasswordSchema = z.object({
