@@ -74,6 +74,7 @@ export async function addNewWaMessage(
   sendBy?: string,
   failed: boolean = false,
   sourceMessage: string = "inbox",
+  logs = {},
 ) {
   const initialStats = {
     read: "",
@@ -107,6 +108,7 @@ export async function addNewWaMessage(
       conversationId,
       ...statsData,
       sourceMessage,
+      logs,
     },
     include: {
       sender: {

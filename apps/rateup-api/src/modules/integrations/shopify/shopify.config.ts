@@ -1,6 +1,6 @@
 import "@shopify/shopify-api/adapters/node";
 import { ApiVersion, LogSeverity, shopifyApi } from "@shopify/shopify-api";
-import { restResources } from "@shopify/shopify-api/rest/admin/2024-07";
+import { restResources } from "@shopify/shopify-api/rest/admin/2024-10";
 import { API_URL } from "../../../utils/constants/constants.js";
 
 const apiUrl = new URL(API_URL);
@@ -20,7 +20,7 @@ function initializeShopify() {
     scopes: scopes.split(","),
     hostName: protocol == "http" ? "localhost:3001" : apiUrl.hostname,
     hostScheme: protocol as "http" | "https",
-    apiVersion: ApiVersion.July24,
+    apiVersion: ApiVersion.October24,
     restResources,
     isEmbeddedApp: false,
     future: {
