@@ -125,6 +125,7 @@ export const SuperTokensConfig: TypeInput = {
               const planId = getValueByKey(formFields, "planId");
               const location = getValueByKey(formFields, "location");
               const website = getValueByKey(formFields, "website");
+              const industry = getValueByKey(formFields, "industry");
               const goals = getValueByKey(formFields, "goals");
               const integrationsSelected = getValueByKey(
                 formFields,
@@ -145,6 +146,7 @@ export const SuperTokensConfig: TypeInput = {
                   planId,
                   location,
                   website,
+                  industry,
                   goals: Array.isArray(goals) ? goals : goals ? [goals] : [],
                   integrationsSelected: Array.isArray(integrationsSelected)
                     ? integrationsSelected

@@ -143,6 +143,9 @@ model Org {
 
   showLifecycle Boolean @default(true)
 
+  onboardingChecklist          Json?
+  onboardingChecklistCompleted Boolean @default(false)
+
   members                  OrgMember[]
   teams                    Team[]
   invitations              Invitation[]

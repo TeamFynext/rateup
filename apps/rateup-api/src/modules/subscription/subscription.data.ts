@@ -79,8 +79,10 @@ export const SampleSubscriptionFeatures = getSampleSubscriptionFeatures(10);
 // TODO: check if Math.infinity is a good idea or use null value for unlimited
 export const UnlimitedAccess = getSampleSubscriptionFeatures(10000);
 
-function getFreeSubscriptionFeatures(): SubscriptionFeatures {
-  return {
+export function getFreeSubscriptionFeatures(
+  overrides?: Partial<SubscriptionFeatures>,
+): SubscriptionFeatures {
+  const base = {
     menu: { count: { max: 1, monthlyViewLimit: 50 }, active: false },
     team: {
       count: { max: 1 },
@@ -149,6 +151,15 @@ function getFreeSubscriptionFeatures(): SubscriptionFeatures {
       reward: { count: { max: 0 }, active: true },
       customer: { count: { max: 0 }, active: true },
       active: false,
+    },
+  };
+
+  return {
+    ...base,
+    ...overrides,
+    loyalty: {
+      ...base.loyalty,
+      ...overrides?.loyalty,
     },
   };
 }
