@@ -104,7 +104,7 @@ export function Testimonials() {
           {/* Left arrow */}
           <button
             onClick={prev}
-            className="absolute -left-6 z-20 w-11 h-11 rounded-full bg-[#2D74E0] hover:bg-[#2D74E0]/80 flex items-center justify-center shadow-lg transition-colors"
+            className="absolute -left-6 z-20 w-11 h-11 rounded-full bg-rateup-blue-5 hover:bg-rateup-blue-5/80 flex items-center justify-center shadow-lg transition-colors"
             aria-label="Previous testimonial"
           >
             <ChevronLeft className="w-5 h-5 text-white" />
@@ -142,7 +142,7 @@ export function Testimonials() {
 
                 {/* Read Story */}
                 <div className="mt-3">
-                  <button className="inline-flex items-center gap-2 bg-[#2D74E0] hover:bg-[#2D74E0]/90 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+                  <button className="inline-flex items-center gap-2 bg-rateup-blue-5 hover:bg-rateup-blue-5/90 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
                     Read Story <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -151,7 +151,7 @@ export function Testimonials() {
               {/* Right: image */}
               <div className="relative w-full md:w-[380px] shrink-0 min-h-[300px] md:min-h-0">
                 {/* Category badge */}
-                <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-[#2D74E0] text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-rateup-blue-5 text-white text-xs font-medium px-3 py-1.5 rounded-full">
                   {t.categoryIcon}
                   {t.category}
                 </div>
@@ -181,7 +181,7 @@ export function Testimonials() {
           {/* Right arrow */}
           <button
             onClick={next}
-            className="absolute -right-6 z-20 w-11 h-11 rounded-full bg-[#2D74E0] hover:bg-[#2D74E0]/80 flex items-center justify-center shadow-lg transition-colors"
+            className="absolute -right-6 z-20 w-11 h-11 rounded-full bg-rateup-blue-5 hover:bg-rateup-blue-5/80 flex items-center justify-center shadow-lg transition-colors"
             aria-label="Next testimonial"
           >
             <ChevronRight className="w-5 h-5 text-white" />
@@ -194,11 +194,15 @@ export function Testimonials() {
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              className={`h-2 rounded-full transition-all ${
-                i === current ? "bg-[#2D74E0] w-6" : "bg-white/20 w-2"
-              }`}
+              className="h-6 w-6 flex items-center justify-center"
               aria-label={`Go to slide ${i + 1}`}
-            />
+            >
+              <span
+                className={`h-2 rounded-full transition-all block ${
+                  i === current ? "bg-rateup-blue-5 w-6" : "bg-white/20 w-2"
+                }`}
+              />
+            </button>
           ))}
         </div>
       </div>

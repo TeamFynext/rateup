@@ -15,15 +15,17 @@ const page = () => {
   return (
     <Layout>
       <div className="bg-rateup-dark-blue text-white min-h-screen leading-relaxed">
-        <Hero />
-        <Stats />
-        <Clients />
-        <FeatureShowcase />
-        <FeaturesGrid />
-        <Integrations />
-        <Testimonials />
-        <PricingData />
-        <CTA />
+        <main>
+          <Hero />
+          <Stats />
+          <Clients />
+          <FeatureShowcase />
+          <FeaturesGrid />
+          <Integrations />
+          <Testimonials />
+          <PricingData />
+          <CTA />
+        </main>
         <Footer />
         <SupportWidgetWrapper />
       </div>

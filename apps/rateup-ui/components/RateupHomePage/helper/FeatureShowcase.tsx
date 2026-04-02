@@ -147,7 +147,7 @@ export function FeatureShowcase() {
     <section className="w-full ">
       {/* Heading */}
       <div className="text-center mb-16 space-y-4">
-        <div className="inline-flex items-center rounded-full border border-rateup-blue/30 bg-rateup-blue/10 px-3 py-1 text-sm font-medium text-rateup-blue w-fit mx-auto">
+        <div className="inline-flex items-center rounded-full border border-rateup-blue/30 bg-rateup-blue/10 px-3 py-1 text-sm font-medium text-white w-fit mx-auto">
           <Layers className="h-4 w-4 mr-2" />
           Features
         </div>
@@ -163,7 +163,7 @@ export function FeatureShowcase() {
           <div key={i} className="flex flex-col gap-8">
             <div className="flex flex-col">
               <span
-                className="text-rateup-blue text-sm font-semibold uppercase tracking-widest mb-2"
+                className="text-blue-300 text-sm font-semibold uppercase tracking-widest mb-2"
                 style={{ color: slide.accent }}
               >
                 {slide.label}
@@ -174,7 +174,7 @@ export function FeatureShowcase() {
               >
                 {slide.title}
               </h3>
-              <p className="text-lg text-gray-600 leading-relaxed mb-5">
+              <p className="text-lg text-gray-300 leading-relaxed mb-5">
                 {slide.desc}
               </p>
               <a

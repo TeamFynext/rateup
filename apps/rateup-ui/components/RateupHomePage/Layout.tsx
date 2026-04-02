@@ -123,7 +123,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
             <div className="flex items-center gap-4 justify-center">
               <Link
                 href={"/signup"}
-                className="px-4 text-[14px] relative py-2 rounded-xl border font-semibold border-rateup-blue-4 bg-rateup-blue-2 text-white transition"
+                className="px-4 text-[14px] relative py-2 rounded-xl border font-semibold border-rateup-blue-4 bg-rateup-blue-5 text-white transition"
               >
                 Start Free Trial
               </Link>

@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Badge, Group, SegmentedControl, Text } from "@mantine/core";
 import { ChevronRight } from "lucide-react";
 import { useTimeZone } from "next-intl";
 
@@ -128,15 +127,18 @@ export function Pricing({ onPlanSelect = null, plans }) {
     { label: "Monthly", value: "monthly" },
     {
       label: (
-        <Group gap="xs" p={0} w={140}>
-          <Text>Yearly</Text>
-          <Badge
-            color={period === "yearly" ? "white" : "#2D74E0"}
-            c={period === "yearly" ? "#2D74E0" : "white"}
+        <div className="flex items-center gap-2 w-[140px]">
+          <span>Yearly</span>
+          <span
+            className={`text-[11px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full border ${
+              period === "yearly"
+                ? "bg-white text-rateup-blue-5 border-white"
+                : "bg-rateup-blue-5 text-white border-rateup-blue-5"
+            }`}
           >
             Save 20%
-          </Badge>
-        </Group>
+          </span>
+        </div>
       ),
       value: "yearly",
     },
@@ -172,20 +174,26 @@ export function Pricing({ onPlanSelect = null, plans }) {
 
         {/* Monthly / Yearly toggle */}
         <div className="flex flex-col items-center gap-2 mb-12">
-          <SegmentedControl
-            transitionDuration={500}
-            transitionTimingFunction="linear"
-            size="lg"
-            color="#2D74E0"
-            bg="#050f24"
-            styles={{
-              root: { border: "1px solid rgba(45,116,224,0.3)" },
-              label: { color: "#93C6F5" },
-            }}
-            data={periods}
-            value={period}
-            onChange={setPeriod}
-          />
+          <div className="flex items-center p-1 rounded-xl border border-[#2D74E0]/30 bg-[#050f24]">
+            {periods.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setPeriod(p.value)}
+                className={`
+        flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium
+        transition-all duration-500 ease-linear cursor-pointer
+        ${
+          period === p.value
+            ? "bg-rateup-blue-5 text-white shadow-sm"
+            : "bg-transparent text-[#93C6F5] hover:text-white"
+        }
+      `}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Plan cards */}
@@ -233,7 +241,7 @@ export function Pricing({ onPlanSelect = null, plans }) {
                     className={`text-[11px] font-bold tracking-[0.12em] uppercase px-4 py-1.5 rounded-full border
                       ${
                         isPopular
-                          ? "bg-[#2D74E0] text-white border-[#2D74E0]"
+                          ? "bg-rateup-blue-5 text-white border-[#2D74E0]"
                           : "bg-transparent text-[#93C6F5] border-[#2D74E0]/40"
                       }`}
                   >
@@ -260,7 +268,7 @@ export function Pricing({ onPlanSelect = null, plans }) {
                 </div>
 
                 {/* Divider */}
-                <div className="mx-8 h-px bg-[#2D74E0]/20 mb-6" />
+                <div className="mx-8 h-px bg-rateup-blue-5/20 mb-6" />
 
                 {/* Features */}
                 <ul className="px-8 flex-1 space-y-3.5 mb-8">
@@ -289,7 +297,7 @@ export function Pricing({ onPlanSelect = null, plans }) {
                   ) : isPopular ? (
                     <button
                       onClick={() => handlePlanSelection(plan)}
-                      className="w-full flex items-center justify-center gap-2 bg-[#2D74E0] hover:bg-[#0045CC] text-white font-medium text-sm rounded-xl py-3.5 transition-colors group"
+                      className="w-full flex items-center justify-center gap-2 bg-rateup-blue-5 hover:bg-[#0045CC] text-white font-medium text-sm rounded-xl py-3.5 transition-colors group"
                     >
                       Get Started
                       <div className="bg-[#001747] rounded-md w-6 h-6 flex items-center justify-center group-hover:bg-[#001747]/80 transition-colors">
