@@ -170,8 +170,9 @@ const WaTemplateSendSettings = ({ integration, updateIntegration }) => {
     },
   });
 
-  const handleSave = () => {
-    if (form.validate().hasErrors) return;
+  const handleSave = async () => {
+    const validationRes = await form.validate();
+    if (validationRes.hasErrors) return;
     toast.loading("Updating settings", {
       id: "integration-update",
     });

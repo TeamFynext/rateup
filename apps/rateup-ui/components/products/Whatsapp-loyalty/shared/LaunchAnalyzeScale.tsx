@@ -1,6 +1,6 @@
 "use client";
 
-import { easeOut, motion } from "framer-motion";
+import { easeOut, motion } from "motion/react";
 
 import { benefits, features } from "../constants";
 

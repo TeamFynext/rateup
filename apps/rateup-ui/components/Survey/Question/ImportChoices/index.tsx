@@ -47,7 +47,7 @@ function ImportChoices({
     async (file) => {
       if (file) {
         const rows = await readXlsxFile(file);
-        const headerRow = rows[0];
+        const headerRow = rows[0]?.data;
         const areAllSurveyLangsColsPresent =
           areAllSurveyLanguagesColumnsPresent(headerRow);
         if (!areAllSurveyLangsColsPresent) {
@@ -89,7 +89,7 @@ function ImportChoices({
           }
         }
         for (let i = 1; i < rows.length; i++) {
-          const rowArr = rows[i];
+          const rowArr = rows[i]?.data;
           if (!rowArr.includes(null)) {
             for (const key in columnLanguageObj) {
               const surveyLanguage = columnLanguageObj[key];

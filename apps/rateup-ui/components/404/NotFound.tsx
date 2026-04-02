@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { motion } from "framer-motion";
 import { ArrowLeft, Home } from "lucide-react";
+import { motion } from "motion/react";
 
 import { rateupLogoUrl } from "../HomePage/constants";
 

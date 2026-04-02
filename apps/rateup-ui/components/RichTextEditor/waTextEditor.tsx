@@ -139,7 +139,7 @@ function WaTextEditor({
       ext.push(
         CustomEnter.configure({
           onEnter: customEnter,
-        }),
+        }) as any,
       );
     return ext;
   }, [customEnter]);

@@ -254,7 +254,7 @@ function ConditionBlock({
             label={translations("Match Data")}
             value={Array.isArray(matchData) ? "" : matchData}
             data={getResponses(selectedQ, selectedLanguage)}
-            onChange={setMatchData}
+            onChange={(value) => setMatchData(value)}
             w={165}
             mb={"md"}
           />
@@ -266,7 +266,7 @@ function ConditionBlock({
           label={translations("Action")}
           data={possibleActions}
           value={selectedAction}
-          onChange={setSelectedAction as any}
+          onChange={(value) => setSelectedAction(value as any)}
           style={{
             flex: 1,
           }}

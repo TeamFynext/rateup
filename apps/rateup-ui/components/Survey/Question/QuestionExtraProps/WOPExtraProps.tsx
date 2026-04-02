@@ -1,9 +1,8 @@
 "use client";
 
 import { Box, CloseButton, SimpleGrid } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { useDebouncedCallback } from "@mantine/hooks";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useExtracted } from "next-intl";
 import { z } from "zod/v4";
 
@@ -66,7 +65,9 @@ const WOPExtraProps = ({ form }) => {
 
   const wopForm = useForm({
     initialValues: form.values.wop || DEFAULT_WOP,
-    validate: zod4Resolver(schema),
+    validate: schemaResolver(schema, {
+      sync: true,
+    }),
     onValuesChange: handleWop,
   });
 

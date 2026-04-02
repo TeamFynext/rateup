@@ -342,7 +342,7 @@ const SurveyStats = ({ survey, flowId = null }) => {
           </Stack>
         </PaperLayout>
         {!flowId && (
-          <Grid columns={10} p={2} gutter={"10px"} grow>
+          <Grid columns={10} p={2} gap={"10px"} grow>
             {/* Location-wise response frequency */}
             <Grid.Col span={{ xs: 10, md: 3 }}>
               <PaperLayout h="350px">

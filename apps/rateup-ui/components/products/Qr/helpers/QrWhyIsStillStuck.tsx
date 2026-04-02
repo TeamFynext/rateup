@@ -3,13 +3,13 @@
 import React, { useEffect, useRef, useState } from "react";
 
 import { IconArrowDown } from "@tabler/icons-react";
-import { motion, useInView } from "framer-motion";
 import {
   ClockIcon,
   EyeOffIcon,
   ScrollTextIcon,
   TrendingDownIcon,
 } from "lucide-react";
+import { motion, useInView } from "motion/react";
 
 function QrWhyIsStillStuck() {
   const problems = [

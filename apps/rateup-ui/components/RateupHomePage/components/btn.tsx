@@ -39,7 +39,7 @@ export function LandingButton({
 
   const variants = {
     primary:
-      "text-[14px] relative border border-rateup-blue-4 bg-rateup-blue-2 text-white",
+      "text-[14px] relative border border-rateup-blue-4 bg-rateup-blue-5 text-white",
     secondary:
       "bg-rateup-light-blue text-rateup-dark-blue cursor-pointer hover:bg-rateup-darkblue-2",
     outline:
@@ -187,7 +187,7 @@ export function ArrowButton({
   type = "button",
   fullWidth = false,
   size = "sm",
-  bg = "bg-rateup-blue-2",
+  bg = "bg-rateup-blue-5",
   hoverBg = "hover:bg-blue-500",
   hoverText = "",
   textColor = "text-white",

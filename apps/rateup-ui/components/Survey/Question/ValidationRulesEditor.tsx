@@ -313,8 +313,9 @@ const ValidationRulesEditor = ({
         errorMessage: isNotEmpty("required"),
       },
     });
-    const handleUpdateRule = () => {
-      if (ruleForm.validate().hasErrors) return;
+    const handleUpdateRule = async () => {
+      const validationRes = await ruleForm.validate();
+      if (validationRes.hasErrors) return;
       const newRules = multiInputRules?.[ruleForm.values.fieldKey];
       let rule = newRules.find((r) => r.ruleType == ruleForm.values.ruleType);
       if (rule.ruleType == "length") {

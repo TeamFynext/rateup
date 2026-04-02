@@ -14,10 +14,9 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -99,7 +98,9 @@ export function DataSourceInput(props) {
           metadata: "",
           image: "",
         },
-    validate: zod4Resolver(choiceSchema),
+    validate: schemaResolver(choiceSchema, {
+      sync: true,
+    }),
   });
   const translations = useExtracted();
   const handleAddChoice = async () => {
@@ -349,7 +350,9 @@ function Choice({
           metadata: "",
           image: "",
         },
-    validate: zod4Resolver(choiceSchema),
+    validate: schemaResolver(choiceSchema, {
+      sync: true,
+    }),
   });
 
   useEffect(() => {

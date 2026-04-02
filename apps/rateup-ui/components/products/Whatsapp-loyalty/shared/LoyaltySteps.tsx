@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 
-import { easeOut, motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
+import { easeOut, motion } from "motion/react";
 
 import { steps } from "../constants";
 

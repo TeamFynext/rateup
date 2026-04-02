@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@mantine/core";
-import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,6 +13,7 @@ import {
   Target,
   Users,
 } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Card } from "@/components/ui/card";
 

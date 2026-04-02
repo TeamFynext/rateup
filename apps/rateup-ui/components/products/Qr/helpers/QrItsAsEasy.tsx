@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 
-import { motion, Variants } from "framer-motion";
+import { motion, Variants } from "motion/react";
 
 import { imagesPath } from "@/utils/constants";
 

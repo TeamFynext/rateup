@@ -12,6 +12,7 @@ import {
   Text,
 } from "@mantine/core";
 import {
+  IconBrandInstagram,
   IconCheck,
   IconCircleCheck,
   IconCircleX,
@@ -29,7 +30,6 @@ import {
   CircleX,
   Gift,
   Globe,
-  Instagram,
   MessageSquare,
   Upload,
   UserPlus,
@@ -120,7 +120,7 @@ export const getSourceBadge = (source: string) => {
       className: "bg-green-100 text-green-700",
     },
     instagram: {
-      icon: Instagram,
+      icon: IconBrandInstagram,
       label: "Instagram",
       className: "bg-pink-100 text-pink-700",
     },

@@ -1,7 +1,7 @@
 "use client";
 
-import { easeOut, motion } from "framer-motion";
 import { BarChart, MessageSquare, RefreshCcw } from "lucide-react";
+import { easeOut, motion } from "motion/react";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 40 },

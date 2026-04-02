@@ -19,14 +19,13 @@ import {
   Textarea,
   Title,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { getHotkeyHandler, useToggle } from "@mantine/hooks";
 import {
   IconAsterisk,
   IconImageInPicture,
   IconInfoCircle,
 } from "@tabler/icons-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -145,7 +144,9 @@ export function WhatsappTemplateById({
         whatsappSettingsPhoneId: "",
       },
     },
-    validate: zod4Resolver(templateSchema),
+    validate: schemaResolver(templateSchema, {
+      sync: true,
+    }),
   });
   const configForm = useForm<z.infer<typeof configSchema>>({
     initialValues: {
@@ -154,7 +155,9 @@ export function WhatsappTemplateById({
       orderType: null,
       name: "",
     },
-    validate: zod4Resolver(configSchema),
+    validate: schemaResolver(configSchema, {
+      sync: true,
+    }),
   });
   const isOrderCreate = form.values.templateType === TemplateType.ORDER_DETAILS;
 

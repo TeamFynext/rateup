@@ -17,6 +17,8 @@ export function Integrations() {
               src={`${imagesPath}/landing/integrations.svg`}
               alt="RateUp Integrations"
               className="w-full h-auto object-cover rounded-t-3xl"
+              width="1200"
+              height="800"
             />
           </div>
           <div className="relative z-10 space-y-2 py-4 px-4 sm:px-8 text-center">
@@ -25,13 +27,13 @@ export function Integrations() {
             >
               Connect Rateup To Your Favourite Tools
             </h2>
-            <h6
+            <p
               className={`text-rateup-light-blue-2 text-base sm:text-lg pb-4 max-w-xl mx-auto text-center`}
             >
               Integrate with Shopify, WooCommerce, Zendesk, and 100+ other
               platforms to bring all your customer data into one unified
               workspace.
-            </h6>
+            </p>
             <ArrowButton label="View All Integrations" />
           </div>
         </div>

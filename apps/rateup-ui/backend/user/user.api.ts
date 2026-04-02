@@ -88,12 +88,13 @@ export const updateUserProfilePhoto = (data: IUpdateProfilePhoto) =>
     data: data,
   });
 
-export const createGoogleUser = (data: ICreateGoogleUser) =>
-  axiosClient({
+export const createGoogleUser = (data) => {
+  return axiosClient({
     url: `/user/complete-google-signup`,
     method: "POST",
     data: data,
   });
+};
 
 export const changeUserPassword = (data: IChangePassword) =>
   axiosClient({

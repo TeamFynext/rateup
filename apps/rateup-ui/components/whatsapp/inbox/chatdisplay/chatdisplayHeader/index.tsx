@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { Group, Radio, RadioGroup, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
+  IconBrandInstagram,
   IconBrandWhatsappFilled,
   IconCategoryPlus,
   IconWebhook,
@@ -15,7 +16,6 @@ import {
   BellOff,
   Bot,
   CircleCheckBig,
-  InstagramIcon,
   Tag,
   Ticket,
 } from "lucide-react";
@@ -121,7 +121,7 @@ export default function WaInboxChatDisplayHeader({
 
   switch (platform) {
     case MessagePlatform.INSTAGRAM:
-      leftSectionIcon = <InstagramIcon size={13} />;
+      leftSectionIcon = <IconBrandInstagram size={13} />;
       break;
     case MessagePlatform.WEBCHAT:
       leftSectionIcon = <IconWebhook size={13} color="#25D366" />;

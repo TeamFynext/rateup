@@ -22,6 +22,7 @@ import {
   useActiveSurveyStats,
   useOverallStats,
 } from "@/backend/dashboard/dashboard.query";
+import { useUserInfo } from "@/backend/user/user.query";
 import { StatCards, StatCardSkeleton } from "@/components/Dashboard/StatCards";
 import SubscriptionCard from "@/components/Dashboard/SubscriptionCard";
 import {
@@ -37,12 +38,24 @@ export default function DashboardHome() {
   // const { data: activeSurveyData, isLoading: activeSurveyLoading } =
   //   useActiveSurveyStats();
   const router = useRouter();
+  const {
+    isPending: isLoadingUserInfo,
+    data: userQueryData,
+    isFetched,
+    refetch,
+  } = useUserInfo();
   // const { data: overallData, isLoading: overallStatsLoading } =
   //   useOverallStats();
   // const translations = useExtracted();
   useEffect(() => {
+    const user =
+      userQueryData && "data" in userQueryData ? userQueryData.data : null;
+    if (!user) return;
+    if (!user.onboardingChecklistCompleted) {
+      return router.replace("/login/setup");
+    }
     router.replace("/dashboard/inbox?tab=New");
-  }, [router]);
+  }, [userQueryData, isFetched, isLoadingUserInfo]);
 
   return (
     <Loader />

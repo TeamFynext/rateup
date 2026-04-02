@@ -1,6 +1,6 @@
 "use client";
 
-import { easeOut, motion } from "framer-motion";
+import { easeOut, motion } from "motion/react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 import { Button } from "@/components/ui/button";

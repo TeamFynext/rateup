@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 import { Button } from "@/components/ui/button";
