@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 import CustomQRCode from "../components/CustomQrCode/CustomQrCode";
-import { getLogoSrc } from "../ShareQR/utils";
 import styles from "./Preview.module.css";
 
 function Preview({
@@ -36,13 +35,30 @@ function Preview({
 
   const previewContainerRef = useRef(undefined);
   const translations = useExtracted();
-  const logoSrc = getLogoSrc(qrBgImgLogo);
+  const [logoSrc, setLogoSrc] = useState(null);
+  const FALLBACK_LOGO = "/images/rateup-star.svg";
+
+  const finalLogoSrc = logoSrc || FALLBACK_LOGO;
 
   useEffect(() => {
-    return () => {
-      URL.revokeObjectURL(logoSrc);
+    if (!qrBgImgLogo) {
+      setLogoSrc(null);
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setLogoSrc(reader.result); // ✅ base64
     };
-  }, []);
+
+    reader.onerror = () => {
+      console.error("File read failed");
+      setLogoSrc(null);
+    };
+
+    reader.readAsDataURL(qrBgImgLogo);
+  }, [qrBgImgLogo]);
 
   const downloadQrCode = async () => {
     const element = previewContainerRef.current;
@@ -97,7 +113,7 @@ function Preview({
           {isLogoEnabled && (
             <img
               className={styles["qr-bg-img"]}
-              src={logoSrc}
+              src={finalLogoSrc}
               alt="bg-image"
               width={500}
               height={500}
