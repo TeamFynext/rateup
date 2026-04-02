@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -21,11 +21,9 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useExtracted } from "next-intl";
+import { Controller, useForm } from "react-hook-form";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-import SelectR from "react-select";
-import countryList from "react-select-country-list";
 import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
@@ -107,7 +105,8 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
         });
 
   const signupForm = useForm({
-    initialValues: {
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
       email: "",
       name: "",
       password: "",
@@ -117,10 +116,9 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
       phoneNumber: "",
       industry: "",
       location: "",
-      goals: [] as string[],
-      integrationsSelected: [] as string[],
+      goals: [],
+      integrationsSelected: [],
     },
-    validate: zod4Resolver(signUpSchema),
   });
 
   useEffect(() => {
@@ -129,7 +127,8 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
     );
     if (newUserFromPricingPage) {
       const data = JSON.parse(newUserFromPricingPage);
-      signupForm.setValues({
+      signupForm.reset({
+        ...signupForm.getValues(),
         email: data.email,
         name: data.name,
         orgName: data.orgName,
@@ -158,25 +157,25 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
     const selectedPlan = JSON.parse(localStorage.getItem("selected_plan"));
     if (cart?.planId.length) {
       sendMail.mutate({
-        email: signupForm.values.email,
-        name: signupForm.values.name,
+        email: signupForm.getValues("email"),
+        name: signupForm.getValues("name"),
         planName: cart?.name,
       });
     }
 
     setIsLoading(true);
     signUp(
-      signupForm.values.email,
-      signupForm.values.password,
-      signupForm.values.name,
-      signupForm.values.orgName,
-      signupForm.values.phoneNumber,
+      signupForm.getValues("email"),
+      signupForm.getValues("password"),
+      signupForm.getValues("name"),
+      signupForm.getValues("orgName"),
+      signupForm.getValues("phoneNumber"),
       selectedPlan?.id,
-      signupForm.values.website,
-      signupForm.values.industry,
-      signupForm.values.location,
-      signupForm.values.goals,
-      signupForm.values.integrationsSelected,
+      signupForm.getValues("website"),
+      signupForm.getValues("industry"),
+      signupForm.getValues("location"),
+      signupForm.getValues("goals"),
+      signupForm.getValues("integrationsSelected"),
     ).finally(() => {
       setIsLoading(false);
       localStorage.removeItem("selected_plan");
@@ -276,6 +275,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
 }
 
 export function Step1({ formData, handleNext, google }) {
+  const values = formData.watch();
   const translations = useExtracted();
   const checkEmailMutaion = useCheckEmailExistMutation();
   const [showPassword, setShowPassword] = useState(false);
@@ -283,7 +283,7 @@ export function Step1({ formData, handleNext, google }) {
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const password = formData.values.password;
+  const password = values.password;
   const [emailError, setEmailError] = useState(false);
 
   const rules = [
@@ -314,20 +314,20 @@ export function Step1({ formData, handleNext, google }) {
     /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
   const isFormComplete =
-    formData.values.name.trim() !== "" &&
+    values.name.trim() !== "" &&
     (!google
-      ? formData.values.email.trim() !== "" &&
-        formData.values.password.trim() !== "" &&
-        isPasswordValid(formData.values.password)
+      ? values.email.trim() !== "" &&
+        values.password.trim() !== "" &&
+        isPasswordValid(values.password)
       : true) &&
     agreesToTerms;
 
   const handleClick = async () => {
     if (!google) {
-      if (formData.values?.email) {
+      if (values?.email) {
         setLoading(true);
         const response = await checkEmailMutaion.mutateAsync({
-          email: formData.values.email.trim(),
+          email: values.email.trim(),
         });
 
         if (response.success) {
@@ -354,9 +354,7 @@ export function Step1({ formData, handleNext, google }) {
                 <p className="text-sm font-medium text-green-800">
                   Account connected successfully!
                 </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {formData.values.email}
-                </p>
+                <p className="text-xs text-gray-600 mt-1">{values.email}</p>
               </div>
             </div>
           </div>
@@ -392,12 +390,18 @@ export function Step1({ formData, handleNext, google }) {
             </Label>
             <div className="relative">
               <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                id="name"
-                type="text"
-                placeholder={translations("Name")}
-                className="pl-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
-                {...formData.getInputProps("name")}
+              <Controller
+                name="name"
+                control={formData.control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    id="name"
+                    type="text"
+                    placeholder={translations("Name")}
+                    className="pl-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
+                  />
+                )}
               />
             </div>
           </div>
@@ -414,12 +418,18 @@ export function Step1({ formData, handleNext, google }) {
                   </Label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="you@company.com"
-                      {...formData.getInputProps("email")}
-                      className="pl-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
+                    <Controller
+                      name="email"
+                      control={formData.control}
+                      render={({ field }) => (
+                        <Input
+                          {...field}
+                          id="email"
+                          type="email"
+                          placeholder="you@company.com"
+                          className="pl-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
+                        />
+                      )}
                     />
                   </div>
                 </div>
@@ -465,14 +475,23 @@ export function Step1({ formData, handleNext, google }) {
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Create a strong password"
-                    {...formData.getInputProps("password")}
-                    onFocus={() => setIsPasswordFocused(true)}
-                    onBlur={() => setIsPasswordFocused(false)}
-                    className="pl-11 pr-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
+                  <Controller
+                    name="password"
+                    control={formData.control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Create a strong password"
+                        onFocus={() => setIsPasswordFocused(true)}
+                        onBlur={(e) => {
+                          field.onBlur(); // IMPORTANT
+                          setIsPasswordFocused(false);
+                        }}
+                        className="pl-11 pr-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"
+                      />
+                    )}
                   />
                   <button
                     type="button"
@@ -489,35 +508,34 @@ export function Step1({ formData, handleNext, google }) {
               </div>
               {/* Password Validation Errors */}
               <AnimatePresence>
-                {formData.values.password &&
-                  !isPasswordValid(formData.values.password) && (
-                    <motion.div
-                      key="password-invalid"
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -5 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex items-center gap-1 mt-0.5 sm:mt-1 text-xs text-red-600 font-medium"
+                {values.password && !isPasswordValid(values.password) && (
+                  <motion.div
+                    key="password-invalid"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center gap-1 mt-0.5 sm:mt-1 text-xs text-red-600 font-medium"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-500 shrink-0"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      {translations(
-                        "Your password must meet all security requirements",
-                      )}
-                    </motion.div>
-                  )}
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {translations(
+                      "Your password must meet all security requirements",
+                    )}
+                  </motion.div>
+                )}
               </AnimatePresence>
 
               {/* Password Rules */}
@@ -650,10 +668,12 @@ export function Step2({ formData, handleBack, handleNext }) {
     "Other",
   ];
 
+  const values = formData.watch();
+
   const isFormComplete =
-    formData.values.orgName.trim() !== "" &&
-    formData.values.phoneNumber.trim() !== "" &&
-    formData.values.industry.trim() !== "";
+    values.orgName?.trim() !== "" &&
+    values.phoneNumber?.trim() !== "" &&
+    values.industry?.trim() !== "";
 
   return (
     <div className="w-full h-96 flex flex-col">
@@ -665,10 +685,16 @@ export function Step2({ formData, handleBack, handleNext }) {
           </Label>
           <div className="relative">
             <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Your Company Name"
-              {...formData.getInputProps("orgName")}
-              className="h-8 pl-9 text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
+            <Controller
+              name="orgName"
+              control={formData.control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  placeholder="Your Company Name"
+                  className="h-8 pl-9 text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
+                />
+              )}
             />
           </div>
         </div>
@@ -680,10 +706,16 @@ export function Step2({ formData, handleBack, handleNext }) {
           </Label>
           <div className="relative">
             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="https://yourcompany.com"
-              {...formData.getInputProps("website")}
-              className="h-8 pl-9 text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
+            <Controller
+              name="website"
+              control={formData.control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  placeholder="https://yourcompany.com"
+                  className="h-8 pl-9 text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white"
+                />
+              )}
             />
           </div>
         </div>
@@ -693,40 +725,47 @@ export function Step2({ formData, handleBack, handleNext }) {
           <Label className="text-xs font-medium text-gray-900">
             Contact Number
           </Label>
-          <PhoneInput
-            international
-            defaultCountry="IN"
-            value={formData.values.phoneNumber}
-            onChange={(val) => {
-              const phone = val || "";
-              formData.setFieldValue("phoneNumber", phone);
-            }}
-            className="h-8 border border-gray-300 rounded-md px-2 text-xs bg-white 
-            [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:outline-none [&>input]:w-full"
+          <Controller
+            name="phoneNumber"
+            control={formData.control}
+            render={({ field }) => (
+              <PhoneInput
+                international
+                defaultCountry="IN"
+                value={field.value}
+                onChange={(val) => field.onChange(val || "")}
+                className="h-8 border border-gray-300 rounded-md px-2 text-xs bg-white 
+                [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:outline-none [&>input]:w-full"
+              />
+            )}
           />
         </div>
 
         {/* Industry */}
         <div className="space-y-1">
           <Label className="text-xs font-medium text-gray-900">Industry</Label>
-          <Select
-            value={formData.values.industry}
-            onValueChange={(value) => formData.setFieldValue("industry", value)}
-          >
-            <SelectTrigger className="h-8 w-full text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white">
-              <SelectValue placeholder="Select Industry" />
-            </SelectTrigger>
-            <SelectContent>
-              {industries.map((industry) => (
-                <SelectItem key={industry} value={industry}>
-                  {industry}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Controller
+            name="industry"
+            control={formData.control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="h-8 w-full text-xs border border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-white">
+                  <SelectValue placeholder="Select Industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {industries.map((industry) => (
+                    <SelectItem key={industry} value={industry}>
+                      {industry}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
       </div>
 
+      {/* Footer */}
       <div className="flex justify-between gap-3 mt-2 pt-2">
         <Button
           variant="outline"
@@ -749,8 +788,9 @@ export function Step2({ formData, handleBack, handleNext }) {
     </div>
   );
 }
-
 export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
+  const values = formData.watch();
+
   const businessGoals = [
     { id: "whatsapp-api", label: "WhatsApp Business API", icon: MessageSquare },
     {
@@ -772,12 +812,13 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
   ];
 
   const handleGoalToggle = (goalId: string) => {
-    const currentGoals = formData.values.goals;
+    const currentGoals = values.goals || [];
+
     const newGoals = currentGoals.includes(goalId)
       ? currentGoals.filter((g) => g !== goalId)
       : [...currentGoals, goalId];
 
-    formData.setFieldValue("goals", newGoals);
+    formData.setValue("goals", newGoals);
   };
 
   return (
@@ -788,10 +829,10 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
         </p>
       </div>
 
-      {/* 🔹 Goals List (scrollable) */}
+      {/* Goals List */}
       <div className="flex-1 overflow-y-auto space-y-2 pr-1">
         {businessGoals.map((goal) => {
-          const isActive = formData.values.goals.includes(goal.id);
+          const isActive = values.goals?.includes(goal.id);
 
           return (
             <div
@@ -832,7 +873,7 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
         })}
       </div>
 
-      {/* 🔹 Footer */}
+      {/* Footer */}
       <div className="flex justify-between gap-3 mt-2 pt-2">
         <Button
           variant="outline"
