@@ -40,7 +40,7 @@ export async function createCheckoutSessionHandler(
   let newOrder = await createOrder(data, userId);
 
   const session = await stripe.checkout.sessions.create({
-    ui_mode: "embedded",
+    ui_mode: "embedded_page",
     line_items: [
       {
         // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
