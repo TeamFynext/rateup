@@ -449,6 +449,11 @@ function WaTextEditor({
           </div>
         </div>
       )}
+      {label && (
+        <div className="text-xs font-bold text-muted-foreground">
+          {label} {required && <span className="text-red-500">*</span>}
+        </div>
+      )}
       <div className={`flex items-start ${border ? "p-4" : ""} pb-0 space-x-2`}>
         <div className="flex-1">
           <RichTextEditor

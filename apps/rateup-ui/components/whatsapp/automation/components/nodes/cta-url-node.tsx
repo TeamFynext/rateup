@@ -27,7 +27,9 @@ function CtaUrlNode(props: NodeProps & { data: CTAUrlNodeData }) {
           <Text size="sm" fw={500}>
             URL:
           </Text>
-          <Text size="sm">{data.url}</Text>
+          <Text size="sm" className="wrap-break-word">
+            {data.url}
+          </Text>
         </Stack>
         {data.footer && <Text size="xs">{parseJsonToReact(data.footer)}</Text>}
       </Stack>

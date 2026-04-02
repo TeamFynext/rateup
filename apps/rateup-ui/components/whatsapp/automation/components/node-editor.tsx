@@ -1148,6 +1148,7 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
         content={typedData.body || ""}
         placeholder="Enter message text..."
         label="Body Text (optional)"
+        required
         max={1024}
       />
 

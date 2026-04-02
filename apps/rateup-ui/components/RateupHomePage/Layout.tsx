@@ -18,6 +18,7 @@ import {
 import { imagesPath } from "@/utils/constants";
 
 import CookieConsentBanner from "../Analytics/CookieConsentBanner";
+import { Button } from "../ui/button";
 import { BookDemoModal } from "./helper/BookDemoModal";
 import DropDownMobileNavItems from "./helpers/DropDownMobileNavItems";
 
@@ -89,7 +90,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   const router = useRouter();
 
   return (
-    <div className={`${!isBlog && "bg-rateup-darkblue"} relative w-full `}>
+    <div className={`${!isBlog && "bg-rateup-darkblue"} relative w-full py-2`}>
       <Navbar>
         {/* Desktop Navigation */}
         <NavBody className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 ">
@@ -110,36 +111,48 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
           <NavItems items={navItems} />
           {hasSession ? (
             <div className="flex  items-center gap-4">
-              <Link
-                href={"/dashboard"}
-                className="px-6 relative py-1.5 rounded-lg border font-medium 
+              <Link href={"/dashboard"}>
+                <Button
+                  className="font-medium 
                border-rateup-blue-4 bg-rateup-blue-4
               text-white transition"
-              >
-                Dashboard
+                  size="lg"
+                >
+                  Dashboard
+                </Button>
               </Link>
             </div>
           ) : (
             <div className="flex items-center gap-4 justify-center">
               <Link
                 href={"/signup"}
-                className="px-4 text-[14px] relative py-2 rounded-xl border font-semibold border-rateup-blue-4 bg-rateup-blue-5 text-white transition"
+                // className="px-4 text-[14px] relative py-2 rounded-xl border font-semibold border-rateup-blue-4 bg-rateup-blue-5 text-white transition"
               >
-                Start Free Trial
+                <Button
+                  className="border-rateup-blue-4 bg-rateup-blue-5 text-white transition"
+                  size="lg"
+                >
+                  <span className="font-semibold text-[14px]">
+                    Start Free Trial
+                  </span>
+                </Button>
               </Link>
               <BookDemoModal>
-                <button className="bg-rateup-light-blue px-4 py-2 rounded-xl text-rateup-dark-blue cursor-pointer hover:bg-rateup-darkblue-2">
+                <Button
+                  className="bg-rateup-light-blue text-rateup-dark-blue hover:bg-rateup-darkblue-2 hover:text-white transition"
+                  size="lg"
+                >
                   <span className="font-semibold text-[14px]">Book A Demo</span>
-                </button>
+                </Button>
               </BookDemoModal>
-              <button
+              <Button
                 onClick={() => router.push("/login")}
-                className="px-10 flex items-center justify-center rounded-xl cursor-pointer
-             text-rateup-blue border border-rateup-light-blue hover:bg-rateup-blue-4
-             hover:text-white transition bg-white py-2"
+                size="lg"
+                variant="outline"
+                className="px-10 text-rateup-blue border border-rateup-light-blue hover:bg-rateup-blue-4 hover:text-white transition bg-white"
               >
                 <span className="font-semibold text-[14px]">Login</span>
-              </button>
+              </Button>
             </div>
           )}
         </NavBody>

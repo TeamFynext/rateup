@@ -1,6 +1,6 @@
 import { Node } from "@xyflow/react";
 
-import { safeStrOrNull } from "@/utils";
+import { hasRealContent, safeStrOrNull } from "@/utils";
 
 import { CatalogMessages } from "../components/node-editor";
 
@@ -112,7 +112,7 @@ export interface StickerNodeData extends BaseNodeData {
 // CTA URL Node
 export interface CTAUrlNodeData extends BaseNodeData {
   header?: string;
-  body?: string;
+  body: string;
   footer?: string;
   display_text: string;
   url: string;
@@ -729,6 +729,12 @@ export function validateNodeData(node: TypedNode): {
 
     case "ctaUrlNode": {
       const data = node.data as NodeTypeMap["ctaUrlNode"];
+      if (!data.body || !hasRealContent(data.body)) {
+        return {
+          valid: false,
+          message: `${node.data.label}: Body is required.`,
+        };
+      }
       if (!data.display_text || data.display_text.trim() === "") {
         return {
           valid: false,
