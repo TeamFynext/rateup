@@ -31,6 +31,7 @@ import {
 } from "@/components/Dashboard/SurveyCard";
 import TeamMembers from "@/components/Dashboard/TeamMembers";
 import { Loader } from "@/components/ui/loader";
+import { UserRole } from "@/utils/enums";
 
 dayjs.extend(relativeTime);
 
@@ -51,7 +52,7 @@ export default function DashboardHome() {
     const user =
       userQueryData && "data" in userQueryData ? userQueryData.data : null;
     if (!user) return;
-    if (!user.onboardingChecklistCompleted) {
+    if (!user.onboardingChecklistCompleted && user.role === UserRole.SUPADM) {
       return router.replace("/login/setup");
     }
     router.replace("/dashboard/inbox?tab=New");

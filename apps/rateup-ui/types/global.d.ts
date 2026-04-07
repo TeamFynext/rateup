@@ -451,6 +451,8 @@ declare global {
     role: "ADMIN" | "MEMBER" | "SUPER_ADMIN";
     userId: string;
     active: boolean;
+    phone: string;
+    createdAt: string;
   };
   interface ITeamResponseData {
     teamId: string;

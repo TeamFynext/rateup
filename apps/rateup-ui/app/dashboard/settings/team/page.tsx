@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
@@ -9,18 +9,11 @@ import { Plus, RefreshCcw, User, Users, UserX } from "lucide-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
-import { createTeam } from "@/backend/team/team.api";
 import {
   useCreateTeamMutation,
   useTeamsByUser,
 } from "@/backend/team/team.query";
-import {
-  AddMembers,
-  colorArray,
-  DeleteTeam,
-  EditTeam,
-  TeamChannelPermissions,
-} from "@/components/settings/team";
+import { colorArray } from "@/components/settings/team";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -33,22 +26,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
 
 const Team = () => {
   const translations = useExtracted();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const action = searchParams?.get("action");
   const { user } = useUser();
   const [isCreating, setIsCreating] = useState(false);
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
-  const [isManageTeamDialogOpen, setIsManageTeamDialogOpen] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState<TeamData | null>(null);
-  const [editedColor, setEditedColor] = useState("blue");
 
   const createTeamForm = useForm({
     initialValues: {
@@ -118,7 +107,6 @@ const Team = () => {
     );
     createTeamMutation.mutate(values);
   };
-
   useEffect(() => {
     if (action === "create") {
       open();
@@ -130,7 +118,7 @@ const Team = () => {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-1">
-            <h2 className="text-2xl">Team Management </h2>
+            <h2 className="text-2xl">{translations("Team Management")}</h2>
             <Button
               disabled={isLoadingTeamsUser}
               variant="outline"
@@ -193,6 +181,10 @@ const Team = () => {
             <Card
               key={team.id}
               className="p-5 shadow-sm border-gray-200 hover:shadow-md hover:border-rateup-blue/30 transition-all"
+              onClick={() => {
+                user?.role === UserRole.SUPADM &&
+                  router.push(`/dashboard/settings/team/${team.id}`);
+              }}
             >
               <div className="flex justify-between flex-col gap-6">
                 <div className="flex items-center gap-3">
@@ -249,19 +241,6 @@ const Team = () => {
                         : translations("members")}
                     </span>
                   </div>
-                  {user?.role === UserRole.SUPADM && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedTeam(team);
-                        setEditedColor(team.color || "blue");
-                        setIsManageTeamDialogOpen(true);
-                      }}
-                    >
-                      {translations("Manage")}
-                    </Button>
-                  )}
                 </div>
               </div>
             </Card>
@@ -364,84 +343,6 @@ const Team = () => {
                   : translations("Create Team")}
               </Button>
             </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-      {/* manage teams */}
-      {user?.role === UserRole.SUPADM && (
-        <Dialog
-          open={isManageTeamDialogOpen}
-          onOpenChange={setIsManageTeamDialogOpen}
-        >
-          <DialogContent className="sm:max-w-[500px]">
-            <div className="py-2 flex flex-col gap-4">
-              <DialogHeader>
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all`}
-                    style={{
-                      backgroundColor: editedColor,
-                    }}
-                  >
-                    <Users className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <DialogTitle>{selectedTeam?.name}</DialogTitle>
-                    <DialogDescription className="text-xs">
-                      {translations("Created")}:{" "}
-                      {selectedTeam?.createdAt
-                        ? dayjs(selectedTeam.createdAt).format("DD MMM YYYY")
-                        : "—"}
-                    </DialogDescription>
-                  </div>
-                </div>
-              </DialogHeader>
-
-              <Tabs defaultValue="details" className="w-full">
-                <TabsList className="flex w-full mb-4">
-                  <TabsTrigger value="details">
-                    {translations("Details")}
-                  </TabsTrigger>
-                  <TabsTrigger value="members">
-                    {translations("Members")}
-                  </TabsTrigger>
-                  <TabsTrigger value="channels">
-                    {translations("Channels")}
-                  </TabsTrigger>
-                  <TabsTrigger value="settings">
-                    {translations("Settings")}
-                  </TabsTrigger>
-                </TabsList>
-                <ScrollArea className="h-[45vh]">
-                  <TabsContent value="details">
-                    <EditTeam
-                      selectedTeam={selectedTeam}
-                      editedColor={editedColor}
-                      setIsManageTeamDialogOpen={setIsManageTeamDialogOpen}
-                      setEditedColor={setEditedColor}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="members" className="space-y-3">
-                    <AddMembers
-                      selectedTeam={selectedTeam}
-                      refetchTeams={refetchTeams}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="channels">
-                    <TeamChannelPermissions selectedTeam={selectedTeam} />
-                  </TabsContent>
-
-                  <TabsContent value="settings" className="space-y-4">
-                    <DeleteTeam
-                      selectedTeam={selectedTeam}
-                      setIsManageTeamDialogOpen={setIsManageTeamDialogOpen}
-                    />
-                  </TabsContent>
-                </ScrollArea>
-              </Tabs>
-            </div>
           </DialogContent>
         </Dialog>
       )}

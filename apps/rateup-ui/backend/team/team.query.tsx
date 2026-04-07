@@ -1,6 +1,5 @@
 import { useRouter } from "next/navigation";
 
-import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -13,6 +12,7 @@ import {
   editTeam,
   getNotTeamMembers,
   getSurveyLanguagesFromTeam,
+  getTeamById,
   getTeamMembersFromInvitation,
   getTeamsByUser,
   IEditTeam,
@@ -209,5 +209,13 @@ export function useRemoveUserFromTeam(teamId) {
     onError: (error) => {
       toast.error(error?.message || "Failed");
     },
+  });
+}
+
+export function useGetTeamById(teamId: string) {
+  return useQuery({
+    queryKey: ["teamsDetailsQuery", teamId],
+    queryFn: () => getTeamById(teamId),
+    enabled: !!teamId,
   });
 }
