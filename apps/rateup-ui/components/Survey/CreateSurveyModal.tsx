@@ -266,7 +266,7 @@ export function CreateSurveyModal({
 
         <Radio.Group
           value={teamChoice}
-          onChange={setTeamChoice}
+          onChange={(value) => setTeamChoice(value)}
           name="selectTeams"
           label={translations("Select teams")}
           withAsterisk

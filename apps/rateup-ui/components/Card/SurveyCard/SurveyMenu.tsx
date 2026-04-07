@@ -161,7 +161,7 @@ export function SurveyMenu({
           <Group>
             <Radio.Group
               value={teamChoice}
-              onChange={setTeamChoice}
+              onChange={(value) => setTeamChoice(value)}
               name="selectTeams"
               label={translations("Select teams")}
               withAsterisk

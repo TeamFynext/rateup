@@ -682,8 +682,8 @@ const PubliShSettingsModal = ({
   survey,
 }) => {
   const translations = useExtracted();
-  const [publishChoice, setPublishChoice] = useState<any>(PublishEnum.NOW);
-  const [surveyExpiry, setSurveyExpiry] = useState<any>(ExpiryEnum.NO_EXPIRY);
+  const [publishChoice, setPublishChoice] = useState(PublishEnum.NOW);
+  const [surveyExpiry, setSurveyExpiry] = useState(ExpiryEnum.NO_EXPIRY);
   const form = useForm({
     initialValues: {
       surveyPublishAt: new Date(
@@ -803,7 +803,7 @@ const PubliShSettingsModal = ({
           <Stack mb="xl">
             <Radio.Group
               value={publishChoice}
-              onChange={setPublishChoice}
+              onChange={(value) => setPublishChoice(value)}
               name="selectPublish"
               label={translations("Publish")}
               withAsterisk
@@ -847,7 +847,7 @@ const PubliShSettingsModal = ({
           <Stack mb="xl">
             <Radio.Group
               value={surveyExpiry}
-              onChange={setSurveyExpiry}
+              onChange={(value) => setSurveyExpiry(value)}
               name="selectExpiry"
               label={translations("Expiry Date")}
               withAsterisk

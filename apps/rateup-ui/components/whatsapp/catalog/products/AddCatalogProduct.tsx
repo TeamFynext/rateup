@@ -466,7 +466,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               <RadioGroup
                 size="xs"
                 value={imageUpload}
-                onChange={setImageUpload}
+                onChange={(value) => setImageUpload(value)}
               >
                 <Group>
                   <Radio value="upload" size="xs" label="Upload" />
@@ -500,7 +500,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                 <RadioGroup
                   size="xs"
                   value={videoUpload}
-                  onChange={setVideoUpload}
+                  onChange={(value) => setVideoUpload(value)}
                 >
                   <Group>
                     <Radio size="xs" value="upload" label="Upload" />

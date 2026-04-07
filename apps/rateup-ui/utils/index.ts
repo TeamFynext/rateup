@@ -153,3 +153,9 @@ export function isValidUrl(url: string, checkHttps: boolean = true) {
 
 export const safeStrOrNull = (str: string): string | null =>
   !str || !str.trim().length ? null : str;
+
+export function hasRealContent(obj) {
+  return obj?.content?.some(
+    (block) => block.content && block.content.length > 0,
+  );
+}

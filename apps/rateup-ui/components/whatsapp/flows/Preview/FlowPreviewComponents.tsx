@@ -1,4 +1,3 @@
-import { Carousel } from "@mantine/carousel";
 import {
   ActionIcon,
   Box,
@@ -23,6 +22,14 @@ import {
   IconFileText,
   IconX,
 } from "@tabler/icons-react";
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 import {
   WaFlowFormElementType,
@@ -282,20 +289,24 @@ export function FlowImageCarouselPreview({
   return (
     <Box>
       <Text>{label}</Text>
-      <Carousel withIndicators>
-        {fe.images?.map((img, idx) => (
-          <Carousel.Slide key={idx}>
-            <Image
-              src={`data:image/png;base64,${img.src}`}
-              alt={img["alt-text"]}
-              // maw={200}
-              mah={200}
-              style={{
-                aspectRatio: fe?.["aspect-ratio"] || "4/3",
-              }}
-            />
-          </Carousel.Slide>
-        ))}
+      <Carousel className="w-full">
+        <CarouselContent>
+          {fe.images?.map((img, idx) => (
+            <CarouselItem key={idx}>
+              <Image
+                src={`data:image/png;base64,${img.src}`}
+                alt={img["alt-text"]}
+                // maw={200}
+                mah={200}
+                style={{
+                  aspectRatio: fe?.["aspect-ratio"] || "4/3",
+                }}
+              />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
       </Carousel>
     </Box>
   );

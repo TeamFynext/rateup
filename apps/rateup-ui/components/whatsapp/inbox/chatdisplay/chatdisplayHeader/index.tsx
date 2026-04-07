@@ -518,7 +518,10 @@ export const AssignInboxContent = ({
   return (
     <Stack>
       <TeamSelector label="Select Team" {...form.getInputProps("teamId")} />
-      <RadioGroup value={memberChoice} onChange={setMemberChoice}>
+      <RadioGroup
+        value={memberChoice}
+        onChange={(value) => setMemberChoice(value)}
+      >
         <Group>
           <Radio value={"all"} label={"All Members"} />
           <Radio value={"manual"} label={"Select Manually"} />

@@ -83,7 +83,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
             </Title>
             <Radio.Group
               value={selectedDbFlowId}
-              onChange={setSelectedDbFlowId}
+              onChange={(value) => setSelectedDbFlowId(value)}
             >
               {acceptedFlows?.map((flow) => (
                 <WaInboxFlowSelectCard {...flow} />
