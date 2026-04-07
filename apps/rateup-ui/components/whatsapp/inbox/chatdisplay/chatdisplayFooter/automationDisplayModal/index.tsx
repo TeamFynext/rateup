@@ -77,7 +77,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
               </Title>
               <Radio.Group
                 value={selectedAutomationId}
-                onChange={setSelectedAutomationId}
+                onChange={(value) => setSelectedAutomationId(value)}
               >
                 {automations?.map((automation) => (
                   <Card className={classes2.wrapper} key={automation?.id}>

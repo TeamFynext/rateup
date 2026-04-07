@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { Carousel } from "@mantine/carousel";
 import {
   Box,
   Card,
@@ -20,6 +19,13 @@ import { useExtracted } from "next-intl";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { CreditsCard } from "@/components/Card/CreditsCard";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import YoutubeEmbed from "@/components/youtube/YoutubeEmbed";
 import { fallbackImage } from "@/utils/constants";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
@@ -51,7 +57,7 @@ export function ItemDetailedViewModal({
   };
   const translations = useExtracted();
   const imageSlides = item?.images?.map((url: string) => (
-    <Carousel.Slide key={url}>
+    <CarouselItem key={url}>
       <CreditsCard
         // enableCredits={
         //   item?.unsplashImage?.find((data) => data === url)?.length > 0
@@ -70,13 +76,13 @@ export function ItemDetailedViewModal({
           alt={translations("menu item image")}
         />
       </CreditsCard>
-    </Carousel.Slide>
+    </CarouselItem>
   ));
 
   const videoSlides = item?.videoUrl && (
-    <Carousel.Slide>
+    <CarouselItem>
       <YoutubeEmbed embedId={extractVideoId(item?.videoUrl)} sx={imageStyle} />
-    </Carousel.Slide>
+    </CarouselItem>
   );
   const count = item?.images?.length + (item?.videoUrl ? 1 : 0);
 
@@ -93,13 +99,13 @@ export function ItemDetailedViewModal({
       <Card radius="md" className={classes.card}>
         <Card.Section>
           {item?.images?.length > 0 || item?.videoUrl ? (
-            <Carousel
-              withIndicators={count > 1}
-              withControls={count > 1}
-              slideGap={"lg"}
-            >
-              {videoSlides}
-              {imageSlides}
+            <Carousel className="w-full">
+              <CarouselContent>
+                {videoSlides}
+                {imageSlides}
+              </CarouselContent>
+              {count > 1 && <CarouselPrevious />}
+              {count > 1 && <CarouselNext />}
             </Carousel>
           ) : (
             <Image

@@ -16,9 +16,11 @@ import {
   NavItems,
 } from "@/components/ui/resizable-navbar";
 import { imagesPath } from "@/utils/constants";
+import { fbConsent } from "@/utils/fbpixel";
+import { setGAConsent } from "@/utils/gtag";
 
-import CookieConsentBanner from "../Analytics/CookieConsentBanner";
 import { Button } from "../ui/button";
+import { CookieConsent } from "../ui/cookie-consent";
 import { BookDemoModal } from "./helper/BookDemoModal";
 import DropDownMobileNavItems from "./helpers/DropDownMobileNavItems";
 
@@ -234,7 +236,17 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
         </MobileNav>
       </Navbar>
       {children}
-      <CookieConsentBanner />
+      <CookieConsent
+        variant="small"
+        onAcceptCallback={() => {
+          setGAConsent("granted");
+          fbConsent("grant");
+        }}
+        onDeclineCallback={() => {
+          setGAConsent("denied");
+          fbConsent("revoke");
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

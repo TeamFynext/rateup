@@ -1,11 +1,16 @@
 "use client";
 
-import { Carousel } from "@mantine/carousel";
-import { Flex, Rating, Stack, Text, Title } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import { Rating, Stack, Text, Title } from "@mantine/core";
 import { motion } from "motion/react";
 
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const reviews = [
   {
@@ -59,26 +64,31 @@ export const PricingPlanReview = () => {
           viewport={{ once: true }}
         >
           <Carousel
-            emblaOptions={{ loop: true, align: "start", slidesToScroll: 1 }}
+            opts={{ loop: true, align: "start", slidesToScroll: 1 }}
+            className="w-full"
           >
-            {reviews.map((review, index) => (
-              <Carousel.Slide key={index} px={60}>
-                <Stack justify="center" align="center" gap={"xs"}>
-                  <Rating value={5} />
-                  <p className="text-sm italic">
-                    {quote} {review.description} {quote}
-                  </p>
-                  <Stack gap={0} p={0} justify="center" align="center">
-                    <Text fw={500} size="sm">
-                      {review.author}
-                    </Text>
-                    <Text size="sm" c="dimmed">
-                      {review.position}
-                    </Text>
+            <CarouselContent>
+              {reviews.map((review, index) => (
+                <CarouselItem key={index} className="px-15">
+                  <Stack justify="center" align="center" gap={"xs"}>
+                    <Rating value={5} />
+                    <p className="text-sm italic">
+                      {quote} {review.description} {quote}
+                    </p>
+                    <Stack gap={0} p={0} justify="center" align="center">
+                      <Text fw={500} size="sm">
+                        {review.author}
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        {review.position}
+                      </Text>
+                    </Stack>
                   </Stack>
-                </Stack>
-              </Carousel.Slide>
-            ))}
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
           </Carousel>
         </motion.div>
       </PaperLayout>

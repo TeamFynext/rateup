@@ -8,9 +8,6 @@ import {
 
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
-import "@mantine/notifications/styles.css";
-import "@mantine/carousel/styles.css";
-import "@mantine/nprogress/styles.css";
 import "@mantine/dropzone/styles.css";
 import "@mantine/tiptap/styles.css";
 import "keen-slider/keen-slider.min.css";
@@ -20,7 +17,6 @@ import "./globals.css";
 import { Suspense } from "react";
 
 import { ModalsProvider } from "@mantine/modals";
-import { Notifications } from "@mantine/notifications";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -102,7 +98,6 @@ export default async function RootLayout({
         >
           <MantineProvider theme={theme}>
             <Suspense fallback={<RateupLoader h={"100dvh"} />}>
-              <Notifications />
               <SuperTokensProvider>
                 <Providers locale={locale} messages={messages}>
                   <ModalsProvider modals={allModalManagerModalsObj}>

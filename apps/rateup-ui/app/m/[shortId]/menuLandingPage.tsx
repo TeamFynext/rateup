@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 
-import { Carousel } from "@mantine/carousel";
 import {
   Container,
   Image,
@@ -18,6 +17,11 @@ import { CreditsCard } from "@/components/Card/CreditsCard";
 import { CategoryDisplay } from "@/components/menu/category/CategoryDisplay";
 import { ItemDetailedViewModal } from "@/components/menu/item/ItemDetailedViewModal";
 import NothingFound from "@/components/NothingFound/NothingFound";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 import { isCategoryActive } from "@/utils/dateTime";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
@@ -75,46 +79,37 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
     <ScrollAreaAutosize scrollbarSize={0} className={styles.scrollArea}>
       <Paper className={styles.paper}>
         {menuBanner?.length > 0 ? (
-          <Carousel
-            withIndicators
-            plugins={[autoplay.current]}
-            onMouseEnter={autoplay.current.stop}
-            onMouseLeave={autoplay.current.reset}
-            controlsOffset="lg"
-            emblaOptions={{ loop: true }}
-          >
-            {menuBanner?.map((value) => (
-              <Carousel.Slide
-                key={value.id}
-                onClick={() => {
-                  setSelectedItem({
-                    images: [value?.image],
-                    description: value?.description,
-                    name: value?.name,
-                    id: value?.id,
-                    price: value?.price,
-                    videoUrl: value?.videoUrl,
-                    categoryId: value?.menuId,
-                    createdAt: value?.createdAt,
-                    foodLabels: value?.foodLabels,
-                  });
-                }}
-                style={{
-                  cursor: "pointer",
-                }}
-              >
-                <Image
-                  src={
-                    value?.image && encodeURI(getFileUrlFromKey(value?.image))
-                  }
-                  className={styles.gradient}
-                  bgp={"center"}
-                  bgsz={"cover"}
-                  alt="menu banner image"
-                  fallbackSrc={backgroundImageFallback}
-                />
-              </Carousel.Slide>
-            ))}
+          <Carousel opts={{ loop: true }} plugins={[autoplay.current]}>
+            <CarouselContent>
+              {menuBanner?.map((value) => (
+                <CarouselItem
+                  key={value.id}
+                  onClick={() => {
+                    setSelectedItem({
+                      images: [value?.image],
+                      description: value?.description,
+                      name: value?.name,
+                      id: value?.id,
+                      price: value?.price,
+                      videoUrl: value?.videoUrl,
+                      categoryId: value?.menuId,
+                      createdAt: value?.createdAt,
+                      foodLabels: value?.foodLabels,
+                    });
+                  }}
+                  className="cursor-pointer"
+                >
+                  <Image
+                    src={
+                      value?.image && encodeURI(getFileUrlFromKey(value?.image))
+                    }
+                    className={styles.gradient}
+                    alt="menu banner image"
+                    fallbackSrc={backgroundImageFallback}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
           </Carousel>
         ) : (
           <CreditsCard

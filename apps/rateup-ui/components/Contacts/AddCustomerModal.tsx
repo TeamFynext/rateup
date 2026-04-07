@@ -205,7 +205,7 @@ const AddCustomerModal = ({
         <Group>
           <Radio.Group
             value={addType}
-            onChange={setAddType}
+            onChange={(value) => setAddType(value)}
             name="addType"
             label={translations("Choose")}
             styles={customStyle}

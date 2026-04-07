@@ -1,13 +1,15 @@
 "use client";
 
-import { ActionIcon, Container, Flex } from "@mantine/core";
+import { ActionIcon, Container } from "@mantine/core";
 import { useWindowScroll } from "@mantine/hooks";
 import { IconArrowUp } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
+import { CookieConsent } from "@/components/ui/cookie-consent";
+import { fbConsent } from "@/utils/fbpixel";
+import { setGAConsent } from "@/utils/gtag";
+
 import { isProduction } from "../../../utils/constants";
-import CookieConsentBanner from "../../Analytics/CookieConsentBanner";
-import BookADemoSection from "../components/BookADemoSection";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import styles from "./LandingPageLayout.module.css";
@@ -45,7 +47,19 @@ function LandingPageLayout({ children, className = "" }) {
           <IconArrowUp width={"55%"} height={"55%"} />
         </ActionIcon>
       )}
-      {isProduction ? <CookieConsentBanner /> : null}
+      {isProduction ? (
+        <CookieConsent
+          variant="small"
+          onAcceptCallback={() => {
+            setGAConsent("granted");
+            fbConsent("grant");
+          }}
+          onDeclineCallback={() => {
+            setGAConsent("denied");
+            fbConsent("revoke");
+          }}
+        />
+      ) : null}
     </div>
   );
 }

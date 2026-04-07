@@ -4,8 +4,13 @@ import React from "react";
 import Head from "next/head";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
-import { Carousel } from "@mantine/carousel";
 import { Flex, Loader, SimpleGrid } from "@mantine/core";
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 
 import { useGetAllTestimonialsByCollection } from "../../../../backend/testimonials/testimonial.query";
 import TestimonialCard from "../../../../components/testimonial/TestimonialCard";
@@ -51,29 +56,27 @@ const Collections = () => {
           <Loader type="bars" />
         ) : collection?.theme.layout == "horizontal" ? (
           <Carousel
-            slideSize={{ base: "270px", xs: "320px" }}
-            slideGap={{ base: "md", xs: "sm", sm: "md", md: "lg" }}
-            controlsOffset={"xs"}
-            w={"100%"}
-            emblaOptions={{
+            opts={{
               loop: true,
               dragFree: true,
               align: "start",
               slidesToScroll: 1,
             }}
+            className="w-full"
           >
-            {collection?.testimonials?.map((testimonial) => {
-              return (
-                <>
-                  <Carousel.Slide key={testimonial.id} p={"sm"}>
-                    <TestimonialCard
-                      testimonial={testimonial}
-                      currentStyle={collection?.theme}
-                    />
-                  </Carousel.Slide>
-                </>
-              );
-            })}
+            <CarouselContent>
+              {collection?.testimonials?.map((testimonial) => (
+                <CarouselItem
+                  key={testimonial.id}
+                  className="basis-[270px] xs:basis-[320px] pl-4 py-2"
+                >
+                  <TestimonialCard
+                    testimonial={testimonial}
+                    currentStyle={collection?.theme}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
           </Carousel>
         ) : (
           <SimpleGrid cols={3}>

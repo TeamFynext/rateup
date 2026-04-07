@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import { Carousel } from "@mantine/carousel";
 import {
   Box,
   Checkbox,
@@ -22,6 +21,12 @@ import {
 } from "@mantine/core";
 import { useExtracted } from "next-intl";
 import { useImmer } from "use-immer";
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 
 import { useUpdateCollection } from "../../backend/testimonials/testimonial.query";
 import { Testimonial, TestimonialStyleType } from "../../types/global";
@@ -325,21 +330,18 @@ const TestimonialEditModal = ({
                         value={"horizontal"}
                         label={translations("Horizontal")}
                       />
-                      <Carousel
-                        color="#E2E5ED"
-                        slideSize={"25%"}
-                        slideGap={"xs"}
-                        emblaOptions={{ slidesToScroll: 1 }}
-                      >
-                        {Array.apply(null, { length: 3 }).map((e, index) => (
-                          <Carousel.Slide key={index}>
-                            <Box
-                              bg={"#E2E5ED"}
-                              h={100}
-                              style={{ borderRadius: "5px" }}
-                            ></Box>
-                          </Carousel.Slide>
-                        ))}
+                      <Carousel opts={{ slidesToScroll: 1 }} className="w-full">
+                        <CarouselContent>
+                          {Array.from({ length: 3 }).map((_, index) => (
+                            <CarouselItem key={index} className="basis-1/4">
+                              <Box
+                                bg={"#E2E5ED"}
+                                h={100}
+                                style={{ borderRadius: "5px" }}
+                              ></Box>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
                       </Carousel>
                     </Stack>
                     <Stack>

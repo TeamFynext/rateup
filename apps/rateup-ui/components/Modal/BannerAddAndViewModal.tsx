@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-import { Carousel } from "@mantine/carousel";
 import {
   ActionIcon,
   Group,
@@ -32,6 +31,11 @@ import {
   useMenuBannerQuery,
   useUpdateMenuBannerMutation,
 } from "@/backend/menu/Banner/banner.query";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import { RateupButtonPrimary, RateupIconButton } from "../Button/RateupButtons";
@@ -53,20 +57,21 @@ export const BannerAddAndViewModal = ({
   currency,
 }: BannerAddAndViewModalProps) => {
   const largeScreen = useMediaQuery("(min-width: 40em)");
-  const carouselRef = useRef(null);
+  const carouselApiRef = useRef<any>(null);
   const [page, { increment, decrement }] = useCounter(0, {
     min: 0,
   });
   const createMenuBannerMutation = useCreateMenuBannerMutation(menuId);
   const updateMenuBannerMutation = useUpdateMenuBannerMutation(menuId);
   const deleteMenuBannerMutation = useDeleteMenuBannerMutation(menuId, () => {
+    carouselApiRef.current?.scrollPrev();
     decrement();
   });
   const { data, isPending } = useMenuBannerQuery(menuId);
   const translations = useExtracted();
   useEffect(() => {
-    if (data) {
-      handleCarouselControl(1, data?.length);
+    if (data && carouselApiRef.current) {
+      carouselApiRef.current.scrollTo(data.length - 1);
     }
   }, [data, data?.length]);
 
@@ -97,9 +102,9 @@ export const BannerAddAndViewModal = ({
   };
 
   const bannerForm = data?.map((value, index) => (
-    <Carousel.Slide
+    <CarouselItem
       key={value.id}
-      maw={largeScreen ? "min(59vw , 890px)" : "90vw"}
+      style={{ maxWidth: largeScreen ? "min(59vw , 890px)" : "90vw" }}
     >
       <Slide
         key={value?.id ?? index}
@@ -112,23 +117,9 @@ export const BannerAddAndViewModal = ({
         popFromData={popFromData}
         currency={currency}
       />
-    </Carousel.Slide>
+    </CarouselItem>
   ));
 
-  const handleCarouselControl = (direction: number, times: number = 1) => {
-    if (carouselRef?.current) {
-      const controls = carouselRef.current.querySelectorAll(
-        ".mantine-Carousel-control",
-      );
-      const nextControl = controls?.[direction];
-      if (nextControl) {
-        let max = Math.min(times, 4);
-        for (let index = 0; index < max; index++) {
-          nextControl.click();
-        }
-      }
-    }
-  };
   const bannerInfo = (
     <Popover position="bottom" withArrow shadow="md">
       <Popover.Target>
@@ -233,34 +224,25 @@ export const BannerAddAndViewModal = ({
                   rightIcon={<IconChevronLeft />}
                   radius="md"
                   size="md"
-                  onClick={() => handleCarouselControl(0)}
+                  onClick={() => carouselApiRef.current?.scrollPrev()}
                 />
                 <RateupIconButton
                   title=""
                   rightIcon={<IconChevronRight />}
                   radius="md"
                   size="md"
-                  onClick={() => handleCarouselControl(1)}
+                  onClick={() => carouselApiRef.current?.scrollNext()}
                 />
               </Group>
             </Group>
             <PaperLayout mt={"lg"}>
               <Carousel
-                ref={carouselRef}
-                withIndicators
-                slideGap="lg"
-                onNextSlide={increment}
-                onPreviousSlide={decrement}
-                styles={{
-                  control: {
-                    visibility: "hidden",
-                  },
-                  indicator: {
-                    background: "var(--tertiary-color)",
-                  },
+                setApi={(api) => {
+                  carouselApiRef.current = api;
                 }}
+                className="w-full"
               >
-                {bannerForm}
+                <CarouselContent>{bannerForm}</CarouselContent>
               </Carousel>
             </PaperLayout>
           </>
