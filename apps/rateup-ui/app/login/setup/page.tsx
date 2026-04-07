@@ -222,13 +222,13 @@ export default function RateUpOnboarding() {
     };
   }, [visibleSections, checklistMap]);
 
-  const handleToggle = (key, value) => {
+  const handleToggle = async (key, value) => {
     setLocalChecklist((prev) => ({
       ...prev,
       [key]: value,
     }));
 
-    updateOrg.mutate(
+    await updateOrg.mutate(
       {
         onboardingChecklist: {
           ...checklistMap,
@@ -591,9 +591,12 @@ function CollapsibleCard({
                           onClick={async () => {
                             if (id === "verify") {
                               await handleVerify();
+                            } else if (id === "payment") {
+                              window.open(CARD_ROUTES[id], "_blank");
+                              await onToggle(id, true);
                             } else {
+                              await onToggle(id, true);
                               onNavigate(id);
-                              onToggle(id, true);
                             }
                           }}
                         >
