@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
         hostname: "blog.rateup.app",
       },
     ],
+    qualities: [25, 50, 60, 75],
   },
   htmlLimitedBots: /.*/,
   compiler:
