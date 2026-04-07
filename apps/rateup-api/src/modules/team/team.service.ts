@@ -649,6 +649,8 @@ export async function getTeamMembersAndFromInvitation(
               email: true,
               profilePhoto: true,
               active: true,
+              phone: true,
+              createdAt: true,
               orgMember: {
                 where: {
                   orgId: { equals: orgId },
@@ -680,6 +682,8 @@ export async function getTeamMembersAndFromInvitation(
         role: member.user.orgMember[0].role,
         userId: member.user.orgMember[0].userId,
         profilePhoto: member.user.profilePhoto,
+        phone: member.user.phone,
+        createdAt: member.user.createdAt,
       };
     }),
     invitations: team.invitations.map((invite) => {
@@ -690,6 +694,7 @@ export async function getTeamMembersAndFromInvitation(
         status: invite.status,
         type: invite.type,
         invitedBy: invite.invitedBy,
+        createdAt: invite.createdAt,
       };
     }),
   };
@@ -841,6 +846,17 @@ export async function manageTags(
 export async function getTeamById(teamId: string) {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
+    include: {
+      members: true,
+      whatsappChannels: {
+        select: {
+          id: true,
+          phone: true,
+          phoneId: true,
+          ibaId: true,
+        },
+      },
+    },
   });
 
   return team;
