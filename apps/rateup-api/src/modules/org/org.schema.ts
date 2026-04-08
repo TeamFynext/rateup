@@ -58,6 +58,7 @@ const updateOrgDetailsSchema = z.object({
     .object({
       api: z.boolean().optional(),
       verify: z.boolean().optional(),
+      payment: z.boolean().optional(),
       invite: z.boolean().optional(),
       auto: z.boolean().optional(),
       points: z.boolean().optional(),

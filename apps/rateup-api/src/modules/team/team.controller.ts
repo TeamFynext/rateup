@@ -315,3 +315,21 @@ export async function addMembertoTeamsHandler(
     reply.code(500).send(e);
   }
 }
+
+export async function getTeamByIdHandler(
+  request: FastifyRequest<{
+    Params: { teamId: string };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const team = await getTeamById(request.params.teamId);
+    if (!team) {
+      reply.code(404).send({ message: "Team not found" });
+      return;
+    }
+    reply.send(team);
+  } catch (e) {
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
