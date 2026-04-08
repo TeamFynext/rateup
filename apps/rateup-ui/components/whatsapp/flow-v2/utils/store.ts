@@ -72,6 +72,7 @@ interface StoreState {
   addScreens: (screens: Screen[]) => void;
   addScreenWithTitle: (title: string) => void;
   deleteScreen: (screenId: string) => void;
+  reorderScreens: (sourceIndex: number, destinationIndex: number) => void;
   updateComponentInScreen: (
     id: string,
     updatedComponent: Partial<FormElement>,
@@ -240,6 +241,28 @@ const useFlowStoreV3 = create<StoreState>()(
         .getCurrentScreen()
         ?.layout.children.find((el) => el.id === state.currentElementId);
     },
+    reorderScreens: (sourceIndex, destinationIndex) =>
+      set((state) => {
+        const [removed] = state.screens.splice(sourceIndex, 1);
+        state.screens.splice(destinationIndex, 0, removed);
+        state.screens.forEach((s, index) => {
+          s.terminal = index === state.screens.length - 1;
+          const footer = s.layout.children.find(
+            (child) => child.type === "Footer",
+          );
+          if (footer) {
+            if (index < state.screens.length - 1) {
+              footer["on-click-action"] = {
+                name: "navigate",
+                next: { type: "screen", name: state.screens[index + 1].id },
+                payload: {},
+              };
+            } else {
+              footer["on-click-action"] = { name: "complete", payload: {} };
+            }
+          }
+        });
+      }),
     deleteScreen: (screenId) =>
       set((state) => {
         const screenIndex = state.screens.findIndex(

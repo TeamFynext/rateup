@@ -5,9 +5,7 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import {
   ActionIcon,
   Box,
-  Card,
   Checkbox,
-  Flex,
   Group,
   Image,
   SimpleGrid,
@@ -21,7 +19,6 @@ import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
-import { QuestionType2 } from "@/types/enums";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -30,6 +27,7 @@ import {
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import { LengthTracker } from "@/components/input/LengthTracker";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
+import { Card } from "@/components/ui/card";
 import {
   DEFAULT_IMAGE_BASE64_START,
   MAX_DESCRIPTION_COUNT,
@@ -150,7 +148,7 @@ export function DataSourceInput(props) {
     Object.values(WaNPSQuestions2).includes(props?.metaType) || props.disabled;
 
   return (
-    <Card bg={"var(--bg-grey-color)"} radius={"lg"}>
+    <Card className="p-4 gap-2">
       <Text td={"underline"}>CHOICES</Text>
       <Text fz={"xs"} c={"red"}>
         {props.error}

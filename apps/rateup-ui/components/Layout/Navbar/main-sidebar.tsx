@@ -48,21 +48,6 @@ export default function MainSidebar({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (!isFetched || isLoadingUserInfo) return;
-
-    const user =
-      userQueryData && "data" in userQueryData ? userQueryData.data : null;
-    if (!user) return;
-
-    if (
-      !user.onboardingCompleted &&
-      !pathname?.startsWith("/login/complete-login")
-    ) {
-      router.replace("/login/complete-login");
-      return;
-    }
-  }, [userQueryData, isFetched, isLoadingUserInfo, pathname]);
   const query = useSearchParams() as {
     msg?: string;
     tab?: string;

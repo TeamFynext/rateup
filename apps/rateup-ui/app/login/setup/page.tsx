@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
   BadgeCheck,
   BookOpen,
@@ -11,6 +12,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Coins,
+  CreditCard,
   Gift,
   Headphones,
   Loader2,
@@ -50,6 +52,13 @@ const CARD_CONFIG = {
     desc: "Link your WhatsApp Business account to enable customer messaging, loyalty commands, and broadcast campaigns.",
     btnLabel: "Connect API",
   },
+  payment: {
+    icon: CreditCard,
+    iconBg: { background: "rgba(16,185,129,0.08)", color: "#10b981" },
+    title: "Add payment method",
+    desc: "Add your preferred payment method to enable subscriptions, billing, and seamless transactions.",
+    btnLabel: "Add payment",
+  },
   verify: {
     icon: BadgeCheck,
     iconBg: { background: "rgba(24,115,232,0.08)", color: "#1873E8" },
@@ -57,6 +66,7 @@ const CARD_CONFIG = {
     desc: "Complete Meta Business verification to unlock higher messaging limits.",
     btnLabel: "Check Status",
   },
+
   invite: {
     icon: Users,
     iconBg: { background: "rgba(124,58,237,0.08)", color: "#7c3aed" },
@@ -117,6 +127,7 @@ const CARD_CONFIG = {
 
 const CARD_ROUTES = {
   api: "/dashboard/settings/channels/whatsapp",
+  payment: "https://business.facebook.com/latest/billing_hub/accounts/details/",
   invite: "/dashboard/settings/users",
   auto: "/dashboard/automation",
   points: "/dashboard/loyalty/settings",
@@ -133,7 +144,7 @@ export default function RateUpOnboarding() {
       id: "whatsapp",
       title: "Connect WhatsApp",
       sub: "API setup and business account verification",
-      cards: ["api", "verify"],
+      cards: ["api", "verify", "payment"],
     },
     {
       id: "team",
@@ -156,6 +167,7 @@ export default function RateUpOnboarding() {
   const { data: waSettings, isLoading } = useWaSettings();
 
   const updateOrg = useUpdateOrgDetailsMutation();
+  const queryClient = useQueryClient();
   const waConnected = !isLoading && Boolean(waSettings?.length);
   const isSubReady = !isSubLoading && sub;
 
@@ -178,10 +190,9 @@ export default function RateUpOnboarding() {
       ...base,
       ...localChecklist,
       api: waConnected || base.api,
-      verify: verificationStatus === "verified" || base.verify, // ✅ auto verify
+      verify: verificationStatus === "verified" || base.verify,
     };
 
-    // ✅ If no loyalty → mark all loyalty steps true
     if (!hasLoyaltyFeature) {
       merged = {
         ...merged,
@@ -211,23 +222,32 @@ export default function RateUpOnboarding() {
     };
   }, [visibleSections, checklistMap]);
 
-  const handleToggle = (key, value) => {
+  const handleToggle = async (key, value) => {
     setLocalChecklist((prev) => ({
       ...prev,
       [key]: value,
     }));
 
-    updateOrg.mutate({
-      onboardingChecklist: {
-        ...checklistMap,
-        [key]: value,
+    await updateOrg.mutate(
+      {
+        onboardingChecklist: {
+          ...checklistMap,
+          [key]: value,
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: ["onboarding-checklist"],
+          });
+        },
+      },
+    );
   };
 
   return (
-    <div>
-      <nav className="bg-white border-b border-gray-200 px-8 py-3 flex items-center justify-between sticky top-0 z-10">
+    <div className="w-full flex flex-col items-center justify-center">
+      <nav className="w-full h-16 border-b px-8 py-3 flex items-center justify-between sticky top-0 z-50 dark:border-gray-950 backdrop-blur-md bg-white dark:bg-gray-900/80">
         {/* Left */}
         <div className="flex items-center gap-2">
           <img
@@ -285,107 +305,109 @@ export default function RateUpOnboarding() {
           </Button>
         </div>
       </nav>
-      {/* hero */}
-      <div
-        className="mt-6 mx-8 rounded-[18px] p-7 px-8 relative overflow-hidden"
-        style={{ background: "#1873E8" }}
-      >
-        {/* Background circles */}
-        <div className="absolute -right-8 -top-12 w-52 h-52 rounded-full bg-white/5 pointer-events-none" />
-        <div className="absolute right-20 -bottom-16 w-40 h-40 rounded-full bg-white/5 opacity-70 pointer-events-none" />
+      <div className="max-w-7xl">
+        {/* hero */}
+        <div
+          className="mt-6 mx-8 rounded-[18px] p-7 px-8 relative overflow-hidden"
+          style={{ background: "#1873E8" }}
+        >
+          {/* Background circles */}
+          <div className="absolute -right-8 -top-12 w-52 h-52 rounded-full bg-white/5 pointer-events-none" />
+          <div className="absolute right-20 -bottom-16 w-40 h-40 rounded-full bg-white/5 opacity-70 pointer-events-none" />
 
-        {/* Content */}
-        <div className="flex items-start justify-between gap-5 relative">
-          {/* Left */}
-          <div>
-            <div className="flex items-center gap-3 mb-2.5">
-              <span className="text-[26px] leading-none">👋</span>
-              <h1 className="text-[22px] font-extrabold text-white tracking-[-0.4px] leading-[1.2] m-0">
-                Hello, there! Let's get started.
-              </h1>
+          {/* Content */}
+          <div className="flex items-start justify-between gap-5 relative">
+            {/* Left */}
+            <div>
+              <div className="flex items-center gap-3 mb-2.5">
+                <span className="text-[26px] leading-none">👋</span>
+                <h1 className="text-[22px] font-extrabold text-white tracking-[-0.4px] leading-[1.2] m-0">
+                  Hello, there! Let's get started.
+                </h1>
+              </div>
+
+              <p className="text-[13.5px] text-white/70 leading-[1.65] max-w-120 m-0">
+                Welcome to RateUp — connect your WhatsApp, Invite Team members,
+                build automations, configure your loyalty program, and launch
+                your first campaign.
+              </p>
             </div>
 
-            <p className="text-[13.5px] text-white/70 leading-[1.65] max-w-120 m-0">
-              Welcome to RateUp — connect your WhatsApp, Invite Team members,
-              build automations, configure your loyalty program, and launch your
-              first campaign.
-            </p>
+            {/* Right stats */}
+            <div className="flex gap-2.5 shrink-0">
+              {[
+                { val: doneTasks, label: "completed" },
+                { val: remainingTasks, label: "remaining" },
+              ].map(({ val, label }) => (
+                <div
+                  key={label}
+                  className="bg-white/10 rounded-xl py-3 px-5 text-center min-w-18"
+                >
+                  <p className="text-[22px] font-extrabold text-white leading-none">
+                    {val}
+                  </p>
+                  <p className="text-[11px] text-white/60 mt-1">{label}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Right stats */}
-          <div className="flex gap-2.5 shrink-0">
-            {[
-              { val: doneTasks, label: "completed" },
-              { val: remainingTasks, label: "remaining" },
-            ].map(({ val, label }) => (
+          {/* Progress */}
+          <div className="mt-6 relative">
+            <div className="flex justify-between mb-2">
+              <span className="text-xs text-white/60">
+                Overall setup progress
+              </span>
+              <span className="text-xs font-bold text-white">
+                {doneTasks} of {totalTasks} tasks complete
+              </span>
+            </div>
+
+            <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
               <div
-                key={label}
-                className="bg-white/10 rounded-xl py-3 px-5 text-center min-w-18"
-              >
-                <p className="text-[22px] font-extrabold text-white leading-none">
-                  {val}
-                </p>
-                <p className="text-[11px] text-white/60 mt-1">{label}</p>
-              </div>
-            ))}
+                className="h-full bg-white rounded-full transition-all duration-500 ease-in-out"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
           </div>
         </div>
-
-        {/* Progress */}
-        <div className="mt-6 relative">
-          <div className="flex justify-between mb-2">
-            <span className="text-xs text-white/60">
-              Overall setup progress
-            </span>
-            <span className="text-xs font-bold text-white">
-              {doneTasks} of {totalTasks} tasks complete
-            </span>
-          </div>
-
-          <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-white rounded-full transition-all duration-500 ease-in-out"
-              style={{ width: `${pct}%` }}
+        <div className="flex flex-col gap-12 p-8">
+          {visibleSections.map((section) => (
+            <CollapsibleCard
+              key={section.id}
+              section={section}
+              checklistMap={checklistMap}
+              onToggle={handleToggle}
+              onNavigate={(id) => router.push(CARD_ROUTES[id])}
+              verificationStatus={verificationStatus}
+              setVerificationStatus={setVerificationStatus}
+              isCheckingVerification={isCheckingVerification}
+              setIsCheckingVerification={setIsCheckingVerification}
+              waConnected={waConnected}
             />
-          </div>
+          ))}
         </div>
-      </div>
-      <div className="flex flex-col gap-12 p-8">
-        {visibleSections.map((section) => (
-          <CollapsibleCard
-            key={section.id}
-            section={section}
-            checklistMap={checklistMap}
-            onToggle={handleToggle}
-            onNavigate={(id) => router.push(CARD_ROUTES[id])}
-            verificationStatus={verificationStatus}
-            setVerificationStatus={setVerificationStatus}
-            isCheckingVerification={isCheckingVerification}
-            setIsCheckingVerification={setIsCheckingVerification}
-            waConnected={waConnected}
-          />
-        ))}
-      </div>
-      <div className="flex justify-center mt-10 mb-10">
-        <Button
-          size="lg"
-          className="text-sm px-6 py-3 text-white"
-          style={{ background: "#1873E8" }}
-          onClick={() => {
-            const finalChecklist = { ...checklistMap };
+        <div className="flex justify-center mt-10 mb-10">
+          <Button
+            size="lg"
+            className="text-sm px-6 py-3 text-white"
+            style={{ background: "#1873E8" }}
+            onClick={() => {
+              const finalChecklist = { ...checklistMap };
 
-            const allDone = Object.values(finalChecklist).every(Boolean);
+              const allDone = Object.values(finalChecklist).every(Boolean);
 
-            updateOrg.mutate({
-              onboardingChecklist: finalChecklist,
-              onboardingChecklistCompleted: allDone,
-            });
+              updateOrg.mutate({
+                onboardingChecklist: finalChecklist,
+                onboardingChecklistCompleted: allDone,
+              });
 
-            router.push("/dashboard/inbox?tab=New");
-          }}
-        >
-          Continue to Dashboard
-        </Button>
+              router.push("/dashboard/inbox?tab=New");
+            }}
+          >
+            Continue to Dashboard
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -407,8 +429,11 @@ function CollapsibleCard({
     try {
       setIsCheckingVerification(true);
 
-      const res = await getVerificationStatus(); // 👈 your API
-      setVerificationStatus(res?.verificationStatus);
+      const res = await getVerificationStatus();
+      if (res) {
+        setVerificationStatus(res?.verificationStatus);
+        onToggle("verify", true);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -461,7 +486,7 @@ function CollapsibleCard({
 
             {/* Title */}
             <div className="flex-1">
-              <p className="text-sm font-bold text-gray-900">{section.title}</p>
+              <p className="text-sm font-bold">{section.title}</p>
               <p className="text-xs text-gray-400">{section.sub}</p>
             </div>
 
@@ -490,9 +515,7 @@ function CollapsibleCard({
                 <Card
                   key={id}
                   className={`border rounded-[10px] ${
-                    done
-                      ? "border-green-200 bg-green-50"
-                      : "border-gray-200 bg-white"
+                    done ? "border-green-200" : "border-gray-200"
                   }`}
                 >
                   <CardContent className="px-4 py-4 flex items-center gap-4">
@@ -506,11 +529,7 @@ function CollapsibleCard({
 
                     {/* Text */}
                     <div className="flex-1">
-                      <p
-                        className={`text-sm font-bold ${done ? "text-green-900" : "text-gray-900"}`}
-                      >
-                        {cfg.title}
-                      </p>
+                      <p className={`text-sm font-bold`}>{cfg.title}</p>
                       <p className="text-xs text-gray-500">{cfg.desc}</p>
                       {id === "verify" && (
                         <div className="mt-1 flex items-center gap-1.5">
@@ -536,7 +555,7 @@ function CollapsibleCard({
                           )}
 
                           {verificationStatus === "ineligible" && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
                               Not eligible
                             </span>
                           )}
@@ -554,7 +573,7 @@ function CollapsibleCard({
                     {/* Action */}
                     <div className="w-35 flex flex-col items-center">
                       {done ? (
-                        <span className="text-xs text-green-700 font-semibold">
+                        <span className="text-xs text-green-600 font-semibold">
                           ✓ Done
                         </span>
                       ) : (
@@ -565,8 +584,12 @@ function CollapsibleCard({
                           disabled={id === "verify" && !waConnected}
                           onClick={async () => {
                             if (id === "verify") {
-                              await handleVerify(); // ✅ ONLY HERE
+                              await handleVerify();
+                            } else if (id === "payment") {
+                              window.open(CARD_ROUTES[id], "_blank");
+                              await onToggle(id, true);
                             } else {
+                              await onToggle(id, true);
                               onNavigate(id);
                             }
                           }}
@@ -586,9 +609,7 @@ function CollapsibleCard({
                             checked={done}
                             onCheckedChange={(val) => onToggle(id, val)}
                           />
-                          <span className="text-xs text-gray-700">
-                            Mark done
-                          </span>
+                          <span className="text-xs">Mark done</span>
                         </div>
                       )}
                     </div>

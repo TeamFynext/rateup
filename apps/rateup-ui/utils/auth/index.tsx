@@ -279,7 +279,7 @@ export const useConsumeVerificationCode = () => {
           id: "verify-email",
         });
         // router.push(route);
-        router.push("/login/complete-login");
+        router.push("/dashboard");
       }
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {

@@ -268,7 +268,7 @@ function AddElementModal({ opened, close }: AddElementModalProps) {
 
   return (
     <Dialog open={opened} onOpenChange={(open) => !open && close()}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
+      <DialogContent className="max-w-4xl max-h-[80vh] min-w-fit">
         <DialogHeader>
           <DialogTitle>{translations("Add Element")}</DialogTitle>
           <DialogDescription>

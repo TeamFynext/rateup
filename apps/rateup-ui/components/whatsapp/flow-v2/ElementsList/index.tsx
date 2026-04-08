@@ -10,12 +10,13 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import classNames from "classnames/bind";
 import { useExtracted } from "next-intl";
 
 import { QuestionType2 } from "@/types/enums";
+import { cn } from "@/lib/utils";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,12 +24,8 @@ import { reorder } from "@/utils/questions";
 
 import useFlowStore, { EditorType } from "../utils/store";
 import AddElementModal from "./AddElementModal"; // Modal for element type selection
-
-import styles from "./ElementsList.module.css";
 import InlineElementEditor from "./InlineElementEditor"; // Inline element editor
 import { ScreenLogicEditor } from "./ScreenLogicEditor";
-
-const cx = classNames.bind(styles);
 
 function ElementsList() {
   const translations = useExtracted();
@@ -56,7 +53,7 @@ function ElementsList() {
 
   if (!screen) {
     return (
-      <div className={styles["empty-state"]}>
+      <div className="h-full flex items-center justify-center p-8">
         <p className="text-lg text-muted-foreground">
           {translations("Select a screen to view elements")}
         </p>
@@ -94,10 +91,10 @@ function ElementsList() {
   }
 
   return (
-    <div className={styles["elements-list-container"]}>
+    <div className="h-full flex flex-col bg-muted overflow-y-auto">
       {/* Screen Title Editor - Styled like the attached image */}
-      <div className={styles["screen-title-section"]}>
-        <div className="space-y-2">
+      <div className="px-4 py-2 pb-2.5 bg-card border-b border-border sticky top-0 z-10">
+        <div>
           <Label htmlFor="screen-title" className="text-sm font-medium">
             {translations("Screen Title")}
           </Label>
@@ -128,7 +125,7 @@ function ElementsList() {
         <Droppable droppableId={screen.id}>
           {(provided) => (
             <div
-              className={styles["elements-stack"] + " space-y-2 px-2"}
+              className="flex-1 pb-4 space-y-2 px-2"
               {...provided.droppableProps}
               ref={provided.innerRef}
             >
@@ -153,13 +150,10 @@ function ElementsList() {
       </DragDropContext>
       {/* Add Element Button */}
       <div className="px-4 mt-2 mb-6">
-        <RateupButtonBlue
-          onClick={() => setAddModalOpened(true)}
-          title={translations("Add Element")}
-          radius="md"
-          fullWidth
-          rightIcon={<IconPlus size={16} />}
-        />
+        <Button onClick={() => setAddModalOpened(true)} className="w-full">
+          {translations("Add Element")}
+          <IconPlus size={16} />
+        </Button>
       </div>
       <AddElementModal
         opened={addModalOpened}
@@ -189,7 +183,7 @@ function ElementCard({
 
   const getElementLabel = () => {
     return (
-      element.header ||
+      (element.header && <MarkdownToReact content={element.header} />) ||
       element.label ||
       element.text ||
       element.type?.toUpperCase() ||
@@ -209,42 +203,37 @@ function ElementCard({
           <div
             ref={provided.innerRef}
             {...provided.draggableProps}
-            className={cx("element-card", {
-              expanded: isExpanded,
-              dragging: snapshot.isDragging,
-            })}
+            className={cn(
+              "bg-card border border-border rounded-lg transition-all duration-200 overflow-hidden",
+              "hover:border-primary/60 hover:shadow-md",
+              isExpanded &&
+                "border-primary shadow-[0_4px_12px_rgba(37,99,235,0.15)]",
+              snapshot.isDragging && "opacity-80 shadow-lg",
+            )}
           >
             {/* Element Header */}
             <div
-              className={
-                styles["element-header"] +
-                " flex items-center gap-3 p-3 cursor-pointer"
-              }
+              className="flex items-center gap-3 p-3 cursor-pointer select-none"
               onClick={onToggle}
             >
               <div {...provided.dragHandleProps}>
                 <IconGripVertical
                   size={16}
-                  className={styles["drag-handle"] + " text-muted-foreground"}
+                  className="cursor-grab active:cursor-grabbing text-muted-foreground"
                 />
               </div>
-              <div
-                className={
-                  styles["element-number"] +
-                  " flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium"
-                }
-              >
+              <div className="flex items-center justify-center w-6 h-6 rounded bg-primary text-primary-foreground text-xs font-semibold shrink-0">
                 {index + 1}
               </div>
               <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">
+                <p className="font-medium text-sm truncate flex flex-wrap">
                   {getElementLabel()}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {element.metaType || element.type}
                   {element.required && (
                     <span className="text-red-500 ml-1">*</span>
                   )}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {element.metaType || element.type}
                 </p>
               </div>
               <div className="flex gap-1">
@@ -271,7 +260,7 @@ function ElementCard({
 
             {/* Expanded Editor */}
             {isExpanded && (
-              <div className={styles["element-editor"] + " p-4 border-t"}>
+              <div className="p-4 border-t border-border bg-muted/30">
                 <InlineElementEditor element={element} />
               </div>
             )}

@@ -11,7 +11,6 @@ import {
   IconEye,
   IconEyeOff,
   IconFileText,
-  IconMessageCircle,
   IconSettings,
   IconShare,
   IconUsers,
@@ -22,7 +21,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import SurveyContext from "../../../../../context/SurveyContext";
 import { EditFlowContext } from "../EditFlow/EditFlowContext";
 import styles from "./FlowPageHeader.module.css";
 
@@ -60,7 +58,7 @@ function FlowPageHeader({
   previewOpened = false,
   setPreviewOpened,
   flowDbId,
-}: FlowPageHeaderProps) {
+}: Readonly<FlowPageHeaderProps>) {
   const { survey } = useContext(EditFlowContext);
   const router = useRouter();
   const pushToWaMutation = usePushToWaMutation();
@@ -102,10 +100,8 @@ function FlowPageHeader({
           {/* Save to WhatsApp Button - Visible in all tabs */}
           {flowDbId && (
             <Button
-              variant="outline"
               onClick={handleSaveToWhatsapp}
               disabled={pushToWaMutation.isPending}
-              className="h-9 text-xs bg-[#25D366] hover:bg-[#128C7E] text-white border-[#25D366]"
             >
               <IconBrandWhatsapp size={16} className="mr-2" />
               {pushToWaMutation.isPending ? "Syncing..." : "Save to WhatsApp"}
@@ -116,7 +112,6 @@ function FlowPageHeader({
             <Button
               variant="outline"
               onClick={() => setPreviewOpened(!previewOpened)}
-              className={styles["preview-button"]}
             >
               {previewOpened ? (
                 <>

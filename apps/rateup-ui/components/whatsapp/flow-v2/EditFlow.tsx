@@ -11,7 +11,6 @@ import {
 } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 
-import styles from "./EditFlow.module.css";
 import ElementsList from "./ElementsList";
 import WhatsAppPreview from "./Preview/WhatsAppPreview";
 import ScreensList from "./ScreensList";
@@ -122,21 +121,24 @@ function EditFlowV3({
 
   return (
     <div
-      className={`${styles["edit-flow-container"]} ${!previewOpened ? styles["no-preview"] : ""}`}
+      className="grid h-full overflow-hidden relative"
+      style={{
+        gridTemplateColumns: previewOpened ? "280px 1fr 400px" : "280px 1fr",
+      }}
     >
       {/* Column 1: Screens List */}
-      <div className={styles["column-1"]}>
+      <div className="border-r border-border overflow-y-auto">
         <ScreensList />
       </div>
 
       {/* Column 2: Elements List with inline editing */}
-      <div className={styles["column-2"]}>
+      <div className="border-r border-border overflow-y-auto">
         <ElementsList />
       </div>
 
       {/* Column 3: WhatsApp Preview */}
       {previewOpened && (
-        <div className={styles["column-3"]}>
+        <div className="overflow-y-auto">
           <WhatsAppPreview />
         </div>
       )}
