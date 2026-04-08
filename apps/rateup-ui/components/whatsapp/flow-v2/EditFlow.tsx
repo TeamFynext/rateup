@@ -121,7 +121,7 @@ function EditFlowV3({
 
   return (
     <div
-      className="grid h-full overflow-hidden"
+      className="grid h-full overflow-hidden relative"
       style={{
         gridTemplateColumns: previewOpened ? "280px 1fr 400px" : "280px 1fr",
       }}

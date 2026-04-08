@@ -313,7 +313,7 @@ function WhatsAppPreview() {
     const control = renderControl(element);
 
     return (
-      <div key={key} className="py-3 border-b border-border last:border-b-0">
+      <div key={key} className="py-6 border-b border-border last:border-b-0">
         {element?.header && (
           <p className="text-foreground mb-1.5! leading-snug flex flex-wrap">
             {<MarkdownToReact content={element.header} />}
