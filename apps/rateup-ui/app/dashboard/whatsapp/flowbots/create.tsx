@@ -15,6 +15,7 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { AutomationPlatform } from "@/types/platform";
@@ -71,6 +72,7 @@ function TemplatePicker({
   const searchRef = useRef("");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
+  const t = useExtracted();
   useEffect(() => {
     if (open) {
       setSearch(searchRef.current);
@@ -108,10 +110,10 @@ function TemplatePicker({
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <IconTemplate size={20} className="text-primary" />
-            Choose a Template
+            {t("Choose a Template")}
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            Pick a pre-built chatbot template to get started quickly.
+            {t("Pick a pre-built chatbot template to get started quickly.")}
           </p>
           <div className="relative mt-3">
             <IconSearch
@@ -120,7 +122,7 @@ function TemplatePicker({
             />
             <Input
               className="pl-9 h-9 text-sm"
-              placeholder="Search by name, tag, or description..."
+              placeholder={t("Search by name, tag, or description...")}
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               autoFocus
@@ -146,10 +148,10 @@ function TemplatePicker({
                 className="text-muted-foreground/40 mb-3"
               />
               <p className="text-sm font-medium text-muted-foreground">
-                No templates found
+                {t("No templates found")}
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
-                Try a different search term
+                {t("Try a different search term")}
               </p>
             </div>
           )}
@@ -181,11 +183,11 @@ function TemplatePicker({
                       >
                         {tpl.platform === AutomationPlatform.WHATSAPP ? (
                           <span className="flex items-center gap-1">
-                            <IconBrandWhatsapp size={11} /> WhatsApp
+                            <IconBrandWhatsapp size={11} /> {t("WhatsApp")}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1">
-                            <IconBrandInstagram size={11} /> Instagram
+                            <IconBrandInstagram size={11} /> {t("Instagram")}
                           </span>
                         )}
                       </Badge>
@@ -204,7 +206,7 @@ function TemplatePicker({
                         className="text-xs px-2 py-0.5 text-muted-foreground"
                       >
                         <IconLayoutGrid size={10} className="mr-1" />
-                        {tpl.nodeCount} nodes
+                        {t("{count} nodes", { count: tpl.nodeCount })}
                       </Badge>
                     </div>
                   </div>
@@ -230,18 +232,18 @@ function TemplatePicker({
           <div className="text-sm text-muted-foreground truncate">
             {selectedTemplate ? (
               <span>
-                Selected:{" "}
+                {t("Selected:")}{" "}
                 <span className="font-medium text-foreground">
                   {selectedTemplate.name}
                 </span>
               </span>
             ) : (
-              <span>No template selected</span>
+              <span>{t("No template selected")}</span>
             )}
           </div>
           <div className="flex gap-2 shrink-0">
             <Button type="button" variant="outline" size="sm" onClick={onClose}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               type="button"
@@ -249,7 +251,7 @@ function TemplatePicker({
               disabled={!selected}
               onClick={handleApply}
             >
-              Use Template
+              {t("Use Template")}
             </Button>
           </div>
         </div>
@@ -271,18 +273,22 @@ function ConfirmDiscardDialog({
   onConfirm,
   onCancel,
 }: Readonly<ConfirmDiscardProps>) {
+  const t = useExtracted();
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Discard Changes?</DialogTitle>
+          <DialogTitle>{t("Discard Changes?")}</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
-          You have unsaved changes. Are you sure you want to discard them?
+          {t(
+            "You have unsaved changes. Are you sure you want to discard them?",
+          )}
         </p>
         <div className="flex justify-end gap-2 mt-2">
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Keep Editing
+            {t("Keep Editing")}
           </Button>
           <Button
             type="button"
@@ -290,7 +296,7 @@ function ConfirmDiscardDialog({
             size="sm"
             onClick={onConfirm}
           >
-            Discard
+            {t("Discard")}
           </Button>
         </div>
       </DialogContent>
@@ -307,9 +313,11 @@ interface PlatformToggleProps {
 
 // FIX: Replaced Select dropdown with a clear 2-option toggle for better UX
 function PlatformToggle({ value, onChange }: Readonly<PlatformToggleProps>) {
+  const t = useExtracted();
+
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">Platform</label>
+      <label className="text-sm font-medium">{t("Platform")}</label>
       <div className="flex rounded-lg border bg-muted/30 p-1 gap-1">
         <button
           type="button"
@@ -326,7 +334,7 @@ function PlatformToggle({ value, onChange }: Readonly<PlatformToggleProps>) {
               value === AutomationPlatform.WHATSAPP ? "text-green-500" : ""
             }
           />
-          WhatsApp
+          {t("WhatsApp")}
         </button>
         <button
           type="button"
@@ -343,7 +351,7 @@ function PlatformToggle({ value, onChange }: Readonly<PlatformToggleProps>) {
               value === AutomationPlatform.INSTAGRAM ? "text-pink-500" : ""
             }
           />
-          Instagram
+          {t("Instagram")}
         </button>
       </div>
     </div>
@@ -353,12 +361,18 @@ function PlatformToggle({ value, onChange }: Readonly<PlatformToggleProps>) {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function CreateAutomatedReplyPage() {
+  const t = useExtracted();
+
   return (
     <div className="space-y-6 p-6">
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Create Chatbot</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t("Create Chatbot")}
+        </h1>
         <p className="text-muted-foreground">
-          Set up automated replies for your WhatsApp or Instagram conversations.
+          {t(
+            "Set up automated replies for your WhatsApp or Instagram conversations.",
+          )}
         </p>
       </div>
       <AutomatedReplyForm />
@@ -406,15 +420,17 @@ export function AutomatedReplyForm({
   editMode,
   close,
 }: Readonly<AutoPilotFormProps>) {
+  const t = useExtracted();
+
   // FIX: Added validation rules
   const rootForm = useForm({
     initialValues: getInitialValues(initialValues),
     validate: {
       name: (value) =>
         !value?.trim()
-          ? "Chatbot name is required"
+          ? t("Chatbot name is required")
           : value.trim().length < 3
-            ? "Name must be at least 3 characters"
+            ? t("Name must be at least 3 characters")
             : null,
     },
   });
@@ -470,7 +486,7 @@ export function AutomatedReplyForm({
                 { automationId: waAutomatedReplyId },
               ],
             });
-            toast.success("Instagram Automation updated successfully");
+            toast.success(t("Instagram Automation updated successfully"));
             setSaveSuccess(true);
           },
         });
@@ -480,7 +496,7 @@ export function AutomatedReplyForm({
             qc.invalidateQueries({
               queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
             });
-            toast.success("Automated Reply updated successfully");
+            toast.success(t("Automated Reply updated successfully"));
             setSaveSuccess(true);
           },
         });
@@ -489,7 +505,7 @@ export function AutomatedReplyForm({
       if (isInstagram) {
         createInstagramMutation.mutate(data, {
           onSuccess: () => {
-            toast.success("Instagram automation created!");
+            toast.success(t("Instagram automation created!"));
             setSaveSuccess(true);
           },
           onSettled: () => {
@@ -500,7 +516,7 @@ export function AutomatedReplyForm({
       } else {
         createMutation.mutate(data, {
           onSuccess: () => {
-            toast.success("Chatbot created successfully!");
+            toast.success(t("Chatbot created successfully!"));
             setSaveSuccess(true);
           },
           onSettled: () => {
@@ -520,7 +536,9 @@ export function AutomatedReplyForm({
       whatsappSettingsPhoneId: null,
     });
     rootForm.resetDirty();
-    toast.success(`Template "${template.name}" applied!`);
+    toast.success(
+      t("Template {templateName} applied!", { templateName: template.name }),
+    );
   }
 
   const isSaving =
@@ -551,9 +569,9 @@ export function AutomatedReplyForm({
           {/* FIX: Template button moved into CardHeader as a secondary action */}
           <CardHeader className="flex flex-row items-start justify-between gap-4">
             <div>
-              <CardTitle>Basic Information</CardTitle>
+              <CardTitle>{t("Basic Information")}</CardTitle>
               <CardDescription>
-                Configure the basic settings for your Chatbot
+                {t("Configure the basic settings for your Chatbot")}
               </CardDescription>
             </div>
             <Button
@@ -564,15 +582,15 @@ export function AutomatedReplyForm({
               className="flex items-center gap-2 bg-primary text-white hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
             >
               <IconTemplate size={16} />
-              Use Template
+              {t("Use Template")}
             </Button>
           </CardHeader>
 
           <CardContent className="space-y-5">
             {/* FIX: Validation error shown below name field */}
             <ContainedTextField
-              label="Chatbot Name"
-              placeholder="e.g. Welcome Bot, Support Bot..."
+              label={t("Chatbot Name")}
+              placeholder={t("e.g. Welcome Bot, Support Bot...")}
               required
               {...rootForm.getInputProps("name")}
               error={rootForm.errors.name}
@@ -589,7 +607,7 @@ export function AutomatedReplyForm({
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
                   <label className="text-sm font-medium">
-                    WhatsApp Account
+                    {t("WhatsApp Account")}
                   </label>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -598,12 +616,13 @@ export function AutomatedReplyForm({
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="right" className="max-w-xs text-xs">
-                      Only required if this chatbot includes a lead automation
-                      step that sends messages via a specific WhatsApp number.
+                      {t(
+                        "Only required if this chatbot includes a lead automation step that sends messages via a specific WhatsApp number.",
+                      )}
                     </TooltipContent>
                   </Tooltip>
                   <span className="text-xs text-muted-foreground">
-                    (Optional)
+                    ({t("Optional")})
                   </span>
                 </div>
                 <AccountSelector
@@ -624,7 +643,7 @@ export function AutomatedReplyForm({
             onClick={handleCancelClick}
             className="text-muted-foreground hover:text-foreground"
           >
-            Cancel
+            {t("Cancel")}
           </Button>
 
           {/* Right: Save with proper spinner */}
@@ -632,15 +651,15 @@ export function AutomatedReplyForm({
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving…
+                {t("Saving…")}
               </>
             ) : saveSuccess && editMode ? (
               <>
                 <IconCheck size={16} className="mr-2" />
-                Saved
+                {t("Saved")}
               </>
             ) : (
-              "Save Chatbot"
+              t("Save Chatbot")
             )}
           </Button>
         </div>

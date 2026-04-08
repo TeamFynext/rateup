@@ -985,9 +985,7 @@ export function parseWhatsAppToReact(text: string): React.ReactNode {
 export function parseJsonToReact(value) {
   if (typeof value === "string") return value;
   if (!value?.content?.[0]?.content) return "";
-  const html = generateHTML(value, [StarterKit]);
-  const cleaned = html.replace(/^<p>/, "").replace(/<\/p>$/, "");
-  return parse(cleaned);
+  return parse(generateHTML(value, [StarterKit]));
 }
 
 export function whatsappToHTML(text) {
