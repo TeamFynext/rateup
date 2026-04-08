@@ -94,9 +94,7 @@ export const getNotTeamMembers = (teamId: String) =>
   });
 
 export async function getTeamMembersFromInvitation(teamId: String) {
-  let teamData: ITeamResponseData = (
-    await axiosClient.get(`/team/invitation/${teamId}`)
-  ).data;
+  let teamData = (await axiosClient.get(`/team/invitation/${teamId}`)).data;
   return teamData;
 }
 
@@ -117,4 +115,9 @@ export async function addUsertoTeams({ userId, teamIds, userEmail }) {
 
 export async function removeUserFromTeam({ teamId, userId }) {
   await axiosClient.delete(`/team/member?teamId=${teamId}&userId=${userId}`);
+}
+
+export async function getTeamById(teamId) {
+  const res = await axiosClient.get(`/team/teams/${teamId}`);
+  return res.data;
 }
