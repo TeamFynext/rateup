@@ -82,7 +82,6 @@ export function LogicJumpModal({
   useEffect(() => {
     if (opened && !initializedRef.current) {
       const logicJumps = getLogicJumps(currentScreen?.id || "");
-      // Filter logic jumps for this specific element
       const elementLogicJumps = (logicJumps || []).filter((jump: any) =>
         jump.conditions?.some((cond: any) => cond.questionId === elementId),
       );
@@ -94,7 +93,6 @@ export function LogicJumpModal({
     }
   }, [opened, elementId, currentScreen?.id, getLogicJumps]);
 
-  // Get questions from current screen that support logic
   const filteredQuestions = useMemo(() => {
     if (!currentScreen) return [];
     return currentScreen.layout.children.filter(({ label, type, metaType }) => {
@@ -117,7 +115,6 @@ export function LogicJumpModal({
     [filteredQuestions],
   );
 
-  // Get available screens for navigation
   const screenOptions = useMemo(
     () =>
       screens.map((screen) => ({
@@ -127,18 +124,14 @@ export function LogicJumpModal({
     [screens],
   );
 
-  // Get conditions for a specific question
   const getConditions = (questionId: string) => {
     if (!questionId) return [];
     const question = filteredQuestions.find((q) => q.id === questionId);
     if (!question) return [];
 
     try {
-      const qType =
-        QuestionType2[question.metaType as keyof typeof QuestionType2] ||
-        QuestionType2[question.type as keyof typeof QuestionType2];
+      const qType = question.metaType || question.type;
       const conditions = getConditionsv2(qType as any);
-      // Ensure conditions have proper label/value format
       return (conditions || [])
         .map((c) => ({
           label: c?.label || String(c?.value || c),
@@ -151,7 +144,6 @@ export function LogicJumpModal({
     }
   };
 
-  // Get responses for a specific question
   const getResponseOptions = (questionId: string) => {
     if (!questionId) return [];
     const question = filteredQuestions.find((q) => q.id === questionId);
@@ -159,7 +151,6 @@ export function LogicJumpModal({
 
     try {
       const responses = getResponses2(question as any);
-      // Ensure responses have proper label/value format
       if (!responses || responses.length === 0) return [];
       return responses
         .map((r) => {
@@ -188,36 +179,67 @@ export function LogicJumpModal({
     value: any,
   ) => {
     const updated = [...localJumps];
+
+    const jump = updated[jumpIndex];
+
+    // ✅ clone conditions array
+    const conditions = [...jump.conditions];
+
     if (field === "questionId") {
-      // Reset condition and response when question changes
-      updated[jumpIndex].conditions[conditionIndex] = {
+      conditions[conditionIndex] = {
         questionId: value,
         condition: LogicCondition.Submitted,
         response: undefined,
       };
     } else {
-      updated[jumpIndex].conditions[conditionIndex] = {
-        ...updated[jumpIndex].conditions[conditionIndex],
+      conditions[conditionIndex] = {
+        ...conditions[conditionIndex],
         [field]: value,
       };
     }
+
+    // ✅ assign cloned array back
+    updated[jumpIndex] = {
+      ...jump,
+      conditions,
+    };
+
     setLocalJumps(updated);
   };
 
   const handleAddCondition = (jumpIndex: number) => {
-    const updated = [...localJumps];
-    updated[jumpIndex].conditions.push({
-      questionId: elementId,
-      condition: LogicCondition.Submitted,
-      response: undefined,
-    });
-    setLocalJumps(updated);
+    setLocalJumps((prev) =>
+      prev.map((jump, i) =>
+        i === jumpIndex
+          ? {
+              ...jump,
+              conditions: [
+                ...jump.conditions,
+                {
+                  questionId: elementId,
+                  condition: LogicCondition.Submitted,
+                  response: undefined,
+                },
+              ],
+            }
+          : jump,
+      ),
+    );
   };
 
   const handleRemoveCondition = (jumpIndex: number, conditionIndex: number) => {
-    const updated = [...localJumps];
-    updated[jumpIndex].conditions.splice(conditionIndex, 1);
-    setLocalJumps(updated);
+    setLocalJumps((prev) =>
+      prev.map((jump, i) =>
+        i === jumpIndex
+          ? {
+              ...jump,
+              conditions: jump.conditions.filter(
+                (_, idx) => idx !== conditionIndex,
+              ),
+            }
+          : jump,
+      ),
+    );
   };
 
   const handleUpdateAction = (jumpIndex: number, action: any) => {
@@ -227,39 +249,38 @@ export function LogicJumpModal({
   };
 
   const handleRemoveJump = (jumpIndex: number) => {
-    const updated = [...localJumps];
-    updated.splice(jumpIndex, 1);
-    setLocalJumps(updated);
+    setLocalJumps((prev) => prev.filter((_, i) => i !== jumpIndex));
   };
 
   const handleSave = () => {
     if (!currentScreen) return;
 
-    // Get all existing logic jumps for this screen
     const allLogicJumps = getLogicJumps(currentScreen.id);
 
-    // Filter out jumps for this element
     const otherJumps = (allLogicJumps || []).filter(
       (jump: any) =>
         !jump.conditions?.some((cond: any) => cond.questionId === elementId),
     );
 
-    // Combine with updated jumps for this element
     const allJumps = [...otherJumps, ...localJumps];
 
-    // Update in store
     updateLogicJumps(currentScreen.id, allJumps);
     onClose();
   };
 
   return (
     <Dialog open={opened} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="w-full max-w-4xl h-[75vh] overflow-hidden p-0 gap-0 flex flex-col min-h-0">
+        {/* Fixed header */}
+        <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
           <DialogTitle>{translations("Logic Jumps")}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
+        {/* Scrollable body — grows, shrinks, scrolls */}
+        <div
+          className="px-6 py-4 overflow-y-auto"
+          style={{ flex: "1 1 0", minHeight: 0 }}
+        >
           {localJumps.length === 0 ? (
             <p className="text-muted-foreground text-center py-12">
               {translations("No logic jumps configured for this element")}
@@ -268,7 +289,7 @@ export function LogicJumpModal({
             <Accordion
               type="single"
               collapsible
-              className="w-full space-y-4"
+              className="w-full space-y-3"
               value={openedAccordion}
               onValueChange={setOpenedAccordion}
             >
@@ -277,19 +298,18 @@ export function LogicJumpModal({
                   key={jumpIndex}
                   value={`jump-${jumpIndex}`}
                   className="border rounded-lg px-4 bg-muted/30 data-[state=open]:bg-muted/50 transition-colors"
-                  style={{ marginBottom: "1rem" }}
                 >
-                  <AccordionTrigger className="hover:no-underline py-4">
-                    <div className="flex items-center gap-2 font-medium">
+                  <AccordionTrigger className="hover:no-underline py-3">
+                    <div className="flex items-center gap-2 font-medium text-sm">
                       {translations("Logic Jump")} #{jumpIndex + 1}
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="pb-4">
+                  <AccordionContent className="pb-4 max-h-[60vh] overflow-y-auto">
                     <div className="flex flex-col gap-4">
-                      {/* Conditions */}
+                      {/* ── Conditions ── */}
                       <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <p className="font-semibold">
+                        <div className="flex justify-between items-center mb-3">
+                          <p className="font-semibold text-sm">
                             {translations("Conditions")}
                           </p>
                           <Button
@@ -297,138 +317,168 @@ export function LogicJumpModal({
                             variant="secondary"
                             onClick={() => handleAddCondition(jumpIndex)}
                           >
-                            <IconPlus size={14} className="mr-2" />
+                            <IconPlus size={14} className="mr-1" />
                             {translations("Add Condition")}
                           </Button>
                         </div>
 
-                        {jump.conditions.map((condition, condIndex) => (
-                          <div
-                            key={condIndex}
-                            className="flex gap-2 items-start mb-2"
-                          >
-                            <div className="flex-1">
-                              <Label>{translations("Question")}</Label>
-                              <Select
-                                value={condition.questionId}
-                                onValueChange={(value) =>
-                                  handleUpdateCondition(
-                                    jumpIndex,
-                                    condIndex,
-                                    "questionId",
-                                    value,
-                                  )
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue
-                                    placeholder={translations(
-                                      "Select question",
-                                    )}
-                                  />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {questions.map((q) => (
-                                    <SelectItem key={q.value} value={q.value}>
-                                      {q.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="flex-1">
-                              <Label>{translations("Condition")}</Label>
-                              <Select
-                                value={condition.condition}
-                                onValueChange={(value) =>
-                                  handleUpdateCondition(
-                                    jumpIndex,
-                                    condIndex,
-                                    "condition",
-                                    value,
-                                  )
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue
-                                    placeholder={translations(
-                                      "Select condition",
-                                    )}
-                                  />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {getConditions(condition.questionId).map(
-                                    (c: any) => (
-                                      <SelectItem key={c.value} value={c.value}>
-                                        {c.label}
-                                      </SelectItem>
-                                    ),
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {condition.condition !==
-                              LogicCondition.Submitted && (
-                              <div className="flex-1">
-                                <Label>{translations("Response")}</Label>
+                        <div className="flex flex-col gap-3">
+                          {jump.conditions.map((condition, condIndex) => (
+                            <div
+                              key={condIndex}
+                              className="grid gap-2 items-end"
+                              style={{
+                                gridTemplateColumns:
+                                  condition.condition !==
+                                  LogicCondition.Submitted
+                                    ? "1fr 1fr 1fr auto"
+                                    : "1fr 1fr auto",
+                              }}
+                            >
+                              {/* Question */}
+                              <div className="min-w-0">
+                                <Label className="text-xs mb-1 block">
+                                  {translations("Question")}
+                                </Label>
                                 <Select
-                                  value={condition.response}
+                                  value={condition.questionId}
                                   onValueChange={(value) =>
                                     handleUpdateCondition(
                                       jumpIndex,
                                       condIndex,
-                                      "response",
+                                      "questionId",
                                       value,
                                     )
                                   }
                                 >
-                                  <SelectTrigger>
+                                  <SelectTrigger className="w-full truncate">
                                     <SelectValue
                                       placeholder={translations(
-                                        "Select response",
+                                        "Select question",
                                       )}
                                     />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {getResponseOptions(
-                                      condition.questionId,
-                                    ).map((r: any) => (
-                                      <SelectItem key={r.value} value={r.value}>
-                                        {r.label}
+                                    {questions.map((q) => (
+                                      <SelectItem key={q.value} value={q.value}>
+                                        {q.label}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
                                 </Select>
                               </div>
-                            )}
 
-                            {jump.conditions.length > 1 && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive mt-6"
-                                onClick={() =>
-                                  handleRemoveCondition(jumpIndex, condIndex)
-                                }
-                              >
-                                <IconTrash size={16} />
-                              </Button>
-                            )}
-                          </div>
-                        ))}
+                              {/* Condition */}
+                              <div className="min-w-0">
+                                <Label className="text-xs mb-1 block">
+                                  {translations("Condition")}
+                                </Label>
+                                <Select
+                                  value={condition.condition}
+                                  onValueChange={(value) =>
+                                    handleUpdateCondition(
+                                      jumpIndex,
+                                      condIndex,
+                                      "condition",
+                                      value,
+                                    )
+                                  }
+                                >
+                                  <SelectTrigger className="w-full truncate">
+                                    <SelectValue
+                                      placeholder={translations(
+                                        "Select condition",
+                                      )}
+                                    />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {getConditions(condition.questionId).map(
+                                      (c: any) => (
+                                        <SelectItem
+                                          key={c.value}
+                                          value={c.value}
+                                        >
+                                          {c.label}
+                                        </SelectItem>
+                                      ),
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Response (only when not Submitted) */}
+                              {condition.condition !==
+                                LogicCondition.Submitted && (
+                                <div className="min-w-0">
+                                  <Label className="text-xs mb-1 block">
+                                    {translations("Response")}
+                                  </Label>
+                                  <Select
+                                    value={condition.response}
+                                    onValueChange={(value) =>
+                                      handleUpdateCondition(
+                                        jumpIndex,
+                                        condIndex,
+                                        "response",
+                                        value,
+                                      )
+                                    }
+                                  >
+                                    <SelectTrigger className="w-full truncate">
+                                      <SelectValue
+                                        placeholder={translations(
+                                          "Select response",
+                                        )}
+                                      />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {getResponseOptions(
+                                        condition.questionId,
+                                      ).map((r: any) => (
+                                        <SelectItem
+                                          key={r.value}
+                                          value={r.value}
+                                        >
+                                          {r.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+
+                              {/* Remove condition */}
+                              {jump.conditions.length > 1 ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive shrink-0 self-end"
+                                  onClick={() =>
+                                    handleRemoveCondition(jumpIndex, condIndex)
+                                  }
+                                >
+                                  <IconTrash size={16} />
+                                </Button>
+                              ) : (
+                                <div className="w-9 shrink-0" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
+                      {/* ── Separator ── */}
                       <Separator />
 
-                      {/* Action */}
+                      {/* ── Action ── */}
                       <div>
-                        <p className="font-semibold mb-2">
+                        <p className="font-semibold text-sm mb-2">
                           {translations("Action")}
                         </p>
-                        <div>
-                          <Label>{translations("Navigate to Screen")}</Label>
+                        <div className="max-w-xs">
+                          <Label className="text-xs mb-1 block">
+                            {translations("Navigate to Screen")}
+                          </Label>
                           <Select
                             value={
                               typeof jump.action === "string" ? jump.action : ""
@@ -437,7 +487,7 @@ export function LogicJumpModal({
                               handleUpdateAction(jumpIndex, value)
                             }
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full truncate">
                               <SelectValue
                                 placeholder={translations(
                                   "Select target screen",
@@ -458,12 +508,14 @@ export function LogicJumpModal({
                         </div>
                       </div>
 
-                      <div className="flex justify-end">
+                      {/* ── Remove Jump ── */}
+                      <div className="flex justify-end pt-1">
                         <Button
                           variant="destructive"
+                          size="sm"
                           onClick={() => handleRemoveJump(jumpIndex)}
                         >
-                          <IconTrash size={16} className="mr-2" />
+                          <IconTrash size={14} className="mr-1.5" />
                           {translations("Remove Jump")}
                         </Button>
                       </div>
@@ -477,14 +529,15 @@ export function LogicJumpModal({
           <Button
             onClick={handleAddJump}
             variant="secondary"
-            className="w-full"
+            className="w-full mt-3"
           >
             <IconPlus size={16} className="mr-2" />
             {translations("Add Logic Jump")}
           </Button>
+        </div>
 
-          <Separator />
-
+        {/* Fixed footer */}
+        <div className="px-6 py-4 border-t shrink-0">
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
               {translations("Cancel")}
