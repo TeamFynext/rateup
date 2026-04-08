@@ -294,7 +294,7 @@ export function AddMembers({ selectedTeam }) {
 
         <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#1873E8] hover:bg-[#1873E8]/90 text-white">
+            <Button>
               <UserPlus className="w-4 h-4 mr-2" />
               {translations("Add Member")}
             </Button>
@@ -336,7 +336,7 @@ export function AddMembers({ selectedTeam }) {
                     {notTeamMembersData?.data?.map((user) => (
                       <div
                         key={user.id}
-                        className="w-full py-2 rounded-lg hover:bg-gray-50 flex items-center justify-between px-6"
+                        className="w-full py-2 rounded-lg flex items-center justify-between px-6"
                       >
                         <div className="flex items-center gap-2">
                           <Avatar className="w-8 h-8">

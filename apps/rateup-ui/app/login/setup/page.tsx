@@ -247,7 +247,7 @@ export default function RateUpOnboarding() {
 
   return (
     <div className="w-full flex flex-col items-center justify-center">
-      <nav className="bg-white w-full h-16 border-b border-gray-200 px-8 py-3 flex items-center justify-between sticky top-0 z-10">
+      <nav className="w-full h-16 border-b px-8 py-3 flex items-center justify-between sticky top-0 z-50 dark:border-gray-950 backdrop-blur-md bg-white dark:bg-gray-900/80">
         {/* Left */}
         <div className="flex items-center gap-2">
           <img
@@ -486,7 +486,7 @@ function CollapsibleCard({
 
             {/* Title */}
             <div className="flex-1">
-              <p className="text-sm font-bold text-gray-900">{section.title}</p>
+              <p className="text-sm font-bold">{section.title}</p>
               <p className="text-xs text-gray-400">{section.sub}</p>
             </div>
 
@@ -515,9 +515,7 @@ function CollapsibleCard({
                 <Card
                   key={id}
                   className={`border rounded-[10px] ${
-                    done
-                      ? "border-green-200 bg-green-50"
-                      : "border-gray-200 bg-white"
+                    done ? "border-green-200" : "border-gray-200"
                   }`}
                 >
                   <CardContent className="px-4 py-4 flex items-center gap-4">
@@ -531,11 +529,7 @@ function CollapsibleCard({
 
                     {/* Text */}
                     <div className="flex-1">
-                      <p
-                        className={`text-sm font-bold ${done ? "text-green-900" : "text-gray-900"}`}
-                      >
-                        {cfg.title}
-                      </p>
+                      <p className={`text-sm font-bold`}>{cfg.title}</p>
                       <p className="text-xs text-gray-500">{cfg.desc}</p>
                       {id === "verify" && (
                         <div className="mt-1 flex items-center gap-1.5">
@@ -561,7 +555,7 @@ function CollapsibleCard({
                           )}
 
                           {verificationStatus === "ineligible" && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
                               Not eligible
                             </span>
                           )}
@@ -579,7 +573,7 @@ function CollapsibleCard({
                     {/* Action */}
                     <div className="w-35 flex flex-col items-center">
                       {done ? (
-                        <span className="text-xs text-green-700 font-semibold">
+                        <span className="text-xs text-green-600 font-semibold">
                           ✓ Done
                         </span>
                       ) : (
@@ -615,9 +609,7 @@ function CollapsibleCard({
                             checked={done}
                             onCheckedChange={(val) => onToggle(id, val)}
                           />
-                          <span className="text-xs text-gray-700">
-                            Mark done
-                          </span>
+                          <span className="text-xs">Mark done</span>
                         </div>
                       )}
                     </div>
