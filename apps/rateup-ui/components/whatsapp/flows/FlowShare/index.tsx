@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload";
 
 import { ShareSection } from "./ShareSection";
 
@@ -58,6 +59,8 @@ export default function FlowShare({
     survey?.teams?.[0]?.mapId,
   );
   const [shortUrlId, setShortUrlId] = useState(survey?.teams?.[0]?.shortUrlId);
+  const [headerImage, setHeaderImage] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
 
   // Start Message state
   const [startMessageBody, setStartMessageBody] = useState(
@@ -73,6 +76,12 @@ export default function FlowShare({
           "Send this message to start survey.",
       );
       setStartMessageSuffix(flowData.startMessageConfig.suffix || "");
+    }
+    if (flowData?.templateMessage) {
+      setTemplateBody(flowData.templateMessage.body || "");
+      setTemplateFooter(flowData.templateMessage.footer || "");
+      setTemplateCTA(flowData.templateMessage.cta || "Start");
+      setHeaderImage(flowData.templateMessage.headerImage || null);
     }
   }, [flowData]);
 
@@ -141,6 +150,20 @@ export default function FlowShare({
         startMessageConfig: {
           prefix: startMessageBody,
           suffix: startMessageSuffix,
+        },
+      },
+    });
+  };
+
+  const handleSaveTemplateMessage = () => {
+    updateFlowMutation.mutate({
+      dbFlowId: flowDbId,
+      data: {
+        templateMessage: {
+          body: templateBody,
+          cta: templateCTA,
+          footer: templateFooter,
+          headerImage: headerImage,
         },
       },
     });
@@ -349,11 +372,48 @@ export default function FlowShare({
           leftContent={
             <div className="flex flex-col gap-2">
               <div className="flex gap-2">
-                <Button size="sm" className="h-8 text-xs">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  id="flow-image-upload"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    try {
+                      setImageUploading(true);
+                      const url = await uploadFile(file);
+                      setHeaderImage(url);
+                      toast.success("Image uploaded");
+                    } catch (e) {
+                      toast.error("Upload failed");
+                    } finally {
+                      setImageUploading(false);
+                    }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  className="h-8 text-xs"
+                  disabled={imageUploading}
+                  onClick={() =>
+                    document.getElementById("flow-image-upload")?.click()
+                  }
+                >
                   <IconUpload size={14} className="mr-2" />
-                  Upload Image
+                  {imageUploading
+                    ? "Uploading..."
+                    : headerImage
+                      ? "Change Image"
+                      : "Upload Image"}
                 </Button>
-                <Button variant="outline" size="sm" className="h-8 text-xs">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={() => setHeaderImage(null)}
+                >
                   Remove Image
                 </Button>
               </div>
@@ -395,6 +455,17 @@ export default function FlowShare({
                   {templateCTA.length} / 20
                 </span>
               </div>
+              <div className="flex w-full justify-end">
+                <Button
+                  size="sm"
+                  onClick={handleSaveTemplateMessage}
+                  disabled={updateFlowMutation.isPending}
+                  className="h-8 text-xs"
+                >
+                  <IconDeviceFloppy size={14} className="mr-1.5" />
+                  {updateFlowMutation.isPending ? "Saving..." : "Save"}
+                </Button>
+              </div>
             </div>
           }
           rightTitle="Preview"
@@ -406,7 +477,22 @@ export default function FlowShare({
                   "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0, 0, 0, 0.02) 10px, rgba(0, 0, 0, 0.02) 20px)",
               }}
             >
-              <div className="bg-white dark:bg-gray-700 rounded-md rounded-tl-sm p-3 max-w-[85%] border border-gray-200 dark:border-gray-600 relative break-words before:content-[''] before:absolute before:left-[-6px] before:top-0 before:w-0 before:h-0 before:border-r-[6px] before:border-r-white dark:before:border-r-gray-700 before:border-b-[6px] before:border-b-transparent">
+              <div className="bg-white dark:bg-gray-700 rounded-md rounded-tl-sm p-3 max-w-[85%] border border-gray-200 dark:border-gray-600 relative wrap-break-words before:content-[''] before:absolute before:left-[-6px] before:top-0 before:w-0 before:h-0 before:border-r-[6px] before:border-r-white dark:before:border-r-gray-700 before:border-b-[6px] before:border-b-transparent">
+                {imageUploading ? (
+                  <div className="w-full h-30 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-md mb-2">
+                    <span className="text-xs text-gray-500">
+                      Uploading image...
+                    </span>
+                  </div>
+                ) : (
+                  headerImage && (
+                    <img
+                      src={getFileUrlFromKey(headerImage)}
+                      alt="header"
+                      className="max-w-50 h-auto rounded-md mb-2 object-contain"
+                    />
+                  )
+                )}
                 <div className="text-xs leading-[1.4] text-[#303030] dark:text-gray-200 mb-0 whitespace-pre-wrap break-words">
                   {templateBody.split("\n").map((line, i) => (
                     <div key={i}>{line || "\u00A0"}</div>
