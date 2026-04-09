@@ -472,18 +472,22 @@ export function ChoicesCreator({
   );
 }
 class FileConverter {
-  public static async fileToBase64(file: File): Promise<string> {
+  public static async fileToBase64(file: File | string): Promise<string> {
+    // If it's already a string (from API), return it as-is
+    if (typeof file === "string") {
+      return file;
+    }
+
+    // Otherwise, it's a File object - convert to base64
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
       reader.onload = () => {
         let base64URL = reader.result as string;
-
         const base64Data = base64URL.replace(
           /^data:image\/[a-zA-Z]+;base64,/,
           "",
         );
-
         resolve(base64Data);
       };
 
@@ -491,7 +495,7 @@ class FileConverter {
         reject(error);
       };
 
-      reader.readAsDataURL(file); // Converts the file to base64 URL
+      reader.readAsDataURL(file);
     });
   }
 }
