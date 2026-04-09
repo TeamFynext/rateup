@@ -14,6 +14,7 @@ import {
   deleteTeamMemberHandler,
   addMembertoTeamsHandler,
   getUsersNotInTeamHandler,
+  getTeamByIdHandler,
 } from "./team.controller.js";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
@@ -258,5 +259,16 @@ export async function teamRoutes(server: FastifyInstance) {
       },
     },
     addMembertoTeamsHandler,
+  );
+
+  server.get(
+    "/teams/:teamId",
+    {
+      preHandler: [checkSession, verifyTeamAccess],
+      schema: {
+        params: getTeamMembersRequestSchema,
+      },
+    },
+    getTeamByIdHandler,
   );
 }
