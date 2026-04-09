@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import dayjs from "dayjs";
 import isToday from "dayjs/plugin/isToday";
-import { CheckCircle2, Send, XCircle, Zap } from "lucide-react";
+import { CheckCircle2, Download, Send, XCircle, Zap } from "lucide-react";
 import { useExtracted } from "next-intl";
+import generatePDF from "react-to-pdf";
 
 import {
   useGetApiAnlayticsOverview,
@@ -19,6 +20,7 @@ import OverviewCard from "@/components/apiAnalytics/OverviewCard";
 import TeamOverview from "@/components/apiAnalytics/TeamOverview";
 import TemplateOverview from "@/components/apiAnalytics/TemplateOverview";
 import { TeamSelector } from "@/components/input/TeamSelector";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 dayjs.extend(isToday);
@@ -35,6 +37,7 @@ const formatTime = (time) => {
 
 function ApiAnalytics({ dateRange }) {
   const t = useExtracted("apianalytics");
+  const targetRef = useRef(null);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [granularity, setGranularity] = useState("hour");
   const [apiType, setApiType] = useState("all");
@@ -79,7 +82,7 @@ function ApiAnalytics({ dateRange }) {
   }));
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" ref={targetRef}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl">{t("WhatsApp Messages Analytics")}</h2>
@@ -99,6 +102,24 @@ function ApiAnalytics({ dateRange }) {
             enableAll={true}
             className="w-full"
           />
+          <Button
+            variant="outline"
+            className="w-full max-w-32"
+            onClick={() =>
+              generatePDF(targetRef, {
+                filename: "analytics.pdf",
+                page: {
+                  margin: 20,
+                  format: "A4",
+                  orientation: "portrait",
+                },
+                resolution: 2,
+              })
+            }
+          >
+            <Download />
+            {t("Export")}
+          </Button>
         </div>
       </div>
       {isLoading ? (
