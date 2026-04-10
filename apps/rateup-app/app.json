@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "RateUp",
-    "slug": "rateup-2026",
+    "name": "RateUp2026",
+    "slug": "rateup",
     "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -10,7 +10,7 @@
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true,
-      "bundleIdentifier": "com.rateupapp.rateup2026",
+      "bundleIdentifier": "com.rateupapp.rateup",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow RateUp to access microphone.",
         "CFBundleURLTypes": [
