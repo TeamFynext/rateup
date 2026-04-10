@@ -6,14 +6,20 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { useColorScheme, View } from "react-native";
+import { useColorScheme } from "react-native";
 import { colors } from "@/constants/constants";
+import { useSubscription } from "@/api/sunscription/subscription.query";
+import { hasFeature } from "@/utils/subscription";
+import { SubscriptionFeaturePathName } from "../../../../enums";
 
 function ProtectedLayout() {
   const colorScheme = useColorScheme();
+  const { data: sub, isPending } = useSubscription();
   useFonts({
     Geist: require("@/assets/fonts/Geist-Regular.ttf"),
   });
+
+  const hasLoyalty = hasFeature(sub, SubscriptionFeaturePathName.Loyalty);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
@@ -39,10 +45,12 @@ function ProtectedLayout() {
           <NativeTabs.Trigger.Label>Web Forms</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
 
-        <NativeTabs.Trigger name="loyalty">
-          <NativeTabs.Trigger.Icon sf="gift.fill" md="redeem" />
-          <NativeTabs.Trigger.Label>Loyalty</NativeTabs.Trigger.Label>
-        </NativeTabs.Trigger>
+        {!isPending && hasLoyalty && (
+          <NativeTabs.Trigger name="loyalty">
+            <NativeTabs.Trigger.Icon sf="gift.fill" md="redeem" />
+            <NativeTabs.Trigger.Label>Loyalty</NativeTabs.Trigger.Label>
+          </NativeTabs.Trigger>
+        )}
 
         <NativeTabs.Trigger name="account">
           <NativeTabs.Trigger.Icon sf="person.crop.circle" md="person" />

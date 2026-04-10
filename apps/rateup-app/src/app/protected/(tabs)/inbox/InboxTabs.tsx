@@ -145,7 +145,7 @@ export default function InboxLayout() {
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View className="flex-row px-4 bg-primaryBlue py-6 justify-between">
+        <View className="flex-row px-4 bg-primaryBlue py-3 justify-between">
           <View className="flex-row items-start justify-center gap-2">
             <View>
               <Text className="text-white text-xl font-bold">Inbox</Text>
