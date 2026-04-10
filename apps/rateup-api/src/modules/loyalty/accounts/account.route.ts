@@ -21,6 +21,7 @@ import {
   awardPointsSchema,
   assignRewardSchema,
   shortCodeParamSchema,
+  searchQuerySchema,
 } from "./account.schema.js";
 
 export async function customerAccountRoutes(server: FastifyInstance) {
@@ -34,7 +35,15 @@ export async function customerAccountRoutes(server: FastifyInstance) {
     createCustomerAccountHandler,
   );
 
-  server.get("/", getCustomerAccountsHandler);
+  server.get(
+    "/",
+    {
+      schema: {
+        querystring: searchQuerySchema,
+      },
+    },
+    getCustomerAccountsHandler,
+  );
 
   server.get(
     "/:customerId",

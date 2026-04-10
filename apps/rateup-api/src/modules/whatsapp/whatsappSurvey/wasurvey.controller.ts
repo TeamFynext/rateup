@@ -147,6 +147,7 @@ import {
   notificationQueue,
   pausedAutomationQueue,
 } from "../../../utils/redisConnection.js";
+import { enqueueWebhookDispatch } from "../../webhook/webhook.service.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -386,18 +387,35 @@ async function handleMessageStatusEvent(
   eventType: WaEvent,
 ) {
   const promises = (body.entry || []).flatMap((entry) =>
-    (entry.changes || []).flatMap((change) =>
-      (change.value?.statuses || []).map((status) =>
+    (entry.changes || []).flatMap((change) => {
+      const value = change.value as WaReceiveMessageBody;
+      const phoneId = value?.metadata?.phone_number_id;
+      return (value?.statuses || []).map((status) =>
         safeAsyncOperation(
-          () => handleMessageStatusUpdate(eventType, status.id, status.errors),
+          async () => {
+            await handleMessageStatusUpdate(
+              eventType,
+              status.id,
+              status.errors,
+            );
+            if (phoneId) {
+              await enqueueWebhookDispatch(phoneId, "message_status", {
+                status: status.status,
+                messageId: status.id,
+                recipientId: status.recipient_id,
+                timestamp: status.timestamp,
+                errors: status.errors ?? null,
+              });
+            }
+          },
           (error) =>
             log.error(
               `Error handling message status update for status id ${status.id}: %o`,
               error,
             ),
         ),
-      ),
-    ),
+      );
+    }),
   );
 
   await Promise.all(promises);

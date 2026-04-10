@@ -72,6 +72,11 @@ const shortCodeParamSchema = z.object({
   shortCode: z.string().min(1),
 });
 
+const searchQuerySchema = z.object({
+  search: z.string().optional(),
+  name: z.string().optional(),
+});
+
 export type CustomerLoyaltyAccountInput = z.infer<
   typeof customerLoyaltyAccountSchema
 >;
@@ -86,6 +91,7 @@ export type RedeemRewardInput = z.infer<typeof redeemRewardSchema>;
 export type VerifyRedemptionInput = z.infer<typeof verifyRedemptionSchema>;
 export type ApplyRedemptionInput = z.infer<typeof applyRedemptionSchema>;
 export type AssignRewardInput = z.infer<typeof assignRewardSchema>;
+export type SearchQueryInput = z.infer<typeof searchQuerySchema>;
 
 // Auto-exported after fastify-zod migration
 export {
@@ -100,4 +106,5 @@ export {
   applyRedemptionSchema,
   assignRewardSchema,
   shortCodeParamSchema,
+  searchQuerySchema,
 };

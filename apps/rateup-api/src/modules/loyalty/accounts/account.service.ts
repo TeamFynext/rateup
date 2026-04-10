@@ -108,8 +108,21 @@ export async function createCustomerAccount(
   });
 
   const signupBonus = program?.signupBonus || 0;
+
+  const referralBonus = program?.referralBonus || 0;
+  const referralBonusType = program?.referralBonusType || "points";
+  const referralRewardId = program?.referralRewardId || null;
+
+  const refereeBonus = program?.refereeBonus || 0;
+  const refereeBonusType = program?.refereeBonusType || "points";
+  const refereeRewardId = program?.refereeRewardId || null;
+
+  // Points credited immediately at account creation
+  const refereeBonusPoints = refereeBonusType === "points" ? refereeBonus : 0;
+
   const currentTierId = tier ? tier.id : null;
   let referredById = null;
+  let referrerAccount: { id: string; currentPoints: number } | null = null;
 
   if (data.referCode) {
     const referredBy = await prisma.customerLoyaltyAccount.findUnique({
@@ -119,31 +132,42 @@ export async function createCustomerAccount(
       },
     });
     if (referredBy) {
-      await prisma.customerLoyaltyAccount.update({
-        where: {
-          id: referredBy?.id,
-        },
-        data: {
-          currentPoints: {
-            increment: program?.referralBonus || 0,
+      referredById = referredBy.id;
+      referrerAccount = referredBy;
+
+      // Award referral bonus to referrer (points path)
+      if (referralBonusType === "points" && referralBonus > 0) {
+        await prisma.customerLoyaltyAccount.update({
+          where: { id: referredBy.id },
+          data: {
+            currentPoints: { increment: referralBonus },
+            lifetimePoints: { increment: referralBonus },
           },
-          lifetimePoints: {
-            increment: program?.referralBonus || 0,
+        });
+        await prisma.loyaltyTransaction.create({
+          data: {
+            accountId: referredBy.id,
+            programId,
+            transactionType: "earn",
+            source: "referral",
+            points: referralBonus,
+            balanceAfter: referredBy.currentPoints + referralBonus,
+            metadata: { refereeContactId: contactId },
           },
-        },
-      });
-      referredById = referredBy ? referredBy.id : null;
+        });
+      }
+      // Gift path is handled after the new account is created below
     }
   }
 
-  // Create account
+  // Create account (referee bonus points are included in initial balance)
   const account = await prisma.customerLoyaltyAccount.create({
     data: {
       programId,
       contactId: contactId,
       referralCode,
-      currentPoints: signupBonus,
-      lifetimePoints: signupBonus,
+      currentPoints: refereeBonusPoints,
+      lifetimePoints: refereeBonusPoints,
       referredById,
       currentTierId,
     },
@@ -151,6 +175,35 @@ export async function createCustomerAccount(
       contact: true,
     },
   });
+
+  // Award referral gift to referrer (requires referrer account to exist — always true here)
+  if (referrerAccount && referralBonusType === "gift" && referralRewardId) {
+    try {
+      await assignRewardToCustomer(referrerAccount.id, referralRewardId);
+    } catch (e) {
+      if (!(e as Error).message?.includes("already assigned")) throw e;
+    }
+  }
+
+  // Award referee bonus (gift or points transaction)
+  if (referredById) {
+    if (refereeBonusType === "gift" && refereeRewardId) {
+      await assignRewardToCustomer(account.id, refereeRewardId);
+    } else if (refereeBonusPoints > 0) {
+      // Record a transaction for the referee bonus points
+      await prisma.loyaltyTransaction.create({
+        data: {
+          accountId: account.id,
+          programId,
+          transactionType: "earn",
+          source: "referral",
+          points: refereeBonusPoints,
+          balanceAfter: signupBonus + refereeBonusPoints,
+          metadata: { referrerAccountId: referredById },
+        },
+      });
+    }
+  }
 
   // Create transaction if signup bonus exists
   if (signupBonus > 0) {
@@ -199,13 +252,50 @@ You are now registered in our Loyalty Program.
   return account;
 }
 
-export async function getCustomerAccounts(programId: string) {
+export async function getCustomerAccounts(
+  programId: string,
+  search?: string,
+  name?: string,
+) {
+  const contactFilter: Record<string, unknown> = {};
+  if (name) {
+    contactFilter.name = { contains: name, mode: "insensitive" };
+  } else if (search) {
+    contactFilter.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { phone: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
   return await prisma.customerLoyaltyAccount.findMany({
-    where: { programId },
+    where: {
+      programId,
+      ...(Object.keys(contactFilter).length > 0
+        ? { contact: contactFilter }
+        : {}),
+    },
     include: {
       currentTier: true,
-      contact: true,
-      assignedRewards: true,
+      contact: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          email: true,
+        },
+      },
+      assignedRewards: {
+        include: {
+          reward: true,
+        },
+      },
+      redemptions: {
+        take: 10,
+        orderBy: { createdAt: "desc" },
+        include: {
+          reward: true,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
