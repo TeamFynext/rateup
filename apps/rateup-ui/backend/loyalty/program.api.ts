@@ -10,7 +10,11 @@ export interface LoyaltyProgram {
   currencySymbol: string;
   signupBonus: number;
   referralBonus: number;
+  referralBonusType?: "points" | "gift";
+  referralRewardId?: string;
   refereeBonus: number;
+  refereeBonusType?: "points" | "gift";
+  refereeRewardId?: string;
   newCustomerBonus?: number;
   tiersEnabled: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;
@@ -35,7 +39,11 @@ export interface LoyaltyProgramInput {
   currencySymbol?: string;
   signupBonus?: number;
   referralBonus?: number;
+  referralBonusType?: "points" | "gift";
+  referralRewardId?: string;
   refereeBonus?: number;
+  refereeBonusType?: "points" | "gift";
+  refereeRewardId?: string;
   newCustomerBonus?: number;
   tiersEnabled?: boolean;
   tierResetPeriod?: "never" | "yearly" | "monthly" | null;

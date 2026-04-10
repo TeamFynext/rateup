@@ -183,6 +183,7 @@ export const useAwardPointsMutation = () => {
         queryKey: ["loyaltyCustomerByContact", variables.contactId],
       });
       queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
+      queryClient.invalidateQueries({ queryKey: ["loyalty-cashier-customer"] });
       toast.success("Points awarded successfully");
     },
     onError: (error) => {
