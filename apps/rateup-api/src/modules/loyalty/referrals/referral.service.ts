@@ -1,4 +1,6 @@
+import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
+import { assignRewardToCustomer } from "../accounts/account.service.js";
 
 export async function trackReferral(
   programId: string,
@@ -40,12 +42,21 @@ export async function trackReferral(
     throw new Error("Contact not found");
   }
 
-  // Get program for referral bonus
+  // Get program for referral/referee bonus configuration
   const program = await prisma.loyaltyProgram.findUnique({
     where: { id: programId },
   });
 
   const referralBonus = program?.referralBonus || 0;
+  const referralBonusType = program?.referralBonusType || "points";
+  const referralRewardId = program?.referralRewardId;
+
+  const refereeBonus = program?.refereeBonus || 0;
+  const refereeBonusType = program?.refereeBonusType || "points";
+  const refereeRewardId = program?.refereeRewardId;
+
+  // If referee bonus is points, credit them on account creation
+  const refereeBonusPoints = refereeBonusType === "points" ? refereeBonus : 0;
 
   // Create referee account
   const refereeReferralCode = `${contact.name?.substring(0, 4) || contact.phone?.substring(0, 4) || "REF"}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
@@ -55,8 +66,8 @@ export async function trackReferral(
       programId,
       contactId: refereeContactId,
       referralCode: refereeReferralCode,
-      currentPoints: program?.signupBonus || 0,
-      lifetimePoints: program?.signupBonus || 0,
+      currentPoints: refereeBonusPoints,
+      lifetimePoints: refereeBonusPoints,
     },
   });
 
@@ -71,21 +82,29 @@ export async function trackReferral(
     },
   });
 
-  // Award referral bonus to referrer if configured
+  // Award referral bonus to referrer
+  if (referralBonusType === "gift" && referralRewardId) {
+    // Assign gift reward; silently skip if already assigned (repeat referrals)
+    try {
+      await assignRewardToCustomer(referrer.id, referralRewardId);
+    } catch (e) {
+      if (!(e as Error).message?.includes("already assigned")) {
+        log.error(
+          { error: (e as Error).message },
+          "Error assigning referral reward",
+        );
+      }
+    }
+  }
   if (referralBonus > 0) {
     await prisma.customerLoyaltyAccount.update({
       where: { id: referrer.id },
       data: {
-        currentPoints: {
-          increment: referralBonus,
-        },
-        lifetimePoints: {
-          increment: referralBonus,
-        },
+        currentPoints: { increment: referralBonus },
+        lifetimePoints: { increment: referralBonus },
       },
     });
 
-    // Create transaction for referrer
     await prisma.loyaltyTransaction.create({
       data: {
         accountId: referrer.id,
@@ -97,6 +116,27 @@ export async function trackReferral(
         metadata: {
           referralId: referral.id,
           refereeContactId,
+        },
+      },
+    });
+  }
+
+  // Award referee bonus
+  if (refereeBonusType === "gift" && refereeRewardId) {
+    await assignRewardToCustomer(referee.id, refereeRewardId);
+  } else if (refereeBonusPoints > 0) {
+    // Points already credited on account creation; record the transaction
+    await prisma.loyaltyTransaction.create({
+      data: {
+        accountId: referee.id,
+        programId,
+        transactionType: "earn",
+        source: "referral",
+        points: refereeBonusPoints,
+        balanceAfter: refereeBonusPoints,
+        metadata: {
+          referralId: referral.id,
+          referrerAccountId: referrer.id,
         },
       },
     });

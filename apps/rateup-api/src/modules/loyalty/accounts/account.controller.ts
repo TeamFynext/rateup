@@ -22,6 +22,7 @@ import {
   ContactIdParam,
   PhoneNumberParam,
   AssignRewardInput,
+  SearchQueryInput,
 } from "./account.schema.js";
 import { getLoyaltyProgramByOrg } from "../program/program.service.js";
 
@@ -50,16 +51,16 @@ export async function createCustomerAccountHandler(
 }
 
 export async function getCustomerAccountsHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: SearchQueryInput }>,
   reply: FastifyReply,
 ) {
   try {
     const program = await getLoyaltyProgramByOrg(request.user.orgId);
     if (!program) {
-      // if no program, return empty array to avoid 404s on frontend which expects an array in (all data get case)
       return reply.code(200).send([]);
     }
-    const result = await getCustomerAccounts(program.id);
+    const { search, name } = request.query;
+    const result = await getCustomerAccounts(program.id, search, name);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
