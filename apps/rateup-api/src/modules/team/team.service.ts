@@ -240,13 +240,15 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         }
         return { ...input, existing: true };
       }
-      const anotherOrgOwner = existingMemberships.find(
-        (o) => o.orgId !== orgId && o.role === "SUPER_ADMIN",
+      const belongsToAnotherOrg = existingMemberships.find(
+        (o) => o.orgId !== orgId,
       );
-      if (anotherOrgOwner)
+
+      if (belongsToAnotherOrg) {
         throw new Error(
-          "User with the provided email is already a SUPER_ADMIN member in an organization.",
+          "User with the provided email is already a member of another organization.",
         );
+      }
     }
 
     // Check if the email already exists in the invitation table
