@@ -40,6 +40,10 @@ interface LoyaltyRewardFormProps {
   // State
   rewardTierRestriction: boolean;
   setRewardTierRestriction: (val: boolean) => void;
+  minimumSpendEnabled: boolean;
+  setMinimumSpendEnabled: (val: boolean) => void;
+  timeRestrictionsEnabled: boolean;
+  setTimeRestrictionsEnabled: (val: boolean) => void;
 
   // Data
   loyaltyTiers: any[] | undefined;
@@ -53,9 +57,22 @@ export function LoyaltyRewardForm({
   giftForm,
   rewardTierRestriction,
   setRewardTierRestriction,
+  minimumSpendEnabled,
+  setMinimumSpendEnabled,
+  timeRestrictionsEnabled,
+  setTimeRestrictionsEnabled,
   loyaltyTiers,
   loyaltyTemplates,
-}: LoyaltyRewardFormProps) {
+}: Readonly<LoyaltyRewardFormProps>) {
+  const DAYS_OF_WEEK = [
+    { label: "Monday", value: "monday" },
+    { label: "Tuesday", value: "tuesday" },
+    { label: "Wednesday", value: "wednesday" },
+    { label: "Thursday", value: "thursday" },
+    { label: "Friday", value: "friday" },
+    { label: "Saturday", value: "saturday" },
+    { label: "Sunday", value: "sunday" },
+  ];
   return (
     <div className="space-y-5">
       {/* Point Rewards Form */}
@@ -257,7 +274,7 @@ export function LoyaltyRewardForm({
                 Redemption Rules (Optional)
               </h3>
               <div className="space-y-3">
-                <div className="border rounded-lg p-3">
+                <div className="border rounded-lg p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-sm">Minimum Spend</p>
@@ -265,10 +282,48 @@ export function LoyaltyRewardForm({
                         Require minimum purchase amount
                       </p>
                     </div>
-                    <Switch className="data-[state=checked]:bg-[#1873E8]" />
+                    <Switch
+                      checked={minimumSpendEnabled}
+                      onCheckedChange={(checked) => {
+                        setMinimumSpendEnabled(checked);
+                        if (!checked)
+                          pointRewardForm.setValue("minimumSpend", undefined);
+                      }}
+                      className="data-[state=checked]:bg-[#1873E8]"
+                    />
                   </div>
+                  {minimumSpendEnabled && (
+                    <FormField
+                      control={pointRewardForm.control}
+                      name="minimumSpend"
+                      render={({ field }) => (
+                        <FormItem className="pt-2 border-t">
+                          <FormLabel className="text-xs">
+                            Minimum Amount
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="100"
+                              min="0"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(
+                                  Number.parseFloat(e.target.value) || 0,
+                                )
+                              }
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Customer must spend at least this amount to redeem
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
-                <div className="border rounded-lg p-3">
+                <div className="border rounded-lg p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-sm">Time Restrictions</p>
@@ -276,8 +331,94 @@ export function LoyaltyRewardForm({
                         Limit by day/time
                       </p>
                     </div>
-                    <Switch className="data-[state=checked]:bg-[#1873E8]" />
+                    <Switch
+                      checked={timeRestrictionsEnabled}
+                      onCheckedChange={(checked) => {
+                        setTimeRestrictionsEnabled(checked);
+                        if (!checked) {
+                          pointRewardForm.setValue("availableDays", undefined);
+                          pointRewardForm.setValue("timeFrom", undefined);
+                          pointRewardForm.setValue("timeTo", undefined);
+                        }
+                      }}
+                      className="data-[state=checked]:bg-[#1873E8]"
+                    />
                   </div>
+                  {timeRestrictionsEnabled && (
+                    <div className="pt-2 border-t space-y-3">
+                      <FormField
+                        control={pointRewardForm.control}
+                        name="availableDays"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">
+                              Available Days
+                            </FormLabel>
+                            <div className="grid grid-cols-2 gap-2">
+                              {DAYS_OF_WEEK.map((day) => (
+                                <div
+                                  key={day.value}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <Checkbox
+                                    id={`day-${day.value}`}
+                                    checked={field.value?.includes(day.value)}
+                                    onCheckedChange={(checked) => {
+                                      const updated = checked
+                                        ? [...(field.value || []), day.value]
+                                        : field.value?.filter(
+                                            (d) => d !== day.value,
+                                          ) || [];
+                                      field.onChange(updated);
+                                    }}
+                                  />
+                                  <Label
+                                    htmlFor={`day-${day.value}`}
+                                    className="text-sm font-normal cursor-pointer"
+                                  >
+                                    {day.label}
+                                  </Label>
+                                </div>
+                              ))}
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={pointRewardForm.control}
+                          name="timeFrom"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">
+                                Start Time
+                              </FormLabel>
+                              <FormControl>
+                                <Input type="time" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={pointRewardForm.control}
+                          name="timeTo"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">
+                                End Time
+                              </FormLabel>
+                              <FormControl>
+                                <Input type="time" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="border rounded-lg p-3 space-y-3">
                   <div className="flex items-center justify-between">
@@ -346,33 +487,6 @@ export function LoyaltyRewardForm({
                 </div>
               </div>
             </div>
-
-            <FormField
-              control={pointRewardForm.control}
-              name="waTemplateId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    WhatsApp Notification Template (Optional)
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select template" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {loyaltyTemplates?.map((template) => (
-                        <SelectItem key={template.id} value={template.id}>
-                          {template.data?.name || "Unnamed Template"}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </form>
         </Form>
       )}

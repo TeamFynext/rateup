@@ -75,6 +75,7 @@ export default async function RootLayout({
         notoColorEmogi.className,
         "font-sans",
         inter.variable,
+        "h-full antialiased",
       )}
       data-scroll-behavior="smooth"
       suppressHydrationWarning

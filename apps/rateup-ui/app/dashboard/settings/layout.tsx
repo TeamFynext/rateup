@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import {
-  Bolt,
   ChevronRight,
   CreditCard,
   Crown,
@@ -14,6 +13,7 @@ import {
   User,
   UserCog,
   Users,
+  Webhook,
   X,
 } from "lucide-react";
 import { useExtracted } from "next-intl";
@@ -32,7 +32,8 @@ type SettingsSection =
   | "team"
   | "billing"
   | "admin"
-  | "security";
+  | "security"
+  | "webhooks";
 
 const SettingsLayout = ({ children }) => {
   const router = useRouter();
@@ -85,7 +86,13 @@ const SettingsLayout = ({ children }) => {
           description: translations("Communication channels"),
           href: "/dashboard/settings/channels",
         },
-
+        {
+          id: "integrations" as SettingsSection,
+          label: "Integrations",
+          icon: Webhook,
+          description: "Webhooks & external services",
+          href: "/dashboard/settings/integrations",
+        },
         // {
         //   id: "integrations" as SettingsSection,
         //   label: translations("Integrations"),
@@ -270,8 +277,8 @@ const SettingsLayout = ({ children }) => {
       </nav>
       {/* Main Content */}
       {/* Add md:ml-64 so the main content sits to the right of the sidebar on medium+ screens */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-4 max-w-7xl h-full">{children}</div>
+      <main className="flex-1 overflow-auto bg-[#f9fafc] dark:bg-background">
+        <div className="p-4 max-w-7xl  relative">{children}</div>
       </main>
     </div>
   );

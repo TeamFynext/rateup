@@ -9,12 +9,14 @@ interface DangerZoneProps {
   onReset: () => void;
   onDelete: () => void;
   disabled?: boolean;
+  showDelete?: boolean;
 }
 
 export function DangerZone({
   onReset,
   onDelete,
   disabled = false,
+  showDelete = true,
 }: Readonly<DangerZoneProps>) {
   const t = useExtracted();
 
@@ -46,25 +48,27 @@ export function DangerZone({
           </Button>
         </div>
 
-        <div className="flex items-center justify-between p-2.5 border-2 border-red-200 rounded-lg bg-white">
-          <div>
-            <p className="text-sm font-medium text-red-700">
-              {t("Delete Program")}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {t("Remove all data")}
-            </p>
+        {showDelete && (
+          <div className="flex items-center justify-between p-2.5 border-2 border-red-200 rounded-lg bg-white">
+            <div>
+              <p className="text-sm font-medium text-red-700">
+                {t("Delete Program")}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("Remove all data")}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 border-red-300 text-red-600 hover:bg-red-50"
+              onClick={onDelete}
+              disabled={disabled}
+            >
+              {t("Delete")}
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 border-red-300 text-red-600 hover:bg-red-50"
-            onClick={onDelete}
-            disabled={disabled}
-          >
-            {t("Delete")}
-          </Button>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

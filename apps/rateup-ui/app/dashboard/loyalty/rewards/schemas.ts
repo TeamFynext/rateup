@@ -16,6 +16,10 @@ export const pointRewardSchema = z.object({
   restrictions: z.string().optional(),
   waTemplateId: z.string().optional(),
   tierIds: z.array(z.string()).optional(),
+  minimumSpend: z.coerce.number().min(0).optional(),
+  availableDays: z.array(z.string()).optional(),
+  timeFrom: z.string().optional(),
+  timeTo: z.string().optional(),
 });
 
 export const couponSchema = z.object({

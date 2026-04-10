@@ -28,6 +28,10 @@ interface RewardFormContainerProps {
   editingId: string | null;
   rewardTierRestriction: boolean;
   setRewardTierRestriction: (val: boolean) => void;
+  minimumSpendEnabled: boolean;
+  setMinimumSpendEnabled: (val: boolean) => void;
+  timeRestrictionsEnabled: boolean;
+  setTimeRestrictionsEnabled: (val: boolean) => void;
 
   // Data
   loyaltyTiers: any[] | undefined;
@@ -47,9 +51,13 @@ export function RewardFormContainer({
   editingId,
   rewardTierRestriction,
   setRewardTierRestriction,
+  minimumSpendEnabled,
+  setMinimumSpendEnabled,
+  timeRestrictionsEnabled,
+  setTimeRestrictionsEnabled,
   loyaltyTiers,
   loyaltyTemplates,
-}: RewardFormContainerProps) {
+}: Readonly<RewardFormContainerProps>) {
   const getHeaderInfo = () => {
     switch (category) {
       case "point-rewards":
@@ -108,6 +116,10 @@ export function RewardFormContainer({
             giftForm={giftForm}
             rewardTierRestriction={rewardTierRestriction}
             setRewardTierRestriction={setRewardTierRestriction}
+            minimumSpendEnabled={minimumSpendEnabled}
+            setMinimumSpendEnabled={setMinimumSpendEnabled}
+            timeRestrictionsEnabled={timeRestrictionsEnabled}
+            setTimeRestrictionsEnabled={setTimeRestrictionsEnabled}
             loyaltyTiers={loyaltyTiers}
             loyaltyTemplates={loyaltyTemplates}
           />

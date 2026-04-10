@@ -35,6 +35,10 @@ interface RewardCardProps {
   };
   readonly rewardTierRestriction: boolean;
   readonly setRewardTierRestriction: (val: boolean) => void;
+  readonly minimumSpendEnabled: boolean;
+  readonly setMinimumSpendEnabled: (val: boolean) => void;
+  readonly timeRestrictionsEnabled: boolean;
+  readonly setTimeRestrictionsEnabled: (val: boolean) => void;
   readonly loyaltyTiers: any[] | undefined;
   readonly loyaltyTemplates: any[] | undefined;
 
@@ -56,6 +60,10 @@ export function RewardCard({
   forms,
   rewardTierRestriction,
   setRewardTierRestriction,
+  minimumSpendEnabled,
+  setMinimumSpendEnabled,
+  timeRestrictionsEnabled,
+  setTimeRestrictionsEnabled,
   loyaltyTiers,
   loyaltyTemplates,
   getRewardIcon,
@@ -154,6 +162,10 @@ export function RewardCard({
               giftForm={forms.giftForm}
               rewardTierRestriction={rewardTierRestriction}
               setRewardTierRestriction={setRewardTierRestriction}
+              minimumSpendEnabled={minimumSpendEnabled}
+              setMinimumSpendEnabled={setMinimumSpendEnabled}
+              timeRestrictionsEnabled={timeRestrictionsEnabled}
+              setTimeRestrictionsEnabled={setTimeRestrictionsEnabled}
               loyaltyTiers={loyaltyTiers}
               loyaltyTemplates={loyaltyTemplates}
             />
