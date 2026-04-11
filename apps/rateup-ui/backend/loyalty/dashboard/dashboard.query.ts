@@ -6,34 +6,42 @@ interface LoyaltyDashboardStats {
   programExists: boolean;
   programId: string;
   currencySymbol: string;
-  defaultCountryCode: string;
   summary: {
-    totalCustomers: number;
+    totalMembers: number;
+    totalMembersChange: number | null;
+    activeThisMonth: number;
+    activeThisMonthChange: number | null;
     pointsIssued: number;
-    pointsRedeemed: number;
+    pointsIssuedChange: number | null;
+    rewardsRedeemed: number;
+    rewardsRedeemedChange: number | null;
   };
-  analytics: {
-    pointsEarnedVsRedeemed: {
-      date: string;
-      earned: number;
-      redeemed: number;
-    }[];
-    customerGrowthOverTime: {
-      date: string;
-      newCustomers: number;
-      totalCustomers: number;
-    }[];
-  };
-  tierBreakdown: {
-    tierId: string;
+  memberGrowth: {
+    month: string;
+    members: number;
+    active: number;
+  }[];
+  pointsActivity: {
+    month: string;
+    issued: number;
+    redeemed: number;
+  }[];
+  tierDistribution: {
     name: string;
-    count: number;
+    value: number;
   }[];
   popularRewards: {
     id: string;
     name: string;
     pointsCost: number;
     count: number;
+  }[];
+  recentActivity: {
+    user: string;
+    action: string;
+    item: string;
+    points: number;
+    createdAt: string;
   }[];
 }
 
