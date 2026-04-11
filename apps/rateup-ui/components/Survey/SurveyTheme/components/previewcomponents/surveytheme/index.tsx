@@ -6,8 +6,8 @@ import { Box } from "@mantine/core";
 import _ from "lodash";
 
 import { PageType } from "@/types/enums";
-import ThankYou from "@/app/public/survey/[surveyId]/end";
-import ResponseSubmitted from "@/app/ws/[shortId]/response-submitted/page";
+import ThankYou from "@/app/(public-facing)/public/survey/[surveyId]/end";
+import ResponseSubmitted from "@/app/(public-facing)/ws/[shortId]/response-submitted/page";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview";
 import { useUser } from "@/context/UserContext";
 import { surveyUploadsPath } from "@/utils/constants";

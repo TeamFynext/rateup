@@ -1,5 +1,3 @@
-"use client";
-
 import { Center, CenterProps } from "@mantine/core";
 
 import { Spinner } from "../ui/spinner";
