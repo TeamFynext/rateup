@@ -60,6 +60,7 @@ import { externalIntegrationRoutes } from "./modules/integrations/external/exter
 import healthRoutes from "./routes/health.js";
 import { customerAccountPublicRoutes } from "./modules/loyalty/accounts/account.public.route.js";
 import { apiAnalyticsRoutes } from "./modules/apiAnalytics/apianalytics.routes.js";
+import { webhookRoutes } from "./modules/webhook/webhook.route.js";
 
 // Route configurations
 const routeConfigs = [
@@ -132,6 +133,7 @@ const routeConfigs = [
   { plugin: bookDemoRoutes, prefix: "/api/bookdemo" },
   { plugin: externalIntegrationRoutes, prefix: "/api/integration/external" },
   { plugin: apiAnalyticsRoutes, prefix: "/api/apianalytics" },
+  { plugin: webhookRoutes, prefix: "/api/webhook" },
 ];
 
 export async function registerRoutes(server: FastifyInstance): Promise<void> {

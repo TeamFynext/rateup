@@ -186,6 +186,7 @@ model Org {
   rules                    Rule[]
   ruleMessageBodyLocks     RuleMessageBodyLock[]
   waMessageOrgTeamMaps     WaMessageOrgTeamMap[]
+  Webhook                  Webhook?
 }
 
 model UsageStats {
@@ -1736,9 +1737,13 @@ model LoyaltyProgram {
   defaultCountryCode String @default("IN")
 
   // Fixed Bonuses
-  signupBonus   Int @default(0)
-  referralBonus Int @default(0) // For referrer
-  refereeBonus  Int @default(0) // For new customer
+  signupBonus      Int    @default(0)
+  referralBonus    Int    @default(0) // For referrer
+  referralBonusType String @default("points") // 'points' or 'gift'
+  referralRewardId String? @db.Uuid // Reward ID when referralBonusType is 'gift'
+  refereeBonus     Int    @default(0) // For new customer
+  refereeBonusType  String @default("points") // 'points' or 'gift'
+  refereeRewardId  String? @db.Uuid // Reward ID when refereeBonusType is 'gift'
 
   // Tier Configuration
   tiersEnabled    Boolean @default(true)
@@ -2482,4 +2487,14 @@ model WaMessageOrgTeamMap {
   @@index([teamId])
   @@index([type])
   @@index([externalApi])
+}
+
+model Webhook {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId     String   @unique @db.Uuid
+  url       String
+  events    String[]
 }

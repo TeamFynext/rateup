@@ -32,6 +32,9 @@ export const pausedAutomationQueue = new Queue("pausedAutomationQueue", {
 });
 
 export const webhookQueue = new Queue("webhookQueue", { connection });
+export const outgoingWebhookQueue = new Queue("outgoingWebhookQueue", {
+  connection,
+});
 export const shopifySurveyQueue = new Queue("shopifySurveyQueue", {
   connection,
 });
