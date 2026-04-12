@@ -29,7 +29,10 @@ const waTemplateInput = {
         type: z.string().min(1),
         phone_number: z.string().max(25).optional(),
         url: z.string().max(2000).optional(),
-        example: z.string().max(15).optional(),
+        example: z.union([
+          z.array(z.string().trim().min(1).max(2000)).optional(),
+          z.string().trim().min(1).max(2000).optional(),
+        ]),
         flow_id: z.string().optional(),
         flow_action: z.string().optional(),
         navigate_screen: z.string().optional(),
