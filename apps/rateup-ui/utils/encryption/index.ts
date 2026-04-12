@@ -1,14 +1,11 @@
-import _sodium from "libsodium-wrappers";
+type SodiumInstance = Awaited<ReturnType<typeof initialize>>;
 
-//creating a sodium instance with type _sodium
-type SodiumInstance = typeof _sodium;
-
-//function to initialize sodium
-const initialize = async (): Promise<SodiumInstance> => {
-  await _sodium.ready;
-  const sodium = _sodium;
+async function initialize() {
+  const sodiumModule = await import("libsodium-wrappers");
+  const sodium = (sodiumModule as any).default ?? sodiumModule;
+  await sodium.ready;
   return sodium;
-};
+}
 
 //function to generate a keypair
 export const generateKeyPair = async () => {
