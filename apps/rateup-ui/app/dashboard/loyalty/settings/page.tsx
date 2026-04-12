@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { createLoyaltyEarningRule } from "@/backend/loyalty/earningRules.api";
 import {
   LoyaltyEventType,
   updateEventTrigger,
@@ -26,6 +27,8 @@ import {
   useResetLoyaltyProgramPointsMutation,
   useUpdateLoyaltyProgramMutation,
 } from "@/backend/loyalty/program.query";
+import { createLoyaltyReward } from "@/backend/loyalty/reward.api";
+import { createLoyaltyTier } from "@/backend/loyalty/tier.api";
 import InfoButton from "@/components/Button/InfoButton";
 import { BasicSettings } from "@/components/loyalty/settings/BasicSettings";
 import { BirthdayReminderSettings } from "@/components/loyalty/settings/BirthdayReminderSettings";
@@ -45,9 +48,21 @@ import { TierUpdateSettings } from "@/components/loyalty/settings/TierUpdateSett
 import { TransactionNotifications } from "@/components/loyalty/settings/TransactionNotifications";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUser } from "@/context/UserContext";
 import { docsPath } from "@/utils/constants";
+import { UserRole } from "@/utils/enums";
 
 export default function LoyaltySettingsPage() {
   const t = useExtracted();
@@ -55,6 +70,8 @@ export default function LoyaltySettingsPage() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const activeTab = searchParams.get("tab") ?? "general";
+  const { user } = useUser();
+  const isSuperAdmin = user?.role === UserRole.SUPADM;
 
   const { data: program, isLoading: isProgramLoading } = useLoyaltyProgram();
   const { data: eventTriggers } = useEventTriggers(program?.id || "");
@@ -73,6 +90,7 @@ export default function LoyaltySettingsPage() {
   // States for Modals
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   // States for modified buttons
   const [pointsReminderModified, setPointsReminderModified] = useState(false);
@@ -260,7 +278,9 @@ export default function LoyaltySettingsPage() {
   }, [eventTriggers, eventTriggersForm]);
 
   // Save Handlers
-  const onSaveBasicSettings = (data: z.infer<typeof BasicSettingsSchema>) => {
+  const onSaveBasicSettings = async (
+    data: z.infer<typeof BasicSettingsSchema>,
+  ) => {
     const payload = {
       name: data.programName,
       currencyName: data.pointsCurrency,
@@ -272,7 +292,90 @@ export default function LoyaltySettingsPage() {
     if (program?.id) {
       updateProgramMutation.mutate(payload);
     } else {
-      createProgramMutation.mutate(payload);
+      await createProgramMutation.mutateAsync(payload);
+
+      // Create defaults in parallel (non-fatal if any fail)
+      try {
+        await createLoyaltyEarningRule({
+          name: "Standard Earning",
+          pointsPerUnit: 10,
+          status: "active",
+          isDefault: true,
+        });
+
+        const defaultTiers = [
+          {
+            name: "Bronze",
+            threshold: 0,
+            pointsMultiplier: 1,
+            color: "#CD7F32",
+            benefitsDescription: "Standard rewards",
+            priority: 1,
+          },
+          {
+            name: "Silver",
+            threshold: 1000,
+            pointsMultiplier: 1,
+            color: "#94A3B8",
+            benefitsDescription: "10% bonus points",
+            priority: 2,
+          },
+          {
+            name: "Gold",
+            threshold: 5000,
+            pointsMultiplier: 1,
+            color: "#EAB308",
+            benefitsDescription: "20% bonus points",
+            priority: 3,
+          },
+          {
+            name: "Platinum",
+            threshold: 10000,
+            pointsMultiplier: 1,
+            color: "#CBD5E1",
+            benefitsDescription: "30% bonus points + exclusive rewards",
+            priority: 4,
+          },
+        ];
+
+        const defaultRewards = [
+          {
+            name: "50 Points",
+            description: "Get 50 loyalty points",
+            pointsCost: 50,
+            rewardType: "point" as const,
+            rewardValue: { points: 50 },
+            status: "ACTIVE" as const,
+          },
+          {
+            name: "10% Off",
+            description: "10% discount on next purchase",
+            pointsCost: 200,
+            rewardType: "coupon" as const,
+            rewardValue: {},
+            status: "ACTIVE" as const,
+          },
+          {
+            name: "Free Shipping",
+            description: "Free shipping on next order",
+            pointsCost: 150,
+            rewardType: "assigned" as const,
+            rewardValue: {},
+            status: "ACTIVE" as const,
+          },
+        ];
+
+        await Promise.all([
+          ...defaultTiers.map((tier) => createLoyaltyTier(tier)),
+          ...defaultRewards.map((reward) => createLoyaltyReward(reward)),
+        ]);
+
+        queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
+        queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
+        queryClient.invalidateQueries({ queryKey: ["loyalty-earning-rules"] });
+      } catch (error) {
+        console.error("Error creating program defaults:", error);
+      }
     }
   };
 
@@ -390,9 +493,10 @@ export default function LoyaltySettingsPage() {
   };
 
   const handleDeleteProgram = () => {
-    if (program?.id) {
+    if (program?.id && deleteConfirmText === program.name) {
       deleteProgramMutation.mutate({ programId: program.id, force: true });
       setDeleteModalOpen(false);
+      setDeleteConfirmText("");
     }
   };
 
@@ -475,8 +579,12 @@ export default function LoyaltySettingsPage() {
 
               <DangerZone
                 onReset={() => setResetModalOpen(true)}
-                onDelete={() => setDeleteModalOpen(true)}
+                onDelete={() => {
+                  setDeleteConfirmText("");
+                  setDeleteModalOpen(true);
+                }}
                 disabled={noProgram}
+                showDelete={isSuperAdmin}
               />
             </div>
           </>
@@ -550,18 +658,72 @@ export default function LoyaltySettingsPage() {
         loading={resetPointsMutation.isPending}
       />
 
-      <ConfirmationModal
-        opened={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        headerTitle={t("Delete Loyalty Program")}
-        headerLabel={t(
-          "Are you sure you want to delete this loyalty program? All data will be permanently removed.",
-        )}
-        confirmLabel={t("Delete Program")}
-        onConfirm={handleDeleteProgram}
-        loading={deleteProgramMutation.isPending}
-        forDeleteFunctionality={true}
-      />
+      <Dialog
+        open={deleteModalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteModalOpen(false);
+            setDeleteConfirmText("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-600">
+              {t("Delete Loyalty Program")}
+            </DialogTitle>
+            <DialogDescription>
+              {t(
+                "This action is permanent and cannot be undone. All program data will be removed.",
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {t("Type")}{" "}
+              <span className="font-semibold text-foreground">
+                &quot;{program?.name}&quot;
+              </span>{" "}
+              {t("to confirm deletion")}
+            </p>
+            <Input
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && deleteConfirmText === program?.name) {
+                  handleDeleteProgram();
+                }
+              }}
+              placeholder={program?.name ?? ""}
+              autoComplete="off"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteModalOpen(false);
+                setDeleteConfirmText("");
+              }}
+            >
+              {t("Cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={
+                deleteConfirmText !== program?.name ||
+                deleteProgramMutation.isPending
+              }
+              onClick={handleDeleteProgram}
+            >
+              {deleteProgramMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              {t("Delete Program")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

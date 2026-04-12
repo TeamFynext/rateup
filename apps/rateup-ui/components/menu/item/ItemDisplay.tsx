@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { useExtracted } from "next-intl";
 
-import classes2 from "@/app/m/[shortId]/gradientAnimation.module.css";
+import classes2 from "@/app/(public-facing)/m/[shortId]/gradientAnimation.module.css";
 
 import { fallbackImage } from "../../../utils/constants";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";

@@ -4,8 +4,8 @@
 // Since QueryClientProvider relies on useContext under the hood, we have to put 'use client' on top
 import {
   dehydrate,
+  environmentManager,
   HydrationBoundary,
-  isServer,
   QueryCache,
   QueryClient,
   QueryClientProvider,
@@ -17,7 +17,6 @@ import Session from "supertokens-auth-react/recipe/session";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserProvider } from "@/context/UserContext";
-import { isProduction } from "@/utils/constants";
 import RouteChangeHandler from "@/utils/routeHandler";
 
 function makeQueryClient() {
@@ -59,7 +58,7 @@ function makeQueryClient() {
 let browserQueryClient: QueryClient | undefined = undefined;
 
 function getQueryClient() {
-  if (isServer) {
+  if (environmentManager.isServer()) {
     // Server: always make a new query client
     return makeQueryClient();
   } else {
@@ -77,11 +76,6 @@ export function resetBrowserQueryClient() {
   browserQueryClient = undefined;
 }
 
-function onError(error) {
-  if (error.code === "MISSING_MESSAGE" && isProduction) return;
-  console.error(error);
-}
-
 export default function Providers({ children, locale, messages }) {
   // NOTE: Avoid useState when initializing the query client if you don't
   //       have a suspense boundary between this and the code that may
@@ -94,7 +88,6 @@ export default function Providers({ children, locale, messages }) {
     <NextIntlClientProvider
       locale={locale}
       messages={messages}
-      onError={onError}
       timeZone={timeZone ?? "UTC"}
     >
       <QueryClientProvider client={queryClient}>

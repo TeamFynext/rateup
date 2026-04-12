@@ -43,6 +43,7 @@ import InfoButton from "@/components/Button/InfoButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -92,6 +93,10 @@ const earningRuleSchema = z.object({
   // UI supports these (and backend may accept them); keep permissive for date input values.
   validFrom: z.string().nullable().optional(),
   validUntil: z.string().nullable().optional(),
+  allowedDays: z.array(z.string()).optional(),
+  timeFrom: z.string().optional(),
+  timeTo: z.string().optional(),
+  applicableToTiers: z.array(z.string()).optional(),
   isDefault: z.boolean().default(false),
 });
 
@@ -179,6 +184,10 @@ export default function EarningRulesPage() {
       maxPurchaseAmount: null,
       validFrom: null,
       validUntil: null,
+      allowedDays: [],
+      timeFrom: "",
+      timeTo: "",
+      applicableToTiers: [],
       isDefault: false,
     },
   });
@@ -196,6 +205,10 @@ export default function EarningRulesPage() {
       maxPurchaseAmount: null,
       validFrom: null,
       validUntil: null,
+      allowedDays: [],
+      timeFrom: "",
+      timeTo: "",
+      applicableToTiers: [],
       isDefault: false,
     });
     setRuleIcon("");
@@ -207,7 +220,22 @@ export default function EarningRulesPage() {
   };
 
   const handleCreateSubmit = (values: EarningRuleFormValues) => {
-    createRuleMutation.mutate(values as LoyaltyEarningRuleInput);
+    const { timeFrom, timeTo, allowedDays, applicableToTiers, ...rest } =
+      values;
+    const payload = {
+      ...rest,
+      allowedDays: scheduleEnabled ? (allowedDays ?? []) : [],
+      allowedTimeRanges:
+        scheduleEnabled && (timeFrom || timeTo)
+          ? [{ start: timeFrom || "00:00", end: timeTo || "23:59" }]
+          : [],
+      applicableToTiers: tierRestrictionEnabled
+        ? (applicableToTiers ?? [])
+        : [],
+      validFrom: limitedPeriodEnabled ? rest.validFrom : null,
+      validUntil: limitedPeriodEnabled ? rest.validUntil : null,
+    };
+    createRuleMutation.mutate(payload as LoyaltyEarningRuleInput);
   };
 
   const handleDeleteRule = (ruleId: string) => {
@@ -566,49 +594,7 @@ export default function EarningRulesPage() {
                     />
                   </div>
 
-                  {/* Optional date range (matches design intent) */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={ruleForm.control}
-                      name="validFrom"
-                      render={({ field }) => (
-                        <FormItem className="space-y-2">
-                          <FormLabel>Valid From</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="date"
-                              value={field.value ?? ""}
-                              onChange={(e) =>
-                                field.onChange(e.target.value || null)
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={ruleForm.control}
-                      name="validUntil"
-                      render={({ field }) => (
-                        <FormItem className="space-y-2">
-                          <FormLabel>Valid To</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="date"
-                              value={field.value ?? ""}
-                              onChange={(e) =>
-                                field.onChange(e.target.value || null)
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Schedule Settings (UI-only toggles) */}
+                  {/* Schedule Settings */}
                   <div className="space-y-3 border-t pt-4">
                     <h3 className="text-base font-medium">
                       When does this rule apply?
@@ -627,10 +613,109 @@ export default function EarningRulesPage() {
                           </div>
                           <Switch
                             checked={scheduleEnabled}
-                            onCheckedChange={setScheduleEnabled}
+                            onCheckedChange={(checked) => {
+                              setScheduleEnabled(checked);
+                              if (!checked) {
+                                ruleForm.setValue("allowedDays", []);
+                                ruleForm.setValue("timeFrom", "");
+                                ruleForm.setValue("timeTo", "");
+                              }
+                            }}
                             className="data-[state=checked]:bg-[#1873E8]"
                           />
                         </div>
+                        {scheduleEnabled && (
+                          <div className="space-y-3 border-t pt-3">
+                            <FormField
+                              control={ruleForm.control}
+                              name="allowedDays"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">
+                                    Available Days
+                                  </FormLabel>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {[
+                                      "MONDAY",
+                                      "TUESDAY",
+                                      "WEDNESDAY",
+                                      "THURSDAY",
+                                      "FRIDAY",
+                                      "SATURDAY",
+                                      "SUNDAY",
+                                    ].map((day) => (
+                                      <div
+                                        key={day}
+                                        className="flex items-center space-x-2"
+                                      >
+                                        <Checkbox
+                                          id={`create-day-${day}`}
+                                          checked={field.value?.includes(day)}
+                                          onCheckedChange={(checked) => {
+                                            const updated = checked
+                                              ? [...(field.value || []), day]
+                                              : (field.value || []).filter(
+                                                  (d) => d !== day,
+                                                );
+                                            field.onChange(updated);
+                                          }}
+                                        />
+                                        <Label
+                                          htmlFor={`create-day-${day}`}
+                                          className="cursor-pointer text-sm font-normal capitalize"
+                                        >
+                                          {day.charAt(0) +
+                                            day.slice(1).toLowerCase()}
+                                        </Label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={ruleForm.control}
+                                name="timeFrom"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">
+                                      Start Time
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="time"
+                                        {...field}
+                                        value={field.value ?? ""}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={ruleForm.control}
+                                name="timeTo"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">
+                                      End Time
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="time"
+                                        {...field}
+                                        value={field.value ?? ""}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-3 rounded-lg border p-4">
@@ -645,10 +730,61 @@ export default function EarningRulesPage() {
                           </div>
                           <Switch
                             checked={tierRestrictionEnabled}
-                            onCheckedChange={setTierRestrictionEnabled}
+                            onCheckedChange={(checked) => {
+                              setTierRestrictionEnabled(checked);
+                              if (!checked)
+                                ruleForm.setValue("applicableToTiers", []);
+                            }}
                             className="data-[state=checked]:bg-[#1873E8]"
                           />
                         </div>
+                        {tierRestrictionEnabled && (
+                          <FormField
+                            control={ruleForm.control}
+                            name="applicableToTiers"
+                            render={({ field }) => (
+                              <FormItem className="border-t pt-3">
+                                <FormLabel className="text-xs">
+                                  Applicable Tiers
+                                </FormLabel>
+                                <div className="space-y-2">
+                                  {loyaltyTiers.map((tier) => (
+                                    <div
+                                      key={tier.id}
+                                      className="flex items-center space-x-2"
+                                    >
+                                      <Checkbox
+                                        id={`create-tier-${tier.id}`}
+                                        checked={field.value?.includes(tier.id)}
+                                        onCheckedChange={(checked) => {
+                                          const updated = checked
+                                            ? [...(field.value || []), tier.id]
+                                            : (field.value || []).filter(
+                                                (t) => t !== tier.id,
+                                              );
+                                          field.onChange(updated);
+                                        }}
+                                      />
+                                      <Label
+                                        htmlFor={`create-tier-${tier.id}`}
+                                        className="flex cursor-pointer items-center gap-2 text-sm font-normal"
+                                      >
+                                        <div
+                                          className="h-3 w-3 rounded-full"
+                                          style={{
+                                            backgroundColor: tier.color,
+                                          }}
+                                        />
+                                        {tier.name}
+                                      </Label>
+                                    </div>
+                                  ))}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
                       </div>
 
                       <div className="space-y-3 rounded-lg border p-4">
@@ -663,39 +799,64 @@ export default function EarningRulesPage() {
                           </div>
                           <Switch
                             checked={limitedPeriodEnabled}
-                            onCheckedChange={setLimitedPeriodEnabled}
+                            onCheckedChange={(checked) => {
+                              setLimitedPeriodEnabled(checked);
+                              if (!checked) {
+                                ruleForm.setValue("validFrom", null);
+                                ruleForm.setValue("validUntil", null);
+                              }
+                            }}
                             className="data-[state=checked]:bg-[#1873E8]"
                           />
                         </div>
+                        {limitedPeriodEnabled && (
+                          <div className="grid grid-cols-2 gap-4 border-t pt-3">
+                            <FormField
+                              control={ruleForm.control}
+                              name="validFrom"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">
+                                    Valid From
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="date"
+                                      value={field.value ?? ""}
+                                      onChange={(e) =>
+                                        field.onChange(e.target.value || null)
+                                      }
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={ruleForm.control}
+                              name="validUntil"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">
+                                    Valid To
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="date"
+                                      value={field.value ?? ""}
+                                      onChange={(e) =>
+                                        field.onChange(e.target.value || null)
+                                      }
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-
-                  {/* WhatsApp Template (UI-only) */}
-                  <div className="space-y-2">
-                    <Label>WhatsApp Notification Template (Optional)</Label>
-                    <Select
-                      value={whatsAppTemplate}
-                      onValueChange={setWhatsAppTemplate}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select template" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="points_earned">
-                          Points Earned Notification
-                        </SelectItem>
-                        <SelectItem value="bonus_points">
-                          Bonus Points Alert
-                        </SelectItem>
-                        <SelectItem value="multiplier_active">
-                          Multiplier Active
-                        </SelectItem>
-                        <SelectItem value="special_offer">
-                          Special Offer Points
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
 
                   {/* Action Buttons */}
@@ -1010,8 +1171,9 @@ function RuleCard({
   onCancelEdit,
   onDelete,
   isDeleting,
-}) {
+}: any) {
   const t = useExtracted();
+  const { data: loyaltyTiers = [] } = useLoyaltyTiers();
   const ruleForm = useForm<EarningRuleFormValues>({
     resolver: zodResolver(earningRuleSchema),
     defaultValues: {
@@ -1026,6 +1188,10 @@ function RuleCard({
       maxPurchaseAmount: rule.maxPurchaseAmount ?? null,
       validFrom: toDateInputValue(rule.validFrom),
       validUntil: toDateInputValue(rule.validUntil),
+      allowedDays: rule.allowedDays || [],
+      timeFrom: rule.allowedTimeRanges?.[0]?.start || "",
+      timeTo: rule.allowedTimeRanges?.[0]?.end || "",
+      applicableToTiers: rule.applicableToTiers || [],
       isDefault: rule.isDefault || false,
     },
   });
@@ -1042,9 +1208,34 @@ function RuleCard({
   );
 
   const isEnabled = rule.status === "active";
+  const [scheduleEnabled, setScheduleEnabled] = useState(
+    (rule.allowedDays?.length || 0) > 0 ||
+      (rule.allowedTimeRanges?.length || 0) > 0,
+  );
+  const [tierRestrictionEnabled, setTierRestrictionEnabled] = useState(
+    (rule.applicableToTiers?.length || 0) > 0,
+  );
+  const [limitedPeriodEnabled, setLimitedPeriodEnabled] = useState(
+    !!(rule.validFrom || rule.validUntil),
+  );
 
   const onSave = (values: EarningRuleFormValues) => {
-    updateRuleMutation.mutate(values as LoyaltyEarningRuleInput, {
+    const { timeFrom, timeTo, allowedDays, applicableToTiers, ...rest } =
+      values;
+    const payload = {
+      ...rest,
+      allowedDays: scheduleEnabled ? (allowedDays ?? []) : [],
+      allowedTimeRanges:
+        scheduleEnabled && (timeFrom || timeTo)
+          ? [{ start: timeFrom || "00:00", end: timeTo || "23:59" }]
+          : [],
+      applicableToTiers: tierRestrictionEnabled
+        ? (applicableToTiers ?? [])
+        : [],
+      validFrom: limitedPeriodEnabled ? rest.validFrom : null,
+      validUntil: limitedPeriodEnabled ? rest.validUntil : null,
+    };
+    updateRuleMutation.mutate(payload as LoyaltyEarningRuleInput, {
       onSuccess: () => onCancelEdit(),
     });
   };
@@ -1307,6 +1498,254 @@ function RuleCard({
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="space-y-3 border-t pt-3">
+              <div className="space-y-3 rounded-lg border p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Specific Days/Times</p>
+                    <p className="text-xs text-muted-foreground">
+                      E.g., Weekends, Happy Hours
+                    </p>
+                  </div>
+                  <Switch
+                    checked={scheduleEnabled}
+                    onCheckedChange={(checked) => {
+                      setScheduleEnabled(checked);
+                      if (!checked) {
+                        ruleForm.setValue("allowedDays", []);
+                        ruleForm.setValue("timeFrom", "");
+                        ruleForm.setValue("timeTo", "");
+                      }
+                    }}
+                    className="data-[state=checked]:bg-[#1873E8]"
+                  />
+                </div>
+                {scheduleEnabled && (
+                  <div className="space-y-3 border-t pt-3">
+                    <FormField
+                      control={ruleForm.control}
+                      name="allowedDays"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">
+                            Available Days
+                          </FormLabel>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              "MONDAY",
+                              "TUESDAY",
+                              "WEDNESDAY",
+                              "THURSDAY",
+                              "FRIDAY",
+                              "SATURDAY",
+                              "SUNDAY",
+                            ].map((day) => (
+                              <div
+                                key={day}
+                                className="flex items-center space-x-2"
+                              >
+                                <Checkbox
+                                  id={`edit-day-${rule.id}-${day}`}
+                                  checked={field.value?.includes(day)}
+                                  onCheckedChange={(checked) => {
+                                    const updated = checked
+                                      ? [...(field.value || []), day]
+                                      : (field.value || []).filter(
+                                          (d) => d !== day,
+                                        );
+                                    field.onChange(updated);
+                                  }}
+                                />
+                                <Label
+                                  htmlFor={`edit-day-${rule.id}-${day}`}
+                                  className="cursor-pointer text-xs font-normal capitalize"
+                                >
+                                  {day.charAt(0) + day.slice(1).toLowerCase()}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField
+                        control={ruleForm.control}
+                        name="timeFrom"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">
+                              Start Time
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="time"
+                                {...field}
+                                value={field.value ?? ""}
+                                className="mt-1 h-9"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={ruleForm.control}
+                        name="timeTo"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">End Time</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="time"
+                                {...field}
+                                value={field.value ?? ""}
+                                className="mt-1 h-9"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 rounded-lg border p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">
+                      Customer Tier Restriction
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Apply to specific membership tiers only
+                    </p>
+                  </div>
+                  <Switch
+                    checked={tierRestrictionEnabled}
+                    onCheckedChange={(checked) => {
+                      setTierRestrictionEnabled(checked);
+                      if (!checked) ruleForm.setValue("applicableToTiers", []);
+                    }}
+                    className="data-[state=checked]:bg-[#1873E8]"
+                  />
+                </div>
+                {tierRestrictionEnabled && (
+                  <FormField
+                    control={ruleForm.control}
+                    name="applicableToTiers"
+                    render={({ field }) => (
+                      <FormItem className="border-t pt-3">
+                        <FormLabel className="text-xs">
+                          Applicable Tiers
+                        </FormLabel>
+                        <div className="space-y-2">
+                          {loyaltyTiers.map((tier: any) => (
+                            <div
+                              key={tier.id}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`edit-tier-${rule.id}-${tier.id}`}
+                                checked={field.value?.includes(tier.id)}
+                                onCheckedChange={(checked) => {
+                                  const updated = checked
+                                    ? [...(field.value || []), tier.id]
+                                    : (field.value || []).filter(
+                                        (t) => t !== tier.id,
+                                      );
+                                  field.onChange(updated);
+                                }}
+                              />
+                              <Label
+                                htmlFor={`edit-tier-${rule.id}-${tier.id}`}
+                                className="flex cursor-pointer items-center gap-2 text-xs font-normal"
+                              >
+                                <div
+                                  className="h-3 w-3 rounded-full"
+                                  style={{ backgroundColor: tier.color }}
+                                />
+                                {tier.name}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+
+              <div className="space-y-3 rounded-lg border p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Limited Time Period</p>
+                    <p className="text-xs text-muted-foreground">
+                      Set start and end dates for this rule
+                    </p>
+                  </div>
+                  <Switch
+                    checked={limitedPeriodEnabled}
+                    onCheckedChange={(checked) => {
+                      setLimitedPeriodEnabled(checked);
+                      if (!checked) {
+                        ruleForm.setValue("validFrom", null);
+                        ruleForm.setValue("validUntil", null);
+                      }
+                    }}
+                    className="data-[state=checked]:bg-[#1873E8]"
+                  />
+                </div>
+                {limitedPeriodEnabled && (
+                  <div className="grid grid-cols-2 gap-3 border-t pt-3">
+                    <FormField
+                      control={ruleForm.control}
+                      name="validFrom"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Valid From</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value || null)
+                              }
+                              className="mt-1 h-9"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={ruleForm.control}
+                      name="validUntil"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Valid To</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value || null)
+                              }
+                              className="mt-1 h-9"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center justify-between border-t pt-3">

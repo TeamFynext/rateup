@@ -55,7 +55,7 @@ export interface CustomerRewardsResponse {
     currentTier: {
       name: string;
       id: string;
-    };
+    } | null;
     name: string;
     phone: string;
     email: string;
@@ -64,11 +64,31 @@ export interface CustomerRewardsResponse {
   };
   availableRewards: Array<CustomerReward>;
   issuableRewards: Array<CustomerReward>;
+  activeCoupons: Array<CustomerReward>;
   redeemedRewards: CustomerRedemption[];
   //   redemptions: {
   //     unused: CustomerRedemption[];
   //     used: CustomerRedemption[];
   //   };
+}
+
+export interface CustomerSearchResult {
+  contact: {
+    id: string;
+    contactId: string;
+    currentPoints: number;
+    lifetimePoints: number;
+    referralCode: string;
+    currentTier: {
+      name: string;
+      id: string;
+    } | null;
+    name: string;
+    phone: string;
+    email: string | null;
+    points: number;
+    status: string;
+  };
 }
 
 export interface ClaimRewardInput {
@@ -107,5 +127,16 @@ export async function useRedemption(
   data: UseRedemptionInput,
 ): Promise<CustomerRedemption> {
   const response = await axiosClient.post(`${base}/use`, data);
+  return response.data;
+}
+
+/**
+ * Search customers by partial name or phone
+ */
+export async function searchCustomers(params: {
+  search?: string;
+  name?: string;
+}): Promise<CustomerSearchResult[]> {
+  const response = await axiosClient.get(base, { params });
   return response.data;
 }

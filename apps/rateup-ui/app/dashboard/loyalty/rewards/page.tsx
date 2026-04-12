@@ -3,10 +3,22 @@
 import { useEffect, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Gift, Loader2, Plus, Save, Tag, UserPlus } from "lucide-react";
+import {
+  ArrowRight,
+  Gift,
+  Link2,
+  Loader2,
+  MessageCircle,
+  Plus,
+  Save,
+  ShoppingBag,
+  Sparkles,
+  Tag,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { useExtracted } from "next-intl";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
 
 import { LoyaltyRewardStatus, TemplateType } from "@/types/enums";
@@ -35,6 +47,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { docsPath } from "@/utils/constants";
 
@@ -94,6 +113,10 @@ export default function RewardsPage() {
     restrictions: "",
     waTemplateId: "",
     tierIds: [],
+    minimumSpend: undefined,
+    availableDays: [],
+    timeFrom: undefined,
+    timeTo: undefined,
   };
 
   const defaultCouponValues: z.infer<typeof couponSchema> = {
@@ -145,10 +168,24 @@ export default function RewardsPage() {
   // Form states
   const [rewardFormCategory, setRewardFormCategory] = useState("point-rewards");
   const [rewardTierRestriction, setRewardTierRestriction] = useState(false);
+  const [minimumSpendEnabled, setMinimumSpendEnabled] = useState(false);
+  const [timeRestrictionsEnabled, setTimeRestrictionsEnabled] = useState(false);
 
   // Referral settings
   const [referralBonus, setReferralBonus] = useState(0);
+  const [referralBonusType, setReferralBonusType] = useState<"points" | "gift">(
+    "points",
+  );
+  const [referralRewardId, setReferralRewardId] = useState<string | undefined>(
+    undefined,
+  );
   const [refereeBonus, setRefereeBonus] = useState(0);
+  const [refereeBonusType, setRefereeBonusType] = useState<"points" | "gift">(
+    "points",
+  );
+  const [refereeRewardId, setRefereeRewardId] = useState<string | undefined>(
+    undefined,
+  );
 
   // Form field states
   const { data: editingReward } = useLoyaltyRewardById(activeEditingRewardId);
@@ -180,13 +217,21 @@ export default function RewardsPage() {
   useEffect(() => {
     if (loyaltyProgram) {
       setReferralBonus(loyaltyProgram.referralBonus || 0);
+      setReferralBonusType(loyaltyProgram.referralBonusType || "points");
+      setReferralRewardId(loyaltyProgram.referralRewardId);
       setRefereeBonus(loyaltyProgram.refereeBonus || 0);
+      setRefereeBonusType(loyaltyProgram.refereeBonusType || "points");
+      setRefereeRewardId(loyaltyProgram.refereeRewardId);
     }
   }, [loyaltyProgram]);
 
   useEffect(() => {
     if (editingReward) {
       if (editingReward.rewardType === "point") {
+        const spendMin =
+          editingReward.redemptionRules?.spend_requirements?.minimum_spend;
+        const timeRestrictions =
+          editingReward.redemptionRules?.time_restrictions;
         pointRewardForm.reset({
           name: editingReward.name || "",
           description: editingReward.description || "",
@@ -199,7 +244,17 @@ export default function RewardsPage() {
           discountPercentage: 0,
           estimatedValue: 0,
           restrictions: "",
+          minimumSpend: spendMin ? Number(spendMin) : undefined,
+          availableDays: timeRestrictions?.allowed_days || [],
+          timeFrom:
+            timeRestrictions?.allowed_time_ranges?.[0]?.start || undefined,
+          timeTo: timeRestrictions?.allowed_time_ranges?.[0]?.end || undefined,
         });
+        setMinimumSpendEnabled(!!spendMin);
+        setTimeRestrictionsEnabled(
+          (timeRestrictions?.allowed_days?.length || 0) > 0 ||
+            (timeRestrictions?.allowed_time_ranges?.length || 0) > 0,
+        );
       } else if (editingReward.rewardType === "coupon") {
         couponForm.reset({
           name: editingReward.name || "",
@@ -240,13 +295,21 @@ export default function RewardsPage() {
     couponForm.reset(defaultCouponValues);
     giftForm.reset(defaultGiftValues);
     setRewardTierRestriction(false);
+    setMinimumSpendEnabled(false);
+    setTimeRestrictionsEnabled(false);
   };
 
   const handleSaveReferralSettings = () => {
     if (loyaltyProgram?.id) {
       updateLoyaltyProgramMutation.mutate({
-        referralBonus,
-        refereeBonus,
+        referralBonus: referralBonusType === "points" ? referralBonus : 0,
+        referralBonusType,
+        referralRewardId:
+          referralBonusType === "gift" ? referralRewardId : undefined,
+        refereeBonus: refereeBonusType === "points" ? refereeBonus : 0,
+        refereeBonusType,
+        refereeRewardId:
+          refereeBonusType === "gift" ? refereeRewardId : undefined,
       });
     }
   };
@@ -270,6 +333,36 @@ export default function RewardsPage() {
   };
 
   const onSubmitPointReward = (data: z.infer<typeof pointRewardSchema>) => {
+    const redemptionRules: Record<string, unknown> = {};
+
+    if (data.minimumSpend !== undefined && data.minimumSpend > 0) {
+      redemptionRules.spend_requirements = {
+        minimum_spend: data.minimumSpend,
+      };
+    }
+
+    if (
+      (data.availableDays && data.availableDays.length > 0) ||
+      data.timeFrom ||
+      data.timeTo
+    ) {
+      redemptionRules.time_restrictions = {
+        ...(data.availableDays?.length
+          ? { allowed_days: data.availableDays }
+          : {}),
+        ...(data.timeFrom || data.timeTo
+          ? {
+              allowed_time_ranges: [
+                {
+                  start: data.timeFrom || "00:00",
+                  end: data.timeTo || "23:59",
+                },
+              ],
+            }
+          : {}),
+      };
+    }
+
     const payload: any = {
       name: data.name,
       description: data.description,
@@ -281,7 +374,7 @@ export default function RewardsPage() {
       waTemplateId: data.waTemplateId || undefined,
       availableForTiers:
         rewardTierRestriction && data.tierIds?.length ? data.tierIds : [],
-      redemptionRules: {},
+      redemptionRules,
     };
 
     if (editingRewardId) {
@@ -408,58 +501,44 @@ export default function RewardsPage() {
             onValueChange={setSelectedRewardCategory}
             className="space-y-4"
           >
-            <div className="flex items-center gap-2 border-b">
-              <TabsList className="bg-transparent p-0 h-auto space-x-2">
-                <TabsTrigger
-                  value="point-rewards"
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 border-transparent px-4 py-2 rounded-none transition-all"
-                >
-                  <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4" />
-                    <span>Point Rewards</span>
-                    <Badge variant="outline" className="text-xs">
-                      {rewardsList.length}
-                    </Badge>
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="coupons"
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 border-transparent px-4 py-2 rounded-none transition-all"
-                >
-                  <div className="flex items-center gap-2">
-                    <Gift className="w-4 h-4" />
-                    <span>Coupons</span>
-                    <Badge variant="outline" className="text-xs">
-                      {couponsList.length}
-                    </Badge>
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="free-gifts"
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-primary data-[state=active]:text-primary border-b-2 border-transparent px-4 py-2 rounded-none transition-all"
-                >
-                  <div className="flex items-center gap-2">
-                    <Gift className="w-4 h-4" />
-                    <span>Free Gifts</span>
-                    <Badge variant="outline" className="text-xs">
-                      {freeGiftsList.length}
-                    </Badge>
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="referral"
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent px-4 py-2 rounded-none transition-all"
-                >
-                  <div className="flex items-center gap-2">
-                    <UserPlus className="w-4 h-4" />
-                    <span>Referral Program</span>
-                    <Badge variant="outline" className="text-xs">
-                      Auto
-                    </Badge>
-                  </div>
-                </TabsTrigger>
-              </TabsList>
-            </div>
+            <TabsList>
+              <TabsTrigger value="point-rewards">
+                <div className="flex items-center gap-2">
+                  <Tag className="w-4 h-4" />
+                  <span>Point Rewards</span>
+                  <Badge variant="outline" className="text-xs">
+                    {rewardsList.length}
+                  </Badge>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger value="coupons">
+                <div className="flex items-center gap-2">
+                  <Gift className="w-4 h-4" />
+                  <span>Coupons</span>
+                  <Badge variant="outline" className="text-xs">
+                    {couponsList.length}
+                  </Badge>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger value="free-gifts">
+                <div className="flex items-center gap-2">
+                  <Gift className="w-4 h-4" />
+                  <span>Free Gifts</span>
+                  <Badge variant="outline" className="text-xs">
+                    {freeGiftsList.length}
+                  </Badge>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger value="referral">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  <span>Referral Program</span>
+                  <Badge variant="outline" className="text-xs">
+                    Auto
+                  </Badge>
+                </div>
+              </TabsTrigger>
+            </TabsList>
 
             {/* Point Rewards */}
             <TabsContent value="point-rewards" className="space-y-3 mt-0">
@@ -509,6 +588,10 @@ export default function RewardsPage() {
                     forms={{ pointRewardForm, couponForm, giftForm }}
                     rewardTierRestriction={rewardTierRestriction}
                     setRewardTierRestriction={setRewardTierRestriction}
+                    minimumSpendEnabled={minimumSpendEnabled}
+                    setMinimumSpendEnabled={setMinimumSpendEnabled}
+                    timeRestrictionsEnabled={timeRestrictionsEnabled}
+                    setTimeRestrictionsEnabled={setTimeRestrictionsEnabled}
                     loyaltyTiers={loyaltyTiers}
                     loyaltyTemplates={loyaltyTemplates}
                     getRewardIcon={getRewardIcon}
@@ -561,6 +644,10 @@ export default function RewardsPage() {
                     forms={{ pointRewardForm, couponForm, giftForm }}
                     rewardTierRestriction={rewardTierRestriction}
                     setRewardTierRestriction={setRewardTierRestriction}
+                    minimumSpendEnabled={minimumSpendEnabled}
+                    setMinimumSpendEnabled={setMinimumSpendEnabled}
+                    timeRestrictionsEnabled={timeRestrictionsEnabled}
+                    setTimeRestrictionsEnabled={setTimeRestrictionsEnabled}
                     loyaltyTiers={loyaltyTiers}
                     loyaltyTemplates={loyaltyTemplates}
                     getRewardIcon={getRewardIcon}
@@ -615,6 +702,10 @@ export default function RewardsPage() {
                     forms={{ pointRewardForm, couponForm, giftForm }}
                     rewardTierRestriction={rewardTierRestriction}
                     setRewardTierRestriction={setRewardTierRestriction}
+                    minimumSpendEnabled={minimumSpendEnabled}
+                    setMinimumSpendEnabled={setMinimumSpendEnabled}
+                    timeRestrictionsEnabled={timeRestrictionsEnabled}
+                    setTimeRestrictionsEnabled={setTimeRestrictionsEnabled}
                     loyaltyTiers={loyaltyTiers}
                     loyaltyTemplates={loyaltyTemplates}
                     getRewardIcon={getRewardIcon}
@@ -624,150 +715,289 @@ export default function RewardsPage() {
             </TabsContent>
 
             {/* Referral Program */}
-            <TabsContent value="referral" className="space-y-4 mt-0">
-              <p className="text-sm text-muted-foreground">
-                Automated system to reward customers for inviting friends
-              </p>
+            <TabsContent value="referral" className="space-y-5 mt-0">
+              {/* Hero banner */}
+              <div className="rounded-xl bg-linear-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-5">
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base font-semibold">
+                        Referral Program
+                      </h2>
+                      <Badge className="bg-green-500/15 text-green-600 border-green-500/20 text-xs px-2">
+                        Live
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Turn customers into ambassadors — automatically reward
+                      them for bringing friends
+                    </p>
+                  </div>
+                </div>
+                {/* Flow visualization */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 bg-card rounded-lg px-3 py-2 border text-xs font-medium">
+                    <MessageCircle className="w-3.5 h-3.5 text-primary" />
+                    Customer shares link
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <div className="flex items-center gap-1.5 bg-card rounded-lg px-3 py-2 border text-xs font-medium">
+                    <Link2 className="w-3.5 h-3.5 text-blue-500" />
+                    Friend joins
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <div className="flex items-center gap-1.5 bg-card rounded-lg px-3 py-2 border text-xs font-medium">
+                    <ShoppingBag className="w-3.5 h-3.5 text-orange-500" />
+                    First purchase
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <div className="flex items-center gap-1.5 bg-card rounded-lg px-3 py-2 border text-xs font-medium">
+                    <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
+                    Both get rewarded
+                  </div>
+                </div>
+              </div>
 
-              <Card className="border-2 border-primary shadow-sm bg-accent/20">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                        <UserPlus className="w-5 h-5 text-primary-foreground" />
+              {/* Reward configuration cards */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Referrer */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <UserPlus className="w-4 h-4 text-blue-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold">Referral Program</h3>
-                        <p className="text-xs text-muted-foreground">
-                          Automatically reward referrers and referees
+                        <CardTitle className="text-sm font-semibold leading-none">
+                          Referrer Reward
+                        </CardTitle>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          The person who invites
                         </p>
                       </div>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className="border-primary text-primary"
-                    >
-                      Active
-                    </Badge>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-card rounded-lg border-2 border-border p-4">
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Referrer Gets
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="rounded-md bg-muted/50 border px-3 py-2 text-xs text-muted-foreground">
+                      Triggered after friend&apos;s first purchase
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Reward type
                       </p>
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <Input
-                          type="number"
-                          value={referralBonus}
-                          onChange={(e) =>
-                            setReferralBonus(
-                              Number.parseFloat(e.target.value) || 0,
-                            )
-                          }
-                          className="w-20 h-9 font-semibold text-lg"
-                        />
-                        <span className="font-semibold text-lg">points</span>
+                      <Select
+                        value={referralBonusType}
+                        onValueChange={(v) =>
+                          setReferralBonusType(v as "points" | "gift")
+                        }
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="points">Points</SelectItem>
+                          <SelectItem value="gift">Free Gift</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {referralBonusType === "points" ? (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                          Amount
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            value={referralBonus}
+                            onChange={(e) =>
+                              setReferralBonus(
+                                Number.parseFloat(e.target.value) || 0,
+                              )
+                            }
+                            className="h-9"
+                          />
+                          <span className="text-sm font-medium text-muted-foreground shrink-0">
+                            pts
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        After friend's first purchase
-                      </p>
-                    </div>
-
-                    <div className="bg-card rounded-lg border-2 border-border p-4">
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Referee Gets
-                      </p>
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <Input
-                          type="number"
-                          value={refereeBonus}
-                          onChange={(e) =>
-                            setRefereeBonus(
-                              Number.parseFloat(e.target.value) || 0,
-                            )
-                          }
-                          className="w-20 h-9 font-semibold text-lg"
-                        />
-                        <span className="font-semibold text-lg">points</span>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                          Gift
+                        </p>
+                        <Select
+                          value={referralRewardId ?? ""}
+                          onValueChange={setReferralRewardId}
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Select a gift" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {freeGiftsList.length === 0 ? (
+                              <SelectItem value="" disabled>
+                                No free gifts created yet
+                              </SelectItem>
+                            ) : (
+                              freeGiftsList.map((g) => (
+                                <SelectItem key={g.id} value={g.id}>
+                                  {g.name}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Instant bonus on joining
-                      </p>
-                    </div>
-                  </div>
-
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={handleSaveReferralSettings}
-                    disabled={updateLoyaltyProgramMutation.isPending}
-                  >
-                    {updateLoyaltyProgramMutation.isPending && (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     )}
-                    {!updateLoyaltyProgramMutation.isPending && (
-                      <Save className="w-4 h-4 mr-2" />
-                    )}
-                    Save Referral Settings
-                  </Button>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card className="border shadow-sm">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">
-                    How Referral Works
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <span className="text-sm font-semibold text-primary">
-                        1
-                      </span>
+                {/* Referee */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                        <Users className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-sm font-semibold leading-none">
+                          Referee Reward
+                        </CardTitle>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          The friend who joins
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-sm">
-                        Customer types "refer"
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Gets unique referral link via WhatsApp
-                      </p>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="rounded-md bg-muted/50 border px-3 py-2 text-xs text-muted-foreground">
+                      Triggered instantly on joining
                     </div>
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Reward type
+                      </p>
+                      <Select
+                        value={refereeBonusType}
+                        onValueChange={(v) =>
+                          setRefereeBonusType(v as "points" | "gift")
+                        }
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="points">Points</SelectItem>
+                          <SelectItem value="gift">Free Gift</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {refereeBonusType === "points" ? (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                          Amount
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            value={refereeBonus}
+                            onChange={(e) =>
+                              setRefereeBonus(
+                                Number.parseFloat(e.target.value) || 0,
+                              )
+                            }
+                            className="h-9"
+                          />
+                          <span className="text-sm font-medium text-muted-foreground shrink-0">
+                            pts
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                          Gift
+                        </p>
+                        <Select
+                          value={refereeRewardId ?? ""}
+                          onValueChange={setRefereeRewardId}
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Select a gift" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {freeGiftsList.length === 0 ? (
+                              <SelectItem value="" disabled>
+                                No free gifts created yet
+                              </SelectItem>
+                            ) : (
+                              freeGiftsList.map((g) => (
+                                <SelectItem key={g.id} value={g.id}>
+                                  {g.name}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Button
+                className="w-full"
+                onClick={handleSaveReferralSettings}
+                disabled={updateLoyaltyProgramMutation.isPending}
+              >
+                {updateLoyaltyProgramMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                Save Referral Settings
+              </Button>
+
+              {/* How it works - compact 3-column */}
+              <div className="rounded-xl border bg-card/50 p-4">
+                <p className="text-sm font-medium mb-4">How it works</p>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center space-y-2">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <MessageCircle className="w-5 h-5 text-primary" />
+                    </div>
+                    <p className="text-xs font-medium">
+                      Customer types &quot;refer&quot;
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Gets unique referral link via WhatsApp
+                    </p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <span className="text-sm font-semibold text-primary">
-                        2
-                      </span>
+                  <div className="text-center space-y-2">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <Link2 className="w-5 h-5 text-primary" />
                     </div>
-                    <div>
-                      <p className="font-medium text-sm">
-                        Friend joins via link
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        New member gets instant welcome bonus
-                      </p>
-                    </div>
+                    <p className="text-xs font-medium">Friend joins via link</p>
+                    <p className="text-xs text-muted-foreground">
+                      New member gets instant welcome bonus
+                    </p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <span className="text-sm font-semibold text-primary">
-                        3
-                      </span>
+                  <div className="text-center space-y-2">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <ShoppingBag className="w-5 h-5 text-primary" />
                     </div>
-                    <div>
-                      <p className="font-medium text-sm">
-                        Friend makes first purchase
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Referrer gets bonus points automatically
-                      </p>
-                    </div>
+                    <p className="text-xs font-medium">
+                      Friend makes first purchase
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Referrer gets bonus points automatically
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </>
@@ -791,6 +1021,10 @@ export default function RewardsPage() {
           editingId={editingRewardId || editingCouponId || editingGiftId}
           rewardTierRestriction={rewardTierRestriction}
           setRewardTierRestriction={setRewardTierRestriction}
+          minimumSpendEnabled={minimumSpendEnabled}
+          setMinimumSpendEnabled={setMinimumSpendEnabled}
+          timeRestrictionsEnabled={timeRestrictionsEnabled}
+          setTimeRestrictionsEnabled={setTimeRestrictionsEnabled}
           loyaltyTiers={loyaltyTiers}
           loyaltyTemplates={loyaltyTemplates}
         />
