@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 
-import { Palette, Save } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
@@ -68,6 +68,15 @@ const ShareQR = ({
       const formData = new FormData();
       for (const property in logoTabPanelState) {
         let value = logoTabPanelState[property];
+
+        if (typeof value === "number") {
+          value = value.toString();
+        }
+
+        if (typeof value === "boolean") {
+          value = value ? "true" : "false";
+        }
+
         formData.append(property, value);
       }
       try {
@@ -102,6 +111,25 @@ const ShareQR = ({
               surveyTitle={title}
               isSurveyPublished={isPublished}
             />
+            <Button
+              className="w-full flex items-center justify-center gap-2"
+              onClick={handleSaveOfSurveyShareSettings}
+              disabled={
+                shareSettingsMutation ? shareSettingsMutation.isPending : false
+              }
+            >
+              {shareSettingsMutation?.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {translations("Saving...")}
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  {translations("Save")}
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>
