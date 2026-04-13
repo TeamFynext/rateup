@@ -8,11 +8,11 @@ const paramsSchema = z.object({
 const bodySchema = z.object({
   qrBgColor: z.string(),
   qrColor: z.string(),
-  logoSize: z.number(),
+  logoSize: z.coerce.number(),
   logoFillType: z.string(),
-  logoBorderRadius: z.number(),
+  logoBorderRadius: z.coerce.number(),
   logoFile: z.union([z.object({}).loose(), z.string()]).optional(),
-  isLogoEnabled: z.boolean().optional(),
+  isLogoEnabled: z.coerce.boolean().optional(),
 });
 
 const responseSchema = z
