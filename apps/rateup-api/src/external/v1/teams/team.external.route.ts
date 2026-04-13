@@ -6,7 +6,6 @@ const getTeamsResponse = z.array(
   z.object({
     id: z.string(),
     name: z.string(),
-    createdAt: z.string(),
   }),
 );
 
