@@ -35,7 +35,7 @@ function Preview({
 
   const previewContainerRef = useRef(undefined);
   const translations = useExtracted();
-  const [logoSrc, setLogoSrc] = useState(null);
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
   const FALLBACK_LOGO = "/images/rateup-star.svg";
 
   const finalLogoSrc = logoSrc || FALLBACK_LOGO;
@@ -46,18 +46,18 @@ function Preview({
       return;
     }
 
-    const reader = new FileReader();
+    if (qrBgImgLogo instanceof File) {
+      const objectUrl = URL.createObjectURL(qrBgImgLogo);
+      setLogoSrc(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
 
-    reader.onload = () => {
-      setLogoSrc(reader.result); // ✅ base64
-    };
+    if (typeof qrBgImgLogo === "string") {
+      setLogoSrc(qrBgImgLogo);
+      return;
+    }
 
-    reader.onerror = () => {
-      console.error("File read failed");
-      setLogoSrc(null);
-    };
-
-    reader.readAsDataURL(qrBgImgLogo);
+    setLogoSrc(null);
   }, [qrBgImgLogo]);
 
   const downloadQrCode = async () => {
