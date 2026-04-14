@@ -255,18 +255,18 @@ export default function RateUpOnboarding() {
 
   return (
     <div className="w-full flex flex-col items-center justify-center bg-[#f9fafc] dark:bg-[#121212]">
-      <nav className="w-full h-16 border-b px-8 py-3 flex items-center justify-between sticky top-0 z-50 dark:border-gray-950 backdrop-blur-md bg-white dark:bg-gray-900/80">
+      <nav className="w-full h-16 border-b px-4 sm:px-8 py-3 flex items-center justify-between sticky top-0 z-50 dark:border-gray-950 backdrop-blur-md bg-white dark:bg-gray-900/80">
         {/* Left */}
         <div className="flex items-center gap-2">
           <img
             src={`${imagePath}/LogoRateup.png`}
             alt="RateUp Logo"
-            className="w-24 h-auto"
+            className="w-20 sm:w-24 h-auto"
           />
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -313,10 +313,10 @@ export default function RateUpOnboarding() {
           </Button>
         </div>
       </nav>
-      <div className="min-w-5xl max-w-5xl">
+      <div className="w-full max-w-5xl">
         {/* hero */}
         <div
-          className="mt-6 mx-8 rounded-[18px] p-7 px-8 relative overflow-hidden"
+          className="mt-6 mx-4 sm:mx-8 rounded-[18px] p-4 sm:p-7 px-4 sm:px-8 relative overflow-hidden"
           style={{ background: "#1873E8" }}
         >
           {/* Background circles */}
@@ -324,17 +324,17 @@ export default function RateUpOnboarding() {
           <div className="absolute right-20 -bottom-16 w-40 h-40 rounded-full bg-white/5 opacity-70 pointer-events-none" />
 
           {/* Content */}
-          <div className="flex items-start justify-between gap-5 relative">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-5 relative">
             {/* Left */}
             <div>
               <div className="flex items-center gap-3 mb-2.5">
-                <span className="text-[26px] leading-none">👋</span>
-                <h1 className="text-[22px] font-extrabold text-white tracking-[-0.4px] leading-[1.2] m-0">
+                <span className="text-2xl sm:text-[26px] leading-none">👋</span>
+                <h1 className="text-xl sm:text-[22px] font-extrabold text-white tracking-[-0.4px] leading-[1.2] m-0">
                   Hello, there! Let's get started.
                 </h1>
               </div>
 
-              <p className="text-[13.5px] text-white/70 leading-[1.65] max-w-120 m-0">
+              <p className="text-xs sm:text-[13.5px] text-white/70 leading-[1.65] max-w-120 m-0">
                 Welcome to RateUp — connect your WhatsApp, Invite Team members,
                 build automations, configure your loyalty program, and launch
                 your first campaign.
@@ -349,12 +349,14 @@ export default function RateUpOnboarding() {
               ].map(({ val, label }) => (
                 <div
                   key={label}
-                  className="bg-white/10 rounded-xl py-3 px-5 text-center min-w-18"
+                  className="bg-white/10 rounded-xl py-3 px-5 text-center min-w-16 sm:min-w-18"
                 >
-                  <p className="text-[22px] font-extrabold text-white leading-none">
+                  <p className="text-xl sm:text-[22px] font-extrabold text-white leading-none">
                     {val}
                   </p>
-                  <p className="text-[11px] text-white/60 mt-1">{label}</p>
+                  <p className="text-[10px] sm:text-[11px] text-white/60 mt-1">
+                    {label}
+                  </p>
                 </div>
               ))}
             </div>
@@ -379,7 +381,7 @@ export default function RateUpOnboarding() {
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-4 p-8">
+        <div className="flex flex-col gap-4 p-4 sm:p-8">
           {visibleSections.map((section) => (
             <CollapsibleCard
               key={section.id}
@@ -399,7 +401,7 @@ export default function RateUpOnboarding() {
         <div className="flex justify-center mb-10">
           <Button
             size="lg"
-            className="text-sm px-6 py-3 text-white"
+            className="text-sm px-4 sm:px-6 py-2 sm:py-3 text-white"
             style={{ background: "#1873E8" }}
             onClick={() => {
               const finalChecklist = { ...checklistMap };
@@ -487,7 +489,7 @@ function CollapsibleCard({
         }`}
       >
         <CollapsibleTrigger asChild>
-          <div className="flex items-center gap-3.5 px-5 cursor-pointer select-none">
+          <div className="flex items-center gap-3.5 px-4 sm:px-5 cursor-pointer select-none">
             {/* Progress ring */}
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
@@ -594,7 +596,7 @@ function CollapsibleCard({
                     </div>
 
                     {/* Action */}
-                    <div className="w-35 flex flex-col items-center">
+                    <div className="w-full sm:w-35 flex flex-col items-center">
                       {done ? (
                         <span className="text-xs text-green-600 font-semibold">
                           ✓ Done
