@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -55,8 +55,8 @@ const CARD_CONFIG = {
   payment: {
     icon: CreditCard,
     iconBg: { background: "rgba(16,185,129,0.08)", color: "#10b981" },
-    title: "Add payment method",
-    desc: "Add your preferred payment method to enable subscriptions, billing, and seamless transactions.",
+    title: "Add payment in Meta",
+    desc: "Add a payment method to send WhatsApp messages and notification to customers.",
     btnLabel: "Add payment",
   },
   verify: {
@@ -245,8 +245,16 @@ export default function RateUpOnboarding() {
     );
   };
 
+  const defaultOpenSectionId = useMemo(() => {
+    for (const section of visibleSections) {
+      const isDone = section.cards.every((id) => checklistMap[id]);
+      if (!isDone) return section.id;
+    }
+    return visibleSections[0]?.id;
+  }, [visibleSections, checklistMap]);
+
   return (
-    <div className="w-full flex flex-col items-center justify-center">
+    <div className="w-full flex flex-col items-center justify-center bg-[#f9fafc] dark:bg-[#121212]">
       <nav className="w-full h-16 border-b px-8 py-3 flex items-center justify-between sticky top-0 z-50 dark:border-gray-950 backdrop-blur-md bg-white dark:bg-gray-900/80">
         {/* Left */}
         <div className="flex items-center gap-2">
@@ -305,7 +313,7 @@ export default function RateUpOnboarding() {
           </Button>
         </div>
       </nav>
-      <div className="max-w-7xl">
+      <div className="min-w-5xl max-w-5xl">
         {/* hero */}
         <div
           className="mt-6 mx-8 rounded-[18px] p-7 px-8 relative overflow-hidden"
@@ -371,10 +379,11 @@ export default function RateUpOnboarding() {
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-12 p-8">
+        <div className="flex flex-col gap-4 p-8">
           {visibleSections.map((section) => (
             <CollapsibleCard
               key={section.id}
+              defaultOpenSectionId={defaultOpenSectionId}
               section={section}
               checklistMap={checklistMap}
               onToggle={handleToggle}
@@ -387,7 +396,7 @@ export default function RateUpOnboarding() {
             />
           ))}
         </div>
-        <div className="flex justify-center mt-10 mb-10">
+        <div className="flex justify-center mb-10">
           <Button
             size="lg"
             className="text-sm px-6 py-3 text-white"
@@ -415,6 +424,7 @@ export default function RateUpOnboarding() {
 
 function CollapsibleCard({
   section,
+  defaultOpenSectionId,
   checklistMap,
   onToggle,
   onNavigate,
@@ -424,15 +434,20 @@ function CollapsibleCard({
   setIsCheckingVerification,
   waConnected,
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(section.id === defaultOpenSectionId);
   const handleVerify = async () => {
     try {
       setIsCheckingVerification(true);
-
       const res = await getVerificationStatus();
-      if (res) {
-        setVerificationStatus(res?.verificationStatus);
+      if (!res) return;
+
+      const status = res?.verificationStatus;
+      setVerificationStatus(status);
+
+      if (status === "verified") {
         onToggle("verify", true);
+      } else {
+        onToggle("verify", false);
       }
     } catch (err) {
       console.error(err);
@@ -453,6 +468,14 @@ function CollapsibleCard({
     };
   };
 
+  useEffect(() => {
+    if (section.id === defaultOpenSectionId) {
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  }, [defaultOpenSectionId]);
+
   const { total, doneCount, allDone, partial } = getSectionState(section);
 
   return (
@@ -464,7 +487,7 @@ function CollapsibleCard({
         }`}
       >
         <CollapsibleTrigger asChild>
-          <div className="flex items-center gap-3.5 px-5 py-4 cursor-pointer select-none">
+          <div className="flex items-center gap-3.5 px-5 cursor-pointer select-none">
             {/* Progress ring */}
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
@@ -505,7 +528,7 @@ function CollapsibleCard({
       {/* Content */}
       <CollapsibleContent>
         <Card className="border border-gray-200 border-t border-dashed rounded-b-xl rounded-t-none shadow-none">
-          <CardContent className="p-4 flex flex-col gap-2">
+          <CardContent className="flex flex-col gap-2">
             {section.cards.map((id) => {
               const cfg = CARD_CONFIG[id];
               const Icon = cfg.icon;
@@ -518,7 +541,7 @@ function CollapsibleCard({
                     done ? "border-green-200" : "border-gray-200"
                   }`}
                 >
-                  <CardContent className="px-4 py-4 flex items-center gap-4">
+                  <CardContent className="flex items-center gap-2">
                     {/* Icon */}
                     <div
                       className="w-9 h-9 rounded-lg flex items-center justify-center"
@@ -587,9 +610,7 @@ function CollapsibleCard({
                               await handleVerify();
                             } else if (id === "payment") {
                               window.open(CARD_ROUTES[id], "_blank");
-                              await onToggle(id, true);
                             } else {
-                              await onToggle(id, true);
                               onNavigate(id);
                             }
                           }}
@@ -603,7 +624,7 @@ function CollapsibleCard({
                       )}
 
                       {/* Checkbox */}
-                      {!["api", "verify"].includes(id) && (
+                      {!["api"].includes(id) && (
                         <div className="flex items-center gap-1 mt-2">
                           <Checkbox
                             checked={done}
