@@ -24,6 +24,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 
 import { SubscriptionFeaturePathName } from "@/types/enums";
 import {
@@ -471,7 +472,7 @@ function CollapsibleCard({
   };
 
   useEffect(() => {
-    if (section.id === defaultOpenSectionId) {
+    if (section?.id === defaultOpenSectionId) {
       setOpen(true);
     } else {
       setOpen(false);
@@ -528,120 +529,139 @@ function CollapsibleCard({
       </Card>
 
       {/* Content */}
-      <CollapsibleContent>
-        <Card className="border border-gray-200 border-t border-dashed rounded-b-xl rounded-t-none shadow-none">
-          <CardContent className="flex flex-col gap-2">
-            {section.cards.map((id) => {
-              const cfg = CARD_CONFIG[id];
-              const Icon = cfg.icon;
-              const done = !!checklistMap[id];
+      <CollapsibleContent forceMount>
+        <AnimatePresence initial={false} mode="wait">
+          {open && (
+            <motion.div
+              key="collapsible-content"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.26, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <Card className="border border-gray-200 border-t border-dashed rounded-b-xl rounded-t-none shadow-none">
+                <CardContent className="flex flex-col gap-2">
+                  {section.cards.map((id) => {
+                    const cfg = CARD_CONFIG[id];
+                    const Icon = cfg.icon;
+                    const done = !!checklistMap[id];
 
-              return (
-                <Card
-                  key={id}
-                  className={`border rounded-[10px] ${
-                    done ? "border-green-200" : "border-gray-200"
-                  }`}
-                >
-                  <CardContent className="flex items-center gap-2">
-                    {/* Icon */}
-                    <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center"
-                      style={cfg.iconBg}
-                    >
-                      <Icon size={18} />
-                    </div>
+                    return (
+                      <Card
+                        key={id}
+                        className={`border rounded-[10px] ${
+                          done ? "border-green-200" : "border-gray-200"
+                        }`}
+                      >
+                        <CardContent className="flex items-center gap-2">
+                          {/* Icon */}
+                          <div
+                            className="w-9 h-9 rounded-lg flex items-center justify-center"
+                            style={cfg.iconBg}
+                          >
+                            <Icon size={18} />
+                          </div>
 
-                    {/* Text */}
-                    <div className="flex-1">
-                      <p className={`text-sm font-bold`}>{cfg.title}</p>
-                      <p className="text-xs text-gray-500">{cfg.desc}</p>
-                      {id === "verify" && (
-                        <div className="mt-1 flex items-center gap-1.5">
-                          {verificationStatus === "verified" && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
-                              <CheckCircle2 size={12} />
-                              Verified
-                            </span>
-                          )}
+                          {/* Text */}
+                          <div className="flex-1">
+                            <p className={`text-sm font-bold`}>{cfg.title}</p>
+                            <p className="text-xs text-gray-500">{cfg.desc}</p>
+                            {id === "verify" && (
+                              <div className="mt-1 flex items-center gap-1.5">
+                                {verificationStatus === "verified" && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                                    <CheckCircle2 size={12} />
+                                    Verified
+                                  </span>
+                                )}
 
-                          {verificationStatus === "pending" && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">
-                              <Loader2 size={12} className="animate-spin" />
-                              Under review
-                            </span>
-                          )}
+                                {verificationStatus === "pending" && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">
+                                    <Loader2
+                                      size={12}
+                                      className="animate-spin"
+                                    />
+                                    Under review
+                                  </span>
+                                )}
 
-                          {verificationStatus === "not_verified" && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
-                              <XCircle size={12} />
-                              Not verified
-                            </span>
-                          )}
+                                {verificationStatus === "not_verified" && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
+                                    <XCircle size={12} />
+                                    Not verified
+                                  </span>
+                                )}
 
-                          {verificationStatus === "ineligible" && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                              Not eligible
-                            </span>
-                          )}
+                                {verificationStatus === "ineligible" && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+                                    Not eligible
+                                  </span>
+                                )}
 
-                          {isCheckingVerification && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                              <Loader2 size={12} className="animate-spin" />
-                              Checking...
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                                {isCheckingVerification && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+                                    <Loader2
+                                      size={12}
+                                      className="animate-spin"
+                                    />
+                                    Checking...
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
 
-                    {/* Action */}
-                    <div className="w-full sm:w-35 flex flex-col items-center">
-                      {done ? (
-                        <span className="text-xs text-green-600 font-semibold">
-                          ✓ Done
-                        </span>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className="text-xs w-full text-white disabled:opacity-50"
-                          style={{ background: "rgb(24,115,232)" }}
-                          disabled={id === "verify" && !waConnected}
-                          onClick={async () => {
-                            if (id === "verify") {
-                              await handleVerify();
-                            } else if (id === "payment") {
-                              window.open(CARD_ROUTES[id], "_blank");
-                            } else {
-                              onNavigate(id);
-                            }
-                          }}
-                        >
-                          {id === "verify"
-                            ? isCheckingVerification
-                              ? "Checking..."
-                              : "Check Status"
-                            : cfg.btnLabel}
-                        </Button>
-                      )}
+                          {/* Action */}
+                          <div className="w-full sm:w-35 flex flex-col items-center">
+                            {done ? (
+                              <span className="text-xs text-green-600 font-semibold">
+                                ✓ Done
+                              </span>
+                            ) : (
+                              <Button
+                                size="sm"
+                                className="text-xs w-full text-white disabled:opacity-50"
+                                style={{ background: "rgb(24,115,232)" }}
+                                disabled={id === "verify" && !waConnected}
+                                onClick={async () => {
+                                  if (id === "verify") {
+                                    await handleVerify();
+                                  } else if (id === "payment") {
+                                    window.open(CARD_ROUTES[id], "_blank");
+                                  } else {
+                                    onNavigate(id);
+                                  }
+                                }}
+                              >
+                                {id === "verify"
+                                  ? isCheckingVerification
+                                    ? "Checking..."
+                                    : "Check Status"
+                                  : cfg.btnLabel}
+                              </Button>
+                            )}
 
-                      {/* Checkbox */}
-                      {!["api"].includes(id) && (
-                        <div className="flex items-center gap-1 mt-2">
-                          <Checkbox
-                            checked={done}
-                            onCheckedChange={(val) => onToggle(id, val)}
-                          />
-                          <span className="text-xs">Mark done</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </CardContent>
-        </Card>
+                            {/* Checkbox */}
+                            {!["api"].includes(id) && (
+                              <div className="flex items-center gap-1 mt-2">
+                                <Checkbox
+                                  checked={done}
+                                  onCheckedChange={(val) => onToggle(id, val)}
+                                />
+                                <span className="text-xs">Mark done</span>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CollapsibleContent>
     </Collapsible>
   );
