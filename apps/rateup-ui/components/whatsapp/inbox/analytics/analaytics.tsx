@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useExtracted } from "next-intl";
 import { usePDF } from "react-to-pdf";
+import { toast } from "sonner";
 
 import AuditLogs from "@/app/dashboard/analytics/audit-log/page";
 import { Button } from "@/components/ui/button";
@@ -57,11 +58,11 @@ const Analytics = () => {
       else if (tab === "agent-performance") await agentPDF.toPDF();
       else if (tab === "team-performance") await teamPDF.toPDF();
       else {
-        alert("Export not available for this section");
+        toast.error(t("Export not supported for this tab"));
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to export PDF");
+      toast.error(t("Failed to export PDF"));
     }
   };
 
