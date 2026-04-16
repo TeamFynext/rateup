@@ -74,33 +74,25 @@ export interface ImageAlignButtonProps
 export const ImageAlignButton = forwardRef<
   HTMLButtonElement,
   ImageAlignButtonProps
->(
-  (
-    {
-      editor: providedEditor,
-      align,
-      text,
-      extensionName,
-      attributeName = "data-align",
-      hideWhenUnavailable = false,
-      onAligned,
-      showShortcut = false,
-      onClick,
-      children,
-      ...buttonProps
-    },
-    ref,
-  ) => {
-    const { editor } = useTiptapEditor(providedEditor);
-    const {
-      isVisible,
-      handleImageAlign,
-      label,
-      canAlign,
-      isActive,
-      Icon,
-      shortcutKeys,
-    } = useImageAlign({
+>((props, ref) => {
+  const {
+    editor: providedEditor,
+    align,
+    text,
+    extensionName,
+    attributeName = "data-align",
+    hideWhenUnavailable = false,
+    onAligned,
+    showShortcut = false,
+    onClick,
+    children,
+    ...buttonProps
+  } = props;
+
+  const { editor } = useTiptapEditor(providedEditor);
+
+  const { isVisible, handleImageAlign, label, canAlign, isActive, Icon } =
+    useImageAlign({
       editor,
       align,
       extensionName,
@@ -109,45 +101,34 @@ export const ImageAlignButton = forwardRef<
       onAligned,
     });
 
-    const handleClick = useCallback(
-      (event: React.MouseEvent<HTMLButtonElement>) => {
-        console.log("ALIGN CLICKED", align);
-        onClick?.(event);
-        if (event.defaultPrevented) return;
-        handleImageAlign();
-      },
-      [handleImageAlign, onClick],
-    );
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(event);
+      if (event.defaultPrevented) return;
+      handleImageAlign();
+    },
+    [handleImageAlign, onClick],
+  );
 
-    if (!isVisible) {
-      return null;
-    }
+  if (!isVisible) return null;
 
-    return (
-      <Button
-        type="button"
-        disabled={!canAlign}
-        data-style="ghost"
-        data-active-state={isActive ? "on" : "off"}
-        data-disabled={!canAlign}
-        role="button"
-        tabIndex={-1}
-        aria-label={label}
-        aria-pressed={isActive}
-        tooltip={label}
-        onClick={handleClick}
-        {...buttonProps}
-        ref={ref}
-      >
-        {children ?? (
-          <>
-            <Icon className="tiptap-button-icon" />
-          </>
-        )}
-      </Button>
-    );
-  },
-);
+  return (
+    <Button
+      ref={ref}
+      type="button"
+      disabled={!canAlign}
+      data-style="ghost"
+      data-active-state={isActive ? "on" : "off"}
+      aria-label={label}
+      aria-pressed={isActive}
+      tooltip={label}
+      onClick={handleClick}
+      {...buttonProps}
+    >
+      {children ?? <Icon className="tiptap-button-icon" />}
+    </Button>
+  );
+});
 
 ImageAlignButton.displayName = "ImageAlignButton";
 

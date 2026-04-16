@@ -392,7 +392,6 @@ body {
 }
 
 /* Images */
-/* ✅ Works everywhere (editor + preview) */
 img[data-align="left"] {
   display: block;
   margin-right: auto !important;
