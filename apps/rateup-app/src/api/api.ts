@@ -125,3 +125,7 @@ export const useLoggedInUser = () =>
 export const createGoogleUser = async (data: ICreateGoogleUser) => {
   await axios.post("/user/complete-google-signup", data);
 };
+
+export async function deleteOrg(orgId: string) {
+  return await axios.delete(`/api/org/${orgId}`);
+}

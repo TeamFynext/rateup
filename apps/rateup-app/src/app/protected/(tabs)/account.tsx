@@ -18,7 +18,8 @@ export default function AccountScreen() {
     return null;
   }
 
-  const { email, orgName, role, profilePhoto, orgPhone, userName } = userData;
+  const { email, orgName, role, profilePhoto, orgPhone, userName, orgId } =
+    userData;
 
   return (
     <View className="flex-1 bg-white dark:bg-slate-950">
@@ -29,6 +30,7 @@ export default function AccountScreen() {
         profilePhoto={profilePhoto}
         orgPhone={orgPhone}
         userName={userName}
+        orgId={orgId}
       />
     </View>
   );
