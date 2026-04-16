@@ -792,6 +792,12 @@ export async function getWaMessageLogsHandler(
   const status = request.query?.status ?? "all";
   const sourceMessage = request.query?.source ?? "all";
   const team = request.query?.team ?? "all";
+
+  // Pagination parameters
+  const pageIndex = parseInt(request.query?.pageIndex ?? "0", 10);
+  const pageSize = parseInt(request.query?.pageSize ?? "25", 10);
+  const offset = pageIndex * pageSize;
+
   try {
     const res = await getWaMessageLogs(
       orgId,
@@ -799,6 +805,8 @@ export async function getWaMessageLogsHandler(
       status,
       sourceMessage,
       team,
+      pageSize,
+      offset,
     );
     reply.send(res);
   } catch (e) {
