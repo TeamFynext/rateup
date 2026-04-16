@@ -7,12 +7,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
   Clock,
+  FileText,
   MessageCircle,
   RefreshCcw,
   Target,
   Users,
 } from "lucide-react";
 import { useExtracted } from "next-intl";
+import { usePDF } from "react-to-pdf";
 
 import { MessagePlatform } from "@/types/enums";
 import { useGetTeamDetailedMetrics } from "@/backend/conversation/conversation.query";
@@ -31,6 +33,9 @@ function page() {
   const queryClient = useQueryClient();
   const { teamid } = useParams();
   const router = useRouter();
+  const { toPDF, targetRef } = usePDF({
+    filename: `analytics-team-${teamid}-${day}d.pdf`,
+  });
   const { data, isLoading } = useGetTeamDetailedMetrics(teamid, {
     days: day,
   });
@@ -48,7 +53,7 @@ function page() {
     });
   };
   return (
-    <div className="space-y-6">
+    <div ref={targetRef} className="space-y-6">
       <Card className="border shadow-sm p-0">
         <CardContent className="p-4">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -93,6 +98,14 @@ function page() {
                 <span>{t("Refresh")}</span>
               </Button>
               <DateSelector days={day} setDays={setDay} />
+              <Button
+                variant="outline"
+                onClick={() => toPDF()}
+                className="flex items-center justify-center gap-1"
+              >
+                <FileText />
+                <span>{t("Export")}</span>
+              </Button>
             </div>
           </div>
         </CardContent>
