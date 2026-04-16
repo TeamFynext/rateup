@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -292,7 +293,17 @@ export function useCreatePrivateMessage(contactId) {
 
 export function useWaMessageLogs(filter) {
   return useQuery({
-    queryKey: ["wa-message-logs", filter],
+    queryKey: [
+      "wa-message-logs",
+      filter.dateKey,
+      filter.dateRange,
+      filter.status,
+      filter.source,
+      filter.team,
+      filter.pagination?.pageIndex,
+      filter.pagination?.pageSize,
+    ],
     queryFn: () => getWaMessageLogs(filter),
+    placeholderData: keepPreviousData, // don't have empty rows flash while changing pages
   });
 }

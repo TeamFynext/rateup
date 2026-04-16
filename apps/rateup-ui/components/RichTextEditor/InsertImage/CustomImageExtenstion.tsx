@@ -1,53 +1,37 @@
 import Image from "@tiptap/extension-image";
 
-import { uploadFile } from "@/components/Linktree/LinktreeEditor/ThemeEditor/components/SaveChangesBtn/uploadFile";
-
-declare module "@tiptap/core" {
-  interface Commands<ReturnType> {
-    CustomImageExtension: {
-      /**
-       * Comments will be added to the autocomplete.
-       */
-      setImage: (someProp: any) => ReturnType;
-    };
-  }
-}
-
 const CustomImageExtension = Image.extend({
+  name: "image",
+
+  inline: false,
+  group: "block",
+
   addAttributes() {
     return {
       ...this.parent?.(),
+
       style: {
-        default: `object-fit: contain;max-width: 100%;`,
-      },
-    };
-  },
-  addCommands() {
-    return {
-      setImage:
-        (options) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
-        },
-    };
-  },
-  parseHTML() {
-    return [
-      {
-        tag: "img",
-        getAttrs: (element) => {
+        default: "object-fit: contain; max-width: 100%;",
+        parseHTML: (element) => element.getAttribute("style"),
+        renderHTML: (attributes) => {
+          if (!attributes.style) return {};
           return {
-            style: element.getAttribute("style"),
+            style: attributes.style,
           };
         },
       },
-    ];
-  },
-  renderHTML({ HTMLAttributes }) {
-    return ["img", HTMLAttributes];
+
+      "data-align": {
+        default: null, // ⚠️ IMPORTANT (not "center")
+        parseHTML: (element) => element.getAttribute("data-align"),
+        renderHTML: (attributes) => {
+          if (!attributes["data-align"]) return {};
+          return {
+            "data-align": attributes["data-align"],
+          };
+        },
+      },
+    };
   },
 });
 
