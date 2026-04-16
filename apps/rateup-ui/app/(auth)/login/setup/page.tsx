@@ -436,7 +436,7 @@ function CollapsibleCard({
   setIsCheckingVerification,
   waConnected,
 }) {
-  const [open, setOpen] = useState(section.id === defaultOpenSectionId);
+  const [open, setOpen] = useState(section?.id === defaultOpenSectionId);
   const handleVerify = async () => {
     try {
       setIsCheckingVerification(true);
