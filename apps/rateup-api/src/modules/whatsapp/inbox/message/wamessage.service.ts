@@ -1840,6 +1840,8 @@ export async function getWaMessageLogs(
   status?: string,
   sourceMessage?: string,
   team?: string,
+  limit: number = 25,
+  offset: number = 0,
 ) {
   let rangeStart: Date | null = null;
   let rangeEnd: Date | null = null;
@@ -1907,7 +1909,32 @@ export async function getWaMessageLogs(
     }
   }
 
-  return prisma.$queryRaw`
+  // Get total count
+  const countResult = await prisma.$queryRaw<[{ count: bigint }]>`
+    SELECT COUNT(*) as count
+    FROM "WaMessage" wm
+    INNER JOIN "Contact" c 
+      ON c.id = wm."contactId"
+    INNER JOIN "WaMessageOrgTeamMap" motm
+      ON motm."messageId" = wm.id
+    WHERE c."orgId" = ${orgId}
+      AND wm."sourceMessage" IN ('TEMPLATE', 'CAMPAIGN')
+      AND wm."messageBody"->>'exchangeProcess' = 'send'
+      ${statusFilter}
+      ${sourceFilter}
+      ${teamFilter}
+
+      ${
+        rangeStart && rangeEnd
+          ? Prisma.sql`AND wm."createdAt" BETWEEN ${rangeStart} AND ${rangeEnd}`
+          : Prisma.sql``
+      }
+  `;
+
+  const total = Number(countResult[0]?.count || 0);
+
+  // Get paginated data
+  const data = await prisma.$queryRaw`
     SELECT 
       wm.id,
       wm."createdAt",
@@ -2010,6 +2037,19 @@ export async function getWaMessageLogs(
           : Prisma.sql``
       }
 
-    ORDER BY wm."createdAt" DESC;
+    ORDER BY wm."createdAt" DESC
+    LIMIT ${limit}
+    OFFSET ${offset};
   `;
+
+  return {
+    data,
+    pagination: {
+      total,
+      limit,
+      offset,
+      pageIndex: Math.floor(offset / limit),
+      pageSize: limit,
+    },
+  };
 }
