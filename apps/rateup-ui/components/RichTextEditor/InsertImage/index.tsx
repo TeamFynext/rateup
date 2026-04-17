@@ -104,7 +104,12 @@ function InsertImage() {
             .focus()
             .setImage({
               src: url,
-              style: `width: ${imgWidth}px; height: ${imgHeight}px; max-width: 100%; object-fit:contain`,
+              style: `
+  width: ${imgWidth}px;
+  height: ${imgHeight}px;
+  object-fit: contain;
+  max-width: 100%;
+`,
             })
             .run();
           setIsUploadingFile(false);

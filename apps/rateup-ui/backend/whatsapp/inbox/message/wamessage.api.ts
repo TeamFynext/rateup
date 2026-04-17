@@ -232,10 +232,39 @@ export async function createPrivateMessage(contactId, data) {
 }
 
 export async function getWaMessageLogs(filter) {
-  const query = Object.entries(filter)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
+  // Format date range if it's an array of Date objects
+  let dateRange = filter.dateRange;
+  if (Array.isArray(dateRange) && dateRange.length === 2) {
+    dateRange = `${dateRange[0]},${dateRange[1]}`;
+  }
+
+  // Build params object
+  const params = {
+    dateKey: filter.dateKey,
+    dateRange,
+    status: filter.status,
+    source: filter.source,
+    team: filter.team,
+    ...(filter.pagination && {
+      pageIndex: filter.pagination.pageIndex,
+      pageSize: filter.pagination.pageSize,
+    }),
+  };
+
+  // Add pagination if provided
+  if (filter.pagination) {
+    params.pageIndex = filter.pagination.pageIndex;
+    params.pageSize = filter.pagination.pageSize;
+  }
+
+  // Filter out undefined/null values
+  const filteredParams = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v != null),
+  );
+
   return (
-    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/message-logs?${query}`)
+    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/message-logs`, {
+      params: filteredParams,
+    })
   ).data;
 }

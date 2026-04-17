@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
-import { ColumnDef, Table } from "@tanstack/react-table";
+import { ColumnDef, PaginationState, Table } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
   CheckCircle2,
@@ -36,29 +36,48 @@ function MessageLogs({ dateRange }) {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedSource, setSelectedSource] = useState("all");
   const [selectedTeamId, setSelectedTeamId] = useState("all");
-  const t = useExtracted();
-  const { data: messageLogsData, isLoading } = useWaMessageLogs({
-    dateKey: dateRange.key,
-    dateRange: dateRange.range,
-    status: selectedStatus,
-    source: selectedSource,
-    team: selectedTeamId,
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
   });
+  const t = useExtracted();
 
+  const params = useMemo(
+    () => ({
+      dateKey: dateRange.key,
+      dateRange: dateRange.range,
+      status: selectedStatus,
+      source: selectedSource,
+      team: selectedTeamId,
+      pagination,
+    }),
+    [dateRange, selectedStatus, selectedSource, selectedTeamId, pagination],
+  );
+  const { data: messageLogsData, isLoading } = useWaMessageLogs(params);
+
+  const handlePaginationChange = useCallback((updater: any) => {
+    setPagination((prev) => {
+      const newPagination =
+        typeof updater === "function" ? updater(prev) : updater;
+      return newPagination;
+    });
+  }, []);
+
+  // Client-side search on the current page data
   const filteredData = useMemo(() => {
-    if (!messageLogsData) return [];
+    if (!messageLogsData?.data) return [];
 
-    if (!search.trim()) return messageLogsData;
+    if (!search.trim()) return messageLogsData.data;
 
     const term = search.toLowerCase();
 
-    return messageLogsData.filter((item) => {
+    return messageLogsData.data.filter((item) => {
       return (
         item.phone?.toLowerCase().includes(term) ||
         item.messagePreview?.toLowerCase().includes(term)
       );
     });
-  }, [messageLogsData, search]);
+  }, [messageLogsData?.data, search]);
 
   function formatLabel(value?: string) {
     if (!value) return t("Export");
@@ -344,10 +363,12 @@ function MessageLogs({ dateRange }) {
     [],
   );
 
-  const skeletonData = Array.from({ length: 8 }).map((_, i) => ({
-    id: i,
-    isSkeleton: true,
-  }));
+  const skeletonData = Array.from({ length: pagination.pageSize }).map(
+    (_, i) => ({
+      id: i,
+      isSkeleton: true,
+    }),
+  );
 
   return (
     <div className="h-full relative">
@@ -425,6 +446,11 @@ function MessageLogs({ dateRange }) {
       <DataTable
         columns={columns}
         data={isLoading ? skeletonData : filteredData}
+        manualPagination={{
+          pagination,
+          onPaginationChange: handlePaginationChange,
+          rowCount: messageLogsData?.pagination?.total || 0,
+        }}
       />
     </div>
   );
