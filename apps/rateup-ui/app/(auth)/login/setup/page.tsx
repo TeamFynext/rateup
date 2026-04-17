@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,6 +24,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 
 import { SubscriptionFeaturePathName } from "@/types/enums";
 import {
@@ -55,8 +56,8 @@ const CARD_CONFIG = {
   payment: {
     icon: CreditCard,
     iconBg: { background: "rgba(16,185,129,0.08)", color: "#10b981" },
-    title: "Add payment method",
-    desc: "Add your preferred payment method to enable subscriptions, billing, and seamless transactions.",
+    title: "Add payment in Meta",
+    desc: "Add a payment method to send WhatsApp messages and notification to customers.",
     btnLabel: "Add payment",
   },
   verify: {
@@ -245,20 +246,28 @@ export default function RateUpOnboarding() {
     );
   };
 
+  const defaultOpenSectionId = useMemo(() => {
+    for (const section of visibleSections) {
+      const isDone = section.cards.every((id) => checklistMap[id]);
+      if (!isDone) return section.id;
+    }
+    return visibleSections[0]?.id;
+  }, [visibleSections, checklistMap]);
+
   return (
-    <div className="w-full flex flex-col items-center justify-center">
-      <nav className="w-full h-16 border-b px-8 py-3 flex items-center justify-between sticky top-0 z-50 dark:border-gray-950 backdrop-blur-md bg-white dark:bg-gray-900/80">
+    <div className="w-full flex flex-col items-center justify-center bg-[#f9fafc] dark:bg-[#121212]">
+      <nav className="w-full h-16 border-b px-4 sm:px-8 py-3 flex items-center justify-between sticky top-0 z-50 dark:border-gray-950 backdrop-blur-md bg-white dark:bg-gray-900/80">
         {/* Left */}
         <div className="flex items-center gap-2">
           <img
             src={`${imagePath}/LogoRateup.png`}
             alt="RateUp Logo"
-            className="w-24 h-auto"
+            className="w-20 sm:w-24 h-auto"
           />
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -305,10 +314,10 @@ export default function RateUpOnboarding() {
           </Button>
         </div>
       </nav>
-      <div className="max-w-7xl">
+      <div className="w-full max-w-5xl">
         {/* hero */}
         <div
-          className="mt-6 mx-8 rounded-[18px] p-7 px-8 relative overflow-hidden"
+          className="mt-6 mx-4 sm:mx-8 rounded-[18px] p-4 sm:p-7 px-4 sm:px-8 relative overflow-hidden"
           style={{ background: "#1873E8" }}
         >
           {/* Background circles */}
@@ -316,17 +325,17 @@ export default function RateUpOnboarding() {
           <div className="absolute right-20 -bottom-16 w-40 h-40 rounded-full bg-white/5 opacity-70 pointer-events-none" />
 
           {/* Content */}
-          <div className="flex items-start justify-between gap-5 relative">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-5 relative">
             {/* Left */}
             <div>
               <div className="flex items-center gap-3 mb-2.5">
-                <span className="text-[26px] leading-none">👋</span>
-                <h1 className="text-[22px] font-extrabold text-white tracking-[-0.4px] leading-[1.2] m-0">
+                <span className="text-2xl sm:text-[26px] leading-none">👋</span>
+                <h1 className="text-xl sm:text-[22px] font-extrabold text-white tracking-[-0.4px] leading-[1.2] m-0">
                   Hello, there! Let's get started.
                 </h1>
               </div>
 
-              <p className="text-[13.5px] text-white/70 leading-[1.65] max-w-120 m-0">
+              <p className="text-xs sm:text-[13.5px] text-white/70 leading-[1.65] max-w-120 m-0">
                 Welcome to RateUp — connect your WhatsApp, Invite Team members,
                 build automations, configure your loyalty program, and launch
                 your first campaign.
@@ -341,12 +350,14 @@ export default function RateUpOnboarding() {
               ].map(({ val, label }) => (
                 <div
                   key={label}
-                  className="bg-white/10 rounded-xl py-3 px-5 text-center min-w-18"
+                  className="bg-white/10 rounded-xl py-3 px-5 text-center min-w-16 sm:min-w-18"
                 >
-                  <p className="text-[22px] font-extrabold text-white leading-none">
+                  <p className="text-xl sm:text-[22px] font-extrabold text-white leading-none">
                     {val}
                   </p>
-                  <p className="text-[11px] text-white/60 mt-1">{label}</p>
+                  <p className="text-[10px] sm:text-[11px] text-white/60 mt-1">
+                    {label}
+                  </p>
                 </div>
               ))}
             </div>
@@ -371,10 +382,11 @@ export default function RateUpOnboarding() {
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-12 p-8">
+        <div className="flex flex-col gap-4 p-4 sm:p-8">
           {visibleSections.map((section) => (
             <CollapsibleCard
               key={section.id}
+              defaultOpenSectionId={defaultOpenSectionId}
               section={section}
               checklistMap={checklistMap}
               onToggle={handleToggle}
@@ -387,10 +399,10 @@ export default function RateUpOnboarding() {
             />
           ))}
         </div>
-        <div className="flex justify-center mt-10 mb-10">
+        <div className="flex justify-center mb-10">
           <Button
             size="lg"
-            className="text-sm px-6 py-3 text-white"
+            className="text-sm px-4 sm:px-6 py-2 sm:py-3 text-white"
             style={{ background: "#1873E8" }}
             onClick={() => {
               const finalChecklist = { ...checklistMap };
@@ -415,6 +427,7 @@ export default function RateUpOnboarding() {
 
 function CollapsibleCard({
   section,
+  defaultOpenSectionId,
   checklistMap,
   onToggle,
   onNavigate,
@@ -424,15 +437,20 @@ function CollapsibleCard({
   setIsCheckingVerification,
   waConnected,
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(section?.id === defaultOpenSectionId);
   const handleVerify = async () => {
     try {
       setIsCheckingVerification(true);
-
       const res = await getVerificationStatus();
-      if (res) {
-        setVerificationStatus(res?.verificationStatus);
+      if (!res) return;
+
+      const status = res?.verificationStatus;
+      setVerificationStatus(status);
+
+      if (status === "verified") {
         onToggle("verify", true);
+      } else {
+        onToggle("verify", false);
       }
     } catch (err) {
       console.error(err);
@@ -453,6 +471,14 @@ function CollapsibleCard({
     };
   };
 
+  useEffect(() => {
+    if (section?.id === defaultOpenSectionId) {
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  }, [defaultOpenSectionId]);
+
   const { total, doneCount, allDone, partial } = getSectionState(section);
 
   return (
@@ -464,7 +490,7 @@ function CollapsibleCard({
         }`}
       >
         <CollapsibleTrigger asChild>
-          <div className="flex items-center gap-3.5 px-5 py-4 cursor-pointer select-none">
+          <div className="flex items-center gap-3.5 px-4 sm:px-5 cursor-pointer select-none">
             {/* Progress ring */}
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
@@ -503,122 +529,139 @@ function CollapsibleCard({
       </Card>
 
       {/* Content */}
-      <CollapsibleContent>
-        <Card className="border border-gray-200 border-t border-dashed rounded-b-xl rounded-t-none shadow-none">
-          <CardContent className="p-4 flex flex-col gap-2">
-            {section.cards.map((id) => {
-              const cfg = CARD_CONFIG[id];
-              const Icon = cfg.icon;
-              const done = !!checklistMap[id];
+      <CollapsibleContent forceMount>
+        <AnimatePresence initial={false} mode="wait">
+          {open && (
+            <motion.div
+              key="collapsible-content"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.26, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <Card className="border border-gray-200 border-t border-dashed rounded-b-xl rounded-t-none shadow-none">
+                <CardContent className="flex flex-col gap-2">
+                  {section.cards.map((id) => {
+                    const cfg = CARD_CONFIG[id];
+                    const Icon = cfg.icon;
+                    const done = !!checklistMap[id];
 
-              return (
-                <Card
-                  key={id}
-                  className={`border rounded-[10px] ${
-                    done ? "border-green-200" : "border-gray-200"
-                  }`}
-                >
-                  <CardContent className="px-4 py-4 flex items-center gap-4">
-                    {/* Icon */}
-                    <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center"
-                      style={cfg.iconBg}
-                    >
-                      <Icon size={18} />
-                    </div>
+                    return (
+                      <Card
+                        key={id}
+                        className={`border rounded-[10px] ${
+                          done ? "border-green-200" : "border-gray-200"
+                        }`}
+                      >
+                        <CardContent className="flex items-center gap-2">
+                          {/* Icon */}
+                          <div
+                            className="w-9 h-9 rounded-lg flex items-center justify-center"
+                            style={cfg.iconBg}
+                          >
+                            <Icon size={18} />
+                          </div>
 
-                    {/* Text */}
-                    <div className="flex-1">
-                      <p className={`text-sm font-bold`}>{cfg.title}</p>
-                      <p className="text-xs text-gray-500">{cfg.desc}</p>
-                      {id === "verify" && (
-                        <div className="mt-1 flex items-center gap-1.5">
-                          {verificationStatus === "verified" && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
-                              <CheckCircle2 size={12} />
-                              Verified
-                            </span>
-                          )}
+                          {/* Text */}
+                          <div className="flex-1">
+                            <p className={`text-sm font-bold`}>{cfg.title}</p>
+                            <p className="text-xs text-gray-500">{cfg.desc}</p>
+                            {id === "verify" && (
+                              <div className="mt-1 flex items-center gap-1.5">
+                                {verificationStatus === "verified" && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                                    <CheckCircle2 size={12} />
+                                    Verified
+                                  </span>
+                                )}
 
-                          {verificationStatus === "pending" && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">
-                              <Loader2 size={12} className="animate-spin" />
-                              Under review
-                            </span>
-                          )}
+                                {verificationStatus === "pending" && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">
+                                    <Loader2
+                                      size={12}
+                                      className="animate-spin"
+                                    />
+                                    Under review
+                                  </span>
+                                )}
 
-                          {verificationStatus === "not_verified" && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
-                              <XCircle size={12} />
-                              Not verified
-                            </span>
-                          )}
+                                {verificationStatus === "not_verified" && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
+                                    <XCircle size={12} />
+                                    Not verified
+                                  </span>
+                                )}
 
-                          {verificationStatus === "ineligible" && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                              Not eligible
-                            </span>
-                          )}
+                                {verificationStatus === "ineligible" && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+                                    Not eligible
+                                  </span>
+                                )}
 
-                          {isCheckingVerification && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-                              <Loader2 size={12} className="animate-spin" />
-                              Checking...
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                                {isCheckingVerification && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+                                    <Loader2
+                                      size={12}
+                                      className="animate-spin"
+                                    />
+                                    Checking...
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
 
-                    {/* Action */}
-                    <div className="w-35 flex flex-col items-center">
-                      {done ? (
-                        <span className="text-xs text-green-600 font-semibold">
-                          ✓ Done
-                        </span>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className="text-xs w-full text-white disabled:opacity-50"
-                          style={{ background: "rgb(24,115,232)" }}
-                          disabled={id === "verify" && !waConnected}
-                          onClick={async () => {
-                            if (id === "verify") {
-                              await handleVerify();
-                            } else if (id === "payment") {
-                              window.open(CARD_ROUTES[id], "_blank");
-                              await onToggle(id, true);
-                            } else {
-                              await onToggle(id, true);
-                              onNavigate(id);
-                            }
-                          }}
-                        >
-                          {id === "verify"
-                            ? isCheckingVerification
-                              ? "Checking..."
-                              : "Check Status"
-                            : cfg.btnLabel}
-                        </Button>
-                      )}
+                          {/* Action */}
+                          <div className="w-full sm:w-35 flex flex-col items-center">
+                            {done ? (
+                              <span className="text-xs text-green-600 font-semibold">
+                                ✓ Done
+                              </span>
+                            ) : (
+                              <Button
+                                size="sm"
+                                className="text-xs w-full text-white disabled:opacity-50"
+                                style={{ background: "rgb(24,115,232)" }}
+                                disabled={id === "verify" && !waConnected}
+                                onClick={async () => {
+                                  if (id === "verify") {
+                                    await handleVerify();
+                                  } else if (id === "payment") {
+                                    window.open(CARD_ROUTES[id], "_blank");
+                                  } else {
+                                    onNavigate(id);
+                                  }
+                                }}
+                              >
+                                {id === "verify"
+                                  ? isCheckingVerification
+                                    ? "Checking..."
+                                    : "Check Status"
+                                  : cfg.btnLabel}
+                              </Button>
+                            )}
 
-                      {/* Checkbox */}
-                      {!["api", "verify"].includes(id) && (
-                        <div className="flex items-center gap-1 mt-2">
-                          <Checkbox
-                            checked={done}
-                            onCheckedChange={(val) => onToggle(id, val)}
-                          />
-                          <span className="text-xs">Mark done</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </CardContent>
-        </Card>
+                            {/* Checkbox */}
+                            {!["api"].includes(id) && (
+                              <div className="flex items-center gap-1 mt-2">
+                                <Checkbox
+                                  checked={done}
+                                  onCheckedChange={(val) => onToggle(id, val)}
+                                />
+                                <span className="text-xs">Mark done</span>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CollapsibleContent>
     </Collapsible>
   );

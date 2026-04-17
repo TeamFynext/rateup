@@ -13,6 +13,7 @@ import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
 import SurveyContext from "../../context/SurveyContext";
+import { ImageAlignButton } from "./image-align-button/image-align-button";
 import InsertEmoji from "./InsertEmoji";
 import InsertImage from "./InsertImage";
 import CustomImageExtension from "./InsertImage/CustomImageExtenstion";
@@ -137,6 +138,29 @@ function TextEditor({ form, selectedLanguage, className = "" }) {
             <InsertEmoji />
             <InsertImage />
             <InsertVideo />
+          </RichTextEditor.ControlsGroup>
+          <RichTextEditor.ControlsGroup>
+            <div>
+              <ImageAlignButton
+                editor={editor}
+                align="left"
+                hideWhenUnavailable={true}
+                showShortcut={true}
+                onAligned={() => console.log("Image aligned!")}
+              />
+              <ImageAlignButton
+                editor={editor}
+                align="center"
+                hideWhenUnavailable={true}
+                showShortcut={true}
+              />
+              <ImageAlignButton
+                editor={editor}
+                align="right"
+                hideWhenUnavailable={true}
+                showShortcut={true}
+              />
+            </div>
           </RichTextEditor.ControlsGroup>
         </Group>
       </RichTextEditor.Toolbar>

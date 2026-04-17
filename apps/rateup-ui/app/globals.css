@@ -390,3 +390,22 @@ body {
     mask-size: 200vmax;
   }
 }
+
+/* Images */
+img[data-align="left"] {
+  display: block;
+  margin-right: auto !important;
+  margin-left: 0 !important;
+}
+
+img[data-align="center"] {
+  display: block;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+img[data-align="right"] {
+  display: block;
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}

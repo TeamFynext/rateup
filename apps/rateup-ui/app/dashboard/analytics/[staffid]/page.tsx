@@ -10,11 +10,13 @@ import {
   ArrowRight,
   Clock,
   Clock2,
+  FileText,
   MessageCircle,
   RefreshCcw,
   ThumbsUp,
 } from "lucide-react";
 import { useExtracted } from "next-intl";
+import { usePDF } from "react-to-pdf";
 import {
   Bar,
   BarChart,
@@ -46,6 +48,9 @@ function page() {
   const router = useRouter();
   const t = useExtracted();
   const queryClient = useQueryClient();
+  const { toPDF, targetRef } = usePDF({
+    filename: `analytics-staff-${staffid}-${day}d.pdf`,
+  });
   const { data: analytics, isLoading } =
     useGetStaffDetailedConversationAnalytics(staffid, {
       days: day,
@@ -67,7 +72,7 @@ function page() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={targetRef} className="flex flex-col gap-4">
       {isLoading ? (
         <Card className="border shadow-sm p-0">
           <CardContent className="p-4">
@@ -148,6 +153,14 @@ function page() {
                   <span>{t("Refresh")}</span>
                 </Button>
                 <DateSelector days={day} setDays={setDay} />
+                <Button
+                  variant="outline"
+                  onClick={() => toPDF()}
+                  className="flex items-center justify-center gap-1"
+                >
+                  <FileText />
+                  <span>{t("Export")}</span>
+                </Button>
               </div>
             </div>
           </CardContent>

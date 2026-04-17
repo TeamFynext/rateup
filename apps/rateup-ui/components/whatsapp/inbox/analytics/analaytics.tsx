@@ -16,6 +16,8 @@ import {
   Send,
 } from "lucide-react";
 import { useExtracted } from "next-intl";
+import { usePDF } from "react-to-pdf";
+import { toast } from "sonner";
 
 import AuditLogs from "@/app/dashboard/analytics/audit-log/page";
 import { Button } from "@/components/ui/button";
@@ -37,7 +39,32 @@ const Analytics = () => {
     key: "last7days",
     range: [dayjs().subtract(7, "day").toDate(), new Date()],
   });
+  const overviewPDF = usePDF({
+    filename: `analytics-overview-${dateRange.key}.pdf`,
+  });
+  const agentPDF = usePDF({ filename: `analytics-agent-${dateRange.key}.pdf` });
+  const teamPDF = usePDF({ filename: `analytics-team-${dateRange.key}.pdf` });
   const queryClient = useQueryClient();
+
+  const isExportable = [
+    "overview",
+    "agent-performance",
+    "team-performance",
+  ].includes(tab);
+
+  const handleExport = async () => {
+    try {
+      if (tab === "overview") await overviewPDF.toPDF();
+      else if (tab === "agent-performance") await agentPDF.toPDF();
+      else if (tab === "team-performance") await teamPDF.toPDF();
+      else {
+        toast.error(t("Export not supported for this tab"));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(t("Failed to export PDF"));
+    }
+  };
 
   function refresh() {
     queries.forEach((key) => {
@@ -142,19 +169,38 @@ const Analytics = () => {
                 </span>
                 <DateRangeSelector value={dateRange} onChange={setDateRange} />
               </div>
+
+              {isExportable && (
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto justify-center ml-2"
+                  onClick={handleExport}
+                >
+                  <FileText className="mr-1" />
+                  {t("Export")}
+                </Button>
+              )}
             </>
           }
         />
 
         <div>
           {tab === "overview" && (
-            <ConversationStatsOverview dateRange={dateRange} />
+            <div ref={overviewPDF.targetRef}>
+              <ConversationStatsOverview dateRange={dateRange} />
+            </div>
           )}
+
           {tab === "agent-performance" && (
-            <ConversationStatsAgentPerformance dateRange={dateRange} />
+            <div ref={agentPDF.targetRef}>
+              <ConversationStatsAgentPerformance dateRange={dateRange} />
+            </div>
           )}
+
           {tab === "team-performance" && (
-            <TeamPerformance dateRange={dateRange} />
+            <div ref={teamPDF.targetRef}>
+              <TeamPerformance dateRange={dateRange} />
+            </div>
           )}
           {tab === "api-analytics" && <ApiAnalytics dateRange={dateRange} />}
           {tab === "message-logs" && <MessageLogs dateRange={dateRange} />}
