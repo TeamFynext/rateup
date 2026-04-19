@@ -1,12 +1,15 @@
 "use client";
 
-import { Button } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
-import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-react/recipe/thirdparty";
+import {
+  getAuthorisationURLWithQueryParamsAndSetState,
+  Google,
+} from "supertokens-auth-react/recipe/thirdparty";
 
 import { GoogleIcon } from "../Button/GoogleIcon";
+import { Button } from "../ui/button";
 
 type GoogleSignInButtonProps = {
   className?: string;
@@ -48,13 +51,12 @@ function GoogleSignInButton({ buttonText, className }) {
 
   return (
     <Button
-      leftSection={<GoogleIcon />}
-      variant="default"
-      color="gray"
+      variant="outline"
       onClick={googleSignInClicked}
-      className={className}
+      className={`w-full h-8 ${className}`}
     >
-      {buttonText}
+      <GoogleIcon />
+      <span className="font-semibold">{buttonText}</span>
     </Button>
   );
 }

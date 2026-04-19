@@ -18,7 +18,7 @@ export const useCheckSessionAppRouter = () => {
       if (
         !sessionExists &&
         currentPath === "/signup" &&
-        query === "?auth=google"
+        (query === "?auth=google" || query === "?auth=apple")
       ) {
         router.push("/login");
       }

@@ -28,7 +28,10 @@ export const frontendConfig = (): SuperTokensConfig => {
       EmailPasswordReact.init(),
       ThirdPartyReact.init({
         signInAndUpFeature: {
-          providers: [ThirdPartyReact.Google.init()],
+          providers: [
+            ThirdPartyReact.Google.init(),
+            ThirdPartyReact.Apple.init(),
+          ],
         },
       }),
       EmailVerificationReact.init(),

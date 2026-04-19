@@ -15,7 +15,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Loader } from "../ui/loader";
-import styles from "./AuthForm.module.css";
+import AppleSignInButton from "./AppleSigninButton";
 import GoogleSignInButton from "./GoogleSigninButton";
 
 const loginSchema = z.object({
@@ -111,10 +111,17 @@ export default function SignInFlow({
             Continue your growth journey with RateUp
           </p>
         </div>
-        <GoogleSignInButton
-          className={styles["login-signup-with-google-btn"]}
-          buttonText={"Continue with Google"}
-        />
+        <div className="flex flex-col gap-2">
+          <GoogleSignInButton
+            className="w-full h-8 py-2 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-800 hover:bg-gray-50 font-medium"
+            buttonText={"Continue with Google"}
+          />
+          <AppleSignInButton
+            className="w-full h-8 py-2 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-800 hover:bg-gray-50 font-medium"
+            buttonText="Continue with Apple"
+          />
+        </div>
+
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300" />
