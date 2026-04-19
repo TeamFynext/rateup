@@ -157,6 +157,82 @@ export async function createGoogleUserHandler(
   reply.code(201).send(user);
 }
 
+export async function createAppleUserHandler(
+  request: FastifyRequest<{
+    Body: CreateUserGoogleSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  let session = await Session.getSession(request, reply);
+  let userId = session.getUserId();
+
+  let user;
+  let userInfo;
+  if (request?.body?.type === "apple") {
+    userInfo = await supertokens.getUser(userId);
+  } else {
+    // userInfo = await PasswordLess.getUserById({ userId }); //STT
+    userInfo = await supertokens.getUser(userId);
+    userInfo.emails[0] = request?.body?.email;
+    userInfo.phoneNumbers[0] = request?.body?.phoneNumber;
+  }
+  const body = request.body;
+
+  const payload = {
+    id: userId,
+    email: userInfo?.emails?.[0] ?? "",
+    name: body.name ?? "",
+    orgName: body.orgName ?? "",
+    phoneNumber: body.phoneNumber ?? "",
+    phone: body.phoneNumber ?? "",
+    recipeName: UserRecipes.ThirdPartyApple,
+    location: body.location ?? "",
+    industry: body.industry ?? "",
+    website:
+      body.website && body.website.startsWith("http")
+        ? body.website
+        : body.website
+          ? `https://${body.website}`
+          : undefined,
+
+    goals: Array.isArray(body.goals) ? body.goals : [],
+    integrationsSelected: Array.isArray(body.integrationsSelected)
+      ? body.integrationsSelected
+      : [],
+  };
+  try {
+    user = await createUserSignup({
+      id: payload.id,
+      email: payload.email,
+      name: payload.name,
+      orgName: payload.orgName,
+      phoneNumber: payload.phoneNumber,
+      phone: payload.phone,
+      recipeName: payload.recipeName,
+      location: payload.location,
+      industry: payload.industry,
+      website: payload.website,
+      goals: payload.goals,
+      integrationsSelected: payload.integrationsSelected,
+    });
+  } catch (e: any) {
+    console.error(e);
+    let message = e.message;
+
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === "P2002"
+    ) {
+      message = "User already exists. Please logout and Login again.";
+    }
+
+    reply.code(500).send({ success: false, message });
+    return;
+  }
+
+  reply.code(201).send(user);
+}
+
 export async function changeUserPasswordHandler(
   req: FastifyRequest<{
     Body: ChangeUserPasswordSchema;

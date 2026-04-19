@@ -37,6 +37,10 @@ export const appConfig = {
     smsApiKey: process.env.SUPERTOKEN_SMS_API_KEY,
     googleClientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
     googleClientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
+    appleClientId: process.env.APPLE_CLIENT_ID || "",
+    appleKeyId: process.env.APPLE_KEY_ID || "",
+    applePrivateKey: process.env.APPLE_PRIVATE_KEY || "",
+    appleTeamId: process.env.APPLE_TEAM_ID || "",
   },
   cookieDomain: process.env.COOKIE_DOMAIN || "",
 };
@@ -182,6 +186,24 @@ export const SuperTokensConfig: TypeInput = {
                 {
                   clientId: appConfig.supertokens.googleClientId,
                   clientSecret: appConfig.supertokens.googleClientSecret,
+                },
+              ],
+            },
+          },
+          {
+            config: {
+              thirdPartyId: "apple",
+              clients: [
+                {
+                  clientId: appConfig.supertokens.appleClientId,
+                  additionalConfig: {
+                    keyId: appConfig.supertokens.appleKeyId,
+                    privateKey: appConfig.supertokens.applePrivateKey.replace(
+                      /\\n/g,
+                      "\n",
+                    ),
+                    teamId: appConfig.supertokens.appleTeamId,
+                  },
                 },
               ],
             },
