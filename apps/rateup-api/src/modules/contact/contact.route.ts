@@ -156,12 +156,8 @@ export async function contactRoutes(server: FastifyInstance) {
   server.get(
     "/custom-fields",
     {
-      onSend: async (_req, reply, payload) => {
-        if (reply.statusCode === 403) {
-          reply.code(200);
-          return "[]";
-        }
-        return payload;
+      config: {
+        fallbackEmptyArray: true,
       },
     },
     getCustomFieldHandler,

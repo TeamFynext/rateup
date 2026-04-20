@@ -72,7 +72,14 @@ export function requireFeature(feature: TeamFeature) {
     }
 
     if (!request.features.has(feature)) {
-      reply.code(403).send({
+      const fallbackEmpty = (request.routeOptions.config as any)
+        ?.fallbackEmptyArray;
+
+      if (fallbackEmpty) {
+        return reply.code(200).send([]);
+      }
+
+      return reply.code(403).send({
         message: `Access to '${feature}' is not enabled for your team`,
       });
     }

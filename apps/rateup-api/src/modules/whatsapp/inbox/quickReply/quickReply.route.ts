@@ -11,10 +11,8 @@ import {
   byQuickReplyIdParamSchema,
   updateQuickReplyShema,
 } from "./quickReply.schema.js";
-import { checkSession } from "../../../../utils/checkSession.js";
 
 export async function waQuickReplyRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
   server.post(
     "/",
     {
