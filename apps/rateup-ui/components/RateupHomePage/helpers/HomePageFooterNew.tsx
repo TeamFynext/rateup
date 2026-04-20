@@ -174,7 +174,7 @@ export default function HomePageFooter() {
             </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center lg:min-w-[15vw] gap-8 lg:gap-20 mt-8 lg:mt-0">
+          <div className="flex flex-col items-center justify-center lg:min-w-[15vw] gap-4 lg:gap-8 mt-8 lg:mt-0">
             <div className="bg-[linear-gradient(135deg,#FFF5F5,#F5EBFF,#E0EEFF,#F5FFFB)] flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl">
               <div className="flex items-center justify-center gap-2">
                 <Image
@@ -191,6 +191,19 @@ export default function HomePageFooter() {
                 </span>
               </div>
             </div>
+            <a
+              href="https://www.foundrlist.com/product/rateup?utm_source=badge&utm_medium=embed"
+              target="_blank"
+              rel="noopener"
+              className="hover:opacity-80 transition-opacity my-0"
+            >
+              <img
+                src="https://www.foundrlist.com/api/badge/rateup"
+                alt="Featured on FoundrList"
+                width="150"
+                height="48"
+              />
+            </a>
             <div className="w-full">
               <div className="text-left mb-2">Follow us</div>
               <div className="flex items-center gap-4 justify-center flex-wrap">
