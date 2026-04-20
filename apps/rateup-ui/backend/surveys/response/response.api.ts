@@ -103,7 +103,7 @@ export async function downloadExcelResponse(data: downloadExcelResponseType) {
     },
   );
   const blob = new Blob([response.data], {
-    type: response.headers["content-type"],
+    type: response.headers["content-type"] as string,
   });
 
   return saveAs(blob, `${data.title}.xlsx`);

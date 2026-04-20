@@ -76,7 +76,7 @@ export const campaignResponseDownloadById = async ({
     },
   );
   const blob = new Blob([response.data], {
-    type: response.headers["content-type"],
+    type: response.headers["content-type"] as string,
   });
 
   return saveAs(blob, response?.headers?.filename ?? "file.xlsx");
