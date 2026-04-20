@@ -17,8 +17,10 @@ import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { RouteAccessGuard } from "@/components/common/RouteAccessGuard";
 import { CustomFieldsProvider } from "@/context/CustomFieldsContext";
 import { LifecycleContext } from "@/context/LifecycleContext";
+import { TeamFeaturesProvider } from "@/context/TeamFeaturesContext";
 
 import { IUserInfoApiResponse } from "../../../backend/user/user.api";
 import { useUserInfo } from "../../../backend/user/user.query";
@@ -146,8 +148,7 @@ export default function MainSidebar({ children }) {
   const isInbox = pathname?.includes("/dashboard/inbox");
   const paddingExclusion = isInbox
     ? true
-    : pathname?.includes("/dashboard/settings") ||
-      pathname?.includes("/dashboard/whatsapp/flows/v2/");
+    : pathname?.includes("/dashboard/whatsapp/flows/v2/");
   const { data: inboxCount } = useGetInboxUserCount(isInbox);
 
   useEffect(() => {
@@ -181,44 +182,46 @@ export default function MainSidebar({ children }) {
     <SessionReact.SessionAuth>
       <WebSocketHandler />
 
-      <SidebarProvider
-        defaultOpen={true}
-        style={
-          {
-            "--sidebar-width": "0px", // for custom second sidebar width
-            "--sidebar-width-icon": "53px",
-          } as React.CSSProperties
-        }
-      >
-        {isLoading ? (
-          <NavbarSkeleton />
-        ) : (
-          <AppSidebar
-            subscription={sub}
-            contactLabels={contactLabels}
-            lifecycles={lifecycles}
-            userData={
-              userQueryData &&
-              "message" in userQueryData &&
-              "data" in userQueryData
-                ? userQueryData
-                : undefined
-            }
-            staff={userRes?.data ?? []}
-            teams={teamRes?.data ?? []}
-          />
-        )}
-
-        <div
-          className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-[#f9fafc] dark:bg-[#121212]`}
+      <TeamFeaturesProvider>
+        <SidebarProvider
+          defaultOpen={true}
+          style={
+            {
+              "--sidebar-width": "0px", // for custom second sidebar width
+              "--sidebar-width-icon": "53px",
+            } as React.CSSProperties
+          }
         >
-          <LifecycleContext value={lifecycles || []}>
-            <CustomFieldsProvider initialFields={customFieldData || []}>
-              {children}
-            </CustomFieldsProvider>
-          </LifecycleContext>
-        </div>
-      </SidebarProvider>
+          {isLoading ? (
+            <NavbarSkeleton />
+          ) : (
+            <AppSidebar
+              subscription={sub}
+              contactLabels={contactLabels}
+              lifecycles={lifecycles}
+              userData={
+                userQueryData &&
+                "message" in userQueryData &&
+                "data" in userQueryData
+                  ? userQueryData
+                  : undefined
+              }
+              staff={userRes?.data ?? []}
+              teams={teamRes?.data ?? []}
+            />
+          )}
+
+          <div
+            className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-[#f9fafc] dark:bg-[#121212]`}
+          >
+            <LifecycleContext value={lifecycles || []}>
+              <CustomFieldsProvider initialFields={customFieldData || []}>
+                <RouteAccessGuard>{children}</RouteAccessGuard>
+              </CustomFieldsProvider>
+            </LifecycleContext>
+          </div>
+        </SidebarProvider>
+      </TeamFeaturesProvider>
     </SessionReact.SessionAuth>
   );
 }

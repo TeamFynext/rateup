@@ -83,7 +83,13 @@ export function TeamSelector({
   return (
     <Select value={value} onValueChange={onChange} defaultValue={label}>
       <SelectTrigger className={`${className || ""}`}>
-        <Users className="w-4 h-4 mr-2 text-[#1873E8]" />
+        <div
+          className={
+            "rounded-md flex items-center justify-center shrink-0 size-7 bg-muted"
+          }
+        >
+          <Users className="size-4 text-muted-foreground" />
+        </div>
         <SelectValue placeholder="Team" />
       </SelectTrigger>
       <SelectContent className="z-[1050]">

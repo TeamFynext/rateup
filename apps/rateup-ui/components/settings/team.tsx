@@ -16,45 +16,50 @@ import {
   UserPlus,
   Users,
   UserX,
-  X,
 } from "lucide-react";
 import { useExtracted } from "next-intl";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import {
+  SubscriptionFeaturePathName as sfpn,
+  TeamFeature,
+} from "@/types/enums";
+import { useSubscription } from "@/backend/subscription/subscription.query";
 import {
   useAddUsertoTeams,
   useDeleteTeamMutation,
   useEditTeamMutation,
   useNotTeamMembers,
   useRemoveUserFromTeam,
+  useTeamFeatures,
   useTeamMembersFromInvitation,
+  useUpdateTeamFeatures,
 } from "@/backend/team/team.query";
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { UserRole } from "@/utils/enums";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
+import { hasFeature } from "@/utils/subscription/subscription";
 
-import { Card } from "../ui/card";
+import { Card, CardContent } from "../ui/card";
 
-export let colorArray = [
+export const colorArray = [
   { from: "#3B82F6", to: "#2563EB" }, // Blue
   { from: "#F97316", to: "#EA580C" }, // Orange
   { from: "#22C55E", to: "#16A34A" }, // Green
@@ -110,73 +115,85 @@ export function EditTeam({ selectedTeam }) {
   };
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl mb-1">{translations("Team Settings")}</h2>
-      <p className="text-sm text-muted-foreground mb-6">
+    <Card className="p-4">
+      <h2 className="text-xl">{translations("Team Settings")}</h2>
+      <p className="text-sm text-muted-foreground">
         {translations("Configure team details and preferences")}
       </p>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Team Name */}
-        <div className="space-y-2">
-          <Label htmlFor="team-name">{translations("Team Name")}</Label>
-          <Input
-            id="team-name"
-            placeholder={translations("Enter Team name")}
-            {...form.register("name", {
-              validate: (value) =>
-                value.length >= 3 ||
-                translations("Team Name should be at least 3 characters long"),
-            })}
-            className="h-10 border-2 border-gray-200"
-          />
-          {form.formState.errors.name && (
-            <p className="text-xs text-red-500">
-              {form.formState.errors.name.message}
-            </p>
+        <Controller
+          name="name"
+          control={form.control}
+          rules={{
+            validate: (value) =>
+              value.length >= 3 ||
+              translations("Team Name should be at least 3 characters long"),
+          }}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="team-name">
+                {translations("Team Name")}
+              </FieldLabel>
+              <Input
+                {...field}
+                id="team-name"
+                placeholder={translations("Enter Team name")}
+                aria-invalid={fieldState.invalid}
+                className="h-10"
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
           )}
-        </div>
+        />
 
         {/* Team Code */}
-        <div className="space-y-2">
-          <Label htmlFor="team-code">{translations("Team Code")}</Label>
-          <Input
-            id="team-code"
-            placeholder={translations("Enter Team code")}
-            {...form.register("code", {
-              validate: (value) => {
-                if (value.length < 2) {
-                  return translations(
-                    "Team Code should be at least 2 characters long",
-                  );
-                }
+        <Controller
+          name="code"
+          control={form.control}
+          rules={{
+            validate: (value) => {
+              if (value.length < 2) {
+                return translations(
+                  "Team Code should be at least 2 characters long",
+                );
+              }
 
-                if (/\s/.test(value)) {
-                  const suggested = value.trim().replace(/\s+/g, "-");
-                  return `${translations("Spaces not allowed, try")} "${suggested}"`;
-                }
+              if (/\s/.test(value)) {
+                const suggested = value.trim().replace(/\s+/g, "-");
+                return `${translations("Spaces not allowed, try")} "${suggested}"`;
+              }
 
-                if (!/^[A-Za-z0-9-]+$/.test(value)) {
-                  return translations(
-                    "Team Code can contain only alphabets, numbers, and hyphens",
-                  );
-                }
+              if (!/^[A-Za-z0-9-]+$/.test(value)) {
+                return translations(
+                  "Team Code can contain only alphabets, numbers, and hyphens",
+                );
+              }
 
-                return true;
-              },
-            })}
-            className="h-10 border-2 border-gray-200"
-          />
-          {form.formState.errors.code && (
-            <p className="text-xs text-red-500">
-              {form.formState.errors.code.message}
-            </p>
+              return true;
+            },
+          }}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="team-code">
+                {translations("Team Code")}
+              </FieldLabel>
+              <Input
+                {...field}
+                id="team-code"
+                placeholder={translations("Enter Team code")}
+                aria-invalid={fieldState.invalid}
+                className="h-10"
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
           )}
-        </div>
+        />
 
         {/* Team Color */}
-        <div className="space-y-2">
-          <Label>{translations("Team Color")}</Label>
+        <Field>
+          <FieldLabel>{translations("Team Color")}</FieldLabel>
           <div className="flex gap-3 flex-wrap">
             {colorArray.map((color, index) => {
               const isSelected = editedColor === color.from;
@@ -190,9 +207,7 @@ export function EditTeam({ selectedTeam }) {
                     form.setValue("color", color.from);
                   }}
                   className={`w-12 h-12 rounded-lg transition-all ${
-                    isSelected
-                      ? "ring-4 ring-offset-2 ring-gray-400 scale-105"
-                      : ""
+                    isSelected ? "ring-4 ring-offset-2 ring-ring scale-105" : ""
                   } hover:scale-110`}
                   style={{
                     background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
@@ -201,11 +216,11 @@ export function EditTeam({ selectedTeam }) {
               );
             })}
           </div>
-        </div>
+        </Field>
 
         {/* Created Date */}
         {selectedTeam?.createdAt && (
-          <div className="pt-4 border-t border-gray-200">
+          <div className="pt-4 border-t border-border">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
               <span>
@@ -242,20 +257,20 @@ export function AddMembers({ selectedTeam }) {
       case UserRole.SUPADM:
         return {
           icon: Crown,
-          className: "bg-yellow-100 text-yellow-700 border-yellow-200",
+          className: "bg-secondary text-secondary-foreground border-border",
         };
 
       case UserRole.ADM:
         return {
           icon: Shield,
-          className: "bg-purple-100 text-purple-700 border-purple-200",
+          className: "bg-accent text-accent-foreground border-border",
         };
 
       case UserRole.MEMBER:
       default:
         return {
           icon: User,
-          className: "bg-blue-100 text-blue-700 border-blue-200",
+          className: "bg-muted text-foreground border-border",
         };
     }
   };
@@ -465,7 +480,7 @@ export function AddMembers({ selectedTeam }) {
                     )}
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="mt-4 pt-4 border-t border-border">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">
                         {translations("Status")}
@@ -474,7 +489,9 @@ export function AddMembers({ selectedTeam }) {
                       {/* Active boolean handling */}
                       <span
                         className={
-                          member?.active ? "text-green-600" : "text-gray-500"
+                          member?.active
+                            ? "text-primary"
+                            : "text-muted-foreground"
                         }
                       >
                         {member?.active
@@ -584,52 +601,53 @@ export function DeleteTeam({ selectedTeam }) {
     <>
       {/* FORM */}
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="space-y-2">
-          <Label htmlFor="google-link">
-            {translations("Google review link")}
-          </Label>
-
-          <div>
-            <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
-              <Input
-                id="google-link"
-                placeholder={translations("Enter google link")}
-                {...form.register("googleLink", {
-                  validate: (value) =>
-                    value.startsWith("https://") ||
-                    value === "" ||
-                    translations("Please enter a valid url (https://...)"),
-                })}
-                className="border-2 border-gray-200 focus:border-rateup-blue"
-              />
-
-              <Button
-                size="sm"
-                type="submit"
-                className="bg-primary min-w-full sm:min-w-18"
-                disabled={editTeamMutation.isPending}
-              >
-                {editTeamMutation.isPending ? <Clock /> : translations("Save")}
-              </Button>
-            </div>
-
-            {/* ERROR */}
-            {form.formState.errors.googleLink && (
-              <p className="text-xs text-red-600 mt-1">
-                {form.formState.errors.googleLink.message}
-              </p>
-            )}
-          </div>
-        </div>
+        <Controller
+          name="googleLink"
+          control={form.control}
+          rules={{
+            validate: (value) =>
+              value.startsWith("https://") ||
+              value === "" ||
+              translations("Please enter a valid url (https://...)"),
+          }}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="google-link">
+                {translations("Google review link")}
+              </FieldLabel>
+              <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
+                <Input
+                  {...field}
+                  id="google-link"
+                  placeholder={translations("Enter google link")}
+                  aria-invalid={fieldState.invalid}
+                />
+                <Button
+                  size="sm"
+                  type="submit"
+                  className="bg-primary min-w-full sm:min-w-18"
+                  disabled={editTeamMutation.isPending}
+                >
+                  {editTeamMutation.isPending ? (
+                    <Clock />
+                  ) : (
+                    translations("Save")
+                  )}
+                </Button>
+              </div>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
       </form>
 
       {/* DELETE SECTION */}
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+      <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
         <div className="flex items-start gap-3">
-          <Trash2 className="w-5 h-5 text-red-600 shrink-0" />
+          <Trash2 className="h-5 w-5 shrink-0 text-destructive" />
           <div className="flex flex-col gap-2 items-start">
             <div>
-              <h4 className="text-sm font-medium text-red-700">
+              <h4 className="text-sm font-medium text-destructive">
                 {translations("Delete Team")}
               </h4>
               <p className="text-xs text-muted-foreground">
@@ -653,10 +671,10 @@ export function DeleteTeam({ selectedTeam }) {
 
       {/* DIALOG */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-sm border border-red-200 bg-red-50">
+        <DialogContent className="max-w-sm border-destructive/20">
           <DialogHeader>
-            <DialogTitle className="text-red-700 flex items-center gap-2">
-              <Trash2 className="w-5 h-5 text-red-600" />
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5 text-destructive" />
               {translations("Confirm Deletion")}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
@@ -692,92 +710,162 @@ export function DeleteTeam({ selectedTeam }) {
   );
 }
 
-export function TeamChannelPermissions({ selectedTeam }) {
+const FEATURES_WITH_SUBSCRIPTION: {
+  feature: TeamFeature;
+  label: string;
+  requiredSubscriptions?: sfpn[];
+}[] = [
+  {
+    feature: TeamFeature.Inbox,
+    label: "Inbox",
+    requiredSubscriptions: [sfpn.Whatsapp],
+  },
+  { feature: TeamFeature.Analytics, label: "Analytics" },
+  {
+    feature: TeamFeature.Contacts,
+    label: "Contacts",
+    requiredSubscriptions: [sfpn.WhatsAppCampaign],
+  },
+  {
+    feature: TeamFeature.Campaigns,
+    label: "Campaigns",
+    requiredSubscriptions: [sfpn.WhatsAppCampaign],
+  },
+  {
+    feature: TeamFeature.Flows,
+    label: "Flows",
+    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppFlow],
+  },
+  {
+    feature: TeamFeature.Chatbots,
+    label: "Chatbots",
+    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppAutomation],
+  },
+  {
+    feature: TeamFeature.Templates,
+    label: "Templates",
+    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppTemplate],
+  },
+  {
+    feature: TeamFeature.Automation,
+    label: "Automation",
+    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppAutomation],
+  },
+  {
+    feature: TeamFeature.Loyalty,
+    label: "Loyalty",
+    requiredSubscriptions: [sfpn.Loyalty],
+  },
+  {
+    feature: TeamFeature.WebForms,
+    label: "Web Forms / Surveys",
+    requiredSubscriptions: [sfpn.WebSurvey],
+  },
+  {
+    feature: TeamFeature.Tickets,
+    label: "Tickets",
+    requiredSubscriptions: [sfpn.Ticket],
+  },
+  { feature: TeamFeature.QrStudio, label: "QR Studio" },
+  {
+    feature: TeamFeature.AiChatbot,
+    label: "Chatbot (AI)",
+    requiredSubscriptions: [sfpn.AI],
+  },
+  { feature: TeamFeature.AppsServices, label: "Apps & Services" },
+  {
+    feature: TeamFeature.DigitalMenu,
+    label: "Digital Menu",
+    requiredSubscriptions: [sfpn.Menu],
+  },
+  { feature: TeamFeature.Settings, label: "Settings" },
+];
+
+export function TeamFeatureAccess({ selectedTeam }) {
   const translations = useExtracted();
-  const { data: waSettings, isLoading: isLoadingSettings } = useWaSettings();
-  const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const editTeamMutation = useEditTeamMutation(
-    selectedTeam.id,
-    setIsUpdating,
-    undefined,
-    true, // use this to avoid triggering full team update if possible, although our backend handles it
+  const teamId = selectedTeam?.id as string;
+
+  const { data, isLoading } = useTeamFeatures(teamId);
+  const updateMutation = useUpdateTeamFeatures(teamId);
+  const { data: subscription } = useSubscription();
+
+  const availableFeatures = FEATURES_WITH_SUBSCRIPTION.filter(
+    ({ requiredSubscriptions }) =>
+      !requiredSubscriptions ||
+      requiredSubscriptions.every((sfp) => hasFeature(subscription, sfp)),
   );
 
+  const [checked, setChecked] = useState<Set<string>>(new Set());
+
   useEffect(() => {
-    if (selectedTeam?.whatsappChannels) {
-      setSelectedChannels(selectedTeam.whatsappChannels.map((c: any) => c.id));
+    if (data) {
+      setChecked(new Set(data.features.map((f) => f.feature)));
     }
-  }, [selectedTeam]);
+  }, [data]);
 
-  const handleToggleChannel = (channelId: string) => {
-    setSelectedChannels((prev) =>
-      prev.includes(channelId)
-        ? prev.filter((id) => id !== channelId)
-        : [...prev, channelId],
-    );
-  };
-
-  const handleSave = () => {
-    setIsUpdating(true);
-    editTeamMutation.mutate({
-      whatsappChannels: selectedChannels.map((id) => ({ id })),
+  const handleToggle = (feature: string) => {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      if (next.has(feature)) next.delete(feature);
+      else next.add(feature);
+      return next;
     });
   };
 
-  if (isLoadingSettings) return <Skeleton className="h-20 w-full" />;
+  const handleSave = () => {
+    updateMutation.mutate(Array.from(checked));
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={`feat-skel-${i}`} className="h-12 w-full rounded-lg" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 pt-2">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium">
-          {translations("Inbox Channels Visibility")}
-        </h4>
-        <Button size="sm" onClick={handleSave} disabled={isUpdating}>
-          {isUpdating ? translations("Saving") : translations("Save")}
+        <div>
+          <h2 className="text-xl mb-1">{translations("Feature Access")}</h2>
+          <p className="text-sm text-muted-foreground">
+            {translations(
+              "Select which features this team can access. Org owners and admins always have full access.",
+            )}
+          </p>
+        </div>
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={updateMutation.isPending}
+        >
+          {updateMutation.isPending
+            ? translations("Saving")
+            : translations("Save Changes")}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">
-        {translations(
-          "Select the WhatsApp and Instagram channels this team can access. If none are selected, the team will have access to all channels by default.",
-        )}
-      </p>
-      <ScrollArea className="h-[250px] border rounded-md p-3">
-        <div className="space-y-3">
-          {waSettings?.map((setting: any) => (
-            <div
-              key={setting.id}
-              className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors"
-            >
-              <Checkbox
-                id={`channel-${setting.id}`}
-                checked={selectedChannels.includes(setting.id)}
-                onCheckedChange={() => handleToggleChannel(setting.id)}
-              />
-              <div className="grid gap-1 leading-none">
-                <Label
-                  htmlFor={`channel-${setting.id}`}
-                  className="text-sm font-medium cursor-pointer"
-                >
-                  {setting.phone || setting.phoneId}
-                </Label>
-                {setting.igUserName && (
-                  <p className="text-xs text-muted-foreground">
-                    Instagram: {setting.igUserName}
-                  </p>
-                )}
+
+      <Card>
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {availableFeatures.map(({ feature, label }) => (
+              <div
+                key={feature}
+                className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+              >
+                <span>{label}</span>
+                <Switch
+                  checked={checked.has(feature)}
+                  onCheckedChange={() => handleToggle(feature)}
+                />
               </div>
-            </div>
-          ))}
-          {(!waSettings || waSettings.length === 0) && (
-            <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground">
-                {translations("No channels found")}
-              </p>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

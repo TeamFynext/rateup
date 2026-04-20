@@ -200,7 +200,7 @@ export const exportContacts = async (data: {
     timeout: 0,
   });
   const blob = new Blob([response.data], {
-    type: response.headers["content-type"],
+    type: response.headers["content-type"] as string,
   });
 
   return saveAs(blob, `contacts.${data.type}`);

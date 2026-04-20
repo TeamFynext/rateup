@@ -18,6 +18,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { MoveRight, PanelsTopLeft } from "lucide-react";
 import { useExtracted } from "next-intl";
 
+import { TeamFeature } from "@/types/enums";
 import {
   useActiveSurveyStats,
   useOverallStats,
@@ -31,6 +32,7 @@ import {
 } from "@/components/Dashboard/SurveyCard";
 import TeamMembers from "@/components/Dashboard/TeamMembers";
 import { Loader } from "@/components/ui/loader";
+import { useTeamFeatures } from "@/context/TeamFeaturesContext";
 import { UserRole } from "@/utils/enums";
 
 dayjs.extend(relativeTime);
@@ -48,6 +50,7 @@ export default function DashboardHome() {
   // const { data: overallData, isLoading: overallStatsLoading } =
   //   useOverallStats();
   // const translations = useExtracted();
+  const allowedFeatures = useTeamFeatures();
   useEffect(() => {
     const user =
       userQueryData && "data" in userQueryData ? userQueryData.data : null;
@@ -55,8 +58,34 @@ export default function DashboardHome() {
     if (!user.onboardingChecklistCompleted && user.role === UserRole.SUPADM) {
       return router.replace("/login/setup");
     }
+    // For members with a restricted feature set, redirect to the first
+    // permitted route instead of always going to inbox (which may be blocked).
+    if (allowedFeatures !== null) {
+      if (allowedFeatures.has(TeamFeature.Inbox)) {
+        return router.replace("/dashboard/inbox?tab=New");
+      }
+      // Fall back through other common features in priority order
+      if (allowedFeatures.has(TeamFeature.Analytics)) {
+        return router.replace("/dashboard/analytics");
+      }
+      if (allowedFeatures.has(TeamFeature.Contacts)) {
+        return router.replace("/dashboard/contacts");
+      }
+      if (allowedFeatures.has(TeamFeature.Campaigns)) {
+        return router.replace("/dashboard/campaign");
+      }
+      if (allowedFeatures.has(TeamFeature.Loyalty)) {
+        return router.replace("/dashboard/loyalty/dashboard");
+      }
+      if (allowedFeatures.has(TeamFeature.Tickets)) {
+        return router.replace("/dashboard/tickets");
+      }
+      // No feature permissions at all — settings is always allowed
+      return router.replace("/dashboard/settings");
+    }
+    // Owners / admins: go straight to inbox
     router.replace("/dashboard/inbox?tab=New");
-  }, [userQueryData, isFetched, isLoadingUserInfo]);
+  }, [userQueryData, isFetched, isLoadingUserInfo, allowedFeatures]);
 
   return (
     <Loader />

@@ -37,24 +37,34 @@ import {
   ChartLine,
   CircleCheckBig,
   Clock,
+  CreditCard,
+  Crown,
   FileSpreadsheet,
   FileText,
   Folder,
   Inbox,
   Logs,
+  MessageSquare,
   Send,
   Settings,
+  Shield,
   ShoppingCart,
   Sparkles,
   Tag,
   User,
   UserCheck,
+  UserCog,
   Users,
+  Webhook,
   Zap,
 } from "lucide-react";
 import { useExtracted } from "next-intl";
 
-import { SubscriptionFeaturePathName as sfpn } from "@/types/enums";
+import {
+  SubscriptionFeaturePathName as sfpn,
+  TeamFeature,
+} from "@/types/enums";
+import { UserRole } from "@/utils/enums";
 import { hasFeature } from "@/utils/subscription/subscription";
 
 export function useNavMain({
@@ -67,8 +77,13 @@ export function useNavMain({
   hiddenModules,
   handleFilter,
   userId,
+  allowedFeatures,
+  user,
 }: any) {
   const t = useExtracted();
+  // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)
+  const hasTeamFeature = (feature: TeamFeature) =>
+    allowedFeatures === null || allowedFeatures.has(feature);
   return useMemo(
     () => [
       // {
@@ -78,7 +93,8 @@ export function useNavMain({
       //   items: [],
       // },
 
-      ...(hasFeature(subscription, sfpn.Whatsapp)
+      ...(hasFeature(subscription, sfpn.Whatsapp) &&
+      hasTeamFeature(TeamFeature.Inbox)
         ? [
             {
               title: t("Inbox"),
@@ -113,7 +129,6 @@ export function useNavMain({
                 },
                 {
                   group: "Filter",
-                  showTitle: false,
                   items: [
                     ...(lifecycles.length > 0
                       ? [
@@ -121,7 +136,10 @@ export function useNavMain({
                             title: "Lifecycle",
                             icon: IconActivity,
                             items: lifecycles.map((lbl) => ({
-                              title: `${lbl.emoji ? lbl.emoji + " " : ""}${lbl.name}`,
+                              icon: (props) => (
+                                <div {...props}>{lbl.emoji}</div>
+                              ),
+                              title: lbl.name,
                               url: "#",
                               handleClick: () => {
                                 handleFilter("lifecycle", lbl.id);
@@ -140,7 +158,7 @@ export function useNavMain({
                             items: contactLabels.map((lbl) => ({
                               title: lbl.name,
                               url: "#",
-                              icon: (props: any) => (
+                              icon: (props) => (
                                 <div
                                   {...props}
                                   className={`rounded-full ${props?.className ?? ""}`}
@@ -191,44 +209,49 @@ export function useNavMain({
             },
           ]
         : []),
-      {
-        title: t("Analytics"),
-        url: "/dashboard/analytics?tab=overview",
-        icon: ChartColumnBig,
-        items: [
-          {
-            title: t("Overview"),
-            url: "/dashboard/analytics?tab=overview",
-            icon: BarChart,
-          },
-          {
-            title: t("Agent Performance"),
-            url: "/dashboard/analytics?tab=agent-performance",
-            icon: Award,
-          },
-          {
-            title: t("Team Performance"),
-            url: "/dashboard/analytics?tab=team-performance",
-            icon: Activity,
-          },
-          {
-            title: t("Message Analytics"),
-            url: "/dashboard/analytics?tab=api-analytics",
-            icon: ChartLine,
-          },
-          {
-            title: t("Message Logs"),
-            url: "/dashboard/analytics?tab=message-logs",
-            icon: Logs,
-          },
-          {
-            title: t("Team Activity"),
-            url: "/dashboard/analytics?tab=team-activity",
-            icon: FileText,
-          },
-        ],
-      },
-      ...(hasFeature(subscription, sfpn.WhatsAppCampaign)
+      ...(hasTeamFeature(TeamFeature.Analytics)
+        ? [
+            {
+              title: t("Analytics"),
+              url: "/dashboard/analytics?tab=overview",
+              icon: ChartColumnBig,
+              items: [
+                {
+                  title: t("Overview"),
+                  url: "/dashboard/analytics?tab=overview",
+                  icon: BarChart,
+                },
+                {
+                  title: t("Agent Performance"),
+                  url: "/dashboard/analytics?tab=agent-performance",
+                  icon: Award,
+                },
+                {
+                  title: t("Team Performance"),
+                  url: "/dashboard/analytics?tab=team-performance",
+                  icon: Activity,
+                },
+                {
+                  title: t("Message Analytics"),
+                  url: "/dashboard/analytics?tab=api-analytics",
+                  icon: ChartLine,
+                },
+                {
+                  title: t("Message Logs"),
+                  url: "/dashboard/analytics?tab=message-logs",
+                  icon: Logs,
+                },
+                {
+                  title: t("Team Activity"),
+                  url: "/dashboard/analytics?tab=team-activity",
+                  icon: FileText,
+                },
+              ],
+            },
+          ]
+        : []),
+      ...(hasFeature(subscription, sfpn.WhatsAppCampaign) &&
+      hasTeamFeature(TeamFeature.Contacts)
         ? [
             {
               title: t("Contacts"),
@@ -264,7 +287,8 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.WhatsAppCampaign)
+      ...(hasFeature(subscription, sfpn.WhatsAppCampaign) &&
+      hasTeamFeature(TeamFeature.Campaigns)
         ? [
             {
               title: t("Campaign"),
@@ -273,14 +297,19 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.Whatsapp)
+      ...(hasFeature(subscription, sfpn.Whatsapp) &&
+      (hasTeamFeature(TeamFeature.Flows) ||
+        hasTeamFeature(TeamFeature.Chatbots) ||
+        hasTeamFeature(TeamFeature.Templates) ||
+        hasTeamFeature(TeamFeature.Automation))
         ? [
             {
               title: t("WhatsApp"),
               url: "/dashboard/whatsapp/flows",
               icon: IconBrandWhatsapp,
               items: [
-                ...(hasFeature(subscription, sfpn.WhatsAppFlow)
+                ...(hasFeature(subscription, sfpn.WhatsAppFlow) &&
+                hasTeamFeature(TeamFeature.Flows)
                   ? [
                       {
                         title: t("Flow"),
@@ -289,7 +318,8 @@ export function useNavMain({
                       },
                     ]
                   : []),
-                ...(hasFeature(subscription, sfpn.WhatsAppAutomation)
+                ...(hasFeature(subscription, sfpn.WhatsAppAutomation) &&
+                hasTeamFeature(TeamFeature.Chatbots)
                   ? [
                       {
                         title: t("Chatbots"),
@@ -298,7 +328,8 @@ export function useNavMain({
                       },
                     ]
                   : []),
-                ...(hasFeature(subscription, sfpn.WhatsAppTemplate)
+                ...(hasFeature(subscription, sfpn.WhatsAppTemplate) &&
+                hasTeamFeature(TeamFeature.Templates)
                   ? [
                       {
                         title: t("Templates"),
@@ -329,7 +360,8 @@ export function useNavMain({
                 },
               ],
             },
-            ...(hasFeature(subscription, sfpn.WhatsAppAutomation)
+            ...(hasFeature(subscription, sfpn.WhatsAppAutomation) &&
+            hasTeamFeature(TeamFeature.Automation)
               ? [
                   {
                     title: t("Automation"),
@@ -341,7 +373,8 @@ export function useNavMain({
           ]
         : []),
 
-      ...(hasFeature(subscription, sfpn.Loyalty)
+      ...(hasFeature(subscription, sfpn.Loyalty) &&
+      hasTeamFeature(TeamFeature.Loyalty)
         ? [
             {
               title: t("Loyalty"),
@@ -402,7 +435,8 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.WebSurvey)
+      ...(hasFeature(subscription, sfpn.WebSurvey) &&
+      hasTeamFeature(TeamFeature.WebForms)
         ? [
             {
               title: t("Web Forms"),
@@ -432,7 +466,8 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.Ticket)
+      ...(hasFeature(subscription, sfpn.Ticket) &&
+      hasTeamFeature(TeamFeature.Tickets)
         ? [
             {
               title: t("Tickets"),
@@ -442,29 +477,34 @@ export function useNavMain({
             },
           ]
         : []),
-      {
-        title: t("QR Studio"),
-        url: "/dashboard/qrCreator",
-        icon: IconQrcode,
-        items: [
-          {
-            title: t("QR Creator"),
-            url: "/dashboard/qrCreator",
-            icon: IconCirclePlus,
-          },
-          {
-            title: t("Access Links"),
-            url: "/dashboard/quickAccessLinks",
-            icon: IconLinkPlus,
-          },
-          // {
-          //   title: t("Landing Pages"),
-          //   url: "/dashboard/landingPages",
-          //   icon: IconWallpaper,
-          // },
-        ],
-      },
-      ...(hasFeature(subscription, sfpn.AI)
+      ...(hasTeamFeature(TeamFeature.QrStudio)
+        ? [
+            {
+              title: t("QR Studio"),
+              url: "/dashboard/qrCreator",
+              icon: IconQrcode,
+              items: [
+                {
+                  title: t("QR Creator"),
+                  url: "/dashboard/qrCreator",
+                  icon: IconCirclePlus,
+                },
+                {
+                  title: t("Access Links"),
+                  url: "/dashboard/quickAccessLinks",
+                  icon: IconLinkPlus,
+                },
+                // {
+                //   title: t("Landing Pages"),
+                //   url: "/dashboard/landingPages",
+                //   icon: IconWallpaper,
+                // },
+              ],
+            },
+          ]
+        : []),
+      ...(hasFeature(subscription, sfpn.AI) &&
+      hasTeamFeature(TeamFeature.AiChatbot)
         ? [
             {
               title: "ChatBot",
@@ -474,71 +514,76 @@ export function useNavMain({
             },
           ]
         : []),
-      {
-        title: t("Apps & Services"),
-        url: "/dashboard/apps&services",
-        icon: IconApps,
-        items: [
-          {
-            title: "home",
-            url: "/dashboard/apps&services",
-            icon: IconApps,
-          },
-          {
-            title: "apps",
-            icon: IconApps,
-            items: [
-              {
-                title: "Shopify",
-                url: "/dashboard/apps&services/shopify",
-                icon: IconBuildingStore,
-              },
-              {
-                title: "Google Sheet",
-                url: "/dashboard/apps&services/googlesheet",
-                icon: IconFileAnalytics,
-              },
-              {
-                title: "Amelia",
-                url: "/dashboard/apps&services/amelia",
-                icon: IconUser,
-              },
-              {
-                title: "Whatsapp Payment",
-                url: "/dashboard/apps&services/waPayment",
-                icon: IconBrandWhatsapp,
-              },
-              {
-                title: "Petpooja",
-                url: "/dashboard/apps&services/petpooja",
-                icon: IconBuildings,
-              },
-              {
-                title: "Zapier",
-                url: "/dashboard/apps&services/zapier",
-                icon: IconApi,
-              },
-            ],
-          },
+      ...(hasTeamFeature(TeamFeature.AppsServices)
+        ? [
+            {
+              title: t("Apps & Services"),
+              url: "/dashboard/apps&services",
+              icon: IconApps,
+              items: [
+                {
+                  title: "home",
+                  url: "/dashboard/apps&services",
+                  icon: IconApps,
+                },
+                {
+                  title: "apps",
+                  icon: IconApps,
+                  items: [
+                    {
+                      title: "Shopify",
+                      url: "/dashboard/apps&services/shopify",
+                      icon: IconBuildingStore,
+                    },
+                    {
+                      title: "Google Sheet",
+                      url: "/dashboard/apps&services/googlesheet",
+                      icon: IconFileAnalytics,
+                    },
+                    {
+                      title: "Amelia",
+                      url: "/dashboard/apps&services/amelia",
+                      icon: IconUser,
+                    },
+                    {
+                      title: "Whatsapp Payment",
+                      url: "/dashboard/apps&services/waPayment",
+                      icon: IconBrandWhatsapp,
+                    },
+                    {
+                      title: "Petpooja",
+                      url: "/dashboard/apps&services/petpooja",
+                      icon: IconBuildings,
+                    },
+                    {
+                      title: "Zapier",
+                      url: "/dashboard/apps&services/zapier",
+                      icon: IconApi,
+                    },
+                  ],
+                },
 
-          {
-            title: "Encryption",
-            url: "/dashboard/apps&services/encryption",
-            icon: IconTerminal2,
-          },
-          {
-            title: "API Service",
-            url: "/dashboard/apps&services/apiservice",
-            icon: IconApi,
-          },
-          {
-            title: "Widget",
-            url: "/dashboard/apps&services/widget",
-            icon: IconBrowser,
-          },
-        ],
-      },
-      ...(hasFeature(subscription, sfpn.Menu)
+                {
+                  title: "Encryption",
+                  url: "/dashboard/apps&services/encryption",
+                  icon: IconTerminal2,
+                },
+                {
+                  title: "API Service",
+                  url: "/dashboard/apps&services/apiservice",
+                  icon: IconApi,
+                },
+                {
+                  title: "Widget",
+                  url: "/dashboard/apps&services/widget",
+                  icon: IconBrowser,
+                },
+              ],
+            },
+          ]
+        : []),
+      ...(hasFeature(subscription, sfpn.Menu) &&
+      hasTeamFeature(TeamFeature.DigitalMenu)
         ? [
             {
               title: t("Digital Menu"),
@@ -552,7 +597,94 @@ export function useNavMain({
         title: t("Settings"),
         url: "/dashboard/settings",
         icon: IconSettings,
-        items: [],
+        settingsStyle: true,
+        items: [
+          {
+            group: t("Account Settings"),
+            items: [
+              {
+                title: t("Account"),
+                url: "/dashboard/settings/account",
+                icon: User,
+                description: t("Business profile & preferences"),
+              },
+              ...(user?.role === UserRole.SUPADM
+                ? [
+                    {
+                      title: t("Users"),
+                      url: "/dashboard/settings/users",
+                      icon: UserCog,
+                      description: t("User accounts & access"),
+                    },
+                  ]
+                : []),
+              {
+                title: t("Team"),
+                url: "/dashboard/settings/team",
+                icon: Users,
+                description: t("Team members & roles"),
+              },
+            ],
+          },
+          {
+            group: t("Platform Settings"),
+            items: [
+              ...(hasTeamFeature(TeamFeature.Inbox)
+                ? [
+                    {
+                      title: t("Channels"),
+                      url: "/dashboard/settings/channels",
+                      icon: MessageSquare,
+                      description: t("Communication channels"),
+                    },
+                  ]
+                : []),
+              {
+                title: "Integrations",
+                url: "/dashboard/settings/integrations",
+                icon: Webhook,
+                description: "Webhooks & external services",
+              },
+            ],
+          },
+          {
+            group: t("System Settings"),
+            items: [
+              {
+                title: t("Security"),
+                url: "/dashboard/settings/security",
+                icon: Shield,
+                description: t("Password & security"),
+              },
+              ...(user?.role === UserRole.SUPADM
+                ? [
+                    {
+                      title: t("Billing"),
+                      url: "/dashboard/settings/billing",
+                      icon: CreditCard,
+                      description: t("Subscription & payments"),
+                    },
+                  ]
+                : []),
+            ],
+          },
+          ...(subscription?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG &&
+          user?.role === UserRole.SUPADM
+            ? [
+                {
+                  group: t("Admin Settings"),
+                  items: [
+                    {
+                      title: t("Admin"),
+                      url: "/admin",
+                      icon: Crown,
+                      description: t("Admin settings"),
+                    },
+                  ],
+                },
+              ]
+            : []),
+        ],
       },
     ],
     [
@@ -563,6 +695,8 @@ export function useNavMain({
       chatFilterStore.filter?.labels,
       chatFilterStore.filter?.lifecycle,
       hiddenModules,
+      allowedFeatures,
+      user,
     ],
   );
 }

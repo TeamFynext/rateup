@@ -8,7 +8,10 @@ import {
   Shield,
 } from "lucide-react";
 
-import { useMigrateWaTemplateToWhatsappPhoneId } from "@/backend/updations/update.query";
+import {
+  useMigrateWaTemplateToWhatsappPhoneId,
+  useSyncTeamFeatures,
+} from "@/backend/updations/update.query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +26,7 @@ import { isProduction } from "@/utils/constants";
 
 function UpdateAllThemes() {
   const migrateWaTemplate = useMigrateWaTemplateToWhatsappPhoneId();
+  const syncTeamFeaturesMutation = useSyncTeamFeatures();
 
   return (
     <div className="container mx-auto space-y-8">
@@ -93,6 +97,40 @@ function UpdateAllThemes() {
                   <>
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Run Migration
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
+            <CardHeader className="pb-3">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
+                  <Database className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-lg">Sync Team Features</CardTitle>
+                  <CardDescription className="mt-1">
+                    Syncs team feature access for all organisations
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <Button
+                onClick={() => syncTeamFeaturesMutation.mutate()}
+                disabled={syncTeamFeaturesMutation.isPending}
+                className="w-full"
+              >
+                {syncTeamFeaturesMutation.isPending ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Run Sync
                   </>
                 )}
               </Button>

@@ -10,6 +10,11 @@ import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import {
+  SubscriptionFeaturePathName as sfpn,
+  TeamFeature,
+} from "@/types/enums";
+import { useSubscription } from "@/backend/subscription/subscription.query";
+import {
   useCreateTeamMutation,
   useTeamsByUser,
 } from "@/backend/team/team.query";
@@ -27,8 +32,81 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
+import { hasFeature } from "@/utils/subscription/subscription";
+
+const FEATURES_WITH_SUBSCRIPTION: {
+  feature: TeamFeature;
+  label: string;
+  requiredSubscriptions?: sfpn[];
+}[] = [
+  {
+    feature: TeamFeature.Inbox,
+    label: "Inbox",
+    requiredSubscriptions: [sfpn.Whatsapp],
+  },
+  { feature: TeamFeature.Analytics, label: "Analytics" },
+  {
+    feature: TeamFeature.Contacts,
+    label: "Contacts",
+    requiredSubscriptions: [sfpn.WhatsAppCampaign],
+  },
+  {
+    feature: TeamFeature.Campaigns,
+    label: "Campaigns",
+    requiredSubscriptions: [sfpn.WhatsAppCampaign],
+  },
+  {
+    feature: TeamFeature.Flows,
+    label: "Flows",
+    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppFlow],
+  },
+  {
+    feature: TeamFeature.Chatbots,
+    label: "Chatbots",
+    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppAutomation],
+  },
+  {
+    feature: TeamFeature.Templates,
+    label: "Templates",
+    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppTemplate],
+  },
+  {
+    feature: TeamFeature.Automation,
+    label: "Automation",
+    requiredSubscriptions: [sfpn.Whatsapp, sfpn.WhatsAppAutomation],
+  },
+  {
+    feature: TeamFeature.Loyalty,
+    label: "Loyalty",
+    requiredSubscriptions: [sfpn.Loyalty],
+  },
+  {
+    feature: TeamFeature.WebForms,
+    label: "Web Forms / Surveys",
+    requiredSubscriptions: [sfpn.WebSurvey],
+  },
+  {
+    feature: TeamFeature.Tickets,
+    label: "Tickets",
+    requiredSubscriptions: [sfpn.Ticket],
+  },
+  { feature: TeamFeature.QrStudio, label: "QR Studio" },
+  {
+    feature: TeamFeature.AiChatbot,
+    label: "Chatbot (AI)",
+    requiredSubscriptions: [sfpn.AI],
+  },
+  { feature: TeamFeature.AppsServices, label: "Apps & Services" },
+  {
+    feature: TeamFeature.DigitalMenu,
+    label: "Digital Menu",
+    requiredSubscriptions: [sfpn.Menu],
+  },
+  { feature: TeamFeature.Settings, label: "Settings" },
+];
 
 const Team = () => {
   const translations = useExtracted();
@@ -36,8 +114,41 @@ const Team = () => {
   const searchParams = useSearchParams();
   const action = searchParams?.get("action");
   const { user } = useUser();
+  const { data: subscription } = useSubscription();
   const [isCreating, setIsCreating] = useState(false);
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
+  const [selectedFeatures, setSelectedFeatures] = useState<Set<TeamFeature>>(
+    new Set(),
+  );
+
+  // Only show features that are active in this org's subscription
+  const availableFeatures = FEATURES_WITH_SUBSCRIPTION.filter(
+    ({ requiredSubscriptions }) => {
+      if (!requiredSubscriptions || requiredSubscriptions.length === 0)
+        return true;
+      return requiredSubscriptions.every((sfp) =>
+        hasFeature(subscription, sfp),
+      );
+    },
+  );
+
+  const toggleFeature = (feature: TeamFeature) => {
+    setSelectedFeatures((prev) => {
+      const next = new Set(prev);
+      if (next.has(feature)) next.delete(feature);
+      else next.add(feature);
+      return next;
+    });
+  };
+
+  const allEnabled = selectedFeatures.size === availableFeatures.length;
+  const toggleAll = () => {
+    if (allEnabled) {
+      setSelectedFeatures(new Set());
+    } else {
+      setSelectedFeatures(new Set(availableFeatures.map((f) => f.feature)));
+    }
+  };
 
   const createTeamForm = useForm({
     initialValues: {
@@ -82,7 +193,6 @@ const Team = () => {
   const {
     isLoading: isLoadingTeamsUser,
     data: teamsData,
-    error: errorTeamsDataUser,
     refetch: refetchTeams,
   } = useTeamsByUser() as {
     isLoading: boolean;
@@ -105,7 +215,10 @@ const Team = () => {
         id: "load-data",
       },
     );
-    createTeamMutation.mutate(values);
+    createTeamMutation.mutate({
+      ...values,
+      features: Array.from(selectedFeatures),
+    });
   };
   useEffect(() => {
     if (action === "create") {
@@ -256,7 +369,12 @@ const Team = () => {
       {user?.role === UserRole.SUPADM && (
         <Dialog
           open={isCreateTeamDialogOpen}
-          onOpenChange={setIsCreateTeamDialogOpen}
+          onOpenChange={(open) => {
+            setIsCreateTeamDialogOpen(open);
+            if (!open) {
+              setSelectedFeatures(new Set());
+            }
+          }}
         >
           <DialogContent>
             <DialogHeader>
@@ -321,6 +439,36 @@ const Team = () => {
                       />
                     );
                   })}
+                </div>
+              </div>
+
+              {/* Feature Access */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>{translations("Feature Access")}</Label>
+                  <button
+                    type="button"
+                    onClick={toggleAll}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {allEnabled
+                      ? translations("Disable All")
+                      : translations("Enable All")}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                  {availableFeatures.map(({ feature, label }) => (
+                    <div
+                      key={feature}
+                      className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm"
+                    >
+                      <span className="text-muted-foreground">{label}</span>
+                      <Switch
+                        checked={selectedFeatures.has(feature)}
+                        onCheckedChange={() => toggleFeature(feature)}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
