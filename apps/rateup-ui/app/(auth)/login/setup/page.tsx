@@ -643,15 +643,14 @@ function CollapsibleCard({
                             )}
 
                             {/* Checkbox */}
-                            {!["api"].includes(id) && (
-                              <div className="flex items-center gap-1 mt-2">
-                                <Checkbox
-                                  checked={done}
-                                  onCheckedChange={(val) => onToggle(id, val)}
-                                />
-                                <span className="text-xs">Mark done</span>
-                              </div>
-                            )}
+
+                            <div className="flex items-center gap-1 mt-2">
+                              <Checkbox
+                                checked={done}
+                                onCheckedChange={(val) => onToggle(id, val)}
+                              />
+                              <span className="text-xs">Mark done</span>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>

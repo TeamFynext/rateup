@@ -96,6 +96,14 @@ export const createGoogleUser = (data) => {
   });
 };
 
+export const createAppleUser = (data) => {
+  return axiosClient({
+    url: `/user/complete-apple-signup`,
+    method: "POST",
+    data: data,
+  });
+};
+
 export const changeUserPassword = (data: IChangePassword) =>
   axiosClient({
     url: `/user/change-password`,

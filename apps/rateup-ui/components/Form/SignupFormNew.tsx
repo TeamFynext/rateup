@@ -42,10 +42,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import AppleSignInButton from "./AppleSigninButton";
 import GoogleSignInButton from "./GoogleSigninButton";
 
 export const signUpType = {
   SIGNUP_WITH_GOOGLE: "google",
+  SIGNUP_WITH_APPLE: "apple",
   SIGNUP_WITH_EMAIL: "email",
   SIGNUP_WITH_PHONE: "phone",
 };
@@ -226,7 +228,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
             <Step1
               formData={signupForm}
               handleNext={handleNext}
-              google={false}
+              authType={signUpType.SIGNUP_WITH_EMAIL}
             />
           )}
           {currentStep === 2 && (
@@ -276,7 +278,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
   );
 }
 
-export function Step1({ formData, handleNext, google }) {
+export function Step1({ formData, handleNext, authType }) {
   const values = formData.watch();
   const translations = useExtracted();
   const checkEmailMutaion = useCheckEmailExistMutation();
@@ -315,17 +317,22 @@ export function Step1({ formData, handleNext, google }) {
     /[0-9]/.test(password) &&
     /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
+  const google = authType === signUpType.SIGNUP_WITH_GOOGLE;
+  const apple = authType === signUpType.SIGNUP_WITH_APPLE;
+
+  const isSocial = google || apple;
+
   const isFormComplete =
     values.name.trim() !== "" &&
-    (!google
-      ? values.email.trim() !== "" &&
+    (isSocial
+      ? true
+      : values.email.trim() !== "" &&
         values.password.trim() !== "" &&
-        isPasswordValid(values.password)
-      : true) &&
+        isPasswordValid(values.password)) &&
     agreesToTerms;
 
   const handleClick = async () => {
-    if (!google) {
+    if (!isSocial) {
       if (values?.email) {
         setLoading(true);
         const response = await checkEmailMutaion.mutateAsync({
@@ -348,7 +355,7 @@ export function Step1({ formData, handleNext, google }) {
   return (
     <div className="flex flex-col justify-between gap-2 sm:gap-3 w-full min-h-96">
       <div className="flex flex-col gap-2">
-        {google ? (
+        {isSocial ? (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center space-x-3">
               <CheckCircle className="w-5 h-5 text-green-600" />
@@ -361,12 +368,18 @@ export function Step1({ formData, handleNext, google }) {
             </div>
           </div>
         ) : (
-          <GoogleSignInButton
-            className="w-full h-8 py-2 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-800 hover:bg-gray-50 font-medium"
-            buttonText={"Continue with Google"}
-          />
+          <div className="flex flex-col gap-2">
+            <GoogleSignInButton
+              className="w-full h-8 py-2 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-800 hover:bg-gray-50 font-medium"
+              buttonText={"Continue with Google"}
+            />
+            <AppleSignInButton
+              className="w-full h-8 py-2 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-800 hover:bg-gray-50 font-medium"
+              buttonText="Continue with Apple"
+            />
+          </div>
         )}
-        {!google && (
+        {!isSocial && (
           <>
             {/* Divider */}
 
@@ -408,7 +421,8 @@ export function Step1({ formData, handleNext, google }) {
             </div>
           </div>
           {/* Email + Passwords (only if not Google signup) */}
-          {!google && (
+
+          {!isSocial && (
             <>
               <div className="space-y-0.5 sm:space-y-1">
                 <div className="space-y-1">
@@ -488,7 +502,7 @@ export function Step1({ formData, handleNext, google }) {
                         placeholder="Create a strong password"
                         onFocus={() => setIsPasswordFocused(true)}
                         onBlur={(e) => {
-                          field.onBlur(); // IMPORTANT
+                          field.onBlur();
                           setIsPasswordFocused(false);
                         }}
                         className="pl-11 pr-11 h-8 border-2 border-gray-200 focus:border-blue-300 focus:ring-1 focus:ring-blue-200 bg-white"

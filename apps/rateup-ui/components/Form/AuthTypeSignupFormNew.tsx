@@ -16,6 +16,7 @@ import { Step1, Step2, Step3 } from "./SignupFormNew";
 function AuthTypeSignupForm({
   setIsLoading,
   createUserMutation,
+  createAppleUserMutation,
   isLoading,
   authType,
 }) {
@@ -121,7 +122,12 @@ function AuthTypeSignupForm({
         integrationsSelected: values?.integrationsSelected,
       });
     }
-    createUserMutation.mutate(data);
+
+    if (authType === "apple") {
+      createAppleUserMutation.mutate(data);
+    } else {
+      createUserMutation.mutate(data);
+    }
   };
 
   return (
@@ -164,7 +170,7 @@ function AuthTypeSignupForm({
             <Step1
               formData={signupForm}
               handleNext={handleNext}
-              google={true}
+              authType={authType}
             />
           )}
           {currentStep === 2 && (

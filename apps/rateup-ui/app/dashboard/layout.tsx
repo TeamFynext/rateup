@@ -1,11 +1,7 @@
 import React from "react";
-import { cookies } from "next/headers";
 
 import MainSidebar from "@/components/Layout/Navbar/main-sidebar";
 import { SessionAuthForNextJS } from "@/components/SuperToken/sessionAuthForNextJS";
-import { TryRefreshComponent } from "@/components/SuperToken/tryRefreshClientComponent";
-
-import { getSessionForSSR } from "../util";
 
 export default async function DashboardLayout({
   children,
