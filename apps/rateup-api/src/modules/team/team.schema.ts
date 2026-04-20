@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { TeamFeature } from "../../../generated/prisma/client.js";
+
+const teamFeatureEnum = z.enum(TeamFeature);
 
 const teamCore = {
   name: z.string(),
@@ -12,6 +15,7 @@ const teamCore = {
   orgId: z.string(),
   userId: z.string(),
   color: z.string().optional(),
+  features: z.array(z.string()).optional(),
 };
 
 const createTeamRequestSchema = z.object({
@@ -107,6 +111,20 @@ const tagQuerySchema = z.object({
   onlytag: z.boolean(),
 });
 
+const setTeamFeaturesSchema = z.object({
+  features: z.array(teamFeatureEnum),
+});
+
+const teamFeatureAccessItemSchema = z.object({
+  id: z.string(),
+  feature: teamFeatureEnum,
+  createdAt: z.string().or(z.date()),
+});
+
+const getTeamFeaturesResponseSchema = z.object({
+  features: z.array(teamFeatureAccessItemSchema),
+});
+
 export type CreateTeamInput = z.infer<typeof createTeamRequestSchema>;
 export type GetTeamsByOrgInput = z.infer<typeof getTeamsByOrgRequestSchema>;
 export type DeleteTeamInput = z.infer<typeof deleteTeamByIdRequestSchema>;
@@ -120,6 +138,7 @@ export type tagQuerySchema = z.infer<typeof tagQuerySchema>;
 export type BySurveyTeamMapIdParams = z.infer<
   typeof bySurveyTeamMapIdParamsSchema
 >;
+export type SetTeamFeaturesInput = z.infer<typeof setTeamFeaturesSchema>;
 
 // Auto-exported after fastify-zod migration
 export {
@@ -137,4 +156,6 @@ export {
   bySurveyTeamMapIdParamsSchema,
   deleteTeamMemberSchema,
   addTeamMemberSchema,
+  setTeamFeaturesSchema,
+  getTeamFeaturesResponseSchema,
 };

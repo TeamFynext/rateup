@@ -546,11 +546,15 @@ export async function getMediaFileByMediaId(
     const orgId = request.user.orgId;
     const media = await getMediaFile(mediaId, orgId);
     if (media?.data) {
-      reply.status(200).type(media.type).send(media?.data);
+      reply
+        .status(200)
+        .type(media.type as string)
+        .send(media?.data);
     } else {
       reply.status(404).send("Media not found");
     }
   } catch (error) {
+    log.error("Error in getMediaFileByMediaId: %o", error);
     reply.status(500).send("Internal Server Error");
   }
 }
@@ -560,10 +564,7 @@ export async function exportWhatsappChatsHandler(
   reply: FastifyReply,
 ) {
   const { constraints, filterData } = request.query;
-  if (!constraints) {
-    reply.status(400).send("Constraints not provided");
-    return;
-  } else {
+  if (constraints) {
     const orgId = request.user.orgId;
 
     const constraintsDecoded: WaChatExportConstraints = JSON.parse(
@@ -596,6 +597,9 @@ export async function exportWhatsappChatsHandler(
     );
     reply.header("Content-Disposition", "attachment; filename=export.xlsx");
     reply.send(buffer);
+  } else {
+    reply.status(400).send("Constraints not provided");
+    return;
   }
 }
 

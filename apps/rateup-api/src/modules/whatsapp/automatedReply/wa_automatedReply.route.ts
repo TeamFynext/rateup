@@ -13,6 +13,7 @@ import {
 import { checkSession } from "../../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import { requireFeature, TeamFeature } from "../../../utils/permissions.js";
 import { verifyAutomationLimit } from "./wa_automatedReply.utils.js";
 // --- Rule Controller Imports ---
 import {
@@ -43,6 +44,7 @@ export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
       SubscriptionFeaturePathName.WhatsAppAutomation,
     ]),
   );
+  fastify.addHook("preHandler", requireFeature(TeamFeature.automation));
   fastify.get("/message/:id", getAutomatedRepliesMessagIdHandler);
   fastify.get("/", getAllAutomatedRepliesByOrgIdHandler);
   fastify.post(

@@ -825,11 +825,16 @@ declare module "fastify" {
     userId: string;
     user: {
       userId: string;
+      id: string;
       role: Role;
       orgId: string;
       email: string;
     };
     subscription: Subscription;
+    features: Set<import("../../generated/prisma/client.js").TeamFeature>;
+    can: (
+      feature: import("../../generated/prisma/client.js").TeamFeature,
+    ) => boolean;
   }
 }
 

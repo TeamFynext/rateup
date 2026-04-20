@@ -1,6 +1,9 @@
 import dayjs from "dayjs";
 import prisma from "../../utils/prisma.js";
 import { log } from "../../utils/logger.js";
+import { subscriptionGates } from "../../utils/canAccess.js";
+import { TeamFeature } from "../../../generated/prisma/client.js";
+import { getNestedProperty } from "../../utils/misc/obj.utils.js";
 
 export async function updateUsageStatsTemplateMessageCount() {
   const subscriptions = await prisma.subscription.findMany();
@@ -500,4 +503,80 @@ export async function migrateWaTemplatePhoneIds() {
     orgsWithoutWhatsappAccount: skippedOrgs,
     templatesUpdated: updatedTemplates,
   };
+}
+
+/**
+ * For each team in the given org (or all orgs when orgId is omitted),
+ * syncs TeamFeatureAccess rows to match the org's active subscription features.
+ *
+ * Features with no subscription gate are always enabled.
+ * Features whose subscription gate is inactive are removed.
+ */
+export async function syncTeamFeaturesFromSubscription(orgId?: string) {
+  const subscriptions = await prisma.subscription.findMany({
+    where: orgId ? { orgId } : undefined,
+    select: { orgId: true, features: true },
+  });
+
+  const results: { orgId: string; teamsUpdated: number; features: string[] }[] =
+    [];
+
+  for (const sub of subscriptions) {
+    const subFeatures = sub.features as SubscriptionFeatures;
+
+    // Determine which TeamFeatures are enabled by this subscription
+    const activeFeatures = (
+      Object.keys(subscriptionGates) as TeamFeature[]
+    ).filter((feature) => {
+      const gate = subscriptionGates[feature];
+      if (!gate) return true; // no gate → always enabled
+      const gated = getNestedProperty(subFeatures, gate);
+      return Boolean(gated?.active);
+    });
+
+    const teams = await prisma.team.findMany({
+      where: { orgId: sub.orgId },
+      select: { id: true },
+    });
+
+    for (const team of teams) {
+      const existing = await prisma.teamFeatureAccess.findMany({
+        where: { teamId: team.id },
+        select: { id: true, feature: true },
+      });
+
+      const desiredSet = new Set(activeFeatures);
+      const toDelete = existing
+        .filter((r) => !desiredSet.has(r.feature))
+        .map((r) => r.id);
+      const existingSet = new Set(existing.map((r) => r.feature));
+      const toCreate = activeFeatures.filter((f) => !existingSet.has(f));
+
+      await prisma.$transaction([
+        ...(toDelete.length > 0
+          ? [
+              prisma.teamFeatureAccess.deleteMany({
+                where: { id: { in: toDelete } },
+              }),
+            ]
+          : []),
+        ...(toCreate.length > 0
+          ? [
+              prisma.teamFeatureAccess.createMany({
+                data: toCreate.map((feature) => ({ teamId: team.id, feature })),
+                skipDuplicates: true,
+              }),
+            ]
+          : []),
+      ]);
+    }
+
+    results.push({
+      orgId: sub.orgId,
+      teamsUpdated: teams.length,
+      features: activeFeatures,
+    });
+  }
+
+  return results;
 }

@@ -26,6 +26,25 @@ enum Role {
   MEMBER
 }
 
+enum TeamFeature {
+  inbox
+  analytics
+  contacts
+  campaigns
+  flows
+  chatbots
+  templates
+  automation
+  loyalty
+  web_forms
+  tickets
+  qr_studio
+  ai_chatbot
+  apps_services
+  digital_menu
+  settings
+}
+
 enum InviteStatus {
   // initial
   PENDING
@@ -449,9 +468,20 @@ model Team {
   whatsappChannels       WhatsappSettings[]
   waMessageOrgTeamMaps   WaMessageOrgTeamMap[]
   waMessageSchedule      WaMessageSchedule[]
+  featureAccess          TeamFeatureAccess[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
+}
+
+model TeamFeatureAccess {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  team      Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String      @db.Uuid
+  feature   TeamFeature
+  createdAt DateTime    @default(now())
+
+  @@unique([teamId, feature])
 }
 
 model TeamMember {

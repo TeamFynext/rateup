@@ -39,6 +39,13 @@ export async function contactLabelRoutes(server: FastifyInstance) {
   server.get(
     "/",
     {
+      onSend: async (_req, reply, payload) => {
+        if (reply.statusCode === 403) {
+          reply.code(200);
+          return "[]";
+        }
+        return payload;
+      },
       schema: {
         response: {
           200: contactLabelResponseSchema.array(),
