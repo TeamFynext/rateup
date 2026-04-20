@@ -25,8 +25,11 @@ import {
   updateChatbotSchema,
 } from "./chatbot.schema.js";
 
+import { requireFeature, TeamFeature } from "../../utils/permissions.js";
+
 export async function chatbotRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
+  server.addHook("preHandler", requireFeature(TeamFeature.ai_chatbot));
   server.register(FastifyMultipart, {
     limits: {
       fileSize: 1048576 * 50,

@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { checkSession } from "../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import { requireFeature, TeamFeature } from "../../utils/permissions.js";
 
 // New Loyalty System Routes
 import { loyaltyProgramRoutes } from "./program/program.route.js";
@@ -23,6 +24,7 @@ export async function loyaltyRoutes(server: FastifyInstance) {
     "preHandler",
     getVerifySubscriptionHandler([SubscriptionFeaturePathName.Loyalty]),
   );
+  server.addHook("preHandler", requireFeature(TeamFeature.loyalty));
 
   // New Loyalty System Routes
   server.register(loyaltyProgramRoutes, { prefix: "/program" });

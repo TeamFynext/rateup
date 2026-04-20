@@ -10,6 +10,7 @@ import {
   updateUsageStatsAutomation,
   updateUsageStatsTemplateMessageCount,
   migrateAutomationToRules,
+  syncTeamFeaturesFromSubscription,
 } from "./update.service.js";
 import prisma from "../../utils/prisma.js";
 import { StageCategory } from "../../../generated/prisma/enums.js";
@@ -365,5 +366,23 @@ export async function migrateWaTemplatePhoneIdsHandler(
   } catch (error) {
     log.error(error);
     res.code(500).send("Error migrating WaTemplate phone IDs");
+  }
+}
+
+export async function syncTeamFeaturesHandler(
+  req: FastifyRequest<{ Querystring: { orgId?: string } }>,
+  res: FastifyReply,
+) {
+  try {
+    const { orgId } = req.query;
+    const results = await syncTeamFeaturesFromSubscription(orgId);
+    res.code(200).send({
+      message: "Team features synced from subscription",
+      orgsProcessed: results.length,
+      results,
+    });
+  } catch (error) {
+    log.error(error);
+    res.code(500).send("Error syncing team features");
   }
 }

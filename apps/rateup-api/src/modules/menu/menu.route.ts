@@ -17,6 +17,7 @@ import {
 import { checkSession } from "../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import { requireFeature, TeamFeature } from "../../utils/permissions.js";
 import {
   ByMenuIdParamsSchema,
   menuInputSchema,
@@ -30,6 +31,7 @@ export async function menuRoutes(server: FastifyInstance) {
     "preHandler",
     getVerifySubscriptionHandler([SubscriptionFeaturePathName.Menu]),
   );
+  server.addHook("preHandler", requireFeature(TeamFeature.digital_menu));
   server.post(
     "/",
     {

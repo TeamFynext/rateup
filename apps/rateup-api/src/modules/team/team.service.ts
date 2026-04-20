@@ -8,6 +8,7 @@ import {
   GetTeamsByOrgInput,
   IdParamInput,
   InviteMemberInput,
+  SetTeamFeaturesInput,
 } from "./team.schema.js";
 import EmailVerification from "supertokens-node/recipe/emailverification/index.js";
 import { createEmailBody } from "../../utils/email/supertoken/inviteEmail.js";
@@ -933,4 +934,59 @@ export async function addMembersToTeamsMail(email, teamName, user) {
     console.error(error);
     throw new Error("Email sending failed. E:" + error);
   }
+}
+
+// ── Team Feature Access ───────────────────────────────────────────────────────
+
+/**
+ * Returns the list of TeamFeatureAccess rows for a team.
+ */
+export async function getTeamFeatures(teamId: string) {
+  return prisma.teamFeatureAccess.findMany({
+    where: { teamId },
+    select: { id: true, feature: true, createdAt: true },
+    orderBy: { feature: "asc" },
+  });
+}
+
+/**
+ * Replaces the full set of features for a team (upsert + delete orphans).
+ * Returns the resulting feature rows.
+ */
+export async function setTeamFeatures(
+  teamId: string,
+  input: SetTeamFeaturesInput,
+) {
+  const desired = new Set(input.features);
+  const existing = await prisma.teamFeatureAccess.findMany({
+    where: { teamId },
+    select: { id: true, feature: true },
+  });
+
+  const toDelete = existing
+    .filter((r) => !desired.has(r.feature))
+    .map((r) => r.id);
+
+  const existingFeatures = new Set(existing.map((r) => r.feature));
+  const toCreate = input.features.filter((f) => !existingFeatures.has(f));
+
+  await prisma.$transaction([
+    ...(toDelete.length > 0
+      ? [
+          prisma.teamFeatureAccess.deleteMany({
+            where: { id: { in: toDelete } },
+          }),
+        ]
+      : []),
+    ...(toCreate.length > 0
+      ? [
+          prisma.teamFeatureAccess.createMany({
+            data: toCreate.map((feature) => ({ teamId, feature })),
+            skipDuplicates: true,
+          }),
+        ]
+      : []),
+  ]);
+
+  return getTeamFeatures(teamId);
 }
