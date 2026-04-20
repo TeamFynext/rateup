@@ -14,6 +14,7 @@ import SignInScreen from "@/components/signInScreen";
 import GoogleLogin from "@/components/googleSignInScreen";
 import { RateLogo } from "@/constants/imageExports";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AppleLogin from "@/components/appleSignInScreen";
 
 const SignIn = () => {
   const showError = (message: string) => {
@@ -56,6 +57,7 @@ const SignIn = () => {
             </View>
               <SignInScreen setError={showError} />
               <GoogleLogin setError={showError} />
+              <AppleLogin setError={showError} />
             </View>
               <View className="flex-row items-center justify-center gap-1">
                 <Text className="font-bold text-md">Don't have an account?</Text>
