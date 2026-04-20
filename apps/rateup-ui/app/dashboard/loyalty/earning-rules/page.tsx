@@ -21,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import type {
   LoyaltyEarningRule,
   LoyaltyEarningRuleInput,
@@ -64,6 +65,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { randomHexColor } from "@/utils";
 import { docsPath } from "@/utils/constants";
 
 // Validation schemas
@@ -139,6 +141,8 @@ export default function EarningRulesPage() {
   const [tierRestrictionEnabled, setTierRestrictionEnabled] = useState(false);
   const [limitedPeriodEnabled, setLimitedPeriodEnabled] = useState(false);
   const [whatsAppTemplate, setWhatsAppTemplate] = useState("");
+
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   // Fetch tiers from API
   const { data: loyaltyTiers = [], isLoading: tiersLoading } =
@@ -238,21 +242,35 @@ export default function EarningRulesPage() {
     createRuleMutation.mutate(payload as LoyaltyEarningRuleInput);
   };
 
-  const handleDeleteRule = (ruleId: string) => {
-    if (confirm(t("Are you sure you want to delete this earning rule?"))) {
-      deleteRuleMutation.mutate(ruleId, {
-        onSuccess: () => toast.success(t("Earning rule deleted successfully")),
-      });
-    }
+  const handleDeleteRule = async (ruleId: string, ruleName?: string) => {
+    const confirmed = await confirm({
+      title: t("Delete earning rule"),
+      description: ruleName
+        ? t("Are you sure you want to delete {name}? This cannot be undone.", {
+            name: ruleName,
+          })
+        : t(
+            "Are you sure you want to delete this earning rule? This cannot be undone.",
+          ),
+    });
+    if (!confirmed) return;
+    deleteRuleMutation.mutate(ruleId, {
+      onSuccess: () => toast.success(t("Earning rule deleted successfully")),
+    });
   };
 
-  const handleTierDelete = (tierId: string, tierName: string) => {
-    if (confirm(t("deleteTierConfirm"))) {
-      deleteTierMutation.mutate(tierId, {
-        onSuccess: () =>
-          toast.success(t("{name} tier deleted", { name: tierName })),
-      });
-    }
+  const handleTierDelete = async (tierId: string, tierName: string) => {
+    const confirmed = await confirm({
+      title: t("Delete {name} tier", { name: tierName }),
+      description: t(
+        "All earning rules in this tier will be permanently removed. This cannot be undone.",
+      ),
+    });
+    if (!confirmed) return;
+    deleteTierMutation.mutate(tierId, {
+      onSuccess: () =>
+        toast.success(t("{name} tier deleted", { name: tierName })),
+    });
   };
 
   const handleAddTier = () => {
@@ -261,8 +279,8 @@ export default function EarningRulesPage() {
       0,
     );
     const newTierData: LoyaltyTierInput = {
-      name: "New Tier " + (loyaltyTiers.length + 1),
-      color: "#1873E8",
+      name: "Tier " + loyaltyTiers.length,
+      color: randomHexColor(),
       pointsMultiplier: 10,
       threshold: maxPoints + 1000,
     };
@@ -292,6 +310,7 @@ export default function EarningRulesPage() {
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog />
       {earningRulesViewMode === "list" && (
         <div className="space-y-5">
           {/* Header */}
@@ -398,7 +417,9 @@ export default function EarningRulesPage() {
                       setEditingRuleId(rule.id || null);
                     }}
                     onCancelEdit={() => setEditingRuleId(null)}
-                    onDelete={() => rule.id && handleDeleteRule(rule.id)}
+                    onDelete={() =>
+                      rule.id && handleDeleteRule(rule.id, rule.name)
+                    }
                     isDeleting={deleteRuleMutation.isPending}
                   />
                 ))}
@@ -951,9 +972,14 @@ function TierCard({
 
             <div className="flex flex-1 items-center gap-4">
               <div className="min-w-0 flex-1">
-                <h4 className="text-sm font-semibold leading-tight">
-                  {tier.name}
-                </h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-semibold leading-tight">
+                    {tier.name}
+                  </h4>
+                  <span className="text-xs text-muted-foreground font-medium">
+                    ({index === 0 ? "Base Tier" : `Tier ${index}`})
+                  </span>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {index === 0
                     ? "Base tier - Starting point"

@@ -16,6 +16,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { useConfirmDialog } from "@/hooks/useConfirmDialog";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import ChatHistory from "@/components/ChatBot/ChatHistory";
 import CreateNewChatbot from "@/components/ChatBot/CreateNewChatbot";
@@ -52,6 +53,8 @@ const ChatBot = () => {
   const { setSelectedChatbotId: setGlobalChatbotId } = useChatbotStore();
   const { mutate: deleteChatbot, isPending: isDeletingChatbot } =
     useDeleteChatbot();
+
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   //new
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -103,13 +106,13 @@ const ChatBot = () => {
     }
   }, [allChatbots]);
 
-  const handleDeleteChatbot = () => {
+  const handleDeleteChatbot = async () => {
     if (!selectedChatbotId || !allChatbots) return;
 
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this chatbot?",
-    );
-    if (!confirmDelete) return;
+    const confirmed = await confirm({
+      description: "Are you sure you want to delete this chatbot?",
+    });
+    if (!confirmed) return;
 
     deleteChatbot(selectedChatbotId, {
       onSuccess: () => {
@@ -183,6 +186,7 @@ const ChatBot = () => {
   }
   return (
     <Stack p={"sm"}>
+      <ConfirmDialog />
       <PublishChatbot selectedChatbotId={selectedChatbotId} />
       <Flex justify="space-between" align="center" mb="sm" wrap="wrap" gap="md">
         <RateupButtonBlue

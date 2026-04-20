@@ -36,6 +36,7 @@ import { CurrencySelect } from "@/components/ui/currency-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { randomHexColor } from "@/utils";
 
 interface LoyaltyOnboardingProps {
   onComplete: () => void;
@@ -442,7 +443,7 @@ export function LoyaltyOnboarding({
   const addTier = () => {
     setTiers([
       ...tiers,
-      { name: "", minPoints: "", benefits: "", color: "#6B7280" },
+      { name: "", minPoints: "", benefits: "", color: randomHexColor() },
     ]);
   };
 
