@@ -551,18 +551,19 @@ export default function AppSidebar({
               <SidebarMenuButton
                 size="lg"
                 asChild
-                className="md:h-8 md:p-0 hidden md:flex"
+                className="md:h-8 md:p-0 hidden md:flex ml-0.5"
                 tooltip={userData?.data?.orgName}
               >
                 <Link href="#" aria-label="Organization">
                   <Avatar
-                    className={`${userData?.data.orgLogo ? "bg-background" : "bg-sidebar-primary"} text-sidebar-primary-foreground size-8 w-10 rounded-lg`}
+                    className={`${userData?.data.orgLogo ? "bg-background" : "bg-sidebar-primary"} text-sidebar-primary-foreground`}
                   >
                     <AvatarImage
                       src={getFileUrlFromKey(userData?.data.orgLogo)}
                       alt={userData?.data?.orgName}
+                      className="rounded-md"
                     />
-                    <AvatarFallback className="rounded-lg uppercase bg-sidebar-primary text-sidebar-primary-foreground">
+                    <AvatarFallback className="uppercase bg-sidebar-primary text-sidebar-primary-foreground">
                       {userData?.data?.orgName?.slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
