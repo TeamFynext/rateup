@@ -13,7 +13,6 @@ const AppleCallback = () => {
   async function handleAppleCallback() {
     try {
       const response = await signInAndUp();
-      console.log("Response from signInAndUp:", response);
       if (response.status === "OK") {
         if (
           response.createdNewRecipeUser &&
