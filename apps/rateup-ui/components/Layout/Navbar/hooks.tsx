@@ -417,12 +417,12 @@ export function useNavMain({
                   icon: UserCheck,
                 },
                 {
-                  title: t("commands"),
+                  title: t("Commands"),
                   url: "/dashboard/loyalty/command",
                   icon: IconTerminal2,
                 },
                 {
-                  title: t("whatsapp templates"),
+                  title: t("WhatsApp Templates"),
                   url: "/dashboard/loyalty/templates",
                   icon: IconFileDescription,
                 },
@@ -522,12 +522,12 @@ export function useNavMain({
               icon: IconApps,
               items: [
                 {
-                  title: "home",
+                  title: "Home",
                   url: "/dashboard/apps&services",
                   icon: IconApps,
                 },
                 {
-                  title: "apps",
+                  title: "Apps",
                   icon: IconApps,
                   items: [
                     {

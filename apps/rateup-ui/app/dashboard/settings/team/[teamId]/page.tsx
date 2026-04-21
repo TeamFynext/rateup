@@ -32,7 +32,7 @@ function TeamManagement() {
     return <TeamSkeleton />;
   }
   return (
-    <div className="min-h-screen">
+    <div className="h-full relative">
       {/* Header */}
       <Card>
         <CardContent>

@@ -398,7 +398,7 @@ export function AddMembers({ selectedTeam }) {
       </div>
 
       {/* Members Grid */}
-      <ScrollArea className="h-96 p-1">
+      <ScrollArea className="h-[calc(100vh-275px)] min-h-64 p-1">
         <div className="p-2">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {isLoadingMembers ? (
