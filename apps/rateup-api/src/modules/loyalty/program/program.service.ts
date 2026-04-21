@@ -102,12 +102,20 @@ export async function deleteLoyaltyProgram(
 }
 
 export async function resetProgramPoints(programId: string) {
-  // 1. Reset all customer points
+  // Find the first (lowest threshold) tier for the program
+  const firstTier = await prisma.loyaltyTier.findFirst({
+    where: { programId },
+    orderBy: { threshold: "asc" },
+  });
+
+  // Reset all customer points, spend, and tier
   await prisma.customerLoyaltyAccount.updateMany({
     where: { programId },
     data: {
       currentPoints: 0,
       lifetimePoints: 0,
+      totalSpend: 0,
+      currentTierId: firstTier?.id ?? null,
     },
   });
 }

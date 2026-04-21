@@ -271,11 +271,11 @@ export class EarningRulesEngine {
   }
 
   /**
-   * Check if customer's tier should be upgraded based on lifetime points
+   * Check if customer's tier should be upgraded based on total spend
    */
   async checkAndUpgradeTier(
     customerId: string,
-    lifetimePoints: number,
+    totalSpend: number,
   ): Promise<{ upgraded: boolean; newTier?: any }> {
     const customer = await prisma.customerLoyaltyAccount.findUnique({
       where: { id: customerId },
@@ -293,13 +293,13 @@ export class EarningRulesEngine {
       },
     });
 
-    if (!customer || !customer.program.tiersEnabled) {
+    if (!customer?.program.tiersEnabled) {
       return { upgraded: false };
     }
 
     // Find the highest tier that the customer qualifies for
     const qualifiedTier = customer.program.tiers.find(
-      (tier) => lifetimePoints >= tier.threshold,
+      (tier) => totalSpend >= Number(tier.threshold),
     );
 
     if (!qualifiedTier) {

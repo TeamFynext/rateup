@@ -1817,7 +1817,7 @@ model LoyaltyTier {
 
   // Tier Identity
   name             String
-  threshold        Int     @default(0) // Lifetime points required
+  threshold        Decimal @default(0) @db.Decimal(12, 2) // Total spend required for this tier
   pointsMultiplier Decimal @default(1.00) @db.Decimal(4, 2) // 1.0, 1.25, 1.5, 2.0
 
   // Display
@@ -1949,8 +1949,9 @@ model CustomerLoyaltyAccount {
   contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
   // Points Balance
-  currentPoints  Int @default(0) // Available for redemption
-  lifetimePoints Int @default(0) // Total earned ever (for tier progression)
+  currentPoints  Int     @default(0) // Available for redemption
+  lifetimePoints Int     @default(0) // Total earned ever
+  totalSpend     Decimal @default(0) @db.Decimal(12, 2) // Total lifetime spend (for tier progression)
 
   // Tier
   currentTierId String?      @db.Uuid
