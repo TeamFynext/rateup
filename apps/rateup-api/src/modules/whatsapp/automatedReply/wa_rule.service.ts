@@ -93,6 +93,12 @@ async function ensureMessageBodyUniqueness(
               group: {
                 select: {
                   ruleId: true,
+                  rule: {
+                    select: {
+                      isActive: true,
+                      name: true,
+                    },
+                  },
                 },
               },
             },
@@ -106,11 +112,26 @@ async function ensureMessageBodyUniqueness(
 
       if (linkedRuleId && linkedRuleId === excludeRuleId) return;
 
-      throw new Error(
-        businessHourId
-          ? `Message body '${value}' is already reserved for business hour '${businessHourId}'`
-          : `Message body '${value}' is already reserved`,
-      );
+      const isLinkedRuleActive = existing.ruleCondition?.group.rule?.isActive;
+
+      if (!isLinkedRuleActive) return;
+
+      const conflictingRuleName = existing.ruleCondition?.group.rule?.name;
+      const ruleNamePart = conflictingRuleName
+        ? " ('" + conflictingRuleName + "')"
+        : "";
+      const context = businessHourId
+        ? " during the configured business hours"
+        : "";
+      const baseMsg =
+        "Keyword '" +
+        value +
+        "' is already used by another active automation" +
+        ruleNamePart +
+        context +
+        ". Please disable that automation first to enable this one.";
+
+      throw new Error(baseMsg);
     }),
   );
 }
@@ -292,7 +313,18 @@ export async function getRuleById(id: string) {
 export async function updateRule(id: string, data: UpdateRuleInput) {
   const existingRule = await prisma.rule.findUnique({
     where: { id },
-    select: { orgId: true },
+    select: {
+      orgId: true,
+      isActive: true,
+      groups: {
+        select: {
+          conditions: {
+            select: { field: true, value: true },
+          },
+        },
+      },
+      options: true,
+    },
   });
 
   if (!existingRule) {
@@ -301,16 +333,37 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
 
   const { groups, actions, options, ...rest } = data;
 
+  // When disabling a rule, skip uniqueness checks entirely
+  const isDisabling = data.isActive === false;
+  // When enabling a previously inactive rule, check existing conditions for conflicts
+  const isEnabling = data.isActive === true && !existingRule.isActive;
+
   let messageBodyCandidates: MessageBodyCandidate[] = [];
 
-  if (groups) {
-    messageBodyCandidates = extractMessageBodyCandidates(groups, options);
-    ensureNoDuplicateMessageBodyCandidates(messageBodyCandidates);
-    await ensureMessageBodyUniqueness(
-      existingRule.orgId,
-      messageBodyCandidates,
-      id,
-    );
+  if (!isDisabling) {
+    if (groups) {
+      messageBodyCandidates = extractMessageBodyCandidates(groups, options);
+      ensureNoDuplicateMessageBodyCandidates(messageBodyCandidates);
+      await ensureMessageBodyUniqueness(
+        existingRule.orgId,
+        messageBodyCandidates,
+        id,
+      );
+    } else if (isEnabling) {
+      // No new groups provided but the rule is being enabled — check existing conditions
+      const existingOptions = existingRule.options as
+        | CreateRuleInput["options"]
+        | null;
+      const existingCandidates = extractMessageBodyCandidates(
+        existingRule.groups as CreateRuleInput["groups"],
+        existingOptions ?? undefined,
+      );
+      await ensureMessageBodyUniqueness(
+        existingRule.orgId,
+        existingCandidates,
+        id,
+      );
+    }
   }
 
   return prisma.$transaction(async (tx) => {
