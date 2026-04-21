@@ -1,7 +1,5 @@
 import { Tabs, TabsProps } from "@mantine/core";
 
-import { MotionTransition } from "../../../animation/MotionTransition";
-
 interface TabsCommonProps {
   tabHeading: string[];
 }

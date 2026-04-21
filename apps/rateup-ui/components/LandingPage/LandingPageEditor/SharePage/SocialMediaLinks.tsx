@@ -1,6 +1,6 @@
 "use client";
 
-import { ActionIcon, Box, Button, Image, Tooltip } from "@mantine/core";
+import { ActionIcon, Box, Image, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useExtracted } from "next-intl";
 

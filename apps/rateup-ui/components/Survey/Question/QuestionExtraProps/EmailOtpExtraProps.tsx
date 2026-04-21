@@ -92,7 +92,7 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
     const remainingIds = allowedEmailIDs?.filter(
       (email) => !selectedEmailIds.includes(email),
     );
-    let featuresObj = { ...form.values?.features };
+    const featuresObj = { ...form.values?.features };
     for (const lang of surveyLanguages) {
       featuresObj[lang] = {
         ...form.values.features?.[lang],
@@ -115,7 +115,7 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
       return;
     }
     allowedEmailIDs?.push(newEmail);
-    let featuresObj = { ...form.values?.features };
+    const featuresObj = { ...form.values?.features };
     for (const lang of surveyLanguages) {
       featuresObj[lang] = {
         ...form.values.features?.[lang],

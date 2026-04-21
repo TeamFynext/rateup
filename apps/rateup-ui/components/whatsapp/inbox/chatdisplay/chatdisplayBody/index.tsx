@@ -1,29 +1,18 @@
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { ActionIcon, Center, Loader } from "@mantine/core";
 import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import clsx from "clsx";
 import dayjs from "dayjs";
-import { useExtracted } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { IgReceiveMessageBody } from "@/types/global";
-import { cn } from "@/lib/utils";
 import { getMessagesFromIDB } from "@/app/dashboard/inbox/idb";
 import {
   useContactsStore,
   useMessagesStore,
 } from "@/app/dashboard/inbox/store";
 import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { formatToCustomTime } from "@/utils/dateTime";
 import { parseWaMessage } from "@/utils/whatsapp/inbox";
 
 import { useChatFilterStore } from "../../chatselect/chatFilter";

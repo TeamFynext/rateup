@@ -4,7 +4,6 @@ import {
   BackgroundImage,
   Box,
   Flex,
-  ScrollArea,
   ScrollAreaAutosize,
   Text,
 } from "@mantine/core";

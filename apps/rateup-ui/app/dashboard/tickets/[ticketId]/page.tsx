@@ -728,7 +728,7 @@ const TicketResponse = ({
         {type === TicketType.SURVEY_RESPONSE ? (
           <Stack gap="xs">
             {surveyResponse?.responses?.map((response: any, index) => {
-              let question =
+              const question =
                 surveyResponse?.surveyTeamMap?.survey?.questions?.find(
                   (q) => q.id === response.questionId,
                 );

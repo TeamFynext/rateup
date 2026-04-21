@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { Flex, Menu, NavLink } from "@mantine/core";
-import { IconBrandWhatsapp } from "@tabler/icons-react";
 
 import headerStyles from "./components/Header/Header.module.css";
 import navLinkStyles from "./components/Header/MobileNavDrawer/NavLink.module.css";

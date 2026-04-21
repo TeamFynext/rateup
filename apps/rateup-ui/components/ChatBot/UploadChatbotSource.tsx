@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 
 import { Stack } from "@mantine/core";
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";

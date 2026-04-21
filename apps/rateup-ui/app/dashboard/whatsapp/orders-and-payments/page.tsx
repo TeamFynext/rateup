@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums";

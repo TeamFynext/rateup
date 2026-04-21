@@ -1,7 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import {
   ActionIcon,
@@ -16,7 +16,7 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import { useCounter, useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -37,11 +37,7 @@ import {
   WaFlowFormElementType,
   WaFlowStatus,
 } from "@/types/enums";
-import {
-  WaFlowFormChoice,
-  WaFlowFormElement,
-  WaFlowScreen,
-} from "@/types/global";
+import { WaFlowFormElement, WaFlowScreen } from "@/types/global";
 import { useReplaceQuestionsMutation } from "@/backend/surveys/questions/questions.query";
 import {
   usePushToWaMutation,
@@ -230,18 +226,18 @@ function ScreenListItem({
     });
   }
   const handleSaveJsonToWa = () => {
-    let errorMessages = [];
+    const errorMessages = [];
     for (const flScreen of flowJson?.screens) {
       const questions = getQuestionsFromScreen(flScreen, survey, map);
       for (const qs of questions) {
         if (FlowChoiceQuestions.includes(qs.type as QuestionType)) {
-          let choice = Object.values(qs?.choices ?? {})?.[0];
+          const choice = Object.values(qs?.choices ?? {})?.[0];
           if (
             !choice ||
             (typeof choice === "string" && (choice as string)?.length === 0)
           ) {
-            let title = Object.values(qs?.title ?? {})?.[0];
-            let label = Object.values(qs?.label ?? {})?.[0];
+            const title = Object.values(qs?.title ?? {})?.[0];
+            const label = Object.values(qs?.label ?? {})?.[0];
             errorMessages.push(title || label);
           }
         }

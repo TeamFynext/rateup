@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";

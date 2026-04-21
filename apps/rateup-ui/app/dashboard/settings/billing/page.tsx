@@ -74,12 +74,12 @@ export default function BillingPage() {
   const [isAnnualMessageLimit, setIsAnnualMessageLimit] = useState(false);
 
   useEffect(() => {
-    let order = orders?.data?.filter(
+    const order = orders?.data?.filter(
       (o) => o.subscriptionId === subscription?.subscriptionRef,
     );
     order?.length > 0 && setActiveOrderData(order[0]);
 
-    let sorted = orders?.data?.sort(
+    const sorted = orders?.data?.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
@@ -121,7 +121,7 @@ export default function BillingPage() {
     }
 
     if (order?.subscriptionId && selectedRateupPlan) {
-      var options = {
+      const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_API_KEY,
         subscription_id: order?.subscriptionId,
         name: translations("RateUp Payment"),
@@ -192,7 +192,7 @@ export default function BillingPage() {
     );
   };
 
-  let enablePurchase =
+  const enablePurchase =
     isSubscriber() || activeOrderData?.subscriptionStatus === "cancelled";
 
   function handleRefresh() {

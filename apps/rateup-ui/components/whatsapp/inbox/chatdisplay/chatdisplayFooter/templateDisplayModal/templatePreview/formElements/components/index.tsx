@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
 import {
   ActionIcon,
@@ -11,7 +11,6 @@ import {
   Paper,
   Radio,
   RadioGroup,
-  rem,
   Stack,
   Text,
   Tooltip,
@@ -25,7 +24,6 @@ import { useExtracted } from "next-intl";
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
 import {
-  useMetaAssets,
   useSyncLeadgenFormQuestions,
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
@@ -52,7 +50,7 @@ interface Props {
   };
 }
 export default function WaTemplateFormComponents(props: Props) {
-  let header = props.exampleParams?.find(
+  const header = props.exampleParams?.find(
     (item) =>
       typeof item === "object" && item.type === props?.type?.toLowerCase(),
   )?.[props?.type?.toLowerCase()];
@@ -341,7 +339,7 @@ function LeadFormQuestionsInputComponent(
   props: LeadFormQuestionsInputComponentProps,
 ) {
   const params = useParams();
-  let automatedId = params.waAutomatedReplyId as string;
+  const automatedId = params.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const {
     data: automatedReply,

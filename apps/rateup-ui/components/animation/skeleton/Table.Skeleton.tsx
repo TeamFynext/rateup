@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { Skeleton, Table } from "@mantine/core";
+import { Skeleton } from "@mantine/core";
 
 import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 

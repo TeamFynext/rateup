@@ -1,11 +1,7 @@
 "use client";
 
-import { useState } from "react";
-
 import {
-  CheckIcon,
   Combobox,
-  Group,
   Input,
   InputBase,
   Loader,

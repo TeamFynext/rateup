@@ -3,7 +3,7 @@ import lodash from "lodash";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums";
+import { WaMessageAssignStatus } from "@/types/enums";
 import {
   ContactsWithLastMessage,
   markWaMessagesAsRead,
@@ -239,7 +239,7 @@ export const useContactsStore = create<ContactsStoreState>()(
             });
             state.contactsById = contactsByIdMap;
 
-            let allIds = Array.from(contactIdsSet);
+            const allIds = Array.from(contactIdsSet);
 
             sortedList = allIds
               .map((id) => {

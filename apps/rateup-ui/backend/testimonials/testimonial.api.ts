@@ -5,7 +5,7 @@ const TESTIMONIAL_BASE_URL = "/testimonials";
 const TESTIMONIAL_COLLECTION_BASE_URL = "/testimonial/collections";
 
 export async function getAllTestimonialBySurvey(surveyId: string) {
-  let testimonials = await axiosClient.get(`/testimonials/${surveyId}`);
+  const testimonials = await axiosClient.get(`/testimonials/${surveyId}`);
   return testimonials.data;
 }
 
@@ -15,12 +15,12 @@ export async function getAllTestimonials() {
 }
 
 export async function getAllTestimonialSurveys() {
-  let surveys = await axiosClient.get(`${TESTIMONIAL_BASE_URL}/surveys`);
+  const surveys = await axiosClient.get(`${TESTIMONIAL_BASE_URL}/surveys`);
   return surveys.data;
 }
 
 export async function createTestimonialCollection(data) {
-  let testimonials = await axiosClient.post(
+  const testimonials = await axiosClient.post(
     `${TESTIMONIAL_COLLECTION_BASE_URL}/create`,
     data,
   );
@@ -28,7 +28,7 @@ export async function createTestimonialCollection(data) {
 }
 
 export async function getAllTestimonialCollections() {
-  let collections = (await axiosClient.get(TESTIMONIAL_COLLECTION_BASE_URL))
+  const collections = (await axiosClient.get(TESTIMONIAL_COLLECTION_BASE_URL))
     .data;
   return collections;
 }
@@ -45,14 +45,14 @@ type TestiomonialCollection = {
   >[];
 };
 export async function getAllTestimonialsByCollection(collectionId: string) {
-  let collection = (
+  const collection = (
     await axiosClient.get(`/public/testimonials/${collectionId}`)
   ).data;
 
   return collection as TestiomonialCollection;
 }
 export async function updateTestimonialCollection({ data, collectionId }) {
-  let testimonials = await axiosClient.put(
+  const testimonials = await axiosClient.put(
     `${TESTIMONIAL_COLLECTION_BASE_URL}/update/${collectionId}`,
     data,
   );

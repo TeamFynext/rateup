@@ -17,7 +17,6 @@ import Confetti from "react-confetti";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
 
 import { CreditsCard } from "../../../../../components/Card/CreditsCard";
-import RateupRedirectCard from "../../../../../components/Card/RateupRedirectCard";
 import { getBgImgAndBgColor } from "../../../../../components/Layout/TakeSurveyLayout/utils";
 import BodyComp from "./BodyComp";
 
@@ -43,7 +42,7 @@ export default function ThankYou({
   const router = useRouter();
   const translations = useExtracted();
   const searchParams = useSearchParams();
-  let err = searchParams.get("err") && searchParams.get("err") === "oops";
+  const err = searchParams.get("err") && searchParams.get("err") === "oops";
   let k,
     sid,
     surveyId = "";

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { useDebouncedState, useDebouncedValue } from "@mantine/hooks";
+import { useDebouncedValue } from "@mantine/hooks";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   Activity,
@@ -18,10 +18,7 @@ import {
   AddLifeCycleStage,
   LifecycleStage,
 } from "@/app/dashboard/contacts/lifecycle/page";
-import {
-  useDeleteLifeCycleMutation,
-  useUpdateLifeCycleMutation,
-} from "@/backend/lifecycle/lifecycle.query";
+import { useUpdateLifeCycleMutation } from "@/backend/lifecycle/lifecycle.query";
 import { useUpdateOrgDetailsMutation } from "@/backend/org/org.query";
 import { useUser } from "@/context/UserContext";
 

@@ -132,7 +132,7 @@ export function setImageAlign(
     const currentAttrs = editor.getAttributes(extensionName);
 
     // 🔥 remove old margin styles
-    let cleanStyle = (currentAttrs.style || "")
+    const cleanStyle = (currentAttrs.style || "")
       .replace(/margin-left:\s*auto;?/g, "")
       .replace(/margin-right:\s*auto;?/g, "")
       .replace(/display:\s*block;?/g, "");

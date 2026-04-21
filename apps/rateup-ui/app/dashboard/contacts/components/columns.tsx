@@ -1,6 +1,6 @@
 "use client";
 
-import { Checkbox, ColorSwatch, Text } from "@mantine/core";
+import { Checkbox, Text } from "@mantine/core";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 

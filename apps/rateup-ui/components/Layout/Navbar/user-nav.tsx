@@ -11,14 +11,10 @@ import Link from "next/link";
 
 import {
   Activity,
-  BadgeCheck,
-  Bell,
   ChevronsUpDown,
   Circle,
   CircleX,
-  CreditCard,
   LogOut,
-  Sparkles,
 } from "lucide-react";
 
 import {

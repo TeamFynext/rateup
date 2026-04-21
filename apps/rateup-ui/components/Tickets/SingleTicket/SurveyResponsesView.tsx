@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { Badge, Group, Image, Rating, Stack, Text, Title } from "@mantine/core";
+import { Badge, Group, Image, Rating, Stack, Text } from "@mantine/core";
 import dayjs from "dayjs";
 import parse from "html-react-parser";
 import { useExtracted } from "next-intl";
@@ -147,7 +147,7 @@ const SurveyResponsesView = ({
                   case Q.MCQ:
                   case QuestionType2.RadioButtonsGroup:
                   case QuestionType2.Dropdown:
-                    let selectedValue =
+                    const selectedValue =
                       typeof response?.response !== "string"
                         ? Object.values(response?.response)[0]
                         : response?.response;
@@ -157,10 +157,10 @@ const SurveyResponsesView = ({
                     return <Text>{choice?.title || selectedValue?.value}</Text>;
                   case Q.CustomNPS:
                   case Q.DDSS:
-                    let selectedChoice = Object.values(response?.response)[0];
+                    const selectedChoice = Object.values(response?.response)[0];
                     return <Text>{selectedChoice?.value}</Text>;
                   case Q.PCQ:
-                    let selectedPictureChoice = Object.values(
+                    const selectedPictureChoice = Object.values(
                       response?.response,
                     )?.[0]?.value;
                     return (

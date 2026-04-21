@@ -1,7 +1,6 @@
 "use client";
 
 import { Table } from "@tanstack/react-table";
-import { Shield } from "lucide-react";
 import { useExtracted } from "next-intl";
 
 import RefreshButton from "@/components/Button/RefreshButton";

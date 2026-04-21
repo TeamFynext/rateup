@@ -3,7 +3,7 @@ import Session from "supertokens-auth-react/recipe/session";
 export async function getOrgIdRole() {
   let orgId: string, role: string;
   if (await Session.doesSessionExist()) {
-    let accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
+    const accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
     orgId = accessTokenPayload.orgId;
     role = accessTokenPayload.role;
   }
@@ -11,15 +11,14 @@ export async function getOrgIdRole() {
 }
 
 export async function getUserID() {
-  let userId: string;
-  userId = await Session.getUserId();
+  const userId: string = await Session.getUserId();
   return { userId };
 }
 
 export async function getUserEmail() {
   let email: string;
   if (await Session.doesSessionExist()) {
-    let accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
+    const accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
     email = accessTokenPayload.email;
   }
   return { email };

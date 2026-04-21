@@ -136,7 +136,7 @@ function TakeSurvey({
 
   const takeSurveyRootDivRef = useRef(null);
 
-  let pendingUpdate = useRef(false);
+  const pendingUpdate = useRef(false);
   const viewportHandler = (event) => {
     if (pendingUpdate.current) return;
     pendingUpdate.current = true;
@@ -190,7 +190,7 @@ function TakeSurvey({
   }
 
   const currentQRes = responses.find((r) => r.questionId === selectedQ.id);
-  let currentResponse = currentQRes?.response[selectedQ.type];
+  const currentResponse = currentQRes?.response[selectedQ.type];
 
   const goTo = (question: Question) => {
     setSelectedQ(question);
@@ -276,7 +276,7 @@ function TakeSurvey({
   }
   function getColumnIdFromTickets(questions, responses) {
     for (const question of questions) {
-      let ticketIssue = question?.ticketIssue;
+      const ticketIssue = question?.ticketIssue;
       if (!ticketIssue) continue;
       const response = responses.find((r) => r.questionId === question.id);
       if (!response) continue;
@@ -289,7 +289,7 @@ function TakeSurvey({
     const shouldShowGoogleReview =
       pageType === PageType.GoogleReview ||
       checkGoogleReviewForQuestion(survey?.questions, responsesRef.current);
-    let shouldRaiseTicket =
+    const shouldRaiseTicket =
       survey?.enableAutoGenerateTicket ||
       checkRaiseTicketIssueQuestion(
         survey?.questions,
@@ -315,7 +315,7 @@ function TakeSurvey({
 
     setIsSavingResponses(true);
 
-    let checkUniqueDevice = survey?.uniqueDeviceResponse;
+    const checkUniqueDevice = survey?.uniqueDeviceResponse;
 
     //logic for encrypting the responses, to swap values between response variable and end to end encrypted response
     let defaultResponses = responsesRef.current;

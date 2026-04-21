@@ -111,7 +111,7 @@ const CreateOrEditContactModal = ({
     if (validation.hasErrors) {
       return;
     }
-    let contactData = {
+    const contactData = {
       ...form.getValues(),
       dob: form.getValues()?.dob
         ? new Date(form.getValues().dob).toISOString()

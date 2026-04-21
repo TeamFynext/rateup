@@ -11,7 +11,7 @@ import {
   Stack,
   useMantineTheme,
 } from "@mantine/core";
-import { animate, AnimatePresence, motion, useAnimate } from "motion/react";
+import { AnimatePresence, motion, useAnimate } from "motion/react";
 
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";

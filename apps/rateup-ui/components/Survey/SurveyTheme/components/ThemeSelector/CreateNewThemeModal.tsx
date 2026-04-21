@@ -1,16 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Modal,
-  TextInput,
-  Tooltip,
-} from "@mantine/core";
+import { Box, Button, Modal, TextInput, Tooltip } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";

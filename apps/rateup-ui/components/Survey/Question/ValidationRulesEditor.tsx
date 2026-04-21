@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useContext, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import {
   ActionIcon,
@@ -26,11 +26,7 @@ import { toast } from "sonner";
 
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
-import {
-  QuestionType as Q,
-  QuestionType,
-  SmileyResponse,
-} from "../../../types/enums";
+import { QuestionType as Q, QuestionType } from "../../../types/enums";
 import { SAVE_HOTKEY } from "../../../utils/constants";
 import {
   RateupButtonBlue,
@@ -171,7 +167,7 @@ const ValidationRulesEditor = ({
 
   useEffect(() => {
     if (![Q.MultiTextInput].includes(selectedQ?.type as QuestionType)) {
-      let validationResult = form.validate();
+      const validationResult = form.validate();
 
       if (validationResult?.hasErrors) {
         // There are validation errors, do not save the form
@@ -317,7 +313,7 @@ const ValidationRulesEditor = ({
       const validationRes = await ruleForm.validate();
       if (validationRes.hasErrors) return;
       const newRules = multiInputRules?.[ruleForm.values.fieldKey];
-      let rule = newRules.find((r) => r.ruleType == ruleForm.values.ruleType);
+      const rule = newRules.find((r) => r.ruleType == ruleForm.values.ruleType);
       if (rule.ruleType == "length") {
         rule.min = ruleForm.values.min;
         rule.max = ruleForm.values.max;

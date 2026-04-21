@@ -37,7 +37,7 @@ export const MenuSection = ({
     };
   }
 
-  let menuPlans = [...freePlan, ...menuPlan];
+  const menuPlans = [...freePlan, ...menuPlan];
 
   return (
     <Stack my={"lg"}>

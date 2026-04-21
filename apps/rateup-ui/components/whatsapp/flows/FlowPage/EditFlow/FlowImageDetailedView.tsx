@@ -10,7 +10,6 @@ import {
   Group,
   Image,
   NumberInput,
-  ScrollArea,
   ScrollAreaAutosize,
   Stack,
 } from "@mantine/core";

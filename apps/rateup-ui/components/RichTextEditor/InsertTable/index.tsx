@@ -2,9 +2,9 @@
 
 import { useCallback, useState } from "react";
 
-import { ActionIcon, Button, Popover, Tooltip } from "@mantine/core";
+import { Popover } from "@mantine/core";
 import { RichTextEditor } from "@mantine/tiptap";
-import { IconTable, IconTablePlus } from "@tabler/icons-react";
+import { IconTable } from "@tabler/icons-react";
 
 import { useTiptopTableBtnHandlersObj } from "./HandlersObjHook";
 import styles from "./InsertTable.module.css";

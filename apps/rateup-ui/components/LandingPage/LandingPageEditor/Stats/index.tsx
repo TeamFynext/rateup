@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { Group, Stack } from "@mantine/core";
 import { useExtracted } from "next-intl";

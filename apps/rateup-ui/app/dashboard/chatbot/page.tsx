@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-import { Flex, Select, SimpleGrid, Stack, Tabs } from "@mantine/core";
+import { Flex, Select, Stack, Tabs } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import {
-  IconAi,
   IconBrandWhatsapp,
   IconFile,
   IconMessageChatbot,
   IconPlus,
-  IconRobot,
   IconRobotFace,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";

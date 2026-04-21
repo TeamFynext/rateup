@@ -143,7 +143,7 @@ export default function WaInboxContactDetails({
   }, [contact]);
 
   const handleSubmit = async (values: ContactFormValues) => {
-    let data = {
+    const data = {
       ...values,
       phone: values.phone?.startsWith("+")
         ? values.phone.slice(1)

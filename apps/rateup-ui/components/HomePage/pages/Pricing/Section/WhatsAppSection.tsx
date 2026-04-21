@@ -39,7 +39,7 @@ export const WhatsAppSection = ({
     };
   }
 
-  let whatsAppPlans = [...freePlan, ...whatsAppPlan];
+  const whatsAppPlans = [...freePlan, ...whatsAppPlan];
 
   return (
     <Stack my={"lg"}>

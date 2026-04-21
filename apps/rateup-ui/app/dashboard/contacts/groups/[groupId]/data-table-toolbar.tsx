@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import { useDebouncedState } from "@mantine/hooks";
 import { Table } from "@tanstack/react-table";
 import { Plus, Search, Trash2, X } from "lucide-react";
 import { useExtracted } from "next-intl";
@@ -11,7 +10,6 @@ import {
   useRemoveContactsFromGroup,
 } from "@/backend/campaign/contactGroup/contactGroup.query";
 import AddCustomerModal from "@/components/Contacts/AddCustomerModal";
-import { DataTableProps } from "@/components/Table/data-table";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option";
 import { Button } from "@/components/ui/button";
 import {

@@ -223,7 +223,7 @@ const TableLayout = ({
                     key={row.id}
                     className={detailBtn && styles["table-body-row"]}
                     onClick={() => {
-                      let routeUrl: string | null =
+                      const routeUrl: string | null =
                         detailBtn && row.getValue(DETAIL_BTN);
                       if (routeUrl) router.push(routeUrl);
                     }}

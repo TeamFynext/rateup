@@ -1,7 +1,6 @@
-import { JSX, useCallback } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-import { IconCheck, IconInfoCircleFilled, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { signIn, signUp } from "supertokens-auth-react/recipe/emailpassword";
 import {
@@ -18,7 +17,7 @@ import { useRouteAndCartStore } from "../../components/HomePage/pages/Pricing/st
 
 const handleCreateCode = async (phoneNumber: string, router) => {
   try {
-    let response = await createCode({
+    const response = await createCode({
       phoneNumber,
     });
     if (response.status !== "OK") {
@@ -50,7 +49,7 @@ export function useSignIn() {
       if (phoneNumber) {
         await handleCreateCode(phoneNumber, router);
       } else {
-        let response = await signIn({
+        const response = await signIn({
           formFields: [
             {
               id: "email",
@@ -98,7 +97,7 @@ export async function sendOTP(phoneNumber: string) {
   const router = useRouter();
 
   try {
-    let response = await createCode({
+    const response = await createCode({
       phoneNumber,
     });
     if (response.status !== "OK") {
@@ -123,7 +122,7 @@ export async function sendOTP(phoneNumber: string) {
 }
 export async function resendOTP() {
   try {
-    let response = await resendCode();
+    const response = await resendCode();
 
     if (response.status === "RESTART_FLOW_ERROR") {
       // this can happen if the user has already successfully logged in into
@@ -201,7 +200,7 @@ export function useSignUp() {
         },
       ].filter((field) => field.value !== null);
 
-      let response = await signUp({
+      const response = await signUp({
         formFields: [
           {
             id: "email",
@@ -265,7 +264,7 @@ export const useConsumeVerificationCode = () => {
       id: "verify-email",
     });
     try {
-      let response = await verifyEmail();
+      const response = await verifyEmail();
       if (response?.status === "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR") {
         // This can happen if the verification code is expired or invalid.
         // You should ask the user to retry
@@ -301,7 +300,7 @@ export function useEmailSend() {
 
   return useCallback(async () => {
     try {
-      let response = await sendVerificationEmail();
+      const response = await sendVerificationEmail();
       if (response?.status === "EMAIL_ALREADY_VERIFIED_ERROR") {
         router.push("/dashboard");
       } else {

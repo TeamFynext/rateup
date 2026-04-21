@@ -7,13 +7,8 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
-import { saveContactsToDB } from "@/app/dashboard/inbox/idb";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/app/dashboard/inbox/store";
-import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilter";
+import { MessagePlatform } from "@/types/enums";
+import useContactStore from "@/app/dashboard/inbox/store";
 
 import {
   assignInboxToUser,

@@ -47,7 +47,7 @@ export function ItemDetailedViewModal({
   currency = "0",
 }: Readonly<ItemDetailedViewModalProps>) {
   const [alleryView, setAlleryView] = useState(false);
-  let foodLabelLength = item?.foodLabels?.length;
+  const foodLabelLength = item?.foodLabels?.length;
 
   const imageStyle = {
     aspectRatio: 3 / 2,

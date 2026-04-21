@@ -60,7 +60,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { SAVE_HOTKEY } from "@/utils/constants";
 
-import { AccountSelector } from "../input/AccountSelector";
 import { TeamSelector } from "../input/TeamSelector";
 
 interface CreateCampaignProps {

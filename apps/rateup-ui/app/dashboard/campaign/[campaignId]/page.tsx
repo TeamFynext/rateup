@@ -50,10 +50,7 @@ import {
   ResendCampaignModal,
   ResendOptions,
 } from "@/components/Campaign/ResendCampaignModal";
-import {
-  CONTACT_SORT,
-  selectCheckBox,
-} from "@/components/Contacts/utils/utils";
+import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
 import useDebounce from "@/components/menu/hook/useDebounce";
 import { DataTable } from "@/components/Table/data-table";
 import {

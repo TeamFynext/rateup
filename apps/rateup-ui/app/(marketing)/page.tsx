@@ -4,10 +4,8 @@ import dynamic from "next/dynamic";
 
 import ClientLogos from "@/components/RateupHomePage/helpers/ClientLogos";
 import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooterNew";
-import ScrollToTop from "@/components/RateupHomePage/helpers/ScrollToTop";
 import Layout from "@/components/RateupHomePage/Layout";
 import AutomateInteraction from "@/components/RateupHomePage/shared/AutomateInteraction";
-import Clients from "@/components/RateupHomePage/shared/ClientNew";
 import FeatureCards2 from "@/components/RateupHomePage/shared/FeatureCards2New";
 import Features from "@/components/RateupHomePage/shared/FeaturesNew";
 import HeroAnalytics from "@/components/RateupHomePage/shared/HeroAnalyticsNew";

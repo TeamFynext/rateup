@@ -44,7 +44,7 @@ export function WebsurveySelector({
   }));
 
   const handleChange = (url) => {
-    let arr = url?.split("?");
+    const arr = url?.split("?");
     if (carousel) {
       form.setFieldValue(`${carousel}.url`, `${arr?.[0]}{{1}}`);
       form.setFieldValue(`${carousel}.example`, [arr?.[1]]);

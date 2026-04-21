@@ -3,18 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  Bot,
-  Box,
-  ChevronDown,
-  ClipboardList,
-  MessageCircle,
-  MessageCircleCodeIcon,
-  Monitor,
-  QrCode,
-  ScanLine,
-  Star,
-} from "lucide-react";
+import { ChevronDown, MessageCircle, Monitor } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 export default function DropDownNavItems() {

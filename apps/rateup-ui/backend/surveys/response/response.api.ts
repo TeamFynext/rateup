@@ -69,7 +69,7 @@ export async function generateResponse(data: generateResponseType) {
 }
 
 export async function syncResponseToGoogleSheet({ surveyId }) {
-  let res = await axiosClient.post(
+  const res = await axiosClient.post(
     `${RESPONSE_URL}/${surveyId}/sync-response`,
     {},
     { timeout: 0 },

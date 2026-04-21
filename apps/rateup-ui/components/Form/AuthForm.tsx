@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { Flex, Image, Stack, useMantineColorScheme } from "@mantine/core";
+import { Stack, useMantineColorScheme } from "@mantine/core";
 
 import {
   useCreateAppleUserMutation,

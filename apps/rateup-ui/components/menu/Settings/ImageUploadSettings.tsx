@@ -58,11 +58,11 @@ const ImageUploadSettings = ({
     });
     toggleCropDialog();
   };
-  let labelColor =
+  const labelColor =
     "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))";
 
   const handleCropImageSave = (cropedImage) => {
-    let imageUrl =
+    const imageUrl =
       typeof cropedImage === "string"
         ? cropedImage
         : URL.createObjectURL(cropedImage);

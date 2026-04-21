@@ -1,9 +1,7 @@
 import { useRouter } from "next/navigation";
 
-import { IconCheck, IconX } from "@tabler/icons-react";
 import {
   keepPreviousData,
-  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,

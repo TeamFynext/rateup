@@ -149,7 +149,7 @@ export function ChoicesCreator({
     try {
       if (choiceWeightage.trim().length === 0)
         return choiceForm.setFieldError("title", "Text required");
-      let choiceObj = {
+      const choiceObj = {
         value:
           surveyType !== SurveyType.Web
             ? Object.fromEntries(
@@ -483,7 +483,7 @@ class FileConverter {
       const reader = new FileReader();
 
       reader.onload = () => {
-        let base64URL = reader.result as string;
+        const base64URL = reader.result as string;
         const base64Data = base64URL.replace(
           /^data:image\/[a-zA-Z]+;base64,/,
           "",
@@ -538,7 +538,7 @@ function Choice({
   const { surveyTeamMapId } = useContext(SurveyContext);
   const { data: responses } = useResponses(surveyTeamMapId);
   const resetRef = useRef<() => void>(null);
-  let newWeightage = choice?.weightage;
+  const newWeightage = choice?.weightage;
   const choiceResetRef = useRef<() => void>(null);
   const translations = useExtracted();
   useEffect(() => {
@@ -580,7 +580,7 @@ function Choice({
     });
   };
 
-  let choices = form.values.choices?.[selectedLanguage];
+  const choices = form.values.choices?.[selectedLanguage];
   const handleEditChoice = async () => {
     const { hasErrors } = choiceForm.validate();
     if (hasErrors) return;
@@ -610,7 +610,7 @@ function Choice({
       });
       setSelectedImageFile(null);
     } else {
-      let choiceObj = {
+      const choiceObj = {
         value:
           surveyType !== SurveyType.Web
             ? Object.fromEntries(

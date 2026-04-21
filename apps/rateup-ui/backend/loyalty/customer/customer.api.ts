@@ -24,11 +24,11 @@ export async function getAllCustomers(
   },
   columnFilters: { id: string; value: string }[],
 ) {
-  let filter = columnFilters
+  const filter = columnFilters
     .map((data) => `&${data.id}=${data.value}`)
     .join("&");
-  let desc = sort.desc ? "desc" : "asc";
-  let customerUrl = `${base}?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&sort=${sort.id}&desc=${desc}${filter}`;
+  const desc = sort.desc ? "desc" : "asc";
+  const customerUrl = `${base}?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&sort=${sort.id}&desc=${desc}${filter}`;
 
   const response = await axiosClient.get(customerUrl);
   return response.data;
@@ -43,7 +43,7 @@ export async function createLCAction({ phone, actionId, amount }) {
 }
 
 export const importCustomers = async (data) => {
-  let res = await axiosClient.post(`${base}/importcsv`, data, {
+  const res = await axiosClient.post(`${base}/importcsv`, data, {
     headers: {
       "Content-Type": "multipart/form-data",
     },

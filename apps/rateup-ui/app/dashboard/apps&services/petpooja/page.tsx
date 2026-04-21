@@ -2,21 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  Checkbox,
-  Divider,
-  Group,
-  SimpleGrid,
-  Stack,
-  Title,
-} from "@mantine/core";
+import { Divider, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
-import { IntegratedApps, ShopifySendAfter } from "@/types/enums";
+import { IntegratedApps } from "@/types/enums";
 import {
   useCreateIntegrationMutation,
   useDeleteIntegrationMutation,
@@ -27,7 +20,6 @@ import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey";
 import {
   ContainedNumberInput,
-  ContainedSelection,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";

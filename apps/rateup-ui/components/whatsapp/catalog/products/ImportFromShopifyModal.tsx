@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 

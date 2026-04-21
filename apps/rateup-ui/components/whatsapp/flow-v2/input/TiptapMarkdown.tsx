@@ -23,7 +23,7 @@ import { Markdown } from "tiptap-markdown";
 import styles from "./TiptapMarkdown.module.css";
 
 function TiptapMarkdown({ value, onChange, label, max, disabled }) {
-  let content = value || "";
+  const content = value || "";
   const isUpdatingFromEditor = useRef(false);
 
   const editor = useEditor({

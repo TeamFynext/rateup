@@ -29,13 +29,13 @@ function CustomQRCode({
     });
     setQrCodeObj(qrCodeObj);
     const { data: qrData, size } = qrCodeObj.modules;
-    let rows = [];
+    const rows = [];
 
     let tempRow = [];
     let x = 0;
     let y = 0;
-    let width = 10;
-    let height = 10;
+    const width = 10;
+    const height = 10;
 
     const checkIsFindingPatternModule = (i) => {
       if (

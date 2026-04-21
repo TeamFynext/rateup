@@ -277,7 +277,7 @@ export const RateupFileUploadButton = ({
   size = "lg",
   rightSection,
 }: RateupFileUploadButtonProps) => {
-  let url = rightSection
+  const url = rightSection
     ? typeof fileSrc === "string"
       ? getFileUrlFromKey(fileSrc)
       : `${DEFAULT_IMAGE_BASE64_START}${fileSrc}`

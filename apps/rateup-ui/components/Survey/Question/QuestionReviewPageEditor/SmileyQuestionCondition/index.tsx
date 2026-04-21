@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Group, Stack, Text, useMantineTheme } from "@mantine/core";
+import { Button, Group, Text, useMantineTheme } from "@mantine/core";
 
 import { SmileyResponse } from "@/types/enums";
 import { mapSmileyIcon } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/SmileyRating";

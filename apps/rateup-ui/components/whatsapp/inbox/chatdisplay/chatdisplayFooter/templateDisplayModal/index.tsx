@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 
-import {
-  IconFile,
-  IconFileDescription,
-  IconSearch,
-  IconX,
-} from "@tabler/icons-react";
+import { IconFile, IconFileDescription, IconSearch } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useExtracted } from "next-intl";
 

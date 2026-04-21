@@ -56,9 +56,9 @@ export const useLoyaltyCustomers = (
   sorting?,
   columnFilters?,
 ) => {
-  let sort = sorting ?? CONTACT_SORT;
-  let filters = columnFilters ?? [];
-  let search = searchData ?? "";
+  const sort = sorting ?? CONTACT_SORT;
+  const filters = columnFilters ?? [];
+  const search = searchData ?? "";
   return useQuery({
     queryFn: () => getAllCustomers(pagination, search, sort, filters),
     queryKey: ["loyaltyCustomers", pagination, search, sort, filters],

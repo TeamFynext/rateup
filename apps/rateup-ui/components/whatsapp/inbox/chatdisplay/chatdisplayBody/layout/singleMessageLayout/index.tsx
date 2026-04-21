@@ -1,27 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
-import {
-  ActionIcon,
-  Avatar,
-  CopyButton,
-  Group,
-  Indicator,
-  IndicatorProps,
-  Paper,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import {
-  IconChecks,
-  IconClock,
-  IconCopy,
-  IconExclamationCircleFilled,
-  IconRobot,
-} from "@tabler/icons-react";
+import { ActionIcon, CopyButton, IndicatorProps, Tooltip } from "@mantine/core";
+import { IconCopy, IconRobot } from "@tabler/icons-react";
 import { EmojiClickData } from "emoji-picker-react";
 import {
   AlertCircle,
@@ -38,8 +20,8 @@ import {
 import { toast } from "sonner";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
-import { WaReceiveMessageBody, WaSendMessageBody } from "@/types/global";
-import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
+import { WaReceiveMessageBody } from "@/types/global";
+import { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { CreativeAvatar } from "@/components/ui/creative-avatar";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
@@ -55,11 +37,8 @@ import { useUser } from "@/context/UserContext";
 import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {
   formatDateWithRelativeTime,
-  formatDateWithTime,
   formatToCustomTime,
-  formatToRelativeTime,
 } from "../../../../../../../utils/dateTime";
-import classes from "./styles.module.css";
 
 interface Props {
   exchangeProcess: "send" | "receive" | "internal" | "privateNote";

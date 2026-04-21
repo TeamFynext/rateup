@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback } from "react";
-import { useRouter } from "next/navigation";
 
 import { Button, Center, Modal } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";

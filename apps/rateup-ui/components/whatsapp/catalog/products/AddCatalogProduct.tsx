@@ -3,18 +3,14 @@
 import React, { useEffect, useState } from "react";
 
 import {
-  FileInput,
   Group,
   Radio,
   RadioGroup,
   SimpleGrid,
   Stack,
-  Switch,
-  TagsInput,
   Text,
 } from "@mantine/core";
-import { isInRange, isNotEmpty, useForm } from "@mantine/form";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { useForm } from "@mantine/form";
 import { toast } from "sonner";
 
 import { CatalogProductType } from "@/types/enums";
@@ -24,7 +20,6 @@ import {
   useUpdateCatalogProducts,
 } from "@/backend/whatsapp/catalog/products/products.query";
 import {
-  RateupButtonOutline,
   RateupButtonPrimary,
   RateupButtonSecondary,
 } from "@/components/Button/RateupButtons";
@@ -45,7 +40,6 @@ import {
 import {
   CATALOG_PRODUCT_AVAILABILITY,
   CATALOG_PRODUCT_CONDITIONS,
-  CATALOG_PRODUCT_TYPES,
   CURRENCY_CODES,
 } from "@/utils/constants";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload";
@@ -179,7 +173,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
       form.setFieldValue("type", type);
       if (productData) {
         if (productData.image.length) setImageUpload("url");
-        let initialValues = getInitialValues(type);
+        const initialValues = getInitialValues(type);
         Object.keys(getInitialValues(type)).map((key) => {
           initialValues[key] = productData[key];
         });
@@ -266,7 +260,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
 
     // ── Meta catalog mode ─────────────────────────────────────────────────
     if (form.validate().hasErrors) return;
-    let loadinggMessage = productData
+    const loadinggMessage = productData
       ? "Updating Product"
       : "Uploading product..";
     toast.loading(loadinggMessage, {

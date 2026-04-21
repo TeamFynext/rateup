@@ -5,7 +5,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   claimReward,
   ClaimRewardInput,
-  CustomerSearchResult,
   getCustomerRewardsByPhone,
   searchCustomers,
   useRedemption,

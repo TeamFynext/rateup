@@ -6,8 +6,6 @@ import { useExtracted } from "next-intl";
 import { useGetWaQuickReplies } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
 import { Spinner } from "@/components/ui/spinner";
 
-import QuickReplyItem from "./QuickReplyItem";
-
 export function isJSONString(string) {
   return /^\s*\{.*\}\s*$/.test(string);
 }

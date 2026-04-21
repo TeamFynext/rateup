@@ -4,7 +4,6 @@ import {
   LogicCondition,
   PageType,
   QuestionType as Q,
-  QuestionType2 as Q2,
   QuestionType,
   SmileyResponse,
   WaQuestions,

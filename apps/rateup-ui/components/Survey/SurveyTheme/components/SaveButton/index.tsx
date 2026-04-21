@@ -2,15 +2,14 @@
 
 import { useCallback, useState } from "react";
 
-import { Button, Group, Text } from "@mantine/core";
+import { Button, Group } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
 import _ from "lodash";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useUpdateSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
-import { docsPath, SAVE_HOTKEY } from "../../../../../utils/constants";
-import InfoButton from "../../../../Button/InfoButton";
+import { SAVE_HOTKEY } from "../../../../../utils/constants";
 import { ThemeTabEnum } from "../../SurveyTheme.enums";
 import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
 import {

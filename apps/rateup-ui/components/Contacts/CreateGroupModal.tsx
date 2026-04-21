@@ -99,7 +99,7 @@ const CreateGroupModal = ({
       }
     }
 
-    let updatedValues = {
+    const updatedValues = {
       ...form.values,
       type,
       tags: result,

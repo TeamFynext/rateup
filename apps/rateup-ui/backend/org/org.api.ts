@@ -4,7 +4,7 @@ import { axiosClient } from "../apiClient";
 
 export async function getTeamsMembersOfOrg() {
   try {
-    let members: MembersResponse = (
+    const members: MembersResponse = (
       await axiosClient.get("/org/members-with-teams")
     ).data;
     return members;
@@ -16,7 +16,7 @@ export async function getTeamsMembersOfOrg() {
 
 export async function getAllTeamsMembersOfOrg() {
   try {
-    let members = (
+    const members = (
       await axiosClient.get("/org/members-with-teams-and-invitation")
     ).data;
     return members;

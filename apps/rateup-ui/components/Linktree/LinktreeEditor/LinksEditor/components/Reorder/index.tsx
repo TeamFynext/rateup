@@ -1,7 +1,5 @@
 import { Box } from "@mantine/core";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-
-import styles from "./Reorder.module.css";
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 
 function Reorder({ onDragEnd, className = "", children, itemsArr }) {
   const handleDragEnd = (result) => {

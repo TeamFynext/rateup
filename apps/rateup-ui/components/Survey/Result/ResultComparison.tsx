@@ -26,23 +26,17 @@ import {
   YAxis,
 } from "recharts";
 
-import { useQuestions } from "../../../backend/surveys/questions/questions.query";
-import { TeamWiseResponses } from "../../../backend/surveys/response/response.api";
 import {
-  useAllResponses,
-  useResponseAnalytics,
   useResponseCount,
   useResponseForComparison,
 } from "../../../backend/surveys/response/response.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import SurveyContext from "../../../context/SurveyContext";
 import { QuestionType, QuestionType2 } from "../../../types/enums";
-import { getContent } from "../../../utils";
 import {
   getResponseArrayByQuestionType,
   getResponseObjectByQuestionType,
 } from "../../../utils/response";
-import { getFilteredResponsesUsingTeam } from "../../../utils/team/surveyTeam";
 import RateupLoader from "../../Loaders/RateupLoader";
 import NothingFound from "../../NothingFound/NothingFound";
 import Heading from "../../styled/Heading/Heading";
@@ -104,11 +98,11 @@ export default function ResultComparison({
           const question = allQuestions.find(
             (ques) => ques.id === q.questionId,
           );
-          let questionTitle =
+          const questionTitle =
             version === 1
               ? question.title || question.label
               : question.header || question.label;
-          let localizedTitle =
+          const localizedTitle =
             typeof questionTitle === "object"
               ? getReplacedTitleFromVariable({
                   title: questionTitle[defaultLanguage],

@@ -16,7 +16,7 @@ export default function TextWithFormatting(text, examples, category?) {
       .split(/\*(.*?)\*|_(.*?)_|~(.*?)~|```(.*?)```/g)
       .map((part, index) => {
         if (!part) return;
-        let tt =
+        const tt =
           part?.split(/\*(.*?)\*|_(.*?)_|~(.*?)~|```(.*?)```/g)?.length > 1
             ? parseText(part)
             : part;

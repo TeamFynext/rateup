@@ -13,7 +13,6 @@ import {
   PillsInput,
   Stack,
   Switch,
-  Text,
   useCombobox,
 } from "@mantine/core";
 import { hasLength, isNotEmpty, useForm } from "@mantine/form";
@@ -29,7 +28,13 @@ import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import styles from "./GeneralSettings.module.css";
 
-let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
+const Languages = new Set([
+  "English",
+  "Malayalam",
+  "Hindi",
+  "Kannada",
+  "Tamil",
+]);
 const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
   const translations = useExtracted();
   const settingsForm = useForm({
@@ -178,7 +183,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
 
   useEffect(() => {}, [errors]);
 
-  let languages = Array.from(Languages);
+  const languages = Array.from(Languages);
   const [search, setSearch] = useState("");
   const [data, setData] = useState(languages);
 

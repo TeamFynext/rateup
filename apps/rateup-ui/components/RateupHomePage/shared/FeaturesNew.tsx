@@ -1,7 +1,6 @@
 import Image from "next/image";
 
-import { motion } from "framer-motion";
-import { Variants } from "motion/react";
+import { motion, Variants } from "motion/react";
 
 import { imagePath } from "@/components/HomePage/pages/constants";
 import { sora } from "@/utils/fonts";

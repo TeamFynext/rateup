@@ -15,7 +15,6 @@ import { useAnimate } from "motion/react";
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useSurveyContext } from "../../../../../context/SurveyObjContext";
-import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext";
 import styles from "./OpinionScaleForm.module.css";

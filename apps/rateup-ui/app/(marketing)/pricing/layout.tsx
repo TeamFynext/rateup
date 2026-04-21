@@ -1,14 +1,13 @@
 import React from "react";
+import { Metadata } from "next";
 
 import { pageMetadata } from "@/lib/metadata";
 
-import Page from "./page";
-
-export const metadata = pageMetadata["/pricing"];
+export const metadata: Metadata = pageMetadata["/pricing"];
 export default function PricingLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return <div>{children}</div>;
 }

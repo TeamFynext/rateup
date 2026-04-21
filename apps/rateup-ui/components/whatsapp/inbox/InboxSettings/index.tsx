@@ -2,7 +2,6 @@
 
 import WaQuickReplySettings from "@/components/RichTextEditor/WaQuickReply/WaQuickReplySettings";
 import { useUser } from "@/context/UserContext";
-import { UserRole } from "@/utils/enums";
 
 // import WaInboxPermissions from "../chatselect/permissions";
 

@@ -2,10 +2,7 @@ import React, { useState } from "react";
 
 import { toast } from "sonner";
 
-import {
-  useAddExistingContactMutation,
-  useContactGroup,
-} from "@/backend/campaign/contactGroup/contactGroup.query";
+import { useAddExistingContactMutation } from "@/backend/campaign/contactGroup/contactGroup.query";
 
 import { Button } from "../ui/button";
 import {

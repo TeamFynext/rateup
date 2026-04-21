@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import { useUpdateLinktreeMutation } from "../../../../../backend/linktree/linktree.query";
 import styles from "../LinksEditor.module.css";

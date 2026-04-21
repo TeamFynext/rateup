@@ -3,12 +3,9 @@ import { useContext } from "react";
 import {
   IconMoodAngry,
   IconMoodCrazyHappy,
-  IconMoodCry,
   IconMoodEmpty,
   IconMoodHappy,
   IconMoodSad,
-  IconMoodSmile,
-  IconMoodSmileBeam,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
@@ -26,7 +23,6 @@ import {
 } from "../types/enums";
 import { isToday } from "./dateTime";
 import { decryptPrivateKey, decryptResponse } from "./encryption";
-import { RatingScaleMap } from "./whatsapp/enumMap";
 
 export function getResponse(q: any, response: any) {
   if (!response && response !== 0) return "";
@@ -464,22 +460,22 @@ export async function decryptResultResponse(
 }
 
 export function getFormattedResponseForAreaGraph(responses, timePeriod) {
-  let dateResponseCount = {};
-  let dayResponseCount = {};
-  let weekResponseCount = {};
+  const dateResponseCount = {};
+  const dayResponseCount = {};
+  const weekResponseCount = {};
   responses.forEach((response) => {
     if (isToday(response.createdAt)) {
-      let hour = dayjs(response.createdAt).format("h A");
+      const hour = dayjs(response.createdAt).format("h A");
       if (dayResponseCount[hour]) dayResponseCount[hour]++;
       else dayResponseCount[hour] = 1;
     }
     if (dayjs().diff(dayjs(response.createdAt), "day") <= 30) {
-      let date = dayjs(response.createdAt).format("MMM DD");
+      const date = dayjs(response.createdAt).format("MMM DD");
       if (dateResponseCount[date]) dateResponseCount[date]++;
       else dateResponseCount[date] = 1;
     }
     if (dayjs().diff(dayjs(response.createdAt), "year") === 0) {
-      let week = dayjs().diff(dayjs(response.createdAt), "week");
+      const week = dayjs().diff(dayjs(response.createdAt), "week");
       if (weekResponseCount[week]) weekResponseCount[week]++;
       else weekResponseCount[week] = 1;
     }
@@ -488,8 +484,8 @@ export function getFormattedResponseForAreaGraph(responses, timePeriod) {
   const resData = [];
   switch (timePeriod) {
     case "hourly":
-      for (var i = 0; i < 24; i++) {
-        let date = dayjs().hour(i).format("h A");
+      for (let i = 0; i < 24; i++) {
+        const date = dayjs().hour(i).format("h A");
         resData.push(
           dayResponseCount[date]
             ? { date, responses: dayResponseCount[date] }
@@ -498,8 +494,8 @@ export function getFormattedResponseForAreaGraph(responses, timePeriod) {
       }
       break;
     case "daily":
-      for (var i = 30; i > 0; i--) {
-        let date = dayjs()
+      for (let i = 30; i > 0; i--) {
+        const date = dayjs()
           .subtract(i - 1, "day")
           .format("MMM DD");
         resData.push(
@@ -510,7 +506,7 @@ export function getFormattedResponseForAreaGraph(responses, timePeriod) {
       }
       break;
     case "weekly":
-      for (var i = 52; i >= 0; i--) {
+      for (let i = 52; i >= 0; i--) {
         resData.push(
           weekResponseCount[i]
             ? { date: i, responses: weekResponseCount[i] }

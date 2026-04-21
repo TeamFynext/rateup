@@ -1,14 +1,11 @@
 import { memo } from "react";
 
 import { Text } from "@mantine/core";
-import { IconGitBranch, IconRobotFace } from "@tabler/icons-react";
+import { IconRobotFace } from "@tabler/icons-react";
 import { NodeProps } from "@xyflow/react";
 
-import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
-
-import { AiBotNodeData, FlowNodeData } from "../../types/node-types";
+import { AiBotNodeData } from "../../types/node-types";
 import BaseNode from "./base-node";
-import styles from "./node-styles.module.css";
 
 function AiBotNode(props: NodeProps & { data: AiBotNodeData }) {
   const { data } = props;

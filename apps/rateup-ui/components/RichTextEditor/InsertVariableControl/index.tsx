@@ -2,7 +2,7 @@
 
 import { useContext } from "react";
 
-import { ActionIcon, Menu } from "@mantine/core";
+import { Menu } from "@mantine/core";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconVariable } from "@tabler/icons-react";
 

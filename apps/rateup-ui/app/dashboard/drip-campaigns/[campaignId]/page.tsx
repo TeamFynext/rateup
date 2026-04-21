@@ -77,7 +77,6 @@ import {
   CampaignType,
 } from "../../../../types/enums";
 import { Campaign } from "../../../../types/global";
-import { getErrorMessage } from "../../../../utils";
 import { getCampaignParticipantStatusLabel } from "../../../../utils/enums";
 import styles from "../campaign.module.css";
 import { SearchInput } from "../page";
@@ -107,7 +106,7 @@ const CampaignById = () => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") || CampaignParticipantsTabs.INFO;
   const { update } = useRouteParams();
-  let activeTab = tab?.toString() as CampaignParticipantsTabs;
+  const activeTab = tab?.toString() as CampaignParticipantsTabs;
   const mut = useCampaignResponseDownloadById();
 
   const {
@@ -407,7 +406,7 @@ const StartCampaignCard = ({
       return;
     }
     if (errorMsg) setErrorMsg("");
-    let values = form.getValues();
+    const values = form.getValues();
     if (!startCampaign) {
       values.statuses = Object.values(CampaignParticipantStatus);
     }

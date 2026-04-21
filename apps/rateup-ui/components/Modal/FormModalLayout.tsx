@@ -2,14 +2,7 @@
 
 import { FormEventHandler } from "react";
 
-import {
-  getDefaultZIndex,
-  Group,
-  Modal,
-  Space,
-  Stack,
-  Title,
-} from "@mantine/core";
+import { getDefaultZIndex, Group, Modal, Space, Title } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useExtracted } from "next-intl";
 

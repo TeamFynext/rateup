@@ -31,7 +31,6 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
-import axios from "axios";
 import dayjs from "dayjs";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
@@ -44,16 +43,12 @@ import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
-import {
-  useConnectedWaCatalog,
-  useWaCatalog,
-} from "@/backend/whatsapp/catalog/catalog.query";
+import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import {
   useProductSetsByCatalog,
   useSyncProductSets,
 } from "@/backend/whatsapp/catalog/productSet.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { useMarkWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import {
   useMetaAssets,
   useSubscribeFieldToPage,
@@ -63,12 +58,10 @@ import {
   useSyncLeadgenFormQuestions,
   useSyncMetaLeadgenForms,
   useUpdateWaSettingsMutation,
-  useUpsertWaSettingsMutation,
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
-import { AccountSelector } from "@/components/input/AccountSelector";
 import {
   ContainedDatePickerInput,
   ContainedMultiSelect,
@@ -91,7 +84,6 @@ import {
 } from "@/utils/file-upload/upload";
 import { hasFeature } from "@/utils/subscription/subscription";
 
-import { AssignInboxContent } from "../../inbox/chatdisplay/chatdisplayHeader";
 import {
   CatalogNodeData,
   LeadgenNodeData,
@@ -1202,12 +1194,12 @@ const TemplateNodeEditor: React.FC<
       flowId: t.data?.components?.find((c) => c.type === "BUTTONS")
         ?.buttons?.[0]?.["flow_id"],
     })) || [];
-  let selectedTemplate = templates?.find(
+  const selectedTemplate = templates?.find(
     (t) => t.id === typedData?.template?.id,
   );
   const params = useParams();
 
-  let flowbotId = params.flowbotId as string;
+  const flowbotId = params.flowbotId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data, isPending, refetch } = useWaAutomatedReplyById(flowbotId);
   const waSetting =
@@ -2282,7 +2274,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   const typedData = nodeData as unknown as LeadgenNodeData;
   const params = useParams();
   const router = useRouter();
-  let flowbotId = params.flowbotId as string;
+  const flowbotId = params.flowbotId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data, isPending, refetch } = useWaAutomatedReplyById(flowbotId);
   const waSetting =
@@ -2579,7 +2571,7 @@ const CatalogNodeEditor = ({
 }: NodeComponentProps<"catalogNode">) => {
   const typedData = nodeData as CatalogNodeData;
   const params = useParams();
-  let flowbotId = params.flowbotId as string;
+  const flowbotId = params.flowbotId as string;
   const {
     data: automation,
     isPending,

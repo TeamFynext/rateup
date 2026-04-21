@@ -5,7 +5,6 @@ import Link from "next/link";
 
 import {
   Button,
-  Center,
   Container,
   Image,
   Paper,
@@ -16,7 +15,6 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 
 import { RateupButtonBlue } from "../../../../../components/Button/RateupButtons";
-import RateupRedirectCard from "../../../../../components/Card/RateupRedirectCard";
 
 const Page = () => {
   const largeScreen = useMediaQuery("(min-width: 48em)");
@@ -85,11 +83,11 @@ function Welcome({ setStartClicked, largeScreen }) {
   );
 }
 
-let survey1 =
+const survey1 =
   "https://www.rateup.app/public/survey/06f95c13-fc22-438f-a7dd-f4f068ac4233?start=true";
-let survey2 =
+const survey2 =
   "https://www.rateup.app/public/survey/24f3cdde-4833-46f6-9b82-6ded85e679f8?start=true";
-let survey3 =
+const survey3 =
   "https://www.rateup.app/public/survey/74a86d7e-ec59-40e3-8bf5-4dbece9023e2?start=true";
 
 function StartPage({ largeScreen }) {

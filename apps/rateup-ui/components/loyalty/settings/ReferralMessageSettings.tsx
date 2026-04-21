@@ -3,7 +3,6 @@
 import { Loader2 } from "lucide-react";
 import { useExtracted } from "next-intl";
 import { UseFormReturn } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
 
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor";

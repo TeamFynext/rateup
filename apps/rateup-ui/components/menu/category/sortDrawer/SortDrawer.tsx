@@ -99,7 +99,7 @@ const SortDrawer = ({
     </Draggable>
   ));
   const handleSortOrder = () => {
-    let filteredOrderData = state?.map(({ id }) => ({ id }));
+    const filteredOrderData = state?.map(({ id }) => ({ id }));
     if (categoryOrNot) {
       updateSortOrderMenuCategoryMutation.mutate({
         menuCategory: {

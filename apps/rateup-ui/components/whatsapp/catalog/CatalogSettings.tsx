@@ -1,17 +1,9 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconCheck,
-  IconCloudDownload,
-  IconLinkPlus,
-  IconLogin2,
-  IconRefresh,
-  IconShoppingBag,
-  IconX,
-} from "@tabler/icons-react";
+import { IconLogin2, IconRefresh } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { IntegratedApps, MetaLoginAssets, WaConfigType } from "@/types/enums";
@@ -19,7 +11,6 @@ import { useIntegrationByType } from "@/backend/appsIntegration/integration.quer
 import {
   useDisconnectCatalogFromWa,
   useUpateCatalog,
-  useWaCatalog,
 } from "@/backend/whatsapp/catalog/catalog.query";
 import {
   useProductSetsByCatalog,

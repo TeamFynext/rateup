@@ -1,7 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import { Box, Group, Text, useMantineTheme } from "@mantine/core";
 import { useCounter, useDisclosure } from "@mantine/hooks";

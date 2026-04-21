@@ -8,7 +8,6 @@ import {
   SelectProps,
   Stack,
   Switch,
-  Text,
   Textarea,
   Tooltip,
 } from "@mantine/core";

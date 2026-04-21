@@ -8,23 +8,15 @@ import {
   Divider,
   Flex,
   Group,
-  ScrollArea,
   ScrollAreaAutosize,
   Stack,
   Text,
 } from "@mantine/core";
-import { IconRobotFace, IconUser, IconUserFilled } from "@tabler/icons-react";
-import dayjs from "dayjs";
+import { IconRobotFace, IconUserFilled } from "@tabler/icons-react";
 
 import { ChatBotSource } from "@/types/enums";
 import { useGetUserAiChats } from "@/backend/chatbot/chatbot.query";
-import {
-  formatDate,
-  formatDateWithTime,
-  formatedTime,
-  formatIsoDateStringWithTime,
-  formatToCustomTime,
-} from "@/utils/dateTime";
+import { formatDate, formatToCustomTime } from "@/utils/dateTime";
 
 import RefreshButton from "../Button/RefreshButton";
 import PaperLayout from "../styled/Layouts/PaperLayout";

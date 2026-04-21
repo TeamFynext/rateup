@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 
-import { IconAd, IconBrandMeta, IconGitBranch } from "@tabler/icons-react";
+import { IconBrandMeta } from "@tabler/icons-react";
 import { NodeProps } from "@xyflow/react";
 
 import { LeadgenNodeData } from "../../types/node-types";

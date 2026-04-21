@@ -52,9 +52,9 @@ export function DataSourceInput(props) {
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
   const resetRef = useRef<() => void>(null);
   const choiceResetRef = useRef<() => void>(null);
-  let choices = props.value ?? [];
-  let maxCharCount = props.maxCharCount ?? 30;
-  let maxChoiceCount = props.maxChoice ?? 20;
+  const choices = props.value ?? [];
+  const maxCharCount = props.maxCharCount ?? 30;
+  const maxChoiceCount = props.maxChoice ?? 20;
   const choiceSchema = props?.onlyTitle
     ? z.object({
         title: z
@@ -105,7 +105,7 @@ export function DataSourceInput(props) {
     const { hasErrors } = choiceForm.validate();
     if (hasErrors) return;
     try {
-      let choiceObj = {
+      const choiceObj = {
         id: generateId(),
         ...Object.fromEntries(
           Object.entries(choiceForm.getValues()).filter(
@@ -144,7 +144,7 @@ export function DataSourceInput(props) {
     choiceForm.setFieldValue("image", null);
     choiceResetRef.current?.();
   };
-  let disabled =
+  const disabled =
     Object.values(WaNPSQuestions2).includes(props?.metaType) || props.disabled;
 
   return (
@@ -272,7 +272,7 @@ export class FileConverter {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        let base64URL = reader.result as string;
+        const base64URL = reader.result as string;
         if (withStart) {
           resolve(base64URL);
           return;
@@ -363,7 +363,7 @@ function Choice({
     const { hasErrors } = choiceForm.validate();
     if (hasErrors) return;
 
-    let choiceObj = Object.fromEntries(
+    const choiceObj = Object.fromEntries(
       Object.entries(choiceForm.getValues()).filter(
         ([key, value]) => typeof value === "string" && value.trim() !== "",
       ),

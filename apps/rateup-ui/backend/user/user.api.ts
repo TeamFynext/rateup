@@ -53,7 +53,7 @@ const PUBLICUSER_URL = "/public/user/";
 
 export async function fetchUserInfo() {
   try {
-    let response: IUserInfoApiResponse = (await axiosClient.get("/user/info"))
+    const response: IUserInfoApiResponse = (await axiosClient.get("/user/info"))
       .data;
     return response as IUserInfoApiResponse;
   } catch (e) {

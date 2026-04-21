@@ -10,8 +10,8 @@ async function initialize() {
 //function to generate a keypair
 export const generateKeyPair = async () => {
   const sodium = await initialize();
-  let { publicKey: publickey, privateKey } = sodium.crypto_box_keypair();
-  let publicKey = stringifyUint8Array(publickey);
+  const { publicKey: publickey, privateKey } = sodium.crypto_box_keypair();
+  const publicKey = stringifyUint8Array(publickey);
   return { publicKey, privateKey };
 };
 
@@ -24,8 +24,8 @@ export const encryptResponse = async (
     publicKey = parsetoUint8Array(publicKey);
     const sodium = await initialize();
     const message = JSON.stringify(response);
-    let cipherText = sodium.crypto_box_seal(message, publicKey);
-    let encryptedResponse = stringifyUint8Array(cipherText);
+    const cipherText = sodium.crypto_box_seal(message, publicKey);
+    const encryptedResponse = stringifyUint8Array(cipherText);
     return { encryptedResponse };
   } catch (error) {
     return { error };
@@ -42,13 +42,13 @@ export const decryptResponse = async (
     const sodium = await initialize();
     publicKey = parsetoUint8Array(publicKey);
     cipherText = parsetoUint8Array(cipherText);
-    let decrypted = sodium.crypto_box_seal_open(
+    const decrypted = sodium.crypto_box_seal_open(
       cipherText,
       publicKey,
       privateKey,
       "text",
     );
-    let decryptedResponse: QuestionResponse[] = JSON.parse(decrypted);
+    const decryptedResponse: QuestionResponse[] = JSON.parse(decrypted);
     return { decryptedResponse };
   } catch (error) {
     return { error };
@@ -105,11 +105,11 @@ export const decryptPrivateKey = async (
     ) {
       throw new Error("Nonce and encrypted message must be at least 48 bytes");
     }
-    let nonce = nonceWithEncryptedPrivateKey.slice(
+    const nonce = nonceWithEncryptedPrivateKey.slice(
       0,
       sodium.crypto_secretbox_NONCEBYTES,
     );
-    let encryptedPrivateKey = nonceWithEncryptedPrivateKey.slice(
+    const encryptedPrivateKey = nonceWithEncryptedPrivateKey.slice(
       sodium.crypto_secretbox_NONCEBYTES,
     );
     const privateKey = sodium.crypto_secretbox_open_easy(

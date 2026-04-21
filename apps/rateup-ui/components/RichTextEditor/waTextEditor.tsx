@@ -32,10 +32,7 @@ import { MessagePlatform } from "@/types/enums";
 import { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { uploadFile } from "@/utils/file-upload/upload";
-import {
-  getMessageSourceName,
-  isInboxSessionExpired,
-} from "@/utils/whatsapp/inbox";
+import { isInboxSessionExpired } from "@/utils/whatsapp/inbox";
 
 import { AccountSelector } from "../input/AccountSelector";
 import VoiceRecorder from "../input/VoiceRecorder";
@@ -54,10 +51,7 @@ import InsertInboxAudio from "./InsertInboxMedia/InserInboxAudio";
 import InsertInboxFile from "./InsertInboxMedia/InsertInboxFile";
 import InsertInboxImage from "./InsertInboxMedia/InsertInboxImage";
 import InsertInboxVideo from "./InsertInboxMedia/InsertInboxVideo";
-import WaQuickReplyControl, {
-  isJSONString,
-  WaQuickReply,
-} from "./WaQuickReply";
+import { isJSONString, WaQuickReply } from "./WaQuickReply";
 import styles from "./waTextEditor.module.css";
 
 interface WaTextEditorProps extends BoxComponentProps {
@@ -120,7 +114,7 @@ function WaTextEditor({
   border,
   allowFiles = false,
   ...props
-}: WaTextEditorProps) {
+}: Readonly<WaTextEditorProps>) {
   const [opened, { open, close }] = useDisclosure(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [quickReplySearchQuery, setQuickReplySearchQuery] = useState("");
@@ -735,13 +729,13 @@ const WaTextCharacterCount = ({ editor, max }) => {
 
 export function parseToWhatsAppFormat(editorContent) {
   function formatText(text, type = "*") {
-    let trimmedEnd = text.trimEnd();
-    let trimmedStart = text.trimStart();
-    let trimmed = text.trim();
+    const trimmedEnd = text.trimEnd();
+    const trimmedStart = text.trimStart();
+    const trimmed = text.trim();
 
-    let leadingSpaces = " ".repeat(text.length - trimmedStart.length);
-    let trailingSpaces = " ".repeat(text.length - trimmedEnd.length);
-    let formattedText =
+    const leadingSpaces = " ".repeat(text.length - trimmedStart.length);
+    const trailingSpaces = " ".repeat(text.length - trimmedEnd.length);
+    const formattedText =
       trailingSpaces.length > 0 ? `${type}${trailingSpaces}${type}` : "";
     return `${leadingSpaces}${type}${trimmed}${type}${formattedText}`;
   }
@@ -927,7 +921,7 @@ export function parseWhatsAppToReact(text: string): React.ReactNode {
       case "paragraph":
         return <p>{node.content?.map(parseNode)}</p>;
       case "text":
-        let text = node.text;
+        const text = node.text;
         if (node.marks) {
           return node.marks.reduce((acc, mark) => {
             switch (mark.type) {

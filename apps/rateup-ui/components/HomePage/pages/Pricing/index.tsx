@@ -3,16 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  Box,
-  Flex,
-  Image,
-  SegmentedControl,
-  SimpleGrid,
-  Stack,
-  Switch,
-  Text,
-} from "@mantine/core";
+import { Box, SegmentedControl, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 
 import { useRateupPaymentsPlans } from "../../../../backend/payment/payment.query";
@@ -25,7 +16,6 @@ import { MenuSection } from "./Section/MenuSection";
 import { SurveySection } from "./Section/SurveySection";
 import { WhatsAppSection } from "./Section/WhatsAppSection";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore";
-import { DISCOUNT_PERCENTAGE } from "./Utils/constants";
 
 const Pricing = ({
   isAccount = false,
@@ -41,8 +31,8 @@ const Pricing = ({
   const { data, isPending, isError } = useRateupPaymentsPlans();
 
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  let currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
-  let currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
+  const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
+  const currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
 
   // const currency = "USD";
   // const currencySymbol = "$";

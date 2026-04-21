@@ -2,14 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
-import { ActionIcon, Group, Text } from "@mantine/core";
-import {
-  IconMicrophone,
-  IconPlayerPauseFilled,
-  IconPlayerPlayFilled,
-  IconPlayerStopFilled,
-  IconTrash,
-} from "@tabler/icons-react";
+import { Group, Text } from "@mantine/core";
 import WavesurferPlayer from "@wavesurfer/react";
 import { Mic, Pause, Play, Square, Trash } from "lucide-react";
 import { create } from "zustand";

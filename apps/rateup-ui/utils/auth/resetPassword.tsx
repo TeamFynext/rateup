@@ -1,6 +1,5 @@
 import { useRouter } from "next/navigation";
 
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 //save new password
 import {
@@ -12,7 +11,7 @@ export function useSendResetEmail() {
   const router = useRouter();
   return async function (email: string) {
     try {
-      let response = await sendPasswordResetEmail({
+      const response = await sendPasswordResetEmail({
         formFields: [
           {
             id: "email",
@@ -57,7 +56,7 @@ export function useSetNewPassword(open) {
   const router = useRouter();
   return async function (newPassword: string) {
     try {
-      let response = await submitNewPassword({
+      const response = await submitNewPassword({
         formFields: [
           {
             id: "password",

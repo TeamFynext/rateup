@@ -12,7 +12,7 @@ interface ExtendedDropzoneProps extends Partial<DropzoneProps> {
 }
 export function DropZoneArea(props: Readonly<ExtendedDropzoneProps>) {
   const translations = useExtracted();
-  let { setCsvFile, description, ...otherProps } = props;
+  const { setCsvFile, description, ...otherProps } = props;
   return (
     <Dropzone
       onDrop={(files) => setCsvFile(files[0])}

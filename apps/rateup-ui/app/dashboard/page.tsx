@@ -3,34 +3,11 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@mantine/core";
-import {
-  IconAutomation,
-  IconMessage,
-  IconSpeakerphone,
-  IconTicket,
-  IconUsers,
-  IconUsersGroup,
-  IconWaveSine,
-} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { MoveRight, PanelsTopLeft } from "lucide-react";
-import { useExtracted } from "next-intl";
 
 import { TeamFeature } from "@/types/enums";
-import {
-  useActiveSurveyStats,
-  useOverallStats,
-} from "@/backend/dashboard/dashboard.query";
 import { useUserInfo } from "@/backend/user/user.query";
-import { StatCards, StatCardSkeleton } from "@/components/Dashboard/StatCards";
-import SubscriptionCard from "@/components/Dashboard/SubscriptionCard";
-import {
-  SurveyDashCard,
-  SurveyDashCardSkeleton,
-} from "@/components/Dashboard/SurveyCard";
-import TeamMembers from "@/components/Dashboard/TeamMembers";
 import { Loader } from "@/components/ui/loader";
 import { useTeamFeatures } from "@/context/TeamFeaturesContext";
 import { UserRole } from "@/utils/enums";
