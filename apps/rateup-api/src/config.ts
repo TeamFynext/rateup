@@ -41,6 +41,7 @@ export const appConfig = {
     appleKeyId: process.env.APPLE_KEY_ID || "",
     applePrivateKey: process.env.APPLE_PRIVATE_KEY || "",
     appleTeamId: process.env.APPLE_TEAM_ID || "",
+    appleIosClientId: process.env.APPLE_IOS_CLIENT_ID || "",
   },
   cookieDomain: process.env.COOKIE_DOMAIN || "",
 };
@@ -186,6 +187,7 @@ export const SuperTokensConfig: TypeInput = {
                 {
                   clientId: appConfig.supertokens.googleClientId,
                   clientSecret: appConfig.supertokens.googleClientSecret,
+                  clientType: "web",
                 },
               ],
             },
@@ -196,6 +198,19 @@ export const SuperTokensConfig: TypeInput = {
               clients: [
                 {
                   clientId: appConfig.supertokens.appleClientId,
+                  clientType: "web",
+                  additionalConfig: {
+                    keyId: appConfig.supertokens.appleKeyId,
+                    privateKey: appConfig.supertokens.applePrivateKey.replace(
+                      /\\n/g,
+                      "\n",
+                    ),
+                    teamId: appConfig.supertokens.appleTeamId,
+                  },
+                },
+                {
+                  clientId: appConfig.supertokens.appleIosClientId,
+                  clientType: "ios",
                   additionalConfig: {
                     keyId: appConfig.supertokens.appleKeyId,
                     privateKey: appConfig.supertokens.applePrivateKey.replace(
