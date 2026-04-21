@@ -1,4 +1,3 @@
-// api/apple_auth.ts
 import * as AppleAuthentication from "expo-apple-authentication";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "@/config/axios";
@@ -27,6 +26,7 @@ export const signInWithApple = async () => {
       `${process.env.EXPO_PUBLIC_API_URL}/api/auth/signinup`,
       {
         thirdPartyId: "apple",
+        clientType:"ios",
         oAuthTokens: {
           id_token: idToken,
         },

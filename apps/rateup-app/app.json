@@ -10,6 +10,7 @@
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true,
+      "usesAppleSignIn": true,
       "bundleIdentifier": "com.rateupapp.rateup",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow RateUp to access microphone.",
@@ -50,6 +51,7 @@
     },
     "plugins": [
       "expo-router",
+      ["expo-apple-authentication"],
       "@react-native-google-signin/google-signin",
       "expo-notifications",
       [
