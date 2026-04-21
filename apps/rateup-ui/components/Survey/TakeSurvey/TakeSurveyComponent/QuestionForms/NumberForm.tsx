@@ -1,6 +1,6 @@
 "use client";
 
-import { KeyboardEventHandler, useContext } from "react";
+import { useContext } from "react";
 
 import { NumberInput, useMantineTheme } from "@mantine/core";
 import { useExtracted } from "next-intl";

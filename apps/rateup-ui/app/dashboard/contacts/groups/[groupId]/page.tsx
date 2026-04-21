@@ -1,18 +1,10 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 
-import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
+import { useDebouncedState } from "@mantine/hooks";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -38,17 +30,9 @@ import {
   useEditContactGroupMutation,
 } from "@/backend/campaign/contactGroup/contactGroup.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
-import AddCustomerModal from "@/components/Contacts/AddCustomerModal";
 import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal";
-import CreateGroupModal from "@/components/Contacts/CreateGroupModal";
 import { ParticipantMenu } from "@/components/Contacts/GroupParticipant";
-import {
-  CONTACT_SORT,
-  contactColumn,
-  WhatsappTableType,
-} from "@/components/Contacts/utils/utils";
-import { TeamSelector } from "@/components/input/TeamSelector";
-import ContactTable from "@/components/Table/ContactTable";
+import { CONTACT_SORT, contactColumn } from "@/components/Contacts/utils/utils";
 import { DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

@@ -52,7 +52,7 @@ export const getTeamsByOrg = (orgId: string) =>
   });
 
 export async function getTeamsByUser() {
-  let teams: TeamsResponse = (await axiosClient.get("/team/user")).data;
+  const teams: TeamsResponse = (await axiosClient.get("/team/user")).data;
   return teams;
 }
 
@@ -100,7 +100,7 @@ export const getNotTeamMembers = (teamId: string) =>
   });
 
 export async function getTeamMembersFromInvitation(teamId: string) {
-  let teamData = (await axiosClient.get(`/team/invitation/${teamId}`)).data;
+  const teamData = (await axiosClient.get(`/team/invitation/${teamId}`)).data;
   return teamData;
 }
 

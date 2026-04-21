@@ -45,7 +45,7 @@ export const SurveySection = ({
           : "monthly",
     };
   }
-  let surveyPlans = [...freePlan, ...surveyPlan];
+  const surveyPlans = [...freePlan, ...surveyPlan];
 
   return (
     <Flex justify={"center"} gap={"xl"} wrap={"wrap"} my={"lg"}>

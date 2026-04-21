@@ -375,7 +375,7 @@ function FlowContainerHeader(onClose: any) {
 }
 
 export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
-  let label = fe.header ? markdownToPlainText(fe.header) : fe.label;
+  const label = fe.header ? markdownToPlainText(fe.header) : fe.label;
   switch (fe.type) {
     case WaFlowFormElementType.textHeading:
     case WaFlowFormElementType.textSubHeading:

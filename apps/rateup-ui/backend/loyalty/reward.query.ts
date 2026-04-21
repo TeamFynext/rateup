@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { getErrorMessage } from "../../utils";
 import {
   createLoyaltyReward,
   deleteLoyaltyReward,

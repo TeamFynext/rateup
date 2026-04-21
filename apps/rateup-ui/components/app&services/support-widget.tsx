@@ -236,7 +236,7 @@ export default function SupportWidget({
         if (!support_contact_id) return;
         const timestamp = Math.floor(Date.now() / 1000);
 
-        let messageBody = {
+        const messageBody = {
           object: "support_user",
           entry: [
             {

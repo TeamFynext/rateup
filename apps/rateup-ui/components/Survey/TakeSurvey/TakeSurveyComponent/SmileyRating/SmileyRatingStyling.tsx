@@ -6,15 +6,12 @@ import {
   IconMoodAngryFilled,
   IconMoodCrazyHappy,
   IconMoodCrazyHappyFilled,
-  IconMoodCry,
   IconMoodEmpty,
   IconMoodEmptyFilled,
   IconMoodHappy,
   IconMoodHappyFilled,
   IconMoodSad,
   IconMoodSadFilled,
-  IconMoodSmile,
-  IconMoodSmileBeam,
 } from "@tabler/icons-react";
 
 import {

@@ -525,7 +525,7 @@ export default function AppSidebar({
         />
       ),
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [
       chatFilterStore.filter.assignedUserIds,
       chatFilterStore.filter.assignedTeams,

@@ -21,7 +21,7 @@ export function passwordValidation(value) {
 }
 
 export function validateWordCount(input, min, max) {
-  var words = input.split(" ");
+  const words = input.split(" ");
   if (words.length < min || words.length > max) {
     return false;
   }
@@ -30,13 +30,13 @@ export function validateWordCount(input, min, max) {
 
 export function validateTextType(input, type) {
   if (type === "Letters") {
-    var regex = /^[a-zA-Z\s]+$/;
+    const regex = /^[a-zA-Z\s]+$/;
     return regex.test(input);
   } else if (type === "Letters_&_Numbers") {
-    var regex = /^[a-zA-Z0-9\s]+$/;
+    const regex = /^[a-zA-Z0-9\s]+$/;
     return regex.test(input);
   } else if (type === "Numbers") {
-    var regex = /^[0-9\s]+$/;
+    const regex = /^[0-9\s]+$/;
     return regex.test(input);
   }
   return true;

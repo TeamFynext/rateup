@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import { BackgroundImage, Box, Flex, Image, Tooltip } from "@mantine/core";
+import { BackgroundImage, Box, Flex, Image } from "@mantine/core";
 import { isNumber } from "@tiptap/react";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
@@ -55,7 +55,7 @@ export default function WelcomePageThemeView({ survey }) {
       textAlign: "center",
     };
   }
-  let buttonStyles = requiredThemeObj?.button?.styles;
+  const buttonStyles = requiredThemeObj?.button?.styles;
   let buttonPosition = requiredThemeObj?.button?.position;
   if (!buttonPosition) {
     buttonPosition = { x: "CENTER", y: "DEFAULT" };
@@ -72,7 +72,7 @@ export default function WelcomePageThemeView({ survey }) {
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
     async (value, name) => {
-      let data = {};
+      const data = {};
       switch (name) {
         case "title": {
           data["titleText"] = value;
@@ -183,7 +183,7 @@ export default function WelcomePageThemeView({ survey }) {
 
 export function getInlineStyleFromStyleObj(styles) {
   if (!styles) return "text-align:center";
-  let newStyles = [];
+  const newStyles = [];
   for (const key in styles) {
     const kebabKey = key.replace(/([A-Z])/g, "-$1").toLowerCase();
     const value = isNumber(styles[key]) ? `${styles[key]}px` : `${styles[key]}`;

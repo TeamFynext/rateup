@@ -22,15 +22,15 @@ export function mergeNames(first: string, last: string) {
   return `${first.trim()} ${last.trim()}`;
 }
 
-export var stringToColour = function (str: string) {
-  var hash = 0;
-  for (var i = 0; i < str?.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+export const stringToColour = function (str: string) {
+  let hash = 0;
+  for (let i = 0; i < str?.length; i++) {
+    hash = str.codePointAt(i) || 0 + ((hash << 5) - hash);
   }
-  var colour = "#";
-  for (var i = 0; i < 3; i++) {
-    var value = (hash >> (i * 8)) & 0xff;
-    colour += ("00" + value.toString(16)).substr(-2);
+  let colour = "#";
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xff;
+    colour += ("00" + value.toString(16)).slice(-2);
   }
   return colour;
 };

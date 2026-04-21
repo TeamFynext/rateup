@@ -1,5 +1,3 @@
-import _ from "lodash";
-
 import { getSurveyThemeKeyOf } from "./SurveyTheme.constants";
 
 function surveyThemeReducer(state, action) {

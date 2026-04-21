@@ -97,7 +97,7 @@ export function SurveysPage({
   };
   //--------------check if survey is selected------
   const isChecked = (surveyid) => {
-    let surveysarray = surveyidArray;
+    const surveysarray = surveyidArray;
     let found = false;
     for (const element of surveysarray) {
       if (surveyid == element) {

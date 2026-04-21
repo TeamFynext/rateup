@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 
 import {
@@ -14,13 +14,10 @@ import { schemaResolver, useForm } from "@mantine/form";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   Activity,
-  ArrowUpDown,
   GripVertical,
   Plus,
   Save,
   Settings,
-  Tag,
-  Trash2,
   Trophy,
   X,
   XCircle,
@@ -43,10 +40,8 @@ import { Card } from "@/components/ui/card";
 import CustomAlertDialog from "@/components/ui/custom/CustomAlertDialog";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";

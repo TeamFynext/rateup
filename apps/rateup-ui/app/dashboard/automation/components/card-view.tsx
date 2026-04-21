@@ -12,7 +12,7 @@ import { useExtracted } from "next-intl";
 import { Rule } from "@/types/rule";
 import { GenericCardGrid } from "@/components/common/generic-card";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
-import { createSortableHeader, DataTable } from "@/components/Table/data-table";
+import { DataTable } from "@/components/Table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

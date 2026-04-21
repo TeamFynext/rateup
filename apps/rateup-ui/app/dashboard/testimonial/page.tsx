@@ -26,7 +26,6 @@ import InfoButton from "../../../components/Button/InfoButton";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import NothingFound from "../../../components/NothingFound/NothingFound";
-import Heading from "../../../components/styled/Heading/Heading";
 import SaveTestimonialCollection from "../../../components/testimonial/SaveTestimonialCollection";
 import TestimonialCard from "../../../components/testimonial/TestimonialCard";
 import TestimonialCollectionCard from "../../../components/testimonial/TestimonialCollectionCard";
@@ -48,7 +47,7 @@ const Testimonials = () => {
   const { data: testimonials, isLoading: isTestimonialLoading } =
     useGetAllTestimonialsByOrg();
   const [selectedTeamId, setSelectedTeamId] = useState(null);
-  let filteredCollections =
+  const filteredCollections =
     selectedTeamId == "all"
       ? collections
       : collections?.filter((c) => c?.teamId == selectedTeamId);

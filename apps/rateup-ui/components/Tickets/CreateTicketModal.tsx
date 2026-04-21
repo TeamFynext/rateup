@@ -15,7 +15,6 @@ import {
   useBoard,
   useBoardQueries,
   useCreateTicketMutation,
-  useTicket,
 } from "../../backend/tickets/tickets.query";
 import { TicketType } from "../../utils/enums/ticket";
 import { RateupButtonBlue } from "../Button/RateupButtons";
@@ -57,7 +56,7 @@ const CreateTicketModal = ({
   rid,
   surveyResponseId,
 }: iProps) => {
-  let isCustomTicket = type === TicketType.CUSTOM;
+  const isCustomTicket = type === TicketType.CUSTOM;
   const translations = useExtracted();
   const router = useRouter();
   const form = useForm({

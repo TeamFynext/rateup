@@ -37,15 +37,10 @@ import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import { parseStringWithVariables } from "@/app/dashboard/whatsapp/templates/[templateId]/page";
-import {
-  useConnectedWaCatalog,
-  useWaCatalog,
-} from "@/backend/whatsapp/catalog/catalog.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import {
   ContainedFileInput,
-  ContainedMultiSelect,
   ContainedSelection,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
@@ -59,7 +54,6 @@ import {
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector";
 import { QuickReplyButton } from "../../MessageComponents";
 import { templateSchema } from "../Schema/templateSchema";
-import ButtonInput from "./ButtonInput";
 import { TextFormateToolBar } from "./TextFormateToolBar";
 
 const CardCarousel = ({
@@ -108,10 +102,10 @@ const CardCarousel = ({
   const inputRefs = useRef<Array<HTMLTextAreaElement | null>>([]);
 
   const applyFormatting = (style, index) => {
-    let content = form.values.mediaCarousel[index].body;
+    const content = form.values.mediaCarousel[index].body;
 
     if (style.startsWith("{{")) {
-      let newContent = content + style;
+      const newContent = content + style;
       form.setFieldValue(`mediaCarousel.${index}.body`, newContent);
       return;
     }
@@ -157,7 +151,7 @@ const CardCarousel = ({
     form.removeListItem("productCarousel", index);
   }
   function handleButtonSelect(btn, index) {
-    let newObject = { type: btn, text: "" };
+    const newObject = { type: btn, text: "" };
     if (btn === WHATSAPP_BUTTON_TYPE.WEBSURVEY) {
       ((newObject.type = "URL"), (newObject["example"] = []));
     }

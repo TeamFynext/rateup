@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { Badge, Group, Loader, Radio, Stack, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconSend } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 

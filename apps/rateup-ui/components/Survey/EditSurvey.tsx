@@ -17,7 +17,6 @@ import {
   Tabs,
   Text,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconLanguage } from "@tabler/icons-react";
 import _ from "lodash";
@@ -40,7 +39,6 @@ import {
 import {
   createBlankQuestion,
   createPage,
-  getInitialQuestionValues,
   validateAllLanguagesArePopulated,
 } from "../../utils/questions";
 import PaperLayout from "../styled/Layouts/PaperLayout";

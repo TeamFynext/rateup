@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 
 import { Box, Group, Stack, Switch } from "@mantine/core";
 import { useForm } from "@mantine/form";

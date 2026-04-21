@@ -1,22 +1,11 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 
-import {
-  Box,
-  CheckboxProps,
-  HoverCard,
-  Image,
-  Select,
-  Text,
-} from "@mantine/core";
+import { Box, HoverCard, Image, Select, Text } from "@mantine/core";
 import {
   IconBrandInstagram,
   IconCheck,
-  IconCircleCheck,
-  IconCircleX,
-  IconEye,
   IconUsersGroup,
   IconX,
 } from "@tabler/icons-react";
@@ -46,7 +35,6 @@ import { getInitials } from "@/components/ui/utils";
 import { CampaignParticipantStatus, CampaignType } from "../../../types/enums";
 import { fallbackImage } from "../../../utils/constants";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
-import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import { CampaignParticipantMenu } from "../../Campaign/CampaignParticipantCard";
 import { CampaignMenu, renderBadge } from "../../Card/CampaignCard";
 import ContactGroupMenu from "../ContactGroupMenu";
@@ -522,8 +510,8 @@ export const contactParticipentDetailColumn = [
     filterFn: fuzzyFilter,
     sortingFn: customStatusSort,
     cell: (info) => {
-      let statusData = info?.getValue()?.status;
-      let errorMessage = info?.getValue()?.errorMessage;
+      const statusData = info?.getValue()?.status;
+      const errorMessage = info?.getValue()?.errorMessage;
       return statusData === CampaignParticipantStatus.FAILED ? (
         <HoverCard width={280} shadow="md" withArrow>
           <HoverCard.Target>

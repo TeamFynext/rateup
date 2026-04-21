@@ -19,7 +19,6 @@ import useContactStore, {
   useContactsStore,
   useMessagesStore,
 } from "@/app/dashboard/inbox/store";
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import WaTextEditor, {
@@ -118,7 +117,7 @@ export default function WaInboxChatDisplayFooter({
 
   useEffect(() => {
     if (media.length) {
-      let message = {
+      const message = {
         media,
         type: "text",
       };
@@ -487,7 +486,7 @@ export const WaInboxAssignUserFooter = ({
     if (!user) {
       return toast.error("failed!try again");
     }
-    let message = `Chat assigned to ${user.userName}`;
+    const message = `Chat assigned to ${user.userName}`;
     const id = generateInternalMessageId();
     const newMessage = {
       id: id,

@@ -4,7 +4,6 @@ import { useCallback, useRef } from "react";
 
 import {
   Blockquote,
-  Box,
   Button,
   FileButton,
   Group,
@@ -111,7 +110,7 @@ function ImportChoices({
           const choices = {};
           for (const language in choiceStringsSets) {
             const languageSet = choiceStringsSets[language];
-            let currentLanguageChoices = [];
+            const currentLanguageChoices = [];
             for (const choice of languageSet) {
               currentLanguageChoices.push({ value: choice });
             }

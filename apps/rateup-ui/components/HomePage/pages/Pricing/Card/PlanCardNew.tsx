@@ -1,7 +1,7 @@
 import React from "react";
 
 import { Spoiler, Stack } from "@mantine/core";
-import { IconFlame, IconFlameFilled } from "@tabler/icons-react";
+import { IconFlame } from "@tabler/icons-react";
 import { CheckCircle2 } from "lucide-react";
 
 import { currencyLabel } from "@/components/menu/util/currencyData";

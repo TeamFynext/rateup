@@ -2,7 +2,7 @@
 
 import { useContext, useEffect, useState } from "react";
 
-import { Box, Flex, Group, Transition, useMantineTheme } from "@mantine/core";
+import { Box, Flex, Transition, useMantineTheme } from "@mantine/core";
 
 import { WaFlowScreen } from "../../../../types/global";
 import { getFlowJsonWithTitleAndDescription } from "../../../../utils/whatsapp/flow.utils";

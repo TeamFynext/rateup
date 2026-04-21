@@ -6,7 +6,6 @@ import { EmailPasswordPreBuiltUI } from "supertokens-auth-react/recipe/emailpass
 import EmailVerificationReact from "supertokens-auth-react/recipe/emailverification";
 import Session from "supertokens-auth-react/recipe/session";
 import ThirdPartyReact from "supertokens-auth-react/recipe/thirdparty";
-import { ThirdPartyPreBuiltUI } from "supertokens-auth-react/recipe/thirdparty/prebuiltui";
 
 import { appInfo } from "./appInfo";
 

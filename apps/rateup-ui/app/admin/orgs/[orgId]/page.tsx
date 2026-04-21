@@ -7,7 +7,6 @@ import { useDisclosure } from "@mantine/hooks";
 import {
   Building2,
   Calendar,
-  Edit,
   Globe,
   Info,
   LayoutTemplate,

@@ -48,7 +48,7 @@ const PricingCard = ({
   if (!menuPage && index === 1) {
     marginTop = "-8px";
   }
-  let title = `Subscribe`;
+  const title = `Subscribe`;
   // if (menuPage) {
   //   title = index === 0 ? "Buy Rateup Menu" : "Buy Rateup Menu Pro";
   // }

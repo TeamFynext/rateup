@@ -1,16 +1,7 @@
-import dayjs from "dayjs";
-
 import { MessagePlatform } from "@/types/enums";
 
 import { WA_INBOX_BASE_PATH } from "..";
-import {
-  IgReceiveMessageBody,
-  IgSendMessageBody,
-  WaInboxMessage,
-  WaReceiveMessageBody,
-  WaSendMessageBody,
-  WaTemplateComponent,
-} from "../../../../types/global";
+import { WaInboxMessage, WaTemplateComponent } from "../../../../types/global";
 import { axiosClient } from "../../../apiClient";
 
 const WA_CONTACT_BASE_PATH = `${WA_INBOX_BASE_PATH}/message`;

@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
-import { Box, Image, Switch } from "@mantine/core";
+import { Box, Switch } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useExtracted } from "next-intl";
 

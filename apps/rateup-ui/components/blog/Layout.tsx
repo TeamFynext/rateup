@@ -1,6 +1,5 @@
 import Head from "next/head";
 
-import HomePageFooter from "../RateupHomePage/helpers/HomePageFooter";
 import ScrollToTop from "../RateupHomePage/helpers/ScrollToTop";
 import Layout from "../RateupHomePage/Layout";
 

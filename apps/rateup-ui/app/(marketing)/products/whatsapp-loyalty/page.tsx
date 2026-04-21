@@ -1,3 +1,5 @@
+import { Metadata } from "next";
+
 import { pageMetadata } from "@/lib/metadata";
 import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection";
 import BusinessTypes from "@/components/products/Whatsapp-loyalty/helpers/BusinessTypes";
@@ -16,7 +18,7 @@ import ShopifyIntegration from "@/components/products/Whatsapp-loyalty/shared/Sh
 import WhatsAppBroadcast from "@/components/products/Whatsapp-loyalty/shared/WhatsAppBroadcast";
 import WhatsAppTemplate from "@/components/products/Whatsapp-loyalty/shared/WhatsAppTemplate";
 
-export const metadata = pageMetadata["/products/whatsapp-loyality"];
+export const metadata: Metadata = pageMetadata["/products/whatsapp-loyality"];
 
 function page() {
   const jsonLd = {

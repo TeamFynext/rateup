@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import { Group, Stack } from "@mantine/core";
 import { useExtracted } from "next-intl";
@@ -53,7 +53,7 @@ function ShareLandingPage({ url, isPublished, title }) {
       }
       const formData = new FormData();
       for (const property in newState) {
-        let value = newState[property];
+        const value = newState[property];
         formData.append(property, value);
       }
       try {

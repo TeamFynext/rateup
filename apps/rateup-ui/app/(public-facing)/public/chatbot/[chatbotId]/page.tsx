@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Head from "next/head";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import { Center, Image, Stack, Text } from "@mantine/core";
 import { useListState } from "@mantine/hooks";

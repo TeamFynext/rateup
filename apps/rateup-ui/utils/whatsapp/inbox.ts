@@ -1,4 +1,3 @@
-import { IndicatorProps } from "@mantine/core";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
@@ -13,7 +12,6 @@ import { WaTemplateDefaultValues } from "../../components/whatsapp/templates/Sch
 import {
   IgReceiveMessageBody,
   IgSendMessageBody,
-  WaInboxMessage,
   WaReceiveMessageBody,
   WaSendMessageBody,
   WaTemplateComponent,

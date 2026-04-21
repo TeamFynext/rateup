@@ -13,13 +13,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconCheck,
-  IconKey,
-  IconReload,
-  IconTrash,
-  IconTrashFilled,
-} from "@tabler/icons-react";
+import { IconKey, IconReload, IconTrash } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 
 import { IntegratedApps, ZapierTriggers } from "@/types/enums";
@@ -39,15 +33,12 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { useUser } from "@/context/UserContext";
-import {
-  formatDateWithTime,
-  formatIsoDateStringWithTime,
-} from "@/utils/dateTime";
+import { formatIsoDateStringWithTime } from "@/utils/dateTime";
 
 import { ActiveStatusBadge } from "../shopify/page";
 
 const Zapier = () => {
-  let {
+  const {
     data: integration,
     isLoading,
     refetch,

@@ -16,7 +16,6 @@ import "./globals.css";
 
 import { Suspense } from "react";
 
-import { ModalsProvider } from "@mantine/modals";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -24,14 +23,24 @@ import { theme } from "@/config/mantineTheme";
 import { cn } from "@/lib/utils";
 import FacebookPixel from "@/components/Analytics/FacebookPixel";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import { allModalManagerModalsObj } from "@/components/Modal/ModalManagerModals/allModalManagerModalsObj";
-import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { isProduction, rateupUrl } from "@/utils/constants";
 import { inter, notoColorEmogi } from "@/utils/fonts";
 
 import Providers from "./providers";
+
+async function LocaleProviders({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+  return (
+    <Providers locale={locale} messages={messages}>
+      {children}
+    </Providers>
+  );
+}
 
 export const viewport: Viewport = {
   minimumScale: 1,
@@ -60,16 +69,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = await getLocale();
-  const messages = await getMessages();
   return (
     <html
-      lang={locale}
+      lang="en"
       className={cn(
         inter.className,
         notoColorEmogi.className,
@@ -99,13 +106,7 @@ export default async function RootLayout({
         >
           <MantineProvider theme={theme}>
             <Suspense fallback={<RateupLoader h={"100dvh"} />}>
-              <SuperTokensProvider>
-                <Providers locale={locale} messages={messages}>
-                  <ModalsProvider modals={allModalManagerModalsObj}>
-                    {children}
-                  </ModalsProvider>
-                </Providers>
-              </SuperTokensProvider>
+              <LocaleProviders>{children}</LocaleProviders>
             </Suspense>
           </MantineProvider>
           <Toaster richColors />

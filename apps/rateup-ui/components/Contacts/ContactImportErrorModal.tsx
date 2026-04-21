@@ -9,7 +9,7 @@ import { useExtracted } from "next-intl";
 import FormModalLayout from "../Modal/FormModalLayout";
 
 const ContactImportErrorModal = ({ isError = false, body }) => {
-  let { error, data } = body ?? { error: "", data: "" };
+  const { error, data } = body ?? { error: "", data: "" };
   const [opened, { toggle, close }] = useDisclosure(false);
   const translations = useExtracted();
   useEffect(() => {

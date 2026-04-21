@@ -36,7 +36,7 @@ function InsertVideo() {
     try {
       const url = form.getValues().src;
       new URL(url);
-      let videoOption = form.getValues().customSize
+      const videoOption = form.getValues().customSize
         ? {
             src: url,
             width: form.getValues().width,

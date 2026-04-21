@@ -16,14 +16,11 @@ import {
 import {
   IconArrowLeft,
   IconBrandOpenai,
-  IconCheck,
   IconInfoCircle,
-  IconX,
 } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
-import { QuestionType } from "@/types/enums";
 import { useGenerateLargeTextResponseSummaryByAI } from "@/backend/surveys/response/response.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
 import styles from "@/components/Graph/graph.module.css";

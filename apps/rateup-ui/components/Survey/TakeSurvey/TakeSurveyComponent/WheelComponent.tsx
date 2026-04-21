@@ -334,7 +334,7 @@ const WheelComponent = ({
   }, [onRotate, onTimerTick]);
 
   const initCanvas = useCallback(() => {
-    let canvas = canvasRef.current;
+    const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     const ratio = window.devicePixelRatio;

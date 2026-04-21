@@ -11,7 +11,6 @@ import {
   ScrollArea,
   Stack,
   Table,
-  Text,
   TextInput,
   Tooltip,
 } from "@mantine/core";
@@ -80,7 +79,7 @@ const AddCustomerModal = ({
   );
   const { isLoading: isLoadingContactgroup, data: contactGroupData } =
     useContactGroup();
-  let contactData = data?.users;
+  const contactData = data?.users;
 
   const allContactIds = contactData?.map((customer) => customer?.id);
   const remainingContactIds = allContactIds?.filter(
@@ -197,7 +196,7 @@ const AddCustomerModal = ({
   });
 
   if (isPending) return <RateupLoader />;
-  let totalPageCount = (data?.totalCount ?? 1) / pagination.pageSize;
+  const totalPageCount = (data?.totalCount ?? 1) / pagination.pageSize;
 
   return (
     <Box p="0">

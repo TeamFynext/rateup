@@ -3,13 +3,11 @@
 import React, { useState } from "react";
 
 import {
-  IconCheck,
   IconChevronDown,
   IconChevronUp,
   IconEdit,
   IconShoppingBag,
   IconTrash,
-  IconX,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 

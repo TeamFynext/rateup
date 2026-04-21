@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useContext, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import { useForm } from "@mantine/form";
 import { useExtracted } from "next-intl";

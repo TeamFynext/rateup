@@ -3,15 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  Button,
-  Flex,
-  Group,
-  SimpleGrid,
-  Stack,
-  Tabs,
-  Text,
-} from "@mantine/core";
+import { Button, Flex, SimpleGrid, Stack, Tabs, Text } from "@mantine/core";
 import {
   IconArrowLeft,
   IconLayoutBoard,

@@ -1,4 +1,4 @@
-import { LoyaltyPointRewardSubType, LoyaltyRewardType } from "@/types/enums";
+import { LoyaltyPointRewardSubType } from "@/types/enums";
 
 import { axiosClient } from "../apiClient";
 

@@ -2,16 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import {
-  Box,
-  Button,
-  Loader,
-  Textarea,
-  TextareaProps,
-  TextInput,
-  TextInputProps,
-} from "@mantine/core";
-import { IconChevronRight, IconPencil } from "@tabler/icons-react";
+import { Box, Button, Loader, Textarea, TextInput } from "@mantine/core";
+import { IconPencil } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 

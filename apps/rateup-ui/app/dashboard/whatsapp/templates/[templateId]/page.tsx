@@ -79,7 +79,6 @@ import {
 import WaChatPreview from "@/components/whatsapp/templates/WaChatPreview";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge";
 import { useRouteParams } from "@/context/RouteParamsContext";
-import { getErrorMessage } from "@/utils";
 import {
   SAVE_HOTKEY,
   WHATSAPP_BUTTON_TYPE,
@@ -395,21 +394,36 @@ export function WhatsappTemplateById({
     }
 
     if (values?.buttons?.length > 2) {
-      const isCustomButtonInMiddle = values.buttons.some((button, index) => {
-        return (
-          button.type === WHATSAPP_BUTTON_TYPE.QUICK_REPLY &&
-          index > 0 &&
-          index < values.buttons.length - 1
-        );
-      });
+      const buttons = values.buttons;
+      const quickReplyIndexes = buttons
+        .map((btn, idx) =>
+          btn.type === WHATSAPP_BUTTON_TYPE.QUICK_REPLY ? idx : -1,
+        )
+        .filter((idx) => idx !== -1);
 
-      if (isCustomButtonInMiddle) {
-        toast.error(
-          translations(
-            "Custom buttons must be placed either at the beginning or at the end of the button list.",
-          ),
+      if (quickReplyIndexes.length > 0) {
+        // Check if all quick replies are contiguous
+        const isContiguous = quickReplyIndexes.every(
+          (idx, i, arr) => i === 0 || idx === arr[i - 1] + 1,
         );
-        return;
+        // Check if they are at the start or end
+        const atStart =
+          quickReplyIndexes[0] === 0 &&
+          quickReplyIndexes[quickReplyIndexes.length - 1] ===
+            quickReplyIndexes.length - 1;
+        const atEnd =
+          quickReplyIndexes[quickReplyIndexes.length - 1] ===
+            buttons.length - 1 &&
+          quickReplyIndexes[0] === buttons.length - quickReplyIndexes.length;
+
+        if (!(isContiguous && (atStart || atEnd))) {
+          toast.error(
+            translations(
+              "All quick reply buttons must be grouped together at the beginning or end of the button list.",
+            ),
+          );
+          return;
+        }
       }
     }
     if (values.templateType === TemplateType.CAROUSEL) {
@@ -469,7 +483,7 @@ export function WhatsappTemplateById({
       ) {
         const file = await uploadTemplateMedia(values.header);
         const publicImageLink = await uploadFile(values.header);
-        let filename = values.header.name ?? "";
+        const filename = values.header.name ?? "";
         values.header = file?.id ?? "";
         defaultValues[values.format?.toLowerCase()] = {
           link: publicImageLink,
@@ -506,7 +520,7 @@ export function WhatsappTemplateById({
           }),
         );
       }
-      let templateData = isOrderCreate
+      const templateData = isOrderCreate
         ? { ...values, config: configForm.getValues() }
         : values;
       if (editingItem?.data?.id) {
@@ -556,7 +570,7 @@ export function WhatsappTemplateById({
     return `{{${max + 1}}}`;
   };
   const applyFormatting = (style) => {
-    let content = form.values.body;
+    const content = form.values.body;
     if (style.startsWith("{{")) {
       insertValue(getNextVariable());
       return;

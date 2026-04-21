@@ -39,7 +39,7 @@ import styles from "./GeneralSettings.module.css";
 import ImageUploadSettings from "./ImageUploadSettings";
 
 const GeneralSettings = ({ editingItem }) => {
-  let formatedItemValue = {
+  const formatedItemValue = {
     ...editingItem?.menu,
     backgroundImage: editingItem?.backgroundImage,
     mobileBackgroundImage: editingItem?.mobileBackgroundImage,
@@ -98,12 +98,12 @@ const GeneralSettings = ({ editingItem }) => {
     }));
 
   const onSubmit = async (values: any) => {
-    let changedValue = values;
+    const changedValue = values;
     changedValue.hideUnavailableCategory =
       changedValue?.hideUnavailableCategory === "true";
     try {
-      let imageArray = [];
-      let deleteImageArray = [];
+      const imageArray = [];
+      const deleteImageArray = [];
       setUpdatingLoading(true);
       backgroundImage && imageArray.push(backgroundImage);
       formatedItemValue?.backgroundImage &&

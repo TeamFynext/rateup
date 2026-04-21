@@ -1,4 +1,4 @@
-import { ActionIcon, Box, Button, Group, Modal, Stack } from "@mantine/core";
+import { ActionIcon, Box, Group, Modal, Stack } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 
 import styles from "./SurveyPreviewModal.module.css";

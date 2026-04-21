@@ -2,6 +2,7 @@
 "use client";
 
 // Since QueryClientProvider relies on useContext under the hood, we have to put 'use client' on top
+import { ModalsProvider } from "@mantine/modals";
 import {
   dehydrate,
   environmentManager,
@@ -15,6 +16,8 @@ import axios from "axios";
 import { NextIntlClientProvider } from "next-intl";
 import Session from "supertokens-auth-react/recipe/session";
 
+import { allModalManagerModalsObj } from "@/components/Modal/ModalManagerModals/allModalManagerModalsObj";
+import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserProvider } from "@/context/UserContext";
 import RouteChangeHandler from "@/utils/routeHandler";
@@ -90,15 +93,22 @@ export default function Providers({ children, locale, messages }) {
       messages={messages}
       timeZone={timeZone ?? "UTC"}
     >
-      <QueryClientProvider client={queryClient}>
-        <UserProvider>
-          <RouteChangeHandler />
-          <HydrationBoundary state={dehydrate(queryClient)}>
-            <TooltipProvider>{children}</TooltipProvider>
-          </HydrationBoundary>
-        </UserProvider>
-        <ReactQueryDevtools initialIsOpen={false} buttonPosition="top-right" />
-      </QueryClientProvider>
+      <SuperTokensProvider>
+        <QueryClientProvider client={queryClient}>
+          <ModalsProvider modals={allModalManagerModalsObj}>
+            <UserProvider>
+              <RouteChangeHandler />
+              <HydrationBoundary state={dehydrate(queryClient)}>
+                <TooltipProvider>{children}</TooltipProvider>
+              </HydrationBoundary>
+            </UserProvider>
+          </ModalsProvider>
+          <ReactQueryDevtools
+            initialIsOpen={false}
+            buttonPosition="top-right"
+          />
+        </QueryClientProvider>
+      </SuperTokensProvider>
     </NextIntlClientProvider>
   );
 }

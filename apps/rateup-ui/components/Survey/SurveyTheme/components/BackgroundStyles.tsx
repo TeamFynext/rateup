@@ -2,15 +2,7 @@
 
 import { useCallback } from "react";
 
-import {
-  Box,
-  Checkbox,
-  Group,
-  Overlay,
-  Radio,
-  RadioGroup,
-  Stack,
-} from "@mantine/core";
+import { Box, Group, Overlay, Radio, RadioGroup, Stack } from "@mantine/core";
 
 import LocalOrUnsplashImagePicker from "../../../LocalOrUnsplashImagePicker";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";

@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import { CreditCard, Package, Receipt } from "lucide-react";
 import { useExtracted } from "next-intl";
 

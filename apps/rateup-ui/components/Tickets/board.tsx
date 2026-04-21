@@ -1,7 +1,6 @@
 "use client";
 
 import { useContext, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { Button, Flex, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -24,7 +23,6 @@ import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
 import { Column } from "./column";
 import { TColumn } from "./data";
-import { PriorityFilter } from "./PriorityFilter";
 import { SettingsContext } from "./settings-context";
 import {
   BoardInfo,

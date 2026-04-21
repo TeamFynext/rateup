@@ -63,7 +63,7 @@ export default function WaInboxChatSelectCard({
   const lastMessage = contact?.lastMessage;
   const translations = useExtracted();
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
-  let tab = params.get("tab") ?? "New";
+  const tab = params.get("tab") ?? "New";
 
   const { setSelectedContact, selectedContact } = useContactsStore();
 

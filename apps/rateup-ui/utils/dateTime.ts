@@ -34,7 +34,7 @@ export const formatedTime = (category) => {
     withinTimeRange =
       formattedStartTime <= currentTime && formattedEndTime >= currentTime;
   }
-  let categoryDisabled = category?.scheduleEnabled && !withinTimeRange;
+  const categoryDisabled = category?.scheduleEnabled && !withinTimeRange;
   return {
     formattedEndTimeWithAmPm,
     formattedStartTimeWithAmPm,
@@ -109,8 +109,8 @@ export function roundOffMinutesAndSeconds(dateString) {
   const date = new Date(dateString);
   const roundOffTime = (time) => Math.floor(time / 60) * 60;
 
-  let roundedMinutes = roundOffTime(date.getMinutes() + 30);
-  let roundedSeconds = roundOffTime(date.getSeconds() + 30);
+  const roundedMinutes = roundOffTime(date.getMinutes() + 30);
+  const roundedSeconds = roundOffTime(date.getSeconds() + 30);
 
   date.setMinutes(roundedMinutes);
   date.setSeconds(roundedSeconds);

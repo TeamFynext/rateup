@@ -10,7 +10,6 @@ import React, {
 import { useRouter } from "next/navigation";
 
 import { useDebouncedState } from "@mantine/hooks";
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { useExtracted } from "next-intl";

@@ -13,7 +13,6 @@ import RefreshButton from "../../../components/Button/RefreshButton";
 import SortDropdown from "../../../components/Dashboard/SortDropDown";
 import { TeamSelector } from "../../../components/input/TeamSelector";
 import { CreateMenuModal } from "../../../components/menu/CreateMenu";
-import Heading from "../../../components/styled/Heading/Heading";
 import DigitalMenuTourSteps from "../../../components/WelcomeTour/components/DigitalMenuTourSteps";
 import styles from "../../../components/WelcomeTour/components/Tour.module.css";
 import WelcomeTour from "../../../components/WelcomeTour/WelcomeTour";

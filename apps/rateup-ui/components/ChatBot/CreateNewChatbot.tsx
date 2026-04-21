@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Button, Modal, Stack, TextInput } from "@mantine/core";
+import { Modal, Stack, TextInput } from "@mantine/core";
 
 import { RateupButtonBlue } from "../Button/RateupButtons";
 

@@ -1,7 +1,7 @@
 "use client";
 "use no memo";
 
-import React, { useCallback, useContext, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 
 import { Box, Divider, Flex, Group } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
@@ -81,7 +81,7 @@ function TanstackTable({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
-  let tempVisibleColumnArray: string[] = useMemo(() => [], []);
+  const tempVisibleColumnArray: string[] = useMemo(() => [], []);
   useEffect(() => {
     if (tempVisibleColumnArray)
       useVisibleColumnStore

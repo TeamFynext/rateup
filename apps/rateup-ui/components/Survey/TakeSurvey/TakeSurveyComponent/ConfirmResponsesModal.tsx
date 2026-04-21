@@ -227,7 +227,7 @@ function ConfirmResponsesModal({
                             );
 
                           case Q.MCQ:
-                            let selectedValue = Object.values(
+                            const selectedValue = Object.values(
                               response?.response,
                             )[0];
                             return (
@@ -239,12 +239,12 @@ function ConfirmResponsesModal({
 
                           case Q.CustomNPS:
                           case Q.DDSS:
-                            let selectedChoice = Object.values(
+                            const selectedChoice = Object.values(
                               response?.response,
                             )[0];
                             return <Text>{selectedChoice?.value}</Text>;
                           case Q.PCQ:
-                            let selectedPictureChoice = Object.values(
+                            const selectedPictureChoice = Object.values(
                               response?.response,
                             )?.[0]?.value;
                             return (

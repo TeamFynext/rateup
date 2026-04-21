@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
-import { Box, Button, Center, Flex, Loader } from "@mantine/core";
+import { Box, Center, Loader } from "@mantine/core";
 import { useExtracted } from "next-intl";
 
 import { useGetLandingPageWithShortId } from "../../../backend/landingPage/landingPage.query";

@@ -1,6 +1,5 @@
 import React, { memo } from "react";
 
-import { Text } from "@mantine/core";
 import { IconBuildingStore } from "@tabler/icons-react";
 import { NodeProps } from "@xyflow/react";
 

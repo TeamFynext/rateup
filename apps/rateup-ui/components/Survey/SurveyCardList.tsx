@@ -73,7 +73,7 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
   };
   //--------------check if survey is selected------
   const isChecked = (surveyid) => {
-    let surveysarray = surveyidArray;
+    const surveysarray = surveyidArray;
     let found = false;
     for (let i = 0; i < surveysarray.length; i++) {
       if (surveyid == surveysarray[i]) {

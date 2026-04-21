@@ -38,6 +38,6 @@ export async function getAllStripeSubscriptions() {
 }
 
 export async function cancelStripeSubscription() {
-  let res = await axiosClient.put(`${STRIPE_SUBSCRIPTIONS}/cancel`);
+  const res = await axiosClient.put(`${STRIPE_SUBSCRIPTIONS}/cancel`);
   return res?.data;
 }

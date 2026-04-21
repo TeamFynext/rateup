@@ -58,7 +58,7 @@ export default function SliderCompatible({
       }
     } catch (err) {
       // keep UX flowing even if handler throws
-      // eslint-disable-next-line no-console
+
       console.error("SliderCompatible callback error:", err);
     }
   };

@@ -1,26 +1,15 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 
-import {
-  ActionIcon,
-  BackgroundImage,
-  Box,
-  Flex,
-  Textarea,
-  TextInput,
-  Tooltip,
-} from "@mantine/core";
+import { BackgroundImage, Flex } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
-import { IconEdit } from "@tabler/icons-react";
 import Confetti from "react-confetti";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
-import AutosaveInput from "@/components/input/AutosaveInput";
 
 import { CreditsCard } from "../../../../../Card/CreditsCard";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
-import { SelectedItemEnum } from "../../../SurveyTheme.enums";
 import classes from "../../../SurveyTheme.module.css";
 import {
   useEditSurveySelectedQuestion,
@@ -76,7 +65,7 @@ export default function ThankyouPageThemeView({ survey }) {
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
     async (value, name) => {
-      let data = {};
+      const data = {};
       switch (name) {
         case "title": {
           data["titleText"] = value;

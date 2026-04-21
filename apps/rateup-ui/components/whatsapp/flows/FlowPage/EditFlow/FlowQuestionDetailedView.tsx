@@ -589,7 +589,7 @@ function ElementEditor({
                 }
                 size="sm"
                 onClick={() => {
-                  let save = handleSave();
+                  const save = handleSave();
                   save === "saved" && setActiveTab(EditorType.LogicEditor);
                 }}
               />
@@ -603,7 +603,7 @@ function ElementEditor({
                 leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
                 size="sm"
                 onClick={() => {
-                  let save = handleSave();
+                  const save = handleSave();
                   save === "saved" &&
                     setActiveTab(EditorType.GoogleReviewEditor);
                 }}

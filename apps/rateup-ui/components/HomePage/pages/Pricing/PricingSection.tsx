@@ -25,7 +25,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
   const [period, setPeriod] = useState("yearly");
   const router = useRouter();
   const userTimeZone = useTimeZone();
-  let currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
+  const currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
   const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
   const isMiddleEast = [
     "Asia/Dubai",
@@ -65,7 +65,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
       return;
     }
 
-    let route = "/dashboard/settings/billing";
+    const route = "/dashboard/settings/billing";
     const cartData = {
       id: plan.id,
       amount: plan.paymentPlan.amount,
@@ -227,7 +227,7 @@ const MailForm = ({ opened, close, plan, currencySymbol }) => {
     };
     sendMail.mutate(data, {
       onSettled: () => {
-        let route = "/dashboard/settings/billing";
+        const route = "/dashboard/settings/billing";
         const cartData = {
           id: plan.id,
           amount: plan.paymentPlan.amount,

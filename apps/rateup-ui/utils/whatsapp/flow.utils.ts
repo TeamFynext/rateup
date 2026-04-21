@@ -67,7 +67,7 @@ export function getQuestionTypesFromFlowElement(
     case wft.dropDown:
     case wft.radioButtonsGroup: {
       const choices = formElement["data-source"];
-      let types = [qt.MCQ, qt.CustomNPS];
+      const types = [qt.MCQ, qt.CustomNPS];
       if (choices.length === 2) return types.concat([qt.YN, qt.LD]);
       else if (choices.length === 5)
         return types.concat([qt.Rating, qt.Smiley]);
@@ -170,7 +170,7 @@ export function getFlowFormElementsFromScreen(
   onlyInteractive = false,
   version = 1,
 ) {
-  let children = screen?.layout?.children;
+  const children = screen?.layout?.children;
   const elementsWithoutFooter =
     version === 1
       ? children
@@ -189,7 +189,7 @@ export function getFlowFooterElementsFromScreen(
   screen: WaFlowScreen,
   version = 1,
 ) {
-  let children = screen?.layout?.children;
+  const children = screen?.layout?.children;
   const elementsWithoutFooter =
     version === 1
       ? children
@@ -289,8 +289,8 @@ export function getFlowElementText(
 }
 
 export function getAllIdsFromFlowJson(flowJson: WaFlowJson) {
-  let ids = [];
-  for (let screen of flowJson.screens) {
+  const ids = [];
+  for (const screen of flowJson.screens) {
     const form = screen.layout.children.find((se) => se.type === "Form");
     for (const fe of form.children) {
       ids.push(fe.id);
@@ -354,7 +354,7 @@ export const updateFlowJsonNavigationAndDataPassing = (
   let screenData = null;
   let previousPayloadData = null;
 
-  let routing_model = {};
+  const routing_model = {};
   let datePickerDynamicFlag = false;
 
   const screens = draft.screens;
@@ -505,7 +505,7 @@ export function getFlowJsonWithTitleAndDescription(
   map: WaFlowMap,
   survey: Survey,
 ): WaFlowJson {
-  let fj = JSON.parse(JSON.stringify(flowJson));
+  const fj = JSON.parse(JSON.stringify(flowJson));
   for (const screen of fj.screens) {
     for (const screenElement of screen.layout.children) {
       if (screenElement.type === "Form") {
@@ -592,8 +592,8 @@ export function getFlowElementJsonFromQuestion(question: Question) {
   if (question.type === QuestionType.WaTimeSlot) {
     questionElement["data-source"] = "${data.available_slots}";
   } else if (question?.onSelectAction && question.waAppName) {
-    let now = dayjs().tz("Asia/Kolkata").startOf("day");
-    let afterSixMonth = dayjs().add(6, "M").startOf("day");
+    const now = dayjs().tz("Asia/Kolkata").startOf("day");
+    const afterSixMonth = dayjs().add(6, "M").startOf("day");
     questionElement["min-date"] = now.utc().valueOf().toString();
     questionElement["max-date"] = afterSixMonth.utc().valueOf().toString();
     questionElement["on-select-action"] = {
@@ -745,7 +745,7 @@ export function generateDataSourceFromQuestion(q: Question) {
     }
 
     const dataSource: WaFlowFormChoice[] = choices.map((c, index) => {
-      let t = typeof c === "object" ? c : { title: c };
+      const t = typeof c === "object" ? c : { title: c };
       return {
         id: index.toString(),
         ...t,

@@ -4,7 +4,6 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { LoadingOverlay, Text } from "@mantine/core";
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { signInAndUp } from "supertokens-auth-react/recipe/thirdparty";
 

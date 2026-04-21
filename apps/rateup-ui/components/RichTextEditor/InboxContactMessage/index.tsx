@@ -1,17 +1,14 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   Avatar,
-  Box,
   Checkbox,
   CloseButton,
-  Divider,
   Flex,
   Group,
   Indicator,
-  Loader,
   Popover,
   ScrollArea,
   SegmentedControl,
@@ -20,7 +17,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
+import { RichTextEditor } from "@mantine/tiptap";
 import { IconAddressBook } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 
@@ -33,7 +30,6 @@ import {
 import ContactPagination from "@/components/Contacts/ContactPagination";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter";
 import { PAGE_SIZE } from "@/utils/constants";
 
@@ -107,7 +103,7 @@ const SelectContacts = ({
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
   const { data: contacts, isLoading } = useContacts(pagination, searchText);
   const { data: groups, isPending } = useContactGroup();
-  let totalPageCount = (contacts?.totalCount ?? 1) / pagination.pageSize;
+  const totalPageCount = (contacts?.totalCount ?? 1) / pagination.pageSize;
 
   function handleCancel() {
     setSelectedContactIds([]);

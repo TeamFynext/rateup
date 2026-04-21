@@ -1,6 +1,3 @@
-import axios from "axios";
-
-import { AXIOS_TIMEOUT } from "../../utils/constants";
 import { axiosClient, axiosClientIP } from "../apiClient";
 
 const SURVEYURL = "/survey";
@@ -19,7 +16,7 @@ export interface CreateSurveyResponse {
 }
 
 export async function createSurvey(data) {
-  let res: CreateSurveyResponse = (await axiosClient.post(SURVEYURL, data))
+  const res: CreateSurveyResponse = (await axiosClient.post(SURVEYURL, data))
     .data;
   return res;
 }
@@ -42,7 +39,7 @@ export async function cloneSurvey(surveyId: string, teamIds: string[]) {
 
 export async function getSurveyTemplates(surveyType) {
   try {
-    let surveyTemplates: any = (
+    const surveyTemplates: any = (
       await axiosClient.get(`${SURVEYURL}/templates/${surveyType}`)
     ).data;
     return surveyTemplates;
@@ -54,7 +51,7 @@ export async function getSurveyTemplates(surveyType) {
 
 export async function getSurveys() {
   try {
-    let surveys: Array<Survey> = (await axiosClient.get(SURVEYURL)).data;
+    const surveys: Array<Survey> = (await axiosClient.get(SURVEYURL)).data;
     return surveys;
   } catch (e) {
     console.error(e);
@@ -64,7 +61,7 @@ export async function getSurveys() {
 
 export async function getSurveyWithQuestions() {
   try {
-    let surveys: Array<Survey> = (
+    const surveys: Array<Survey> = (
       await axiosClient.get(`${SURVEYURL}/all/survey-with-questions`)
     ).data;
     return surveys;
@@ -74,14 +71,14 @@ export async function getSurveyWithQuestions() {
 }
 
 export async function getActiveSurveysSummary() {
-  let surveysSummary: SurveySummaryData = (
+  const surveysSummary: SurveySummaryData = (
     await axiosClient.get(`${SURVEYURL}/summary/active`)
   ).data;
   return surveysSummary;
 }
 
 export async function getSurveysSummary() {
-  let allSurveysSummary: SurveySummaryData = (
+  const allSurveysSummary: SurveySummaryData = (
     await axiosClient.get(`${SURVEYURL}/summary/all`)
   ).data;
   return allSurveysSummary;
@@ -95,7 +92,7 @@ export const getSurveysList = () =>
 //----------get all survey landings-------------
 export async function getSurveyLandings() {
   try {
-    let surveyLandings: Array<SurveyLanding> = (
+    const surveyLandings: Array<SurveyLanding> = (
       await axiosClient.get(`${SURVEYURL}/surveylandings`)
     ).data;
     return surveyLandings;
@@ -106,7 +103,7 @@ export async function getSurveyLandings() {
 }
 export async function getSurveysLandingPage() {
   try {
-    let surveys: Array<Survey> = (
+    const surveys: Array<Survey> = (
       await axiosClient.get(`${SURVEYURL}/createlanding`)
     ).data;
     return surveys;
@@ -117,7 +114,7 @@ export async function getSurveysLandingPage() {
 }
 //----get whatsapp survey list ------------
 export async function getWhatsappSurveys() {
-  let surveys: Array<Survey> = (
+  const surveys: Array<Survey> = (
     await axiosClient.get(`${SURVEYURL}/whatsappsurveys`)
   ).data;
   return surveys;

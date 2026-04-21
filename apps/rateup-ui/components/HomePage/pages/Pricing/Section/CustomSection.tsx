@@ -29,7 +29,7 @@ export const CustomSection = ({
   const inversePeriod =
     customPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
 
-  let customPlans = [...customPlan];
+  const customPlans = [...customPlan];
 
   return (
     <Stack my={"lg"}>

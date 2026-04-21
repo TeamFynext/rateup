@@ -11,7 +11,6 @@ import { ContactTabs } from "@/app/dashboard/contacts/page";
 
 import { useImportCSVContactMutation } from "../../backend/campaign/contacts/contacts.query";
 import { RateupButtonBlue } from "../Button/RateupButtons";
-import FormModalLayout from "../Modal/FormModalLayout";
 import SimpleModalLayout from "../Modal/SimpleModalLayout";
 import ContactImportErrorModal from "./ContactImportErrorModal";
 import CreateContactModal from "./CreateContactModal";

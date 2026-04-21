@@ -4,17 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import {
-  Flex,
-  Group,
-  Image,
-  NavLink,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core";
+import { Flex, NavLink, Text, TextInput, Title } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { IconArrowAutofitLeft, IconSend, IconX } from "@tabler/icons-react";
+import { IconArrowAutofitLeft, IconSend } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -39,7 +31,7 @@ function VerifyPhoneNumberPage() {
   async function handleOTPInput() {
     try {
       setIsLoading(true);
-      let response = await consumeCode({
+      const response = await consumeCode({
         userInputCode: otpNumber,
       });
 

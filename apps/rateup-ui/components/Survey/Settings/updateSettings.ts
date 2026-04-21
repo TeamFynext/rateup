@@ -1,10 +1,3 @@
-import {
-  encryptPrivateKey,
-  generateKeyPair,
-  parsetoUint8Array,
-  passwordToKey,
-} from "../../../utils/encryption";
-
 export const updateKioskMode = (setKioskMode, editSurvey) => {
   setKioskMode((prev) => {
     const newKioskMode = !prev;

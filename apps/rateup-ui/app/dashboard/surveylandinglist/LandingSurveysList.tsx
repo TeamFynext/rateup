@@ -46,7 +46,6 @@ import {
 } from "../../../backend/surveys/survey.api";
 import {
   useCloneSurveyMutation,
-  useSurveys,
   useSurveysBylandingId,
   useSurveysByTeam,
 } from "../../../backend/surveys/surveys.query";
@@ -108,7 +107,7 @@ export default function LandingSurveysList() {
     refetch: reftchTeams,
   } = useTeamsByUser() as UseTeamsByUserResult;
 
-  let teamsData = teamsDataUser?.data;
+  const teamsData = teamsDataUser?.data;
 
   const {
     isLoading: isLoadingSurveys,

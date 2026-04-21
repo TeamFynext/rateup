@@ -3,7 +3,7 @@
 import { JSX, useRef } from "react";
 
 import { ActionIcon, Group } from "@mantine/core";
-import { IconDeviceAudioTape, IconDownload } from "@tabler/icons-react";
+import { IconDownload } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { useGetMediaFile } from "@/backend/whatsapp/inbox/message/wamessage.query";

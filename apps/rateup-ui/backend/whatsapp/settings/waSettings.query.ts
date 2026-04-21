@@ -20,7 +20,6 @@ import {
   updateWaSettingsById,
   UpdateWaSettingsInput,
   upsertWaSettings,
-  WaSettings,
 } from "./waSettings.api";
 
 export const useWaSettings = (enabled = true) =>

@@ -2,16 +2,9 @@
 
 import React from "react";
 
-import { Group, Stack, Title } from "@mantine/core";
+import { Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconBrandMeta,
-  IconCheck,
-  IconPlus,
-  IconRefresh,
-  IconShoppingBag,
-  IconX,
-} from "@tabler/icons-react";
+import { IconBrandMeta, IconPlus, IconRefresh } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import {
@@ -24,7 +17,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 

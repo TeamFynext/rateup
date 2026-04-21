@@ -1,5 +1,4 @@
 import { produce } from "immer";
-import _ from "lodash";
 
 import { QuestionType } from "../../../types/enums";
 import { uploadFile } from "../../../utils/file-upload/upload";
@@ -11,7 +10,7 @@ export function getImageUrl(
   unsplashImage: boolean = false,
 ) {
   if (imageObject instanceof Blob) {
-    let url = URL.createObjectURL(imageObject);
+    const url = URL.createObjectURL(imageObject);
     return url;
   }
   if (unsplashImage)

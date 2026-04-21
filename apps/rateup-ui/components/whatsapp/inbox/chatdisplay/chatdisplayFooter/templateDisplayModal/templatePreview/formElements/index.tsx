@@ -84,7 +84,7 @@ export default function WaTemplateFormElements(props: Props) {
   return (
     <Stack className={classes.wrapper}>
       {props?.template?.components?.map((component, i) => {
-        let exampleParams = props.parameters?.find(
+        const exampleParams = props.parameters?.find(
           (data) => data.type === component.type?.toLowerCase(),
         )?.parameters;
         switch (component.type) {

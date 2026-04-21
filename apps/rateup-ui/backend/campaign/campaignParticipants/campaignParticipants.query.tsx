@@ -1,4 +1,3 @@
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";

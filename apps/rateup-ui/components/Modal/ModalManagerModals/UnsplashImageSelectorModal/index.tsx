@@ -25,7 +25,6 @@ import {
 import { mmImageCropModalClassnames } from "../../../../utils/constants";
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import useDebounce from "../../../menu/hook/useDebounce";
-import imageCropModalStyles from "../ImageCropModal/ImageCropModal.module.css";
 
 function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
   const { onImageSelected, aspectRatio } = innerProps;

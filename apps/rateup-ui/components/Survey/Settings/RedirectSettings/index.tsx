@@ -87,7 +87,7 @@ function RedirectSettings({
                   ...prev,
                   ...{ url: "" },
                 }));
-                let data = { ...redirect, ...{ url: e.target.value } };
+                const data = { ...redirect, ...{ url: e.target.value } };
                 setRedirect(data);
               }}
               error={redirectError.url}
@@ -110,7 +110,7 @@ function RedirectSettings({
                   ...prev,
                   ...{ time: "" },
                 }));
-                let data = { ...redirect, ...{ time: e } };
+                const data = { ...redirect, ...{ time: e } };
                 updateRedirect(setRedirect, editSurvey, data);
               }}
               error={redirectError.time}
@@ -131,7 +131,7 @@ function RedirectSettings({
               }
               onClick={() => {
                 if (debounced && !kioskMode && redirect?.enable) {
-                  let data = { ...redirect, ...{ url: debounced } };
+                  const data = { ...redirect, ...{ url: debounced } };
                   updateRedirect(setRedirect, editSurvey, data);
                 }
               }}

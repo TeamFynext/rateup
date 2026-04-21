@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import {
   Center,
@@ -31,7 +31,7 @@ const TestimonialEdit = ({
 }) => {
   const params = useParams();
   const collectionId = params.collectionId as string;
-  let filteredTestimonials = getFilteredTestimonials(
+  const filteredTestimonials = getFilteredTestimonials(
     testimonials,
     filters,
     type,

@@ -14,11 +14,9 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconCheck,
   IconHomeFilled,
   IconPlus,
   IconSettingsFilled,
-  IconX,
 } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";

@@ -50,7 +50,7 @@ const ButtonInput = ({
   productRetailerIds,
 }) => {
   const translations = useExtracted();
-  let { data: flows } = useWaFlowsFromDb(
+  const { data: flows } = useWaFlowsFromDb(
     data.type === WHATSAPP_BUTTON_TYPE.FLOW,
   );
   const buttonState = useButtonState({

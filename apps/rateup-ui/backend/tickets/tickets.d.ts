@@ -1,5 +1,3 @@
-import { UserRole } from "./../../utils/enums/index";
-
 export interface ICreateTicketResponse {
   id: string;
   createdAt: string;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { ActionIcon, Group, Input, Stack, Text, Tooltip } from "@mantine/core";
+import { Group, Input, Stack, Text, Tooltip } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 

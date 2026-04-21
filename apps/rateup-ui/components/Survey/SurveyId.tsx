@@ -158,7 +158,7 @@ export default function SurveyID() {
         setSelectedLanguage("");
       }
       setdefaultLanguage(survey?.languages?.[0]);
-      let options = survey?.teams?.map((team) => ({
+      const options = survey?.teams?.map((team) => ({
         value: team?.id,
         label: team?.name,
       }));

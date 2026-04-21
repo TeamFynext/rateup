@@ -33,7 +33,7 @@ export const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   let itemRank = rankItem(formatedResponse, value);
 
   if (responseType === QuestionType.Smiley && value?.length > 0) {
-    let temp = [];
+    const temp = [];
     value?.map((data) => {
       temp?.push(rankItem(formatedResponse, data));
     });

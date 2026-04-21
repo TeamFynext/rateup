@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { Stack, Text, Title } from "@mantine/core";
+import { Stack, Title } from "@mantine/core";
 import { useExtracted } from "next-intl";
 
 import { useUserInfo } from "@/backend/user/user.query";

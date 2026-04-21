@@ -3,12 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { ActionIcon, Group, Stack, Text } from "@mantine/core";
-import {
-  IconDeviceAudioTape,
-  IconDownload,
-  IconFile,
-  IconFileAnalytics,
-} from "@tabler/icons-react";
+import { IconDownload, IconFileAnalytics } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { useGetMediaFile } from "@/backend/whatsapp/inbox/message/wamessage.query";

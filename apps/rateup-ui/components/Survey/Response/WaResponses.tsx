@@ -284,14 +284,14 @@ const WaResponses = ({
               enableSorting: false,
               accessorKey: "ticket",
               cell: (info) => {
-                let ticketData = info.row.original.Ticket;
-                let ticketExist = ticketData?.length > 0;
+                const ticketData = info.row.original.Ticket;
+                const ticketExist = ticketData?.length > 0;
                 return (
                   <div
                     className="flex items-center justify-center pr-20 cursor-pointer"
                     onClick={() => {
                       if (ticketExist) {
-                        let url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                        const url = `/dashboard/tickets/${ticketData[0]?.id}`;
                         window.open(url, "_blank");
                       }
                     }}

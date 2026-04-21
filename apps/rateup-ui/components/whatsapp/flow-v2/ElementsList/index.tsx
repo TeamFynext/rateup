@@ -14,7 +14,6 @@ import { useExtracted } from "next-intl";
 
 import { QuestionType2 } from "@/types/enums";
 import { cn } from "@/lib/utils";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact";
 import { Button } from "@/components/ui/button";

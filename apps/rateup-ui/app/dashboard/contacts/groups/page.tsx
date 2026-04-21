@@ -1,16 +1,11 @@
 "use client";
 
-import { group } from "console";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Flex, TextInput } from "@mantine/core";
 import { useDebouncedState } from "@mantine/hooks";
-import { IconSearch } from "@tabler/icons-react";
-import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import {
   Edit,
-  Eye,
   Folder,
   MoreVertical,
   Plus,
@@ -28,8 +23,6 @@ import {
 } from "@/backend/campaign/contactGroup/contactGroup.query";
 import CreateGroupModal from "@/components/Contacts/CreateGroupModal";
 import { TeamSelector } from "@/components/input/TeamSelector";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import ContactTable from "@/components/Table/ContactTable";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,8 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { getStringColor } from "@/components/ui/utils";
-import { formatDate, formateDate2 } from "@/utils/dateTime";
+import { formatDate } from "@/utils/dateTime";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 const GroupPage = () => {

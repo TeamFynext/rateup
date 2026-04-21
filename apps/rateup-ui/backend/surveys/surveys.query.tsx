@@ -1,5 +1,3 @@
-import { rem } from "@mantine/core";
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -196,7 +194,7 @@ export const useCreateSurveyMutation = () => {
 type LandingProps = {
   close: () => void;
   resetForm: () => void;
-  setIsCreating: React.Dispatch<React.SetStateAction<Boolean>>;
+  setIsCreating: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export const useCreateSurveyLandingPageMutation = ({
@@ -232,7 +230,7 @@ export const useCreateSurveyLandingPageMutation = ({
 type UpdateLandingProps = {
   close: () => void;
   resetForm: () => void;
-  setIsCreating: React.Dispatch<React.SetStateAction<Boolean>>;
+  setIsCreating: React.Dispatch<React.SetStateAction<boolean>>;
 };
 export const useUpdateSurveyLandingPageMutation = ({
   close,
@@ -264,7 +262,7 @@ export const useUpdateSurveyLandingPageMutation = ({
 
 type CloneProps = {
   close: () => void;
-  selectedTeamId: String;
+  selectedTeamId: string;
 };
 
 export function useCloneSurveyMutation({ close, selectedTeamId }: CloneProps) {
@@ -333,7 +331,7 @@ export function useVerifySurveyPwdMutation(
 }
 
 async function handleSurveyVerifyPwd(surveyId: string, password: string) {
-  let data = { password: password };
+  const data = { password: password };
   return verifySurveyPassword(surveyId, data);
 }
 
