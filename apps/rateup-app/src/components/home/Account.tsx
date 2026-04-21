@@ -1,11 +1,17 @@
 import { Toast } from "toastify-react-native";
-import { View, Text, Image, ScrollView, TextInput, Modal } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  TextInput,
+  Modal,
+  Pressable,
+} from "react-native";
 import React, { useState } from "react";
 import { namePreview } from "../../utils/chatbox_utils";
-import { deleteOrg, signOut } from "@/api/api";
+import { signOut, useUpdateActiveStatusMutation } from "@/api/api";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable } from "react-native";
-import { useMutation } from "@tanstack/react-query";
 
 interface UserProfile {
   email: string;
@@ -15,22 +21,25 @@ interface UserProfile {
   orgPhone: string;
   userName: string;
   orgId: string;
+  userId: string;
 }
 
 const AccountBar = ({
   email,
+  userId,
   orgName,
   role,
   profilePhoto,
   orgPhone,
   userName,
-  orgId,
 }: UserProfile) => {
   const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [confirmText, setConfirmText] = useState("");
 
-  const isValid = confirmText === "DELETE ORGANIZATION";
+  const updateActiveStatus = useUpdateActiveStatusMutation();
+
+  const isValid = confirmText === "DELETE ACCOUNT";
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -52,29 +61,34 @@ const AccountBar = ({
     setLoading(false);
   };
 
-  const orgDeleteMutation = useMutation({
-    mutationFn: ({ id }: { id: string }) => deleteOrg(id),
+  const handleDeleteUser = () => {
+    if (!userId) return;
 
-    onSuccess: () => {
-      Toast.show({
-        type: "success",
-        text1: "Organization deleted successfully",
-      });
+    Toast.show({
+      type: "info",
+      text1: "Deleting account...",
+    });
 
-      setShowDeleteModal(false);
-      setConfirmText("");
+    updateActiveStatus.mutate(userId, {
+      onSuccess: () => {
+        Toast.show({
+          type: "success",
+          text1: "Account deleted successfully",
+        });
 
-      // logout after delete
-      handleSignOut();
-    },
+        setShowDeleteModal(false);
+        setConfirmText("");
 
-    onError: (error: any) => {
-      Toast.show({
-        type: "error",
-        text1: error?.message || "Failed to delete organization",
-      });
-    },
-  });
+        handleSignOut();
+      },
+      onError: (error: any) => {
+        Toast.show({
+          type: "error",
+          text1: error?.message || "Failed to delete account",
+        });
+      },
+    });
+  };
 
   const Row = ({ icon, label, value }: any) => (
     <Pressable className="flex-row items-center justify-between py-4">
@@ -136,17 +150,13 @@ const AccountBar = ({
           <Row icon="call-outline" label="Phone Number" value={orgPhone} />
         </View>
 
-        {/* Delete */}
-        {role === "SUPER_ADMIN" && (
-          <Pressable
-            onPress={() => setShowDeleteModal(true)}
-            className="mt-6 bg-red-50 border border-red-200 py-4 rounded-xl items-center active:bg-red-100"
-          >
-            <Text className="text-red-500 font-semibold">
-              Delete Organization
-            </Text>
-          </Pressable>
-        )}
+        {/* Delete Account (NO ROLE RESTRICTION) */}
+        <Pressable
+          onPress={() => setShowDeleteModal(true)}
+          className="mt-6 bg-red-50 border border-red-200 py-4 rounded-xl items-center active:bg-red-100"
+        >
+          <Text className="text-red-500 font-semibold">Delete Account</Text>
+        </Pressable>
 
         {/* Logout */}
         <Pressable
@@ -167,18 +177,17 @@ const AccountBar = ({
         <View className="flex-1 justify-center items-center bg-black/50 px-6">
           <View className="bg-white dark:bg-slate-900 w-full rounded-2xl p-6">
             <Text className="text-lg font-semibold mb-2 dark:text-white">
-              Delete Organization
+              Delete Account
             </Text>
 
             <Text className="text-gray-500 mb-4">
-              Type <Text className="font-bold">DELETE ORGANIZATION</Text> to
-              confirm.
+              Type <Text className="font-bold">DELETE ACCOUNT</Text> to confirm.
             </Text>
 
             <TextInput
               value={confirmText}
               onChangeText={(text) => setConfirmText(text.toUpperCase())}
-              placeholder="DELETE ORGANIZATION"
+              placeholder="DELETE ACCOUNT"
               className="border border-gray-300 rounded-lg px-4 py-3 mb-4 text-gray-800 dark:text-white"
             />
 
@@ -187,7 +196,6 @@ const AccountBar = ({
               {/* Cancel */}
               <Pressable
                 onPress={() => {
-                  if (orgDeleteMutation.isPending) return;
                   setShowDeleteModal(false);
                   setConfirmText("");
                 }}
@@ -198,26 +206,22 @@ const AccountBar = ({
 
               {/* Delete */}
               <Pressable
-                disabled={!isValid || orgDeleteMutation.isPending}
+                disabled={!isValid}
                 onPress={() => {
                   if (!isValid) {
                     return Toast.show({
                       type: "error",
-                      text1: "Type DELETE ORGANIZATION correctly",
+                      text1: "Type DELETE ACCOUNT correctly",
                     });
                   }
 
-                  orgDeleteMutation.mutate({ id: orgId });
+                  handleDeleteUser();
                 }}
                 className={`px-4 py-2 rounded-lg ${
-                  !isValid || orgDeleteMutation.isPending
-                    ? "bg-red-200"
-                    : "bg-red-500 active:bg-red-600"
+                  !isValid ? "bg-red-200" : "bg-red-500 active:bg-red-600"
                 }`}
               >
-                <Text className="text-white font-semibold">
-                  {orgDeleteMutation.isPending ? "Deleting..." : "Delete"}
-                </Text>
+                <Text className="text-white font-semibold">Delete</Text>
               </Pressable>
             </View>
           </View>
