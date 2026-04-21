@@ -277,5 +277,3 @@ export default async function Page({ params }: Readonly<Props>) {
     </Layout>
   );
 }
-
-export const dynamic = "force-static";

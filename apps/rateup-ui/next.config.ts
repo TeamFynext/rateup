@@ -6,6 +6,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 import redirects from "./redirects";
 
 const nextConfig: NextConfig = {
+  cacheComponents: true,
   reactStrictMode: false,
   // typedRoutes: true,
   images: {
