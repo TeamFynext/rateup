@@ -8,6 +8,8 @@ import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
 import PostGrid from "./post-grid";
 
+export const revalidate = 60;
+
 function Badge({
   children,
   className = "",
