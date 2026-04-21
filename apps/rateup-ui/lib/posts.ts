@@ -1,6 +1,4 @@
 // lib/posts.js - or make a separate file to reuse for other resources
-import { cacheLife } from "next/cache";
-
 import GhostContentAPI from "@tryghost/content-api";
 
 // Create API instance with site credentials
@@ -93,11 +91,6 @@ export type Post = {
   excerpt: string;
 };
 export async function getPosts(filter?: { tag?: string; author?: string }) {
-  "use cache";
-  cacheLife({
-    revalidate: 7200, // 2 hours
-  });
-
   let filterStr: string | undefined;
   if (filter?.tag) {
     filterStr = `tag:${filter.tag}`;
@@ -117,11 +110,6 @@ export async function getPosts(filter?: { tag?: string; author?: string }) {
 }
 
 export async function getSinglePost(postSlug: string) {
-  "use cache";
-  cacheLife({
-    revalidate: 7200, // 2 hours
-  });
-
   try {
     return (await api.posts.read({
       slug: postSlug,

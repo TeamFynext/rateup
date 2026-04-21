@@ -6,6 +6,8 @@ import BlogLayout from "@/components/blog/Layout";
 
 import PostGrid from "../../post-grid";
 
+export const revalidate = 60;
+
 type Props = {
   params: Promise<{ slug: string }>;
 };
