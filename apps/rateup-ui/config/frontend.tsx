@@ -24,6 +24,7 @@ export function setRouter(
 export const frontendConfig = (): SuperTokensConfig => {
   return {
     appInfo,
+    clientType: "web",
     recipeList: [
       EmailPasswordReact.init(),
       ThirdPartyReact.init({
