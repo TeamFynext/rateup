@@ -39,6 +39,9 @@ export async function contactLabelRoutes(server: FastifyInstance) {
   server.get(
     "/",
     {
+      config: {
+        fallbackEmptyArray: true,
+      },
       schema: {
         response: {
           200: contactLabelResponseSchema.array(),

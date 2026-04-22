@@ -15,6 +15,7 @@ import {
 import { checkSession } from "../../../utils/checkSession.js";
 import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
+import { requireFeature, TeamFeature } from "../../../utils/permissions.js";
 import fastifyMultipart from "@fastify/multipart";
 import { verifyMessageMonthlyLimitRestriction } from "./wa_templates.auth.js";
 import {
@@ -39,6 +40,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
       SubscriptionFeaturePathName.WhatsAppTemplate,
     ]),
   );
+  server.addHook("preHandler", requireFeature(TeamFeature.templates));
 
   server.get(
     "/",

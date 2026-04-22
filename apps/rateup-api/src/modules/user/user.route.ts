@@ -3,6 +3,7 @@ import { verifySession } from "supertokens-node/recipe/session/framework/fastify
 import {
   auditLogHandler,
   changeUserPasswordHandler,
+  createAppleUserHandler,
   createGoogleUserHandler,
   getAllUsersHandler,
   getLoggedUserInfoHandler,
@@ -118,6 +119,16 @@ export async function userRoutes(server: FastifyInstance) {
       },
     },
     createGoogleUserHandler,
+  );
+
+  server.post(
+    "/complete-apple-signup",
+    {
+      schema: {
+        body: createUserGoogleSchema,
+      },
+    },
+    createAppleUserHandler,
   );
 
   server.get(

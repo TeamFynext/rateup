@@ -17,6 +17,8 @@ import {
   addMemberToTeams,
   getUsersNotInTeam,
   addMembersToTeamsMail,
+  getTeamFeatures,
+  setTeamFeatures,
 } from "./team.service.js";
 import {
   CreateTeamInput,
@@ -47,6 +49,9 @@ export async function createTeamHandler(
 
   try {
     team = await createTeam(body);
+    if ((request.body?.features as any)?.length && team?.team?.id) {
+      await setTeamFeatures(team.team.id, request.body as any);
+    }
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
@@ -329,6 +334,36 @@ export async function getTeamByIdHandler(
       return;
     }
     reply.send(team);
+  } catch (e) {
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function getTeamFeaturesHandler(
+  request: FastifyRequest<{ Params: { teamId: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const features = await getTeamFeatures(request.params.teamId);
+    reply.send({ features });
+  } catch (e) {
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function setTeamFeaturesHandler(
+  request: FastifyRequest<{
+    Params: { teamId: string };
+    Body: { features: string[] };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const features = await setTeamFeatures(
+      request.params.teamId,
+      request.body as any,
+    );
+    reply.send({ features });
   } catch (e) {
     reply.code(500).send({ message: "Internal server error" });
   }

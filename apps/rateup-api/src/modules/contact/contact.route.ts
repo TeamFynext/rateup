@@ -39,8 +39,11 @@ import { conversationRoutes } from "./conversation/conversation.route.js";
 import { verifyLCustomerMaxCountRestrictionHandler } from "./contact.utils.js";
 import { lifecycleIdParamSchema } from "../lifecycle/lifecycle.schema.js";
 
+import { requireFeature, TeamFeature } from "../../utils/permissions.js";
+
 export async function contactRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
+  server.addHook("preHandler", requireFeature(TeamFeature.contacts));
 
   server.register(contactGroupRoutes, { prefix: "/group" });
 
@@ -150,7 +153,15 @@ export async function contactRoutes(server: FastifyInstance) {
     },
     importCSVContactsHandler,
   );
-  server.get("/custom-fields", getCustomFieldHandler);
+  server.get(
+    "/custom-fields",
+    {
+      config: {
+        fallbackEmptyArray: true,
+      },
+    },
+    getCustomFieldHandler,
+  );
   server.post(
     "/custom-fields",
     {

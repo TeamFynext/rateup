@@ -476,7 +476,7 @@ export async function awardPoints(
     context,
   );
 
-  // Update customer points
+  // Update customer points and total spend
   const updatedCustomer = await prisma.customerLoyaltyAccount.update({
     where: { id: customer.id },
     data: {
@@ -485,6 +485,9 @@ export async function awardPoints(
       },
       lifetimePoints: {
         increment: points,
+      },
+      totalSpend: {
+        increment: purchaseAmount,
       },
     },
   });
@@ -511,7 +514,7 @@ export async function awardPoints(
   // Check for tier upgrade
   const upgradeResult = await checkAndUpgradeTier(
     customer.id,
-    updatedCustomer.lifetimePoints,
+    Number(updatedCustomer.totalSpend),
   );
 
   // Dispatch Notifications

@@ -18,7 +18,6 @@ import {
   sendNewWaMessageHandler,
   unblockWhatsappUserHandler,
 } from "./wamessage.controller.js";
-import { checkSession } from "../../../../utils/checkSession.js";
 import { byContactIdSchema } from "../../../contact/contact.schema.js";
 import {
   blockUserSchema,
@@ -31,7 +30,6 @@ import {
 } from "./wamessage.schema.js";
 
 export async function waMessageRoutes(server: FastifyInstance) {
-  server.addHook("preHandler", checkSession);
   server.get(
     "/:contactId",
     {

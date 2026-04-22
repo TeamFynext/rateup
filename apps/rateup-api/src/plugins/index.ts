@@ -16,6 +16,25 @@ import registerWorkers from "../jobs/index.js";
 export async function registerPlugins(server: FastifyInstance) {
   // SuperTokens initialization
   supertokens.init(SuperTokensConfig);
+  await server.register(formDataPlugin);
+
+  await server.register(plugin);
+
+  server.setErrorHandler(errorHandler() as any);
+
+  server.addHook("onSend", async (request, reply, payload) => {
+    const location = reply.getHeader("location");
+
+    if (
+      location &&
+      request.url.includes("/api/auth/callback/apple") &&
+      reply.statusCode === 200
+    ) {
+      reply.code(303);
+    }
+
+    return payload;
+  });
 
   // CORS
   await server.register(cors, {
@@ -35,13 +54,10 @@ export async function registerPlugins(server: FastifyInstance) {
   await server.register(import("@fastify/websocket"));
 
   // Form data
-  await server.register(formDataPlugin);
 
   // SuperTokens plugin
-  await server.register(plugin);
 
   // Error handler
-  server.setErrorHandler(errorHandler() as any);
 
   // Kafka producer
   await registerKafka(server);
