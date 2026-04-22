@@ -265,6 +265,7 @@ export async function getWaMessageLogs(filter) {
   return (
     await axiosClient.get(`${WA_CONTACT_BASE_PATH}/message-logs`, {
       params: filteredParams,
+      timeout: 60000,
     })
   ).data;
 }

@@ -33,7 +33,7 @@ import {
 
 function MessageLogs({ dateRange }) {
   const [search, setSearch] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("failed");
   const [selectedSource, setSelectedSource] = useState("all");
   const [selectedTeamId, setSelectedTeamId] = useState("all");
   const [pagination, setPagination] = useState<PaginationState>({
