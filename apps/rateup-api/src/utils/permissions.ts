@@ -61,6 +61,8 @@ export async function attachUserFeatures(
 export function requireFeature(feature: TeamFeature) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const { role } = request.user;
+    const featureFromConfig = request.routeOptions.config?.feature;
+    const requiredFeature = featureFromConfig ?? feature;
 
     // Only SUPER_ADMIN bypasses feature checks
     if (role === "SUPER_ADMIN") return;
@@ -71,7 +73,7 @@ export function requireFeature(feature: TeamFeature) {
       request.can = (f: TeamFeature) => request.features.has(f);
     }
 
-    if (!request.features.has(feature)) {
+    if (!request.features.has(requiredFeature)) {
       const fallbackEmpty = (request.routeOptions.config as any)
         ?.fallbackEmptyArray;
 
@@ -80,7 +82,7 @@ export function requireFeature(feature: TeamFeature) {
       }
 
       return reply.code(403).send({
-        message: `Access to '${feature}' is not enabled for your team`,
+        message: `Access to '${requiredFeature}' is not enabled for your team`,
       });
     }
   };

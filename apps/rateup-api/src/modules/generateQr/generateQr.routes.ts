@@ -12,9 +12,8 @@ import {
 
 export async function linkRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {
-    if (routeOptions.config && routeOptions.config["isPublic"] === true) {
+    if (routeOptions.config?.["isPublic"] === true) {
       routeOptions.preHandler = [];
-      return;
     } else {
       routeOptions.preHandler = [checkSession];
     }

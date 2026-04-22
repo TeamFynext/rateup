@@ -1,7 +1,7 @@
 import z from "zod";
 
 const conversationCoreSchema = z.object({
-  contactId: z.string().uuid(),
+  contactId: z.uuid(),
   status: z.string().optional(),
 });
 
@@ -10,7 +10,7 @@ const updateConversationSchema = z.object({
   firstRespondedAt: z.date().optional(),
   assignedAt: z.date().optional(),
   closedAt: z.date().optional(),
-  closedBy: z.string().uuid().optional(),
+  closedBy: z.uuid().optional(),
   firstRespondedByUserAt: z.date().optional(),
 });
 
@@ -18,25 +18,25 @@ const conversationAssigneeUpdateSchema = z.object({
   assignees: z
     .array(
       z.object({
-        userId: z.string().uuid(),
-        teamId: z.string().uuid().optional(),
+        userId: z.uuid(),
+        teamId: z.uuid().optional(),
       }),
     )
     .optional(),
   assignedAt: z.date().optional(),
   removedAt: z.date().optional(),
-  assignedBy: z.string().uuid().optional(),
-  removedBy: z.string().uuid().optional(),
+  assignedBy: z.uuid().optional(),
+  removedBy: z.uuid().optional(),
 });
 
 const conversationParamsSchema = z.object({
-  conversationId: z.string().uuid(),
+  conversationId: z.uuid(),
 });
 
 const statsQuerySchema = z.object({
   dateKey: z.string().optional(),
   dateRange: z.string().optional(),
-  days: z.number().optional(),
+  days: z.coerce.number().optional(),
 });
 
 const staffIdParamsSchema = z.object({
