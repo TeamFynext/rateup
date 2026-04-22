@@ -11,6 +11,7 @@ import {
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
+import { useAllSurveysSummary } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
@@ -43,6 +44,7 @@ const ActionValueInput = ({
   const { data: teamMembers } = useTeamsMembersOfOrg();
   const { data: teamsData } = useTeamsByUser();
   const { data: flowsData } = useWaFlowsFromDb();
+  const { data: surveysSummary } = useAllSurveysSummary();
 
   // Combine both WhatsApp and Instagram automations
   const allAutomations = useMemo(() => {
@@ -51,6 +53,19 @@ const ActionValueInput = ({
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }, [waData, igData]);
+
+  const webSurveyOptions = useMemo(() => {
+    if (!surveysSummary?.surveys?.length) return [];
+
+    return surveysSummary.surveys
+      ?.filter((survey) => survey?.type === "web")
+      .flatMap((survey) =>
+        (survey.teams || []).map((team) => ({
+          value: team.mapId,
+          label: `${survey.title} (${team.teamName})`,
+        })),
+      );
+  }, [surveysSummary]);
 
   const actionType: ActionType = useWatch({
     control,
@@ -160,6 +175,36 @@ const ActionValueInput = ({
           ))}
         </SelectContent>
       </Select>
+    );
+  }
+  if (actionType === "SEND_WEB_SURVEY") {
+    return (
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value || ""}
+      >
+        <SelectTrigger className="w-full bg-background">
+          <SelectValue placeholder="Select web survey" />
+        </SelectTrigger>
+        <SelectContent>
+          {webSurveyOptions.map((survey) => (
+            <SelectItem key={survey.value} value={survey.value}>
+              {survey.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+  if (actionType === "CALL_EXTERNAL_API") {
+    return (
+      <Input
+        type="url"
+        placeholder="https://example.com/webhook"
+        {...valueField}
+        value={valueField.value || ""}
+        className="w-full bg-background"
+      />
     );
   }
   if (actionType === "ASSIGN_LIFECYCLE") {
