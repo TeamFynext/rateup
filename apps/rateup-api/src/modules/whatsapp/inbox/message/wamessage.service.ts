@@ -1872,6 +1872,11 @@ export async function getWaMessageLogs(
     }
   }
 
+  const statusFilter =
+    status && status !== "all"
+      ? Prisma.sql`AND LOWER(ws.status) = LOWER(${status})`
+      : Prisma.sql``;
+
   const baseWhere = Prisma.sql`
     WHERE c."orgId" = ${orgId}
       AND wm."sourceMessage" IN ('TEMPLATE','CAMPAIGN')
@@ -1879,6 +1884,7 @@ export async function getWaMessageLogs(
       ${sourceFilter}
       ${teamFilter}
       ${dateFilter}
+      ${statusFilter}
   `;
 
   /*
@@ -1892,6 +1898,28 @@ export async function getWaMessageLogs(
     FROM "WaMessage" wm
     JOIN "Contact" c ON c.id = wm."contactId"
     JOIN "WaMessageOrgTeamMap" motm ON motm."messageId" = wm.id
+    LEFT JOIN LATERAL (
+      SELECT
+        CASE
+          WHEN failed_ts = greatest_ts THEN 'failed'
+          WHEN read_ts = greatest_ts THEN 'read'
+          WHEN delivered_ts = greatest_ts THEN 'delivered'
+          WHEN sent_ts = greatest_ts THEN 'sent'
+        END AS status
+      FROM (
+        SELECT
+          NULLIF(wm.stats->>'sent','')::timestamp      AS sent_ts,
+          NULLIF(wm.stats->>'delivered','')::timestamp AS delivered_ts,
+          NULLIF(wm.stats->>'read','')::timestamp      AS read_ts,
+          NULLIF(wm.stats->>'failed','')::timestamp    AS failed_ts,
+          GREATEST(
+            NULLIF(wm.stats->>'sent','')::timestamp,
+            NULLIF(wm.stats->>'delivered','')::timestamp,
+            NULLIF(wm.stats->>'read','')::timestamp,
+            NULLIF(wm.stats->>'failed','')::timestamp
+          ) AS greatest_ts
+      ) t
+    ) ws ON true
     ${baseWhere}
   `;
 
@@ -1908,6 +1936,28 @@ export async function getWaMessageLogs(
     FROM "WaMessage" wm
     JOIN "Contact" c ON c.id = wm."contactId"
     JOIN "WaMessageOrgTeamMap" motm ON motm."messageId" = wm.id
+    LEFT JOIN LATERAL (
+      SELECT
+        CASE
+          WHEN failed_ts = greatest_ts THEN 'failed'
+          WHEN read_ts = greatest_ts THEN 'read'
+          WHEN delivered_ts = greatest_ts THEN 'delivered'
+          WHEN sent_ts = greatest_ts THEN 'sent'
+        END AS status
+      FROM (
+        SELECT
+          NULLIF(wm.stats->>'sent','')::timestamp      AS sent_ts,
+          NULLIF(wm.stats->>'delivered','')::timestamp AS delivered_ts,
+          NULLIF(wm.stats->>'read','')::timestamp      AS read_ts,
+          NULLIF(wm.stats->>'failed','')::timestamp    AS failed_ts,
+          GREATEST(
+            NULLIF(wm.stats->>'sent','')::timestamp,
+            NULLIF(wm.stats->>'delivered','')::timestamp,
+            NULLIF(wm.stats->>'read','')::timestamp,
+            NULLIF(wm.stats->>'failed','')::timestamp
+          ) AS greatest_ts
+      ) t
+    ) ws ON true
     ${baseWhere}
     ORDER BY wm."createdAt" DESC
     LIMIT ${limit}
@@ -1982,33 +2032,32 @@ export async function getWaMessageLogs(
         ELSE 'unknown'
       END AS "messagePreview",
 
-      (
-        SELECT status FROM (
-          SELECT
-            CASE
-              WHEN failed_ts = greatest_ts THEN 'failed'
-              WHEN read_ts = greatest_ts THEN 'read'
-              WHEN delivered_ts = greatest_ts THEN 'delivered'
-              WHEN sent_ts = greatest_ts THEN 'sent'
-            END AS status
-          FROM (
-            SELECT
-              NULLIF(wm.stats->>'sent','')::timestamp      AS sent_ts,
-              NULLIF(wm.stats->>'delivered','')::timestamp AS delivered_ts,
-              NULLIF(wm.stats->>'read','')::timestamp      AS read_ts,
-              NULLIF(wm.stats->>'failed','')::timestamp    AS failed_ts,
-              GREATEST(
-                NULLIF(wm.stats->>'sent','')::timestamp,
-                NULLIF(wm.stats->>'delivered','')::timestamp,
-                NULLIF(wm.stats->>'read','')::timestamp,
-                NULLIF(wm.stats->>'failed','')::timestamp
-              ) AS greatest_ts
-          ) t
-        ) s
-      ) AS status
+      ws.status
 
     FROM "WaMessage" wm
     JOIN "Contact" c ON c.id = wm."contactId"
+    LEFT JOIN LATERAL (
+      SELECT
+        CASE
+          WHEN failed_ts = greatest_ts THEN 'failed'
+          WHEN read_ts = greatest_ts THEN 'read'
+          WHEN delivered_ts = greatest_ts THEN 'delivered'
+          WHEN sent_ts = greatest_ts THEN 'sent'
+        END AS status
+      FROM (
+        SELECT
+          NULLIF(wm.stats->>'sent','')::timestamp      AS sent_ts,
+          NULLIF(wm.stats->>'delivered','')::timestamp AS delivered_ts,
+          NULLIF(wm.stats->>'read','')::timestamp      AS read_ts,
+          NULLIF(wm.stats->>'failed','')::timestamp    AS failed_ts,
+          GREATEST(
+            NULLIF(wm.stats->>'sent','')::timestamp,
+            NULLIF(wm.stats->>'delivered','')::timestamp,
+            NULLIF(wm.stats->>'read','')::timestamp,
+            NULLIF(wm.stats->>'failed','')::timestamp
+          ) AS greatest_ts
+      ) t
+    ) ws ON true
     WHERE wm.id IN (${Prisma.join(idList)})
     ORDER BY wm."createdAt" DESC
   `;
@@ -2019,11 +2068,8 @@ export async function getWaMessageLogs(
   ---------------------------------------------------
   */
 
-  const filteredData =
-    status && status !== "all" ? data.filter((d) => d.status === status) : data;
-
   return {
-    data: filteredData,
+    data,
     pagination: {
       total,
       limit,
