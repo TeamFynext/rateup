@@ -6,7 +6,7 @@ import {
 } from "../constants";
 
 export function parseTemplate(template) {
-  let parsedTemplate: any = {};
+  const parsedTemplate: any = {};
   parsedTemplate.name = template?.data?.name;
   parsedTemplate.category = template?.data?.category;
   parsedTemplate.status = template?.data?.status;
@@ -81,7 +81,7 @@ export function parseTemplate(template) {
             template?.defaultValues?.productCarousel?.find(
               (p) => p.cardIndex === index,
             );
-          let cardCarousel = {
+          const cardCarousel = {
             button: {
               type: "",
               text: "",
@@ -104,7 +104,7 @@ export function parseTemplate(template) {
         parsedTemplate["productCarousel"] = cards;
       } else {
         const cards = component.cards.map((card) => {
-          let cardCarousel = {
+          const cardCarousel = {
             format: "IMAGE",
             body: "",
             buttons: [],

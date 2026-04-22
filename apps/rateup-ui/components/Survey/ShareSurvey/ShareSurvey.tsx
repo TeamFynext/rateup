@@ -14,7 +14,6 @@ import {
   Radio,
   ScrollArea,
   Stack,
-  Switch,
   Text,
   Title,
   Tooltip,
@@ -22,14 +21,12 @@ import {
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconCheck,
   IconChevronLeft,
   IconClockPlus,
   IconCopy,
   IconPencil,
   IconPlayerPause,
   IconPlayerPlay,
-  IconX,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useExtracted } from "next-intl";
@@ -55,14 +52,12 @@ import {
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import NothingFound from "../../NothingFound/NothingFound";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { StatusBadge } from "../SurveyCardList";
 import { TabEnum } from "../SurveyId";
 import GenerateTags from "./GenerateTags";
 import IFrameModal from "./IFrameModal";
 import ShareQR from "./ShareQR";
-import TagManager from "./TagManager";
 
 enum PublishEnum {
   NOW = "NOW",

@@ -263,7 +263,7 @@ export const getTextStyle = (style: string, type: boolean): {} => {
   return response;
 };
 
-let textFontSize = {
+const textFontSize = {
   [WaFlowFormElementType.textHeading]: "22px",
   [WaFlowFormElementType.textSubHeading]: "20px",
   [WaFlowFormElementType.textBody]: "18px",

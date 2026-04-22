@@ -2,7 +2,7 @@
 
 import React from "react";
 import Head from "next/head";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 import { Flex, Loader, SimpleGrid } from "@mantine/core";
 

@@ -345,7 +345,7 @@ export const templateSchema = z
                   "1",
                 );
                 // Use URL constructor to validate
-                // eslint-disable-next-line no-new
+
                 new URL(replaced);
               } catch (e) {
                 issues.push({
@@ -358,7 +358,6 @@ export const templateSchema = z
             } else {
               // When no template placeholders present, validate a normal URL
               try {
-                // eslint-disable-next-line no-new
                 new URL(data.url as string);
               } catch (e) {
                 issues.push({
@@ -506,7 +505,7 @@ export const templateSchema = z
           card.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE &&
           cardHeaerTypeNotString
         ) {
-          let msg =
+          const msg =
             !imageType.includes((card.header as File)?.type) &&
             `Incorrect Type use only ${imageType?.join(",")}`;
           issues.push({
@@ -519,7 +518,7 @@ export const templateSchema = z
           format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO &&
           cardHeaerTypeNotString
         ) {
-          let msg =
+          const msg =
             !videoType.includes((card.header as File)?.type) &&
             `Incorrect Type use only ${videoType?.join(",")}`;
           issues.push({
@@ -552,7 +551,7 @@ export const templateSchema = z
         });
         return;
       }
-      let buttonType = values.productCarousel[0].button.type;
+      const buttonType = values.productCarousel[0].button.type;
       values.productCarousel.map((card, index) => {
         if (card.button.type !== buttonType) {
           issues.push({

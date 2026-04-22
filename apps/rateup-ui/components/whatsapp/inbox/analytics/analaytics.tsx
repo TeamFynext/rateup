@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
@@ -21,7 +21,6 @@ import { toast } from "sonner";
 
 import AuditLogs from "@/app/dashboard/analytics/audit-log/page";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 
 import { PageHeaderCard } from "./AnalyticsStaticCard";
 import ApiAnalytics from "./ApiAnalytics";

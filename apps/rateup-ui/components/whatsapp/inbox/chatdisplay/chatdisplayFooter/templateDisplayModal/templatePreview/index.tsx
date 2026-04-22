@@ -58,7 +58,7 @@ export default function WaInboxTemplatePreview(props: Props) {
           const fileKey = await uploadFile(
             item?.parameters[0]?.[item?.parameters[0]?.type]?.link,
           );
-          let filename = fileKey?.split("-")?.slice(1)?.join("-") ?? fileKey;
+          const filename = fileKey?.split("-")?.slice(1)?.join("-") ?? fileKey;
           const isDocument = item?.parameters?.[0]?.type === "document";
 
           return {
@@ -179,7 +179,7 @@ export function WaInboxTemplatePreviewNew(props: Props) {
           const fileKey = await uploadFile(
             item?.parameters[0]?.[item?.parameters[0]?.type]?.link,
           );
-          let filename = fileKey?.split("-")?.slice(1)?.join("-") ?? fileKey;
+          const filename = fileKey?.split("-")?.slice(1)?.join("-") ?? fileKey;
           const isDocument = item?.parameters?.[0]?.type === "document";
 
           return {

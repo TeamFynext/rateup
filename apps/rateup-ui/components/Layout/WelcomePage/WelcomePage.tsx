@@ -2,14 +2,12 @@
 
 import React from "react";
 
-import { Button, Flex, Image, Stack, Text } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import { Button, Image, Stack } from "@mantine/core";
 
 import { PageType } from "@/types/enums";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
 
 import { cordinateStyle } from "../../../utils";
-import { WelcomeTheme } from "../../Survey/SurveyTheme/surveyTheme.types";
 
 const _buttonStyles = {
   backgroundColor: "var(--tertiary-color)",
@@ -64,7 +62,7 @@ function WelcomePage({
     };
   }
 
-  let buttonStyles = requiredThemeObj?.button?.styles;
+  const buttonStyles = requiredThemeObj?.button?.styles;
   let buttonPosition = requiredThemeObj?.button?.position;
   if (!buttonPosition) {
     buttonPosition = { x: "CENTER", y: "DEFAULT" };

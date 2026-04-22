@@ -13,7 +13,7 @@ async function End(props) {
   const { surveyId } = await props.params;
   const { msg, language } = await props.query;
 
-  let propsToPass: any = {
+  const propsToPass: any = {
     enableGoogleReview: false,
   };
 

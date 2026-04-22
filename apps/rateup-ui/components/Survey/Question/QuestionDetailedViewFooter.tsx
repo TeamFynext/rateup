@@ -12,7 +12,6 @@ import {
 } from "@mantine/core";
 import {
   IconAppWindow,
-  IconBrandGoogle,
   IconChevronDown,
   IconDeviceSdCard,
   IconEdit,
@@ -151,7 +150,7 @@ function QuestionDetailedViewFooter({
                       size="sm"
                       fullWidth
                       onClick={async () => {
-                        let save = await handleSave();
+                        const save = await handleSave();
                         save === "saved" &&
                           setActiveTab(
                             QuestionTabsEnum.QuestionReviewPageEditor,
@@ -189,7 +188,7 @@ function QuestionDetailedViewFooter({
                     size="sm"
                     fullWidth
                     onClick={async () => {
-                      let save = await handleSave();
+                      const save = await handleSave();
                       save === "saved" &&
                         setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
                     }}
@@ -207,7 +206,7 @@ function QuestionDetailedViewFooter({
                       size="sm"
                       fullWidth
                       onClick={async () => {
-                        let save = await handleSave();
+                        const save = await handleSave();
                         save === "saved" &&
                           setActiveTab(QuestionTabsEnum.TicketIssueEditor);
                       }}

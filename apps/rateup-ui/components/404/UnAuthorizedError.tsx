@@ -3,16 +3,8 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  Button,
-  Center,
-  Group,
-  Image,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
-import { IconUserOff, IconUserShield } from "@tabler/icons-react";
+import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { IconUserShield } from "@tabler/icons-react";
 
 export function UnauthorizedPage() {
   const router = useRouter();

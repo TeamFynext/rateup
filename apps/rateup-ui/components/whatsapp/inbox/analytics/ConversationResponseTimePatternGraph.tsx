@@ -1,5 +1,3 @@
-import { Space_Mono } from "next/font/google";
-
 import { Skeleton } from "@mantine/core";
 import { Clock } from "lucide-react";
 import { useExtracted } from "next-intl";

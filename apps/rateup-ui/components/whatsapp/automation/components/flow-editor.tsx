@@ -240,7 +240,7 @@ function FlowEditorContent({
 
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const type = event.dataTransfer.getData("application/reactflow");
-      let nodeData = JSON.parse(
+      const nodeData = JSON.parse(
         event.dataTransfer.getData("application/nodeData") || "{}",
       );
 

@@ -1,4 +1,3 @@
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -39,9 +38,9 @@ export const useContactGroupById = (
   sorting?,
   columnFilters?,
 ) => {
-  let sort = sorting ?? CONTACT_SORT;
-  let filters = columnFilters ?? [];
-  let search = searchData ?? "";
+  const sort = sorting ?? CONTACT_SORT;
+  const filters = columnFilters ?? [];
+  const search = searchData ?? "";
   return useQuery({
     queryKey: ["contactGroupById", groupId, pagination, search, sort, filters],
     queryFn: () =>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useContext, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconEye, IconEyeClosed } from "@tabler/icons-react";
@@ -100,14 +100,14 @@ function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
       flowJson.screens,
       selectedScreenId,
     );
-    let formElementChildren = screenToBeEdited.layout.children.find(
+    const formElementChildren = screenToBeEdited.layout.children.find(
       (se) => se.type === "Form",
     ).children;
     if (formElementChildren.length > 50)
       return toast.error("Only 50 components in a screen", {
         id: "error-max-screen-elements",
       });
-    let qsType = [
+    const qsType = [
       WaFlowFormElementType.nonInputText,
       WaFlowFormElementType.image,
     ].includes(type as WaFlowFormElementType)

@@ -2,30 +2,17 @@
 
 import { useState } from "react";
 
-import {
-  Badge,
-  Card,
-  Group,
-  Loader,
-  Radio,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Badge, Card, Group, Loader, Radio, Stack, Title } from "@mantine/core";
 import { IconSend } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 
 import {
   useAllWaAutomatedReplies,
   useInitiateWaAutomatedReplyMutation,
-  useWaAutomatedReplies,
-  useWaAutomatedRepliesMessageById,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
-import { data } from "@/components/GenerateQr/tempdata";
 import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
 import NothingFound from "@/components/NothingFound/NothingFound";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
 import classes2 from "../flowDisplayModel/flowSelectCard/styles.module.css";
 import classes from "../flowDisplayModel/styles.module.css";

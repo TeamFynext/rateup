@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 
 import {
   ActionIcon,
@@ -43,7 +43,7 @@ const SmileyExtraProps = ({ form }) => {
   const [opened, { toggle, open }] = useDisclosure(true);
 
   const handleChange = (field, value) => {
-    let updateData = {
+    const updateData = {
       [field]: value,
     };
     if (
@@ -209,10 +209,10 @@ const SmileyExtraProps = ({ form }) => {
 };
 
 function hexToRgb(hex) {
-  let bigint = parseInt(hex.slice(1), 16);
-  let r = (bigint >> 16) & 255;
-  let g = (bigint >> 8) & 255;
-  let b = bigint & 255;
+  const bigint = parseInt(hex.slice(1), 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
   return [r, g, b];
 }
 
@@ -227,19 +227,19 @@ export function generateGradient(startColor, endColor, steps, defaultColor) {
   if (!startColor || !endColor) {
     return Array.from({ length: steps }, (_, i) => defaultColor);
   }
-  let startRGB = hexToRgb(startColor);
-  let endRGB = hexToRgb(endColor);
-  let stepFactor = 1 / (steps + 1);
-  let gradientColors = [startColor];
+  const startRGB = hexToRgb(startColor);
+  const endRGB = hexToRgb(endColor);
+  const stepFactor = 1 / (steps + 1);
+  const gradientColors = [startColor];
 
   for (let i = 1; i <= steps; i++) {
-    let r = Math.round(
+    const r = Math.round(
       startRGB[0] + stepFactor * i * (endRGB[0] - startRGB[0]),
     );
-    let g = Math.round(
+    const g = Math.round(
       startRGB[1] + stepFactor * i * (endRGB[1] - startRGB[1]),
     );
-    let b = Math.round(
+    const b = Math.round(
       startRGB[2] + stepFactor * i * (endRGB[2] - startRGB[2]),
     );
     gradientColors.push(rgbToHex(r, g, b));

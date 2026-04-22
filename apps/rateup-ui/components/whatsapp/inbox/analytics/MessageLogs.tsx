@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 
-import { ColumnDef, PaginationState, Table } from "@tanstack/react-table";
+import { ColumnDef, PaginationState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
   CheckCircle2,

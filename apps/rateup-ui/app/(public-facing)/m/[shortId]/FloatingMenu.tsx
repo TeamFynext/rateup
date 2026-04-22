@@ -39,7 +39,7 @@ const FloatingMenuMain = ({
   logo,
   categoryRefs,
 }: FloatingMenuMainProps) => {
-  let mainColor = "black";
+  const mainColor = "black";
   const firstTwoItems = dynamicVariables?.slice(0, 2);
   const remainingItems = dynamicVariables?.slice(2);
 

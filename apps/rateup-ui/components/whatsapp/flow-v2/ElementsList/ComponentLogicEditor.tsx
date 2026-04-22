@@ -258,10 +258,10 @@ export const ComponentLogicEditor = ({
                     </h4>
                     {block.conditions.map(
                       (condition: any, condIndex: number) => {
-                        let q = filteredQuestions.find(
+                        const q = filteredQuestions.find(
                           (qs) => qs.id === condition.field,
                         );
-                        let operatorData = q && getResponses2(q);
+                        const operatorData = q && getResponses2(q);
                         return (
                           <div
                             key={condIndex}
@@ -372,7 +372,7 @@ export const ComponentLogicEditor = ({
                                   value={condition.value}
                                   type={q?.["input-type"] || "text"}
                                   onChange={(e) => {
-                                    let value =
+                                    const value =
                                       q?.["input-type"] === "number"
                                         ? Number(e.target.value)
                                         : e.target.value;

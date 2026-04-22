@@ -96,7 +96,7 @@ export default function SurveyLandingList() {
     refetch: reftchTeams,
   } = useTeamsByUser() as UseTeamsByUserResult;
 
-  let teamsData = teamsDataUser?.data;
+  const teamsData = teamsDataUser?.data;
 
   const {
     isLoading: isLoadingSurveys,

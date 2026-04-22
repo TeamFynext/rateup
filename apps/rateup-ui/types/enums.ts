@@ -292,6 +292,25 @@ export enum SubscriptionFeaturePathName {
   CarouselTemplate = "whatsapp.template.carouselTemplate",
 }
 
+export enum TeamFeature {
+  Inbox = "inbox",
+  Analytics = "analytics",
+  Contacts = "contacts",
+  Campaigns = "campaigns",
+  Flows = "flows",
+  Chatbots = "chatbots",
+  Templates = "templates",
+  Automation = "automation",
+  Loyalty = "loyalty",
+  WebForms = "web_forms",
+  Tickets = "tickets",
+  QrStudio = "qr_studio",
+  AiChatbot = "ai_chatbot",
+  AppsServices = "apps_services",
+  DigitalMenu = "digital_menu",
+  Settings = "settings",
+}
+
 export enum PaymentType {
   BASE = "BASE",
   ADDON = "ADDON",

@@ -7,7 +7,6 @@ import {
   Box,
   Checkbox,
   Group,
-  Select as MantineSelect,
   NavLink,
   Paper,
   Radio,
@@ -16,23 +15,14 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import {
-  IconCheck,
-  IconDownload,
-  IconInfoCircle,
-  IconX,
-} from "@tabler/icons-react";
-import { ChevronDownIcon, User } from "lucide-react";
+import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
+import { User } from "lucide-react";
 import { useExtracted } from "next-intl";
-import PhoneInputWithCountrySelect, {
-  isValidPhoneNumber,
-} from "react-phone-number-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
 import { ContactGroupType } from "@/types/enums";
-import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
 import {
-  useContactLabels,
   useCreateContactMutation,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
@@ -46,18 +36,9 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import {
-  ContainedFileInput,
-  ContainedMultiSelect,
-} from "../input/ContainedInput/ContainedInput";
-import PhoneInputWithCountry from "../input/PhoneInputWithCountry";
-import { Button } from "../ui/button";
-import { Calendar } from "../ui/calendar";
+import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
 import { Card } from "../ui/card";
-import { Field, FieldError, FieldLabel } from "../ui/field";
-import { Input } from "../ui/input";
 import { MultiSelect } from "../ui/multi-select";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import {
   Select,
   SelectContent,
@@ -66,12 +47,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Skeleton } from "../ui/skeleton";
-import { Textarea } from "../ui/textarea";
-import AssignUser from "../whatsapp/inbox/chatdisplay/chatdisplayHeader/AssignUser";
-import styles from "./contact.module.css";
 import ContactForm from "./ContactForm";
-import ContactGroupSelector from "./ContactGroupSelector";
-import { LifecycleSelector } from "./LifecycleSelector";
 
 export interface ImportContact {
   name: string;
@@ -184,7 +160,7 @@ const CreateContactModal = ({
         },
       });
     } else {
-      let contactData = {
+      const contactData = {
         ...form.getValues(),
         dob: form.getValues()?.dob
           ? new Date(form.getValues().dob).toISOString()
@@ -433,7 +409,13 @@ export const UserSelector = ({
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className={`${className}`}>
-        <User className="w-4 h-4 mr-2 text-[#1873E8]" />
+        <div
+          className={
+            "rounded-md flex items-center justify-center shrink-0 size-7 bg-muted"
+          }
+        >
+          <User className="size-4 text-muted-foreground" />
+        </div>
         <span className="text-sm ">
           <SelectValue placeholder="Select staff" />
         </span>

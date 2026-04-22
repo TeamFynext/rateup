@@ -37,7 +37,7 @@ interface FormValues {
   type: string;
   getLocation: boolean;
 }
-let Languages = new Set([
+const Languages = new Set([
   "English",
   "മലയാളം",
   "Deutsch",
@@ -345,7 +345,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
     console.log(errors);
   }, [errors]);
 
-  let languages = Array.from(Languages);
+  const languages = Array.from(Languages);
   const [search, setSearch] = useState("");
   const [data, setData] = useState(languages);
 

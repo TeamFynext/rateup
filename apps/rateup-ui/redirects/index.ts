@@ -1,4 +1,6 @@
 import blogRedirects from "./redirects-blog";
 import pageRedirects from "./redirects-pages";
 
-export default [...blogRedirects, ...pageRedirects];
+const redirects = [...blogRedirects, ...pageRedirects];
+
+export default redirects;

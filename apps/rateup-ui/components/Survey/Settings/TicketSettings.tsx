@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { Box, Flex, Group, Select, Stack } from "@mantine/core";
+import { Box, Group, Select, Stack } from "@mantine/core";
 import { useExtracted } from "next-intl";
 
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";

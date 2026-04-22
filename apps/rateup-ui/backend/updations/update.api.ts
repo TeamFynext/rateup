@@ -13,3 +13,9 @@ export async function migrateWaTemplateToWhatsappPhoneId() {
     },
   );
 }
+
+export async function syncTeamFeatures() {
+  return await axiosClient.put(`${baseUrl}/sync-team-features`, null, {
+    timeout: 60000,
+  });
+}

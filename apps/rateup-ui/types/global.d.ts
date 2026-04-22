@@ -8,7 +8,6 @@ import {
   LogicAction,
   LogicCondition,
   LogicConditionComponentLevel,
-  LoyaltyCampaignType,
   MenuItemPriceType,
   NPSWeightage,
   PageType,
@@ -21,7 +20,6 @@ import {
   SurveyVariableType,
   WaAssignedChatPermission,
   WaAutomatedReplyMatchType,
-  WaAutomatedReplyResponseType,
   WaFlowFormElementType,
   WaFlowLayoutType,
   WaFlowStatus,
@@ -774,7 +772,7 @@ declare global {
     createdAt: number;
     active: boolean;
     liveMode: boolean;
-    priceId: String;
+    priceId: string;
     currency: string;
     amount: number;
     interval: string;

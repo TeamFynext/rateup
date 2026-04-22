@@ -100,7 +100,7 @@ const Flow = () => {
 
   useEffect(() => {
     if (survey) {
-      let options = survey?.teams?.map((team) => ({
+      const options = survey?.teams?.map((team) => ({
         value: team?.id,
         label: team?.name,
       }));

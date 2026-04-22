@@ -1,6 +1,5 @@
 "use client";
 
-import { Clock } from "lucide-react";
 import { useExtracted } from "next-intl";
 
 import TimeSinceText from "../TimeSinceText";

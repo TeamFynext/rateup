@@ -1,9 +1,0 @@
-.create-qr-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.create-qr-form input {
-  border-radius: 0.625rem;
-}

@@ -9,16 +9,7 @@ import React, {
 } from "react";
 import { useSearchParams } from "next/navigation";
 
-import {
-  ActionIcon,
-  Card,
-  Divider,
-  Group,
-  Indicator,
-  Paper,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Card, Divider, Group, Indicator, Text } from "@mantine/core";
 import {
   IconForbid2,
   IconMessageCheck,
@@ -32,7 +23,6 @@ import { useExtracted } from "next-intl";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
-import { saveContactsToDB } from "@/app/dashboard/inbox/idb";
 import useContactStore, {
   makeFilterKey,
   useChatContactCountStore,
@@ -63,10 +53,7 @@ import { useUser } from "@/context/UserContext";
 import WhatsAppInboxLoader from "../loader";
 import AddUnknownContactModal from "./addUnknownContactModal";
 import BulkAssignUser from "./AssignUser";
-import WaInboxChatFilter, {
-  ChatFilter,
-  useChatFilterStore,
-} from "./chatFilter";
+import { ChatFilter, useChatFilterStore } from "./chatFilter";
 import WaInboxChatSelectCard from "./chatselectCard";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
 import ChatselectPanelHeader from "./ChatselectPanelHeader";

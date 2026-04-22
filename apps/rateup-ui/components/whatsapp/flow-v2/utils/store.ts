@@ -185,7 +185,7 @@ const useFlowStoreV3 = create<StoreState>()(
           },
         };
         state.screens.push(newScreen);
-        let screenIndex = state.screens.length - 1;
+        const screenIndex = state.screens.length - 1;
         const nextScreen = state.screens[screenIndex];
         state.screens.forEach((s, index) => {
           s.terminal = index === state.screens.length - 1;
@@ -338,7 +338,7 @@ const useFlowStoreV3 = create<StoreState>()(
 
     addComponentToScreen: (component) =>
       set((state) => {
-        let { currentScreenId } = state;
+        const { currentScreenId } = state;
         const screen = state.screens.find(
           (screen) => screen.id === currentScreenId,
         );
@@ -359,7 +359,7 @@ const useFlowStoreV3 = create<StoreState>()(
 
     deleteComponentFromScreen: (id) =>
       set((state) => {
-        let { currentScreenId } = state;
+        const { currentScreenId } = state;
         const screen = state.screens.find(
           (screen) => screen.id === currentScreenId,
         );
@@ -376,7 +376,7 @@ const useFlowStoreV3 = create<StoreState>()(
       }),
     updateComponentInScreen: (id, updatedComponent) =>
       set((state) => {
-        let { currentScreenId } = state;
+        const { currentScreenId } = state;
         const screen = state.screens.find(
           (screen) => screen.id === currentScreenId,
         );

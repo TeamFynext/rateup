@@ -8,6 +8,8 @@ import { getSinglePost } from "@/lib/posts";
 import Layout from "@/components/blog/Layout";
 import SharePopover from "@/components/blog/ShareBlog";
 
+export const revalidate = 60;
+
 type Props = {
   params: Promise<{ slug: string }>;
 };

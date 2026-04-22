@@ -6,12 +6,9 @@ import { Rating, Text, useMantineTheme } from "@mantine/core";
 import {
   IconMoodAngry,
   IconMoodCrazyHappy,
-  IconMoodCry,
   IconMoodEmpty,
   IconMoodHappy,
   IconMoodSad,
-  IconMoodSmile,
-  IconMoodSmileBeam,
 } from "@tabler/icons-react";
 import { useAnimate } from "motion/react";
 

@@ -2,7 +2,6 @@
 
 import { memo, useMemo } from "react";
 
-import { Text } from "@mantine/core";
 import { IconMessages } from "@tabler/icons-react";
 import { Handle, NodeProps, Position } from "@xyflow/react";
 

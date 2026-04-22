@@ -8,7 +8,6 @@ import {
   Loader,
   LoadingOverlay,
   luminance,
-  rem,
   Stack,
   Text,
   useMantineTheme,

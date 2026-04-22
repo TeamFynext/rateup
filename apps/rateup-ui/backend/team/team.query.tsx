@@ -1,6 +1,11 @@
 import { useRouter } from "next/navigation";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { getOrgIdRole, getUserID } from "../../utils/userInfo";
@@ -13,11 +18,13 @@ import {
   getNotTeamMembers,
   getSurveyLanguagesFromTeam,
   getTeamById,
+  getTeamFeatures,
   getTeamMembersFromInvitation,
   getTeamsByUser,
   IEditTeam,
   removeUserFromTeam,
   resendInviteTeamMember,
+  updateTeamFeatures,
 } from "./team.api";
 
 export function useTeamsByUser() {
@@ -132,6 +139,7 @@ async function handleCreateTeam(values) {
     orgId,
     userId,
     whatsappAccessToken: values.whatsappAccessToken,
+    features: values.features,
   };
   return createTeam(data);
 }
@@ -218,4 +226,50 @@ export function useGetTeamById(teamId: string) {
     queryFn: () => getTeamById(teamId),
     enabled: !!teamId,
   });
+}
+
+export function useTeamFeatures(teamId: string) {
+  return useQuery({
+    queryKey: ["teamFeatures", teamId],
+    queryFn: () => getTeamFeatures(teamId),
+    enabled: !!teamId,
+  });
+}
+
+export function useUpdateTeamFeatures(teamId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (features: string[]) => updateTeamFeatures(teamId, features),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamFeatures", teamId] });
+      toast.success("Feature access updated successfully.");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to update feature access.");
+    },
+  });
+}
+
+/**
+ * Returns the union of all enabled features across the given teamIds.
+ * Pass an empty array (or skip) to get an empty Set.
+ */
+export function useMyAllowedFeatures(teamIds: string[]): Set<string> {
+  const results = useQueries({
+    queries: teamIds.map((id) => ({
+      queryKey: ["teamFeatures", id],
+      queryFn: () => getTeamFeatures(id),
+      enabled: !!id,
+    })),
+  });
+
+  const union = new Set<string>();
+  for (const result of results) {
+    if (result.data) {
+      for (const f of result.data.features) {
+        union.add(f.feature);
+      }
+    }
+  }
+  return union;
 }

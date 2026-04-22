@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 
 import {
-  Center,
   Divider,
   Group,
   Loader,
-  ScrollAreaAutosize,
   Select,
   SelectProps,
   Stack,
@@ -15,7 +13,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { IconCheck } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
@@ -203,7 +201,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
 
     try {
       setIsSwitchStateSaving(true);
-      let data = {
+      const data = {
         reviewPageOptions: state,
         reviewPagePlatform: reviewPagePlatformDDState,
       };

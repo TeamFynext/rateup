@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { Flex, Image, Stack, useMantineColorScheme } from "@mantine/core";
+import { Stack, useMantineColorScheme } from "@mantine/core";
 
-import { useCreateUserMutation } from "../../backend/user/user.query";
+import {
+  useCreateAppleUserMutation,
+  useCreateUserMutation,
+} from "../../backend/user/user.query";
 import {
   useConsumeVerificationCode,
   useEmailSend,
@@ -52,6 +54,7 @@ const AuthForm = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const createUserMutation = useCreateUserMutation(setIsLoading);
+  const createAppleUserMutation = useCreateAppleUserMutation(setIsLoading);
 
   const isLogin = mode === AuthMode.LOGIN;
 
@@ -75,6 +78,7 @@ const AuthForm = ({
           <AuthTypeSignupForm
             setIsLoading={setIsLoading}
             createUserMutation={createUserMutation}
+            createAppleUserMutation={createAppleUserMutation}
             isLoading={isLoading}
             authType={authType}
           />

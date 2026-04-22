@@ -4,7 +4,6 @@ import { useExtracted } from "next-intl";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { useGetResolvedConversationStats } from "@/backend/conversation/conversation.query";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,

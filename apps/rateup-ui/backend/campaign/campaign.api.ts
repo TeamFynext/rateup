@@ -4,32 +4,32 @@ import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { axiosClient } from "../apiClient";
 
 export const getCampaigns = async (type) => {
-  let res = await axiosClient.get(`/campaign/?type=${type}`);
+  const res = await axiosClient.get(`/campaign/?type=${type}`);
   return res;
 };
 
 export const getCampaignsByTeam = async (teamId: string) => {
-  let res = await axiosClient.get(`/campaign?teamId=${teamId}`);
+  const res = await axiosClient.get(`/campaign?teamId=${teamId}`);
   return res;
 };
 
 export const createCampaign = async (data) => {
-  let res = await axiosClient.post("/campaign/", data);
+  const res = await axiosClient.post("/campaign/", data);
   return res;
 };
 
 export const getCampaignById = async (campaignId) => {
-  let res = await axiosClient.get(`/campaign?campaignId=${campaignId}`);
+  const res = await axiosClient.get(`/campaign?campaignId=${campaignId}`);
   return res?.data;
 };
 
 export const updateCampaign = async ({ data, campaignId }) => {
-  let res = await axiosClient.put(`/campaign/${campaignId}`, data);
+  const res = await axiosClient.put(`/campaign/${campaignId}`, data);
   return res;
 };
 
 export const deleteCampaign = async (campaignId) => {
-  let res = await axiosClient.delete(`/campaign/${campaignId}`);
+  const res = await axiosClient.delete(`/campaign/${campaignId}`);
   return res;
 };
 
@@ -76,7 +76,7 @@ export const campaignResponseDownloadById = async ({
     },
   );
   const blob = new Blob([response.data], {
-    type: response.headers["content-type"],
+    type: response.headers["content-type"] as string,
   });
 
   return saveAs(blob, response?.headers?.filename ?? "file.xlsx");

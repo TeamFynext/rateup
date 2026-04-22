@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   Box,
   Center,
-  Flex,
   ScrollArea,
   Stack,
   useMantineColorScheme,
@@ -14,7 +13,6 @@ import {
 
 import { rateupLogoUrl } from "../HomePage/constants";
 import styles from "./login-signup-layout.module.css";
-import LoginSignupDecorativeImage from "./LoginSignupDecorativeImage";
 
 function LoginSignupLayout({ children }) {
   const { colorScheme } = useMantineColorScheme();

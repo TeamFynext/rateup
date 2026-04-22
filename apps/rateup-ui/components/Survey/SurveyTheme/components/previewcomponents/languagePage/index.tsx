@@ -10,7 +10,6 @@ import {
   Radio,
   ScrollAreaAutosize,
   Stack,
-  Tooltip,
 } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 import classNames from "classnames/bind";
@@ -108,7 +107,7 @@ function LanguagePage({ survey }) {
 
   const handleSaveTitleSubtitleStartTextSave = useCallback(
     async (value, name) => {
-      let data = {};
+      const data = {};
       switch (name) {
         case "title": {
           data["titleText"] = value;

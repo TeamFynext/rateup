@@ -19,11 +19,11 @@ export function reorder<T extends Reorderable>(
   from: number,
   to: number,
 ): Array<T> {
-  let newArray = [...array];
+  const newArray = [...array];
   const item = newArray.splice(from, 1)[0];
   newArray.splice(to, 0, item);
 
-  let reOrderedList = reOrderPages(newArray);
+  const reOrderedList = reOrderPages(newArray);
 
   return reOrderedList;
 }
@@ -33,7 +33,7 @@ export function reOrderPages<T extends Reorderable>(pages: Array<T>) {
     return pages;
   }
 
-  let newArray = [];
+  const newArray = [];
   const welcomeItem = pages.find((item) => item.type === "Welcome");
   const languageItem = pages.find((item) => item.type === "Language");
   const thankYouItem = pages.find((item) => item.type === "ThankYou");
@@ -138,7 +138,7 @@ export function validateAllLanguagesArePopulated(
   languages: Array<string>,
   keyToValidate: Array<"title" | "description" | "choices">,
 ) {
-  let missingLangs = [];
+  const missingLangs = [];
 
   keyToValidate.forEach((key) => {
     if (key === "choices") {

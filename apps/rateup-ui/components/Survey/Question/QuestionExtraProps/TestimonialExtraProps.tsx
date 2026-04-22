@@ -69,7 +69,7 @@ const TestimonialExtraProps = ({
   ];
 
   useEffect(() => {
-    let data = {};
+    const data = {};
     if (!features?.rating) data["ratingQn"] = "";
     if (!features?.jobTitle) data["jobTitleQn"] = "";
     if (!features?.photo) data["photoQn"] = "";

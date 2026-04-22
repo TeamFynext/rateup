@@ -65,7 +65,7 @@ export default function MenuById({ categories: initialCategories }) {
   const searchParams = useSearchParams();
   const tab = (searchParams.get("tab") as TabEnum) || TabEnum.Menu;
 
-  let activeTab = tab?.toString() as TabEnum;
+  const activeTab = tab?.toString() as TabEnum;
 
   const {
     isLoading: isLoadingMenu,
@@ -78,7 +78,7 @@ export default function MenuById({ categories: initialCategories }) {
     isError,
     data: categories,
   } = useCategories(menuId, initialCategories);
-  let filteredCategory = categories;
+  const filteredCategory = categories;
 
   useEffect(() => {
     update({ menuId: menuLandingData?.menu?.name });
@@ -87,7 +87,7 @@ export default function MenuById({ categories: initialCategories }) {
   if ((!categories && (isLoading || isError)) || isLoadingMenu) {
     return <RateupLoader />;
   }
-  let menu: any = menuLandingData?.menu;
+  const menu: any = menuLandingData?.menu;
   if (menuLandingData?.surveyTeamMapId) {
     menu.surveyTeamMapId = menuLandingData?.surveyTeamMapId;
   }

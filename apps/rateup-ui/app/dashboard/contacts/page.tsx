@@ -2,9 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { TextInput } from "@mantine/core";
 import { useDebouncedState } from "@mantine/hooks";
-import { IconSearch } from "@tabler/icons-react";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import { useExtracted } from "next-intl";
 
@@ -13,15 +11,11 @@ import ErrorComponent from "@/components/404/ErrorComponent";
 import ContactMenu from "@/components/Contacts/ContactMenu";
 import { CONTACT_SORT, contactColumn } from "@/components/Contacts/utils/utils";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import ContactTable from "@/components/Table/ContactTable";
 import { DataTable } from "@/components/Table/data-table";
-import { Input } from "@/components/ui/input";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { useUser } from "@/context/UserContext";
 import { PAGE_SIZE } from "@/utils/constants";
 
-import { columns } from "./components/columns";
 import { DataTableToolbar } from "./components/data-table-toolbar";
 import { useContactTableStore } from "./store/contact-table-store";
 

@@ -1,7 +1,6 @@
 import { PageType, QuestionType } from "../../../types/enums";
 import BackgroundStyles from "./components/BackgroundStyles";
 import ButtonStyles from "./components/ButtonStyles";
-import DescStyles from "./components/DescStyles";
 import HeaderStyles from "./components/HeaderStyles";
 import InputStyles from "./components/InputStyles";
 import LogoStyles from "./components/LogoStyles";

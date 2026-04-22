@@ -5,12 +5,7 @@ import React, { useEffect, useMemo } from "react";
 
 import { ActionIcon, Box, Divider, Flex, Group, Tooltip } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import {
-  IconCheck,
-  IconPlus,
-  IconRefresh,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import {
   ColumnDef,
   getCoreRowModel,
@@ -23,7 +18,6 @@ import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { ContactGroupType } from "@/types/enums";
-import { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 
 import { useRemoveMulitpleGroupParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 import {
@@ -37,7 +31,6 @@ import {
 import { docsPath, PAGE_SIZE } from "../../utils/constants";
 import InfoButton from "../Button/InfoButton";
 import { RateupButtonBlue } from "../Button/RateupButtons";
-import RefreshButton from "../Button/RefreshButton";
 import OpenCreateMenu from "../Contacts/OpenCreateMenu";
 import {
   DETAIL_BTN,

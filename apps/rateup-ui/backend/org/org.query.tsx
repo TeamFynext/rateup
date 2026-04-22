@@ -1,6 +1,4 @@
-import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import PhoneInputWithCountrySelect from "react-phone-number-input";
 import { toast } from "sonner";
 
 import {

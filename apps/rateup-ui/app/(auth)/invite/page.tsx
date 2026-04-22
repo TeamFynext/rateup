@@ -16,7 +16,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { IconArrowAutofitLeft, IconCheck } from "@tabler/icons-react";
+import { IconArrowAutofitLeft } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
@@ -40,7 +40,7 @@ const Invite = () => {
   else if (type === "org") title = "Organization";
 
   const acceptInvite = async () => {
-    let inviteToken = token.toString();
+    const inviteToken = token.toString();
     await signOut();
     return completeInvite(inviteToken);
   };

@@ -1,9 +1,7 @@
 import { useRouter } from "next/navigation";
 
-import { IconCheck, IconX } from "@tabler/icons-react";
 import {
   keepPreviousData,
-  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -13,6 +11,7 @@ import { toast } from "sonner";
 import {
   changeUserPassword,
   checkEmailExist,
+  createAppleUser,
   createGoogleUser,
   fetchUserInfo,
   fetchUserProfile,
@@ -67,7 +66,32 @@ export function useCreateUserMutation(setIsLoading) {
       setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      router.push("/dashboard?msg=welcome");
+      router.push("/dashboard");
+    },
+    onError: (error) => {
+      console.error("Error completing signup:", error.message);
+      toast.error(error?.message, {
+        id: "load-data",
+      });
+
+      setIsLoading(false);
+    },
+  });
+}
+
+export function useCreateAppleUserMutation(setIsLoading) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values: ICreateGoogleUser) => handleCreateAppleUser(values),
+    onSuccess: () => {
+      toast.success("Sign up process is Complete!", {
+        id: "load-data",
+      });
+      setIsLoading(false);
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      router.push("/dashboard");
     },
     onError: (error) => {
       console.error("Error completing signup:", error.message);
@@ -82,6 +106,10 @@ export function useCreateUserMutation(setIsLoading) {
 
 async function handleCreateUser(values) {
   return createGoogleUser(values);
+}
+
+async function handleCreateAppleUser(values) {
+  return createAppleUser(values);
 }
 
 export function useChangePasswordMutation() {

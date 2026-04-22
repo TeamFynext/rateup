@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import {
   Button,
@@ -15,7 +15,6 @@ import {
   Title,
   useMantineTheme,
 } from "@mantine/core";
-import { IconInfoCircle, IconX } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
@@ -25,7 +24,6 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
 
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
-import { useSurvey } from "../../../backend/surveys/surveys.query";
 import {
   QuestionType as Q,
   QuestionType,

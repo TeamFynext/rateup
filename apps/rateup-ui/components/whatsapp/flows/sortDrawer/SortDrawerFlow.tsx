@@ -67,12 +67,12 @@ const SortDrawerFlow = ({
         const indexB = state.findIndex((item) => item.id === b.id);
         return indexA - indexB;
       });
-      let cloneScreens = JSON.parse(JSON.stringify(sortedScreens));
+      const cloneScreens = JSON.parse(JSON.stringify(sortedScreens));
       for (const screenIndex in cloneScreens) {
-        let footer = cloneScreens[screenIndex].layout.children.find(
+        const footer = cloneScreens[screenIndex].layout.children.find(
           (child) => child.type === "Footer",
         );
-        let nextScreenId = cloneScreens?.[parseInt(screenIndex) + 1]?.id;
+        const nextScreenId = cloneScreens?.[parseInt(screenIndex) + 1]?.id;
         cloneScreens[screenIndex].terminal = nextScreenId ? undefined : true;
         footer["on-click-action"] = !!nextScreenId
           ? {

@@ -19,7 +19,7 @@ const WOPForm = ({
   const [price, setPrice] = useState("");
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
-  let wopData = wop
+  const wopData = wop
     ? wop?.segments?.length === 0
       ? DEFAULT_WOP
       : wop

@@ -2,14 +2,12 @@
 
 import { useCallback } from "react";
 
-import { Button, FileButton, Group, Image } from "@mantine/core";
+import { Button, FileButton, Group } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconBrandUnsplash, IconUpload } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 
 import { mmImageCropModalClassnames } from "../../../../utils/constants";
-import { getFileUrlFromKey } from "../../../../utils/file-upload/upload";
-import imageCropModalStyles from "../ImageCropModal/ImageCropModal.module.css";
 import commonStyles from "../mmCommonStyles.module.css";
 import styles from "./ImageSourceSelectorModal.module.css";
 

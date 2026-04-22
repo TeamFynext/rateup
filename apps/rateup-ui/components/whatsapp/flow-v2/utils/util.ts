@@ -381,21 +381,21 @@ type InitialValues = {
 
 export const getInitialValues = (type: QuestionType2) => {
   let initialValues: InitialValues = {};
-  let validation = getValidationSchema(type);
-  let shape: any = validation?.shape;
-  let LABEL_MAX = shape?.label?.def?.checks?.find(
+  const validation = getValidationSchema(type);
+  const shape: any = validation?.shape;
+  const LABEL_MAX = shape?.label?.def?.checks?.find(
     (data) => data?._zod?.def?.check === "max_length",
   )?._zod?.def?.maximum;
 
-  let DESC_MAX = shape?.description?.def?.checks?.find(
+  const DESC_MAX = shape?.description?.def?.checks?.find(
     (data) => data?._zod?.def?.check === "max_length",
   )?._zod?.def?.maximum;
-  let TEXT_MAX = shape?.text?.def?.checks?.find(
+  const TEXT_MAX = shape?.text?.def?.checks?.find(
     (data) => data?._zod?.def?.check === "max_length",
   )?._zod?.def?.maximum;
 
-  let TITLE_MAX = 4090;
-  let HELPER_TEXT_MAX = 80;
+  const TITLE_MAX = 4090;
+  const HELPER_TEXT_MAX = 80;
   const generateId = crypto.randomUUID().replace(/-/g, "_");
   switch (type) {
     case QuestionType2.TextInput:

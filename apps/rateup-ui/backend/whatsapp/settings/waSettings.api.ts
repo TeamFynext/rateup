@@ -5,7 +5,6 @@ import {
   WhatsappSettingsStatus,
 } from "../../../types/enums";
 import { axiosClient } from "../../apiClient";
-import { GetLabelsRes } from "../../lifecycle/lifecycle.types";
 
 const SettingsUrl = `${WHATSAPP_URL}/settings`;
 const authUrl = `${WHATSAPP_URL}/auth`;
@@ -114,10 +113,10 @@ export const getWaLogs = async (
   },
   columnFilters: { id: string; value: string }[],
 ) => {
-  let filter = columnFilters
+  const filter = columnFilters
     .map((data) => `&${data.id}=${data.value}`)
     .join("&");
-  let desc = sort.desc ? "desc" : "asc";
+  const desc = sort.desc ? "desc" : "asc";
   const url = `${SettingsUrl}/logs?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&desc=${desc}${filter}`;
 
   const res = await axiosClient.get(url);

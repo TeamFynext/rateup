@@ -63,9 +63,11 @@ const shouldShowGoogleReview = (question, userResponse) => {
 };
 
 export const checkGoogleReviewForQuestion = (questions, responses) => {
-  for (let question of questions) {
+  for (const question of questions) {
     if (question?.reviewPageOptions) {
-      let userResponse = responses.find((r) => r?.questionId === question?.id);
+      const userResponse = responses.find(
+        (r) => r?.questionId === question?.id,
+      );
       if (userResponse && shouldShowGoogleReview(question, userResponse)) {
         return true;
       }
@@ -120,9 +122,11 @@ export const checkRaiseTicketIssueQuestion = (
   responses,
   selectedLanguage,
 ) => {
-  for (let question of questions) {
+  for (const question of questions) {
     if (question?.ticketIssue) {
-      let userResponse = responses.find((r) => r?.questionId === question?.id);
+      const userResponse = responses.find(
+        (r) => r?.questionId === question?.id,
+      );
       if (
         userResponse &&
         shouldRaiseTicket(question, userResponse, selectedLanguage)
@@ -390,7 +394,7 @@ function getValueFromVariable(
   surveyId,
 ) {
   const { data: variables } = useGetSurveyVariables(surveyId, true);
-  let variableObj =
+  const variableObj =
     variables && variables?.find((val) => val?.name === variable);
   if (variableObj) {
     if (variableObj.type === SurveyVariableType.CUSTOM)

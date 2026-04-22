@@ -2,7 +2,7 @@
 
 //TODO: refactor drag and drop
 import { useEffect } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import {
   ActionIcon,
@@ -83,7 +83,7 @@ export function QuestionsSideBar({
   useEffect(() => {
     handlers.setState(questions);
 
-    let newOrder = reOrderPages(questions);
+    const newOrder = reOrderPages(questions);
     surveyId && questionsReorderMutation.mutate(newOrder); //TODO-SE optimize: do api call only when new qn count changes
   }, [questions]);
 

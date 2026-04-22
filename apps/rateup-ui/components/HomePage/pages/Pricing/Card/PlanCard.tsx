@@ -58,7 +58,7 @@ const PlanCard = ({
   }, []);
 
   let marginTop = "xl";
-  let title = `Subscribe Now`;
+  const title = `Subscribe Now`;
 
   if (isPopular) {
     marginTop = "-12px";

@@ -2,14 +2,13 @@
 
 import { useCallback } from "react";
 
-import { Box, Flex, Slider, Stack } from "@mantine/core";
+import { Box, Flex, Stack } from "@mantine/core";
 
 import { COORDINATESX, COORDINATESY } from "../../../../utils/constants";
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
 import CustomColorPicker from "../../ShareSurvey/components/CustomColorPicker";
 import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
 import { ThemeTabEnum } from "../SurveyTheme.enums";
-import { Button as ButtonType } from "../surveyTheme.types";
 import {
   useSelectedPageTab,
   useSurveyThemeContextValue,

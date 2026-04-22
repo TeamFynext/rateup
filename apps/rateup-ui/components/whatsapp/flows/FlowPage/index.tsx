@@ -107,7 +107,7 @@ function FlowPage() {
       updateFlowJson((draft) => {
         if (!flowJson.screens && questions?.length > 2) {
           {
-            let id = getUniqueRandomAlphaId(6, []);
+            const id = getUniqueRandomAlphaId(6, []);
             draft.screens = [
               getNewScreenObj({
                 screenId: id,
@@ -197,7 +197,7 @@ function FlowPage() {
         setSelectedLanguage("");
       }
       setdefaultLanguage(survey?.languages?.[0]);
-      let options = survey?.teams?.map((team) => ({
+      const options = survey?.teams?.map((team) => ({
         value: team?.id,
         label: team?.name,
       }));

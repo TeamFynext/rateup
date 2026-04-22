@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { Group, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import { IconLink } from "@tabler/icons-react";
 import { NodeProps } from "@xyflow/react";
 

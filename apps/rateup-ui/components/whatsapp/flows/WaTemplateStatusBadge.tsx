@@ -1,6 +1,6 @@
 import { Badge } from "@mantine/core";
 
-import { WaFlowStatus, WaTemplateStatus } from "../../../types/enums";
+import { WaFlowStatus } from "../../../types/enums";
 
 interface WaFlowStatusBadgleProps {
   status: WaFlowStatus;

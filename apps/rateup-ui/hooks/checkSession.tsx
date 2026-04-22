@@ -43,7 +43,7 @@ export const useCheckSession = () => {
   const checkSession = useCallback(async () => {
     try {
       if (!pathname) return;
-      if (auth === "google") return;
+      if (auth === "google" || auth === "apple") return;
       const doesSessionExist = await Session.doesSessionExist();
       if (["/login", "/signup"].includes(pathname) && doesSessionExist) {
         router.push(redirectTo || "/dashboard");

@@ -50,7 +50,6 @@ import { CreativeAvatar } from "@/components/ui/creative-avatar";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -323,7 +322,7 @@ const ChatHeaderMenu = ({ contact }) => {
     );
   }
   function handleCloseChat(status) {
-    let message = `marked this chat as ${getStatusLabel(status)}`;
+    const message = `marked this chat as ${getStatusLabel(status)}`;
     const id = generateInternalMessageId();
     const newMessage = {
       id: id,

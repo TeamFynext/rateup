@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useContext } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import {
   ActionIcon,
@@ -21,7 +21,6 @@ import { useExtracted } from "next-intl";
 
 import { PageType } from "@/types/enums";
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
-import { GoogleIcon } from "@/components/Button/GoogleIcon";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
 import { extractText } from "@/utils";

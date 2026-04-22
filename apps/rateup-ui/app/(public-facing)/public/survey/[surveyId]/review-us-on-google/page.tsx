@@ -10,7 +10,7 @@ import GoogleReview from "../../../../../../components/Survey/TakeSurvey/GoogleR
 export async function ReviewUsOnGoogle(props) {
   const { surveyId } = await props.params;
 
-  let propsToPass: any = {};
+  const propsToPass: any = {};
   const { orgLogo } = await getPublicSurvey(surveyId);
 
   const [googleLink, reviews] = await Promise.all([

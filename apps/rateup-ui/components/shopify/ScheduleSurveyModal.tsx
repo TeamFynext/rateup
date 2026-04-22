@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   IconAlertCircle,
   IconBolt,
   IconClock,
   IconMessage,
-  IconPlus,
   IconRefresh,
   IconSettings,
 } from "@tabler/icons-react";
@@ -18,11 +17,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 
-import {
-  IntegratedApps,
-  LoyaltyApiFeature,
-  ShopifyEvents,
-} from "@/types/enums";
+import { IntegratedApps, ShopifyEvents } from "@/types/enums";
 import { ShopifyIntegration } from "@/types/global";
 import useTemplatesAvailableForTeam from "@/hooks/team";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
@@ -31,9 +26,7 @@ import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 
 import { shopifyEventData } from "../../utils/constants";
 import { TeamSelector } from "../input/TeamSelector";
-import WaTemplateSelector from "../input/WaTemplateSelector";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Checkbox } from "../ui/checkbox";
@@ -55,7 +48,6 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
-import { ScrollArea } from "../ui/scroll-area";
 import {
   Select,
   SelectContent,

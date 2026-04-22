@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useDebouncedState, useDisclosure } from "@mantine/hooks";
+import { useDebouncedState } from "@mantine/hooks";
 import { Table } from "@tanstack/react-table";
 import { Plus, Search } from "lucide-react";
 import { useExtracted } from "next-intl";

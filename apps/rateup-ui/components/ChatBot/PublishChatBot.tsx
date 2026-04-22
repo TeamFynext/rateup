@@ -4,12 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Badge, Flex, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconCheck,
-  IconChevronDown,
-  IconChevronUp,
-  IconX,
-} from "@tabler/icons-react";
+import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";

@@ -114,7 +114,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
     );
   };
 
-  let timeLeft =
+  const timeLeft =
     isOtpSend && !timerComplete ? (
       <CountDownTimer initialTime={120} onComplete={onTimerComplete} />
     ) : null;

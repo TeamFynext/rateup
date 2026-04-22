@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import { Box, Button, Loader, Text, TextInput } from "@mantine/core";
 import { modals } from "@mantine/modals";

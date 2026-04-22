@@ -75,7 +75,7 @@ function NextPrev({
       response &&
       validationSupportedTypes.includes(selectedQ?.type as QuestionType)
     ) {
-      let error = validateQuestion(selectedQ, response, selectedLanguage);
+      const error = validateQuestion(selectedQ, response, selectedLanguage);
       if (error?.length > 0) {
         setIsErrorInput(true);
         setErrorMsg(error?.length ? error : null);

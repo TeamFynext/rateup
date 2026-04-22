@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-import { Box, Button, Modal, MultiSelect, TextInput } from "@mantine/core";
+import { Box, Button, Modal, MultiSelect } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useExtracted } from "next-intl";
@@ -16,7 +16,6 @@ import {
   ContainedMultiSelect,
   ContainedTextField,
 } from "../../../input/ContainedInput/ContainedInput";
-import { TeamSelector } from "../../../input/TeamSelector";
 import { flowsCategories } from "../constants";
 import styles from "./CreateFlowModal.module.css";
 

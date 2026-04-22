@@ -8,7 +8,6 @@ import {
   Group,
   Menu,
   Modal,
-  NativeSelect,
   Paper,
   Stack,
   Textarea,

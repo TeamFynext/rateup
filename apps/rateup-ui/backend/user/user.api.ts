@@ -53,7 +53,7 @@ const PUBLICUSER_URL = "/public/user/";
 
 export async function fetchUserInfo() {
   try {
-    let response: IUserInfoApiResponse = (await axiosClient.get("/user/info"))
+    const response: IUserInfoApiResponse = (await axiosClient.get("/user/info"))
       .data;
     return response as IUserInfoApiResponse;
   } catch (e) {
@@ -91,6 +91,14 @@ export const updateUserProfilePhoto = (data: IUpdateProfilePhoto) =>
 export const createGoogleUser = (data) => {
   return axiosClient({
     url: `/user/complete-google-signup`,
+    method: "POST",
+    data: data,
+  });
+};
+
+export const createAppleUser = (data) => {
+  return axiosClient({
+    url: `/user/complete-apple-signup`,
     method: "POST",
     data: data,
   });

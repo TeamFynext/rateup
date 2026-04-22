@@ -1,18 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { Loader, Stack, Text } from "@mantine/core";
-import {
-  CheckCircle,
-  ClipboardList,
-  Filter,
-  Layers,
-  RotateCcw,
-  Tag,
-  User,
-} from "lucide-react";
+import { Loader, Text } from "@mantine/core";
+import { CheckCircle, Filter, RotateCcw } from "lucide-react";
 import { useExtracted } from "next-intl";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -22,7 +13,6 @@ import { useTeamsByUser } from "@/backend/team/team.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { WaMessageClosedStatus } from "@/utils/constants";
 
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";

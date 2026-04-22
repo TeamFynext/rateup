@@ -5,16 +5,13 @@ import { useCallback, useRef } from "react";
 import {
   ActionIcon,
   Button,
-  Divider,
   FileButton,
   Group,
   NumberInput,
   Stack,
-  Text,
-  ThemeIcon,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconStar, IconTrash, IconUpload } from "@tabler/icons-react";
+import { IconTrash, IconUpload } from "@tabler/icons-react";
 
 import { mmImageCropModalClassnames } from "../../../../utils/constants";
 import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import {
   Button,
@@ -16,8 +16,6 @@ import {
   Title,
   useMantineTheme,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconInfoCircle, IconX } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 

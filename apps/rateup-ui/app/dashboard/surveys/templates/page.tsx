@@ -3,15 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  Box,
-  Group,
-  Loader,
-  Tooltip as MantineTooltip,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Box, Group, Loader, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";

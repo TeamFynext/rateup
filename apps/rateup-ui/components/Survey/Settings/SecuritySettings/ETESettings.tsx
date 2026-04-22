@@ -9,7 +9,6 @@ import {
   Box,
   Group,
   Stack,
-  Switch,
   Text,
   Tooltip,
 } from "@mantine/core";
@@ -25,7 +24,6 @@ import { useEditSurveyMutation } from "../../../../backend/surveys/surveys.query
 import { useUser } from "../../../../context/UserContext";
 import ConfirmationModal from "../../../Modal/ConfirmationModal";
 import { updateEndToEndEncryption } from "../updateSettings";
-import styles from "./SecuritySettings.module.css";
 
 //end to end encryption settings module
 interface ETESettingsInterface {

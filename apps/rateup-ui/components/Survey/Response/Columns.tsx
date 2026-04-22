@@ -387,7 +387,7 @@ export function ActionMenu({
               className={ticketExist ? "text-orange-500" : "text-blue-700"}
               onClick={() => {
                 if (ticketExist) {
-                  let url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                  const url = `/dashboard/tickets/${ticketData[0]?.id}`;
                   window.open(url, "_blank");
                 } else {
                   setSelectedResponseId(resId);

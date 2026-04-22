@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from "react";
 
-import { Box, Button, ColorPicker, Flex, Popover, Text } from "@mantine/core";
-import { useEyeDropper, useMediaQuery } from "@mantine/hooks";
+import { Button, ColorPicker, Flex, Popover } from "@mantine/core";
+import { useEyeDropper } from "@mantine/hooks";
 import { IconColorPicker } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 

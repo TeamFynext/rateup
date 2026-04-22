@@ -6,8 +6,6 @@ import {
   ActionIcon,
   Box,
   Button,
-  Chip,
-  ChipGroup,
   FileButton,
   Group,
   Slider,

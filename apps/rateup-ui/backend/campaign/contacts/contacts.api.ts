@@ -1,7 +1,5 @@
 import { saveAs } from "file-saver";
 
-import { ContactGroupType } from "@/types/enums";
-
 import { axiosClient } from "../../apiClient";
 
 export interface ICreateContact {
@@ -41,12 +39,12 @@ export const getContactsList = async (
   columnFilters: { id: string; value: string }[],
   type?: string,
 ) => {
-  let filter = columnFilters
+  const filter = columnFilters
     .map((data) => `&${data.id}=${data.value}`)
     .join("&");
-  let desc = sort.desc ? "desc" : "asc";
-  let contactUrl = `${CONTACT_BASE_URL}?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&sort=${sort.id}&desc=${desc}${filter}&type=${type}`;
-  let contactsData = await axiosClient.get(contactUrl);
+  const desc = sort.desc ? "desc" : "asc";
+  const contactUrl = `${CONTACT_BASE_URL}?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&sort=${sort.id}&desc=${desc}${filter}&type=${type}`;
+  const contactsData = await axiosClient.get(contactUrl);
   return contactsData.data as { users: ContactsData[]; totalCount: number };
 };
 
@@ -56,41 +54,46 @@ export async function getContactById(contactId: string) {
 }
 
 export const createContact = async (data: ICreateContact) => {
-  let res = await axiosClient.post(CONTACT_BASE_URL, data, { timeout: 60000 });
+  const res = await axiosClient.post(CONTACT_BASE_URL, data, {
+    timeout: 60000,
+  });
   return res as { data: ContactsData };
 };
 
 export const importContacts = async (data) => {
-  let res = await axiosClient.post(`${CONTACT_BASE_URL}/importcontacts`, data);
+  const res = await axiosClient.post(
+    `${CONTACT_BASE_URL}/importcontacts`,
+    data,
+  );
   return res;
 };
 
 export const importCSVContacts = async (data) => {
-  let res = await axiosClient.post(`${CONTACT_BASE_URL}/importcsv`, data, {
+  const res = await axiosClient.post(`${CONTACT_BASE_URL}/importcsv`, data, {
     timeout: 60000,
   });
   return res;
 };
 
 export const deleteContact = async (contactId: string) => {
-  let res = await axiosClient.delete(`${CONTACT_BASE_URL}/${contactId}`);
+  const res = await axiosClient.delete(`${CONTACT_BASE_URL}/${contactId}`);
   return res;
 };
 
 export const deleteManyContacts = async (contactIds: string[]) => {
-  let res = await axiosClient.delete(CONTACT_BASE_URL, {
+  const res = await axiosClient.delete(CONTACT_BASE_URL, {
     data: { contactIds },
   });
   return res;
 };
 
 export const editContact = async ({ data, contactId }) => {
-  let res = await axiosClient.put(`${CONTACT_BASE_URL}/${contactId}`, data);
+  const res = await axiosClient.put(`${CONTACT_BASE_URL}/${contactId}`, data);
   return res;
 };
 
 export const editContactLabels = async ({ data, contactId }) => {
-  let res = await axiosClient.put(
+  const res = await axiosClient.put(
     `${CONTACT_BASE_URL}/${contactId}/labels`,
     data,
   );
@@ -98,12 +101,12 @@ export const editContactLabels = async ({ data, contactId }) => {
 };
 
 export const getContactLabels = async () => {
-  let res = await axiosClient.get(`${CONTACT_BASE_URL}/labels`);
+  const res = await axiosClient.get(`${CONTACT_BASE_URL}/labels`);
   return res.data;
 };
 
 export const createContactLabel = async (data: ICreateContactLabel) => {
-  let res = await axiosClient.post(`${CONTACT_BASE_URL}/labels`, data);
+  const res = await axiosClient.post(`${CONTACT_BASE_URL}/labels`, data);
   return res.data;
 };
 
@@ -111,7 +114,7 @@ export const updateContactLabel = async (
   labelId: string,
   data: IUpdateContactLabel,
 ) => {
-  let res = await axiosClient.put(
+  const res = await axiosClient.put(
     `${CONTACT_BASE_URL}/labels/${labelId}`,
     data,
   );
@@ -119,7 +122,7 @@ export const updateContactLabel = async (
 };
 
 export const deleteContactLabel = async (labelId: string) => {
-  let res = await axiosClient.delete(`${CONTACT_BASE_URL}/labels/${labelId}`);
+  const res = await axiosClient.delete(`${CONTACT_BASE_URL}/labels/${labelId}`);
   return res.data;
 };
 
@@ -127,7 +130,7 @@ export const assignContactLabelsToMultipleContacts = async (data: {
   labelIds: string[];
   contactIds: string[];
 }) => {
-  let res = await axiosClient.put(`${CONTACT_BASE_URL}/labels/assign`, data);
+  const res = await axiosClient.put(`${CONTACT_BASE_URL}/labels/assign`, data);
   return res.data;
 };
 
@@ -137,7 +140,7 @@ export const assignContactLabelsToContactId = async (
     labelIds: string[];
   },
 ) => {
-  let res = await axiosClient.put(
+  const res = await axiosClient.put(
     `${CONTACT_BASE_URL}/labels/assign/${contactId}`,
     data,
   );
@@ -148,7 +151,7 @@ export const updateLifecycleofMultipleContacts = async (data: {
   lifecycleId;
   contactIds: string[];
 }) => {
-  let res = await axiosClient.put(
+  const res = await axiosClient.put(
     `${CONTACT_BASE_URL}/lifecycle-stage-update/${data.lifecycleId}`,
     { contactIds: data.contactIds },
   );
@@ -168,16 +171,16 @@ export type CustomFieldData = {
 };
 
 export const getCustomField = async () => {
-  let res = await axiosClient.get(`${CONTACT_BASE_URL}/custom-fields`);
+  const res = await axiosClient.get(`${CONTACT_BASE_URL}/custom-fields`);
   return res?.data as CustomFieldData[];
 };
 export const createCustomField = async (data) => {
-  let res = await axiosClient.post(`${CONTACT_BASE_URL}/custom-fields`, data);
+  const res = await axiosClient.post(`${CONTACT_BASE_URL}/custom-fields`, data);
   return res?.data as CustomFieldData;
 };
 
 export const updateCustomField = async (fieldId: string, data) => {
-  let res = await axiosClient.put(
+  const res = await axiosClient.put(
     `${CONTACT_BASE_URL}/custom-fields/${fieldId}`,
     data,
   );
@@ -185,7 +188,7 @@ export const updateCustomField = async (fieldId: string, data) => {
 };
 
 export const deleteCustomField = async (fieldId: string) => {
-  let res = await axiosClient.delete(
+  const res = await axiosClient.delete(
     `${CONTACT_BASE_URL}/custom-fields/${fieldId}`,
   );
   return res?.data as CustomFieldData;
@@ -195,19 +198,19 @@ export const exportContacts = async (data: {
   type: string;
   fields: string[];
 }) => {
-  let response = await axiosClient.post(`${CONTACT_BASE_URL}/export`, data, {
+  const response = await axiosClient.post(`${CONTACT_BASE_URL}/export`, data, {
     responseType: "blob",
     timeout: 0,
   });
   const blob = new Blob([response.data], {
-    type: response.headers["content-type"],
+    type: response.headers["content-type"] as string,
   });
 
   return saveAs(blob, `contacts.${data.type}`);
 };
 
 export const bulkAssignStatus = async (data) => {
-  let res = await axiosClient.put(
+  const res = await axiosClient.put(
     `${CONTACT_BASE_URL}/bulk-assign-status`,
     data,
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback } from "react";
-import { useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -13,7 +12,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
+import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 
 import { useDeleteQrMutation } from "@/backend/generateQr/generateQr.query";

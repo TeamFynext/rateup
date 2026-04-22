@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { Box, Group, Stack, Switch, Text, Title } from "@mantine/core";
+import { Box, Group, Stack, Text } from "@mantine/core";
 import { useExtracted } from "next-intl";
 
 import RateupSwitch from "@/components/Switch/RateupSwitch";
@@ -10,7 +10,6 @@ import RateupSwitch from "@/components/Switch/RateupSwitch";
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import { RateupButtonBlue } from "../../Button/RateupButtons";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { updateEmailSurvey } from "./updateSettings";
 
 const NotificationEmailSettings = ({ survey, surveyId }) => {

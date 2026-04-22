@@ -9,14 +9,12 @@ import {
   Menu,
   MultiSelect,
   Radio,
-  rem,
   Stack,
   Text,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconCheck,
   IconCopy,
   IconDots,
   IconPlayerPause,

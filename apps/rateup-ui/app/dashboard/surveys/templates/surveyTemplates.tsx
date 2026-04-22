@@ -1,6 +1,5 @@
 import { Paper, Stack } from "@mantine/core";
 
-import { SurveyThemeContextProvider } from "../../../../components/Survey/SurveyTheme/SurveyThemeContext";
 import TemplateCard from "./templateCard";
 
 const SurveyTemplates = ({ survey, setSelectedTemplate, bgTemp, open }) => {

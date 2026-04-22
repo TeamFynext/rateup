@@ -4,7 +4,6 @@ import React, { useContext, useEffect, useState } from "react";
 
 import {
   ActionIcon,
-  Flex,
   Group,
   ScrollAreaAutosize,
   Stack,

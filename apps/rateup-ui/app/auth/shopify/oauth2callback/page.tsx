@@ -3,18 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import {
-  Button,
-  Center,
-  Container,
-  Flex,
-  Loader,
-  Paper,
-  Skeleton,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Flex, Loader, Paper, Stack, Text, Title } from "@mantine/core";
 import { useExtracted } from "next-intl";
 
 import { useCheckSession } from "@/hooks/checkSession";

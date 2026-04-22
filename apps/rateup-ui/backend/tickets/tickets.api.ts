@@ -16,7 +16,7 @@ import { ICreateTicketResponse, ITicket } from "./tickets";
 const TICKET_URL = "/tickets";
 //TODO-TICKET update types
 export async function createTicket(data) {
-  let res: ICreateTicketResponse = (
+  const res: ICreateTicketResponse = (
     await axiosClient.post(`${TICKET_URL}/create`, data)
   ).data;
   return res;
@@ -24,7 +24,7 @@ export async function createTicket(data) {
 
 export async function getTickets() {
   try {
-    let tickets: Array<ITicket> = (await axiosClient.get(TICKET_URL)).data;
+    const tickets: Array<ITicket> = (await axiosClient.get(TICKET_URL)).data;
     return tickets;
   } catch (e) {
     console.error(e);
@@ -34,7 +34,7 @@ export async function getTickets() {
 
 export async function getTicket(id: string) {
   try {
-    let ticket: any = (await axiosClient.get(`${TICKET_URL}/${id}`)).data;
+    const ticket: any = (await axiosClient.get(`${TICKET_URL}/${id}`)).data;
     return ticket;
   } catch (e) {
     console.error(e);
@@ -44,7 +44,7 @@ export async function getTicket(id: string) {
 
 export async function deleteTicket(id: string) {
   try {
-    let ticket: any = (await axiosClient.delete(`${TICKET_URL}/${id}`)).data;
+    const ticket: any = (await axiosClient.delete(`${TICKET_URL}/${id}`)).data;
     return ticket;
   } catch (e) {
     console.error(e);
@@ -55,7 +55,7 @@ export async function deleteTicket(id: string) {
 //update ticket status
 export async function updateTicketStatus(ticketId, data) {
   try {
-    let ticket: any = (
+    const ticket: any = (
       await axiosClient.put(`${TICKET_URL}/${ticketId}/status`, data)
     ).data;
     return ticket;
@@ -68,8 +68,9 @@ export async function updateTicketStatus(ticketId, data) {
 //update ticket - deadline, priority
 export async function updateTicket(ticketId, data) {
   try {
-    let ticket: any = (await axiosClient.put(`${TICKET_URL}/${ticketId}`, data))
-      .data;
+    const ticket: any = (
+      await axiosClient.put(`${TICKET_URL}/${ticketId}`, data)
+    ).data;
     return ticket;
   } catch (e) {
     console.error(e);
@@ -79,9 +80,9 @@ export async function updateTicket(ticketId, data) {
 
 //create comment
 export async function createComment(data) {
-  let id = data.ticketId;
+  const id = data.ticketId;
   try {
-    let comment: any = (
+    const comment: any = (
       await axiosClient.post(`${TICKET_URL}/${id}/comment`, data)
     ).data;
     return comment;

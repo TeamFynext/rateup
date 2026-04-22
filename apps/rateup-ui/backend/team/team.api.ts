@@ -32,25 +32,31 @@ export const createTeam = (data: ICreateTeam) =>
     data: data,
   });
 
-export const editTeam = (teamId: string, data: IEditTeam, onlyTag?: boolean) =>
-  axiosClient({
-    url: `/team/edit/${teamId}${onlyTag ? `?onlytag=true` : ""}`,
+export const editTeam = (
+  teamId: string,
+  data: IEditTeam,
+  onlyTag?: boolean,
+) => {
+  const query = onlyTag ? "?onlytag=true" : "";
+  return axiosClient({
+    url: `/team/edit/${teamId}${query}`,
     method: "PUT",
     data: data,
   });
+};
 
-export const getTeamsByOrg = (orgId: String) =>
+export const getTeamsByOrg = (orgId: string) =>
   axiosClient({
     url: `/team/${orgId}`,
     method: "GET",
   });
 
 export async function getTeamsByUser() {
-  let teams: TeamsResponse = (await axiosClient.get("/team/user")).data;
+  const teams: TeamsResponse = (await axiosClient.get("/team/user")).data;
   return teams;
 }
 
-export const deleteTeamById = (id: String) =>
+export const deleteTeamById = (id: string) =>
   axiosClient({
     url: `/team/${id}`,
     method: "DELETE",
@@ -68,37 +74,37 @@ export const resendInviteTeamMember = async (id: string) => {
   return Response?.data;
 };
 
-export const completeInvite = (inviteToken: String) =>
+export const completeInvite = (inviteToken: string) =>
   axiosClient({
     url: `/team/complete-invite/${inviteToken}`,
     method: "POST",
     timeout: 30000,
   });
 
-export const deleteInviteById = (id: String) =>
+export const deleteInviteById = (id: string) =>
   axiosClient({
     url: `/team/invite/${id}`,
     method: "DELETE",
   });
 
-export const getTeamMembers = (teamId: String) =>
+export const getTeamMembers = (teamId: string) =>
   axiosClient({
     url: `/team/members/${teamId}`,
     method: "GET",
   });
 
-export const getNotTeamMembers = (teamId: String) =>
+export const getNotTeamMembers = (teamId: string) =>
   axiosClient({
     url: `/team/notmembers/${teamId}`,
     method: "GET",
   });
 
-export async function getTeamMembersFromInvitation(teamId: String) {
-  let teamData = (await axiosClient.get(`/team/invitation/${teamId}`)).data;
+export async function getTeamMembersFromInvitation(teamId: string) {
+  const teamData = (await axiosClient.get(`/team/invitation/${teamId}`)).data;
   return teamData;
 }
 
-export const getTeamSurveys = (teamId: String) =>
+export const getTeamSurveys = (teamId: string) =>
   axiosClient({
     url: `/survey/team/${teamId}`,
     method: "GET",
@@ -119,5 +125,32 @@ export async function removeUserFromTeam({ teamId, userId }) {
 
 export async function getTeamById(teamId) {
   const res = await axiosClient.get(`/team/teams/${teamId}`);
+  return res.data;
+}
+
+// ─── Team Features ────────────────────────────────────────────────────────────
+
+export interface TeamFeatureItem {
+  id: string;
+  feature: string;
+  createdAt: string;
+}
+
+export interface TeamFeaturesResponse {
+  features: TeamFeatureItem[];
+}
+
+export async function getTeamFeatures(
+  teamId: string,
+): Promise<TeamFeaturesResponse> {
+  const res = await axiosClient.get(`/team/${teamId}/features`);
+  return res.data;
+}
+
+export async function updateTeamFeatures(
+  teamId: string,
+  features: string[],
+): Promise<TeamFeaturesResponse> {
+  const res = await axiosClient.put(`/team/${teamId}/features`, { features });
   return res.data;
 }

@@ -30,14 +30,8 @@ import {
   type UseFloatingReturn,
 } from "@floating-ui/react";
 import { Editor, useCurrentEditor, useEditorState } from "@tiptap/react";
-import { Badge } from "lucide-react";
 
-import {
-  IMAGE_ALIGN_SHORTCUT_KEYS,
-  ImageAlign,
-  useImageAlign,
-  UseImageAlignConfig,
-} from "./use-image-align";
+import { useImageAlign, UseImageAlignConfig } from "./use-image-align";
 
 export const MAC_SYMBOLS: Record<string, string> = {
   mod: "⌘",
@@ -420,10 +414,8 @@ export const TooltipTrigger = forwardRef<HTMLElement, TooltipTriggerProps>(
     const context = useTooltipContext();
     const childrenRef = isValidElement(children)
       ? parseInt(version, 10) >= 19
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (children as { props: { ref?: React.Ref<any> } }).props.ref
-        : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (children as any).ref
+        ? (children as { props: { ref?: React.Ref<any> } }).props.ref
+        : (children as any).ref
       : undefined;
     const ref = useMergeRefs([context.refs.setReference, propRef, childrenRef]);
 

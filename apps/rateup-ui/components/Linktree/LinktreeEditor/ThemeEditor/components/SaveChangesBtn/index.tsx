@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
-import { Box, Button, Group } from "@mantine/core";
+import { Button, Group } from "@mantine/core";
 import { produce } from "immer";
 import loadash from "lodash";
 
