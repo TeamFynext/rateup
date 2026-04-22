@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -71,7 +71,6 @@ export const colorArray = [
 
 export function EditTeam({ selectedTeam }) {
   const translations = useExtracted();
-  const [editedColor, setEditedColor] = useState(null);
 
   const id = selectedTeam.id;
   const [isLoading, setIsLoading] = useState(false);
@@ -93,8 +92,6 @@ export function EditTeam({ selectedTeam }) {
         code: selectedTeam.code || "",
         color: selectedTeam.color || "blue",
       });
-
-      setEditedColor(selectedTeam.color || "blue");
     }
   }, [selectedTeam]);
 
@@ -113,7 +110,7 @@ export function EditTeam({ selectedTeam }) {
       },
     });
   };
-
+  const editedColor = form.watch("color");
   return (
     <Card className="p-4">
       <h2 className="text-xl">{translations("Team Settings")}</h2>
@@ -161,7 +158,7 @@ export function EditTeam({ selectedTeam }) {
               }
 
               if (/\s/.test(value)) {
-                const suggested = value.trim().replace(/\s+/g, "-");
+                const suggested = value.trim().replaceAll(/\s+/g, "-");
                 return `${translations("Spaces not allowed, try")} "${suggested}"`;
               }
 
@@ -203,7 +200,6 @@ export function EditTeam({ selectedTeam }) {
                   key={index}
                   type="button"
                   onClick={() => {
-                    setEditedColor(color.from);
                     form.setValue("color", color.from);
                   }}
                   className={`w-12 h-12 rounded-lg transition-all ${
@@ -296,6 +292,184 @@ export function AddMembers({ selectedTeam }) {
     ...(teamsMembersData?.invitations || []),
     ...(teamsMembersData?.members || []),
   ];
+
+  let addTeamMembersContent: React.ReactNode;
+  if (isLoadingNotTeamsUser) {
+    addTeamMembersContent = (
+      <div className="space-y-1">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+            key={index}
+            className="w-full py-2 rounded-lg flex items-center justify-between px-6"
+          >
+            <div className="flex items-center gap-2 flex-1">
+              <Skeleton className="w-8 h-8 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            </div>
+            <Skeleton className="h-8 w-16 rounded-md" />
+          </div>
+        ))}
+      </div>
+    );
+  } else if (notTeamMembersData?.data?.length) {
+    addTeamMembersContent = (
+      <div className="space-y-1">
+        {notTeamMembersData?.data?.map((user) => (
+          <div
+            key={user.id}
+            className="w-full py-2 rounded-lg flex items-center justify-between px-6"
+          >
+            <div className="flex items-center gap-2">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={getFileUrlFromKey(user?.profilePhoto)} />
+                <AvatarFallback className="bg-primary text-white text-xs">
+                  {user.name?.toUpperCase().slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+
+              <div>
+                <p className="text-sm">{user.name}</p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() =>
+                addTeams.mutate({
+                  userId: user.id,
+                  teamIds: [selectedTeam],
+                  userEmail: user.email,
+                })
+              }
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              {translations("Add")}
+            </Button>
+          </div>
+        ))}
+      </div>
+    );
+  } else {
+    addTeamMembersContent = (
+      <div className="text-center py-6 text-muted-foreground">
+        {translations("All users are already in this team")}
+      </div>
+    );
+  }
+
+  let membersGridContent: React.ReactNode;
+  if (isLoadingMembers) {
+    membersGridContent = Array.from({ length: 6 }).map((_, index) => (
+      <Card key={index} className="p-5">
+        <Skeleton className="h-20 w-full" />
+      </Card>
+    ));
+  } else if (teamMembersObjArr?.length) {
+    membersGridContent = teamMembersObjArr.map((member, i) => {
+      const isMemberActive = Boolean(member?.active);
+      let memberStatusClassName = "text-muted-foreground";
+      let memberStatusLabel = translations("Inactive");
+
+      if (isMemberActive) {
+        memberStatusClassName = "text-primary";
+        memberStatusLabel = translations("Active");
+      }
+
+      return (
+        <Card
+          key={member?.id}
+          className="p-4 hover:shadow-md transition-shadow flex flex-col justify-between"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <Avatar className="w-10 h-10 shrink-0">
+                <AvatarImage src={getFileUrlFromKey(member?.profilePhoto)} />
+                <AvatarFallback className="bg-primary text-white text-xs sm:text-sm">
+                  {member.name?.toUpperCase().slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+
+              <div>
+                <h3 className="font-semibold text-sm">{member.name}</h3>
+
+                {/* Role only if exists */}
+                {member?.role &&
+                  (() => {
+                    const roleData = getRoleStyles(member.role);
+                    const RoleIcon = roleData.icon;
+
+                    return (
+                      <Badge
+                        className={`text-xs capitalize flex items-center gap-1 px-2 py-0.5 border ${roleData.className}`}
+                      >
+                        <RoleIcon className="w-3 h-3" />
+                        {member.role}
+                      </Badge>
+                    );
+                  })()}
+              </div>
+            </div>
+            {member?.role !== UserRole.SUPADM && (
+              <Button
+                variant="destructive"
+                onClick={() => setMemberToDelete(member)}
+              >
+                <UserX />
+              </Button>
+            )}
+          </div>
+
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Mail className="w-4 h-4" />
+              <span className="truncate">{member.email}</span>
+            </div>
+
+            {/* Phone only if exists */}
+            {member?.phone && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Phone className="w-4 h-4" />
+                <span>{member.phone}</span>
+              </div>
+            )}
+
+            {/* Joined date formatted with dayjs */}
+            {member?.createdAt && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar className="w-4 h-4" />
+                <span>
+                  {translations("Joined")}{" "}
+                  {dayjs(member.createdAt).format("MMM D, YYYY")}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                {translations("Status")}
+              </span>
+
+              {/* Active boolean handling */}
+              <span className={memberStatusClassName}>{memberStatusLabel}</span>
+            </div>
+          </div>
+        </Card>
+      );
+    });
+  } else {
+    membersGridContent = (
+      <div className="col-span-full text-center py-12 text-muted-foreground">
+        <Users className="w-12 h-12 mx-auto opacity-30" />
+        <p>{translations("No members in this team yet")}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -327,71 +501,7 @@ export function AddMembers({ selectedTeam }) {
 
               <Separator />
 
-              <ScrollArea className="h-[240px]">
-                {isLoadingNotTeamsUser ? (
-                  <div className="space-y-1">
-                    {Array.from({ length: 4 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className="w-full py-2 rounded-lg flex items-center justify-between px-6"
-                      >
-                        <div className="flex items-center gap-2 flex-1">
-                          <Skeleton className="w-8 h-8 rounded-full" />
-                          <div className="flex-1 space-y-2">
-                            <Skeleton className="h-4 w-24" />
-                            <Skeleton className="h-3 w-32" />
-                          </div>
-                        </div>
-                        <Skeleton className="h-8 w-16 rounded-md" />
-                      </div>
-                    ))}
-                  </div>
-                ) : notTeamMembersData?.data?.length ? (
-                  <div className="space-y-1">
-                    {notTeamMembersData?.data?.map((user) => (
-                      <div
-                        key={user.id}
-                        className="w-full py-2 rounded-lg flex items-center justify-between px-6"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Avatar className="w-8 h-8">
-                            <AvatarImage
-                              src={getFileUrlFromKey(user?.profilePhoto)}
-                            />
-                            <AvatarFallback className="bg-primary text-white text-xs">
-                              {user.name?.toUpperCase().slice(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-
-                          <div>
-                            <p className="text-sm">{user.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {user.email}
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="outline"
-                          onClick={() =>
-                            addTeams.mutate({
-                              userId: user.id,
-                              teamIds: [selectedTeam],
-                              userEmail: user.email,
-                            })
-                          }
-                        >
-                          <Plus className="w-3 h-3 mr-1" />
-                          {translations("Add")}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 text-muted-foreground">
-                    {translations("All users are already in this team")}
-                  </div>
-                )}
-              </ScrollArea>
+              <ScrollArea className="h-60">{addTeamMembersContent}</ScrollArea>
             </div>
           </DialogContent>
         </Dialog>
@@ -401,113 +511,7 @@ export function AddMembers({ selectedTeam }) {
       <ScrollArea className="h-[calc(100vh-275px)] min-h-64 p-1">
         <div className="p-2">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {isLoadingMembers ? (
-              Array.from({ length: 6 }).map((_, index) => (
-                <Card key={index} className="p-5">
-                  <Skeleton className="h-20 w-full" />
-                </Card>
-              ))
-            ) : teamMembersObjArr?.length ? (
-              teamMembersObjArr.map((member, i) => (
-                <Card
-                  key={i}
-                  className="p-4 hover:shadow-md transition-shadow flex flex-col justify-between"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-10 h-10 shrink-0">
-                        <AvatarImage
-                          src={getFileUrlFromKey(member?.profilePhoto)}
-                        />
-                        <AvatarFallback className="bg-primary text-white text-xs sm:text-sm">
-                          {member.name?.toUpperCase().slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div>
-                        <h3 className="font-semibold text-sm">{member.name}</h3>
-
-                        {/* Role only if exists */}
-                        {member?.role &&
-                          (() => {
-                            const roleData = getRoleStyles(member.role);
-                            const RoleIcon = roleData.icon;
-
-                            return (
-                              <Badge
-                                className={`text-xs capitalize flex items-center gap-1 px-2 py-0.5 border ${roleData.className}`}
-                              >
-                                <RoleIcon className="w-3 h-3" />
-                                {member.role}
-                              </Badge>
-                            );
-                          })()}
-                      </div>
-                    </div>
-                    {member?.role !== UserRole.SUPADM && (
-                      <Button
-                        variant="destructive"
-                        onClick={() => setMemberToDelete(member)}
-                      >
-                        <UserX />
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Mail className="w-4 h-4" />
-                      <span className="truncate">{member.email}</span>
-                    </div>
-
-                    {/* Phone only if exists */}
-                    {member?.phone && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Phone className="w-4 h-4" />
-                        <span>{member.phone}</span>
-                      </div>
-                    )}
-
-                    {/* Joined date formatted with dayjs */}
-                    {member?.createdAt && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Calendar className="w-4 h-4" />
-                        <span>
-                          {translations("Joined")}{" "}
-                          {dayjs(member.createdAt).format("MMM D, YYYY")}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">
-                        {translations("Status")}
-                      </span>
-
-                      {/* Active boolean handling */}
-                      <span
-                        className={
-                          member?.active
-                            ? "text-primary"
-                            : "text-muted-foreground"
-                        }
-                      >
-                        {member?.active
-                          ? translations("Active")
-                          : translations("Inactive")}
-                      </span>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
-                <Users className="w-12 h-12 mx-auto opacity-30" />
-                <p>{translations("No members in this team yet")}</p>
-              </div>
-            )}
+            {membersGridContent}
           </div>
         </div>
       </ScrollArea>
@@ -571,8 +575,7 @@ export function DeleteTeam({ selectedTeam }) {
     if (teamsMembersData?.googleLink) {
       form.setValue("googleLink", teamsMembersData.googleLink);
     }
-  }, [teamsMembersData?.googleLink]);
-
+  }, [form, teamsMembersData.googleLink]);
   const onSubmit = (data) => {
     // simple validation
     if (data.googleLink && !data.googleLink.startsWith("https://")) {
@@ -795,25 +798,37 @@ export function TeamFeatureAccess({ selectedTeam }) {
       requiredSubscriptions.every((sfp) => hasFeature(subscription, sfp)),
   );
 
-  const [checked, setChecked] = useState<Set<string>>(new Set());
+  const serverChecked = useMemo(
+    () => new Set((data?.features || []).map((f) => f.feature)),
+    [data],
+  );
+  const [pendingToggles, setPendingToggles] = useState<Record<string, boolean>>(
+    {},
+  );
+  const checked = useMemo(() => {
+    const next = new Set(serverChecked);
 
-  useEffect(() => {
-    if (data) {
-      setChecked(new Set(data.features.map((f) => f.feature)));
-    }
-  }, [data]);
+    Object.entries(pendingToggles).forEach(([feature, isEnabled]) => {
+      if (isEnabled) next.add(feature);
+      else next.delete(feature);
+    });
+
+    return next;
+  }, [pendingToggles, serverChecked]);
 
   const handleToggle = (feature: string) => {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      if (next.has(feature)) next.delete(feature);
-      else next.add(feature);
-      return next;
-    });
+    setPendingToggles((prev) => ({
+      ...prev,
+      [feature]: !(prev[feature] ?? serverChecked.has(feature)),
+    }));
   };
 
   const handleSave = () => {
-    updateMutation.mutate(Array.from(checked));
+    updateMutation.mutate(Array.from(checked), {
+      onSuccess: () => {
+        setPendingToggles({});
+      },
+    });
   };
 
   if (isLoading) {
@@ -833,7 +848,7 @@ export function TeamFeatureAccess({ selectedTeam }) {
           <h2 className="text-xl mb-1">{translations("Feature Access")}</h2>
           <p className="text-sm text-muted-foreground">
             {translations(
-              "Select which features this team can access. Org owners and admins always have full access.",
+              "Select which features this team can access. Org owners always have full access.",
             )}
           </p>
         </div>

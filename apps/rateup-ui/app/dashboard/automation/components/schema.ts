@@ -36,6 +36,8 @@ export const TRIGGER_EVENTS = [
 // Single source of truth for action types
 export const ACTION_TYPES = [
   { label: "Trigger Chatbot", value: "TRIGGER_CHATBOT" },
+  { label: "Call External API", value: "CALL_EXTERNAL_API" },
+  { label: "Send Web Survey", value: "SEND_WEB_SURVEY" },
   { label: "Send Message", value: "SEND_MESSAGE" },
   { label: "Send Flow", value: "SEND_FLOW" },
   { label: "Assign Team", value: "ASSIGN_TEAM" },
@@ -59,11 +61,22 @@ export const ruleConditionSchema = z.object({
   value: z.string().min(1, "Value is required"),
 });
 
-export const ruleActionSchema = z.object({
+const externalApiActionSchema = z.object({
+  id: z.string().optional(),
+  type: z.literal("CALL_EXTERNAL_API"),
+  value: z.url("Enter a valid full URL (e.g. https://example.com/webhook)"),
+});
+
+const regularActionSchema = z.object({
   id: z.string().optional(),
   type: z.enum(ACTION_TYPES.map((t) => t.value) as [string, ...string[]]),
   value: z.string().min(1, "Value is required"),
 });
+
+export const ruleActionSchema = z.union([
+  externalApiActionSchema,
+  regularActionSchema,
+]);
 
 export const ruleGroupSchema = z.object({
   id: z.string().optional(),
