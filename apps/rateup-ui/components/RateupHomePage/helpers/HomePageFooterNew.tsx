@@ -204,6 +204,14 @@ export default function HomePageFooter() {
                 height="48"
               />
             </a>
+            <a href="https://uno.directory" target="_blank" rel="noopener">
+              <img
+                src="https://uno.directory/uno-directory.svg"
+                alt="Listed on Uno Directory"
+                width="120"
+                height="30"
+              />
+            </a>
             <div className="w-full">
               <div className="text-left mb-2">Follow us</div>
               <div className="flex items-center gap-4 justify-center flex-wrap">
