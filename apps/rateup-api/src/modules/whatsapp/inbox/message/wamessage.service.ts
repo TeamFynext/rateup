@@ -1856,9 +1856,9 @@ export async function getWaMessageLogs(
       ? Prisma.sql`AND motm."teamId" = ${team}::uuid`
       : Prisma.sql``;
 
-  const statusFilter =
-    status && status !== "all"
-      ? Prisma.sql`AND computed_status = ${status}`
+  const dateFilter =
+    rangeStart && rangeEnd
+      ? Prisma.sql`AND wm."createdAt" BETWEEN ${rangeStart} AND ${rangeEnd}`
       : Prisma.sql``;
 
   let sourceFilter = Prisma.sql``;
@@ -1872,122 +1872,158 @@ export async function getWaMessageLogs(
     }
   }
 
-  const dateFilter =
-    rangeStart && rangeEnd
-      ? Prisma.sql`AND wm."createdAt" BETWEEN ${rangeStart} AND ${rangeEnd}`
-      : Prisma.sql``;
+  const baseWhere = Prisma.sql`
+    WHERE c."orgId" = ${orgId}
+      AND wm."sourceMessage" IN ('TEMPLATE','CAMPAIGN')
+      AND wm."messageBody"->>'exchangeProcess' = 'send'
+      ${sourceFilter}
+      ${teamFilter}
+      ${dateFilter}
+  `;
 
-  // Single query: CTE computes status once, window function provides total count
-  const rows = await prisma.$queryRaw<
+  /*
+  ---------------------------------------------------
+  1️⃣ COUNT QUERY (LIGHTWEIGHT)
+  ---------------------------------------------------
+  */
+
+  const countResult = await prisma.$queryRaw<[{ count: bigint }]>`
+    SELECT COUNT(*) AS count
+    FROM "WaMessage" wm
+    JOIN "Contact" c ON c.id = wm."contactId"
+    JOIN "WaMessageOrgTeamMap" motm ON motm."messageId" = wm.id
+    ${baseWhere}
+  `;
+
+  const total = Number(countResult[0]?.count ?? 0);
+
+  /*
+  ---------------------------------------------------
+  2️⃣ GET IDS FIRST (LIMIT BEFORE HEAVY PROCESSING)
+  ---------------------------------------------------
+  */
+
+  const ids = await prisma.$queryRaw<Array<{ id: string }>>`
+    SELECT wm.id
+    FROM "WaMessage" wm
+    JOIN "Contact" c ON c.id = wm."contactId"
+    JOIN "WaMessageOrgTeamMap" motm ON motm."messageId" = wm.id
+    ${baseWhere}
+    ORDER BY wm."createdAt" DESC
+    LIMIT ${limit}
+    OFFSET ${offset}
+  `;
+
+  if (ids.length === 0) {
+    return {
+      data: [],
+      pagination: {
+        total,
+        limit,
+        offset,
+        pageIndex: Math.floor(offset / limit),
+        pageSize: limit,
+      },
+    };
+  }
+
+  const idList = ids.map((r) => r.id);
+
+  /*
+  ---------------------------------------------------
+  3️⃣ FETCH FULL DATA FOR THOSE IDS ONLY
+  ---------------------------------------------------
+  */
+
+  const data = await prisma.$queryRaw<
     Array<{
       id: string;
       createdAt: Date;
       sourceMessage: string;
       contactId: string;
       phone: string;
-      logs: unknown;
-      messageType: string;
+      messageType: string | null;
       messagePreview: string;
       status: string | null;
-      total_count: bigint;
     }>
   >`
-    WITH base AS (
-      SELECT
-        wm.id,
-        wm."createdAt",
-        wm."sourceMessage",
-        wm."contactId",
-        c.phone,
-        wm.logs,
-        motm."externalApi",
-
-        wm."messageBody"->'send'->>'type' AS "messageType",
-
-        CASE wm."messageBody"->'send'->>'type'
-          WHEN 'text'     THEN wm."messageBody"->'send'->'text'->>'body'
-          WHEN 'template' THEN COALESCE(
-                                 wm."messageBody"->'send'->'template'->>'name',
-                                 wm."messageBody"->'send'->'template'->'components'->0->>'text',
-                                 'template message'
-                               )
-          WHEN 'image'    THEN COALESCE(wm."messageBody"->'send'->'image'->>'caption',    'image file')
-          WHEN 'video'    THEN COALESCE(wm."messageBody"->'send'->'video'->>'caption',    'video file')
-          WHEN 'audio'    THEN 'audio file'
-          WHEN 'document' THEN COALESCE(
-                                 wm."messageBody"->'send'->'document'->>'caption',
-                                 wm."messageBody"->'send'->'document'->>'filename',
-                                 'document file'
-                               )
-          WHEN 'contacts' THEN 'contact card'
-          WHEN 'location' THEN 'location'
-          ELSE 'unknown'
-        END AS "messagePreview",
-
-        -- Compute status once here; reused for both filtering and selecting
-        CASE
-          WHEN NULLIF(wm.stats->>'failed','')::timestamp    = GREATEST(
-               NULLIF(wm.stats->>'sent','')::timestamp,
-               NULLIF(wm.stats->>'delivered','')::timestamp,
-               NULLIF(wm.stats->>'read','')::timestamp,
-               NULLIF(wm.stats->>'failed','')::timestamp
-             ) THEN 'failed'
-          WHEN NULLIF(wm.stats->>'read','')::timestamp      = GREATEST(
-               NULLIF(wm.stats->>'sent','')::timestamp,
-               NULLIF(wm.stats->>'delivered','')::timestamp,
-               NULLIF(wm.stats->>'read','')::timestamp,
-               NULLIF(wm.stats->>'failed','')::timestamp
-             ) THEN 'read'
-          WHEN NULLIF(wm.stats->>'delivered','')::timestamp = GREATEST(
-               NULLIF(wm.stats->>'sent','')::timestamp,
-               NULLIF(wm.stats->>'delivered','')::timestamp,
-               NULLIF(wm.stats->>'read','')::timestamp,
-               NULLIF(wm.stats->>'failed','')::timestamp
-             ) THEN 'delivered'
-          WHEN NULLIF(wm.stats->>'sent','')::timestamp      = GREATEST(
-               NULLIF(wm.stats->>'sent','')::timestamp,
-               NULLIF(wm.stats->>'delivered','')::timestamp,
-               NULLIF(wm.stats->>'read','')::timestamp,
-               NULLIF(wm.stats->>'failed','')::timestamp
-             ) THEN 'sent'
-          ELSE NULL
-        END AS computed_status
-
-      FROM "WaMessage" wm
-      INNER JOIN "Contact" c   ON c.id = wm."contactId"
-      INNER JOIN "WaMessageOrgTeamMap" motm ON motm."messageId" = wm.id
-      WHERE c."orgId" = ${orgId}
-        AND wm."sourceMessage" IN ('TEMPLATE', 'CAMPAIGN')
-        AND wm."messageBody"->>'exchangeProcess' = 'send'
-        ${sourceFilter}
-        ${teamFilter}
-        ${dateFilter}
-    )
     SELECT
-      id,
-      "createdAt",
-      "sourceMessage",
-      "contactId",
-      phone,
-      logs,
-      "messageType",
-      "messagePreview",
-      computed_status AS status,
-      COUNT(*) OVER() AS total_count
-    FROM base
-    WHERE 1=1
-      ${statusFilter}
-    ORDER BY "createdAt" DESC
-    LIMIT ${limit}
-    OFFSET ${offset}
+      wm.id,
+      wm."createdAt",
+      wm."sourceMessage",
+      wm."contactId",
+      c.phone,
+
+      wm."messageBody"->'send'->>'type' AS "messageType",
+
+      CASE wm."messageBody"->'send'->>'type'
+        WHEN 'text' THEN wm."messageBody"->'send'->'text'->>'body'
+        WHEN 'template' THEN COALESCE(
+          wm."messageBody"->'send'->'template'->>'name',
+          wm."messageBody"->'send'->'template'->'components'->0->>'text',
+          'template message'
+        )
+        WHEN 'image' THEN COALESCE(
+          wm."messageBody"->'send'->'image'->>'caption',
+          'image file'
+        )
+        WHEN 'video' THEN COALESCE(
+          wm."messageBody"->'send'->'video'->>'caption',
+          'video file'
+        )
+        WHEN 'audio' THEN 'audio file'
+        WHEN 'document' THEN COALESCE(
+          wm."messageBody"->'send'->'document'->>'caption',
+          wm."messageBody"->'send'->'document'->>'filename',
+          'document file'
+        )
+        WHEN 'contacts' THEN 'contact card'
+        WHEN 'location' THEN 'location'
+        ELSE 'unknown'
+      END AS "messagePreview",
+
+      (
+        SELECT status FROM (
+          SELECT
+            CASE
+              WHEN failed_ts = greatest_ts THEN 'failed'
+              WHEN read_ts = greatest_ts THEN 'read'
+              WHEN delivered_ts = greatest_ts THEN 'delivered'
+              WHEN sent_ts = greatest_ts THEN 'sent'
+            END AS status
+          FROM (
+            SELECT
+              NULLIF(wm.stats->>'sent','')::timestamp      AS sent_ts,
+              NULLIF(wm.stats->>'delivered','')::timestamp AS delivered_ts,
+              NULLIF(wm.stats->>'read','')::timestamp      AS read_ts,
+              NULLIF(wm.stats->>'failed','')::timestamp    AS failed_ts,
+              GREATEST(
+                NULLIF(wm.stats->>'sent','')::timestamp,
+                NULLIF(wm.stats->>'delivered','')::timestamp,
+                NULLIF(wm.stats->>'read','')::timestamp,
+                NULLIF(wm.stats->>'failed','')::timestamp
+              ) AS greatest_ts
+          ) t
+        ) s
+      ) AS status
+
+    FROM "WaMessage" wm
+    JOIN "Contact" c ON c.id = wm."contactId"
+    WHERE wm.id IN (${Prisma.join(idList)})
+    ORDER BY wm."createdAt" DESC
   `;
 
-  const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
+  /*
+  ---------------------------------------------------
+  4️⃣ OPTIONAL STATUS FILTER IN NODE (CHEAPER)
+  ---------------------------------------------------
+  */
 
-  const data = rows.map(({ total_count, ...rest }) => rest);
+  const filteredData =
+    status && status !== "all" ? data.filter((d) => d.status === status) : data;
 
   return {
-    data,
+    data: filteredData,
     pagination: {
       total,
       limit,
