@@ -19,6 +19,7 @@ import {
   unblockWhatsappUserHandler,
 } from "./wamessage.controller.js";
 import { byContactIdSchema } from "../../../contact/contact.schema.js";
+import { TeamFeature } from "../../../../utils/permissions.js";
 import {
   blockUserSchema,
   bulkWaMessageAssignBody,
@@ -154,5 +155,13 @@ export async function waMessageRoutes(server: FastifyInstance) {
     },
     generateInboxResponseHandler,
   );
-  server.get("/message-logs", getWaMessageLogsHandler);
+  server.get(
+    "/message-logs",
+    {
+      config: {
+        feature: TeamFeature.analytics,
+      },
+    },
+    getWaMessageLogsHandler,
+  );
 }

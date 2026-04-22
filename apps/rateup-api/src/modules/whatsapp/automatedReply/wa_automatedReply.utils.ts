@@ -894,6 +894,13 @@ async function executeRuleActions(
           );
           break;
 
+        case "SEND_WEB_SURVEY":
+          success = await executeSendWebSurveyAction(
+            action.value as string,
+            context,
+          );
+          break;
+
         case "SEND_TEMPLATE":
           success = await executeSendTemplateAction(
             action.value as string,
@@ -910,6 +917,13 @@ async function executeRuleActions(
 
         case "TRIGGER_CHATBOT":
           success = await executeTriggerChatbotAction(
+            action.value as string,
+            context,
+          );
+          break;
+
+        case "CALL_EXTERNAL_API":
+          success = await executeExternalApiAction(
             action.value as string,
             context,
           );
@@ -1081,6 +1095,53 @@ async function executeSendMessageAction(
   return true;
 }
 
+async function executeSendWebSurveyAction(
+  surveyTeamMapId: string,
+  context: {
+    orgId: string;
+    phone?: string;
+  },
+): Promise<boolean> {
+  if (!context.phone || !context.orgId || !surveyTeamMapId) return false;
+
+  const surveyTeamMap = await prisma.surveyTeamMap.findFirst({
+    where: {
+      id: surveyTeamMapId,
+      survey: {
+        orgId: context.orgId,
+      },
+    },
+    select: {
+      id: true,
+      shortUrlId: true,
+    },
+  });
+
+  if (!surveyTeamMap) {
+    log.warn(
+      `SEND_WEB_SURVEY action received invalid surveyTeamMapId: ${surveyTeamMapId}`,
+    );
+    return false;
+  }
+
+  const frontendUrl = process.env.FRONTEND_URL;
+  if (!frontendUrl) {
+    log.warn("FRONTEND_URL is not configured; unable to send web survey link");
+    return false;
+  }
+
+  const surveyLink = `${frontendUrl.replace(/\/$/, "")}/ws/${surveyTeamMap?.shortUrlId}`;
+  const messageText = `Hi there,\n\nPlease share your feedback using the link below:\n${surveyLink}\n\nThanks for your time.`;
+
+  await sendTextMessage(
+    { phone: context.phone, orgId: context.orgId },
+    null,
+    messageText,
+  );
+
+  return true;
+}
+
 async function executeSendTemplateAction(
   templateId: string,
   context: any,
@@ -1187,6 +1248,60 @@ async function executeTriggerChatbotAction(
       context.orgId,
     );
     return true;
+  }
+
+  return true;
+}
+
+async function executeExternalApiAction(
+  endpoint: string,
+  context: {
+    phone?: string;
+    message?: string;
+  },
+): Promise<boolean> {
+  if (!endpoint) return false;
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(endpoint);
+  } catch {
+    log.warn(`Invalid external API URL configured in rule action: ${endpoint}`);
+    return false;
+  }
+
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    log.warn(
+      `Unsupported protocol for external API URL: ${parsedUrl.protocol}`,
+    );
+    return false;
+  }
+
+  const requestOptions: RequestInit = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      user: context.phone ?? "",
+      action: context.message ?? "",
+    }),
+  };
+
+  let response = await fetch(parsedUrl.toString(), requestOptions);
+
+  if (!response.ok) {
+    log.warn(
+      `External API call failed with status ${response.status} for ${parsedUrl.toString()}, retrying...`,
+    );
+    response = await fetch(parsedUrl.toString(), requestOptions);
+  }
+
+  if (!response.ok) {
+    log.warn(
+      `External API call failed on retry with status ${response.status} for ${parsedUrl.toString()}`,
+    );
+    return false;
   }
 
   return true;

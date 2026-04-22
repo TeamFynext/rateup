@@ -31,8 +31,8 @@ const freeItemValueSchema = z.object({
 });
 
 const timeRestrictionsSchema = z.object({
-  valid_from: z.string().datetime().optional().nullable(),
-  valid_until: z.string().datetime().optional().nullable(),
+  valid_from: z.iso.datetime().optional().nullable(),
+  valid_until: z.iso.datetime().optional().nullable(),
   allowed_days: z.array(z.string()).optional(),
   allowed_time_ranges: z
     .array(
