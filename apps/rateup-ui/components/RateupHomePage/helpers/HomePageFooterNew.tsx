@@ -191,17 +191,12 @@ export default function HomePageFooter() {
                 </span>
               </div>
             </div>
-            <a
-              href="https://www.foundrlist.com/product/rateup?utm_source=badge&utm_medium=embed"
-              target="_blank"
-              rel="noopener"
-              className="hover:opacity-80 transition-opacity my-0"
-            >
+            <a href="https://uno.directory" target="_blank" rel="noopener">
               <img
-                src="https://www.foundrlist.com/api/badge/rateup"
-                alt="Featured on FoundrList"
-                width="150"
-                height="48"
+                src="https://uno.directory/uno-directory.svg"
+                alt="Listed on Uno Directory"
+                width="120"
+                height="30"
               />
             </a>
             <div className="w-full">
