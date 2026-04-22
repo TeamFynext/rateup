@@ -113,7 +113,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
       const shouldShowDate = currentDate !== nextDate;
       return (
-        <View className="bg-gray-50 dark:bg-slate-800">
+        <View className="bg-gray-50 dark:bg-slate-800 px-2">
           {shouldShowDate && (
             <DateSeparator
               label={dayjs(item.createdAt).format("DD MMM YYYY")}

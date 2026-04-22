@@ -54,7 +54,6 @@ const ChatDisplay = () => {
         keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
         style={{ flex: 1 }}
       >
-        {/* @ts-ignore */}
         <ChatHeader
           id={id}
           name={name}
@@ -62,10 +61,8 @@ const ChatDisplay = () => {
           lastReceivedMessageTimeStamp={lastReceivedMessageTimeStamp}
         />
 
-        {/* @ts-ignore */}
         <ChatBody id={id} />
 
-        {/* @ts-ignore */}
         <ChatFooter id={id} />
       </KeyboardAvoidingView>
     </View>
