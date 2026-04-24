@@ -18,7 +18,10 @@ import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { deleteOrg } from "@/backend/org/org.api";
-import { useChangePasswordMutation } from "@/backend/user/user.query";
+import {
+  useChangePasswordMutation,
+  useUpdateActiveStatusMutation,
+} from "@/backend/user/user.query";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -45,11 +48,16 @@ export default function Security() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const updateActiveStatus = useUpdateActiveStatusMutation();
+  const [isUserDeleteDialogOpen, setIsUserDeleteDialogOpen] = useState(false);
+  const [userConfirmText, setUserConfirmText] = useState("");
   const isConfirmValid = confirmText === "DELETE ORGANIZATION";
+  const isUserConfirmValid = userConfirmText === "DELETE ACCOUNT";
 
   const changePassword = useChangePasswordMutation();
   const queryClient = useQueryClient();
   const { user } = useUser();
+  console.log("user:", user);
   const router = useRouter();
 
   const passwordForm = useForm({
@@ -127,6 +135,32 @@ export default function Security() {
       });
     },
   });
+
+  const handleDeleteUser = () => {
+    if (!user?.userId) return;
+
+    toast.loading(translations("Deleting user account"), {
+      id: "delete-user",
+    });
+
+    updateActiveStatus.mutate(user?.userId, {
+      onSuccess: () => {
+        toast.success(translations("User deleted successfully"), {
+          id: "delete-user",
+        });
+        setIsUserDeleteDialogOpen(false);
+        setUserConfirmText("");
+        queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+        router.push("/logout");
+      },
+      onError: (error: any) => {
+        toast.error(error?.message || translations("Failed to delete user"), {
+          id: "delete-user",
+        });
+      },
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -270,10 +304,10 @@ export default function Security() {
           </form>
         </Card>
 
-        {user.role === UserRole.SUPADM && (
-          <Card className="p-6 border-red-200 bg-linear-to-br from-red-50 to-orange-50 shadow-sm">
-            <h3 className="mb-4 text-red-700">{translations("Danger Zone")}</h3>
-            <div className="space-y-4">
+        <Card className="p-6 border-red-200 bg-linear-to-br from-red-50 to-orange-50 shadow-sm">
+          <h3 className="mb-4 text-red-700">{translations("Danger Zone")}</h3>
+          <div className="space-y-4">
+            {user.role === UserRole.SUPADM && (
               <div className="flex items-center justify-between p-5 bg-white border-2 border-red-200 rounded-xl">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -298,9 +332,32 @@ export default function Security() {
                   {translations("Delete Organization")}
                 </Button>
               </div>
+            )}
+            <div className="flex items-center justify-between p-5 bg-white border-2 border-red-200 rounded-xl">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                  <Label className="text-red-700">
+                    {translations("Delete Account")}
+                  </Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {translations("Permanently delete your user account")}.{" "}
+                  {translations("This action cannot be undone")}.
+                </p>
+              </div>
+
+              <Button
+                variant="destructive"
+                size="sm"
+                className="ml-4"
+                onClick={() => setIsUserDeleteDialogOpen(true)}
+              >
+                {translations("Delete Account")}
+              </Button>
             </div>
-          </Card>
-        )}
+          </div>
+        </Card>
       </div>
       {/* Delete Confirmation Dialog */}
       {user.role === UserRole.SUPADM && (
@@ -407,7 +464,7 @@ export default function Security() {
                   await orgDeleteMutation.mutateAsync({ id: user?.orgId });
                 }}
                 disabled={!isConfirmValid || isDeleting}
-                className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+                className="w-full sm:w-auto"
               >
                 {isDeleting ? (
                   <>
@@ -425,6 +482,79 @@ export default function Security() {
           </DialogContent>
         </Dialog>
       )}
+      <Dialog
+        open={isUserDeleteDialogOpen}
+        onOpenChange={setIsUserDeleteDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl text-red-700">
+                  {translations("Delete Account")}?
+                </DialogTitle>
+                <DialogDescription>
+                  {translations("This action is permanent and irreversible")}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <Alert variant="destructive" className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>
+                {translations("Warning: High Risk Action")}
+              </AlertTitle>
+              <AlertDescription>
+                {translations("This will permanently delete your account")}
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">
+                Type{" "}
+                <code className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-mono">
+                  DELETE ACCOUNT
+                </code>{" "}
+                {translations("to confirm")}
+              </Label>
+
+              <Input
+                value={userConfirmText}
+                onChange={(e) => setUserConfirmText(e.target.value)}
+                placeholder="Type here to confirm..."
+                className="border-2 border-red-200 focus:border-red-400"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsUserDeleteDialogOpen(false);
+                setUserConfirmText("");
+              }}
+            >
+              {translations("Cancel")}
+            </Button>
+
+            <Button
+              variant="destructive"
+              disabled={!isUserConfirmValid}
+              onClick={handleDeleteUser}
+              className="w-full sm:w-auto"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {translations("Delete Account")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
