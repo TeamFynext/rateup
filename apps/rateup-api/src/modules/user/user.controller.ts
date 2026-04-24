@@ -387,6 +387,24 @@ export async function updateUserActiveStatusHandler(
   reply: FastifyReply,
 ) {
   try {
+    const sessionUser = request.user;
+    const targetUserId = request.params.userId;
+
+    if (!sessionUser) {
+      return reply.code(401).send({
+        error: "Unauthenticated user",
+      });
+    }
+
+    const isSuperAdmin = sessionUser.role === "SUPER_ADMIN";
+    const isSelfDelete = sessionUser.userId === targetUserId;
+
+    if (!isSuperAdmin && !isSelfDelete) {
+      return reply.code(403).send({
+        error: "You are not allowed to delete this user",
+      });
+    }
+
     await updateUserActiveStatus(request.params.userId);
   } catch (e: any) {
     console.error(e);
