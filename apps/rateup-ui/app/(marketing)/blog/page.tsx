@@ -9,6 +9,13 @@ import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import PostGrid from "./post-grid";
 
 export const revalidate = 60;
+export const metadata = {
+  alternates: {
+    types: {
+      "application/rss+xml": "/blog/rss.xml",
+    },
+  },
+};
 
 function Badge({
   children,
