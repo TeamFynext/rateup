@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import {
   completeOrgDetails,
+  deleteOrgByAdmin,
   getAllOrgs,
   getAllTeamsMembersOfOrg,
   getChecklist,
@@ -12,6 +13,7 @@ import {
   IUpdateLogo,
   IUpdateOrgDetails,
   orgNameAndPhone,
+  sendDeleteOrgEmail,
   updateOrgDetails,
   updateOrgLogo,
   updateOrgPause,
@@ -152,3 +154,19 @@ export function useChecklist() {
     queryFn: getChecklist,
   });
 }
+
+export const useSendDeleteOrgEmail = () => {
+  return useMutation({
+    mutationFn: (orgId: string) => sendDeleteOrgEmail(orgId),
+  });
+};
+
+export const useDeleteOrgByAdminMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orgId: string) => deleteOrgByAdmin(orgId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["org"] });
+    },
+  });
+};

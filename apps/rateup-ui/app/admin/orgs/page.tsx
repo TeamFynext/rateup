@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { ColumnDef } from "@tanstack/react-table";
+import dayjs from "dayjs";
 import {
   ArrowRight,
   Building2,
@@ -46,11 +47,13 @@ interface OrgTableData {
   teams: number;
   members: number;
   invitations: number;
+  lastActivity: string | null;
 }
 
 export default function OrgDisplay() {
   const router = useRouter();
   const { data: orgs, isLoading, isError } = useAllOrgs();
+  console.log("Fetched orgs:", orgs);
   const [orgStats, setOrgStats] = useState({
     today: 0,
     yesterday: 0,
@@ -90,6 +93,32 @@ export default function OrgDisplay() {
         </div>
       ),
       meta: { title: "Created At" },
+    },
+    {
+      accessorKey: "lastActivity",
+      header: createSortableHeader("Last Activity"),
+      cell: ({ row }) => {
+        const value = row.getValue("lastActivity") as string | null;
+
+        if (!value) {
+          return <span className="text-muted-foreground">No activity</span>;
+        }
+
+        const isOld = dayjs(value).isBefore(dayjs().subtract(6, "month"));
+
+        return (
+          <div className="flex items-center gap-2">
+            <Calendar
+              className={`h-4 w-4 ${isOld ? "text-red-500 font-medium" : "text-muted-foreground"}`}
+            />
+            <span
+              className={`text-sm ${isOld ? "text-red-500 font-medium" : ""}`}
+            >
+              {formatIsoDateStringWithTime(value)}
+            </span>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "owner",
@@ -221,6 +250,7 @@ export default function OrgDisplay() {
     teams: org._count.teams,
     members: org._count.members,
     invitations: org._count.invitations,
+    lastActivity: org.AuditLog[0]?.createdAt || null,
   }));
 
   return (
