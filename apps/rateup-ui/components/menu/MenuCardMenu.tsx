@@ -1,21 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { ActionIcon, Menu } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useDeleteMenuMutation } from "../../backend/menu/menu.query";
 import ConfirmationModal from "../Modal/ConfirmationModal";
+import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 type MenuCardMenuProps = {
   readonly menuId: string;
   readonly teamId: string;
-  handleEditClick: any;
-  menu: any;
+  readonly handleEditClick: (menu: Menu) => void;
+  readonly menu: Menu;
 };
 
 function MenuCardMenu({
@@ -23,8 +29,8 @@ function MenuCardMenu({
   menuId,
   teamId,
   handleEditClick,
-}: MenuCardMenuProps) {
-  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+}: Readonly<MenuCardMenuProps>) {
+  const [dialogOpened, setDialogOpened] = useState(false);
   const translations = useExtracted();
   const deleteMutation = useDeleteMenuMutation(
     teamId,
@@ -34,57 +40,58 @@ function MenuCardMenu({
   const router = useRouter();
 
   return (
-    <Menu offset={0} withArrow>
+    <DropdownMenu>
       <ConfirmationModal
         forDeleteFunctionality
         opened={dialogOpened}
-        onClose={closeDialog}
+        onClose={() => setDialogOpened(false)}
         headerLabel={translations("Are you sure to delete this Menu?")}
         headerTitle={translations("Delete Menu?")}
         confirmLabel={translations("Delete")}
-        onConfirm={(e) => {
+        onConfirm={() => {
           toast.loading(translations("Hold on, menu is getting deleted..."), {
             id: "delete-data-menu",
           });
           deleteMutation.mutate(menuId);
-          closeDialog();
+          setDialogOpened(false);
         }}
       />
-      <Menu.Target>
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
+
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={(e) => e.stopPropagation()}
         >
-          <IconDots />
-        </ActionIcon>
-      </Menu.Target>
-      <Menu.Dropdown
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-      >
-        <Menu.Item
-          leftSection={<IconEdit size={16} />}
-          onClick={() => handleEditClick(menu)}
-        >
+          <IconDots size={18} />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenuItem onClick={() => handleEditClick(menu)}>
+          <IconEdit size={16} className="mr-2" />
           {translations("Rename")}
-        </Menu.Item>
-        <Menu.Item
-          leftSection={<IconShare size={16} />}
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
           onClick={() => {
             router.push(`/dashboard/menu/${menuId}?tab=Share`);
           }}
         >
+          <IconShare size={16} className="mr-2" />
           {translations("Share")}
-        </Menu.Item>
-        <Menu.Item leftSection={<IconTrash size={16} />} onClick={toggle}>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          onClick={() => setDialogOpened(true)}
+          variant="destructive"
+        >
+          <IconTrash size={16} className="mr-2" />
           {translations("Delete")}
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

@@ -73,7 +73,7 @@ export function GenericActionCard({
 }: Readonly<GenericActionCardProps>) {
   const cardClassName =
     className ??
-    "h-full cursor-pointer border transition-colors hover:border-primary";
+    "h-full cursor-pointer border border-background transition-colors hover:border-primary";
 
   const footerRightNode = createdAt ? (
     <div className="flex items-center gap-1 text-muted-foreground">

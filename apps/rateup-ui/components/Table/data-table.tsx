@@ -173,7 +173,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className="flex flex-col h-full">
       {DataTableToolbar && <DataTableToolbar table={table} />}
-      <div className="flex-1 min-h-0 **:data-[slot=table-container]:h-full border bg-card rounded-md">
+      <div className="flex-1 min-h-0 **:data-[slot=table-container]:h-full border bg-card rounded-md overflow-hidden">
         <Table>
           <TableHeader>
             {isPending ? (

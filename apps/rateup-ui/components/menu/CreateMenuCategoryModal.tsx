@@ -2,28 +2,33 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  Group,
-  LoadingOverlay,
-  SimpleGrid,
-  Stack,
-  Switch,
-  Title,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
 import { useExtracted } from "next-intl";
+import { Controller, useForm } from "react-hook-form";
 
 import {
   useCreateMenuCategoryMutation,
   useUpdateMenuCategoryMutation,
 } from "@/backend/menu/category/mCategory.query";
-import { createCustomTimestamp, formatToCustomTime } from "@/utils/dateTime";
-
+import { Button } from "@/components/ui/button";
 import {
-  ContainedTextField,
-  ContainedTimeInput,
-} from "../input/ContainedInput/ContainedInput";
-import FormModalLayout from "../Modal/FormModalLayout";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { createCustomTimestamp, formatToCustomTime } from "@/utils/dateTime";
 
 interface CreateMenuCategoryModalProps {
   readonly opened: boolean;
@@ -31,6 +36,15 @@ interface CreateMenuCategoryModalProps {
   readonly menuId: string;
   readonly editingItem?: MenuCategory;
 }
+
+type MenuCategoryFormValues = {
+  name: string;
+  menuId: string;
+  scheduleEnabled: boolean;
+  startTime?: string;
+  endTime?: string;
+};
+
 export function CreateMenuCategoryModal({
   opened,
   close,
@@ -39,38 +53,54 @@ export function CreateMenuCategoryModal({
 }: CreateMenuCategoryModalProps) {
   const [isCreating, setIsCreating] = useState(false);
   const translations = useExtracted();
-  const form = useForm({
-    initialValues: editingItem ?? {
-      name: "",
-      menuId: menuId,
-      scheduleEnabled: false,
-      startTime: "",
-      endTime: "",
-    },
-    validate: {
-      name: (value) => (value.length ? null : translations("Cannot be empty")),
-    },
+
+  const form = useForm<MenuCategoryFormValues>({
+    defaultValues: editingItem
+      ? {
+          ...editingItem,
+          startTime: formatToCustomTime(editingItem.startTime),
+          endTime: formatToCustomTime(editingItem.endTime),
+        }
+      : {
+          name: "",
+          menuId: menuId,
+          scheduleEnabled: false,
+          startTime: "",
+          endTime: "",
+        },
+    mode: "onSubmit",
   });
+
+  const scheduleEnabled = form.watch("scheduleEnabled");
 
   useEffect(() => {
     if (editingItem) {
-      const updatedEditingItem = {
+      form.reset({
         ...editingItem,
         startTime: formatToCustomTime(editingItem.startTime),
         endTime: formatToCustomTime(editingItem.endTime),
-      };
-      form.setValues(updatedEditingItem);
+      });
     } else {
-      form.reset();
+      form.reset({
+        name: "",
+        menuId: menuId,
+        scheduleEnabled: false,
+        startTime: "",
+        endTime: "",
+      });
     }
-    //if form add then infinite loop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editingItem]);
+  }, [editingItem, form, menuId]);
 
   const createMenuCategoryMutation = useCreateMenuCategoryMutation(
     menuId,
     () => {
-      form.reset();
+      form.reset({
+        name: "",
+        menuId: menuId,
+        scheduleEnabled: false,
+        startTime: "",
+        endTime: "",
+      });
       close();
       setIsCreating(false);
     },
@@ -82,7 +112,13 @@ export function CreateMenuCategoryModal({
   const editMenuCategoryMutation = useUpdateMenuCategoryMutation(
     menuId,
     () => {
-      form.reset();
+      form.reset({
+        name: "",
+        menuId: menuId,
+        scheduleEnabled: false,
+        startTime: "",
+        endTime: "",
+      });
       close();
       setIsCreating(false);
     },
@@ -91,99 +127,142 @@ export function CreateMenuCategoryModal({
     },
   );
 
-  const onSubmit = (values: typeof form.values) => {
-    setIsCreating(true);
-    const formatedData: any = values;
-    const processSubmit = async () => {
-      if (values?.scheduleEnabled) {
-        formatedData.startTime =
-          values.startTime && createCustomTimestamp(values.startTime);
-        formatedData.endTime =
-          values.endTime && createCustomTimestamp(values.endTime);
-      } else {
-        formatedData.startTime = undefined;
-        formatedData.endTime = undefined;
-        values.startTime = undefined;
-        values.endTime = undefined;
-      }
+  const onSubmit = (values: MenuCategoryFormValues) => {
+    if (!values.name.trim()) {
+      form.setError("name", { message: translations("Cannot be empty") });
+      return;
+    }
 
-      if (editingItem) {
-        editMenuCategoryMutation.mutate({
-          categoryId: editingItem.id,
-          menuCategory: formatedData,
-        });
-      } else {
-        createMenuCategoryMutation.mutate(formatedData);
-      }
-      setIsCreating(false);
-    };
-    processSubmit();
+    setIsCreating(true);
+    const formatedData: any = { ...values };
+    if (values.scheduleEnabled) {
+      formatedData.startTime =
+        values.startTime && createCustomTimestamp(values.startTime);
+      formatedData.endTime =
+        values.endTime && createCustomTimestamp(values.endTime);
+    } else {
+      formatedData.startTime = undefined;
+      formatedData.endTime = undefined;
+    }
+
+    if (editingItem) {
+      editMenuCategoryMutation.mutate({
+        categoryId: editingItem.id,
+        menuCategory: formatedData,
+      });
+      return;
+    }
+
+    createMenuCategoryMutation.mutate(formatedData);
   };
 
   if (!menuId) {
     return null;
   }
+
+  const isPending =
+    createMenuCategoryMutation.isPending ||
+    editMenuCategoryMutation.isPending ||
+    isCreating;
+
   return (
-    <FormModalLayout
-      opened={opened}
-      onClose={close}
-      title={
-        editingItem
-          ? translations("Edit Category")
-          : translations("Create Category")
-      }
-      centered
-      onSubmit={form.onSubmit(onSubmit)}
-      buttonTitle={
-        editingItem
-          ? translations("Save Category")
-          : translations("Create Category")
-      }
-    >
-      <Stack>
-        <LoadingOverlay
-          visible={
-            createMenuCategoryMutation.isPending ||
-            editMenuCategoryMutation.isPending ||
-            isCreating
-          }
-          zIndex={1000}
-          overlayProps={{ radius: "sm", blur: 2 }}
-          loaderProps={{ type: "bars" }}
-        />
-        <Stack>
-          <Title order={3} c={"var(--grey-color)"}>
+    <Dialog open={opened} onOpenChange={(nextOpen) => !nextOpen && close()}>
+      <DialogContent className="sm:max-w-130">
+        <DialogHeader>
+          <DialogTitle>
+            {editingItem
+              ? translations("Edit Category")
+              : translations("Create Category")}
+          </DialogTitle>
+          <DialogDescription>
             {translations("Category Details")}
-          </Title>
-          <ContainedTextField
-            label={translations("Name")}
-            placeholder={translations("Name")}
-            withAsterisk
-            {...form.getInputProps("name")}
-          />
-          <Group>
-            <Title order={3} c={"var(--grey-color)"}>
-              {translations("Timed Menu")}
-            </Title>
-            <Switch
-              {...form.getInputProps("scheduleEnabled")}
-              checked={form?.values?.scheduleEnabled}
-            />
-          </Group>
-          <SimpleGrid cols={2}>
-            <ContainedTimeInput
-              label={translations("Start Time:")}
-              disabled={!form?.values?.scheduleEnabled}
-              {...form.getInputProps("startTime")}
-            />
-            <ContainedTimeInput
-              label={translations("End Time:")}
-              disabled={!form?.values?.scheduleEnabled}
-              {...form.getInputProps("endTime")}
-            />
-          </SimpleGrid>
-        </Stack>
-      </Stack>
-    </FormModalLayout>
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={form.handleSubmit(onSubmit)} className="relative">
+          {isPending && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-background/80">
+              <Spinner />
+            </div>
+          )}
+
+          <FieldGroup>
+            <Field data-invalid={!!form.formState.errors.name}>
+              <FieldLabel htmlFor="category-name">
+                {translations("Name")}
+              </FieldLabel>
+              <FieldContent>
+                <Input
+                  id="category-name"
+                  placeholder={translations("Name")}
+                  aria-invalid={!!form.formState.errors.name}
+                  {...form.register("name")}
+                />
+                <FieldError errors={[form.formState.errors.name]} />
+              </FieldContent>
+            </Field>
+
+            <Field orientation="horizontal">
+              <FieldLabel htmlFor="timed-menu-switch">
+                {translations("Timed Menu")}
+              </FieldLabel>
+              <FieldContent>
+                <Controller
+                  control={form.control}
+                  name="scheduleEnabled"
+                  render={({ field }) => (
+                    <Switch
+                      id="timed-menu-switch"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+              </FieldContent>
+            </Field>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="start-time">
+                  {translations("Start Time:")}
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="start-time"
+                    type="time"
+                    disabled={!scheduleEnabled}
+                    {...form.register("startTime")}
+                  />
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="end-time">
+                  {translations("End Time:")}
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="end-time"
+                    type="time"
+                    disabled={!scheduleEnabled}
+                    {...form.register("endTime")}
+                  />
+                </FieldContent>
+              </Field>
+            </div>
+          </FieldGroup>
+
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={close}>
+              {translations("Cancel")}
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {editingItem
+                ? translations("Save Category")
+                : translations("Create Category")}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

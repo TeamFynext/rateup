@@ -1,119 +1,167 @@
 "use client";
 
-import React from "react";
-
-import {
-  ActionIcon,
-  Box,
-  Group,
-  Radio,
-  SimpleGrid,
-  Text,
-  TextInput,
-} from "@mantine/core";
 import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 
 import { MenuItemPriceType } from "../../../types/enums";
-import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
+import { Button } from "../../ui/button";
+import { Field, FieldContent, FieldLabel, FieldSet } from "../../ui/field";
+import { Input } from "../../ui/input";
+import { RadioGroup, RadioGroupItem } from "../../ui/radio-group";
 import { currencyLabel } from "../util/currencyData";
+
+type Variant = {
+  name?: string;
+  price?: string | number;
+};
+
+type PriceSectionFormAdapter = {
+  values?: {
+    price?: {
+      type?: MenuItemPriceType;
+      price?: string | number;
+      variants?: Variant[];
+    };
+  };
+  getInputProps: (path: string) => {
+    value?: any;
+    onChange?: (event: any) => void;
+    checked?: boolean;
+  };
+  insertListItem: (path: string, value: any) => void;
+  setFieldValue: (path: string, value: any) => void;
+};
 
 export function PriceSection({
   form,
   currency = "0",
 }: {
-  readonly form: any;
+  readonly form: PriceSectionFormAdapter;
   readonly currency: string;
 }) {
   const translations = useExtracted();
+  const isFixed = form?.values?.price?.type === MenuItemPriceType.FIXED;
+  const variants = form?.values?.price?.variants ?? [];
+
   return (
-    <>
-      <Group>
-        <Text>{translations("Price")}</Text>
-        <Radio.Group {...form.getInputProps("price.type")}>
-          <Group>
-            <Radio
-              label={translations("Fixed")}
-              value={MenuItemPriceType.FIXED}
+    <FieldSet>
+      <Field>
+        <FieldLabel>{translations("Price")}</FieldLabel>
+        <FieldContent>
+          <RadioGroup
+            value={form.getInputProps("price.type").value}
+            onValueChange={(value) => form.setFieldValue("price.type", value)}
+            className="flex gap-4"
+          >
+            <label className="flex items-center gap-2 text-sm">
+              <RadioGroupItem
+                value={MenuItemPriceType.FIXED}
+                id="price-fixed"
+              />
+              {translations("Fixed")}
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <RadioGroupItem
+                value={MenuItemPriceType.VARIANT}
+                id="price-variant"
+              />
+              {translations("Variant")}
+            </label>
+          </RadioGroup>
+        </FieldContent>
+      </Field>
+
+      {isFixed ? (
+        <Field>
+          <FieldLabel>{translations("Price")}</FieldLabel>
+          <FieldContent>
+            <Input
+              placeholder="399"
+              value={form.getInputProps("price.price").value ?? ""}
+              onChange={(event) =>
+                form.setFieldValue("price.price", event.target.value)
+              }
             />
-            <Radio
-              label={translations("Variant")}
-              value={MenuItemPriceType.VARIANT}
-            />
-          </Group>
-        </Radio.Group>
-      </Group>
-      {form?.values?.price?.type === MenuItemPriceType.FIXED ? (
-        <ContainedTextField
-          leftSection={currencyLabel[Number(currency)]?.symbol}
-          placeholder="399"
-          {...form.getInputProps("price.price")}
-        />
+            <p className="text-xs text-muted-foreground">
+              {translations("Currency")}:{" "}
+              {currencyLabel[Number(currency)]?.symbol}
+            </p>
+          </FieldContent>
+        </Field>
       ) : (
-        <Group gap={"3px"}>
-          {form?.values?.price?.variants?.map(
-            (_variant: string, index: number) => {
-              return (
-                <Box
-                  w="95px"
-                  p={"5px"}
-                  key={_variant + index}
-                  style={{
-                    border: "1px solid gray",
-                    borderRadius: "15px",
-                  }}
+        <Field>
+          <FieldLabel>{translations("Variants")}</FieldLabel>
+          <FieldContent>
+            <div className="flex flex-wrap gap-3">
+              {variants.map((_variant, index) => (
+                <div
+                  key={`${_variant?.name ?? "variant"}-${_variant?.price ?? ""}`}
+                  className="w-28 rounded-xl border p-2"
                 >
-                  {form?.values?.price?.variant}
-                  <TextInput
+                  <Input
                     placeholder="Small"
-                    variant="unstyled"
-                    sx={{
-                      borderBottom: "1px solid gray",
-                    }}
-                    {...form.getInputProps(`price.variants.${index}.name`)}
-                  />
-                  <TextInput
-                    leftSection={
-                      <Box style={{ fontSize: "small" }}>
-                        {currencyLabel[Number(currency)]?.symbol}
-                      </Box>
+                    className="mb-2"
+                    value={
+                      form.getInputProps(`price.variants.${index}.name`)
+                        .value ?? ""
                     }
-                    placeholder="399"
-                    radius={"100px"}
-                    {...form.getInputProps(`price.variants.${index}.price`)}
+                    onChange={(event) =>
+                      form.setFieldValue(
+                        `price.variants.${index}.name`,
+                        event.target.value,
+                      )
+                    }
                   />
-                </Box>
-              );
-            },
-          )}
-          <SimpleGrid>
-            {form?.values?.price?.variants?.length < 3 && (
-              <ActionIcon
-                variant="filled"
-                size={"lg"}
-                onClick={() => form.insertListItem("price.variants", {})}
-              >
-                <IconPlus size={16} />
-              </ActionIcon>
-            )}
-            {form?.values?.price?.variants?.length > 1 && (
-              <ActionIcon
-                variant="filled"
-                size={"lg"}
-                onClick={() => {
-                  const newVariants = form?.values?.price?.variants?.slice(
-                    0,
-                    -1,
-                  );
-                  form.setFieldValue("price.variants", newVariants);
-                }}
-              >
-                <IconMinus size={16} />
-              </ActionIcon>
-            )}
-          </SimpleGrid>
-        </Group>
+                  <Input
+                    placeholder="399"
+                    value={
+                      form.getInputProps(`price.variants.${index}.price`)
+                        .value ?? ""
+                    }
+                    onChange={(event) =>
+                      form.setFieldValue(
+                        `price.variants.${index}.price`,
+                        event.target.value,
+                      )
+                    }
+                  />
+                </div>
+              ))}
+
+              <div className="flex flex-col gap-2">
+                {variants.length < 3 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() =>
+                      form.insertListItem("price.variants", {
+                        name: "",
+                        price: "",
+                      })
+                    }
+                  >
+                    <IconPlus />
+                  </Button>
+                )}
+                {variants.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      const newVariants = variants.slice(0, -1);
+                      form.setFieldValue("price.variants", newVariants);
+                    }}
+                  >
+                    <IconMinus />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </FieldContent>
+        </Field>
       )}
-    </>
+    </FieldSet>
   );
 }

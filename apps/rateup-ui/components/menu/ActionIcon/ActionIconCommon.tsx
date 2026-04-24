@@ -1,6 +1,11 @@
 import { JSX } from "react";
 
-import { ActionIcon, Stack, Tooltip } from "@mantine/core";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type ActionIconCommonProps = {
   handleClick: (e: any) => void;
@@ -15,21 +20,19 @@ export const ActionIconCommon = ({
   disabled,
 }: ActionIconCommonProps) => {
   return (
-    <Stack
-      bg={"white"}
-      style={{
-        borderRadius: "100%",
-      }}
-      w={"min-content"}
-    >
-      <ActionIcon
-        variant="light"
-        onClick={handleClick}
-        radius={"lg"}
-        disabled={disabled}
-      >
-        <Tooltip label={label}>{children}</Tooltip>
-      </ActionIcon>
-    </Stack>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          className="rounded-full bg-white"
+          onClick={handleClick}
+          disabled={disabled}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 };

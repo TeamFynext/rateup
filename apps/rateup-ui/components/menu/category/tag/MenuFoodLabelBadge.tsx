@@ -1,36 +1,40 @@
-import React from "react";
+import Image from "next/image";
 
-import { Badge, Flex, Image } from "@mantine/core";
-
+import { Badge } from "../../../ui/badge";
 import { menuLabelWithText } from "../../util/menuLabelData";
 
 type MenuFoodLabelBadgeProps = {
-  foodLabels: string[];
-  p?: string | number;
-  label?: boolean;
-  fz?: string | number;
+  readonly foodLabels: string[];
+  readonly label?: boolean;
 };
+
 const MenuFoodLabelBadge = ({
   foodLabels = [],
-  p = "xs",
   label = true,
-  fz = 11,
-}: MenuFoodLabelBadgeProps) => {
-  const response = foodLabels?.map((data: string) => (
-    <Badge variant="light" key={data} p={p}>
-      <Flex align={"center"} h={"100%"} columnGap={5} fz={fz}>
-        <Image
-          src={menuLabelWithText?.find((gr) => gr.label === data)?.image}
-          alt="it's menu label icon"
-          h={15}
-          w={15}
-        />
-        {label && data}
-      </Flex>
-    </Badge>
-  ));
-
-  return <>{response}</>;
-};
+}: MenuFoodLabelBadgeProps) => (
+  <>
+    {foodLabels.map((data) => {
+      const icon = menuLabelWithText?.find((gr) => gr.label === data)?.image;
+      return (
+        <Badge
+          key={data}
+          variant="secondary"
+          className="gap-1 px-2 py-0.5 text-xs font-normal"
+        >
+          {icon && (
+            <Image
+              src={icon}
+              alt={data}
+              width={14}
+              height={14}
+              className="shrink-0"
+            />
+          )}
+          {label && data}
+        </Badge>
+      );
+    })}
+  </>
+);
 
 export default MenuFoodLabelBadge;
