@@ -57,7 +57,6 @@ export default function Security() {
   const changePassword = useChangePasswordMutation();
   const queryClient = useQueryClient();
   const { user } = useUser();
-  console.log("user:", user);
   const router = useRouter();
 
   const passwordForm = useForm({
