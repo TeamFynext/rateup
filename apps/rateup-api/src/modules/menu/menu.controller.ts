@@ -64,7 +64,7 @@ export async function getFullMenuByIdHandler(
   reply: FastifyReply,
 ) {
   const menu = await getFullMenu(request.params.menuId);
-  reply.send(menu);
+  return reply.send(menu);
 }
 export async function updateMenuHandler(
   request: FastifyRequest<{ Params: ByMenuIdParams; Body: UpdateMenuInput }>,
