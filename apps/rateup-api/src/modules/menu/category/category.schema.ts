@@ -5,8 +5,8 @@ const CreateMenuCategoryInput = {
   menuId: z.string(),
   image: z.string().optional(),
   scheduleEnabled: z.boolean().optional(),
-  startTime: z.date().optional().nullable(),
-  endTime: z.date().optional().nullable(),
+  startTime: z.iso.datetime().optional().nullable(),
+  endTime: z.iso.datetime().optional().nullable(),
 };
 const CreateMenuCategorySchema = z.object(CreateMenuCategoryInput);
 
@@ -18,8 +18,8 @@ const UpdateMenuCategoryInputSchema = z.object({
   image: z.string().optional(),
   itemOrder: z.string().optional(),
   scheduleEnabled: z.boolean().optional(),
-  startTime: z.date().optional(),
-  endTime: z.date().optional(),
+  startTime: z.iso.datetime().optional().nullable(),
+  endTime: z.iso.datetime().optional().nullable(),
 });
 
 const SortMenuCategoryInputSchema = z.object({
