@@ -150,7 +150,7 @@ export default function MenuById() {
               currency={menu?.currency}
             />
           </div>
-          <div className="h-full max-h-200 flex-1 overflow-auto p-1">
+          <div className="h-full max-h-200 flex-1 overflow-auto p-1 relative">
             {filteredCategory?.length === 0 ? (
               <Empty>
                 <EmptyHeader>

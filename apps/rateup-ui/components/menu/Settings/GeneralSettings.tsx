@@ -112,7 +112,7 @@ const GeneralSettings = ({ editingItem }: Readonly<GeneralSettingsProps>) => {
   const formValues = useWatch({
     control: form.control,
   });
-  const menuId = editingItem?.id ?? editingItem?.menu?.id;
+  const menuId = editingItem?.menu?.id ?? editingItem?.id;
 
   const { isPending, mutate } = useUpdateMenuMutation(
     menuId,
