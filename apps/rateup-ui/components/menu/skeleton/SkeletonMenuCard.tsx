@@ -1,9 +1,9 @@
 import React from "react";
 
-import { Box, Flex, Skeleton, Stack } from "@mantine/core";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type SkeletonMenuCardProps = {
-  isMobile?: boolean;
+  readonly isMobile?: boolean;
 };
 export const SkeletonMenuCard = ({ isMobile }: SkeletonMenuCardProps) => {
   const boxes = [
@@ -13,40 +13,23 @@ export const SkeletonMenuCard = ({ isMobile }: SkeletonMenuCardProps) => {
     { h: 1.5, w: 70 },
   ];
   return (
-    <Box
-      h={39}
-      w={isMobile ? "100%" : 115}
-      style={{
-        backgroundColor: "var(--light-grey-color-3)",
-        borderRadius: "3px",
-      }}
-      mb={"2px"}
+    <div
+      className={`mb-0.5 flex items-center rounded-md bg-muted/60 p-3 ${isMobile ? "w-full" : "w-[28.75rem]"}`}
     >
-      <Flex align={"center"}>
-        <Box
-          h={33}
-          w={33}
-          m={3}
-          style={{
-            backgroundColor: "var(--light-grey-color-2)",
-            borderRadius: "2.2px",
-          }}
-        />
+      <Skeleton className="h-33 w-33 rounded-sm bg-muted" />
 
-        <Stack gap={"6px"}>
-          {boxes?.map((box, index) => (
-            <Skeleton
-              key={index}
-              h={box?.h}
-              w={box?.w}
-              style={{
-                backgroundColor: "var(--light-grey-color-2)",
-                borderRadius: "3px",
-              }}
-            />
-          ))}
-        </Stack>
-      </Flex>
-    </Box>
+      <div className="ml-3 flex flex-1 flex-col gap-1.5">
+        {boxes?.map((box) => (
+          <Skeleton
+            key={`${box.h}-${box.w}`}
+            className="rounded-sm bg-muted"
+            style={{
+              height: `${box.h * 0.25}rem`,
+              width: `${box.w * 0.25}rem`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
   );
 };

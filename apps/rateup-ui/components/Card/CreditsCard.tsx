@@ -2,18 +2,17 @@
 
 import React from "react";
 
-import { Anchor, Box, Text } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
 import { useExtracted } from "next-intl";
 
 type CreditsCardProps = {
   enableCredits: boolean;
-  url: string | File;
+  url?: string | File | null;
   children: React.ReactNode;
   sx?: React.CSSProperties;
   fz?: number | string;
   pl?: number | string;
 };
+
 export const CreditsCard = ({
   enableCredits,
   url,
@@ -22,51 +21,49 @@ export const CreditsCard = ({
   fz = 9,
   pl = 0,
 }: CreditsCardProps) => {
-  let params;
   let author = "";
   let username = "";
-  if (typeof url === "string") {
-    params = new URLSearchParams(url?.split("?")[1]);
-    author = params.get("author");
-    username = params.get("username");
+  if (typeof url === "string" && url.includes("?")) {
+    const params = new URLSearchParams(url?.split("?")[1]);
+    author = params.get("author") ?? "";
+    username = params.get("username") ?? "";
   }
-  const isMobile = useMediaQuery("(max-width: 480px)");
   const translations = useExtracted();
   return (
-    <Box pos={"relative"} p={0} m={0} w={"100%"} h={"100%"} style={sx}>
+    <div className="relative m-0 h-full w-full p-0" style={sx}>
       {children}
       {enableCredits && (
-        <Text
-          pos={"absolute"}
-          bottom={0}
-          left={0}
-          c={"white"}
-          px={fz === 9 ? "xs" : 0}
-          fz={fz}
-          w={isMobile ? 120 : "100%"}
+        <span
+          className="absolute bottom-0 left-0 w-full text-white max-[480px]:w-30"
           style={{
+            fontSize: fz,
+            paddingLeft: pl || (fz === 9 ? "0.5rem" : 0),
+            paddingRight: fz === 9 ? "0.5rem" : 0,
             textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
           }}
-          pl={pl}
         >
           {translations("Photo by")}
-          <Anchor
+          <a
             href={`https://unsplash.com/@${username}?utm_source=Rateup&utm_medium=referral`}
             target="_blank"
-            fz={fz}
+            rel="noreferrer"
+            style={{ fontSize: fz }}
+            className="text-white"
           >
             {author}
-          </Anchor>{" "}
+          </a>{" "}
           {translations("on")}
-          <Anchor
-            href={"https://unsplash.com/?utm_source=Rateup&utm_medium=referral"}
+          <a
+            href="https://unsplash.com/?utm_source=Rateup&utm_medium=referral"
             target="_blank"
-            fz={fz}
+            rel="noreferrer"
+            style={{ fontSize: fz }}
+            className="text-white"
           >
             {translations("Unsplash")}
-          </Anchor>
-        </Text>
+          </a>
+        </span>
       )}
-    </Box>
+    </div>
   );
 };

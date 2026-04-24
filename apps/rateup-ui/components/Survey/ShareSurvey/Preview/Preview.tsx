@@ -142,6 +142,7 @@ function Preview({
         onClick={downloadQrCode}
         disabled={!isSurveyPublished || isLogoDownloadProcessing}
         className="disabled:opacity-50 w-full"
+        variant="outline"
       >
         <IconDownload />
         {translations("Download QR Code")}

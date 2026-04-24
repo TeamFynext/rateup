@@ -2,22 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import {
-  Box,
-  Button,
-  Center,
-  FileButton,
-  Flex,
-  Group,
-  Image,
-  LoadingOverlay,
-  Stack,
-  Text,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import {
@@ -36,14 +23,27 @@ import {
   uploadFile,
 } from "../../utils/file-upload/upload";
 import { CreditsCard } from "../Card/CreditsCard";
-import {
-  ContainedTextArea,
-  ContainedTextField,
-} from "../input/ContainedInput/ContainedInput";
-import FormModalLayout from "../Modal/FormModalLayout";
 import { ImageCropModal } from "../Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "../Modal/ImageUploadMethodModal";
 import { UnsplashModal } from "../Modal/UnsplashModal";
+import { Button } from "../ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "../ui/field";
+import { Input } from "../ui/input";
+import { Spinner } from "../ui/spinner";
+import { Textarea } from "../ui/textarea";
 import { FoodLabelSelector } from "./combobox/foodLabelSelector";
 import { PriceSection } from "./item/PriceSection";
 
@@ -56,7 +56,50 @@ interface CreateMenuItemModalProps {
   readonly currency?: string;
 }
 
-// If editingItem is passed, then we are editing an existing item
+type MenuItemFormValues = {
+  name: string;
+  categoryId: string;
+  images: Array<string | File>;
+  videoUrl: string;
+  description: string;
+  price: {
+    price?: string;
+    variants?: Array<{
+      name: string;
+      price: string;
+    }>;
+    type: MenuItemPriceType;
+  };
+  foodLabels: string[];
+  unsplashImage: string[];
+};
+
+const defaultValues = (categoryId: string): MenuItemFormValues => ({
+  name: "",
+  categoryId,
+  images: [],
+  videoUrl: "",
+  description: "",
+  price: {
+    price: "",
+    variants: [
+      {
+        name: "",
+        price: "",
+      },
+    ],
+    type: MenuItemPriceType.FIXED,
+  },
+  foodLabels: [],
+  unsplashImage: [],
+});
+
+const getValueByPath = (object: any, path: string) => {
+  return path
+    .split(".")
+    .reduce((acc: any, key: string) => (acc == null ? acc : acc[key]), object);
+};
+
 export function CreateMenuItemModal({
   opened,
   close,
@@ -66,7 +109,11 @@ export function CreateMenuItemModal({
   currency,
 }: CreateMenuItemModalProps) {
   const [imageLoading, setImageLoading] = useState(false);
-  const translations = useExtracted();
+  const [openedUnsplashDialog, setOpenedUnsplashDialog] = useState(false);
+  const [openedCropDialog, setOpenedCropDialog] = useState(false);
+  const [openedMethodSelectionDialog, setOpenedMethodSelectionDialog] =
+    useState(false);
+
   const [deleteImageArray, setDeleteImageArray] = useState<
     { Key: string | File | undefined }[]
   >([]);
@@ -74,73 +121,87 @@ export function CreateMenuItemModal({
     url: "",
     name: "",
   });
-  const resetRef = useRef<() => void>(null);
-  const itemImgBtnRef = useRef<HTMLButtonElement>(null);
-  const [
-    openedUnsplashDialog,
-    { toggle: toggleUnsplashDialog, close: closeUnsplashDialog },
-  ] = useDisclosure(false);
-  const [
-    openedCropDialog,
-    { toggle: toggleCropDialog, close: closeCropDialog },
-  ] = useDisclosure(false);
-  const [
-    openedMethodSelectionDialog,
-    { toggle: toggleMethodSelectionDialog, close: closeMethodSelectionDialog },
-  ] = useDisclosure(false);
 
-  const form = useForm({
-    initialValues: editingItem || {
-      name: "",
-      categoryId: categoryId,
-      images: [],
-      videoUrl: "",
-      description: "",
-      price: {
-        price: "",
-        variants: [
-          {
-            name: "",
-            price: "",
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const translations = useExtracted();
+
+  const form = useForm<MenuItemFormValues>({
+    defaultValues: editingItem
+      ? {
+          ...editingItem,
+          categoryId,
+          videoUrl: editingItem.videoUrl ?? "",
+          foodLabels: editingItem.foodLabels ?? [],
+          unsplashImage: editingItem.unsplashImage ?? [],
+          price: {
+            ...editingItem.price,
+            price: String(editingItem.price?.price ?? ""),
+            variants: editingItem.price?.variants?.map((variant) => ({
+              name: String(variant.name ?? ""),
+              price: String(variant.price ?? ""),
+            })) ?? [
+              {
+                name: "",
+                price: "",
+              },
+            ],
           },
-        ],
-        type: MenuItemPriceType.FIXED,
-      },
-      foodLabels: [],
-      unsplashImage: [],
-    },
-    validate: {
-      name: (value) => (value.length ? null : translations("Cannot be empty")),
-      description: (value) =>
-        value.length ? null : translations("Cannot be empty"),
-    },
+        }
+      : defaultValues(categoryId),
   });
-  const [selectedImage, setSelectedImage] = useState(
-    form.values.images[0] || "",
+
+  const values = form.watch();
+  const [selectedImage, setSelectedImage] = useState<string | File>(
+    values.images?.[0] ?? "",
   );
 
   useEffect(() => {
     if (editingItem) {
-      form.setValues(editingItem);
-      if (!editingItem.price?.variants) {
-        form.setFieldValue("price.variants", [
-          {
-            name: "",
-            price: "",
-          },
-        ]);
-      }
-    } else {
-      form.reset();
+      form.reset({
+        ...editingItem,
+        categoryId,
+        videoUrl: editingItem.videoUrl ?? "",
+        foodLabels: editingItem.foodLabels ?? [],
+        unsplashImage: editingItem.unsplashImage ?? [],
+        price: {
+          ...editingItem.price,
+          price: String(editingItem.price?.price ?? ""),
+          variants: editingItem.price?.variants?.map((variant) => ({
+            name: String(variant.name ?? ""),
+            price: String(variant.price ?? ""),
+          })) ?? [
+            {
+              name: "",
+              price: "",
+            },
+          ],
+        },
+      });
+      return;
     }
-  }, [editingItem]);
+
+    form.reset(defaultValues(categoryId));
+  }, [editingItem, form, categoryId]);
+
+  useEffect(() => {
+    setSelectedImage(values.images?.[0] ?? "");
+  }, [values.images]);
+
+  const setFieldValue = (path: string, value: any) => {
+    form.setValue(path as any, value, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+  };
 
   const createMenuItemMutation = useCreateMenuItemMutation(
     categoryId,
     menuId,
     () => {
       close();
-      form.reset();
+      form.reset(defaultValues(categoryId));
     },
   );
 
@@ -149,100 +210,137 @@ export function CreateMenuItemModal({
     menuId,
     () => {
       close();
-      form.reset();
+      form.reset(defaultValues(categoryId));
     },
   );
 
-  useEffect(() => {
-    setSelectedImage(form?.values.images[0] || "");
-  }, [form.values.images]);
+  const buildPayload = (submitValues: MenuItemFormValues) => {
+    const payload: any = {
+      ...submitValues,
+      price: {
+        ...submitValues.price,
+      },
+    };
 
-  const onSubmit = async (values: typeof form.values) => {
+    if (payload?.price?.type === MenuItemPriceType.FIXED) {
+      delete payload?.price?.variants;
+    } else {
+      delete payload?.price?.price;
+    }
+
+    return payload;
+  };
+
+  const uploadFiles = async (files: File[]) => {
+    if (files.length === 0) {
+      return {
+        errors: [] as PromiseRejectedResult[],
+        successes: [] as string[],
+      };
+    }
+
+    const response = await Promise.allSettled(
+      files.map((file) => uploadFile(file)),
+    );
+    const errors = response.filter(
+      (result) => result.status === "rejected",
+    ) as PromiseRejectedResult[];
+    const successes = response
+      .filter(
+        (result): result is PromiseFulfilledResult<string> =>
+          result.status === "fulfilled",
+      )
+      .map((result) => result.value);
+
+    return { errors, successes };
+  };
+
+  const handleEditSubmit = async (
+    editingId: string,
+    payload: any,
+    imageArray: Array<string | File>,
+  ) => {
+    const newImages = imageArray.filter(
+      (image): image is File => typeof image !== "string",
+    );
+
+    let errors: PromiseRejectedResult[] = [];
+
+    if (deleteImageArray?.length > 0) {
+      await deleteUploadedFiles({ fileKeyArray: deleteImageArray });
+      setDeleteImageArray([]);
+    }
+
+    if (newImages.length > 0) {
+      const uploadResult = await uploadFiles(newImages);
+      errors = uploadResult.errors;
+      let index = 0;
+      for (let i = 0; i < imageArray.length; i++) {
+        if (typeof imageArray[i] !== "string") {
+          imageArray[i] = uploadResult.successes[index] ?? "";
+          index += 1;
+        }
+      }
+      payload.images = imageArray;
+    }
+
+    updateMenuItemMutation.mutate({
+      menuItemId: editingId,
+      menuItem: payload,
+    });
+
+    return errors;
+  };
+
+  const handleCreateSubmit = async (
+    payload: any,
+    imageArray: Array<string | File>,
+  ) => {
+    const newImages = imageArray.filter(
+      (image): image is File => typeof image !== "string",
+    );
+
+    let errors: PromiseRejectedResult[] = [];
+    if (newImages.length > 0) {
+      const uploadResult = await uploadFiles(newImages);
+      errors = uploadResult.errors;
+      payload.images = uploadResult.successes;
+    }
+
+    createMenuItemMutation.mutate(payload);
+    return errors;
+  };
+
+  const onSubmit = async (submitValues: MenuItemFormValues) => {
+    if (!submitValues.name.trim()) {
+      form.setError("name", { message: translations("Cannot be empty") });
+      return;
+    }
+
+    if (!submitValues.description.trim()) {
+      form.setError("description", {
+        message: translations("Cannot be empty"),
+      });
+      return;
+    }
+
     try {
-      if (values?.price?.type === MenuItemPriceType.FIXED) {
-        delete values?.price?.variants;
-      } else {
-        delete values?.price?.price;
-      }
+      setImageLoading(true);
+      const payload = buildPayload(submitValues);
+      const imageArray = [...(payload?.images ?? [])];
 
-      const imageArray = values?.images;
-      let errors: PromiseRejectedResult[] = [];
-      if (editingItem) {
-        const newImages: File[] = [];
+      const errors = editingItem
+        ? await handleEditSubmit(editingItem.id, payload, imageArray)
+        : await handleCreateSubmit(payload, imageArray);
 
-        for (const image of imageArray) {
-          setImageLoading(true);
-          if (typeof image !== "string") {
-            newImages.push(image);
-          }
-        }
-
-        if (deleteImageArray?.length > 0) {
-          await deleteUploadedFiles({ fileKeyArray: deleteImageArray });
-          setDeleteImageArray([]);
-        }
-        if (newImages?.length > 0) {
-          const imageResponse = newImages?.map((data) => uploadFile(data));
-          const response = await Promise.allSettled(imageResponse);
-          errors = response.filter(
-            (r) => r.status === "rejected",
-          ) as PromiseRejectedResult[];
-          const successes = response
-            .filter(
-              (r): r is PromiseFulfilledResult<string> =>
-                r.status === "fulfilled",
-            )
-            .map((r) => r?.value);
-          let i = 0;
-          for (const index in imageArray) {
-            if (typeof imageArray[index] === "object") {
-              imageArray[index] = successes[i];
-              i++;
-            }
-          }
-          values.images = imageArray;
-        }
-        updateMenuItemMutation.mutate({
-          menuItemId: editingItem.id,
-          menuItem: values,
-        });
-        setImageLoading(false);
-      } else {
-        const newImages: File[] = [];
-        for (const image of imageArray) {
-          setImageLoading(true);
-          if (typeof image !== "string") {
-            newImages.push(image);
-          }
-        }
-        if (newImages?.length > 0) {
-          const imageResponse = imageArray?.map((data) => uploadFile(data));
-          const response = await Promise.allSettled(imageResponse);
-          errors = response?.filter(
-            (r) => r.status === "rejected",
-          ) as PromiseRejectedResult[];
-          const successes = response
-            .filter(
-              (r): r is PromiseFulfilledResult<string> =>
-                r.status === "fulfilled",
-            )
-            .map((r) => r?.value);
-
-          values.images = successes;
-        }
-        createMenuItemMutation.mutate(values);
-        for (const imageUploadError of errors) {
-          toast.error(imageUploadError.reason);
-        }
-        setImageLoading(false);
-      }
       for (const imageUploadError of errors) {
         toast.error(imageUploadError.reason);
       }
-    } catch (error) {
+    } catch {
       setImageLoading(false);
     } finally {
-      form.reset();
+      setImageLoading(false);
+      form.reset(defaultValues(categoryId));
       close();
     }
   };
@@ -250,36 +348,38 @@ export function CreateMenuItemModal({
   if (!menuId) {
     return null;
   }
-  const imageProps = {
-    radius: "md",
-    h: 200,
-    w: 200,
-    fallbackSrc: fallbackImage,
-  };
-  const onChangePicture = (event: File | null) => {
-    if (!event) return;
-    if (event.size > MAX_FILE_SIZE_IN_BYTE) {
+
+  const onChangePicture = (file: File | null) => {
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE_IN_BYTE) {
       toast.error(
         `${translations("Max file size is")} ${MAX_FILE_SIZE_IN_MB} MB`,
       );
       return;
     }
+
     setSelectedInputImage({
-      url: URL.createObjectURL(event),
-      name: event.name,
+      url: URL.createObjectURL(file),
+      name: file.name,
     });
-    toggleCropDialog();
-    resetRef?.current?.();
+    setOpenedCropDialog(true);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
+
   const handleCropImageSave = (cropedImage: File | string) => {
+    const currentImages = values.images ?? [];
     if (typeof cropedImage === "string") {
-      form.setFieldValue("unsplashImage", [
-        ...form?.values?.unsplashImage,
+      setFieldValue("unsplashImage", [
+        ...(values.unsplashImage ?? []),
         cropedImage,
       ]);
     }
-    form.setFieldValue("images", [...form.values.images, cropedImage]);
+    setFieldValue("images", [...currentImages, cropedImage]);
   };
+
   const handleUnsplashImageSave = (
     unsplashImage: string,
     imageName: string,
@@ -288,203 +388,260 @@ export function CreateMenuItemModal({
       url: unsplashImage,
       name: imageName,
     });
-    toggleCropDialog();
+    setOpenedCropDialog(true);
   };
+
   const handleUploadMethod = (type: string) => {
     if (type === "unsplash") {
-      toggleUnsplashDialog();
-    } else {
-      itemImgBtnRef?.current?.click();
+      setOpenedUnsplashDialog(true);
+      return;
     }
+    fileInputRef.current?.click();
   };
+
   const handleDeleteImage = () => {
     if (typeof selectedImage !== "object") {
       setDeleteImageArray((prev) => [
         ...prev,
         {
-          Key: form?.values?.images?.find((image) => image === selectedImage),
+          Key: values.images?.find((image) => image === selectedImage),
         },
       ]);
     }
-    form.removeListItem(
-      "images",
-      form?.values?.images?.findIndex((image) => image === selectedImage),
-    );
+
+    const indexToRemove = (values.images ?? []).indexOf(selectedImage);
+
+    if (indexToRemove == null || indexToRemove < 0) return;
+
+    const nextImages = [...(values.images ?? [])];
+    nextImages.splice(indexToRemove, 1);
+    setFieldValue("images", nextImages);
   };
+
+  const isPending =
+    createMenuItemMutation.isPending ||
+    updateMenuItemMutation.isPending ||
+    imageLoading;
+
+  const formAdapter = {
+    values,
+    getInputProps: (path: string) => ({
+      value: getValueByPath(values, path),
+    }),
+    setFieldValue,
+    insertListItem: (path: string, value: any) => {
+      const current = (getValueByPath(values, path) ?? []) as any[];
+      setFieldValue(path, [...current, value]);
+    },
+  };
+
   return (
-    <FormModalLayout
-      opened={opened}
-      onClose={close}
-      title={
-        editingItem ? translations("Edit Item") : translations("Create Item")
-      }
-      centered
-      onSubmit={form.onSubmit(onSubmit)}
-      buttonTitle={
-        editingItem ? translations("Save Item") : translations("Create Item")
-      }
-      size={"xl"}
-    >
-      <Flex>
-        <UnsplashModal
-          handleUnsplashImageSave={handleUnsplashImageSave}
-          opened={openedUnsplashDialog}
-          onclose={closeUnsplashDialog}
-        />
-        <ImageUploadMethodModal
-          onClose={closeMethodSelectionDialog}
-          opened={openedMethodSelectionDialog}
-          handleUploadMethod={handleUploadMethod}
-        />
-        <ImageCropModal
-          opened={openedCropDialog}
-          onclose={closeCropDialog}
-          imageName={selectedInputImage.name}
-          handleCropImageSave={handleCropImageSave}
-          image={selectedInputImage.url}
-          aspect={3 / 2}
-        />
-        <LoadingOverlay
-          visible={
-            createMenuItemMutation.isPending ||
-            updateMenuItemMutation.isPending ||
-            imageLoading
-          }
-          zIndex={1000}
-          overlayProps={{ radius: "sm", blur: 2 }}
-          loaderProps={{ type: "bars" }}
-        />
-        <Stack style={{ flex: 1 }}>
-          <Group mr={"xs"}>
-            <Text>{translations("Add Images (max 3)")}</Text>
-            {form?.values?.images?.length > 0 ? (
-              <Box>
-                <CreditsCard
-                  enableCredits={
-                    form?.values?.unsplashImage?.find(
-                      (data) => data === selectedImage,
-                    )?.length > 0
-                  }
-                  url={selectedImage}
-                >
-                  <Image
-                    src={getImageValue(
-                      selectedImage,
-                      false,
-                      form?.values?.unsplashImage?.find(
+    <Dialog open={opened} onOpenChange={(nextOpen) => !nextOpen && close()}>
+      <DialogContent className="sm:max-w-200">
+        <DialogHeader>
+          <DialogTitle>
+            {editingItem
+              ? translations("Edit Item")
+              : translations("Create Item")}
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={form.handleSubmit(onSubmit)} className="relative">
+          <UnsplashModal
+            handleUnsplashImageSave={handleUnsplashImageSave}
+            opened={openedUnsplashDialog}
+            onclose={() => setOpenedUnsplashDialog(false)}
+          />
+          <ImageUploadMethodModal
+            onClose={() => setOpenedMethodSelectionDialog(false)}
+            opened={openedMethodSelectionDialog}
+            handleUploadMethod={handleUploadMethod}
+          />
+          <ImageCropModal
+            opened={openedCropDialog}
+            onclose={() => setOpenedCropDialog(false)}
+            imageName={selectedInputImage.name}
+            handleCropImageSave={handleCropImageSave}
+            image={selectedInputImage.url}
+            aspect={3 / 2}
+          />
+
+          {isPending && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-background/80">
+              <Spinner />
+            </div>
+          )}
+
+          <div className="flex flex-col gap-6 lg:flex-row -mx-4 max-h-[50vh] overflow-y-auto px-4">
+            <div className="flex-1">
+              <div className="mb-3 text-sm font-medium">
+                {translations("Add Images (max 3)")}
+              </div>
+
+              {(values.images?.length ?? 0) > 0 ? (
+                <div>
+                  <CreditsCard
+                    enableCredits={
+                      values.unsplashImage?.find(
                         (data) => data === selectedImage,
-                      )?.length > 0,
-                    )}
-                    {...imageProps}
-                    alt="image of menu"
-                    style={{
-                      aspectRatio: 3 / 2,
-                    }}
-                    w={"100%"}
-                  />
-                </CreditsCard>
-                <Center mt="xs">
-                  <Button
-                    radius={"xs"}
-                    variant="light"
-                    color="red"
-                    leftSection={<IconTrash />}
-                    onClick={handleDeleteImage}
+                      )?.length > 0
+                    }
+                    url={selectedImage}
                   >
-                    {translations("Delete")}
-                  </Button>
-                </Center>
-              </Box>
-            ) : (
-              <Image
-                src={fallbackImage}
-                {...imageProps}
-                alt="placholder image of menu"
-                style={{
-                  aspectRatio: 3 / 2,
-                }}
-              />
-            )}
-          </Group>
-          <Flex>
-            {form.values.images?.map((image: File | string, index) => (
-              <Image
-                onClick={() => setSelectedImage(image)}
-                style={{ borderRadius: "8px", cursor: "pointer" }}
-                src={getImageValue(
-                  image,
-                  false,
-                  form?.values?.unsplashImage?.find((data) => data === image)
-                    ?.length > 0,
-                )}
-                h={50}
-                miw={70}
-                maw={70}
-                mr={"md"}
-                fallbackSrc={fallbackImage}
-                alt="thumbnail image of menu item"
-                key={
-                  typeof image === "object" && image !== null
-                    ? (image as File).name + index
-                    : String(image)
-                }
-              />
-            ))}
-            {form?.values?.images?.length < 3 && (
-              <>
-                <FileButton
-                  onChange={onChangePicture}
-                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                  key={form?.values?.images?.length}
-                  resetRef={resetRef}
-                >
-                  {(props) => (
-                    <Button display={"none"} {...props} ref={itemImgBtnRef}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={getImageValue(
+                        selectedImage,
+                        false,
+                        values.unsplashImage?.find(
+                          (data) => data === selectedImage,
+                        )?.length > 0,
+                      )}
+                      alt={translations("menu image")}
+                      className="w-full rounded-md object-cover"
+                      style={{ aspectRatio: 3 / 2, maxHeight: 200 }}
+                    />
+                  </CreditsCard>
+
+                  <div className="mt-2 flex justify-center">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={handleDeleteImage}
+                    >
+                      <IconTrash data-icon="inline-start" />
+                      {translations("Delete")}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-md border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={fallbackImage}
+                    alt={translations("menu placeholder")}
+                    className="w-full rounded-md object-cover"
+                    style={{ aspectRatio: 3 / 2, maxHeight: 200 }}
+                  />
+                </div>
+              )}
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                {(values.images ?? []).map((image: File | string) => (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedImage(image)}
+                    key={
+                      typeof image === "string"
+                        ? image
+                        : `${image.name}-${image.lastModified}`
+                    }
+                    className="rounded-lg"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      className="h-12.5 w-17.5 cursor-pointer rounded-lg object-cover"
+                      src={getImageValue(
+                        image,
+                        false,
+                        values.unsplashImage?.find((data) => data === image)
+                          ?.length > 0,
+                      )}
+                      alt={translations("menu thumbnail")}
+                    />
+                  </button>
+                ))}
+
+                {(values.images?.length ?? 0) < 3 && (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                      onChange={(event) =>
+                        onChangePicture(event.target.files?.[0] ?? null)
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-12.5 w-20"
+                      onClick={() => setOpenedMethodSelectionDialog(true)}
+                    >
                       <IconPlus />
                     </Button>
-                  )}
-                </FileButton>
-                <Button
-                  color="gray"
-                  h={50}
-                  w={80}
-                  type="button"
-                  onClick={toggleMethodSelectionDialog}
-                  mr={"md"}
-                >
-                  <IconPlus />
-                </Button>
-              </>
-            )}
-          </Flex>
-        </Stack>
-        <Stack style={{ flex: 1.5 }} gap={8}>
-          <Flex columnGap={30}>
-            <ContainedTextField
-              label={translations("Name")}
-              placeholder={translations("Name")}
-              withAsterisk
-              {...form.getInputProps("name")}
-            />
-            <ContainedTextField
-              label={translations("Video Url")}
-              placeholder={translations("Video Url")}
-              {...form.getInputProps("videoUrl")}
-            />
-          </Flex>
-          <ContainedTextArea
-            label={translations("Description")}
-            placeholder={translations("Description")}
-            withAsterisk
-            autosize
-            minRows={5}
-            maxRows={5}
-            {...form.getInputProps("description")}
-          />
-          <PriceSection form={form} currency={currency ?? "0"} />
-          <FoodLabelSelector form={form} />
-        </Stack>
-      </Flex>
-    </FormModalLayout>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-[1.5]">
+              <FieldGroup>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <Field data-invalid={!!form.formState.errors.name}>
+                    <FieldLabel htmlFor="menu-item-name">
+                      {translations("Name")}
+                    </FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="menu-item-name"
+                        placeholder={translations("Name")}
+                        aria-invalid={!!form.formState.errors.name}
+                        {...form.register("name")}
+                      />
+                      <FieldError errors={[form.formState.errors.name]} />
+                    </FieldContent>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="menu-item-video-url">
+                      {translations("Video Url")}
+                    </FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="menu-item-video-url"
+                        placeholder={translations("Video Url")}
+                        {...form.register("videoUrl")}
+                      />
+                    </FieldContent>
+                  </Field>
+                </div>
+
+                <Field data-invalid={!!form.formState.errors.description}>
+                  <FieldLabel htmlFor="menu-item-description">
+                    {translations("Description")}
+                  </FieldLabel>
+                  <FieldContent>
+                    <Textarea
+                      id="menu-item-description"
+                      placeholder={translations("Description")}
+                      rows={5}
+                      aria-invalid={!!form.formState.errors.description}
+                      {...form.register("description")}
+                    />
+                    <FieldError errors={[form.formState.errors.description]} />
+                  </FieldContent>
+                </Field>
+
+                <PriceSection form={formAdapter} currency={currency ?? "0"} />
+                <FoodLabelSelector form={formAdapter} />
+              </FieldGroup>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={close}>
+              {translations("Cancel")}
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {editingItem
+                ? translations("Save Item")
+                : translations("Create Item")}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

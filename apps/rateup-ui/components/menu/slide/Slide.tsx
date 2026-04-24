@@ -1,40 +1,29 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import {
-  ActionIcon,
-  BackgroundImage,
-  Center,
-  FileButton,
-  Flex,
-  Group,
-  LoadingOverlay,
-  SimpleGrid,
-  Skeleton,
-  Stack,
-  Text,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { getHotkeyHandler, useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconMenu2, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { MenuItemPriceType } from "@/types/enums";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
-import {
-  ContainedTextArea,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import { ImageCropModal } from "@/components/Modal/ImageCropModal";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { Button } from "@/components/ui/button";
 import {
-  MAX_FILE_SIZE_IN_BYTE,
-  MAX_FILE_SIZE_IN_MB,
-  SAVE_HOTKEY,
-} from "@/utils/constants";
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "@/utils/constants";
 import {
   deleteUploadedFiles,
   getFileUrlFromKey,
@@ -43,42 +32,39 @@ import {
 
 import { FoodLabelSelector } from "../combobox/foodLabelSelector";
 import { PriceSection } from "../item/PriceSection";
-import TabsCommon from "../landingPage/Tabs/TabsCommon";
 import { SkeletonMenuCard } from "../skeleton/SkeletonMenuCard";
 
-export const Slide = ({
-  menuId,
-  formValues,
-  onClose,
-  createMenuBannerMutation,
-  updateMenuBannerMutation,
-  deleteMenuBannerMutation,
-  popFromData,
-  currency,
-}) => {
-  const [imageToUpload, setImageToUpload] = useState<File | null>(null);
-  const largeScreen = useMediaQuery("(min-width: 40em)");
-  const [selectedTab, setSelectedTab] = useState("Web");
-  const [creating, setCreating] = useState(false);
-  const [imageUploadError, setImageUploadError] = useState(false);
-  const isMobile = selectedTab === "Mobile";
-  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
-  const [selectedImage, setSelectedImage] = useState({
-    url: "",
-    name: "",
-  });
-  const resetRef = useRef(null);
-  const translations = useExtracted();
-  const [
-    openedCropDialog,
-    { toggle: toggleCropDialog, close: closeCropDialog },
-  ] = useDisclosure(false);
-  const form = useForm({
-    initialValues: formValues || {
+type SlideFormValues = {
+  id: string;
+  name: string;
+  menuId: string;
+  image?: string;
+  videoUrl: string;
+  description: string;
+  price: {
+    price?: string;
+    variants?: Array<{
+      name: string;
+      price: string;
+    }>;
+    type: MenuItemPriceType;
+  };
+  foodLabels: string[];
+};
+
+const getByPath = (object: any, path: string) => {
+  return path
+    .split(".")
+    .reduce((acc: any, key: string) => (acc == null ? acc : acc[key]), object);
+};
+
+const toFormValues = (menuId: string, formValues?: any): SlideFormValues => {
+  if (!formValues) {
+    return {
       id: "",
       name: "",
-      menuId: menuId,
-      images: [],
+      menuId,
+      image: "",
       videoUrl: "",
       description: "",
       price: {
@@ -92,85 +78,188 @@ export const Slide = ({
         type: MenuItemPriceType.FIXED,
       },
       foodLabels: [],
+    };
+  }
+
+  return {
+    id: formValues.id ?? "",
+    name: formValues.name ?? "",
+    menuId,
+    image: formValues.image ?? "",
+    videoUrl: formValues.videoUrl ?? "",
+    description: formValues.description ?? "",
+    price: {
+      type: formValues.price?.type ?? MenuItemPriceType.FIXED,
+      price: String(formValues.price?.price ?? ""),
+      variants: formValues.price?.variants?.map((variant: any) => ({
+        name: String(variant?.name ?? ""),
+        price: String(variant?.price ?? ""),
+      })) ?? [
+        {
+          name: "",
+          price: "",
+        },
+      ],
     },
-    validate: {
-      name: (value) => (value.length ? null : translations("Cannot be empty")),
-      description: (value) =>
-        value.length ? null : translations("Cannot be empty"),
-    },
+    foodLabels: formValues.foodLabels ?? [],
+  };
+};
+
+export const Slide = ({
+  menuId,
+  formValues,
+  onCloseAction,
+  createMenuBannerMutation,
+  updateMenuBannerMutation,
+  deleteMenuBannerMutation,
+  popFromDataAction,
+  currency,
+}: {
+  readonly menuId: string;
+  readonly formValues?: any;
+  readonly onCloseAction: () => void;
+  readonly createMenuBannerMutation: any;
+  readonly updateMenuBannerMutation: any;
+  readonly deleteMenuBannerMutation: any;
+  readonly popFromDataAction: () => void;
+  readonly currency?: string;
+}) => {
+  const [imageToUpload, setImageToUpload] = useState<File | null>(null);
+  const [selectedTab, setSelectedTab] = useState("Web");
+  const [creating, setCreating] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState(false);
+  const [dialogOpened, setDialogOpened] = useState(false);
+  const [selectedImage, setSelectedImage] = useState({
+    url: "",
+    name: "",
+  });
+  const [openedCropDialog, setOpenedCropDialog] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const translations = useExtracted();
+  const isMobile = selectedTab === "Mobile";
+
+  const form = useForm<SlideFormValues>({
+    defaultValues: toFormValues(menuId, formValues),
   });
 
+  const values = form.watch();
+
   useEffect(() => {
-    if (formValues?.price?.type === "FIXED") {
-      form?.setFieldValue("price", {
-        price: formValues?.price?.price,
-        variants: [
-          {
-            name: "",
-            price: "",
-          },
-        ],
-        type: MenuItemPriceType.FIXED,
+    form.reset(toFormValues(menuId, formValues));
+  }, [formValues, form, menuId]);
+
+  const setFieldValue = (path: string, value: any) => {
+    form.setValue(path as any, value, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+  };
+
+  const formAdapter = {
+    values,
+    getInputProps: (path: string) => ({
+      value: getByPath(values, path),
+    }),
+    setFieldValue,
+    insertListItem: (path: string, value: any) => {
+      const current = (getByPath(values, path) ?? []) as any[];
+      setFieldValue(path, [...current, value]);
+    },
+  };
+
+  const uploadBannerImage = async () => {
+    if (!imageToUpload) return "";
+    const fileKey = await uploadFile(imageToUpload);
+    return typeof fileKey === "string" ? fileKey : "";
+  };
+
+  const normalizePayload = (data: SlideFormValues) => {
+    const payload: any = {
+      ...data,
+      price: {
+        ...data.price,
+      },
+    };
+
+    if (payload?.price?.type === MenuItemPriceType.FIXED) {
+      delete payload?.price?.variants;
+    } else {
+      delete payload?.price?.price;
+    }
+
+    return payload;
+  };
+
+  const applyUploadedImage = async (payload: any, uploadedKey: string) => {
+    if (!imageToUpload) return;
+
+    const isReplacingExisting =
+      formValues?.image && formValues?.image !== payload?.image;
+    if (isReplacingExisting) {
+      await deleteUploadedFiles({
+        fileKeyArray: [{ Key: formValues?.image }],
       });
     }
-  }, [formValues]);
+    payload.image = uploadedKey;
+  };
 
-  const handleSubmit = async (data) => {
+  const submitCreate = (payload: any, uploadedKey: string) => {
+    if (imageToUpload) {
+      payload.image = uploadedKey;
+    }
+    createMenuBannerMutation.mutate(payload);
+  };
+
+  const submitUpdate = async (payload: any, uploadedKey: string) => {
+    await applyUploadedImage(payload, uploadedKey);
+    updateMenuBannerMutation.mutate({ id: payload.id, data: payload });
+  };
+
+  const handleSubmit = async (data: SlideFormValues) => {
+    if (!imageToUpload && !data?.image) {
+      setImageUploadError(true);
+      return;
+    }
+
     try {
-      if (!imageToUpload && !formValues?.image) {
-        setImageUploadError(true);
-        return;
-      }
       setCreating(true);
-      let temp = "";
-      if (imageToUpload) {
-        const fileKey = await uploadFile(imageToUpload);
-        if (typeof fileKey === "string") {
-          temp = fileKey;
-        }
-      }
-      if (data?.price?.type === MenuItemPriceType.FIXED) {
-        delete data?.price?.variants;
-      } else {
-        delete data?.price?.price;
-      }
-      if (data?.id) {
-        if (formValues?.image && formValues?.image !== data?.image) {
-          await deleteUploadedFiles({
-            fileKeyArray: [{ Key: formValues?.image }],
-          });
-          data.image = temp;
-        }
+      const uploadedKey = await uploadBannerImage();
+      const payload = normalizePayload(data);
 
-        updateMenuBannerMutation.mutate({ id: data?.id, data: data });
+      if (payload?.id) {
+        await submitUpdate(payload, uploadedKey);
       } else {
-        if (imageToUpload) {
-          data.image = temp;
-        }
-        createMenuBannerMutation.mutate(data);
+        submitCreate(payload, uploadedKey);
       }
+
       setImageToUpload(null);
-    } catch (error) {
+    } catch {
+      toast.error(translations("Something went wrong"));
     } finally {
       setCreating(false);
       setImageToUpload(null);
     }
   };
 
-  const onChangePicture = (event: File) => {
-    if (!event) return;
-    if (event.size > MAX_FILE_SIZE_IN_BYTE) {
+  const onChangePicture = (file: File | null) => {
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE_IN_BYTE) {
       toast.error(
         `${translations("Max file size is")} ${MAX_FILE_SIZE_IN_MB} MB`,
       );
       return;
     }
     setSelectedImage({
-      url: URL.createObjectURL(event),
-      name: event.name,
+      url: URL.createObjectURL(file),
+      name: file.name,
     });
-    toggleCropDialog();
-    resetRef?.current?.();
+    setOpenedCropDialog(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleDeleteMutation = () => {
@@ -182,205 +271,239 @@ export const Slide = ({
         },
       );
       deleteMenuBannerMutation.mutate(formValues?.id);
-    } else {
-      closeDialog();
-      popFromData();
+      return;
     }
+
+    setDialogOpened(false);
+    popFromDataAction();
   };
-  const handleCropImageSave = (cropedImage) => {
-    form.setFieldValue("image", URL.createObjectURL(cropedImage));
+
+  const handleCropImageSave = (cropedImage: File | string) => {
+    if (typeof cropedImage === "string") {
+      setFieldValue("image", cropedImage);
+      setImageToUpload(null);
+      setImageUploadError(false);
+      return;
+    }
+
+    setFieldValue("image", URL.createObjectURL(cropedImage));
     setImageToUpload(cropedImage);
     setImageUploadError(false);
   };
+
+  const isPending =
+    createMenuBannerMutation.isPending ||
+    updateMenuBannerMutation.isPending ||
+    creating;
+
+  const navSkeletonKeys = ["nav-1", "nav-2", "nav-3"];
+  const cardSkeletonKeys = isMobile
+    ? ["m-1", "m-2", "m-3"]
+    : ["w-1", "w-2", "w-3", "w-4", "w-5", "w-6"];
+
+  let imageUrl = "";
+  if (values?.image) {
+    if (values.image.startsWith("blob")) {
+      imageUrl = values.image;
+    } else {
+      imageUrl = getFileUrlFromKey(values.image);
+    }
+  }
+
   return (
     <>
       <ImageCropModal
         opened={openedCropDialog}
-        onclose={closeCropDialog}
+        onclose={() => setOpenedCropDialog(false)}
         imageName={selectedImage.name}
         handleCropImageSave={handleCropImageSave}
         image={selectedImage.url}
         aspect={16 / 9}
       />
-      <LoadingOverlay
-        visible={
-          createMenuBannerMutation.isPending ||
-          updateMenuBannerMutation.isPending ||
-          creating
-        }
-        zIndex={1000}
-        overlayProps={{ radius: "sm", blur: 2 }}
-        loaderProps={{ type: "bars" }}
-      />
-      <form
-        onSubmit={form.onSubmit(handleSubmit)}
-        onKeyDown={getHotkeyHandler([
-          [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
-        ])}
-      >
-        <SimpleGrid cols={largeScreen ? 2 : 1}>
-          <Stack>
-            <Flex columnGap={30} rowGap={0}>
-              <ContainedTextField
-                label={translations("Name")}
-                placeholder={translations("Name")}
-                withAsterisk
-                {...form.getInputProps("name")}
-              />
-              <ContainedTextField
-                label={translations("Video Url")}
-                placeholder={translations("Video Url")}
-                {...form.getInputProps("videoUrl")}
-              />
-            </Flex>
-            <ContainedTextArea
-              label={translations("Description")}
-              placeholder={translations("Description")}
-              withAsterisk
-              autosize
-              minRows={5}
-              {...form.getInputProps("description")}
-            />
-            <PriceSection form={form} currency={currency ?? "0"} />
-            <FoodLabelSelector form={form} />
-          </Stack>
-          <Stack align="center">
-            <Group w={"100%"} justify="space-between" gap={0}>
-              <Stack></Stack>
-              <TabsCommon
-                tabHeading={["Web", "Mobile"]}
-                radius={"lg"}
-                value={selectedTab}
-                onChange={(value) => setSelectedTab(value)}
-              >
-                <></>
-              </TabsCommon>
-              <ActionIcon onClick={toggle} variant="transparent">
-                <IconTrash />
-              </ActionIcon>
-            </Group>
-            <PaperLayout p={0} w={isMobile ? "185px" : "100%"}>
-              <>
-                {imageUploadError && <Text c={"red"}>*Image is Required</Text>}
-                <BackgroundImage
-                  h={110}
-                  w={"100%"}
-                  style={{
-                    backgroundColor: "var(--light-grey-color-2)",
-                    borderRadius: "3px",
-                  }}
-                  src={
-                    form.values?.image?.startsWith("blob")
-                      ? form.values.image
-                      : getFileUrlFromKey(form.values?.image)
-                  }
-                >
-                  <Center h="100%">
-                    <Stack gap={0} align="center">
-                      <Flex
-                        style={{ cursor: "pointer", borderRadius: "7px" }}
-                        bg={form?.values?.image && "var(--light-dark-color-2)"}
-                        c={form?.values?.image && "white"}
-                        p={5}
-                        columnGap={5}
-                      >
-                        <IconUpload size={"16px"} />
-                        <FileButton
-                          onChange={onChangePicture}
-                          accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                          resetRef={resetRef}
-                        >
-                          {(props) => {
-                            return (
-                              <Text fz={"xs"} {...props}>
-                                {form?.values?.image
-                                  ? translations("Change Banner Image")
-                                  : translations("Upload Banner Image")}
-                              </Text>
-                            );
-                          }}
-                        </FileButton>
-                      </Flex>
-                      {!form?.values?.image && (
-                        <Text c={"var(--grey-color-4)"} fz={10}>
-                          {translations("Width : 1980 X Height: 312")}
-                        </Text>
-                      )}
-                    </Stack>
-                  </Center>
-                </BackgroundImage>
-                <Stack p={"md"}>
-                  <Group gap={isMobile && "3px"}>
-                    <IconMenu2 stroke={1} height={12} width={14} />
-                    {Array(3)
-                      .fill(0)
-                      .map((_, index) => (
-                        <Skeleton
-                          h={13}
-                          w={!isMobile && 50}
-                          key={index}
-                          style={{
-                            flex: isMobile ? 1 : undefined,
-                            backgroundColor: "var(--light-grey-color-2)",
-                            borderRadius: "3px",
-                          }}
-                        />
-                      ))}
-                  </Group>
 
-                  <Skeleton
-                    h={9}
-                    w={57}
-                    style={{
-                      backgroundColor: "var(--light-grey-color-2)",
-                      borderRadius: "3px",
-                    }}
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="relative">
+        {isPending && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-background/80">
+            <Spinner />
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <FieldGroup>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <Field data-invalid={!!form.formState.errors.name}>
+                  <FieldLabel htmlFor="banner-name">
+                    {translations("Name")}
+                  </FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="banner-name"
+                      placeholder={translations("Name")}
+                      aria-invalid={!!form.formState.errors.name}
+                      {...form.register("name")}
+                    />
+                    <FieldError errors={[form.formState.errors.name]} />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="banner-video-url">
+                    {translations("Video Url")}
+                  </FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="banner-video-url"
+                      placeholder={translations("Video Url")}
+                      {...form.register("videoUrl")}
+                    />
+                  </FieldContent>
+                </Field>
+              </div>
+
+              <Field data-invalid={!!form.formState.errors.description}>
+                <FieldLabel htmlFor="banner-description">
+                  {translations("Description")}
+                </FieldLabel>
+                <FieldContent>
+                  <Textarea
+                    id="banner-description"
+                    placeholder={translations("Description")}
+                    rows={5}
+                    aria-invalid={!!form.formState.errors.description}
+                    {...form.register("description")}
                   />
-                  <SimpleGrid
-                    cols={isMobile ? 1 : 3}
-                    spacing={isMobile && "5px"}
+                  <FieldError errors={[form.formState.errors.description]} />
+                </FieldContent>
+              </Field>
+
+              <PriceSection form={formAdapter} currency={currency ?? "0"} />
+              <FoodLabelSelector form={formAdapter} />
+            </FieldGroup>
+          </div>
+
+          <div className="flex flex-col items-center">
+            <div className="mb-2 flex w-full items-center justify-between">
+              <div />
+              <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+                <TabsList>
+                  <TabsTrigger value="Web">Web</TabsTrigger>
+                  <TabsTrigger value="Mobile">Mobile</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setDialogOpened(true)}
+                aria-label={translations("Delete")}
+              >
+                <IconTrash />
+              </Button>
+            </div>
+
+            <div
+              className={`rounded-lg border bg-card ${isMobile ? "w-46.25" : "w-full"}`}
+            >
+              {imageUploadError && (
+                <p className="px-4 pt-2 text-sm text-destructive">
+                  *Image is Required
+                </p>
+              )}
+
+              <div
+                className="flex h-27.5 w-full items-center justify-center rounded-t-md bg-muted"
+                style={{
+                  backgroundImage: imageUrl ? `url(${imageUrl})` : "none",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <Button
+                    type="button"
+                    variant={values?.image ? "secondary" : "outline"}
+                    className="gap-1"
+                    onClick={() => fileInputRef.current?.click()}
                   >
-                    {Array(isMobile ? 3 : 6)
-                      .fill(0)
-                      .map((_, index) => (
-                        <SkeletonMenuCard isMobile={isMobile} key={index} />
-                      ))}
-                  </SimpleGrid>
-                </Stack>
-              </>
-            </PaperLayout>
-          </Stack>
-        </SimpleGrid>
-        <Group justify="flex-end">
-          <RateupButtonPrimary
-            loading={
-              createMenuBannerMutation?.isPending ||
-              updateMenuBannerMutation?.isPending
-            }
-            type="reset"
-            variant="subtle"
-            onClick={onClose}
-            title={"Cancel"}
-          />
-          <RateupButtonPrimary
-            loading={
-              createMenuBannerMutation?.isPending ||
-              updateMenuBannerMutation?.isPending
-            }
-            type="submit"
-            title={translations("save")}
-          />
-        </Group>
+                    <IconUpload data-icon="inline-start" />
+                    {values?.image
+                      ? translations("Change Banner Image")
+                      : translations("Upload Banner Image")}
+                  </Button>
+
+                  {!values?.image && (
+                    <p className="text-xs text-muted-foreground">
+                      {translations("Width : 1980 X Height: 312")}
+                    </p>
+                  )}
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  onChange={(event) =>
+                    onChangePicture(event.target.files?.[0] ?? null)
+                  }
+                />
+              </div>
+
+              <div className="p-4">
+                <div className="mb-3 flex items-center gap-1">
+                  <IconMenu2 stroke={1} height={12} width={14} />
+                  {navSkeletonKeys.map((key) => (
+                    <Skeleton
+                      key={key}
+                      className="h-3.25 rounded-sm bg-muted"
+                      style={{
+                        flex: isMobile ? 1 : undefined,
+                        width: isMobile ? undefined : 50,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <Skeleton className="mb-3 h-2.25 w-14.25 rounded-sm bg-muted" />
+
+                <div
+                  className={`grid ${isMobile ? "grid-cols-1 gap-1.25" : "grid-cols-3 gap-4"}`}
+                >
+                  {cardSkeletonKeys.map((key) => (
+                    <div key={key}>
+                      <SkeletonMenuCard isMobile={isMobile} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCloseAction}
+            disabled={isPending}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isPending}>
+            {translations("save")}
+          </Button>
+        </div>
+
         <ConfirmationModal
           forDeleteFunctionality
           opened={dialogOpened}
-          onClose={closeDialog}
+          onClose={() => setDialogOpened(false)}
           headerLabel={translations("Are you sure to delete this Menu Banner?")}
           headerTitle={translations("Delete Menu Banner?")}
           confirmLabel={translations("Delete")}
-          onConfirm={(e) => {
+          onConfirm={() => {
             handleDeleteMutation();
-            closeDialog();
+            setDialogOpened(false);
           }}
         />
       </form>

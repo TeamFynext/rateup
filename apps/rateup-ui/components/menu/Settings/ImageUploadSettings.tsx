@@ -1,20 +1,35 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { ChangeEvent, useRef, useState } from "react";
 
-import { Box, Button, FileButton, Group, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { ImageCropModal } from "@/components/Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "@/components/Modal/ImageUploadMethodModal";
 import { UnsplashModal } from "@/components/Modal/UnsplashModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "@/utils/constants";
 
-import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
+type ImageFieldName = "backgroundImage" | "mobileBackgroundImage" | "logo";
+
+type ImageUploadSettingsProps = {
+  form: {
+    values: Record<string, any>;
+    setFieldValue: (field: string, value: unknown) => void;
+  };
+  backgroundImage: File | null;
+  setBackgroundImage: React.Dispatch<React.SetStateAction<File | null>>;
+  mobileBackgroundImage: File | null;
+  setMobileBackgroundImage: React.Dispatch<React.SetStateAction<File | null>>;
+  logo: File | null;
+  setLogo: React.Dispatch<React.SetStateAction<File | null>>;
+  setImageToDelete: React.Dispatch<
+    React.SetStateAction<Array<{ Key: string }>>
+  >;
+};
 
 const ImageUploadSettings = ({
   form,
@@ -25,28 +40,20 @@ const ImageUploadSettings = ({
   logo,
   setLogo,
   setImageToDelete,
-}) => {
+}: ImageUploadSettingsProps) => {
   const [aspectRatio, setAspectRatio] = useState(5 / 1);
   const [imageType, setImageType] = useState("");
-  const imageUploadBtnRef = useRef<HTMLButtonElement>(null);
-  const resetLogoRef = useRef(null);
+  const backgroundFileInputRef = useRef<HTMLInputElement>(null);
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
   const translations = useExtracted();
-  const [
-    openedMethodSelectionDialog,
-    { toggle: toggleMethodSelectionDialog, close: closeMethodSelectionDialog },
-  ] = useDisclosure(false);
+  const [openedMethodSelectionDialog, setOpenedMethodSelectionDialog] =
+    useState(false);
   const [selectedUnslashImage, setSelectedUnslashImage] = useState({
     url: "",
     name: "",
   });
-  const [
-    openedUnsplashDialog,
-    { toggle: toggleUnsplashDialog, close: closeUnsplashDialog },
-  ] = useDisclosure(false);
-  const [
-    openedCropDialog,
-    { toggle: toggleCropDialog, close: closeCropDialog },
-  ] = useDisclosure(false);
+  const [openedUnsplashDialog, setOpenedUnsplashDialog] = useState(false);
+  const [openedCropDialog, setOpenedCropDialog] = useState(false);
 
   const handleUnsplashImageSave = (
     unsplashImage: string,
@@ -56,12 +63,10 @@ const ImageUploadSettings = ({
       url: unsplashImage,
       name: imageName,
     });
-    toggleCropDialog();
+    setOpenedCropDialog(true);
   };
-  const labelColor =
-    "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))";
 
-  const handleCropImageSave = (cropedImage) => {
+  const handleCropImageSave = (cropedImage: File | string) => {
     const imageUrl =
       typeof cropedImage === "string"
         ? cropedImage
@@ -97,50 +102,65 @@ const ImageUploadSettings = ({
       }
     } else if (imageType === "logo") {
       form?.setFieldValue("logo", imageUrl);
-      setLogo(cropedImage);
+      if (typeof cropedImage !== "string") {
+        setLogo(cropedImage);
+      }
     }
   };
   const handlePictureBackground = () => {
     setAspectRatio(5 / 1);
-    toggleMethodSelectionDialog();
+    setOpenedMethodSelectionDialog(true);
     setImageType("backgroundImage");
   };
   const handlePictureMobileBackground = () => {
     setAspectRatio(3 / 2);
-    toggleMethodSelectionDialog();
+    setOpenedMethodSelectionDialog(true);
     setImageType("mobileBackgroundImage");
   };
-  const onChangeLogo = (event: File) => {
-    if (!event) return;
-    if (event.size > MAX_FILE_SIZE_IN_BYTE) {
+  const onChangeLogo = (file: File | null) => {
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE_IN_BYTE) {
       toast.error(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
       return;
     }
     setSelectedUnslashImage({
-      url: URL.createObjectURL(event),
-      name: event.name,
+      url: URL.createObjectURL(file),
+      name: file.name,
     });
-    toggleCropDialog();
+    setOpenedCropDialog(true);
     setAspectRatio(4 / 3);
     setImageType("logo");
-    resetLogoRef?.current?.();
+    if (logoFileInputRef.current) {
+      logoFileInputRef.current.value = "";
+    }
   };
 
-  const handleBgPick = (e: File | null) => {
-    if (!e) return;
-    if (e.size > MAX_FILE_SIZE_IN_BYTE) {
+  const handleBgPick = (file: File | null) => {
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE_IN_BYTE) {
       return toast.error(`Max file size is ${MAX_FILE_SIZE_IN_MB} MB`);
     }
-    handleUnsplashImageSave(URL.createObjectURL(e), e.name);
+    handleUnsplashImageSave(URL.createObjectURL(file), file.name);
   };
+
+  const handleFileInputChange = (
+    event: ChangeEvent<HTMLInputElement>,
+    onPick: (file: File | null) => void,
+  ) => {
+    const file = event.target.files?.[0] ?? null;
+    onPick(file);
+    event.target.value = "";
+  };
+
   const handleUploadMethod = (type: string) => {
     if (type === "unsplash") {
-      toggleUnsplashDialog();
+      setOpenedUnsplashDialog(true);
     } else {
-      imageUploadBtnRef?.current?.click();
+      backgroundFileInputRef.current?.click();
     }
   };
-  const resetImage = (type: string) => {
+
+  const resetImage = (type: ImageFieldName) => {
     if (type === "backgroundImage") {
       setBackgroundImage(null);
     } else if (type === "mobileBackgroundImage") {
@@ -160,124 +180,86 @@ const ImageUploadSettings = ({
     });
     form.setFieldValue(type, "");
   };
+
+  const handleLogoUploadClick = () => {
+    if (logoFileInputRef.current) {
+      logoFileInputRef.current?.click();
+    }
+  };
+
   return (
     <>
       <UnsplashModal
         handleUnsplashImageSave={handleUnsplashImageSave}
         opened={openedUnsplashDialog}
-        onclose={closeUnsplashDialog}
+        onclose={() => setOpenedUnsplashDialog(false)}
       />
       <ImageCropModal
         opened={openedCropDialog}
-        onclose={closeCropDialog}
+        onclose={() => setOpenedCropDialog(false)}
         imageName={selectedUnslashImage.name}
         handleCropImageSave={handleCropImageSave}
         image={selectedUnslashImage.url}
         aspect={aspectRatio}
       />
       <ImageUploadMethodModal
-        onClose={closeMethodSelectionDialog}
+        onClose={() => setOpenedMethodSelectionDialog(false)}
         opened={openedMethodSelectionDialog}
         handleUploadMethod={handleUploadMethod}
       />
-      <Box>
-        <Text size="xs" lineClamp={1} h={17} c={labelColor}>
-          {translations("Default Banner Image")}
-        </Text>
-        <Group>
-          <RateupButtonPrimary
-            leftIcon={<IconUpload size={16} />}
-            title={translations("Upload Mobile Image")}
-            size="sm"
-            variant="light"
-            onClick={handlePictureMobileBackground}
-          />
-          <ActionIconCommon
-            handleClick={() => resetImage("mobileBackgroundImage")}
-            disabled={!form?.values?.mobileBackgroundImage}
-            label={translations("Delete")}
-          >
-            <IconTrash />
-          </ActionIconCommon>
-        </Group>
-        <Text size="xs" lineClamp={1} h={17}>
-          {getFileNameFromUrl(
+      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
+        <RenderImageSetting
+          label={translations("Default Banner Image")}
+          buttonLabel={translations("Upload Desktop Image")}
+          currentValue={
             mobileBackgroundImage
-              ? mobileBackgroundImage?.name
-              : form?.values?.mobileBackgroundImage,
-            !!mobileBackgroundImage,
-          )}
-        </Text>
-      </Box>
-      <Box>
-        <Text size="xs" lineClamp={1} h={17} c={labelColor}>
-          {translations("Default Banner Image")}
-        </Text>
-        <Group>
-          <RateupButtonPrimary
-            leftIcon={<IconUpload size={16} />}
-            title={translations("Upload Tablet Image")}
-            size="sm"
-            variant="light"
-            onClick={handlePictureBackground}
-          />
-          <ActionIconCommon
-            handleClick={() => resetImage("backgroundImage")}
-            disabled={!form?.values?.backgroundImage}
-            label={translations("Delete")}
-          >
-            <IconTrash />
-          </ActionIconCommon>
-        </Group>
-        <Text size="xs" lineClamp={1} h={17}>
-          {getFileNameFromUrl(
+              ? mobileBackgroundImage.name
+              : form?.values?.mobileBackgroundImage
+          }
+          isDisabled={!form?.values?.mobileBackgroundImage}
+          isNewFile={!!mobileBackgroundImage}
+          onUpload={handlePictureMobileBackground}
+          onDelete={() => resetImage("mobileBackgroundImage")}
+        />
+
+        <RenderImageSetting
+          label={translations("Default Banner Image")}
+          buttonLabel={translations("Upload Desktop Image")}
+          currentValue={
             backgroundImage
-              ? backgroundImage?.name
-              : form?.values?.backgroundImage,
-            !!backgroundImage,
-          )}
-        </Text>
-      </Box>
-      <Box>
-        <Text size="xs" lineClamp={1} h={17} c={labelColor}>
-          {translations("Logo")}
-        </Text>
-        <Group>
-          <FileButton
-            onChange={onChangeLogo}
-            accept="image/png,image/jpeg,image/svg+xml,image/webp"
-            resetRef={resetLogoRef}
-          >
-            {(props) => (
-              <RateupButtonPrimary
-                leftIcon={<IconUpload size={16} />}
-                title={translations("Upload Logo")}
-                size="sm"
-                variant="light"
-                {...props}
-              />
-            )}
-          </FileButton>
-          <ActionIconCommon
-            handleClick={() => resetImage("logo")}
-            disabled={!form?.values?.logo}
-            label={translations("Delete")}
-          >
-            <IconTrash />
-          </ActionIconCommon>
-        </Group>
-        <Text size="xs" lineClamp={1} h={17}>
-          {getFileNameFromUrl(logo ? logo?.name : form?.values?.logo, !!logo)}
-        </Text>
-      </Box>
-      <FileButton
-        onChange={handleBgPick}
+              ? backgroundImage.name
+              : form?.values?.backgroundImage
+          }
+          isDisabled={!form?.values?.backgroundImage}
+          isNewFile={!!backgroundImage}
+          onUpload={handlePictureBackground}
+          onDelete={() => resetImage("backgroundImage")}
+        />
+
+        <RenderImageSetting
+          label={translations("Logo")}
+          buttonLabel={translations("Upload Logo")}
+          currentValue={logo ? logo.name : form?.values?.logo}
+          isDisabled={!form?.values?.logo}
+          isNewFile={!!logo}
+          onUpload={handleLogoUploadClick}
+          onDelete={() => resetImage("logo")}
+        />
+      </div>
+      <Input
+        ref={backgroundFileInputRef}
+        type="file"
+        className="hidden"
         accept="image/png,image/jpeg,image/svg+xml,image/webp"
-      >
-        {(props) => (
-          <Button ref={imageUploadBtnRef} display={"none"} {...props} />
-        )}
-      </FileButton>
+        onChange={(event) => handleFileInputChange(event, handleBgPick)}
+      />
+      <Input
+        ref={logoFileInputRef}
+        type="file"
+        className="hidden"
+        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+        onChange={(event) => handleFileInputChange(event, onChangeLogo)}
+      />
     </>
   );
 };
@@ -290,3 +272,48 @@ export function getFileNameFromUrl(url: any, isNewFile: boolean) {
   const name = url?.replace(pattern, "");
   return name?.split("?crop=focalpoint")[0];
 }
+
+const RenderImageSetting = ({
+  label,
+  buttonLabel,
+  currentValue,
+  isDisabled,
+  isNewFile,
+  onUpload,
+  onDelete,
+}: {
+  label: string;
+  buttonLabel: string;
+  currentValue?: string;
+  isDisabled: boolean;
+  isNewFile: boolean;
+  onUpload: () => void;
+  onDelete: () => void;
+}) => {
+  const translations = useExtracted();
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="truncate text-xs text-muted-foreground">{label}</p>
+      <div className="flex items-center gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={onUpload}>
+          <IconUpload data-icon="inline-start" />
+          {buttonLabel}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          onClick={onDelete}
+          disabled={isDisabled}
+          aria-label={translations("Delete")}
+          title={translations("Delete")}
+        >
+          <IconTrash />
+        </Button>
+      </div>
+      <p className="truncate text-xs text-muted-foreground">
+        {getFileNameFromUrl(currentValue, isNewFile)}
+      </p>
+    </div>
+  );
+};

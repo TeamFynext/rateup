@@ -1,137 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
 
-import {
-  CheckIcon,
-  Combobox,
-  Flex,
-  Group,
-  Image,
-  Pill,
-  PillsInput,
-  ScrollAreaAutosize,
-  Text,
-  useCombobox,
-} from "@mantine/core";
 import { useExtracted } from "next-intl";
 
+import { Checkbox } from "../../ui/checkbox";
+import { Field, FieldContent, FieldGroup, FieldLabel } from "../../ui/field";
 import { menuLabelWithText } from "../util/menuLabelData";
 
-export function FoodLabelSelector({ form }) {
-  const combobox = useCombobox({
-    onDropdownClose: () => combobox.resetSelectedOption(),
-    onDropdownOpen: () => combobox.updateSelectedOptionIndex("active"),
-  });
-
-  const [search, setSearch] = useState("");
-  const translations = useExtracted();
-  const handleValueSelect = (val: string) => {
-    form.setValues((prevValues) => {
-      const updatedFoodLabels = prevValues?.foodLabels?.includes(val)
-        ? prevValues?.foodLabels?.filter((v) => v !== val)
-        : [...(prevValues?.foodLabels ?? []), val];
-      return {
-        ...prevValues,
-        foodLabels: updatedFoodLabels,
-      };
-    });
+type FoodLabelFormAdapter = {
+  values?: {
+    foodLabels?: string[];
   };
-  const handleValueRemove = (val: string) =>
-    form.setValues((prevValues) => ({
-      ...prevValues,
-      foodLabels: prevValues?.foodLabels?.filter((v: string) => v !== val),
-    }));
+  setFieldValue: (path: string, value: any) => void;
+};
 
-  const values = form?.values?.foodLabels?.map((item) => (
-    <Pill key={item} withRemoveButton onRemove={() => handleValueRemove(item)}>
-      <Flex align={"center"} h={"100%"} columnGap={5}>
-        <Image
-          src={menuLabelWithText?.find((gr) => gr.label === item)?.image}
-          alt="it's me"
-          h={15}
-          w={15}
-        />
-        {item}
-      </Flex>
-    </Pill>
-  ));
+export function FoodLabelSelector({
+  form,
+}: {
+  readonly form: FoodLabelFormAdapter;
+}) {
+  const translations = useExtracted();
+  const selectedValues = form?.values?.foodLabels ?? [];
 
-  const options = menuLabelWithText
-    .filter(({ image: item }) =>
-      item.toLowerCase().includes(search.trim().toLowerCase()),
-    )
-    .filter(({ label }) => !form?.values?.foodLabels?.includes(label))
-    .map(({ image, label }) => (
-      <Combobox.Option
-        value={label}
-        key={image}
-        active={form?.values?.foodLabels?.includes(image)}
-      >
-        <Group gap="sm">
-          {form?.values?.foodLabels?.includes(label) ? (
-            <CheckIcon size={12} />
-          ) : null}
-          <Flex align={"center"} h={"100%"} columnGap={5}>
-            <Image src={image} alt="it's me" h={15} w={15} />
-            {label}
-          </Flex>
-        </Group>
-      </Combobox.Option>
-    ));
+  const toggleValue = (label: string, checked: boolean) => {
+    const next = checked
+      ? [...selectedValues, label]
+      : selectedValues.filter((value) => value !== label);
+    form.setFieldValue("foodLabels", next);
+  };
 
   return (
-    <Combobox store={combobox} onOptionSubmit={handleValueSelect}>
-      <Combobox.DropdownTarget>
-        <PillsInput
-          onClick={() => combobox.openDropdown()}
-          radius={"12px"}
-          label={
-            <Text c={"var(--mantine-color-gray-7)"} fz={"xs"}>
-              {translations("Allergen Info")}
-            </Text>
-          }
-        >
-          <Pill.Group mih={31}>
-            {values}
-            <Combobox.EventsTarget>
-              <PillsInput.Field
-                onFocus={() => combobox.openDropdown()}
-                onBlur={() => combobox.closeDropdown()}
-                value={search}
-                placeholder={translations("Search Values")}
-                onChange={(event) => {
-                  combobox.updateSelectedOptionIndex();
-                  setSearch(event.currentTarget.value);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Backspace" && search.length === 0) {
-                    event.preventDefault();
-                    handleValueRemove(
-                      form?.values?.foodLabels[
-                        form?.values?.foodLabels.length - 1
-                      ],
-                    );
-                  }
-                }}
-              />
-            </Combobox.EventsTarget>
-          </Pill.Group>
-        </PillsInput>
-      </Combobox.DropdownTarget>
-      <Combobox.Dropdown>
-        <ScrollAreaAutosize mah={300}>
-          <Combobox.Options>
-            {options.length > 0 ? (
-              options
-            ) : (
-              <Combobox.Empty>
-                {translations("Nothing found...")}
-              </Combobox.Empty>
-            )}
-          </Combobox.Options>
-        </ScrollAreaAutosize>
-      </Combobox.Dropdown>
-    </Combobox>
+    <FieldGroup>
+      <Field>
+        <FieldLabel>{translations("Allergen Info")}</FieldLabel>
+        <FieldContent>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {menuLabelWithText.map(({ image, label }) => {
+              const checked = selectedValues.includes(label);
+              return (
+                <label
+                  key={label}
+                  className="flex items-center gap-2 rounded-md border px-2 py-1.5"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(value) =>
+                      toggleValue(label, value === true)
+                    }
+                  />
+                  <Image src={image} alt={label} width={15} height={15} />
+                  <span className="text-sm">{label}</span>
+                </label>
+              );
+            })}
+          </div>
+        </FieldContent>
+      </Field>
+    </FieldGroup>
   );
 }
