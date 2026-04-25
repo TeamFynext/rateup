@@ -105,7 +105,7 @@ export const createMessageTemplate = ({ body }) => {
   
               <div class="footer">
                       <p>This is an automated report. Please do not reply to this email.</p>
-                      <p>© 2025 Rateup. All rights reserved.</p>
+                      <p>© 2026 Rateup. All rights reserved.</p>
               </div>
       </div>
   </body>

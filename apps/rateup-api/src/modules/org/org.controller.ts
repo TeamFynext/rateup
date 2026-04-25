@@ -7,10 +7,12 @@ import {
   getAllMembersWithTeamsAndInvitation,
   getAllOrgs,
   getOnboardingChecklist,
+  getOrgById,
   getOrgNameAndUserPhone,
   getOrgStats,
   getTeamsMembers,
   pauseOrg,
+  sendDeletionMailToOrgOwner,
   updateOrgDetails,
   updateOrgLogo,
   updateOrgUserRole,
@@ -332,5 +334,41 @@ export async function getOnboardingChecklistHandler(
     reply.code(200).send(data);
   } catch (e) {
     reply.code(500).send(e);
+  }
+}
+
+export async function sendDeletionWarningHandler(
+  request: FastifyRequest<{
+    Params: ByOrgIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.params;
+
+    const org = await getOrgById(orgId);
+
+    if (!org || !org.owner) {
+      return reply.code(404).send({
+        error: "Organization or owner not found",
+      });
+    }
+
+    await sendDeletionMailToOrgOwner({
+      ownerEmail: org.owner.email,
+      ownerName: org.owner.name,
+      orgName: org.name,
+      orgId,
+      delayInDays: 7,
+    });
+
+    return reply.code(200).send({
+      message: "Deletion warning email scheduled successfully",
+    });
+  } catch (e) {
+    request.log.error(e);
+    return reply.code(500).send({
+      error: "Failed to schedule deletion warning",
+    });
   }
 }

@@ -11,6 +11,11 @@ import Session from "supertokens-node/recipe/session/index.js";
 import { defaultTheme } from "../surveyTheme/defaultTheme.js";
 import { deleteSuperTokenUserForId } from "../../utils/supertoken/supertoken.js";
 import { seedDefaultStages } from "../update/update.controller.js";
+import { notificationQueue } from "../../utils/redisConnection.js";
+import {
+  createInactivityWarningTemplate,
+  createOrgDeletionReminderTemplate,
+} from "../../utils/email/OrgDeletionWarningEmail.js";
 
 export async function createOrg(input: CreateOrgInput) {
   const org = await prisma.org.create({
@@ -34,9 +39,17 @@ export async function getOrgById(orgId: string) {
     where: {
       id: orgId,
     },
+    include: {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
   });
 }
-
 export async function getTeamsMembers(orgId: string) {
   const teams = await prisma.team.findMany({
     where: { orgId: orgId },
@@ -358,6 +371,15 @@ export async function getAllOrgs() {
           members: true,
           invitations: true,
           templates: true,
+        },
+      },
+      AuditLog: {
+        take: 1,
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          createdAt: true,
         },
       },
     },
@@ -765,4 +787,71 @@ export async function getOnboardingChecklist(orgId) {
       (org?.onboardingChecklist as Record<string, boolean>) ?? {},
     onboardingChecklistCompleted: org?.onboardingChecklistCompleted ?? false,
   };
+}
+
+const DAY = 24 * 60 * 60 * 1000;
+
+export async function sendDeletionMailToOrgOwner({
+  ownerEmail,
+  ownerName,
+  orgName,
+  orgId,
+  delayInDays,
+}) {
+  try {
+    const days = delayInDays || 7;
+
+    const triggeredAt = new Date();
+
+    const deadline = new Date(triggeredAt);
+    deadline.setDate(triggeredAt.getDate() + days);
+
+    const html = createInactivityWarningTemplate({
+      orgName,
+      ownerName,
+      deadlineDate: deadline,
+    });
+
+    const internalHtml = createOrgDeletionReminderTemplate({
+      orgName,
+      ownerName,
+      triggeredDate: triggeredAt,
+      orgId,
+    });
+
+    // Send to user immediately
+    await notificationQueue.add("notification", {
+      emailData: {
+        to: ownerEmail,
+        subject: `Action Required: ${orgName} scheduled for deletion`,
+        html,
+        text: `Hi ${ownerName}, your organization "${orgName}" will be deleted if no activity is detected before ${deadline.toDateString()}.`,
+      },
+    });
+
+    await prisma.org.update({
+      where: { id: orgId },
+      data: {
+        deletionMailSent: triggeredAt,
+      },
+    });
+    // reminder
+    await notificationQueue.add(
+      "notification",
+      {
+        emailData: {
+          to: "hello@rateup.app",
+          subject: `Org Deletion Reminder: ${orgName}`,
+          html: internalHtml,
+          text: `Reminder: "${orgName}" was flagged inactive on ${triggeredAt.toDateString()}.`,
+        },
+      },
+      {
+        delay: days * DAY,
+      },
+    );
+  } catch (e) {
+    console.error("Failed to send deletion email:", e);
+    throw e;
+  }
 }
