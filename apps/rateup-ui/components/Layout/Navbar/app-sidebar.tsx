@@ -572,8 +572,8 @@ export default function AppSidebar({
   const { chatFilterStore, handleFilter } = useChatFilter();
 
   // Feature-gating: consumed from TeamFeaturesProvider (shared with RouteAccessGuard).
-  // null = bypass (OWNER / ADMIN / SUPER_ADMIN), Set = restrict (MEMBER).
-  const allowedFeatures = useTeamFeatures();
+  // null = bypass (SUPER_ADMIN), Set = restrict (MEMBER).
+  const { allowedFeatures } = useTeamFeatures();
 
   const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
   const [intendedRoute, setIntendedRoute] = useState<string | null>(null);

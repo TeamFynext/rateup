@@ -10,6 +10,13 @@ import InfoButton from "@/components/Button/InfoButton";
 import RefreshButton from "@/components/Button/RefreshButton";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Empty,
   EmptyContent,
   EmptyDescription,
@@ -18,11 +25,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
@@ -237,8 +239,8 @@ export function ListPageLayout({
           </div>
 
           {hasSortControl ? (
-            <Popover>
-              <PopoverTrigger asChild>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
@@ -251,32 +253,23 @@ export function ListPageLayout({
                   <ArrowUpDown className="h-3.5 w-3.5" />
                   {currentSortLabel}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="start"
-                sideOffset={6}
-                className="w-44 p-1.5"
-              >
-                {activeSortOptions.map((option) => (
-                  <Button
-                    key={option.value}
-                    onClick={() => onSortChange?.(option.value)}
-                    variant="ghost"
-                    className={cn(
-                      "flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm transition-colors",
-                      sortValue === option.value
-                        ? "bg-primary/10 font-medium text-primary"
-                        : "text-foreground hover:bg-muted",
-                    )}
-                  >
-                    {option.label}
-                    {sortValue === option.value ? (
-                      <Check className="h-3.5 w-3.5 shrink-0" />
-                    ) : null}
-                  </Button>
-                ))}
-              </PopoverContent>
-            </Popover>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-44 p-1.5">
+                <DropdownMenuRadioGroup
+                  value={sortValue ?? ""}
+                  onValueChange={(val) => onSortChange?.(val)}
+                >
+                  {activeSortOptions.map((option) => (
+                    <DropdownMenuRadioItem
+                      key={option.value}
+                      value={option.value}
+                    >
+                      {option.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : null}
 
           {rightControls}
