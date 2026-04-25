@@ -95,7 +95,7 @@ export async function userRoutes(server: FastifyInstance) {
   server.put(
     "/update-active-status/:userId",
     {
-      preHandler: [verifySession()],
+      preHandler: [checkSession],
     },
     updateUserActiveStatusHandler,
   );
