@@ -1,21 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import { useDisclosure } from "@mantine/hooks";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import {
   Building2,
   Calendar,
+  CheckCircle,
   Globe,
   Info,
   LayoutTemplate,
+  Mail,
   MessageSquare,
   Pause,
   Play,
   Settings,
   Shield,
   Star,
+  Trash,
   Users,
   Utensils,
   Zap,
@@ -41,10 +46,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatIsoDateStringWithTime } from "@/utils/dateTime";
 
 import {
   useAllOrgs,
+  useDeleteOrgByAdminMutation,
   useOrgStats,
+  useSendDeleteOrgEmail,
   useUpdateOrgPause,
 } from "../../../../backend/org/org.query";
 import {
@@ -56,6 +64,8 @@ import { SubscriptionEditorModal } from "../../../../components/adminPanel/Subsc
 import RefreshButton from "../../../../components/Button/RefreshButton";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
 import ConfirmationModal from "../../../../components/Modal/ConfirmationModal";
+
+dayjs.extend(relativeTime);
 
 const StatCard = ({ title, count, icon: Icon, color = "blue" }) => {
   const getColorClasses = () => {
@@ -124,6 +134,7 @@ export default function OrgById() {
     openedConfirmModal,
     { open: openConfirmModal, close: closeConfirmModal },
   ] = useDisclosure(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const params = useParams();
   const orgId = params?.orgId as string;
   const {
@@ -137,6 +148,7 @@ export default function OrgById() {
   const updatePauseStatus = useUpdateOrgPause();
   const translations = useExtracted();
   const updateSubscription = useUpdateSubscriptionMutation();
+  const sendDeletionEmail = useSendDeleteOrgEmail();
 
   useEffect(() => {
     if (orgs) {
@@ -210,6 +222,10 @@ export default function OrgById() {
   if (isLoading || isOrgsLoading || !stats || isSubLoading)
     return <RateupLoader h={"100dvh"} />;
 
+  const lastActivity = orgDetails?.AuditLog?.[0]?.createdAt;
+  const last = lastActivity ? dayjs(lastActivity) : null;
+  const isInactive = last?.isBefore(dayjs().subtract(6, "month"));
+
   return (
     <div className="container mx-auto space-y-8">
       {/* Header Section */}
@@ -226,6 +242,33 @@ export default function OrgById() {
               )}
             </div>
             <RefreshButton queryKeys={["org", "stats"]} />
+            <div className="flex flex-col leading-tight">
+              {last ? (
+                <>
+                  <span
+                    className={`text-sm font-medium ${
+                      isInactive ? "text-red-500" : "text-green-600"
+                    }`}
+                  >
+                    {isInactive ? "Inactive" : "Active"}
+                  </span>
+
+                  <span className="text-xs text-muted-foreground">
+                    {isInactive
+                      ? `Inactive for ${last.fromNow(true)}`
+                      : `Active ${last.fromNow()}`}
+                  </span>
+
+                  <span className="text-xs text-muted-foreground">
+                    {formatIsoDateStringWithTime(lastActivity)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-muted-foreground text-sm">
+                  No activity
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -277,6 +320,13 @@ export default function OrgById() {
                   : translations("Pause Organization")}
               </Button>
             )}
+            <Button
+              variant="destructive"
+              onClick={() => setOpenDeleteModal(true)}
+            >
+              <Info />
+              Delete Options
+            </Button>
           </div>
         </div>
       </div>
@@ -467,6 +517,165 @@ export default function OrgById() {
         headerLabel={`Are you sure to ${orgDetails?.isPaused ? "resume" : "pause"} this organization?`}
         closeLabel={translations("cancel")}
       />
+      <DeleteOrgModal
+        open={openDeleteModal}
+        deletionMailSent={orgDetails?.deletionMailSent}
+        onClose={() => setOpenDeleteModal(false)}
+        orgId={orgId}
+        isSendingEmail={sendDeletionEmail.isPending}
+        onSendEmail={(orgId, onDone) => {
+          sendDeletionEmail.mutate(orgId, {
+            onSuccess: () => {
+              onDone?.();
+            },
+          });
+        }}
+      />
     </div>
+  );
+}
+
+interface DeleteOrgModalProps {
+  open: boolean;
+  onClose: () => void;
+  orgId: string;
+  isInactive?: boolean;
+  isSendingEmail?: boolean;
+  onSendEmail: (orgId: string, onDone?: () => void) => void;
+  deletionMailSent: string | null;
+}
+
+export function DeleteOrgModal({
+  open,
+  onClose,
+  orgId,
+  isSendingEmail,
+  onSendEmail,
+  deletionMailSent,
+}: DeleteOrgModalProps) {
+  const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
+  const [countdown, setCountdown] = useState(5);
+  const deleteOrg = useDeleteOrgByAdminMutation();
+  const router = useRouter();
+
+  // countdown logic
+  useEffect(() => {
+    if (!openConfirmDelete) return;
+
+    setCountdown(5);
+
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [openConfirmDelete]);
+
+  if (!open) return null;
+
+  return (
+    <>
+      {/* 🔹 First Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-[420px] space-y-5 shadow-lg">
+          <div>
+            <h2 className="text-lg font-semibold">Delete Organization</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              You can notify the organization before deleting or delete
+              immediately.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {/* Send Email */}
+            <Button
+              variant="outline"
+              disabled={isSendingEmail}
+              onClick={() => {
+                onSendEmail(orgId, () => {
+                  onClose();
+                });
+              }}
+              className="relative"
+            >
+              <Mail />
+              {isSendingEmail ? "Sending Mail..." : "Send Warning Email"}
+
+              {/* ✅ Green Tick */}
+              {deletionMailSent && (
+                <CheckCircle className="h-4 w-4 text-green-500 absolute top-1 right-1" />
+              )}
+            </Button>
+
+            {/* Delete Org → opens second modal */}
+            <Button
+              variant="destructive"
+              onClick={() => setOpenConfirmDelete(true)}
+            >
+              <Trash />
+              Delete Organization
+            </Button>
+          </div>
+
+          <div className="flex justify-end">
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* 🔴 Second Confirmation Modal */}
+      {openConfirmDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
+          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-[420px] space-y-5 shadow-lg">
+            <div>
+              <h2 className="text-lg font-semibold text-destructive">
+                Confirm Deletion
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                This action is irreversible. Are you sure you want to delete
+                this organization?
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => setOpenConfirmDelete(false)}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                variant="destructive"
+                disabled={countdown > 0 || deleteOrg.isPending}
+                onClick={() => {
+                  deleteOrg.mutate(orgId, {
+                    onSuccess: () => {
+                      setOpenConfirmDelete(false);
+                      onClose();
+                      router.push("/admin/orgs");
+                    },
+                  });
+                }}
+              >
+                {deleteOrg.isPending
+                  ? "Deleting..."
+                  : countdown > 0
+                    ? `Delete (${countdown}s)`
+                    : "Delete Org"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

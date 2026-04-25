@@ -70,6 +70,7 @@ export async function getAllOrgs() {
     Org & {
       _count: { members: number; teams: number; invitations: number };
       owner: { id: string; name: string; email: string };
+      AuditLog: { createdAt: string }[];
     }
   >;
 }
@@ -103,4 +104,12 @@ export async function orgNameAndPhone() {
 export async function getChecklist() {
   const res = await axiosClient.get("/org/checklist");
   return res.data;
+}
+
+export async function sendDeleteOrgEmail(orgId: string) {
+  return await axiosClient.post(`/org/org-deletion-warning-mail/${orgId}`);
+}
+
+export async function deleteOrgByAdmin(orgId: string) {
+  return await axiosClient.delete(`/org/admin/${orgId}`);
 }
