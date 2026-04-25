@@ -40,7 +40,7 @@ export interface DataTableProps<TData, TValue> {
     props: DataTableToolbarProps<TData, TValue>,
   ) => React.ReactElement;
   onRowClick?: (row: TData) => void;
-  manualPagination?: {
+  serverSide?: {
     pagination: PaginationState;
     onPaginationChange: (
       updater: React.SetStateAction<PaginationState>,
@@ -67,7 +67,7 @@ export function DataTable<TData, TValue>({
   DataTableToolbar,
   onRowClick,
   isPending,
-  manualPagination = undefined,
+  serverSide = undefined,
   defaultColumnVisibility = {},
 }: Readonly<DataTableProps<TData, TValue>>) {
   const [rowSelection, setRowSelection] = React.useState({});
@@ -77,7 +77,7 @@ export function DataTable<TData, TValue>({
     [],
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const isManualPagination = manualPagination !== undefined;
+  const isServerSide = serverSide !== undefined;
 
   const table = useReactTable({
     data,
@@ -86,19 +86,13 @@ export function DataTable<TData, TValue>({
       columnVisibility,
       sorting,
       rowSelection,
-      ...(manualPagination?.pagination
-        ? { pagination: manualPagination.pagination }
-        : {}),
-      ...(manualPagination?.sorting
-        ? { sorting: manualPagination.sorting }
-        : { sorting }),
-      ...(manualPagination?.columnFilters
-        ? { columnFilters: manualPagination.columnFilters }
+      ...(serverSide?.pagination ? { pagination: serverSide.pagination } : {}),
+      ...(serverSide?.sorting ? { sorting: serverSide.sorting } : { sorting }),
+      ...(serverSide?.columnFilters
+        ? { columnFilters: serverSide.columnFilters }
         : { columnFilters }),
     },
-    ...(manualPagination?.rowCount
-      ? { rowCount: manualPagination?.rowCount }
-      : undefined),
+    ...(serverSide?.rowCount ? { rowCount: serverSide?.rowCount } : undefined),
     initialState: {
       pagination: {
         pageSize: 25,
@@ -106,30 +100,28 @@ export function DataTable<TData, TValue>({
       columnVisibility: defaultColumnVisibility,
     },
     enableRowSelection: true,
-    manualPagination: isManualPagination,
-    manualSorting: isManualPagination,
-    manualFiltering: isManualPagination,
-    ...(manualPagination?.onPaginationChange
+    manualPagination: isServerSide,
+    manualSorting: isServerSide,
+    manualFiltering: isServerSide,
+    ...(serverSide?.onPaginationChange
       ? {
-          onPaginationChange: manualPagination.onPaginationChange,
+          onPaginationChange: serverSide.onPaginationChange,
         }
       : {}),
     onRowSelectionChange: setRowSelection,
-    onSortingChange: manualPagination?.onSortingChange
-      ? manualPagination.onSortingChange
+    onSortingChange: serverSide?.onSortingChange
+      ? serverSide.onSortingChange
       : setSorting,
-    onColumnFiltersChange: manualPagination?.onColumnFiltersChange
-      ? manualPagination.onColumnFiltersChange
+    onColumnFiltersChange: serverSide?.onColumnFiltersChange
+      ? serverSide.onColumnFiltersChange
       : setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
-    ...(manualPagination?.pagination
+    ...(serverSide?.pagination
       ? {}
       : { getPaginationRowModel: getPaginationRowModel() }),
-    ...(manualPagination?.sorting
-      ? {}
-      : { getSortedRowModel: getSortedRowModel() }),
-    ...(manualPagination?.columnFilters
+    ...(serverSide?.sorting ? {} : { getSortedRowModel: getSortedRowModel() }),
+    ...(serverSide?.columnFilters
       ? {}
       : { getFilteredRowModel: getFilteredRowModel() }),
 
@@ -209,7 +201,10 @@ export function DataTable<TData, TValue>({
 }
 
 export const createSortableHeader = (title: string) => {
-  return ({ column }: { column: any }) => {
+  const SortableHeader = ({ column }: { column: any }) => {
     return <DataTableColumnHeader column={column} title={title} />;
   };
+
+  SortableHeader.displayName = `SortableHeader(${title})`;
+  return SortableHeader;
 };

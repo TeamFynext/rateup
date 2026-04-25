@@ -476,7 +476,7 @@ const WaResponses = ({
               ? columns?.filter((col) => col.accessorKey !== "tag")
               : columns
           }
-          manualPagination={{
+          serverSide={{
             pagination,
             onPaginationChange: setPagination,
             rowCount: responseCount,

@@ -446,7 +446,7 @@ function MessageLogs({ dateRange }) {
       <DataTable
         columns={columns}
         data={isLoading ? skeletonData : filteredData}
-        manualPagination={{
+        serverSide={{
           pagination,
           onPaginationChange: handlePaginationChange,
           rowCount: messageLogsData?.pagination?.total || 0,
