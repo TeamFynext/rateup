@@ -828,6 +828,13 @@ export async function sendDeletionMailToOrgOwner({
         text: `Hi ${ownerName}, your organization "${orgName}" will be deleted if no activity is detected before ${deadline.toDateString()}.`,
       },
     });
+
+    await prisma.org.update({
+      where: { id: orgId },
+      data: {
+        deletionMailSent: triggeredAt,
+      },
+    });
     // reminder
     await notificationQueue.add(
       "notification",
