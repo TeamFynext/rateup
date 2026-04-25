@@ -12,6 +12,7 @@ import {
   getWebhookClientSecretHandler,
   orgNameAndPhoneNumber,
   pauseOrgHandler,
+  sendDeletionWarningHandler,
   updateLogoHandler,
   updateOrgDetailsHandler,
   updateRoleController,
@@ -84,6 +85,17 @@ export async function orgRoutes(server: FastifyInstance) {
         params: byOrgIdParams,
       },
       preHandler: [checkRoleHandler(["SUPER_ADMIN"])],
+    },
+    deleteOrgHandler,
+  );
+
+  server.delete(
+    "/admin/:orgId",
+    {
+      schema: {
+        params: byOrgIdParams,
+      },
+      preHandler: assertRootOrg,
     },
     deleteOrgHandler,
   );
@@ -205,4 +217,15 @@ export async function orgRoutes(server: FastifyInstance) {
   );
 
   server.get("/checklist", getOnboardingChecklistHandler);
+
+  server.post(
+    "/org-deletion-warning-mail/:orgId",
+    {
+      schema: {
+        params: byOrgIdParams,
+      },
+      preHandler: assertRootOrg,
+    },
+    sendDeletionWarningHandler,
+  );
 }

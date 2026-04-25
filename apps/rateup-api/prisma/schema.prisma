@@ -166,6 +166,8 @@ model Org {
   onboardingChecklist          Json?
   onboardingChecklistCompleted Boolean @default(false)
 
+  deletionMailSent         DateTime?
+
   members                  OrgMember[]
   teams                    Team[]
   invitations              Invitation[]
