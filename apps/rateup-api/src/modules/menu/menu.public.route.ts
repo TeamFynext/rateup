@@ -4,10 +4,7 @@ import {
   getMenuByIdHandler,
   visitedMenuLandingHandler,
 } from "./menu.controller.js";
-import {
-  ByMenuIdParamsSchema,
-  fullMenuPublicResponseSchema,
-} from "./menu.schema.js";
+import { ByMenuIdParamsSchema } from "./menu.schema.js";
 
 export async function menuPublicRoutes(server: FastifyInstance) {
   server.get(
@@ -24,9 +21,6 @@ export async function menuPublicRoutes(server: FastifyInstance) {
     {
       schema: {
         params: ByMenuIdParamsSchema,
-        response: {
-          200: fullMenuPublicResponseSchema,
-        },
       },
     },
     getFullMenuByIdHandler,

@@ -103,7 +103,10 @@ export async function cloneMenu(
 
   for (const cat of menuCategories) {
     let { id, createdAt, menuId, ...rest } = cat;
-    let newCat = await createMenuCategory({ ...rest, menuId: newMenu.id });
+    let newCat = await createMenuCategory({
+      ...rest,
+      menuId: newMenu.id,
+    } as any);
 
     //clone menu -items, category id
     const menuItems = await prisma.menuItem.findMany({
