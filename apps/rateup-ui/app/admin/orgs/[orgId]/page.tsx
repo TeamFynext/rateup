@@ -9,6 +9,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import {
   Building2,
   Calendar,
+  CheckCircle,
   Globe,
   Info,
   LayoutTemplate,
@@ -518,9 +519,9 @@ export default function OrgById() {
       />
       <DeleteOrgModal
         open={openDeleteModal}
+        deletionMailSent={orgDetails?.deletionMailSent}
         onClose={() => setOpenDeleteModal(false)}
         orgId={orgId}
-        isInactive={isInactive}
         isSendingEmail={sendDeletionEmail.isPending}
         onSendEmail={(orgId, onDone) => {
           sendDeletionEmail.mutate(orgId, {
@@ -541,15 +542,16 @@ interface DeleteOrgModalProps {
   isInactive?: boolean;
   isSendingEmail?: boolean;
   onSendEmail: (orgId: string, onDone?: () => void) => void;
+  deletionMailSent: string | null;
 }
 
 export function DeleteOrgModal({
   open,
   onClose,
   orgId,
-  isInactive,
   isSendingEmail,
   onSendEmail,
+  deletionMailSent,
 }: DeleteOrgModalProps) {
   const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
   const [countdown, setCountdown] = useState(5);
@@ -597,12 +599,18 @@ export function DeleteOrgModal({
               disabled={isSendingEmail}
               onClick={() => {
                 onSendEmail(orgId, () => {
-                  onClose(); // only closes AFTER success
+                  onClose();
                 });
               }}
+              className="relative"
             >
               <Mail />
               {isSendingEmail ? "Sending Mail..." : "Send Warning Email"}
+
+              {/* ✅ Green Tick */}
+              {deletionMailSent && (
+                <CheckCircle className="h-4 w-4 text-green-500 absolute top-1 right-1" />
+              )}
             </Button>
 
             {/* Delete Org → opens second modal */}

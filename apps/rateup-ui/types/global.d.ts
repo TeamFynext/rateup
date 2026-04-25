@@ -812,6 +812,7 @@ declare global {
     phone: string;
     address: string;
     isPaused?: boolean;
+    deletionMailSent: string;
   };
   type WaFlowTemplateMessage = {
     header?: string;

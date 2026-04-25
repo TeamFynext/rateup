@@ -48,12 +48,12 @@ interface OrgTableData {
   members: number;
   invitations: number;
   lastActivity: string | null;
+  deletionMail: string | null;
 }
 
 export default function OrgDisplay() {
   const router = useRouter();
   const { data: orgs, isLoading, isError } = useAllOrgs();
-  console.log("Fetched orgs:", orgs);
   const [orgStats, setOrgStats] = useState({
     today: 0,
     yesterday: 0,
@@ -186,6 +186,34 @@ export default function OrgDisplay() {
       meta: { title: "Invitations" },
     },
     {
+      accessorKey: "deletionMail",
+      header: createSortableHeader("Deletion Mail"),
+      cell: ({ row }) => {
+        const value = row.getValue("deletionMail") as string | null;
+
+        if (!value) {
+          return <span className="text-muted-foreground">Not sent</span>;
+        }
+
+        const isOld = dayjs(value).isBefore(dayjs().subtract(7, "day"));
+
+        return (
+          <div className="flex items-center gap-2">
+            <Mail
+              className={`h-4 w-4 ${
+                isOld ? "text-red-500" : "text-muted-foreground"
+              }`}
+            />
+            <span
+              className={`text-sm ${isOld ? "text-red-500 font-medium" : ""}`}
+            >
+              {formatIsoDateStringWithTime(value)}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
@@ -251,6 +279,7 @@ export default function OrgDisplay() {
     members: org._count.members,
     invitations: org._count.invitations,
     lastActivity: org.AuditLog[0]?.createdAt || null,
+    deletionMail: org.deletionMailSent ?? null,
   }));
 
   return (
