@@ -47,11 +47,11 @@ export function RouteAccessGuard({
 }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const router = useRouter();
-  const allowedFeatures = useTeamFeatures();
+  const { allowedFeatures, isPending } = useTeamFeatures();
 
   useEffect(() => {
-    // null = bypass (owner / admin / super-admin)
-    if (allowedFeatures === null) return;
+    // null = bypass (super-admin), Set = restrict (member)
+    if (allowedFeatures === null || isPending) return;
 
     // /dashboard exactly → will be handled by dashboard/page.tsx redirect;
     // let it pass through here so that page can choose the right destination.
@@ -64,7 +64,7 @@ export function RouteAccessGuard({
     if (required && !allowedFeatures.has(required)) {
       router.replace(NO_PERMISSION_FALLBACK);
     }
-  }, [pathname, allowedFeatures, router]);
+  }, [pathname, allowedFeatures, isPending, router]);
 
   return <>{children}</>;
 }

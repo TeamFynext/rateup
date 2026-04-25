@@ -254,7 +254,10 @@ export function useUpdateTeamFeatures(teamId: string) {
  * Returns the union of all enabled features across the given teamIds.
  * Pass an empty array (or skip) to get an empty Set.
  */
-export function useMyAllowedFeatures(teamIds: string[]): Set<string> {
+export function useMyAllowedFeatures(teamIds: string[]): {
+  allowedFeatures: Set<string>;
+  isPending: boolean;
+} {
   const results = useQueries({
     queries: teamIds.map((id) => ({
       queryKey: ["teamFeatures", id],
@@ -264,12 +267,16 @@ export function useMyAllowedFeatures(teamIds: string[]): Set<string> {
   });
 
   const union = new Set<string>();
+  let isPending = false;
   for (const result of results) {
+    if (result.isPending || result.isLoading) {
+      isPending = true;
+    }
     if (result.data) {
       for (const f of result.data.features) {
         union.add(f.feature);
       }
     }
   }
-  return union;
+  return { allowedFeatures: union, isPending };
 }
