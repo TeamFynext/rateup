@@ -191,13 +191,18 @@ export default function HomePageFooter() {
                 </span>
               </div>
             </div>
-            <a href="https://uno.directory" target="_blank" rel="noopener">
+            <a
+              href="https://stackmention.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center bg-[#0a0f22] border border-[rgba(0,174,255,0.25)] px-4 py-2.5 rounded-xl no-underline font-semibold text-[#eaf3ff]"
+            >
               <img
-                src="https://uno.directory/uno-directory.svg"
-                alt="Listed on Uno Directory"
-                width="120"
-                height="30"
+                src="https://stackmention.com/wp-content/uploads/2025/11/StackMention.com-Logo-1.png"
+                alt="StackMention Logo"
+                className="w-9 h-9 rounded-md mr-2.5"
               />
+              Featured on StackMention
             </a>
             <div className="w-full">
               <div className="text-left mb-2">Follow us</div>
