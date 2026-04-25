@@ -103,7 +103,7 @@ export default function Contacts() {
         columns={column}
         data={contactMemoData ?? []}
         DataTableToolbar={DataTableToolbar}
-        manualPagination={{
+        serverSide={{
           pagination,
           onPaginationChange: setPagination,
           rowCount: contactData?.totalCount || 0,

@@ -56,7 +56,7 @@ const AuditLogs = () => {
       columns={columns}
       data={tableData}
       DataTableToolbar={DataTableToolbar}
-      manualPagination={{
+      serverSide={{
         pagination,
         onPaginationChange: handlePaginationChange,
         rowCount: data?.pagination?.total || 0,

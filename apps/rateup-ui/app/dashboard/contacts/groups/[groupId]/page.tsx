@@ -331,7 +331,7 @@ const ContactGroup = () => {
         <DataTable
           columns={column}
           data={groupDetails?.contacts || []}
-          manualPagination={{
+          serverSide={{
             onPaginationChange: setPagination,
             sorting,
             onSortingChange: setSorting,

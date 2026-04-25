@@ -1,7 +1,17 @@
 import { Dispatch, SetStateAction } from "react";
 
-import { Box, Button, Popover, Stack, Text, Title } from "@mantine/core";
-import { IconFilter } from "@tabler/icons-react";
+import { Filter } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface FilterProps {
   filterOpened: boolean;
@@ -10,12 +20,8 @@ interface FilterProps {
   setPriorityFilter: Dispatch<SetStateAction<string | null>>;
 }
 
-export function PriorityFilter({
-  filterOpened,
-  setFilterOpened,
-  priorityFilter,
-  setPriorityFilter,
-}: FilterProps) {
+export function PriorityFilter(props: Readonly<FilterProps>) {
+  const { priorityFilter, setPriorityFilter } = props;
   const priorities = [
     { value: "", label: "Default" },
     { value: "LOW", label: "Low" },
@@ -25,76 +31,33 @@ export function PriorityFilter({
   ];
 
   return (
-    <Popover
-      opened={filterOpened}
-      onChange={setFilterOpened}
-      position="bottom-end"
-      shadow="md"
-      withArrow
-      trapFocus
-    >
-      <Popover.Target>
-        <Button
-          onClick={() => setFilterOpened((o) => !o)}
-          variant="default"
-          color="gray"
-          radius="sm"
-          size="sm"
-          px="sm"
-          ml={"auto"}
-          leftSection={<IconFilter size={19} />}
-        >
-          {priorityFilter || "Filter"}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="ml-auto">
+          <Filter className="mr-2" data-icon="inline-start" />
+          {priorityFilter
+            ? priorities.find((p) => p.value === priorityFilter)?.label
+            : "Filter"}
         </Button>
-      </Popover.Target>
-
-      <Popover.Dropdown>
-        <Box>
-          <Title order={6} mb="xs" c="dimmed">
-            Filter by Priority
-          </Title>
-
-          <Stack gap={4}>
-            {priorities.map((item) => {
-              const selected = priorityFilter === item.value;
-              return (
-                <Text
-                  key={item.value}
-                  onClick={() => {
-                    setPriorityFilter(item.value || null);
-                    setFilterOpened(false);
-                  }}
-                  style={{
-                    cursor: "pointer",
-                    padding: "6px 10px",
-                    borderRadius: 6,
-                    fontWeight: selected ? 600 : 400,
-                    backgroundColor: selected
-                      ? "var(--mantine-color-blue-light)"
-                      : "transparent",
-                    color: selected ? "#1c7ed6" : "inherit",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!selected) {
-                      (e.target as HTMLElement).style.backgroundColor =
-                        "#eafaf1";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!selected) {
-                      (e.target as HTMLElement).style.backgroundColor =
-                        "transparent";
-                    }
-                  }}
-                >
-                  {item.label}
-                </Text>
-              );
-            })}
-          </Stack>
-        </Box>
-      </Popover.Dropdown>
-    </Popover>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44 p-2">
+        <DropdownMenuLabel>Filter by Priority</DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={priorityFilter ?? ""}
+          onValueChange={(val) => setPriorityFilter(val || null)}
+        >
+          {priorities.map((item) => (
+            <DropdownMenuRadioItem key={item.value} value={item.value}>
+              {item.label}
+              {priorityFilter === item.value && (
+                <Badge variant="secondary" className="ml-2">
+                  Selected
+                </Badge>
+              )}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

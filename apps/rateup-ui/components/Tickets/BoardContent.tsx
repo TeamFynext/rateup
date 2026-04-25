@@ -3,17 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Button, Flex, SimpleGrid, Stack, Tabs, Text } from "@mantine/core";
-import {
-  IconArrowLeft,
-  IconLayoutBoard,
-  IconSettings,
-} from "@tabler/icons-react";
+import { ArrowLeft, LayoutPanelTop, Settings } from "lucide-react";
 
 import { useBoard } from "@/backend/tickets/tickets.query";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import RateupLoader from "../Loaders/RateupLoader";
-import StyledTabs from "../styled/StyledTabs/StyledTabs";
 import { Board } from "./board";
 import TicketSettings from "./boardSettings";
 import { PriorityFilter } from "./PriorityFilter";
@@ -21,79 +18,71 @@ import { PriorityFilter } from "./PriorityFilter";
 export function BoardContent({
   selectedBoardId,
   teamOptions,
-}: {
+}: Readonly<{
   selectedBoardId: string;
   teamOptions: { value: string; label: string }[];
-}) {
+}>) {
   const { board: selectedBoard, isLoading: isBoardDataLoading } = useBoard(
     selectedBoardId || "",
   );
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
   const [filterOpened, setFilterOpened] = useState(false);
   const router = useRouter();
-  if (isBoardDataLoading) return <RateupLoader h="400px" w="100%" />;
+  if (isBoardDataLoading) return <Skeleton className="h-96 w-full" />;
 
   if (!selectedBoard || !selectedBoardId)
     return (
-      <Flex align="center" justify="center" h="60vh">
-        <Text>Board not found</Text>
-      </Flex>
+      <div className="flex items-center justify-center h-[60vh]">
+        <span className="text-muted-foreground">Board not found</span>
+      </div>
     );
 
   return (
-    <Stack h={"100%"}>
-      <StyledTabs keepMounted={false} defaultValue={"board"} h={"100%"}>
-        <SimpleGrid
-          mt={{ base: "md", sm: 0 }}
-          cols={{
-            base: 1,
-            sm: 2,
-            lg: 3,
-          }}
-        >
-          <Flex align="center" gap={"xs"}>
+    <div className="h-full flex flex-col">
+      <Tabs defaultValue="board">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div className="flex items-center gap-2">
             <Button
-              variant="light"
-              radius="md"
+              variant="outline"
               size="sm"
-              leftSection={<IconArrowLeft size={16} />}
               onClick={() => router.push("/dashboard/tickets")}
             >
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            <Text tt="capitalize" fw={500} c={"gray.9"} fz={"xl"} truncate>
+            <span className="font-semibold text-xl truncate capitalize">
               {selectedBoard?.title}
-            </Text>
-          </Flex>
-          <Tabs.List>
-            <Tabs.Tab value="board" leftSection={<IconLayoutBoard size={16} />}>
-              Board View
-            </Tabs.Tab>
-            <Tabs.Tab value="settings" leftSection={<IconSettings size={16} />}>
-              Settings
-            </Tabs.Tab>
-          </Tabs.List>
-
-          <PriorityFilter
-            filterOpened={filterOpened}
-            setFilterOpened={setFilterOpened}
-            priorityFilter={priorityFilter}
-            setPriorityFilter={setPriorityFilter}
-          />
-        </SimpleGrid>
-
-        <Tabs.Panel value="board" pt="xs">
+            </span>
+          </div>
+          <TabsList>
+            <TabsTrigger value="board">
+              <LayoutPanelTop className="w-4 h-4 mr-1.5" /> Board View
+            </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Settings className="w-4 h-4 mr-1.5" /> Settings
+            </TabsTrigger>
+          </TabsList>
+          <div className="flex justify-end">
+            <PriorityFilter
+              filterOpened={filterOpened}
+              setFilterOpened={setFilterOpened}
+              priorityFilter={priorityFilter}
+              setPriorityFilter={setPriorityFilter}
+            />
+          </div>
+        </div>
+        <Separator />
+        <TabsContent value="board">
           <Board initial={selectedBoard} priorityFilter={priorityFilter} />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="settings" pt="xs">
+        </TabsContent>
+        <TabsContent value="settings">
           <TicketSettings
             boardId={selectedBoardId}
             teamOptions={teamOptions}
             selectedBoard={selectedBoard}
           />
-        </Tabs.Panel>
-      </StyledTabs>
-    </Stack>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

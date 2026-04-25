@@ -27,7 +27,7 @@ export default function DashboardHome() {
   // const { data: overallData, isLoading: overallStatsLoading } =
   //   useOverallStats();
   // const translations = useExtracted();
-  const allowedFeatures = useTeamFeatures();
+  const { allowedFeatures, isPending } = useTeamFeatures();
   useEffect(() => {
     const user =
       userQueryData && "data" in userQueryData ? userQueryData.data : null;
@@ -35,6 +35,7 @@ export default function DashboardHome() {
     if (!user.onboardingChecklistCompleted && user.role === UserRole.SUPADM) {
       return router.replace("/login/setup");
     }
+    if (isPending) return;
     // For members with a restricted feature set, redirect to the first
     // permitted route instead of always going to inbox (which may be blocked).
     if (allowedFeatures !== null) {
@@ -62,7 +63,7 @@ export default function DashboardHome() {
     }
     // Owners / admins: go straight to inbox
     router.replace("/dashboard/inbox?tab=New");
-  }, [userQueryData, isFetched, isLoadingUserInfo, allowedFeatures]);
+  }, [userQueryData, isFetched, isLoadingUserInfo, allowedFeatures, isPending]);
 
   return (
     <Loader />

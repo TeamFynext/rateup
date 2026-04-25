@@ -107,7 +107,7 @@ const Logs = () => {
       columns={columns}
       data={(data?.logs as any) ?? []}
       DataTableToolbar={DataTableToolbar}
-      manualPagination={{
+      serverSide={{
         pagination,
         onPaginationChange: (updater) => setPagination(updater),
         rowCount: data?.totalCount || 0,

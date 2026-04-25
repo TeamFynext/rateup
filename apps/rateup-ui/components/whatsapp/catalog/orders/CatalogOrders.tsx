@@ -10,7 +10,7 @@ import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrd
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
 import TableLayoutSecondary from "@/components/styled/Table/TableLayoutSecondary";
-import TanstackTable from "@/components/Table/TanstackTable";
+import { DataTable } from "@/components/Table/data-table";
 import {
   Dialog,
   DialogContent,
@@ -155,17 +155,19 @@ const CatalogOrders = ({ catalogId }) => {
     return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
 
   return (
-    <div className="flex flex-col gap-4">
-      <TanstackTable
+    <div className="flex flex-col gap-4 relative">
+      <DataTable
         data={data}
         columns={columns}
-        totalCount={orders?.totalCount}
         isPending={isPending}
-        pagination={pagination}
-        setPagination={setPagination}
+        serverSide={{
+          pagination,
+          onPaginationChange: setPagination,
+          rowCount: orders?.totalCount || 0,
+        }}
       />
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-125">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5" />

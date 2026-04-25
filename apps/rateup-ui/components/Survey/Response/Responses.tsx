@@ -352,7 +352,7 @@ const Responses = ({
             ? columns?.filter((col: any) => col.accessorKey !== "tag")
             : columns
         }
-        manualPagination={{
+        serverSide={{
           pagination,
           onPaginationChange: setPagination,
           rowCount: responseData?.totalCount ?? 0,

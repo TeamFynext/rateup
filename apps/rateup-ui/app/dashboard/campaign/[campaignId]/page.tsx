@@ -777,7 +777,7 @@ export default function CampaignDetails() {
                 columns={columns}
                 data={participantsQuery.data?.participants || []}
                 isPending={participantsQuery.isPending}
-                manualPagination={{
+                serverSide={{
                   pagination,
                   onPaginationChange: setPagination,
                   rowCount: participantsQuery.data?.totalCount || 0,
