@@ -108,6 +108,137 @@ function useChatFilter() {
 // ---------------------------------------------------------------------------
 type RouteGuard = (route?: string) => boolean;
 
+type ParsedRoute = {
+  path: string;
+  queryString: string;
+  hasQuery: boolean;
+  key: string;
+};
+
+function parseRoute(route?: string): ParsedRoute {
+  const safeRoute = route?.trim() ?? "";
+
+  if (!safeRoute) {
+    return {
+      path: "",
+      queryString: "",
+      hasQuery: false,
+      key: "",
+    };
+  }
+
+  const [rawPath, rawQuery = ""] = safeRoute.split("?");
+  const path = rawPath.replace(/\/$/, "") || "/";
+
+  const params = new URLSearchParams(rawQuery);
+  params.sort();
+  const queryString = params.toString();
+  const key = queryString ? `${path}?${queryString}` : path;
+
+  return {
+    path,
+    queryString,
+    hasQuery: Boolean(queryString),
+    key,
+  };
+}
+
+function getRouteKey(route?: string): string {
+  return parseRoute(route).key;
+}
+
+function isValidRoutePath(path: string): boolean {
+  return Boolean(path) && path !== "#";
+}
+
+function isQuerySubsetMatch(
+  current: ParsedRoute,
+  target: ParsedRoute,
+): boolean {
+  if (!target.hasQuery) return true;
+
+  const currentParams = new URLSearchParams(current.queryString);
+  const targetParams = new URLSearchParams(target.queryString);
+
+  for (const [key, value] of targetParams.entries()) {
+    const currentValues = currentParams.getAll(key);
+    if (!currentValues.includes(value)) return false;
+  }
+
+  return true;
+}
+
+function isPathPrefixActive(
+  currentRoute: string,
+  targetRoute?: string,
+): boolean {
+  const currentPath = parseRoute(currentRoute).path;
+  const targetPath = parseRoute(targetRoute).path;
+
+  if (!isValidRoutePath(targetPath)) return false;
+  if (currentPath === targetPath) return true;
+
+  return currentPath.startsWith(`${targetPath}/`);
+}
+
+function isExactPathActive(
+  currentRoute: string,
+  targetRoute?: string,
+): boolean {
+  const currentPath = parseRoute(currentRoute).path;
+  const targetPath = parseRoute(targetRoute).path;
+
+  if (!isValidRoutePath(targetPath)) return false;
+  return currentPath === targetPath;
+}
+
+function getRouteMatchScore(
+  currentRoute: string,
+  targetRoute?: string,
+): number {
+  const current = parseRoute(currentRoute);
+  const target = parseRoute(targetRoute);
+
+  if (!isValidRoutePath(target.path)) return -1;
+
+  if (current.key === target.key) {
+    return 300000 + target.key.length;
+  }
+
+  const samePathQueryMatch =
+    current.path === target.path &&
+    target.hasQuery &&
+    isQuerySubsetMatch(current, target);
+
+  if (samePathQueryMatch) {
+    return 200000 + target.queryString.length;
+  }
+
+  const pathPrefixMatch =
+    current.path === target.path || current.path.startsWith(`${target.path}/`);
+
+  if (pathPrefixMatch) {
+    return 100000 + target.path.length;
+  }
+
+  return -1;
+}
+
+function getMostSpecificChildRoute(children: any[], currentRoute: string) {
+  const bestMatch = children.reduce(
+    (best, child) => {
+      const routeKey = getRouteKey(child?.url);
+      const score = getRouteMatchScore(currentRoute, child?.url);
+
+      if (!routeKey || score < 0 || score <= best.score) return best;
+      return { routeKey, score };
+    },
+    { routeKey: null as string | null, score: -1 },
+  );
+
+  return bestMatch.routeKey;
+}
+
 /** Shared class builder for every nav item wrapper. */
 function navItemClass(isActive: boolean) {
   return cn(
@@ -211,15 +342,21 @@ function NavItem({
   onRouteGuard,
   variant = "default",
   sidebarComponentMap,
+  activeSubPath,
 }: Readonly<{
   item: any;
   fullPathname: string;
   onRouteGuard: RouteGuard;
   variant?: "default" | "sub" | "settings";
   sidebarComponentMap?: Record<string, React.ReactNode>;
+  activeSubPath?: string | null;
 }>) {
   if (variant === "sub") {
-    const isActive = item?.isActive ?? fullPathname === item.url;
+    const isActive =
+      item?.isActive ??
+      (activeSubPath
+        ? getRouteKey(item.url) === activeSubPath
+        : isPathPrefixActive(fullPathname, item.url));
     return (
       <SidebarMenuSubItem>
         <NavLink
@@ -233,7 +370,7 @@ function NavItem({
   }
 
   if (variant === "settings") {
-    const isActive = fullPathname.startsWith(item.url);
+    const isActive = isPathPrefixActive(fullPathname, item.url);
     return (
       <NavLink item={item} isActive={isActive} onRouteGuard={onRouteGuard} />
     );
@@ -254,6 +391,8 @@ function NavItem({
   }
 
   if (item.items?.length > 0) {
+    const activeChildPath = getMostSpecificChildRoute(item.items, fullPathname);
+
     return (
       <Collapsible asChild defaultOpen={false} className="group/collapsible">
         <SidebarMenuItem>
@@ -278,6 +417,7 @@ function NavItem({
                   fullPathname={fullPathname}
                   onRouteGuard={onRouteGuard}
                   variant="sub"
+                  activeSubPath={activeChildPath}
                 />
               ))}
             </SidebarMenuSub>
@@ -287,7 +427,11 @@ function NavItem({
     );
   }
 
-  const isActive = fullPathname.startsWith(item.url);
+  const isActive =
+    item?.isActive ??
+    (activeSubPath
+      ? getRouteKey(item.url) === activeSubPath
+      : isPathPrefixActive(fullPathname, item.url));
   return (
     <SidebarMenuItem>
       <NavLink item={item} isActive={isActive} onRouteGuard={onRouteGuard} />
@@ -341,6 +485,8 @@ function NavSection({
     );
   }
 
+  const activeChildPath = getMostSpecificChildRoute(item.items, fullPathname);
+
   return (
     <SidebarGroup className="p-0">
       <SidebarSeparator className="m-0 group-data-[collapsible=icon]:hidden" />
@@ -355,6 +501,7 @@ function NavSection({
               fullPathname={fullPathname}
               onRouteGuard={onRouteGuard}
               sidebarComponentMap={sidebarComponentMap}
+              activeSubPath={activeChildPath}
             />
           ))}
         </SidebarMenu>
@@ -370,27 +517,25 @@ function NavSection({
 function isGrandchildActive(subItem: any, pathname: string): boolean {
   return (
     subItem.items?.some((grand: any) => {
-      const grandUrl = grand.url?.split("?")[0];
-      return grandUrl && pathname.startsWith(grandUrl);
+      return isPathPrefixActive(pathname, grand.url);
     }) ?? false
   );
 }
 
 function isNavItemActive(item: any, pathname: string): boolean {
   const hasActiveChild = item.items?.some((subItem: any) => {
-    const subUrl = subItem.url?.split("?")[0];
-    if (subUrl && subUrl !== "#" && pathname.startsWith(subUrl)) return true;
+    if (isPathPrefixActive(pathname, subItem.url)) return true;
     if (isGrandchildActive(subItem, pathname)) return true;
     return subItem.isActive ?? false;
   });
 
   if (hasActiveChild) return true;
-  if (item.url === "/dashboard" && pathname === "/dashboard") return true;
+  if (isExactPathActive(pathname, "/dashboard")) return true;
   if (
     item.url &&
     item.url !== "#" &&
     item.url !== "/dashboard" &&
-    pathname.startsWith(item.url)
+    isPathPrefixActive(pathname, item.url)
   )
     return true;
   return false;
@@ -531,6 +676,11 @@ export default function AppSidebar({
       chatFilterStore.filter.assignedTeams,
       handleFilter,
     ],
+  );
+
+  const activePanelItemPath = useMemo(
+    () => getMostSpecificChildRoute(activeItem?.items ?? [], fullPathname),
+    [activeItem?.items, fullPathname],
   );
 
   return (
@@ -682,6 +832,7 @@ export default function AppSidebar({
                                 item={item}
                                 fullPathname={fullPathname}
                                 onRouteGuard={handleRouteGuard}
+                                activeSubPath={activePanelItemPath}
                               />
                             </SidebarMenu>
                           </SidebarGroupContent>

@@ -104,7 +104,7 @@ const ShareQR = ({
           dispatch={logoTabPanelDispatch}
         />
         <div className="flex flex-col gap-4">
-          <div className="border dark:border-gray-700 rounded-lg flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-[#1a1a1a]">
+          <div className="border dark:border-gray-700 rounded-lg flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-[#1a1a1a] gap-2">
             <Preview
               logoTabPanelState={logoTabPanelState}
               url={url}

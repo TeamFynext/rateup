@@ -10,6 +10,11 @@ export const schema = z
     teamId: z.string().min(1),
     surveyTeamMapId: z.string().optional().nullable(),
     currency: z.string(),
+    hideUnavailableCategory: z.string().optional(),
+    backgroundImage: z.string().optional(),
+    mobileBackgroundImage: z.string().optional(),
+    logo: z.string().optional(),
+    locationText: z.string().optional(),
     unsplashImage: z
       .object({
         mobileBackgroundImage: z.boolean().optional(),
@@ -45,21 +50,17 @@ export const schema = z
   .check((ctx) => {
     const { value: values } = ctx;
     values.menuButtons?.map((data, index) => {
-      if (
-        [MenuButtons.CONTACT, MenuButtons.WHATSAPP].includes(
-          data.name as any,
-        ) &&
-        !isValidPhoneNumber(data.link)
-      ) {
+      const isPhoneButton =
+        data.name === MenuButtons.CONTACT || data.name === MenuButtons.WHATSAPP;
+
+      if (isPhoneButton && !isValidPhoneNumber(data.link)) {
         ctx.issues.push({
           path: [`menuButtons.${index}.link`],
           code: "custom",
           message: "Phone number should be valid",
           input: "",
         });
-      } else if (
-        ![MenuButtons.CONTACT, MenuButtons.WHATSAPP].includes(data.name as any)
-      ) {
+      } else if (!isPhoneButton) {
         try {
           new URL(data.link);
         } catch {

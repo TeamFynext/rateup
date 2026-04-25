@@ -1,16 +1,6 @@
-import React, { MutableRefObject } from "react";
+import React from "react";
 import Link from "next/link";
 
-import {
-  ActionIcon,
-  Avatar,
-  Group,
-  HoverCard,
-  Menu,
-  ScrollAreaAutosize,
-  Stack,
-  Text,
-} from "@mantine/core";
 import {
   IconBrandWhatsapp,
   IconCategory,
@@ -21,17 +11,37 @@ import {
 } from "@tabler/icons-react";
 
 import { MenuButtons } from "@/types/enums";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
-import styles from "./FloatingMenu.module.css";
+type DynamicMenuLink = {
+  name: string;
+  link: string;
+};
 
 type FloatingMenuMainProps = {
-  dynamicVariables: any;
-  categories: FullCategory[];
-  displayName: string;
-  logo: string;
-  categoryRefs: MutableRefObject<{}>;
+  readonly dynamicVariables: DynamicMenuLink[];
+  readonly categories: FullCategory[];
+  readonly displayName: string;
+  readonly logo: string;
+  readonly categoryRefs: React.RefObject<Record<string, HTMLDivElement | null>>;
 };
+
 const FloatingMenuMain = ({
   dynamicVariables,
   categories,
@@ -39,144 +49,148 @@ const FloatingMenuMain = ({
   logo,
   categoryRefs,
 }: FloatingMenuMainProps) => {
-  const mainColor = "black";
   const firstTwoItems = dynamicVariables?.slice(0, 2);
   const remainingItems = dynamicVariables?.slice(2);
+
+  const initials =
+    displayName
+      ?.split(" ")
+      .slice(0, 2)
+      .map((n) => n?.[0])
+      .join("")
+      .toUpperCase() ?? "?";
 
   const handleScrollToCategory = (categoryId: string) => {
     const categoryElement = categoryRefs.current[categoryId];
     if (categoryElement) {
-      categoryElement.scrollIntoView({ behavior: "smooth" });
+      categoryElement.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
   return (
-    <Stack
-      pos={"fixed"}
-      bottom={20}
-      left={"50%"}
-      style={{ transform: "translateX(-50%)", zIndex: 999 }}
-      w={"max-content"}
-    >
-      <Group
-        py={{ base: 8, lg: "xs" }}
-        px={{ base: 8, lg: "lg" }}
-        bg={mainColor}
-        justify="space-evenly"
-        className={styles.floatingMenu}
-      >
-        <HoverCard shadow="md" withArrow>
-          <HoverCard.Target>
-            <Avatar
-              src={logo && getFileUrlFromKey(logo)}
-              radius={"sm"}
-              name={displayName}
-              color="initials"
-            />
-          </HoverCard.Target>
-          <HoverCard.Dropdown className={styles.hoverCard}>
-            <Text fz={"sm"}>{displayName ?? "Brand"}</Text>
-          </HoverCard.Dropdown>
-        </HoverCard>
+    <div className="fixed inset-x-0 bottom-5 z-40 flex justify-center px-4">
+      <Card className="px-2 py-1">
+        <CardContent className="flex items-center gap-1 p-0">
+          <Tooltip>
+            <TooltipTrigger>
+              <Avatar className="cursor-pointer">
+                <AvatarImage
+                  src={logo ? getFileUrlFromKey(logo) : undefined}
+                  alt={displayName}
+                />
+                <AvatarFallback className="bg-muted text-xs">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </TooltipTrigger>
+            <TooltipContent>{displayName ?? "Brand"}</TooltipContent>
+          </Tooltip>
 
-        {categories?.length && (
-          <Menu shadow="md" offset={15} withArrow classNames={styles}>
-            <Menu.Target>
-              <Stack gap={0} align="center">
-                <ActionIcon size={"lg"} variant="transparent">
-                  <IconCategory color={"white"} />
-                </ActionIcon>
-                <Text fz={"xs"} lh={0.8} c={"white"}>
-                  Category
-                </Text>
-              </Stack>
-            </Menu.Target>
+          {!!categories?.length && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex h-auto flex-col gap-1 rounded-xl px-3 py-2 text-foreground"
+                >
+                  <IconCategory data-icon="inline-start" />
+                  <span className="text-[10px] leading-none capitalize">
+                    Category
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent sideOffset={15} align="center">
+                <DropdownMenuLabel>Categories</DropdownMenuLabel>
+                <ScrollArea className="max-h-[50dvh]">
+                  {categories?.map((category) => (
+                    <DropdownMenuItem
+                      key={category.id}
+                      onClick={() => handleScrollToCategory(category.id)}
+                      className="justify-between rounded-xl capitalize"
+                    >
+                      <span>{category.name}</span>
+                      <span>{category.items?.length ?? 0}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </ScrollArea>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
-            <Menu.Dropdown>
-              <Menu.Label>Categories</Menu.Label>
-              <ScrollAreaAutosize
-                mah={"50dvh"}
-                type="always"
-                classNames={styles}
+          {firstTwoItems?.map((data) => (
+            <Button
+              key={data.name}
+              variant="ghost"
+              size="sm"
+              asChild
+              className="flex h-auto flex-col gap-1 rounded-xl px-3 py-2"
+            >
+              <Link
+                href={getMenuBtnLink(data)}
+                target="_blank"
+                rel="noreferrer"
               >
-                {categories?.map((category) => (
-                  <Menu.Item
-                    key={category.id}
-                    rightSection={<Text>{category.items?.length ?? 0}</Text>}
-                    onClick={() => handleScrollToCategory(category.id)}
-                  >
-                    {category.name}
-                  </Menu.Item>
-                ))}
-              </ScrollAreaAutosize>
-            </Menu.Dropdown>
-          </Menu>
-        )}
-        {firstTwoItems?.map((data) => (
-          <Link
-            key={data.name}
-            href={getMenuBtnLink(data)}
-            target="_blank"
-            style={{ textDecoration: "none" }}
-            className={styles.menuLink}
-          >
-            <Stack gap={0} align="center">
-              <ActionIcon size={"lg"} variant="transparent">
                 {customButton(data.name)}
-              </ActionIcon>
-              <Text fz={"xs"}>{data.name}</Text>
-            </Stack>
-          </Link>
-        ))}
-        {remainingItems?.length && (
-          <Menu shadow="md" offset={15} withArrow classNames={styles}>
-            <Menu.Target>
-              <Stack gap={0} align="center">
-                <ActionIcon size={"lg"} variant="transparent">
-                  <IconChevronUp color={"white"} />
-                </ActionIcon>
-              </Stack>
-            </Menu.Target>
+                <span className="text-[10px] leading-none capitalize">
+                  {data.name}
+                </span>
+              </Link>
+            </Button>
+          ))}
 
-            <Menu.Dropdown>
-              {remainingItems?.map((data) => (
-                <Menu.Item key={data.name} className={styles.menuBtn}>
-                  <Link href={getMenuBtnLink(data)} target="_blank">
-                    <Group gap={0}>
-                      <ActionIcon size={"lg"} variant="transparent">
-                        {customButton(data.name)}
-                      </ActionIcon>
-                      <Text fz={"xs"} lineClamp={1} maw={200}>
+          {!!remainingItems?.length && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="More menu actions"
+                >
+                  <IconChevronUp data-icon="inline-start" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent sideOffset={15} align="center">
+                {remainingItems?.map((data) => (
+                  <DropdownMenuItem key={data.name} asChild>
+                    <Link
+                      href={getMenuBtnLink(data)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 px-2 py-1.5 no-underline"
+                    >
+                      {customButton(data.name)}
+                      <span className="max-w-50 truncate text-xs capitalize leading-none">
                         {data.name}
-                      </Text>
-                    </Group>
-                  </Link>
-                </Menu.Item>
-              ))}
-            </Menu.Dropdown>
-          </Menu>
-        )}
-      </Group>
-    </Stack>
+                      </span>
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
 export default FloatingMenuMain;
 
-const customButton = (name) => {
+const customButton = (name: string) => {
   switch (name) {
     case MenuButtons.CONTACT:
-      return <IconPhone />;
+      return <IconPhone data-icon="inline-start" />;
     case MenuButtons.WHATSAPP:
-      return <IconBrandWhatsapp />;
+      return <IconBrandWhatsapp data-icon="inline-start" />;
     case "feedback":
-      return <IconMessage />;
+      return <IconMessage data-icon="inline-start" />;
     default:
-      return <IconLink />;
+      return <IconLink data-icon="inline-start" />;
   }
 };
 
-const getMenuBtnLink = (data) => {
+const getMenuBtnLink = (data: DynamicMenuLink) => {
   switch (data?.name) {
     case MenuButtons.CONTACT:
       return `tel:${data.link}`;

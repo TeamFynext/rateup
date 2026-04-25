@@ -2,60 +2,60 @@
 
 import { useRef, useState } from "react";
 
-import {
-  Container,
-  Image,
-  Paper,
-  ScrollAreaAutosize,
-  Stack,
-  Text,
-} from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
 import Autoplay from "embla-carousel-autoplay";
+import { CircleAlertIcon } from "lucide-react";
 
 import { CreditsCard } from "@/components/Card/CreditsCard";
 import { CategoryDisplay } from "@/components/menu/category/CategoryDisplay";
 import { ItemDetailedViewModal } from "@/components/menu/item/ItemDetailedViewModal";
-import NothingFound from "@/components/NothingFound/NothingFound";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { isCategoryActive } from "@/utils/dateTime";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import FloatingMenuMain from "./FloatingMenu";
-import styles from "./gradientAnimation.module.css";
 
 export default function MenuLandingPage({ fullMenu, menuBanner }) {
-  const largeScreen = useMediaQuery("(min-width: 40em)");
-  const autoplay: any = useRef(
+  const [autoplayPlugin] = useState(() =>
     Autoplay({ delay: 2000, stopOnInteraction: false }),
   );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const categoryRefs = useRef({});
+  const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const registerCategoryRef = (
+    categoryId: string,
+    element: HTMLDivElement | null,
+  ) => {
+    categoryRefs.current[categoryId] = element;
+  };
 
-  if (!fullMenu || !fullMenu?.isPublished || fullMenu?.expiry)
+  if (!fullMenu?.isPublished || fullMenu?.expiry)
     return (
-      <Stack align="center" h="50vh" justify="space-around">
-        <Text size="xl" c="red" fw="600">
-          {fullMenu?.expiry ? fullMenu?.expiry : "Menu is not available..!"}
-        </Text>
-      </Stack>
+      <div className="flex min-h-[50vh] items-center justify-center px-4">
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-6 py-4 text-center shadow-sm">
+          <p className="text-xl font-semibold text-destructive">
+            {fullMenu?.expiry ? fullMenu?.expiry : "Menu is not available..!"}
+          </p>
+        </div>
+      </div>
     );
-  const backgroundImage = largeScreen
-    ? fullMenu?.menuLanding?.backgroundImage
-    : fullMenu?.menuLanding?.mobileBackgroundImage;
-  const backgroundImageFallback = largeScreen
-    ? `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/background.jpg`
-    : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/mobileBackground.jpg`;
+
+  const backgroundImageFallback = `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/menu/background.jpg`;
   const hideUnavailableCategory = fullMenu?.menuLanding?.menu
     ?.hideUnavailableCategory as boolean;
 
   let fullCategory = fullMenu?.categories;
 
-  const { successData, failedData } = fullCategory?.reduce(
+  const { successData, failedData } = (fullCategory ?? []).reduce(
     (acc, item) => {
       if (isCategoryActive(item)) {
         acc.successData.push(item);
@@ -76,10 +76,14 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
   }
 
   return (
-    <ScrollAreaAutosize scrollbarSize={0} className={styles.scrollArea}>
-      <Paper className={styles.paper}>
+    <div className="mx-auto max-h-dvh w-full max-w-screen-2xl overflow-y-auto bg-background [scrollbar-width:none]">
+      <div className="relative min-h-dvh bg-[radial-gradient(circle_at_top,--theme(--color-primary/10),transparent_35%),linear-gradient(to_bottom,--theme(--color-background),--theme(--color-muted/30))] pb-28">
         {menuBanner?.length > 0 ? (
-          <Carousel opts={{ loop: true }} plugins={[autoplay.current]}>
+          <Carousel
+            opts={{ loop: true }}
+            plugins={[autoplayPlugin]}
+            className="border-b border-border/60 bg-muted/20"
+          >
             <CarouselContent>
               {menuBanner?.map((value) => (
                 <CarouselItem
@@ -99,13 +103,19 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                   }}
                   className="cursor-pointer"
                 >
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={
-                      value?.image && encodeURI(getFileUrlFromKey(value?.image))
+                      value?.image
+                        ? encodeURI(getFileUrlFromKey(value?.image))
+                        : backgroundImageFallback
                     }
-                    className={styles.gradient}
-                    alt="menu banner image"
-                    fallbackSrc={backgroundImageFallback}
+                    className="aspect-5/1 w-full object-cover max-md:aspect-3/2"
+                    alt="menu banner"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        backgroundImageFallback;
+                    }}
                   />
                 </CarouselItem>
               ))}
@@ -113,14 +123,9 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
           </Carousel>
         ) : (
           <CreditsCard
-            // enableCredits={
-            //   !!fullMenu.menuLanding?.unsplashImage?.[
-            //     largeScreen ? "backgroundImage" : "mobileBackgroundImage"
-            //   ]
-            // }
             // disabled for now
             enableCredits={false}
-            url={backgroundImage}
+            url={fullMenu?.menuLanding?.backgroundImage}
           >
             <picture>
               <source
@@ -134,25 +139,28 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                   )
                 }
               />
-              <Image
+              <img
                 src={
-                  fullMenu?.menuLanding?.mobileBackgroundImage &&
-                  getFileUrlFromKey(
-                    encodeURI(fullMenu?.menuLanding?.mobileBackgroundImage),
-                    true,
-                    !!fullMenu.menuLanding?.unsplashImage?.[
-                      "mobileBackgroundImage"
-                    ],
-                  )
+                  fullMenu?.menuLanding?.mobileBackgroundImage
+                    ? getFileUrlFromKey(
+                        encodeURI(fullMenu?.menuLanding?.mobileBackgroundImage),
+                        true,
+                        !!fullMenu.menuLanding?.unsplashImage?.[
+                          "mobileBackgroundImage"
+                        ],
+                      )
+                    : backgroundImageFallback
                 }
-                className={styles.gradient}
-                fallbackSrc={backgroundImageFallback}
-                alt="banner image of menu"
+                className="aspect-5/1 w-full object-cover max-md:aspect-3/2"
+                alt="menu banner"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = backgroundImageFallback;
+                }}
               />
             </picture>
           </CreditsCard>
         )}
-        <Container size={"95vw"} mih={"45vh"} mt={"sm"} mb={70}>
+        <div className="mx-auto flex min-h-[45vh] w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
           {filteredData?.length > 0 ? (
             filteredData?.map((c) => (
               <CategoryDisplay
@@ -163,13 +171,23 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
                 hideUnavailableCategory={
                   fullMenu?.menuLanding?.menu?.hideUnavailableCategory
                 }
-                categoryRefs={categoryRefs}
+                registerCategoryRef={registerCategoryRef}
               />
             ))
           ) : (
-            <NothingFound text="No Categories Found" />
+            <Empty className="min-h-[45vh] rounded-3xl border border-dashed border-border bg-card/70 shadow-sm backdrop-blur">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <CircleAlertIcon />
+                </EmptyMedia>
+                <EmptyTitle>No Categories Found</EmptyTitle>
+                <EmptyDescription>
+                  This menu does not have any visible categories right now.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           )}
-        </Container>
+        </div>
         {selectedItem && (
           <ItemDetailedViewModal
             item={selectedItem}
@@ -195,7 +213,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
           logo={fullMenu?.menuLanding?.logo}
           categoryRefs={categoryRefs}
         />
-      </Paper>
-    </ScrollAreaAutosize>
+      </div>
+    </div>
   );
 }

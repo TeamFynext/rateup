@@ -87,7 +87,7 @@ const SourceSelector = ({ value, onChange }) => {
   ];
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-[150px] bg-gray-100 border-none">
+      <SelectTrigger className="w-37.5 bg-gray-100 border-none">
         <span className="text-sm ">
           <SelectValue placeholder="Select Source" />
         </span>
@@ -128,19 +128,17 @@ const LabelSelector = ({
   }
   if (includeStatus) {
     labels.push(
-      ...[
-        { id: "active", name: "Active", icon: Zap },
-        { id: "blocked", name: "Blocked", icon: Ban },
-      ],
+      { id: "active", name: "Active", icon: Zap },
+      { id: "blocked", name: "Blocked", icon: Ban },
     );
   }
   if (isPendingContactLabels) {
-    return <Skeleton className="h-4 w-[150px]" />;
+    return <Skeleton className="h-4 w-37.5" />;
   }
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-[150px] bg-gray-100 border-none">
+      <SelectTrigger className="w-37.5 bg-gray-100 border-none">
         <span className="text-sm ">
           <SelectValue placeholder="Select Label" />
         </span>
@@ -215,7 +213,7 @@ export function DataTableToolbar<TData>({
             </div>
             <LifecycleSelector
               all={true}
-              className="bg-gray-100 border-none w-48 h-full rounded-sm px-2"
+              className="border-none w-48 bg-secondary h-full rounded-sm px-2"
               value={filter?.lifecycleId}
               onChange={(value, lifecycleObj) =>
                 setFilter({ ...filter, lifecycleId: value })
@@ -466,7 +464,10 @@ const ImportContactModal = ({ opened, setOpened }) => {
           <p className="text-sm">{t("Custom Fields")}</p>
           <div className="flex gap-2">
             {customFields.map((field) => (
-              <div className="flex items-center gap-3 rounded-lg bg-blue-100 p-1 w-fit px-2">
+              <div
+                className="flex items-center gap-3 rounded-lg bg-blue-100 p-1 w-fit px-2"
+                key={field.id}
+              >
                 <Checkbox
                   checked={fields.some((p) => p.id === field.id)}
                   id={field.id}

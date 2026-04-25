@@ -2,18 +2,36 @@
 
 import { useContext, useEffect } from "react";
 
-import { LoadingOverlay, Stack, Title } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useExtracted } from "next-intl";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
 import {
   useCreateMenuMutation,
   useUpdateMenuMutation,
 } from "../../backend/menu/menu.query";
 import SelectedTeamContext from "../../context/SelectedTeam";
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
-import FormModalLayout from "../Modal/FormModalLayout";
+import { Button } from "../ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
+import { Input } from "../ui/input";
+import { Spinner } from "../ui/spinner";
+
+const schema = z.object({
+  name: z.string().min(1, "Cannot be empty"),
+  displayName: z.string().min(1, "Cannot be empty"),
+  teamId: z.string().min(1, "select a team"),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 interface CreateMenuModalProps {
   readonly opened: boolean;
@@ -27,19 +45,19 @@ export function CreateMenuModal({
 }: CreateMenuModalProps) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
   const translations = useExtracted();
-  const form = useForm({
-    initialValues: editingItem || {
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: editingItem || {
       name: "",
       displayName: "",
       teamId: "",
-    },
-    validate: {
-      name: (value) =>
-        value?.trim().length ? null : translations("Cannot be empty"),
-      displayName: (value) =>
-        value?.trim().length ? null : translations("Cannot be empty"),
-      teamId: (value) =>
-        value?.trim().length ? null : translations("select a team"),
     },
   });
 
@@ -47,7 +65,7 @@ export function CreateMenuModal({
     selectedTeamId,
     close,
     () => {
-      form.reset();
+      reset();
     },
   );
   const updateMenuMutation = useUpdateMenuMutation(
@@ -60,13 +78,16 @@ export function CreateMenuModal({
 
   useEffect(() => {
     if (editingItem) {
-      form.setValues(editingItem);
+      reset(editingItem);
     } else {
-      form.reset();
+      reset({ name: "", displayName: "", teamId: "" });
     }
-  }, [editingItem]);
+  }, [editingItem, reset]);
 
-  const onSubmit = (values: typeof form.values) => {
+  const isPending =
+    createMenuMutation.isPending || updateMenuMutation.isPending;
+
+  const onSubmit = (values: FormValues) => {
     if (editingItem) {
       updateMenuMutation.mutate({
         menuId: editingItem.id,
@@ -82,51 +103,80 @@ export function CreateMenuModal({
   }
 
   return (
-    <FormModalLayout
-      opened={opened}
-      onClose={close}
-      title={
-        editingItem ? translations("Edit Menu") : translations("Create Menu")
-      }
-      centered
-      onSubmit={form.onSubmit(onSubmit)}
-      buttonTitle={
-        editingItem ? translations("Save Menu") : translations("Create Menu")
-      }
-    >
-      <LoadingOverlay
-        visible={createMenuMutation.isPending || updateMenuMutation.isPending}
-        zIndex={1000}
-        overlayProps={{ radius: "sm", blur: 2 }}
-        loaderProps={{ type: "bars" }}
-      />
-      <Title order={3}>{translations("General Info")}</Title>
-      <Stack>
-        <TeamSelector
-          placeholder={translations("Select Team")}
-          label=""
-          allowDeselect={false}
-          value={form?.getInputProps("teamId")?.value || ""}
-          {...form.getInputProps("teamId")}
-          styles={{
-            input: {
-              width: "100%",
-            },
-          }}
-        />
-        <ContainedTextField
-          label={translations("Menu Name")}
-          placeholder={translations("Menu 1")}
-          withAsterisk
-          {...form.getInputProps("name")}
-        />
-        <ContainedTextField
-          label={translations("Display Name")}
-          placeholder={translations("Hotel Name")}
-          withAsterisk
-          {...form.getInputProps("displayName")}
-        />
-      </Stack>
-    </FormModalLayout>
+    <Dialog open={opened} onOpenChange={(open) => !open && close()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {editingItem
+              ? translations("Edit Menu")
+              : translations("Create Menu")}
+          </DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="relative">
+            {isPending && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/60 backdrop-blur-sm">
+                <Spinner />
+              </div>
+            )}
+            <FieldGroup>
+              <Field data-invalid={!!errors.teamId}>
+                <FieldLabel>{translations("Team")}</FieldLabel>
+                <Controller
+                  control={control}
+                  name="teamId"
+                  render={({ field }) => (
+                    <TeamSelector
+                      value={field.value}
+                      onChange={field.onChange}
+                      label=""
+                      allowDeselect={false}
+                      enableDefaultValue={false}
+                    />
+                  )}
+                />
+                {errors.teamId && (
+                  <FieldError>{errors.teamId.message}</FieldError>
+                )}
+              </Field>
+              <Field data-invalid={!!errors.name}>
+                <FieldLabel htmlFor="name">
+                  {translations("Menu Name")}
+                </FieldLabel>
+                <Input
+                  id="name"
+                  placeholder={translations("Menu 1")}
+                  aria-invalid={!!errors.name}
+                  {...register("name")}
+                />
+                {errors.name && <FieldError>{errors.name.message}</FieldError>}
+              </Field>
+              <Field data-invalid={!!errors.displayName}>
+                <FieldLabel htmlFor="displayName">
+                  {translations("Display Name")}
+                </FieldLabel>
+                <Input
+                  id="displayName"
+                  placeholder={translations("Hotel Name")}
+                  aria-invalid={!!errors.displayName}
+                  {...register("displayName")}
+                />
+                {errors.displayName && (
+                  <FieldError>{errors.displayName.message}</FieldError>
+                )}
+              </Field>
+            </FieldGroup>
+          </div>
+          <DialogFooter className="mt-6">
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Spinner data-icon="inline-end" />}
+              {editingItem
+                ? translations("Save Menu")
+                : translations("Create Menu")}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

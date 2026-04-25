@@ -2,23 +2,11 @@
 
 import { useState } from "react";
 
-import {
-  Box,
-  Card,
-  Flex,
-  Group,
-  Image,
-  Modal,
-  ScrollArea,
-  ScrollAreaAutosize,
-  Stack,
-  Text,
-} from "@mantine/core";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { CreditsCard } from "@/components/Card/CreditsCard";
+import { Button } from "@/components/ui/button";
 import {
   Carousel,
   CarouselContent,
@@ -26,6 +14,9 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import YoutubeEmbed from "@/components/youtube/YoutubeEmbed";
 import { fallbackImage } from "@/utils/constants";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
@@ -33,21 +24,19 @@ import { extractVideoId } from "@/utils/youtube/url";
 
 import MenuFoodLabelBadge from "../category/tag/MenuFoodLabelBadge";
 import { currencyLabel } from "../util/currencyData";
-import classes from "./BadgeCard.module.css";
-import styles from "./itemDetailedViewModal.module.css";
 
 interface ItemDetailedViewModalProps {
-  item: MenuItem;
-  onClose: () => void;
-  currency: string;
+  readonly item: MenuItem;
+  readonly onClose: () => void;
+  readonly currency: string;
 }
 export function ItemDetailedViewModal({
   item,
   onClose,
   currency = "0",
 }: Readonly<ItemDetailedViewModalProps>) {
-  const [alleryView, setAlleryView] = useState(false);
-  const foodLabelLength = item?.foodLabels?.length;
+  const [allergyView, setAllergyView] = useState(false);
+  const foodLabelLength = item?.foodLabels?.length ?? 0;
 
   const imageStyle = {
     aspectRatio: 3 / 2,
@@ -59,21 +48,22 @@ export function ItemDetailedViewModal({
   const imageSlides = item?.images?.map((url: string) => (
     <CarouselItem key={url}>
       <CreditsCard
-        // enableCredits={
-        //   item?.unsplashImage?.find((data) => data === url)?.length > 0
-        // }
         // disabled for now
         enableCredits={false}
         url={url}
       >
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={getFileUrlFromKey(
             url,
             true,
             item?.unsplashImage?.find((data) => data === url)?.length > 0,
           )}
-          className={styles.image}
+          className="aspect-3/2 w-full rounded-2xl object-cover"
           alt={translations("menu item image")}
+          onError={(event) => {
+            (event.target as HTMLImageElement).src = fallbackImage;
+          }}
         />
       </CreditsCard>
     </CarouselItem>
@@ -87,138 +77,136 @@ export function ItemDetailedViewModal({
   const count = item?.images?.length + (item?.videoUrl ? 1 : 0);
 
   return (
-    <Modal
-      centered
-      opened={!!item}
-      onClose={onClose}
-      size={"sm"}
-      classNames={styles}
-      scrollAreaComponent={ScrollArea.Autosize}
-      radius={"lg"}
+    <Dialog
+      open={!!item}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
     >
-      <Card radius="md" className={classes.card}>
-        <Card.Section>
-          {item?.images?.length > 0 || item?.videoUrl ? (
-            <Carousel className="w-full">
-              <CarouselContent>
-                {videoSlides}
-                {imageSlides}
-              </CarouselContent>
-              {count > 1 && <CarouselPrevious />}
-              {count > 1 && <CarouselNext />}
-            </Carousel>
-          ) : (
-            <Image
-              className={styles.image}
-              radius={"sm"}
-              src={fallbackImage}
-              alt={translations("Menu Item Images")}
-            />
-          )}
-        </Card.Section>
-        {alleryView ? (
-          item?.foodLabels?.length > 0 && (
-            <Card.Section className={classes.section} mt="md">
-              <Text className={classes.label} c="dimmed">
-                {translations("Allergen Info")}
-              </Text>
-              <Stack gap={0} justify="space-between" mih={230}>
-                <Flex gap={"sm"} wrap={"wrap"} my={"sm"}>
-                  <MenuFoodLabelBadge
-                    foodLabels={item?.foodLabels ?? []}
-                    fz={9}
-                  />
-                </Flex>
-                <RateupButtonPrimary
-                  fullWidth
-                  onClick={() => setAlleryView(false)}
-                  title={translations("Go Back")}
-                  leftIcon={<IconArrowLeft />}
-                />
-              </Stack>
-            </Card.Section>
-          )
-        ) : (
-          <>
-            <Card.Section className={classes.section} mt="sm">
-              <Text className={styles.title}>{item.name}</Text>
-              <ScrollAreaAutosize mah={150} my="xs" type="always">
-                <Text fz="sm" component="pre" className={styles.preWrap}>
-                  {item.description}
-                </Text>
-              </ScrollAreaAutosize>
-              {foodLabelLength > 0 && (
-                <Box>
-                  <Text className={classes.label} c="dimmed">
-                    {translations("Allergen Info")}
-                  </Text>
+      <DialogContent className="max-w-md overflow-hidden rounded-3xl border border-border/60 p-0 shadow-xl">
+        <DialogTitle className="sr-only">{item?.name}</DialogTitle>
+        <div className="bg-background">
+          {/* Media section */}
+          <div>
+            {item?.images?.length > 0 || item?.videoUrl ? (
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {videoSlides}
+                  {imageSlides}
+                </CarouselContent>
+                {count > 1 && <CarouselPrevious />}
+                {count > 1 && <CarouselNext />}
+              </Carousel>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                className="aspect-3/2 w-full object-cover h-50"
+                src={fallbackImage}
+                alt={translations("Menu Item Images")}
+              />
+            )}
+          </div>
 
-                  <Flex align={"center"} gap={0} w={"100%"} mt={5}>
-                    <Group
-                      maw={"calc(100% - 80px"}
-                      style={{
-                        overflow: "hidden",
-                      }}
-                      gap={4}
-                      h={22}
+          {allergyView ? (
+            item?.foodLabels?.length > 0 && (
+              <div className="flex flex-col gap-4 px-4 py-4">
+                <div>
+                  <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                    {translations("Allergen Info")}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2 overflow-x-scroll">
+                    <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} />
+                  </div>
+                </div>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => setAllergyView(false)}
+                >
+                  <IconArrowLeft data-icon="inline-start" />
+                  {translations("Go Back")}
+                </Button>
+              </div>
+            )
+          ) : (
+            <>
+              <div className="flex flex-col gap-4 px-4 py-4">
+                <div className="space-y-3">
+                  <p className="line-clamp-2 text-center font-heading text-xl font-semibold capitalize text-foreground">
+                    {item.name}
+                  </p>
+                  <ScrollArea className="max-h-40">
+                    <pre className="whitespace-pre-wrap wrap-break-word text-sm text-muted-foreground">
+                      {item.description}
+                    </pre>
+                  </ScrollArea>
+                </div>
+                {foodLabelLength > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+                      {translations("Allergen Info")}
+                    </p>
+                    <div className="flex w-full items-center gap-2">
+                      <div
+                        className="flex min-h-6 flex-1 items-center gap-1 overflow-hidden"
+                        style={{ maxWidth: "300px" }}
+                      >
+                        <MenuFoodLabelBadge
+                          foodLabels={item?.foodLabels ?? []}
+                        />
+                      </div>
+                      {foodLabelLength > 1 && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="text-xs"
+                          onClick={() => setAllergyView(true)}
+                        >
+                          {translations("Show All")}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <Separator />
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(96px,1fr))] gap-3 px-4 py-4 text-center text-foreground">
+                {item.price.variants?.length > 0 ? (
+                  item.price.variants.map((varient, index) => (
+                    <div
+                      className="flex flex-col items-center gap-1"
+                      key={varient.name ?? index}
                     >
-                      <MenuFoodLabelBadge
-                        foodLabels={item?.foodLabels ?? []}
-                        fz={9}
-                      />
-                    </Group>
-                    {foodLabelLength > 1 && (
-                      <RateupButtonPrimary
-                        title={translations("Show All")}
-                        sx={{
-                          height: "20px",
-                          width: "80px",
-                        }}
-                        size="xs"
-                        onClick={() => setAlleryView(true)}
-                      />
-                    )}
-                  </Flex>
-                </Box>
-              )}
-            </Card.Section>
-            <Group justify="space-evenly" c="var(--text-color-sp)">
-              {item.price.variants?.length > 0 ? (
-                item.price.variants.map((varient, index) => (
-                  <Stack align="center" gap={"0px"} key={index}>
-                    <Text
-                      fz={"clamp(14px, -415.008px + 30vw, 17.008px)"}
-                      tt={"capitalize"}
-                      fw={500}
-                    >
-                      {varient.name}
-                    </Text>
-                    <Text className={styles.height1}>
-                      {varient?.price && (
+                      <span className="truncate text-sm font-medium capitalize">
+                        {varient.name}
+                      </span>
+                      <span className="text-base font-semibold text-foreground">
+                        {varient?.price && (
+                          <>
+                            {currencyLabel[currency]?.symbol}
+                            {varient.price}
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <span className="text-lg font-semibold text-foreground">
+                      {item?.price?.price && (
                         <>
                           {currencyLabel[currency]?.symbol}
-                          {varient.price}
+                          {item?.price?.price}
                         </>
                       )}
-                    </Text>
-                  </Stack>
-                ))
-              ) : (
-                <Stack align="center" gap={"0px"}>
-                  <Text className={styles.height1}>
-                    {item?.price?.price && (
-                      <>
-                        {currencyLabel[currency]?.symbol}
-                        {item?.price?.price}
-                      </>
-                    )}
-                  </Text>
-                </Stack>
-              )}
-            </Group>
-          </>
-        )}
-      </Card>
-    </Modal>
+                    </span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

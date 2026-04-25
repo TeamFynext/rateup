@@ -31,7 +31,7 @@ export function TeamSelector({
   enableDefaultValue = true,
   className,
   ...props
-}: TeamSelectorProps) {
+}: Readonly<TeamSelectorProps>) {
   // TODO: remove some nesting on results of the query?
   const {
     data: teamRes,
