@@ -397,6 +397,7 @@ const WaInboxChatSelect = () => {
               assignedUsers: [],
             }));
           });
+          refetchFilteredContacts();
         },
       },
     );
