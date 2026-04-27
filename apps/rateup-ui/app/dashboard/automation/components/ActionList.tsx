@@ -200,7 +200,7 @@ const ActionValueInput = ({
     return (
       <Input
         type="url"
-        placeholder="https://example.com/webhook"
+        placeholder="https://example.com/test"
         {...valueField}
         value={valueField.value || ""}
         className="w-full bg-background"
@@ -230,6 +230,30 @@ const ActionValueInput = ({
     <Input placeholder="Value" {...valueField} value={valueField.value || ""} />
   );
 };
+const ExternalApiExample = () => {
+  const { control } = useFormContext<CreateRuleInput>();
+  const actions = useWatch({
+    control,
+    name: "actions",
+  });
+
+  return (
+    actions?.some((data) => data.type === "CALL_EXTERNAL_API") && (
+      <div className="text-xs text-muted-foreground bg-muted/50 rounded p-2 border mt-1">
+        <strong>Example API request:</strong>
+        <pre className="whitespace-pre-wrap mt-1">
+          {`POST {url}
+Content-Type: application/json
+
+{
+  "user": "1234567890",
+  "action": "Approve"
+}`}
+        </pre>
+      </div>
+    )
+  );
+};
 
 const ActionList: React.FC = () => {
   const {
@@ -249,7 +273,7 @@ const ActionList: React.FC = () => {
           No actions added.
         </div>
       )}
-
+      <ExternalApiExample />
       {fields.map((field, index) => (
         <div
           key={field.id}
