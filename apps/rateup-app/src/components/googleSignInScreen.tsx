@@ -51,7 +51,7 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
     router.replace("/protected/inbox");
   } catch (error) {
     console.error("Unexpected Google login error:", error);
-    setError("Something went wrong. Please try again.");
+    setError("Something went wrong. Try signing up if you don't have an account.");
   } finally {
     setLoading(false);
   }
@@ -67,7 +67,7 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
       >
         <GoogleIcon />
         <Text className="text-[#004F98] font-medium text-[16px]">
-          {loading ? "Please Wait..." : "Continue with Google"}
+          {loading ? "Please Wait..." : "Sign in with Google"}
         </Text>
       </TouchableOpacity>
     </View>

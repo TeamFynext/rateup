@@ -50,6 +50,7 @@ export default function LayoutWrapper() {
             default: <Info size={18} color="gray" />,
           }}
           closeIcon={<XCircle size={18} color="gray" />}
+          textStyle={{ fontSize:18 }}
         />
       </SafeAreaProvider>
     </QueryClientProvider>

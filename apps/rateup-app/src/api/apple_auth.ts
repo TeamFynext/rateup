@@ -38,7 +38,7 @@ export const signInWithApple = async () => {
     if (!sessionExists) {
       return {
         success: false,
-        message: "Session could not be created",
+        message: "No account found.",
       };
     }
 
@@ -47,7 +47,7 @@ export const signInWithApple = async () => {
     if (!token) {
       return {
         success: false,
-        message: "Access token not found",
+        message: "Authentication error. Please try again.",
       };
     }
 

@@ -29,14 +29,14 @@ export const signIn = async (email: string, password: string) => {
     if (!sessionExists) {
       return {
         success: false,
-        message: "Session could not be created",
+        message: "Incorrect email or password. Please try again.",
       };
     }
     const token = await SuperTokens.getAccessToken();
     if (!token) {
       return {
         success: false,
-        message: "Token not found",
+        message: "Authentication error. Please try again",
       };
     }
     await AsyncStorage.setItem("accessToken", token);

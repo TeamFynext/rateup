@@ -55,7 +55,7 @@ const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
       router.replace("/protected/inbox");
     } catch (error) {
       console.error("Apple login error:", error);
-      setError("Something went wrong. Please try again.");
+      setError("Something went wrong. Try signing up if you don't have an account.");
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
       >
         <IconBrandAppleFilled color="white" size={20} />
         <Text className="text-white font-medium text-[16px]">
-          {loading ? "Please Wait..." : "Continue with Apple"}
+          {loading ? "Please Wait..." : "Sign in with Apple"}
         </Text>
       </Pressable>
     </View>
