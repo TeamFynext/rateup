@@ -229,26 +229,6 @@ export const RateupButtonBlackOutline = ({
   );
 };
 
-export const RateupIconButton = ({
-  radius,
-  sx,
-  rightIcon = null,
-  variant,
-  ...other
-}: Props) => {
-  return (
-    <Button
-      radius={radius || "xs"}
-      px={"xs"}
-      variant={variant ?? "light"}
-      style={sx}
-      {...other}
-    >
-      {rightIcon}
-    </Button>
-  );
-};
-
 type RateupFileUploadButtonProps = {
   resetRef: MutableRefObject<() => void>;
   handleFileChange: (file: File) => Promise<void>;

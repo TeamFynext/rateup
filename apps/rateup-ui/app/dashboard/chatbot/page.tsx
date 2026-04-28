@@ -1,8 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { Flex, Select, Stack, Tabs } from "@mantine/core";
+import {
+  Flex,
+  Group,
+  Select,
+  Skeleton,
+  Stack,
+  Switch,
+  Tabs,
+  Text,
+  Tooltip,
+} from "@mantine/core";
+import { useForm } from "@mantine/form";
 import { useListState } from "@mantine/hooks";
 import {
   IconBrandWhatsapp,
@@ -12,12 +23,25 @@ import {
   IconRobotFace,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { useConfirmDialog } from "@/hooks/useConfirmDialog";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons";
+import { useSubscription } from "@/backend/subscription/subscription.query";
+import {
+  RateupButtonBlue,
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "@/components/Button/RateupButtons";
 import ChatHistory from "@/components/ChatBot/ChatHistory";
 import CreateNewChatbot from "@/components/ChatBot/CreateNewChatbot";
+import {
+  ContainedTextArea,
+  ContainedTextField,
+} from "@/components/input/ContainedInput/ContainedInput";
+import PremiumFeature from "@/components/Premium/PremiumFeature";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { hasFeature } from "@/utils/subscription/subscription";
 
 import {
   useAllChatbots,
@@ -25,14 +49,20 @@ import {
   useCreateChatbot,
   useDeleteChatbot,
   useDeleteChatHistory,
+  useGetChatbotDetails,
+  useUpdateChatbot,
 } from "../../../backend/chatbot/chatbot.query";
 import ChatbotMessageContainer from "../../../components/ChatBot/ChatbotMessageContainer";
 import ChatbotResources from "../../../components/ChatBot/ChatbotResources";
 import PublishChatbot from "../../../components/ChatBot/PublishChatBot";
 import { useChatbotStore } from "../../../store/chatbot.store";
-import { ChatBotSource } from "../../../types/enums";
+import {
+  ChatBotSource,
+  SubscriptionFeaturePathName,
+} from "../../../types/enums";
 import { ChatBotMessage } from "../../../types/global";
-import { WhatsAppAIChatConfiguration } from "../whatsapp/settings/page";
+
+// import { WhatsAppAIChatConfiguration } from "../whatsapp/settings/page";
 
 enum ChatbotTab {
   ChatBot = "ChatBot",
@@ -271,3 +301,121 @@ const ChatBot = () => {
 };
 
 export default ChatBot;
+
+export function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
+  const { data: chatbot, isLoading } = useGetChatbotDetails(selectedChatbotId);
+  const translations = useExtracted();
+  const updateChatbotdetMut = useUpdateChatbot();
+  const { data: subscription } = useSubscription();
+
+  const form = useForm({
+    initialValues: {
+      waCommand: "",
+      waPrompt: "",
+    },
+  });
+
+  function handleEnableWaAIChat(e) {
+    updateChatbotdetMut.mutate({
+      chatbotId: selectedChatbotId,
+      data: {
+        enableWaChat: e.currentTarget.checked,
+      },
+    });
+  }
+
+  useEffect(() => {
+    if (chatbot) {
+      const newValues = {
+        waCommand: chatbot.waCommand ?? "",
+        waPrompt: chatbot.waPrompt ?? "",
+      };
+
+      form.setInitialValues(newValues); // set new base values
+      form.setValues(newValues); // explicitly reset to the new chatbot's values
+    } else {
+      form.setValues({
+        waCommand: "",
+        waPrompt: "",
+      });
+    }
+  }, [chatbot?.id]);
+
+  function handleSubmit() {
+    updateChatbotdetMut.mutate({
+      chatbotId: selectedChatbotId,
+      data: form.values,
+    });
+  }
+
+  const hasAIFeature = useMemo(
+    () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
+    [subscription],
+  );
+
+  return (
+    <Skeleton visible={isLoading}>
+      <Stack p={0}>
+        <PremiumFeature isSubscribed={hasAIFeature}>
+          <PaperLayout>
+            <Stack>
+              <Text fw={500} c="var(--grey-color-6)">
+                {translations("Configure WhatsApp with AI Chat")}
+              </Text>
+              <Switch
+                label={translations("Enable AI Chat in WhatsApp")}
+                checked={chatbot?.enableWaChat}
+                onChange={handleEnableWaAIChat}
+              />
+              {chatbot?.enableWaChat && (
+                <Stack w={"50%"}>
+                  <Switch
+                    label={"Enable AI Chat for All Messages"}
+                    checked={chatbot?.enableAllWaChat}
+                    onChange={(e) =>
+                      updateChatbotdetMut.mutate({
+                        chatbotId: selectedChatbotId,
+                        data: {
+                          enableAllWaChat: e.currentTarget.checked,
+                        },
+                      })
+                    }
+                  />
+                  <Tooltip
+                    disabled={!chatbot?.enableAllWaChat}
+                    label={
+                      "Disable AI Chat for All Messages for command based chat"
+                    }
+                  >
+                    <ContainedTextField
+                      label={translations("Bot Command")}
+                      placeholder={"eg: @bot"}
+                      {...form.getInputProps("waCommand")}
+                      disabled={chatbot?.enableAllWaChat}
+                    />
+                  </Tooltip>
+                  <ContainedTextArea
+                    label={translations("Bot Prompt")}
+                    {...form.getInputProps("waPrompt")}
+                    rows={5}
+                  />
+                  <Group>
+                    <RateupButtonPrimary
+                      onClick={handleSubmit}
+                      title="Save"
+                      loading={updateChatbotdetMut.isPending}
+                    />
+                    <RateupButtonSecondary
+                      onClick={() => form.reset()}
+                      title="Cancel"
+                    />
+                  </Group>
+                </Stack>
+              )}
+            </Stack>
+          </PaperLayout>
+        </PremiumFeature>
+      </Stack>
+    </Skeleton>
+  );
+}

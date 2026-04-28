@@ -16,7 +16,6 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconLogout, IconPencilMinus } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 
-import { useTeamsByUser } from "@/backend/team/team.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useDeregisterBusinessClientMutation } from "@/backend/whatsapp/settings/waSettings.query";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
@@ -24,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { ConnectMetaAccountButton } from "./connect-meta-account-button";
-import { TeamAssignmentSection } from "./team-assignment-section";
 import { WaSettingEditModal } from "./wa-setting-edit-modal";
 
 type WaSetting = WaSettings[number];
@@ -42,13 +40,6 @@ export function MetaLoginStatus({
   const [openedEdit, { open: openEdit, close: closeEdit }] =
     useDisclosure(false);
   const translations = useExtracted();
-  const { data: teamsRes, isLoading: isLoadingTeams } = useTeamsByUser();
-
-  const teams = teamsRes?.data || [];
-  const teamOptions = teams.map((team: any) => ({
-    value: team.id,
-    label: team.name,
-  }));
 
   function handleDeRegister() {
     if (!selectedAccountId) return;
@@ -84,9 +75,6 @@ export function MetaLoginStatus({
       </div>
       <div className="grid gap-4">
         {waSettings.map((setting) => {
-          const assignedTeamIds =
-            setting.teams?.map((team: any) => team.id) || [];
-
           return (
             <Card
               key={setting.id || setting.phoneId}
@@ -172,21 +160,6 @@ export function MetaLoginStatus({
                         {setting.appId}
                       </code>
                     </div>
-                  </div>
-
-                  <Divider />
-
-                  {/* Team Assignment */}
-                  <div className="bg-accent/40 rounded-lg p-4 border border-dashed border-border/40">
-                    <TeamAssignmentSection
-                      waSettingId={setting.id}
-                      assignedTeamIds={assignedTeamIds}
-                      teamOptions={teamOptions}
-                      isLoadingTeams={isLoadingTeams}
-                      instagramConnectionData={{
-                        fbPageId: setting?.fbPageId,
-                      }}
-                    />
                   </div>
                 </div>
               </CardContent>
