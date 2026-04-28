@@ -189,6 +189,11 @@ export const SuperTokensConfig: TypeInput = {
                   clientSecret: appConfig.supertokens.googleClientSecret,
                   clientType: "web",
                 },
+                {
+                  clientId: appConfig.supertokens.googleClientId,
+                  clientSecret: appConfig.supertokens.googleClientSecret,
+                  clientType: "mobile",
+                },
               ],
             },
           },
@@ -210,7 +215,7 @@ export const SuperTokensConfig: TypeInput = {
                 },
                 {
                   clientId: appConfig.supertokens.appleIosClientId,
-                  clientType: "ios",
+                  clientType: "mobile",
                   additionalConfig: {
                     keyId: appConfig.supertokens.appleKeyId,
                     privateKey: appConfig.supertokens.applePrivateKey.replace(
@@ -229,10 +234,17 @@ export const SuperTokensConfig: TypeInput = {
         functions: (originalImplementation) => ({
           ...originalImplementation,
           signInUp: async function (input) {
+            const clientType = input.userContext.clientType;
             const existingUsers = await getUserInfo(
               input.email,
               input.tenantId,
             );
+
+            if (clientType === "mobile" && existingUsers.length === 0) {
+              throw new Error(
+                "Signup is not available on mobile. Please sign up on the web first, then log in here.",
+              );
+            }
 
             if (existingUsers.length === 0) {
               return originalImplementation.signInUp(input);
@@ -261,6 +273,8 @@ export const SuperTokensConfig: TypeInput = {
           ...originalImplementation,
           signInUpPOST: async function (input) {
             try {
+              const body = await input.options.req.getJSONBody();
+              input.userContext.clientType = body.clientType;
               return await originalImplementation.signInUpPOST!(input);
             } catch (err: any) {
               if (err.message === "Cannot sign up as email already exists") {
