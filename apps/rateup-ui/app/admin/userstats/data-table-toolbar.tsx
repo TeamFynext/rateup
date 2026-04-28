@@ -14,31 +14,32 @@ interface DataTableToolbarProps<TData> {
 export function DataTableToolbar<TData>({
   table,
 }: Readonly<DataTableToolbarProps<TData>>) {
-  const isFiltered = table.getState().columnFilters.length > 0;
+  const globalFilter = table.getState().globalFilter as string;
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex flex-1 items-center gap-2">
+    <div className="flex items-center justify-between mb-2">
+      {/* LEFT: Search */}
+      <div className="flex items-center gap-2">
         <Input
-          placeholder="Filter by name..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => {
-            const value = event.target.value;
-            table.getColumn("name")?.setFilterValue(value);
-          }}
+          placeholder="Search name, email or org..."
+          value={globalFilter ?? ""}
+          onChange={(e) => table.setGlobalFilter(e.target.value)}
           className="h-8 w-[150px] lg:w-[250px]"
         />
-        {isFiltered && (
+
+        {globalFilter && (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            onClick={() => table.resetColumnFilters()}
+            onClick={() => table.setGlobalFilter("")}
+            className="h-8 w-8 p-0"
           >
-            Reset
-            <X />
+            <X className="h-4 w-4" />
           </Button>
         )}
       </div>
+
+      {/* RIGHT: View Options */}
       <div className="flex items-center gap-2">
         <DataTableViewOptions table={table} />
       </div>
