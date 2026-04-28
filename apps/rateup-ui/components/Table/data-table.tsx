@@ -71,6 +71,7 @@ export function DataTable<TData, TValue>({
   defaultColumnVisibility = {},
 }: Readonly<DataTableProps<TData, TValue>>) {
   const [rowSelection, setRowSelection] = React.useState({});
+  const [globalFilter, setGlobalFilter] = React.useState("");
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>(defaultColumnVisibility);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -86,6 +87,7 @@ export function DataTable<TData, TValue>({
       columnVisibility,
       sorting,
       rowSelection,
+      globalFilter,
       ...(serverSide?.pagination ? { pagination: serverSide.pagination } : {}),
       ...(serverSide?.sorting ? { sorting: serverSide.sorting } : { sorting }),
       ...(serverSide?.columnFilters
@@ -128,6 +130,14 @@ export function DataTable<TData, TValue>({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getRowId: (row: any) => row.id,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row, columnId, filterValue) => {
+      const search = filterValue.toLowerCase();
+
+      return Object.values(row.original).some((value) =>
+        String(value).toLowerCase().includes(search),
+      );
+    },
   });
 
   const rows = table.getRowModel().rows;
