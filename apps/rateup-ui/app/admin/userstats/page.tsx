@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { Input } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { ColumnDef } from "@tanstack/react-table";
 import {
@@ -13,6 +14,7 @@ import {
   Shield,
   UserCheck,
   Users,
+  X,
 } from "lucide-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
@@ -82,6 +84,7 @@ const index = () => {
   ] = useDisclosure(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isUpdatedRecipe, setIsUpdatedRecipe] = useState(false);
+  const [search, setSearch] = useState("");
 
   const columns: ColumnDef<UserTableData>[] = [
     {
@@ -273,8 +276,18 @@ const index = () => {
       </div>
     );
 
+  const filteredUsers = users?.filter((user) => {
+    const value = search.toLowerCase();
+
+    return (
+      user?.userName?.toLowerCase().includes(value) ||
+      user?.email?.toLowerCase().includes(value) ||
+      user?.orgName?.toLowerCase().includes(value)
+    );
+  });
+
   const tableData: UserTableData[] =
-    users?.map((user) => ({
+    filteredUsers?.map((user) => ({
       id: user?.email,
       name: user?.userName,
       orgName: user?.orgName,
@@ -437,7 +450,25 @@ const index = () => {
       <p className="text-sm text-muted-foreground">
         Manage and view all users in your system
       </p>
-      <div>
+      <div className="relative">
+        <div className="absolute flex items-center gap-1 top-0 left-0">
+          <Input
+            placeholder="Search name, email or org..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 w-[150px] lg:w-[250px]"
+          />
+          {search && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSearch("")}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
         <DataTable
           columns={columns}
           data={tableData}
