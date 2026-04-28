@@ -208,7 +208,6 @@ function FlowCard({
             }`,
           )
         }
-        className="h-full cursor-pointer border transition-colors hover:border-blue-400 dark:border-gray-700 dark:hover:border-blue-600"
       />
       <ConfirmationModal
         forDeleteFunctionality
