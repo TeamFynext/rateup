@@ -43,7 +43,6 @@ const updateWaSettingsInputSchema = z.object({
   igDisplayName: z.string().optional().nullable(),
   phoneDisplayName: z.string().optional().nullable(),
   paymentMethod: z.string().optional(),
-  teams: z.array(z.string()).optional(),
 });
 
 const whatsappSettingsIdParamSchema = z.object({
@@ -68,7 +67,6 @@ const getWaSettingsResponseSchema = z.array(
     phoneDisplayName: z.string().optional().nullable(),
     assets: z.array(z.string()),
     paymentMethod: z.string().optional(),
-    teams: z.array(z.object({ id: z.string(), name: z.string() })).optional(),
   }),
 );
 const contactTagSchema = z.object({

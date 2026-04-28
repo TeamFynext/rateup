@@ -166,7 +166,7 @@ model Org {
   onboardingChecklist          Json?
   onboardingChecklistCompleted Boolean @default(false)
 
-  deletionMailSent         DateTime?
+  deletionMailSent DateTime?
 
   members                  OrgMember[]
   teams                    Team[]
@@ -316,7 +316,6 @@ model WhatsappSettings {
   catalog          CatalogPhoneIdMap?
   assets           String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
   paymentMethod    String             @default("NATIVE") // NATIVE, SHOPIFY_LINK
-  teams            Team[]
 }
 
 model Rule {
@@ -469,7 +468,6 @@ model Team {
   waInboxAssign          WaInboxAssign[]
   ticketBoards           TicketBoardTeam[]
   assignedConversations  ConversationAssignedUserTeamMap[]
-  whatsappChannels       WhatsappSettings[]
   waMessageOrgTeamMaps   WaMessageOrgTeamMap[]
   waMessageSchedule      WaMessageSchedule[]
   featureAccess          TeamFeatureAccess[]
@@ -1772,13 +1770,13 @@ model LoyaltyProgram {
   defaultCountryCode String @default("IN")
 
   // Fixed Bonuses
-  signupBonus      Int    @default(0)
-  referralBonus    Int    @default(0) // For referrer
-  referralBonusType String @default("points") // 'points' or 'gift'
-  referralRewardId String? @db.Uuid // Reward ID when referralBonusType is 'gift'
-  refereeBonus     Int    @default(0) // For new customer
-  refereeBonusType  String @default("points") // 'points' or 'gift'
-  refereeRewardId  String? @db.Uuid // Reward ID when refereeBonusType is 'gift'
+  signupBonus       Int     @default(0)
+  referralBonus     Int     @default(0) // For referrer
+  referralBonusType String  @default("points") // 'points' or 'gift'
+  referralRewardId  String? @db.Uuid // Reward ID when referralBonusType is 'gift'
+  refereeBonus      Int     @default(0) // For new customer
+  refereeBonusType  String  @default("points") // 'points' or 'gift'
+  refereeRewardId   String? @db.Uuid // Reward ID when refereeBonusType is 'gift'
 
   // Tier Configuration
   tiersEnabled    Boolean @default(true)
