@@ -55,7 +55,7 @@ const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
       router.replace("/protected/inbox");
     } catch (error) {
       console.error("Apple login error:", error);
-      setError("Something went wrong. Try signing up if you don't have an account.");
+      setError("Something went wrong.");
     } finally {
       setLoading(false);
     }

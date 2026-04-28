@@ -20,11 +20,12 @@ export const signInWithGoogle = async () => {
       `${process.env.EXPO_PUBLIC_API_URL}/api/auth/signinup`,
       {
         thirdPartyId: "google",
+        clientType: "mobile",
         oAuthTokens: {
           access_token: accessToken,
           id_token: idToken,
         },
-      }
+      },
     );
 
     // Validate session creation

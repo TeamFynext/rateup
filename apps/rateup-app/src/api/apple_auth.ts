@@ -26,11 +26,11 @@ export const signInWithApple = async () => {
       `${process.env.EXPO_PUBLIC_API_URL}/api/auth/signinup`,
       {
         thirdPartyId: "apple",
-        clientType:"ios",
+        clientType: "mobile",
         oAuthTokens: {
           id_token: idToken,
         },
-      }
+      },
     );
 
     // Validate session
