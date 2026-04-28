@@ -22,7 +22,6 @@ export interface IEditTeam {
   code?: string;
   tags?: string[];
   color?: string;
-  whatsappChannels?: { id: string }[];
 }
 
 export const createTeam = (data: ICreateTeam) =>

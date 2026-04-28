@@ -3,10 +3,9 @@
 import { useEffect } from "react";
 
 import { Link, RichTextEditor } from "@mantine/tiptap";
-import { Color } from "@tiptap/extension-color";
 import Image from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
-import { TextStyle } from "@tiptap/extension-text-style";
+import { Color, TextStyle } from "@tiptap/extension-text-style";
 import Youtube from "@tiptap/extension-youtube";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";

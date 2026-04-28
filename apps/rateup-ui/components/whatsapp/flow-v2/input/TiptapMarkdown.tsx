@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 
 import { Group } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
-import CharacterCount from "@tiptap/extension-character-count";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import {
@@ -13,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@tiptap/extension-table";
+import { CharacterCount } from "@tiptap/extensions";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";

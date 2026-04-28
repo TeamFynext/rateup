@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Building, Check, ClipboardList, Sparkles, X, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
-import WhatsAppSettingsPage from "@/app/dashboard/whatsapp/settings/page";
+import ChannelDetailsPage from "@/app/dashboard/settings/channels/[channel]/page";
 import {
   useCompleteOrgDetails,
   useOrgNameAndPhone,
@@ -171,7 +171,7 @@ export default function OnboardingWizard() {
               >
                 <X className="w-5 h-5" />
               </button>
-              {activeIntegration === "whatsapp" && <WhatsAppSettingsPage />}
+              {activeIntegration === "whatsapp" && <ChannelDetailsPage />}
             </motion.div>
           </motion.div>
         )}
@@ -200,7 +200,8 @@ export default function OnboardingWizard() {
               Welcome to RateUp, {info?.nameOfUser || ""}! 👋
             </h1>
             <p className="text-gray-600 text-sm">
-              Let's get your customer engagement platform ready in 3 quick steps
+              Let`&apos;s get your customer engagement platform ready in 3 quick
+              steps
             </p>
           </motion.div>
 

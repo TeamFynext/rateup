@@ -85,7 +85,6 @@ export function useEditTeamMutation(
   onlyTag?: boolean,
 ) {
   const queryClient = useQueryClient();
-  const router = useRouter();
   return useMutation({
     mutationFn: (values: IEditTeam) => editTeam(id, values, onlyTag),
     onSuccess: (res) => {

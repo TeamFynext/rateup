@@ -20,8 +20,8 @@ import {
   IconWaveSine,
   IconX,
 } from "@tabler/icons-react";
-import CharacterCount from "@tiptap/extension-character-count";
 import Placeholder from "@tiptap/extension-placeholder";
+import { CharacterCount } from "@tiptap/extensions";
 import { Extension, generateHTML, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";

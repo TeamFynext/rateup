@@ -6,7 +6,6 @@ import { isNotEmpty, useForm } from "@mantine/form";
 import { IconTrash } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 
-import { useTeamsByUser } from "@/backend/team/team.query";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import {
   useDeleteWaSettingsMutation,
@@ -23,23 +22,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import { TeamAssignmentSection } from "./team-assignment-section";
-
 type WaSetting = WaSettings[number];
 
 export function WhatsAppManualConfiguration({
   waSettings,
 }: Readonly<{ waSettings: WaSetting | undefined }>) {
   const translations = useExtracted();
-  const { data: teamsRes, isLoading: isLoadingTeams } = useTeamsByUser();
-
-  const teams = teamsRes?.data || [];
-  const teamOptions = teams.map((team: any) => ({
-    value: team.id,
-    label: team.name,
-  }));
-
-  const assignedTeamIds = waSettings?.teams?.map((team: any) => team.id) || [];
 
   const form = useForm({
     initialValues: {
@@ -64,8 +52,7 @@ export function WhatsAppManualConfiguration({
 
   useEffect(() => {
     if (waSettings) {
-      const { teams, ...rest } = waSettings;
-      form.setValues(rest);
+      form.setValues(waSettings);
     } else {
       form.reset();
     }
@@ -154,20 +141,6 @@ export function WhatsAppManualConfiguration({
               {...form.getInputProps("accessToken")}
             />
           </div>
-
-          {waSettings && (
-            <div className="relative rounded-lg border border-dashed border-border/50 bg-accent/30 p-4">
-              <TeamAssignmentSection
-                waSettingId={waSettings.id}
-                assignedTeamIds={assignedTeamIds}
-                teamOptions={teamOptions}
-                isLoadingTeams={isLoadingTeams}
-                instagramConnectionData={{
-                  fbPageId: waSettings?.fbPageId,
-                }}
-              />
-            </div>
-          )}
 
           <div className="flex justify-between pt-2">
             <Button
