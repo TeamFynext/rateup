@@ -410,6 +410,7 @@ export async function sendTemplateToUserCore(
   isTemplateName = false,
   tag?: string,
   buttonVariable?: string,
+  quickReplyPayload?: string[],
   externalApi: boolean = false,
 ): Promise<{ status: boolean; message: string; id?: string }> {
   let dbTemplate = null;
@@ -569,6 +570,7 @@ export async function sendTemplateToUserCore(
   async function processComponents() {
     for await (const item of dbTemplate.data.components) {
       if (item.type?.toLowerCase() === WaTemplateComponentType.BUTTONS) {
+        let quickReplyIdx = 0;
         for await (const [idx, button] of item.buttons.entries()) {
           if (button?.type === "URL" && button?.example?.length > 0) {
             if (button?.example?.[0]?.startsWith(":")) {
@@ -834,6 +836,24 @@ export async function sendTemplateToUserCore(
                 },
               ],
             });
+          } else if (button.type === WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
+            if (
+              quickReplyPayload?.length > quickReplyIdx &&
+              quickReplyPayload?.[quickReplyIdx]
+            ) {
+              components.push({
+                type: "button",
+                sub_type: button.type,
+                index: idx,
+                parameters: [
+                  {
+                    type: "payload",
+                    payload: quickReplyPayload[quickReplyIdx],
+                  },
+                ],
+              });
+              quickReplyIdx++;
+            }
           }
         }
       }
@@ -1155,7 +1175,6 @@ export async function sendTemplateToUserCore(
     },
     components: components,
   };
-
   const defaultValue = dbTemplate?.data?.components?.find(
     (data) => data.example?.body_text,
   )?.example?.body_text?.[0];
