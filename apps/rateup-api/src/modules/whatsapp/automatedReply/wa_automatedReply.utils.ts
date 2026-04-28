@@ -699,6 +699,7 @@ export async function checkAndExecuteRuleByTriggerEvent(
     phone?: string;
     waMessage?: WaMessageBody;
     contactId?: string;
+    buttonPayload?: string;
   },
 ): Promise<
   | {
@@ -1258,6 +1259,7 @@ async function executeExternalApiAction(
   context: {
     phone?: string;
     message?: string;
+    buttonPayload?: string;
   },
 ): Promise<boolean> {
   if (!endpoint) return false;
@@ -1285,6 +1287,7 @@ async function executeExternalApiAction(
     body: JSON.stringify({
       user: context.phone ?? "",
       action: context.message ?? "",
+      buttonPayload: context.buttonPayload ?? "",
     }),
   };
 

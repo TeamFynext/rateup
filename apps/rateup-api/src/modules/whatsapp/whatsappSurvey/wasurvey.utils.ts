@@ -712,6 +712,7 @@ export type WaParsedMessage = {
   type: string;
   completeMessageObject: any;
   buttonId: string;
+  buttonPayload: string;
 };
 export function parseMessage(data: WaMessageBody): WaParsedMessage {
   if (!getMessageObject(data)) {
@@ -725,7 +726,7 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
   let flowResponse;
   let body = "";
   let buttonId = "";
-  message[type];
+  let buttonPayload = "";
   switch (message.type) {
     case WaMessageTypes.interactive:
       if (message.interactive.type === "nfm_reply") {
@@ -746,6 +747,7 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
       break;
     case WaMessageTypes.button:
       body = message.button.text;
+      buttonPayload = message.button.payload;
       break;
     case WaMessageTypes.order:
       body = message.order.text;
@@ -760,6 +762,7 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
     type: subtype,
     completeMessageObject,
     buttonId,
+    buttonPayload,
   };
 }
 

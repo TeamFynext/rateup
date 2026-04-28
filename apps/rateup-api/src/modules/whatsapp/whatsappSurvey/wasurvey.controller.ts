@@ -966,6 +966,7 @@ export async function handleAutomatedReply(
           message,
           phone,
           waMessage,
+          buttonPayload: parsedMessage?.buttonPayload,
         },
       );
 
