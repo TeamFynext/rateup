@@ -2,10 +2,18 @@
 
 import { ReactNode } from "react";
 
+import { cx } from "class-variance-authority";
 import { Calendar } from "lucide-react";
 
 import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 import { Switch } from "../ui/switch";
@@ -71,10 +79,6 @@ export function GenericActionCard({
   switchChecked,
   onSwitchChange,
 }: Readonly<GenericActionCardProps>) {
-  const cardClassName =
-    className ??
-    "h-full cursor-pointer border border-background transition-colors hover:border-primary";
-
   const footerRightNode = createdAt ? (
     <div className="flex items-center gap-1 text-muted-foreground">
       <Calendar className="size-4" />
@@ -85,51 +89,41 @@ export function GenericActionCard({
   );
 
   return (
-    <Card className={cardClassName} onClick={onClick}>
-      <CardContent className="flex h-full flex-col justify-between gap-4 px-4">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 overflow-hidden">
-              <h3
-                className="truncate text-lg font-semibold"
-                title={titleTooltip}
-              >
-                {title}
-              </h3>
-
-              {subtitle ? (
-                <p className="truncate text-xs text-muted-foreground">
-                  {subtitle}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="flex items-center gap-2">
-              {showSwitch && (
-                <Switch
-                  checked={switchChecked}
-                  onCheckedChange={(checked) => {
-                    onSwitchChange?.(checked);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              )}
-
-              {actions}
-            </div>
-          </div>
-
-          {content}
+    <Card
+      className={cx(
+        className,
+        "cursor-pointer hover:ring-1 hover:ring-primary gap-3.5",
+      )}
+      onClick={onClick}
+    >
+      <CardHeader className="flex justify-between">
+        <div className="overflow-hidden">
+          <CardTitle title={titleTooltip} className="truncate">
+            {title}
+          </CardTitle>
+          {subtitle ? (
+            <CardDescription className="truncate">{subtitle}</CardDescription>
+          ) : null}
         </div>
-
-        <div>
-          <Separator className="mb-3" />
-          <div className="flex items-center justify-between">
-            {footerLeft}
-            {footerRightNode}
-          </div>
+        <div className="flex items-center gap-2">
+          {showSwitch && (
+            <Switch
+              checked={switchChecked}
+              onCheckedChange={(checked) => {
+                onSwitchChange?.(checked);
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
+          {actions}
         </div>
-      </CardContent>
+      </CardHeader>
+      {content && <CardContent>{content}</CardContent>}
+      <Separator className="max-w-[calc(100%-45px)] mx-auto" />
+      <CardFooter className="flex justify-between">
+        {footerLeft}
+        {footerRightNode}
+      </CardFooter>
     </Card>
   );
 }

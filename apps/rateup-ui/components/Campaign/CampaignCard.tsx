@@ -206,7 +206,6 @@ export default function CampaignCard(props: Readonly<CampaignCardProps>) {
         </Badge>
       }
       createdAt={campaign.createdAt}
-      className="group relative h-full cursor-pointer overflow-hidden border border-border p-[0.7rem] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg dark:hover:border-primary/10"
       onClick={() => onView(campaign)}
     />
   );
