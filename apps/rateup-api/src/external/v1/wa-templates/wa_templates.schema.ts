@@ -124,6 +124,21 @@ export const sendWithFileSchema = z.object({
     .string()
     .optional()
     .describe("WhatsApp phone number with country code (e.g. 1234567890)"),
+  quickReplyPayload: z
+    .preprocess((val) => {
+      if (typeof val === "string") {
+        try {
+          return JSON.parse(val);
+        } catch {
+          return [];
+        }
+      }
+      return val;
+    }, z.array(z.coerce.string()))
+    .optional()
+    .describe(
+      "Array of payloads for quick reply buttons, if the template has quick reply buttons. The order of payloads should match the order of quick reply buttons in the template.",
+    ),
 });
 
 // used for saving to db

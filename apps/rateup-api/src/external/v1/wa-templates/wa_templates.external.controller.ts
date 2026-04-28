@@ -49,8 +49,8 @@ export async function sendTemplateByNameToPhoneExternalController(
       body_variables,
       parameterData,
       tag,
-      from,
       buttonVariable,
+      quickReplyPayload,
     } = req.body;
     log.info("🚀 ~ req.body - external: %o", req.body);
     const orgId = req.user.orgId;
@@ -98,6 +98,7 @@ export async function sendTemplateByNameToPhoneExternalController(
       true,
       tag,
       buttonVariable,
+      quickReplyPayload,
       true,
     );
     rep
@@ -137,6 +138,7 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
       filename,
       file,
       buttonVariable,
+      quickReplyPayload,
     } = req.body;
     const bodyVariables = body_variables || [];
 
@@ -240,6 +242,7 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
       true,
       tag,
       buttonVariable,
+      quickReplyPayload,
       true,
     );
     rep

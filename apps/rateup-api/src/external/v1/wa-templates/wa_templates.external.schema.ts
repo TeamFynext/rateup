@@ -81,6 +81,12 @@ const sendTemplateByNameToPhone = scheduleTemplate.extend({
     .optional(),
   from: z.number().optional(),
   buttonVariable: z.string().optional(),
+  quickReplyPayload: z
+    .array(z.coerce.string())
+    .optional()
+    .describe(
+      "Array of payloads for quick reply buttons, if the template has quick reply buttons. The order of payloads should match the order of quick reply buttons in the template.",
+    ),
 });
 const sendTemplateWithFile = z.object({
   templateName: z.string(),
@@ -100,6 +106,7 @@ const sendTemplateWithFile = z.object({
   }),
   from: z.number().optional(),
   buttonVariable: z.string().optional(),
+  quickReplyPayload: z.array(z.coerce.string()).optional(),
 });
 
 const sendTemplateToContactParams = z.object({
