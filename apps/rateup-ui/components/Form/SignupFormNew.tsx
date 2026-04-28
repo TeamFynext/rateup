@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   ArrowRight,
+  Briefcase,
   Building,
   Check,
   CheckCircle,
@@ -15,8 +16,10 @@ import {
   Lock,
   Mail,
   MessageSquare,
+  Sparkles,
   Target,
   User,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -76,6 +79,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
           location: z.string().min(1, translations("Location is required")),
           goals: z.array(z.string()).optional(),
           integrationsSelected: z.array(z.string()).optional(),
+          teamSize: z.string().optional(),
         })
       : z.object({
           email: z
@@ -103,6 +107,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
           location: z.string().min(1, translations("Location is required")),
           goals: z.array(z.string()).optional(),
           integrationsSelected: z.array(z.string()).optional(),
+          teamSize: z.string().optional(),
         });
 
   const signupForm = useForm({
@@ -119,6 +124,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
       location: "",
       goals: [],
       integrationsSelected: [],
+      teamSize: "",
     },
   });
 
@@ -177,6 +183,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
       signupForm.getValues("location"),
       signupForm.getValues("goals"),
       signupForm.getValues("integrationsSelected"),
+      signupForm.getValues("teamSize"),
     ).finally(() => {
       setIsLoading(false);
       localStorage.removeItem("selected_plan");
@@ -195,8 +202,47 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
         return "";
     }
   };
+  const getStepSubtitle = () => {
+    switch (currentStep) {
+      case 1:
+        return "Reimagine customer engagement — set up RateUp in under two minutes.";
+      case 2:
+        return "We'll personalize templates, automations and onboarding for your industry.";
+      case 3:
+        return "Select all that apply — we'll tailor your dashboard, templates and onboarding tour.";
+      default:
+        return "";
+    }
+  };
+  const getStepShortTitle = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="text-primary flex items-center gap-1">
+            <UserPlus size={12} strokeWidth={2.5} />{" "}
+            <span className="text-xs">Get started</span>
+          </div>
+        );
+      case 2:
+        return (
+          <div className="text-primary flex items-center gap-1">
+            <Briefcase size={12} strokeWidth={2.5} />{" "}
+            <span className="text-xs">Your business</span>
+          </div>
+        );
+      case 3:
+        return (
+          <div className="text-primary flex items-center gap-1">
+            <Sparkles size={12} strokeWidth={2.5} />{" "}
+            <span className="text-xs">Personalize</span>
+          </div>
+        );
+      default:
+        return "";
+    }
+  };
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center w-full p-3 sm:p-4 md:p-6 bg-linear-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center w-full p-3 sm:p-4 md:p-6 bg-linear-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative dark:bg-linear-to-br dark:from-gray-900/80 dark:via-gray-900/60 dark:to-gray-900/80">
       <div className="text-center mb-0.5 sm:mb-1 max-w-xs sm:max-w-sm">
         <img
           src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/LogoRateup.png`}
@@ -211,19 +257,52 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
             <div className="text-xs font-semibold text-gray-500 tracking-wider uppercase">
               Step {currentStep} of {totalSteps}
             </div>
-            <div className="text-xs font-semibold text-gray-500">
+            <div className="text-xs font-semibold text-gray-500 tabular-nums">
               {Math.round(progress)}% complete
             </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            />
+
+          <div className="flex gap-1">
+            {Array.from({ length: totalSteps }).map((_, index) => {
+              let fill = 0;
+
+              if (index < currentStep - 1) {
+                fill = 1; // fully filled
+              } else if (index === currentStep - 1) {
+                const segmentProgress = (progress / 100) * totalSteps - index;
+                fill = Math.max(0, Math.min(segmentProgress, 1));
+              }
+
+              const isActive = index === currentStep - 1;
+
+              return (
+                <div
+                  key={index}
+                  className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden"
+                >
+                  <motion.div
+                    className={`h-full bg-primary ${isActive ? "shadow-md" : ""}`}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: fill }}
+                    transition={{
+                      duration: 0.6,
+                      ease: [0.22, 1, 0.36, 1], // smooth ease-out
+                    }}
+                    style={{ originX: 0 }}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
-        <Card className="p-8 shadow-sm border border-gray-200 bg-white mb-8">
-          <h2 className="text-xl font-bold text-gray-900">{getStepTitle()}</h2>
+        <Card className="p-8 shadow-sm border border-gray-200 mb-8">
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-semibold capitalize text-primary">
+              {getStepShortTitle()}
+            </p>
+            <h2 className="text-2xl font-bold">{getStepTitle()}</h2>
+            <p className="font-normal text-xs">{getStepSubtitle()}</p>
+          </div>
           {currentStep === 1 && (
             <Step1
               formData={signupForm}
@@ -368,13 +447,13 @@ export function Step1({ formData, handleNext, authType }) {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <GoogleSignInButton
-              className="w-full h-8 py-2 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-800 hover:bg-gray-50 font-medium"
+              className="p-2 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 font-medium"
               buttonText={"Continue with Google"}
             />
             <AppleSignInButton
-              className="w-full h-8 py-2 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-800 hover:bg-gray-50 font-medium"
+              className="p-2 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 font-medium"
               buttonText="Continue with Apple"
             />
           </div>
@@ -383,12 +462,12 @@ export function Step1({ formData, handleNext, authType }) {
           <>
             {/* Divider */}
 
-            <div className="relative">
+            <div className="relative mt-2">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-3 text-gray-400 tracking-wider uppercase">
+                <span className="bg-white dark:bg-black px-3 text-gray-400 tracking-wider uppercase">
                   Or continue with email
                 </span>
               </div>
@@ -397,11 +476,9 @@ export function Step1({ formData, handleNext, authType }) {
         )}
         <div className="space-y-2 sm:space-y-3">
           <div className="space-y-1">
-            <Label
-              htmlFor="email"
-              className="text-xs font-medium text-gray-900"
-            >
-              Name
+            <Label htmlFor="email" className="text-xs font-medium">
+              Full Name
+              <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
               <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -426,11 +503,9 @@ export function Step1({ formData, handleNext, authType }) {
             <>
               <div className="space-y-0.5 sm:space-y-1">
                 <div className="space-y-1">
-                  <Label
-                    htmlFor="email"
-                    className="text-xs font-medium text-gray-900"
-                  >
+                  <Label htmlFor="email" className="text-xs font-medium">
                     Email Address
+                    <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -483,11 +558,9 @@ export function Step1({ formData, handleNext, authType }) {
 
               {/* Password */}
               <div className="space-y-1">
-                <Label
-                  htmlFor="password"
-                  className="text-xs font-medium text-gray-900"
-                >
+                <Label htmlFor="password" className="text-xs font-medium">
                   Password
+                  <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -562,7 +635,7 @@ export function Step1({ formData, handleNext, authType }) {
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.25 }}
-                    className="text-xs text-gray-500 mt-0.5 sm:mt-1 overflow-hidden"
+                    className="text-xs text-gray-500 dark:text-gray-100 mt-0.5 sm:mt-1 overflow-hidden"
                   >
                     {translations("Password must have")}:
                     <ul className="list-none mt-0.5 sm:mt-1 space-y-0.5 sm:space-y-1">
@@ -588,7 +661,9 @@ export function Step1({ formData, handleNext, authType }) {
                           )}
                           <span
                             className={
-                              rule.valid ? "text-gray-800" : "text-gray-500"
+                              rule.valid
+                                ? "text-gray-800 dark:text-gray-100"
+                                : "text-gray-500"
                             }
                           >
                             {rule.label}
@@ -614,7 +689,7 @@ export function Step1({ formData, handleNext, authType }) {
           />
           <Label
             htmlFor="terms"
-            className="text-xs text-gray-600 leading-relaxed cursor-pointer"
+            className="text-xs leading-relaxed cursor-pointer"
           >
             I agree to the{" "}
             <button
@@ -634,7 +709,7 @@ export function Step1({ formData, handleNext, authType }) {
         </div>
 
         <div className="text-center">
-          <p className="text-xs text-gray-600">
+          <p className="text-xs">
             Already have an account?{" "}
             <span
               onClick={() => router.push("/login")}
@@ -696,8 +771,9 @@ export function Step2({ formData, handleBack, handleNext }) {
       <div className="flex-1 space-y-4 overflow-y-auto pr-1">
         {/* Business Name */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-gray-900">
+          <Label className="text-xs font-medium">
             Business Name
+            <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -717,9 +793,7 @@ export function Step2({ formData, handleBack, handleNext }) {
 
         {/* Website */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-gray-900">
-            Website URL
-          </Label>
+          <Label className="text-xs font-medium">Website URL</Label>
           <div className="relative">
             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Controller
@@ -734,12 +808,16 @@ export function Step2({ formData, handleBack, handleNext }) {
               )}
             />
           </div>
+          <span className="text-gray-500 text-[11px]">
+            Optional — helps us prefill your loyalty program landing page.
+          </span>
         </div>
 
         {/* Phone */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-gray-900">
+          <Label className="text-xs font-medium">
             Contact Number
+            <span className="text-red-500">*</span>
           </Label>
           <Controller
             name="phoneNumber"
@@ -750,7 +828,7 @@ export function Step2({ formData, handleBack, handleNext }) {
                 defaultCountry="IN"
                 value={field.value}
                 onChange={(val) => field.onChange(val || "")}
-                className="h-8 border border-gray-300 rounded-md px-2 text-xs bg-white 
+                className="h-8 border border-gray-300 rounded-md px-2 text-xs bg-white dark:bg-transparent 
                 [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:outline-none [&>input]:w-full"
               />
             )}
@@ -759,7 +837,9 @@ export function Step2({ formData, handleBack, handleNext }) {
 
         {/* Industry */}
         <div className="space-y-1">
-          <Label className="text-xs font-medium text-gray-900">Industry</Label>
+          <Label className="text-xs font-medium">
+            Industry <span className="text-red-500">*</span>
+          </Label>
           <Controller
             name="industry"
             control={formData.control}
@@ -876,7 +956,9 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
               {/* Label */}
               <span
                 className={`flex-1 text-xs ${
-                  isActive ? "text-gray-900 font-medium" : "text-gray-700"
+                  isActive
+                    ? "text-gray-900 dark:text-gray-100 font-medium"
+                    : "text-gray-700 dark:text-gray-500"
                 }`}
               >
                 {goal.label}
