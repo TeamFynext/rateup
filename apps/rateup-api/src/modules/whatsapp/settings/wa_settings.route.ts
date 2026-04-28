@@ -22,7 +22,6 @@ import {
   byLeadGenFormIdParamsSchema,
   byWaSettingsIdParamsSchema,
   createWaSettingsInputSchema,
-  getWaSettingsResponseSchema,
   paginationQuery,
   updateWaSettingsInputSchema,
   whatsappSettingsIdParamSchema,

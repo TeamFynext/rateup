@@ -1,4 +1,3 @@
-import Session from "supertokens-node/recipe/session/index.js";
 import prisma from "../../utils/prisma.js";
 import { createUser, getUserRecipeName } from "../user/user.service.js";
 import {
@@ -621,14 +620,6 @@ export async function getTeamMembersAndFromInvitation(
       googleLink: true,
       code: true,
       tags: true,
-      whatsappChannels: {
-        select: {
-          id: true,
-          phone: true,
-          phoneId: true,
-          ibaId: true,
-        },
-      },
       invitations: {
         where: {
           status: {
@@ -675,7 +666,6 @@ export async function getTeamMembersAndFromInvitation(
     googleLink: team.googleLink,
     code: team.code,
     tags: team.tags,
-    whatsappChannels: team.whatsappChannels,
     members: team.members.map((member) => {
       return {
         id: member.user.id,
@@ -734,14 +724,6 @@ export async function getTeamsByUserId(userId: string) {
           createdAt: true,
           googleLink: true,
           reviewPageLinks: true,
-          whatsappChannels: {
-            select: {
-              id: true,
-              phone: true,
-              phoneId: true,
-              ibaId: true,
-            },
-          },
           _count: {
             select: {
               members: {
@@ -788,14 +770,7 @@ export async function getTeamIdsBySurveyMapId(mapId: string[]) {
   return teams.map(({ teamId }) => teamId);
 }
 export async function editTeam(
-  {
-    name,
-    code,
-    googleLink,
-    reviewPageLinks,
-    color,
-    whatsappChannels,
-  }: EditTeamInput,
+  { name, code, googleLink, reviewPageLinks, color }: EditTeamInput,
   params: IdParamInput,
   request: FastifyRequest,
   reply: FastifyReply,
@@ -815,11 +790,6 @@ export async function editTeam(
         googleLink,
         reviewPageLinks,
         color,
-        whatsappChannels: whatsappChannels
-          ? {
-              set: whatsappChannels.map((c) => ({ id: c.id })),
-            }
-          : undefined,
       },
     });
     return team;
@@ -849,17 +819,6 @@ export async function manageTags(
 export async function getTeamById(teamId: string) {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
-    include: {
-      members: true,
-      whatsappChannels: {
-        select: {
-          id: true,
-          phone: true,
-          phoneId: true,
-          ibaId: true,
-        },
-      },
-    },
   });
 
   return team;

@@ -18,7 +18,6 @@ import {
   getAdAccountsFromWa,
   getAdsFromWa,
   getAllWaSettings,
-  getAccessibleWaSettings,
   getContactTag,
   getFbPagesFromWa,
   getLeadgenFormQuestionsFromWa,
@@ -34,7 +33,6 @@ import {
   updateWaSettingsById,
   upsertWaSettings,
 } from "./wa_settings.service.js";
-import { getPhoneDetails } from "../auth/wa_auth.service.js";
 import { WaConfigType } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import { callWhatsappApi } from "../wa_axios.js";
@@ -64,10 +62,8 @@ export async function getWaSettingsHandler(
   req: FastifyRequest,
   res: FastifyReply,
 ) {
-  const { orgId, role } = req.user;
-  // const userId = req.user.id;
-  const userId = req.user.userId;
-  const waSettings = await getAccessibleWaSettings(orgId, userId, role);
+  const { orgId } = req.user;
+  const waSettings = await getAllWaSettings(orgId);
   if (!waSettings?.length) {
     return res.status(200).send([]);
   }
