@@ -26,7 +26,6 @@ export type WaSettings = {
   igDisplayName: string;
   assets: MetaLoginAssets[];
   paymentMethod?: string;
-  teams: { id: string; name: string }[];
   status?: WhatsappSettingsStatus;
 }[];
 

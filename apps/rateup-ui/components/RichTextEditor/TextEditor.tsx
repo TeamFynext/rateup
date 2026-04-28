@@ -4,10 +4,9 @@ import { useContext, useEffect } from "react";
 
 import { Group } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
-import { Color } from "@tiptap/extension-color";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
-import { TextStyle } from "@tiptap/extension-text-style";
+import { Color, TextStyle } from "@tiptap/extension-text-style";
 import { Youtube } from "@tiptap/extension-youtube";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";

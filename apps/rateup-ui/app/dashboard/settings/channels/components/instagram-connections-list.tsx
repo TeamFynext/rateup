@@ -39,7 +39,7 @@ export function InstagramConnectionsList({
   };
 
   const disconnectInstagram = (setting: WaSetting) => {
-    const { id, teams, ...rest } = setting;
+    const { id, ...rest } = setting;
     upsertMutation.mutate({
       ...rest,
       fbPageId: "",

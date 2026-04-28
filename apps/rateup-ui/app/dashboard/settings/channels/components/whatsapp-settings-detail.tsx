@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Group, Skeleton, Stack, Tooltip } from "@mantine/core";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
@@ -20,14 +20,10 @@ export function WhatsAppSettingsDetail({
   waSettings: WaSettings | undefined;
   isLoading: boolean;
 }>) {
-  const [tab, setTab] = useState<string>(WaConfigType.Automated);
+  const [tab, setTab] = useState<string>(
+    waSettings?.[0]?.type ?? WaConfigType.Automated,
+  );
   const translations = useExtracted();
-
-  useEffect(() => {
-    if (waSettings?.[0]?.type) {
-      setTab(waSettings[0].type);
-    }
-  }, [waSettings]);
 
   const isAutomated = waSettings?.[0]?.type === WaConfigType.Automated;
   const isManual = waSettings?.[0]?.type === WaConfigType.Manual;
