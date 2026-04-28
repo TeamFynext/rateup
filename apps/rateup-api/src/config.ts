@@ -235,7 +235,6 @@ export const SuperTokensConfig: TypeInput = {
           ...originalImplementation,
           signInUp: async function (input) {
             const clientType = input.userContext.clientType;
-            console.log("Client type: ", clientType);
             const existingUsers = await getUserInfo(
               input.email,
               input.tenantId,
