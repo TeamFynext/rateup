@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { Input } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { ColumnDef } from "@tanstack/react-table";
 import {
@@ -29,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { UserRole } from "@/utils/enums";
 
