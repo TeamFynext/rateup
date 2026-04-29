@@ -38,11 +38,11 @@ export default function AppleSignInButton({
   return (
     <Button
       onClick={handleAppleLogin}
-      className={`w-full h-8 ${className}`}
+      className={`h-10 ${className}`}
       variant="outline"
     >
       <IconBrandAppleFilled />
-      <span className="font-semibold">{buttonText}</span>
+      <span className="font-semibold text-xs">{buttonText}</span>
     </Button>
   );
 }

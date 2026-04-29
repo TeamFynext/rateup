@@ -49,10 +49,10 @@ function GoogleSignInButton({ buttonText, className }) {
     <Button
       variant="outline"
       onClick={googleSignInClicked}
-      className={`w-full h-8 ${className}`}
+      className={`h-10 ${className}`}
     >
       <GoogleIcon />
-      <span className="font-semibold">{buttonText}</span>
+      <span className="font-semibold text-xs">{buttonText}</span>
     </Button>
   );
 }

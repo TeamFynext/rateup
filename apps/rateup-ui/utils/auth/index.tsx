@@ -164,6 +164,7 @@ export function useSignUp() {
     location?: string,
     goals?: string,
     integrationsSelected?: string,
+    teamSize?: string,
   ) {
     try {
       // if (phoneNumber) {
@@ -197,6 +198,10 @@ export function useSignUp() {
         {
           id: "integrationsSelected",
           value: integrationsSelected || null,
+        },
+        {
+          id: "teamSize",
+          value: teamSize || null,
         },
       ].filter((field) => field.value !== null);
 

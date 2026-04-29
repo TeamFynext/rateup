@@ -17,7 +17,7 @@ function TeamPerformance({ dateRange }) {
     dateRange: dateRange.range,
   });
   return (
-    <Card className="border">
+    <Card>
       <CardHeader>
         <CardTitle>Teams Overview</CardTitle>
         <p className="text-sm text-muted-foreground mt-1">

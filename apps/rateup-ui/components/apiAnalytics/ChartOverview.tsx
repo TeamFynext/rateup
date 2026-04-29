@@ -21,7 +21,7 @@ function ChartOverview({ messageTrendData, isLoading }) {
     Array.isArray(messageTrendData) && messageTrendData.length > 0;
 
   return (
-    <Card className="border shadow-sm">
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Activity className="w-4 h-4 text-primary" />
@@ -105,7 +105,7 @@ export function DailyTrend({ dailyMessageData, isLoading }) {
     Array.isArray(dailyMessageData) && dailyMessageData.length > 0;
 
   return (
-    <Card className="border shadow-sm">
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-primary" />

@@ -2,7 +2,13 @@ import { ReactNode } from "react";
 
 import { TrendingDown, TrendingUp } from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface AnalyticsStatCardProps {
   icon: ReactNode;
@@ -72,33 +78,28 @@ export function PageHeaderCard({
   actions,
 }: PageHeaderCardProps) {
   return (
-    <Card
-      className="flex flex-col gap-4 p-4 w-full shadow-sm border-2
-                 sm:flex-row sm:items-center sm:justify-between"
-    >
-      <div className="flex gap-2 items-center">
-        {icon && (
-          <div className="w-8 h-8 bg-primary rounded-lg items-center justify-center shrink-0 hidden sm:flex">
-            {icon}
+    <Card>
+      <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-2 items-center">
+          {icon && (
+            <div className="w-8 h-8 bg-primary rounded-lg items-center justify-center shrink-0 hidden sm:flex">
+              {icon}
+            </div>
+          )}
+          <div className="flex flex-col">
+            <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              {description}
+            </CardDescription>
           </div>
+        </div>
+
+        {actions && (
+          <CardContent className="flex flex-col gap-3 p-0 sm:flex-row sm:items-center sm:gap-2">
+            {actions}
+          </CardContent>
         )}
-
-        <div className="flex flex-col">
-          <h2 className="text-base sm:text-lg">{title}</h2>
-          <p className="text-muted-foreground text-xs sm:text-sm">
-            {description}
-          </p>
-        </div>
-      </div>
-
-      {actions && (
-        <div
-          className="flex flex-col gap-3
-                  sm:flex-row sm:items-center sm:gap-2"
-        >
-          {actions}
-        </div>
-      )}
+      </CardHeader>
     </Card>
   );
 }

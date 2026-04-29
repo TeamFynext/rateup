@@ -39,7 +39,7 @@ const ConversationAccountDistribution = ({ dateRange }) => {
   }
 
   return (
-    <Card className="border shadow-sm">
+    <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <MessageCircle className="w-4 h-4 text-primary" />
