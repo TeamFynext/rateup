@@ -14,7 +14,7 @@ function TemplateOverview({
 }) {
   const t = useExtracted("apianalytics");
   return (
-    <Card className="border shadow-sm">
+    <Card>
       <CardHeader className="py-0">
         <CardTitle className="text-base flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary" />

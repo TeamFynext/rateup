@@ -8,7 +8,7 @@ function TeamOverview({ teamData, isLoading }) {
   const t = useExtracted("apianalytics");
   const hasData = Array.isArray(teamData) && teamData.length > 0;
   return (
-    <Card className="border shadow-sm">
+    <Card>
       <CardHeader className="py-0">
         <CardTitle className="text-base flex items-center gap-2">
           <Users className="w-4 h-4 text-primary" />

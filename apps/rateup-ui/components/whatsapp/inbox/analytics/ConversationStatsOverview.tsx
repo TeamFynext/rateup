@@ -104,7 +104,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
   }
   return (
     <div className="flex flex-col gap-6">
-      <Card className="border shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Target className="w-4 h-4 text-primary" />
@@ -117,7 +117,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
               return (
                 <div
                   key={index}
-                  className="p-3 sm:p-4 flex flex-col gap-2 rounded-lg border hover:shadow-md transition-all"
+                  className="p-3 sm:p-4 flex flex-col gap-2 rounded-lg border  transition-all"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
           </div>
         </CardContent>
       </Card>
-      <Card className="border shadow-sm">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Zap className="w-4 h-4 text-primary" />
@@ -155,7 +155,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
         </CardHeader>
         <CardContent className="pt-0 pb-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
+            <div className="flex items-center justify-between p-3 rounded-lg border ">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
                   <Eye className="w-4 h-4 text-primary" />
