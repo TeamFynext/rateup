@@ -62,6 +62,7 @@ export async function createUserSignup({
   industry,
   goals,
   integrationsSelected,
+  teamSize,
 }: CreateUserSignupSchema) {
   log.info("Creating user....");
   try {
@@ -92,6 +93,7 @@ export async function createUserSignup({
             integrationsSelected: integrationsSelected?.length
               ? integrationsSelected
               : null,
+            teamSize: teamSize || null,
           },
           surveyThemes: {
             create: {

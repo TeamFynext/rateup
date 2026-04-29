@@ -32,6 +32,7 @@ const createUserSignupSchema = z.object({
   industry: z.string().optional(),
   goals: z.array(z.string()).optional(),
   integrationsSelected: z.array(z.string()).optional(),
+  teamSize: z.string().optional(),
 });
 
 const pauseUserSchema = z.object({
