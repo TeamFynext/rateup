@@ -169,9 +169,6 @@ export async function orgRoutes(server: FastifyInstance) {
     {
       schema: {
         body: createBusinessHourSchema,
-        response: {
-          201: businessHourResponseSchema,
-        },
       },
     },
     createBusinessHourHandler,
@@ -184,9 +181,6 @@ export async function orgRoutes(server: FastifyInstance) {
     {
       schema: {
         params: businessHourParamsSchema,
-        response: {
-          200: businessHourResponseSchema,
-        },
       },
     },
     getBusinessHourHandler,
@@ -198,9 +192,6 @@ export async function orgRoutes(server: FastifyInstance) {
       schema: {
         params: businessHourParamsSchema,
         body: updateBusinessHourSchema,
-        response: {
-          200: businessHourResponseSchema,
-        },
       },
     },
     updateBusinessHourHandler,
