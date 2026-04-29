@@ -173,7 +173,7 @@ export const WhatsAppSettingsModal = ({ opened, onClose, intendedRoute }) => {
           <Button
             onClick={() => {
               onClose();
-              router.push("/dashboard/whatsapp/settings");
+              router.push("/dashboard/settings/channels");
             }}
           >
             Go to WhatsApp Settings
