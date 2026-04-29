@@ -541,18 +541,12 @@ export default function CampaignDetails() {
           <div className="shrink-0 border-b">
             <div className="px-6">
               <div className="flex items-center justify-between">
-                <TabsList className="bg-transparent p-0 h-auto gap-2 border-none">
-                  <TabsTrigger
-                    value="info"
-                    className="border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:shadow-none! data-[state=active]:bg-transparent! data-[state=active]:text-primary data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-none px-4 py-2 transition-all cursor-pointer"
-                  >
+                <TabsList>
+                  <TabsTrigger value="info">
                     <TrendingUp className="w-4 h-4 mr-2" />
                     {t("Overview")}
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="participants"
-                    className="border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:shadow-none! data-[state=active]:bg-transparent! data-[state=active]:text-primary data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 rounded-none px-4 py-2 transition-all cursor-pointer"
-                  >
+                  <TabsTrigger value="participants">
                     <Users className="w-4 h-4 mr-2" />
                     {t("Participants")}
                     <Badge
@@ -570,9 +564,9 @@ export default function CampaignDetails() {
                       campaign.status === "ACTIVE"
                         ? "bg-green-500 dark:bg-green-600"
                         : "bg-slate-400 dark:bg-slate-600"
-                    } hover:bg-green-500 dark:hover:bg-green-600 text-white border-0 px-3 py-1 rounded-md`}
+                    } hover:bg-green-500 dark:hover:bg-green-600 text-white border-0 px-3 py-4 rounded-md`}
                   >
-                    <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse" />
+                    <div className="w-2.5 h-2.5 bg-white rounded-full mr-1.5 animate-pulse" />
                     {campaign.status}
                   </Badge>
                   <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
@@ -668,7 +662,7 @@ export default function CampaignDetails() {
                           </div>
                         </div>
                         {/* Total Participants */}
-                        <div className="px-6 py-4 rounded-xl bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-200 dark:border-slate-700">
+                        <div className="px-6 py-4 rounded-xl bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-1 border-slate-200 dark:border-slate-700">
                           <div className="flex items-center gap-3">
                             <div className="w-11 h-11 rounded-lg bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center">
                               <Users className="w-6 h-6 text-slate-700 dark:text-slate-300" />
@@ -721,7 +715,7 @@ export default function CampaignDetails() {
             className="flex-1 min-h-0 flex flex-col mt-0 p-0"
           >
             {/* Toolbar (fixed height, never scrolls) */}
-            <Card className="mb-4 p-0  border-slate-200 shadow-sm">
+            <Card className="mb-4 p-0  ">
               <CardContent className="mx-0">
                 <div className="shrink-0  pt-6 pb-4">
                   <div className="flex items-center justify-between">

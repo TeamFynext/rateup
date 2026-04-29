@@ -13,7 +13,7 @@ function OverviewCard({
 }) {
   const isNegative = trendValue < 0;
   return (
-    <Card className="border shadow-sm hover:shadow-md transition-shadow">
+    <Card>
       <CardContent>
         <div className="flex items-start justify-between">
           <div className="flex-1">

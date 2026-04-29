@@ -163,7 +163,7 @@ function MetricCard({
       "w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors",
   };
   return (
-    <Card className={`hover:shadow-md transition-all ${colorMap[color]}`}>
+    <Card className={` ${colorMap[color]}`}>
       <CardContent>
         <div className="flex items-start justify-between mb-3">
           <div className={`${iconColrMap[iconColor]}`}>{icon}</div>

@@ -54,7 +54,7 @@ const ConversationResponseTimePatternGraph = ({ dateRange }) => {
   }
 
   return (
-    <Card className="border shadow-sm bg-linear-to-br from-purple-50/30 to-white dark:from-transparent dark:to-transparent w-full">
+    <Card>
       <CardHeader className="flex flex-col gap-0 w-full">
         <div className="flex justify-between items-center gap-2 w-full">
           <CardTitle className="flex gap-1 items-center">
