@@ -72,6 +72,7 @@ export const SuperTokensConfig: TypeInput = {
           { id: "website", optional: true },
           { id: "goals", optional: true },
           { id: "integrationsSelected", optional: true },
+          { id: "teamSize", optional: true },
         ],
       },
       override: {
@@ -136,6 +137,7 @@ export const SuperTokensConfig: TypeInput = {
                 formFields,
                 "integrationsSelected",
               );
+              const teamSize = getValueByKey(formFields, "teamSize");
 
               const { id, emails, loginMethods } = response.user;
               const email = emails[0];
@@ -159,6 +161,7 @@ export const SuperTokensConfig: TypeInput = {
                       ? [integrationsSelected]
                       : [],
                   phone: phoneNumber,
+                  teamSize,
                 });
               }
             }
