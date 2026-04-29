@@ -3,7 +3,6 @@ import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Key, Lock, Mail } from "lucide-react";
-import { motion } from "motion/react";
 import { useExtracted } from "next-intl";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -78,56 +77,52 @@ export default function SignInFlow({
     });
   };
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center w-full p-3 sm:p-4 md:p-6 bg-linear-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative">
-      <div className="text-center mb-1.5 sm:mb-2 md:mb-3">
-        <div className="flex items-center justify-center mb-0.5 sm:mb-1">
-          <img
-            src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup-logo-blue-text.svg`}
-            alt="RateUp Logo"
-            className="w-14 sm:w-16 md:w-18 h-auto"
-          />
-        </div>
-        <h2 className="text-base sm:text-lg md:text-xl text-gray-900 mb-0.5 sm:mb-1">
-          Welcome Back
-        </h2>
-        <p className="text-xs sm:text-sm text-gray-600">
-          Sign in to your RateUp account
-        </p>
-      </div>
-      <Card className="flex flex-col px-4 py-3 sm:px-5 sm:py-3.5 md:px-6 md:py-4 max-w-md w-full">
+    <div className="min-h-screen flex flex-col items-center justify-center w-full p-3 sm:p-4 md:p-6 bg-linear-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative dark:bg-linear-to-br dark:from-gray-900/80 dark:via-gray-900/60 dark:to-gray-900/80">
+      <div className="text-center mb-4 max-w-xs sm:max-w-sm flex items-center justify-between w-full">
+        <img
+          src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/LogoRateup.png`}
+          alt="RateUp Logo"
+          className="h-auto w-24"
+        />
         <div className="text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", duration: 0.6 }}
-            className="inline-flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-1.5 sm:mb-2"
-          >
-            <Lock className="w-5 h-5 sm:w-5.5 sm:h-5.5 md:w-6 md:h-6 text-white" />
-          </motion.div>
-          <h2 className="text-base sm:text-lg md:text-xl text-gray-900">
-            Sign In
-          </h2>
-          <p className="text-xs sm:text-sm text-gray-600">
+          <p className="text-xs">
+            Don't have an account?{" "}
+            <span
+              onClick={() => router.push("/signup")}
+              className="text-primary font-medium hover:underline cursor-pointer"
+            >
+              Create account
+            </span>
+          </p>
+        </div>
+      </div>
+      <Card className="flex flex-col p-4 sm:p-5 md:p-6 max-w-md w-full">
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-semibold capitalize text-primary flex items-center gap-1">
+            <Lock size={14} /> Sign In
+          </p>
+          <h2 className="text-2xl font-bold">Welcome Back</h2>
+          <p className="font-normal text-xs">
             Continue your growth journey with RateUp
           </p>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <GoogleSignInButton
-            className="w-full h-8 py-2 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-800 hover:bg-gray-50 font-medium"
+            className="p-2 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 font-medium"
             buttonText={"Continue with Google"}
           />
           <AppleSignInButton
-            className="w-full h-8 py-2 border-2 border-gray-300 hover:border-gray-400 bg-white text-gray-800 hover:bg-gray-50 font-medium"
+            className="p-2 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 font-medium"
             buttonText="Continue with Apple"
           />
         </div>
 
-        <div className="relative">
+        <div className="relative mt-2">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300" />
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-500">
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-white dark:bg-black px-3 text-gray-400 tracking-wider uppercase">
               Or continue with email
             </span>
           </div>
@@ -146,16 +141,19 @@ export default function SignInFlow({
                   <FieldLabel htmlFor={field.name} className="sr-only">
                     {translations("Email")}
                   </FieldLabel>
-                  <div className="relative">
-                    <Mail className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
-                    <Input
-                      {...field}
-                      id={field.name}
-                      type="email"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Email"
-                      className="pl-8 sm:pl-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
-                    />
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="password">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
+                      <Input
+                        {...field}
+                        id={field.name}
+                        type="email"
+                        aria-invalid={fieldState.invalid}
+                        placeholder="abcd@example.com"
+                        className="pl-8 sm:pl-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
+                      />
+                    </div>
                   </div>
                   {fieldState.invalid && (
                     <FieldError
@@ -175,27 +173,30 @@ export default function SignInFlow({
                   <FieldLabel htmlFor={field.name} className="sr-only">
                     {translations("Password")}
                   </FieldLabel>
-                  <div className="relative">
-                    <Lock className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
-                    <Input
-                      {...field}
-                      id={field.name}
-                      type={showPassword ? "text" : "password"}
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Password"
-                      className="pl-8 sm:pl-10 pr-8 sm:pr-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      ) : (
-                        <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      )}
-                    </button>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
+                      <Input
+                        {...field}
+                        id={field.name}
+                        type={showPassword ? "text" : "password"}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="Enter your password"
+                        className="pl-8 sm:pl-10 pr-8 sm:pr-10 h-9 sm:h-10 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-xs sm:text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        ) : (
+                          <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                   {fieldState.invalid && (
                     <FieldError
@@ -238,20 +239,31 @@ export default function SignInFlow({
             {isLoading ? <Loader /> : "Sign In"}
           </Button>
         </form>
-
-        <div className="w-full text-center mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-gray-200">
-          <p className="text-xs sm:text-sm text-gray-600 text-center">
-            Don't have an account?{" "}
-            <button
-              type="button"
-              onClick={() => router.push("/signup")}
-              className="cursor-pointer text-rateup-blue hover:text-rateup-blue/80 underline transition-colors"
-            >
-              Create account
-            </button>
-          </p>
-        </div>
       </Card>
+      <div className="flex items-center justify-center gap-6 mt-8 text-xs text-gray-400">
+        <button
+          onClick={() => router.push("/privacy-policy")}
+          className="hover:text-gray-600 uppercase tracking-wider text-xs"
+        >
+          <span className="uppercase tracking-wider text-xs">
+            Privacy Policy
+          </span>
+        </button>
+        <button
+          onClick={() => router.push("/terms-of-service")}
+          className="hover:text-gray-600 uppercase tracking-wider text-xs"
+        >
+          <span className="uppercase tracking-wider text-xs">
+            Terms of Service
+          </span>
+        </button>
+        <button
+          className="hover:text-gray-600 uppercase tracking-wider text-xs"
+          onClick={() => window.open("https://docs.rateup.app", "_blank")}
+        >
+          <span className="uppercase tracking-wider text-xs">Help Center</span>
+        </button>
+      </div>
     </div>
   );
 }
