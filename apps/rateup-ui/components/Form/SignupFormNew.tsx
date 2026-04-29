@@ -13,6 +13,7 @@ import {
   Eye,
   EyeOff,
   Globe,
+  Inbox,
   Lock,
   Mail,
   MessageSquare,
@@ -197,7 +198,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
       case 2:
         return "Tell Us About Your Business";
       case 3:
-        return "What features are you interested in RateUp?";
+        return "What are you most excited to use?";
       default:
         return "";
     }
@@ -243,12 +244,23 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
   };
   return (
     <div className="min-h-screen flex flex-col items-center justify-center w-full p-3 sm:p-4 md:p-6 bg-linear-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative dark:bg-linear-to-br dark:from-gray-900/80 dark:via-gray-900/60 dark:to-gray-900/80">
-      <div className="text-center mb-0.5 sm:mb-1 max-w-xs sm:max-w-sm">
+      <div className="text-center mb-2 max-w-xs sm:max-w-sm flex items-center justify-between w-full">
         <img
           src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/LogoRateup.png`}
           alt="RateUp Logo"
           className="h-auto w-24"
         />
+        <div className="text-center">
+          <p className="text-xs">
+            Already have an account?{" "}
+            <span
+              onClick={() => router.push("/login")}
+              className="text-primary font-medium hover:underline cursor-pointer"
+            >
+              Sign in
+            </span>
+          </p>
+        </div>
       </div>
       <div className="w-full max-w-md mx-auto">
         {/* progress bar */}
@@ -295,13 +307,13 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
             })}
           </div>
         </div>
-        <Card className="p-8 shadow-sm border border-gray-200 mb-8">
-          <div className="flex flex-col gap-1">
+        <Card className="p-6 shadow-sm border border-gray-200 mb-8">
+          <div className="flex flex-col">
             <p className="text-sm font-semibold capitalize text-primary">
               {getStepShortTitle()}
             </p>
-            <h2 className="text-2xl font-bold">{getStepTitle()}</h2>
-            <p className="font-normal text-xs">{getStepSubtitle()}</p>
+            <h2 className="text-xl font-bold">{getStepTitle()}</h2>
+            <p className="font-normal text-[11px]">{getStepSubtitle()}</p>
           </div>
           {currentStep === 1 && (
             <Step1
@@ -708,17 +720,6 @@ export function Step1({ formData, handleNext, authType }) {
           </Label>
         </div>
 
-        <div className="text-center">
-          <p className="text-xs">
-            Already have an account?{" "}
-            <span
-              onClick={() => router.push("/login")}
-              className="text-primary font-medium hover:underline cursor-pointer"
-            >
-              Sign in
-            </span>
-          </p>
-        </div>
         {/* Footer actions */}
 
         <div className="flex justify-between gap-4 mt-2">
@@ -758,16 +759,18 @@ export function Step2({ formData, handleBack, handleNext }) {
     "Marketing",
     "Other",
   ];
+  const teamSizes = ["1–5", "6–25", "26–100", "100+"];
 
   const values = formData.watch();
 
   const isFormComplete =
     values.orgName?.trim() !== "" &&
     values.phoneNumber?.trim() !== "" &&
+    values?.teamSize?.trim() !== "" &&
     values.industry?.trim() !== "";
 
   return (
-    <div className="w-full h-96 flex flex-col">
+    <div className="w-full h-101 flex flex-col">
       <div className="flex-1 space-y-4 overflow-y-auto pr-1">
         {/* Business Name */}
         <div className="space-y-1">
@@ -859,6 +862,35 @@ export function Step2({ formData, handleBack, handleNext }) {
             )}
           />
         </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs font-medium">
+            Team Size <span className="text-red-500">*</span>
+          </Label>
+
+          <Controller
+            name="teamSize"
+            control={formData.control}
+            render={({ field }) => (
+              <div className="flex gap-2">
+                {teamSizes.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => field.onChange(size)}
+                    className={`px-3 py-1.5 text-xs rounded-md border ${
+                      field.value === size
+                        ? "bg-blue-500 text-white border-blue-500"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            )}
+          />
+        </div>
       </div>
 
       {/* Footer */}
@@ -888,22 +920,41 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
   const values = formData.watch();
 
   const businessGoals = [
-    { id: "whatsapp-api", label: "WhatsApp Business API", icon: MessageSquare },
+    {
+      id: "whatsapp-api",
+      label: "WhatsApp Business API",
+      description: "Verified sender + templates",
+      icon: MessageSquare,
+    },
     {
       id: "loyalty-program",
-      label: "Build Loyalty Program on WhatsApp",
+      label: "Loyalty on WhatsApp",
+      description: "Points, tiers and rewards",
       icon: Users,
     },
-    { id: "whatsapp-campaigns", label: "WhatsApp Campaigns", icon: Target },
+    {
+      id: "whatsapp-campaigns",
+      label: "WhatsApp Campaigns",
+      description: "Broadcasts with 98% open rate",
+      icon: Target,
+    },
     {
       id: "customer-feedback",
-      label: "Collect customer feedbacks",
+      label: "Customer Feedback",
+      description: "NPS, CSAT, review drives",
       icon: MessageSquare,
     },
     {
       id: "web-feedback-forms",
-      label: "Web based Feedback Forms",
+      label: "Web Feedback Forms",
+      description: "Surveys without the tools",
       icon: Globe,
+    },
+    {
+      id: "unified-inbox",
+      label: "Unified Inbox",
+      description: "WhatsApp + Instagram in one place",
+      icon: Inbox,
     },
   ];
 
@@ -918,7 +969,7 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
   };
 
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col h-96">
       <div className="mb-2">
         <p className="text-xs text-gray-500">
           Select all that apply to personalize your experience
@@ -926,7 +977,7 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
       </div>
 
       {/* Goals List */}
-      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+      <div className="grid grid-cols-2 gap-3">
         {businessGoals.map((goal) => {
           const isActive = values.goals?.includes(goal.id);
 
@@ -934,43 +985,51 @@ export function Step3({ formData, handleBack, handleSubmit, isLoading }) {
             <div
               key={goal.id}
               onClick={() => handleGoalToggle(goal.id)}
-              className={`flex items-center gap-2 p-2.5 border rounded-md cursor-pointer transition-all
-                ${
-                  isActive
-                    ? "border-primary bg-blue-50"
-                    : "border-gray-300 hover:border-gray-400 bg-white"
-                }`}
+              className={`relative p-3 rounded-xl border cursor-pointer transition-all
+          ${
+            isActive
+              ? "border-primary bg-blue-50"
+              : "border-gray-300 hover:border-gray-400"
+          }`}
             >
-              {/* Icon */}
+              {/* Top Right Circle */}
               <div
-                className={`w-7 h-7 rounded-md flex items-center justify-center
-                  ${isActive ? "bg-primary" : "bg-gray-100"}`}
-              >
-                <goal.icon
-                  className={`w-4 h-4 ${
-                    isActive ? "text-white" : "text-gray-600"
-                  }`}
-                />
+                className={`absolute top-2 right-2 w-4 h-4 rounded-full border
+            ${isActive ? "bg-primary border-primary" : "border-gray-300"}`}
+              />
+
+              <div className="flex items-center gap-1">
+                {/* Icon */}
+                <div
+                  className={`w-8 h-8 rounded-md flex items-center justify-center
+            ${isActive ? "bg-primary" : "bg-gray-100"}`}
+                >
+                  <goal.icon
+                    className={`w-4 h-4 ${
+                      isActive ? "text-white" : "text-gray-500"
+                    }`}
+                  />
+                </div>
+
+                {/* Title */}
+                <p
+                  className={`text-xs font-medium max-w-30 ${isActive && "text-gray-900"}`}
+                >
+                  {goal.label}
+                </p>
               </div>
 
-              {/* Label */}
-              <span
-                className={`flex-1 text-xs ${
-                  isActive
-                    ? "text-gray-900 dark:text-gray-100 font-medium"
-                    : "text-gray-700 dark:text-gray-500"
-                }`}
-              >
-                {goal.label}
-              </span>
-
-              {/* Check */}
-              {isActive && <CheckCircle className="w-4 h-4 text-primary" />}
+              {/* Description */}
+              <p className="text-[11px] text-gray-500 mt-1 leading-snug">
+                {goal.description}
+              </p>
             </div>
           );
         })}
       </div>
-
+      <div className="mt-3 p-2 rounded-md bg-yellow-50 border border-yellow-200 text-[11px] text-yellow-700">
+        💡 You can change these later in Settings — nothing is locked in.
+      </div>
       {/* Footer */}
       <div className="flex justify-between gap-3 mt-2 pt-2">
         <Button
