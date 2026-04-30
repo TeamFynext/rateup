@@ -867,7 +867,7 @@ async function executeRuleActions(
 
       switch (action.type) {
         case "CLOSE_TICKET":
-          success = await executeCloseTicketAction(context);
+          success = await executeCloseTicketAction(action.value, context);
           break;
 
         case "ATTACH_LABEL":
@@ -967,7 +967,10 @@ async function executeRuleActions(
 }
 
 // Action executor functions
-async function executeCloseTicketAction(context: any): Promise<boolean> {
+async function executeCloseTicketAction(
+  status: WaMessageAssignStatus,
+  context: any,
+): Promise<boolean> {
   if (!context.orgId || !context.phone) return false;
 
   // Find the contact by phone/orgId (fetch all needed fields at once)
@@ -983,7 +986,7 @@ async function executeCloseTicketAction(context: any): Promise<boolean> {
   await updateContactById(
     contact.id,
     {
-      waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+      waMessageAssignStatus: status,
       messageId: generateInternalMessageId(),
     },
     undefined,
