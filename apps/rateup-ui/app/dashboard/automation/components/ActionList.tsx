@@ -8,6 +8,7 @@ import {
   useWatch,
 } from "react-hook-form";
 
+import { WaMessageAssignStatus } from "@/types/enums";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
@@ -29,12 +30,15 @@ import {
 
 import { ACTION_TYPES, ActionType, CreateRuleInput } from "./schema";
 
+// ActionValueInput now always uses shadcn Field and FieldError, and expects valueField and fieldState from Controller
 const ActionValueInput = ({
   index,
   valueField,
+  fieldState,
 }: {
   index: number;
   valueField: any;
+  fieldState: any;
 }) => {
   const { control } = useFormContext<CreateRuleInput>();
   const { data: waData } = useAllWaAutomatedReplies();
@@ -56,7 +60,6 @@ const ActionValueInput = ({
 
   const webSurveyOptions = useMemo(() => {
     if (!surveysSummary?.surveys?.length) return [];
-
     return surveysSummary.surveys
       ?.filter((survey) => survey?.type === "web")
       .flatMap((survey) =>
@@ -72,166 +75,226 @@ const ActionValueInput = ({
     name: `actions.${index}.type`,
   });
 
+  // All fields are wrapped in Field for shadcn consistency
   if (actionType === "SEND_MESSAGE") {
     return (
-      <Input
-        placeholder="Message text"
-        {...valueField}
-        value={valueField.value || ""}
-        className="w-full bg-background"
-      />
+      <Field className="flex-1" data-invalid={fieldState.invalid}>
+        <Input
+          placeholder="Message text"
+          {...valueField}
+          value={valueField.value || ""}
+          className="w-full bg-background"
+        />
+        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+      </Field>
     );
   }
   if (actionType === "ATTACH_LABEL") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
-        <SelectTrigger className="w-full bg-background">
-          <SelectValue placeholder="Select label" />
-        </SelectTrigger>
-        <SelectContent>
-          {labelsData.map((l) => (
-            <SelectItem key={l?.id} value={l?.id}>
-              {l?.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Field className="flex-1" data-invalid={fieldState.invalid}>
+        <Select
+          onValueChange={valueField.onChange}
+          value={valueField.value || ""}
+        >
+          <SelectTrigger className="w-full bg-background">
+            <SelectValue placeholder="Select label" />
+          </SelectTrigger>
+          <SelectContent>
+            {labelsData?.map((l) => (
+              <SelectItem key={l?.id} value={l?.id}>
+                {l?.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+      </Field>
     );
   }
   if (actionType === "ASSIGN_USER") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
-        <SelectTrigger className="w-full bg-background">
-          <SelectValue placeholder="Select user" />
-        </SelectTrigger>
-        <SelectContent>
-          {teamMembers?.data?.map((u) => (
-            <SelectItem key={u.id} value={u.id}>
-              {u.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Field className="flex-1" data-invalid={fieldState.invalid}>
+        <Select
+          onValueChange={valueField.onChange}
+          value={valueField.value || ""}
+        >
+          <SelectTrigger className="w-full bg-background">
+            <SelectValue placeholder="Select user" />
+          </SelectTrigger>
+          <SelectContent>
+            {teamMembers?.data?.map((u) => (
+              <SelectItem key={u.id} value={u.id}>
+                {u.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+      </Field>
     );
   }
   if (actionType === "ASSIGN_TEAM") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
-        <SelectTrigger className="w-full bg-background">
-          <SelectValue placeholder="Select team" />
-        </SelectTrigger>
-        <SelectContent>
-          {teamsData?.data?.map((t) => (
-            <SelectItem key={t.id} value={t.id}>
-              {t.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Field className="flex-1" data-invalid={fieldState.invalid}>
+        <Select
+          onValueChange={valueField.onChange}
+          value={valueField.value || ""}
+        >
+          <SelectTrigger className="w-full bg-background">
+            <SelectValue placeholder="Select team" />
+          </SelectTrigger>
+          <SelectContent>
+            {teamsData?.data?.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+      </Field>
     );
   }
   if (actionType === "SEND_FLOW") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
-        <SelectTrigger className="w-full bg-background">
-          <SelectValue placeholder="Select flow" />
-        </SelectTrigger>
-        <SelectContent>
-          {flowsData?.map((t) => (
-            <SelectItem key={t.dbFlowId} value={t.dbFlowId}>
-              {t.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Field className="flex-1" data-invalid={fieldState.invalid}>
+        <Select
+          onValueChange={valueField.onChange}
+          value={valueField.value || ""}
+        >
+          <SelectTrigger className="w-full bg-background">
+            <SelectValue placeholder="Select flow" />
+          </SelectTrigger>
+          <SelectContent>
+            {flowsData?.map((t) => (
+              <SelectItem key={t.dbFlowId} value={t.dbFlowId}>
+                {t.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+      </Field>
     );
   }
   if (actionType === "TRIGGER_CHATBOT") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
-        <SelectTrigger className="w-full bg-background">
-          <SelectValue placeholder="Select automation" />
-        </SelectTrigger>
-        <SelectContent>
-          {allAutomations?.map((t) => (
-            <SelectItem key={t.id} value={t.id}>
-              {t.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Field className="flex-1" data-invalid={fieldState.invalid}>
+        <Select
+          onValueChange={valueField.onChange}
+          value={valueField.value || ""}
+        >
+          <SelectTrigger className="w-full bg-background">
+            <SelectValue placeholder="Select automation" />
+          </SelectTrigger>
+          <SelectContent>
+            {allAutomations?.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+      </Field>
     );
   }
   if (actionType === "SEND_WEB_SURVEY") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
-        <SelectTrigger className="w-full bg-background">
-          <SelectValue placeholder="Select web survey" />
-        </SelectTrigger>
-        <SelectContent>
-          {webSurveyOptions.map((survey) => (
-            <SelectItem key={survey.value} value={survey.value}>
-              {survey.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Field className="flex-1" data-invalid={fieldState.invalid}>
+        <Select
+          onValueChange={valueField.onChange}
+          value={valueField.value || ""}
+        >
+          <SelectTrigger className="w-full bg-background">
+            <SelectValue placeholder="Select web survey" />
+          </SelectTrigger>
+          <SelectContent>
+            {webSurveyOptions.map((survey) => (
+              <SelectItem key={survey.value} value={survey.value}>
+                {survey.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+      </Field>
     );
   }
   if (actionType === "CALL_EXTERNAL_API") {
     return (
-      <Input
-        type="url"
-        placeholder="https://example.com/test"
-        {...valueField}
-        value={valueField.value || ""}
-        className="w-full bg-background"
-      />
+      <Field className="flex-1" data-invalid={fieldState.invalid}>
+        <Input
+          type="url"
+          placeholder="https://example.com/test"
+          {...valueField}
+          value={valueField.value || ""}
+          className="w-full bg-background"
+        />
+        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+      </Field>
     );
   }
   if (actionType === "ASSIGN_LIFECYCLE") {
     return (
-      <Select
-        onValueChange={valueField.onChange}
-        value={valueField.value || ""}
-      >
-        <SelectTrigger className="w-full bg-background">
-          <SelectValue placeholder="Select lifecycle" />
-        </SelectTrigger>
-        <SelectContent>
-          {lifecyclesData?.map((t) => (
-            <SelectItem key={t.id} value={t.id}>
-              {t.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Field className="flex-1" data-invalid={fieldState.invalid}>
+        <Select
+          onValueChange={valueField.onChange}
+          value={valueField.value || ""}
+        >
+          <SelectTrigger className="w-full bg-background">
+            <SelectValue placeholder="Select lifecycle" />
+          </SelectTrigger>
+          <SelectContent>
+            {lifecyclesData?.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+      </Field>
     );
   }
-  // For CLOSE_TICKET, no value is needed
   if (actionType === "CLOSE_TICKET") {
-    return null;
+    const statusOptions = [
+      { value: WaMessageAssignStatus.RESOLVED, label: "Resolved" },
+      { value: WaMessageAssignStatus.CLOSED, label: "Closed" },
+      { value: WaMessageAssignStatus.SPAM, label: "Spam" },
+      { value: WaMessageAssignStatus.UNRESOLVED, label: "Unresolved" },
+    ];
+    return (
+      <Field className="flex-1" data-invalid={fieldState.invalid}>
+        <Select
+          onValueChange={valueField.onChange}
+          value={valueField.value || ""}
+        >
+          <SelectTrigger className="w-full bg-background">
+            <SelectValue placeholder="Select close status" />
+          </SelectTrigger>
+          <SelectContent>
+            {statusOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+      </Field>
+    );
   }
+  // Default fallback
   return (
-    <Input placeholder="Value" {...valueField} value={valueField.value || ""} />
+    <Field className="flex-1" data-invalid={fieldState.invalid}>
+      <Input
+        placeholder="Value"
+        {...valueField}
+        value={valueField.value || ""}
+      />
+      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+    </Field>
   );
 };
 const ExternalApiExample = () => {
@@ -321,12 +384,11 @@ const ActionList: React.FC = () => {
             control={control}
             name={`actions.${index}.value`}
             render={({ field: valueField, fieldState }) => (
-              <Field className="flex-1" data-invalid={fieldState.invalid}>
-                <ActionValueInput index={index} valueField={valueField} />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
+              <ActionValueInput
+                index={index}
+                valueField={valueField}
+                fieldState={fieldState}
+              />
             )}
           />
 

@@ -65,7 +65,9 @@ export const ruleConditionSchema = z.object({
 const closeTicketActionSchema = z.object({
   id: z.string().optional(),
   type: z.literal("CLOSE_TICKET"),
-  value: z.string().optional().or(z.literal("")).default(""),
+  value: z
+    .enum(["RESOLVED", "CLOSED", "SPAM", "UNRESOLVED"])
+    .refine((val) => !!val, { message: "Select a close status" }),
 });
 
 const externalApiActionSchema = z.object({
@@ -78,14 +80,13 @@ const regularActionSchema = z.object({
   id: z.string().optional(),
   type: z.enum(
     ACTION_TYPES.map((t) => t.value).filter(
-      (v) => v !== "CLOSE_TICKET" && v !== "CALL_EXTERNAL_API",
+      (v) => v !== "CALL_EXTERNAL_API",
     ) as [string, ...string[]],
   ),
   value: z.string().min(1, "Value is required"),
 });
 
 export const ruleActionSchema = z.union([
-  closeTicketActionSchema,
   externalApiActionSchema,
   regularActionSchema,
 ]);
