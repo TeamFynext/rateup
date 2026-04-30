@@ -373,6 +373,7 @@ const CustomerPage = () => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t("Back to Customers")}
             </Button>
+            m
             <CustomerDetailPanel
               customer={{
                 id: selectedCustomer.id,

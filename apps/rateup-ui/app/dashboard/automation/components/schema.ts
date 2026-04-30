@@ -35,6 +35,7 @@ export const TRIGGER_EVENTS = [
 
 // Single source of truth for action types
 export const ACTION_TYPES = [
+  { label: "Close Chat", value: "CLOSE_TICKET" },
   { label: "Trigger Chatbot", value: "TRIGGER_CHATBOT" },
   { label: "Call External API", value: "CALL_EXTERNAL_API" },
   { label: "Send Web Survey", value: "SEND_WEB_SURVEY" },
@@ -61,6 +62,12 @@ export const ruleConditionSchema = z.object({
   value: z.string().min(1, "Value is required"),
 });
 
+const closeTicketActionSchema = z.object({
+  id: z.string().optional(),
+  type: z.literal("CLOSE_TICKET"),
+  value: z.string().optional().or(z.literal("")).default(""),
+});
+
 const externalApiActionSchema = z.object({
   id: z.string().optional(),
   type: z.literal("CALL_EXTERNAL_API"),
@@ -69,11 +76,16 @@ const externalApiActionSchema = z.object({
 
 const regularActionSchema = z.object({
   id: z.string().optional(),
-  type: z.enum(ACTION_TYPES.map((t) => t.value) as [string, ...string[]]),
+  type: z.enum(
+    ACTION_TYPES.map((t) => t.value).filter(
+      (v) => v !== "CLOSE_TICKET" && v !== "CALL_EXTERNAL_API",
+    ) as [string, ...string[]],
+  ),
   value: z.string().min(1, "Value is required"),
 });
 
 export const ruleActionSchema = z.union([
+  closeTicketActionSchema,
   externalApiActionSchema,
   regularActionSchema,
 ]);

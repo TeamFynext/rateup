@@ -226,6 +226,10 @@ const ActionValueInput = ({
       </Select>
     );
   }
+  // For CLOSE_TICKET, no value is needed
+  if (actionType === "CLOSE_TICKET") {
+    return null;
+  }
   return (
     <Input placeholder="Value" {...valueField} value={valueField.value || ""} />
   );
