@@ -525,12 +525,16 @@ export async function updateContactById(
   contactId: string,
   contact: updateContactSchema,
   userId?: string,
+  existing?: any,
 ) {
-  const existing = await prisma.contact.findUnique({
-    where: {
-      id: contactId,
-    },
-  });
+  // Use provided existing contact if available, otherwise fetch
+  const contactRecord =
+    existing ||
+    (await prisma.contact.findUnique({
+      where: {
+        id: contactId,
+      },
+    }));
   if (contact.labels && contact.labels.length > 0) {
     await prisma.contactLabelMap.deleteMany({
       where: {
@@ -572,7 +576,8 @@ export async function updateContactById(
       waMessageAssignStatus: contact.waMessageAssignStatus,
       lastReceivedMessageTimeStamp:
         contact.lastReceivedMessageTimeStamp || undefined,
-      ...(existing.waMessageAssignStatus !== contact.waMessageAssignStatus &&
+      ...(contactRecord.waMessageAssignStatus !==
+        contact.waMessageAssignStatus &&
       WaMessageClosedStatus.includes(contact.waMessageAssignStatus)
         ? {
             closedAt: new Date(),
@@ -715,7 +720,7 @@ export async function updateContactById(
     }
     if (contact?.waMessageAssignStatus) {
       await createInternalWaMessage({
-        trigerredByUser: userId,
+        trigerredByUser: userId || "RateUp",
         contactId: updatedContact.id,
         waMessageAssignStatus: updatedContact.waMessageAssignStatus,
         messageId: contact.messageId,

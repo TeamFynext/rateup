@@ -1,6 +1,7 @@
 import {
   SubscriptionFeaturePathName,
   WaAutomatedReplyMatchType,
+  WaMessageAssignStatus,
   WaTemplateComponentType,
 } from "../../../types/enums.js";
 import { WaMessageBody } from "../../../types/whatsapp.types.js";
@@ -17,19 +18,27 @@ import {
 import {
   getContactByPhoneNumberAndOrgId,
   getOrCreateContactByPhone,
+  updateContactById,
 } from "../../contact/contact.service.js";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
-import { assignWaMessageToUser } from "../inbox/message/wamessage.service.js";
+import {
+  assignWaMessageToUser,
+  createInternalWaMessage,
+} from "../inbox/message/wamessage.service.js";
 import { getUserIdsByTeamId } from "../../user/user.service.js";
 import { sendTextMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller.js";
 import { sendFlow } from "../flows/flow.service.js";
 import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
+import {
+  getLastCreatedConversationForContact,
+  updateClosedConversationStatus,
+} from "../../contact/conversation/conversation.service.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrAfter);
@@ -858,7 +867,7 @@ async function executeRuleActions(
 
       switch (action.type) {
         case "CLOSE_TICKET":
-          success = await executeCloseTicketAction(context);
+          success = await executeCloseTicketAction(action.value, context);
           break;
 
         case "ATTACH_LABEL":
@@ -958,23 +967,44 @@ async function executeRuleActions(
 }
 
 // Action executor functions
-async function executeCloseTicketAction(context: any): Promise<boolean> {
+async function executeCloseTicketAction(
+  status: WaMessageAssignStatus,
+  context: any,
+): Promise<boolean> {
   if (!context.orgId || !context.phone) return false;
 
-  await prisma.contact.update({
+  // Find the contact by phone/orgId (fetch all needed fields at once)
+  const contact = await prisma.contact.findFirst({
     where: {
-      contact_phone_org_id_unique: {
-        phone: context.phone,
-        orgId: context.orgId,
-      },
-    },
-    data: {
-      closedAt: new Date(),
-      waMessageAssignStatus: "UNASSIGNED",
+      phone: context.phone,
+      orgId: context.orgId,
     },
   });
+  if (!contact) return false;
+
+  // Update the contact to closed status using the main update logic, pass existing contact
+  await updateContactById(
+    contact.id,
+    {
+      waMessageAssignStatus: status,
+      messageId: generateInternalMessageId(),
+    },
+    undefined,
+    contact,
+  );
 
   return true;
+}
+
+export function generateInternalMessageId() {
+  return (
+    "wamid." +
+    Date.now().toString(36) +
+    "-" +
+    crypto
+      .getRandomValues(new Uint8Array(16))
+      .reduce((a, b) => a + b.toString(16).padStart(2, "0"), "")
+  );
 }
 
 async function executeAttachLabelAction(
