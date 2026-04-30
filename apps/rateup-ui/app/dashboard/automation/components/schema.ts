@@ -62,14 +62,6 @@ export const ruleConditionSchema = z.object({
   value: z.string().min(1, "Value is required"),
 });
 
-const closeTicketActionSchema = z.object({
-  id: z.string().optional(),
-  type: z.literal("CLOSE_TICKET"),
-  value: z
-    .enum(["RESOLVED", "CLOSED", "SPAM", "UNRESOLVED"])
-    .refine((val) => !!val, { message: "Select a close status" }),
-});
-
 const externalApiActionSchema = z.object({
   id: z.string().optional(),
   type: z.literal("CALL_EXTERNAL_API"),

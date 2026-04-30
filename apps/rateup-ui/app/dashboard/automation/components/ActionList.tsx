@@ -37,7 +37,6 @@ const ActionValueInput = ({
 }: {
   index: number;
   valueField: any;
-  fieldState: any;
 }) => {
   const { control } = useFormContext<CreateRuleInput>();
   const { data: waData } = useAllWaAutomatedReplies();
@@ -347,11 +346,7 @@ const ActionList: React.FC = () => {
             name={`actions.${index}.value`}
             render={({ field: valueField, fieldState }) => (
               <Field className="flex-1" data-invalid={fieldState.invalid}>
-                <ActionValueInput
-                  index={index}
-                  valueField={valueField}
-                  fieldState={fieldState}
-                />
+                <ActionValueInput index={index} valueField={valueField} />
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
