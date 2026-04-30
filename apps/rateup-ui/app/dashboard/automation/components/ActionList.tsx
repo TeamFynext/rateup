@@ -8,6 +8,7 @@ import {
   useWatch,
 } from "react-hook-form";
 
+import { WaMessageAssignStatus } from "@/types/enums";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
@@ -29,6 +30,7 @@ import {
 
 import { ACTION_TYPES, ActionType, CreateRuleInput } from "./schema";
 
+// ActionValueInput now always uses shadcn Field and FieldError, and expects valueField and fieldState from Controller
 const ActionValueInput = ({
   index,
   valueField,
@@ -56,7 +58,6 @@ const ActionValueInput = ({
 
   const webSurveyOptions = useMemo(() => {
     if (!surveysSummary?.surveys?.length) return [];
-
     return surveysSummary.surveys
       ?.filter((survey) => survey?.type === "web")
       .flatMap((survey) =>
@@ -72,6 +73,7 @@ const ActionValueInput = ({
     name: `actions.${index}.type`,
   });
 
+  // All fields are wrapped in Field for shadcn consistency
   if (actionType === "SEND_MESSAGE") {
     return (
       <Input
@@ -92,7 +94,7 @@ const ActionValueInput = ({
           <SelectValue placeholder="Select label" />
         </SelectTrigger>
         <SelectContent>
-          {labelsData.map((l) => (
+          {labelsData?.map((l) => (
             <SelectItem key={l?.id} value={l?.id}>
               {l?.name}
             </SelectItem>
@@ -226,6 +228,32 @@ const ActionValueInput = ({
       </Select>
     );
   }
+  if (actionType === "CLOSE_TICKET") {
+    const statusOptions = [
+      { value: WaMessageAssignStatus.RESOLVED, label: "Resolved" },
+      { value: WaMessageAssignStatus.CLOSED, label: "Closed" },
+      { value: WaMessageAssignStatus.SPAM, label: "Spam" },
+      { value: WaMessageAssignStatus.UNRESOLVED, label: "Unresolved" },
+    ];
+    return (
+      <Select
+        onValueChange={valueField.onChange}
+        value={valueField.value || ""}
+      >
+        <SelectTrigger className="w-full bg-background">
+          <SelectValue placeholder="Select close status" />
+        </SelectTrigger>
+        <SelectContent>
+          {statusOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+  // Default fallback
   return (
     <Input placeholder="Value" {...valueField} value={valueField.value || ""} />
   );
