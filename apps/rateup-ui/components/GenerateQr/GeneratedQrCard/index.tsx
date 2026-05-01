@@ -37,7 +37,7 @@ function GeneratedQrCard({
   return (
     <Card
       key={id}
-      className="border rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden hover:-translate-y-1 p-0 py-2 px-2"
+      className="rounded-xl shadow-sm  overflow-hidden  p-0 py-2 px-2"
     >
       <CardContent className="p-4 flex flex-col gap-3">
         {/* Header */}

@@ -21,7 +21,7 @@ function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
       {sortedValue?.map((v) => (
         <div
           key={v?.id}
-          className="relative border rounded-xl flex flex-col gap-1 cursor-pointer shadow-sm hover:scale-[1.02] transition-all duration-300"
+          className="relative  rounded-xl flex flex-col gap-1 cursor-pointer hover:ring-1 hover:ring-rateup-blue border"
           onClick={() => router.push(`${baseURL}/${v?.shortUrlId}`)}
         >
           <div className="absolute top-3 right-3 z-10">

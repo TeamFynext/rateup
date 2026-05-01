@@ -379,10 +379,7 @@ export function AddMembers({ selectedTeam }) {
       }
 
       return (
-        <Card
-          key={member?.id}
-          className="p-4 hover:shadow-md transition-shadow flex flex-col justify-between"
-        >
+        <Card key={member?.id} className="p-4 flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10 shrink-0">
@@ -471,7 +468,7 @@ export function AddMembers({ selectedTeam }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

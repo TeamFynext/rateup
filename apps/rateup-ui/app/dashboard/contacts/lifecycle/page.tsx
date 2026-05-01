@@ -202,7 +202,7 @@ const LifecycleStageAnalyticCard = ({
   return (
     <Card
       key={stage.id}
-      className={`p-4 cursor-pointer transition-all ${selectedStage === stage.id ? "ring-2 ring-rateup-blue" : ""} ${colors.hover}`}
+      className="p-4"
       onClick={(e) => {
         e.stopPropagation();
         setSelectedStage(selectedStage === stage.id ? null : stage.id);

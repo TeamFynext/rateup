@@ -14,7 +14,7 @@ const InboxSettings = () => {
           <WaInboxPermissions />
         </div>
       )} */}
-      <div className="rounded-md shadow-md border col-span-2 p-4">
+      <div className="rounded-md border bg-card border col-span-2 p-4">
         <WaQuickReplySettings />
       </div>
     </div>
