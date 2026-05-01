@@ -50,7 +50,7 @@ export function UsageCard({ subscription }) {
   const { data: stats, refetch, isRefetching, isLoading } = useUsageStats();
 
   return (
-    <Card className="p-6 shadow-sm border-gray-200">
+    <Card className="p-6 ">
       <h3 className="">Usage Stats</h3>
       <div className="flex flex-col justify-center gap-4">
         <TeamStats
@@ -75,7 +75,7 @@ export function OrderHistory({ orders, refresh, isRefetching }) {
   const [opened, setOpened] = useState(false);
   return (
     <>
-      <Card id="order-history" className="p-6 shadow-sm border-gray-200">
+      <Card id="order-history" className="p-6 ">
         <div className="flex items-center justify-between">
           <h3>{translations("Billing History")}</h3>
           <Button
@@ -300,7 +300,7 @@ export const Billing = ({
         )}
 
         {/* Main Card */}
-        <Card className="border-2 shadow-sm hover:shadow-md transition-shadow">
+        <Card>
           <CardContent className="pt-6 space-y-6">
             {/* Plan Header */}
             <div className="flex items-start justify-between w-full">
@@ -704,7 +704,7 @@ const TeamStats = ({ stats, refetch, isRefetching, subscription }) => {
   ];
 
   return (
-    <Card className="p-6 shadow-sm border-gray-200">
+    <Card className="p-6">
       <h3 className="flex items-center gap-1">
         <Users className="w-4 h-4" />
         {translations("Team")}
@@ -765,7 +765,7 @@ const MenuStats = ({ stats, subscription }) => {
   ];
 
   return (
-    <Card className="p-6 shadow-sm border-gray-200">
+    <Card className="p-6">
       <h3 className="flex items-center gap-1">
         <Boxes className="w-4 h-4" />
         {translations("Menu")}
@@ -835,7 +835,7 @@ const SurveyStats = ({ stats, subscription }) => {
   ];
 
   return (
-    <Card className="p-6 shadow-sm border-gray-200">
+    <Card className="p-6">
       <h3 className="flex items-center gap-1">
         <ClipboardList className="w-4 h-4" />
         {translations("Web Survey")}
@@ -922,7 +922,7 @@ const WhatsappStats = ({ stats, subscription }) => {
   ];
 
   return (
-    <Card className="p-6 shadow-sm border-gray-200">
+    <Card className="p-6">
       <h3 className="flex items-center gap-1">
         <MessageCircle className="w-4 h-4" />
         {translations("Whatsapp")}
@@ -1057,7 +1057,7 @@ const LoyaltyStats = ({ stats, subscription }) => {
   ];
 
   return (
-    <Card className="p-6 shadow-sm border-gray-200">
+    <Card className="p-6">
       <h3 className="flex items-center gap-1">
         <Gift className="w-4 h-4" />
         {translations("Loyalty")}

@@ -22,10 +22,19 @@ import { useUpdateLifeCycleMutation } from "@/backend/lifecycle/lifecycle.query"
 import { useUpdateOrgDetailsMutation } from "@/backend/org/org.query";
 import { useUser } from "@/context/UserContext";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import CustomAlertDialog from "../ui/custom/CustomAlertDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +43,7 @@ import {
 } from "../ui/dropdown-menu";
 import { Field, FieldContent, FieldDescription, FieldLabel } from "../ui/field";
 import { Switch } from "../ui/switch";
+import { Textarea } from "../ui/textarea";
 
 const LifecycleSetup = ({
   lifecycleStages,
@@ -381,8 +391,8 @@ const LifeCycleStageCard = ({
         </Button>
         {expandedDescriptions.has(stage.id) && (
           <div className="ml-14 mt-2">
-            <textarea
-              className="w-full text-xs border rounded-md px-3 py-2 min-h-[70px] resize-none focus:outline-none focus:ring-2 focus:ring-rateup-blue/20 focus:border-rateup-blue"
+            <Textarea
+              className="w-full text-xs resize-none"
               placeholder="Add a description for this stage..."
               value={description}
               onChange={(e) => setDescription(e.currentTarget.value)}
@@ -465,15 +475,28 @@ const LifecycleStageCardMenu = ({
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
-      <CustomAlertDialog
-        buttonTitle="Delete"
-        description="Are you sure you want to delete this lifycycle stage?"
-        onAction={() => handleDeleteStage(stage)}
-        opened={deleteOpen}
-        setOpened={setDeleteOpen}
-        title="Delete Lifecycle Stage"
-        buttonColor="bg-red-500"
-      />
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Lifecycle Stage</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this lifycycle stage?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteStage(stage);
+              }}
+              className="bg-red-500 text-sm font-normal"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AddLifeCycleStage
         activeStage={stage.category === "lost" ? "lost" : "lifecycle"}
         lifecycleStages={lifecycleStages}

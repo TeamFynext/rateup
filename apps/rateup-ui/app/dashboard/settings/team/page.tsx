@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { useForm } from "@mantine/form";
-import dayjs from "dayjs";
-import { Plus, RefreshCcw, User, Users, UserX } from "lucide-react";
+import { ChevronRight, Plus, RefreshCcw, User, Users } from "lucide-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
@@ -18,9 +17,12 @@ import {
   useCreateTeamMutation,
   useTeamsByUser,
 } from "@/backend/team/team.query";
+import {
+  GenericActionCard,
+  GenericCardGrid,
+} from "@/components/common/generic-card";
 import { colorArray } from "@/components/settings/team";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -31,9 +33,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useUser } from "@/context/UserContext";
+import { formatDate } from "@/utils/dateTime";
 import { UserRole } from "@/utils/enums";
 import { hasFeature } from "@/utils/subscription/subscription";
 
@@ -120,7 +122,6 @@ const Team = () => {
   const [selectedFeatures, setSelectedFeatures] = useState<Set<TeamFeature>>(
     new Set(),
   );
-
   // Only show features that are active in this org's subscription
   const availableFeatures = FEATURES_WITH_SUBSCRIPTION.filter(
     ({ requiredSubscriptions }) => {
@@ -150,11 +151,29 @@ const Team = () => {
     }
   };
 
+  const {
+    isLoading: isLoadingTeamsUser,
+    data: teamsData,
+    refetch: refetchTeams,
+  } = useTeamsByUser() as {
+    isLoading: boolean;
+    error: any;
+    data: TeamsResponse;
+    refetch: any;
+  };
+  const getDefaultColor = () => {
+    if (!teamsData?.data) {
+      // fallback random color
+      return colorArray[Math.floor(Math.random() * colorArray.length)].from;
+    }
+    const index = teamsData.data.length;
+    return colorArray[index % colorArray.length].from;
+  };
   const createTeamForm = useForm({
     initialValues: {
       name: "",
       code: "",
-      color: "null",
+      color: "",
     },
 
     validate: {
@@ -189,17 +208,6 @@ const Team = () => {
       },
     },
   });
-
-  const {
-    isLoading: isLoadingTeamsUser,
-    data: teamsData,
-    refetch: refetchTeams,
-  } = useTeamsByUser() as {
-    isLoading: boolean;
-    error: any;
-    data: TeamsResponse;
-    refetch: any;
-  };
 
   const createTeamMutation = useCreateTeamMutation(
     setIsCreateTeamDialogOpen,
@@ -250,7 +258,15 @@ const Team = () => {
         {user?.role === UserRole.SUPADM && (
           <Button
             className="bg-primary hover:shadow-lg transition-all"
-            onClick={() => setIsCreateTeamDialogOpen(true)}
+            onClick={() => {
+              createTeamForm.setValues({
+                name: "",
+                code: "",
+                color: getDefaultColor(),
+              });
+
+              setIsCreateTeamDialogOpen(true);
+            }}
           >
             <Plus className="w-4 h-4" />
             {translations("Create Team")}
@@ -258,113 +274,78 @@ const Team = () => {
         )}
       </div>
       {/* Teams Grid with Skeletons */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full">
-        {isLoadingTeamsUser ? (
-          // Show 4 skeleton cards while loading
-          Array.from({ length: 4 }).map((_, index) => (
-            <Card key={index} className="p-5 shadow-sm border-gray-200">
-              <div className="flex justify-between flex-col gap-6">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="w-12 h-12 rounded-xl" />
-                  <div className="flex flex-col gap-2 flex-1">
-                    <div className="flex items-center gap-2">
-                      <Skeleton className="h-5 w-32" />
-                      <Skeleton className="h-4 w-16 rounded-xl" />
-                    </div>
-                    <Skeleton className="h-3 w-40" />
-                  </div>
+      <GenericCardGrid
+        className="grid grid-cols-1 lg:grid-cols-3 gap-2.5 w-full "
+        items={teamsData?.data ?? []}
+        getKey={(team) => team.id}
+        renderItem={(team) => (
+          <GenericActionCard
+            onClick={() => {
+              if (user?.role === UserRole.SUPADM) {
+                router.push(`/dashboard/settings/team/${team.id}`);
+              }
+            }}
+            title={
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="w-[38px] h-[38px] rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: team.color || "#7F77DD" }}
+                >
+                  <Users className="w-[17px] h-[17px] text-white" />
                 </div>
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <div className="flex -space-x-2">
-                      {Array.from({ length: 3 }).map((_, i) => (
-                        <Skeleton key={i} className="w-8 h-8 rounded-full" />
-                      ))}
-                    </div>
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                  <Skeleton className="h-8 w-20 rounded-md" />
-                </div>
-              </div>
-            </Card>
-          ))
-        ) : // Show actual teams
-        teamsData?.data?.length > 0 ? (
-          teamsData?.data?.map((team) => (
-            <Card
-              key={team.id}
-              className="p-5 shadow-sm border-gray-200 hover:shadow-md hover:border-rateup-blue/30 transition-all"
-              onClick={() => {
-                user?.role === UserRole.SUPADM &&
-                  router.push(`/dashboard/settings/team/${team.id}`);
-              }}
-            >
-              <div className="flex justify-between flex-col gap-6">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center`}
-                    style={{
-                      backgroundColor: team.color ? team.color : "blue",
-                    }}
-                  >
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center justify-start gap-1">
-                      <h4>{team.name}</h4>
-                      <p className="text-xs text-muted-foreground border border-gray-300 rounded-xl px-2 py-0.5">
-                        {team.code}
-                      </p>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {translations("Created")}:{" "}
-                      {team?.createdAt
-                        ? dayjs(team.createdAt).format("DD MMM YYYY")
-                        : "—"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <div className="flex -space-x-2">
-                      {Array.from({
-                        length: Math.min(team._count.members, 3),
-                      }).map((_, index) => (
-                        <div
-                          key={index}
-                          className="w-8 h-8 rounded-full border-2 border-white bg-primary flex items-center justify-center text-white text-xs font-medium"
-                        >
-                          <User className="h-4 w-4" />
-                        </div>
-                      ))}
-
-                      {team._count.members > 3 && (
-                        <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
-                          <span className="text-xs text-gray-600">
-                            +{team._count.members - 3}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    <span className="text-sm text-muted-foreground">
-                      {team._count.members}{" "}
-                      {team._count.members === 1
-                        ? translations("member")
-                        : translations("members")}
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-medium text-sm truncate">
+                      {team.name}
+                    </span>
+                    <span className="text-[11px] font-medium border rounded-full px-1.5 py-0.5 text-muted-foreground bg-muted">
+                      {team.code}
                     </span>
                   </div>
+                  <span className="text-xs text-muted-foreground/60 mt-0.5">
+                    {translations("created")} {formatDate(team.createdAt)}
+                  </span>
                 </div>
               </div>
-            </Card>
-          ))
-        ) : (
-          <div className="p-10 flex gap-1 min-w-full text-gray-300">
-            <UserX />
-            <h2>{translations("You are not in any team")}</h2>
-          </div>
+            }
+            footerLeft={
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex">
+                    {Array.from({
+                      length: Math.min(team._count.members, 3),
+                    }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-[26px] h-[26px] rounded-full border-2 border-background flex items-center justify-center -ml-1.5 first:ml-0"
+                        style={{ backgroundColor: team.color || "#7F77DD" }}
+                      >
+                        <User className="h-3 w-3 text-white" />
+                      </div>
+                    ))}
+                    {team._count.members > 3 && (
+                      <div className="w-[26px] h-[26px] rounded-full bg-muted border-2 border-background flex items-center justify-center -ml-1.5">
+                        <span className="text-[9px] font-medium text-muted-foreground">
+                          +{team._count.members - 3}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground ml-2">
+                    {team._count.members}{" "}
+                    {team._count.members === 1
+                      ? translations("member")
+                      : translations("members")}
+                  </span>
+                </div>
+              </div>
+            }
+            footerRight={
+              <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+            }
+          />
         )}
-      </div>
+      />
       {/* create team */}
       {user?.role === UserRole.SUPADM && (
         <Dialog
