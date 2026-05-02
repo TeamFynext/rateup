@@ -7,7 +7,6 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
-  Linking,
 } from "react-native";
 import React from "react";
 import SignInScreen from "@/components/signInScreen";
@@ -59,15 +58,6 @@ const SignIn = () => {
               <SignInScreen setError={showError} />
               <GoogleLogin setError={showError} />
               <AppleLogin setError={showError} />
-            </View>
-            <View className="flex-row items-center justify-center gap-1">
-              <Text className="font-bold text-md">Don't have an account?</Text>
-              <Text
-                onPress={() => Linking.openURL("https://rateup.app/signup")}
-                className="text-rateUpBlue font-bold text-md underline"
-              >
-                Sign Up
-              </Text>
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
