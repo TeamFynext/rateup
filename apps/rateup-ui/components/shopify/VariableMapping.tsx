@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 
 import { Loader2 } from "lucide-react";
 
+import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
 
 import { Label } from "../ui/label";
@@ -14,7 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { shopifyVariablePresets } from "./shopifyVariables";
+import {
+  contactVariablePresets,
+  shopifyVariablePresets,
+} from "./shopifyVariables";
 
 interface VariableMappingProps {
   waTemplateId: string;
@@ -22,14 +26,28 @@ interface VariableMappingProps {
   onChange: (
     value: { templateParamIndex: number; shopifyPath: string }[],
   ) => void;
+  triggerEvent?: string;
 }
 
 const VariableMapping = ({
   waTemplateId,
   value,
   onChange,
+  triggerEvent,
 }: VariableMappingProps) => {
   const { data: template, isLoading } = useWaTemplateById(waTemplateId);
+  const isShopify = triggerEvent === "SHOPIFY_EVENT";
+  const { data: customFields } = useCustomFields();
+
+  const variableOptions = useMemo(() => {
+    if (isShopify) return shopifyVariablePresets;
+    const customOptions =
+      customFields?.map((cf) => ({
+        label: `Custom: ${cf.name}`,
+        value: `contact.custom.${cf.id}`,
+      })) ?? [];
+    return [...contactVariablePresets, ...customOptions];
+  }, [isShopify, customFields]);
 
   const variables = useMemo(() => {
     if (!template?.data?.components) return [];
@@ -74,7 +92,9 @@ const VariableMapping = ({
       <div className="space-y-1">
         <h4 className="text-sm font-medium leading-none">Variable Mapping</h4>
         <p className="text-sm text-muted-foreground">
-          Map your WhatsApp template variables to Shopify data.
+          {isShopify
+            ? "Map your WhatsApp template variables to Shopify data."
+            : "Map your WhatsApp template variables to contact fields."}
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -92,10 +112,16 @@ const VariableMapping = ({
                 onValueChange={(val) => handleMappingChange(i, val)}
               >
                 <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Select Shopify Field" />
+                  <SelectValue
+                    placeholder={
+                      isShopify
+                        ? "Select Shopify Field"
+                        : "Select Contact Field"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {shopifyVariablePresets.map((preset) => (
+                  {variableOptions.map((preset) => (
                     <SelectItem key={preset.value} value={preset.value}>
                       {preset.label}
                     </SelectItem>

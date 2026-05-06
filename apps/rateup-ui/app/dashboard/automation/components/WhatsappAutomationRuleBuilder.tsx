@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-import { CreateRule } from "@/types/rule";
 import {
   useCreateRuleMutation,
   useRuleById,
@@ -76,16 +75,16 @@ const WhatsappAutomationRuleBuilder: React.FC<
         ...ruleData,
         whatsappSettingsPhoneIds: ruleData.whatsappSettingsPhoneIds || [],
         groups: ruleData.groups || [],
-        actions: ruleData.actions || [],
+        actions: (ruleData.actions as CreateRuleInput["actions"]) || [],
         options: ruleData.options || defaultValues.options,
       });
     }
   }, [ruleData, form]);
 
-  const onSubmit = (data: CreateRule) => {
+  const onSubmit = (data: CreateRuleInput) => {
     if (isEditMode) {
       updateMutation.mutate(
-        { id: ruleId, ...data },
+        { id: ruleId, ...(data as any) },
         {
           onSuccess: () => {
             router.push(`/dashboard/automation`);
@@ -93,7 +92,7 @@ const WhatsappAutomationRuleBuilder: React.FC<
         },
       );
     } else {
-      createMutation.mutate(data, {
+      createMutation.mutate(data as any, {
         onSuccess: (data) => {
           router.replace(`/dashboard/automation/${data?.id}`);
         },

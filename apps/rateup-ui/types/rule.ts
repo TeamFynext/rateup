@@ -4,6 +4,7 @@ import {
   ConditionOperator,
   TriggerEvent,
 } from "@/app/dashboard/automation/components/schema";
+import type { SendTemplateActionValue } from "@/app/dashboard/automation/components/schema";
 
 export type Rule = {
   id: string;
@@ -19,6 +20,8 @@ export type Rule = {
   updatedAt: Date;
   options?: {
     sendOncePerDay?: boolean;
+    shopifyEvent?: string;
+    shopifyProductIds?: string[];
     businessHours?: {
       enabled: boolean;
       businessHoursId: string | undefined;
@@ -44,7 +47,7 @@ export type RuleCondition = {
 export type RuleAction = {
   id: string;
   type: ActionType;
-  value: string;
+  value: string | SendTemplateActionValue | null | undefined;
   ruleId: string;
 };
 

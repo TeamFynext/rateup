@@ -530,7 +530,12 @@ const PauseNodeEditor: React.FC<NodeComponentProps<"pauseNode">> = ({
 // MediaNode Component
 const MediaNodeEditor: React.FC<
   NodeComponentProps<
-    "documentNode" | "imageNode" | "videoNode" | "audioNode" | "buttonNode"
+    | "documentNode"
+    | "imageNode"
+    | "videoNode"
+    | "audioNode"
+    | "buttonNode"
+    | "ctaUrlNode"
   > & { nodeType: NodeType; disableCaption?: boolean }
 > = ({ nodeData, handleInputChange, nodeType, disableCaption = false }) => {
   const typedData = nodeData;
@@ -1125,15 +1130,58 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
   handleInputChange,
 }) => {
   const typedData = nodeData;
+
+  const getType = () => {
+    switch (typedData.headerType) {
+      case "text":
+        return "textNode";
+      case "image":
+        return "imageNode";
+      case "video":
+        return "videoNode";
+      case "document":
+        return "documentNode";
+      default:
+        return "textNode";
+    }
+  };
+
   return (
     <Stack gap={"xs"}>
-      <ContainedTextField
-        onChange={(e) => handleInputChange("header", e?.target?.value)}
-        value={typedData.header || ""}
-        placeholder="Enter header text..."
-        label="Header Text"
-        maxLength={60}
+      <ContainedSelection
+        label="Header Type"
+        placeholder="Select header type"
+        data={[
+          { value: "text", label: "Text" },
+          { value: "image", label: "Image" },
+          { value: "video", label: "Video" },
+          { value: "document", label: "Document" },
+        ]}
+        value={typedData.headerType}
+        onChange={(value) => {
+          handleInputChange("headerType", value);
+        }}
+        description="Type of header content to display"
       />
+
+      {typedData.headerType === "text" ? (
+        <ContainedTextField
+          onChange={(e) => handleInputChange("header", e.target.value)}
+          value={typedData.header || ""}
+          placeholder="Enter header text..."
+          label="Header Text"
+          maxLength={60}
+        />
+      ) : (
+        typedData.headerType && (
+          <MediaNodeEditor
+            handleInputChange={handleInputChange}
+            nodeData={typedData}
+            nodeType={getType()}
+            disableCaption={true}
+          />
+        )
+      )}
 
       <WaTextEditor
         handleInputChange={(e) => handleInputChange("body", e)}
