@@ -64,5 +64,10 @@ export const useDeleteLoyaltyTierMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
     },
+    onError: (error) => {
+      toast.error(
+        error?.message || `Error deleting loyalty tier: Unknown error`,
+      );
+    },
   });
 };

@@ -43,6 +43,20 @@ const nextConfig: NextConfig = {
   async redirects() {
     return redirects;
   },
+  async headers() {
+    return [
+      {
+        source: "/", // homepage only
+        headers: [
+          {
+            key: "Link",
+            value:
+              '</.well-known/api-catalog>; rel="api-catalog", <https://docs.rateup.app>; rel="service-doc"',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 const sentryConfig: SentryBuildOptions = {

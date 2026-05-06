@@ -49,7 +49,7 @@ export function SurveyCard({
   return (
     <Card
       key={survey.id}
-      className="transition-all duration-300 cursor-pointer overflow-hidden relative hover:-translate-y-1 flex flex-col p-0"
+      className="cursor-pointer hover:ring-1 hover:ring-primary gap-3.5 transition-all duration-300 cursor-pointer overflow-hidden relative hover:-translate-y-1 flex flex-col p-0"
       onClick={(e) => {
         e.stopPropagation();
         router.push(

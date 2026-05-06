@@ -12,3 +12,9 @@ export const shopifyVariablePresets = [
   { label: "Financial Status", value: "financial_status" },
   { label: "Fulfillment Status", value: "fulfillment_status" },
 ];
+
+export const contactVariablePresets = [
+  { label: "Contact Name", value: "contact.name" },
+  { label: "Contact Email", value: "contact.email" },
+  { label: "Contact Phone", value: "contact.phone" },
+];

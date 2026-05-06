@@ -570,7 +570,7 @@ export default function UsersPage() {
               {filteredMembers?.map((member: any) => (
                 <Card
                   key={member.id}
-                  className="p-3 shadow-sm border-gray-200 hover:shadow-md hover:border-rateup-blue/30 transition-all group relative min-w-[15vw] lg:max-w-[15vw]"
+                  className="p-3  group relative min-w-[15vw] lg:max-w-[15vw]"
                 >
                   <div className="flex flex-col items-center text-center justify-center gap-1">
                     <div className="relative mb-2">

@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 
+import { IconRefresh } from "@tabler/icons-react";
 import {
   CheckCircle,
   ClipboardList,
+  Loader2,
   PlusIcon,
   Save,
   Settings,
@@ -16,6 +18,8 @@ import {
   useWatch,
 } from "react-hook-form";
 
+import { ShopifyEvents } from "@/types/enums";
+import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { shopifyEventData } from "@/utils/constants";
 
 import ActionList from "./ActionList";
 import ConditionList from "./ConditionList";
@@ -69,6 +74,39 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
     control: form.control,
     name: "triggerEvent",
   });
+  const isMessageReceivedTrigger = triggerEvent === "MESSAGE_RECEIVED";
+  const isShopifyTrigger = triggerEvent === "SHOPIFY_EVENT";
+  const shopifyEvent = useWatch({
+    control: form.control,
+    name: "options.shopifyEvent",
+  });
+  const shopifyProductIds =
+    useWatch({
+      control: form.control,
+      name: "options.shopifyProductIds",
+    }) ?? [];
+
+  const [productData, setProductData] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  const loadShopifyProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const products = await getProductsFromShopify();
+      setProductData(
+        products
+          ? products.map((product: any) => ({
+              label: product.title,
+              value: product.id.toString(),
+            }))
+          : [],
+      );
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
 
   return (
     <Form {...form}>
@@ -144,6 +182,10 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                     onValueChange={(value) => {
                       field.onChange(value);
                       const currentGroups = form.getValues("groups");
+                      if (value !== "SHOPIFY_EVENT") {
+                        form.setValue("options.shopifyEvent", undefined);
+                        form.setValue("options.shopifyProductIds", []);
+                      }
                       if (value !== "MESSAGE_RECEIVED") {
                         form.setValue("groups", []);
                       } else if (currentGroups.length === 0) {
@@ -183,6 +225,36 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                 </Field>
               )}
             />
+
+            {isShopifyTrigger && (
+              <Controller
+                control={form.control}
+                name="options.shopifyEvent"
+                render={({ field, fieldState }) => (
+                  <Field className="mt-4" data-invalid={fieldState.invalid}>
+                    <FieldLabel>Shopify Trigger Condition</FieldLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger
+                        className="w-full"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue placeholder="Select Shopify event" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {shopifyEventData.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -215,68 +287,183 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
             </div>
 
             <div className="space-y-4">
-              {groupFields.map((group, groupIndex) => (
-                <React.Fragment key={group.id}>
-                  {/* Condition Block */}
-                  <div className="border-2 border-purple-200 dark:border-purple-800 rounded-lg p-4 bg-purple-50/50 dark:bg-purple-950/20">
-                    <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-200 dark:border-purple-800">
-                      <span className="text-sm font-semibold text-purple-800 dark:text-purple-300">
-                        Condition Block {groupIndex + 1}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeGroup(groupIndex)}
-                        disabled={
-                          triggerEvent === "MESSAGE_RECEIVED" &&
-                          groupFields.length === 1
-                        }
-                        className="h-8 text-muted-foreground hover:text-red-500"
-                      >
-                        <Trash2Icon className="w-4 h-4" />
-                      </Button>
-                    </div>
-
-                    <ConditionList
-                      name={`groups.${groupIndex}.conditions`}
-                      groupOperator={
-                        (form.watch(`groups.${groupIndex}.operator`) as
-                          | "AND"
-                          | "OR") || "AND"
-                      }
-                      onOperatorChange={(operator) =>
-                        form.setValue(`groups.${groupIndex}.operator`, operator)
-                      }
-                    />
+              {isShopifyTrigger ? (
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-dashed border-purple-300 dark:border-purple-700 p-4 text-sm text-muted-foreground">
+                    Shopify rules use the selected Shopify event as the trigger
+                    condition. Message condition blocks are not used for this
+                    trigger.
                   </div>
-                </React.Fragment>
-              ))}
 
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full border-2 border-dashed border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20 hover:bg-purple-100 dark:hover:bg-purple-900/30"
-                onClick={() => {
-                  const defaultField =
-                    triggerEvent === "MESSAGE_RECEIVED"
+                  {shopifyEvent !== ShopifyEvents.ABANDONED_CHECKOUTS && (
+                    <div className="border-2 border-purple-200 dark:border-purple-800 rounded-lg p-4 bg-purple-50/50 dark:bg-purple-950/20 space-y-3">
+                      <span className="text-sm font-semibold text-purple-800 dark:text-purple-300 block">
+                        Product Filter (optional)
+                      </span>
+                      <p className="text-xs text-muted-foreground">
+                        Add one or more product conditions. The rule will
+                        trigger if the order contains any selected product.
+                      </p>
+
+                      {shopifyProductIds.map((_, index) => (
+                        <div key={index} className="flex items-end gap-2 mt-2">
+                          <Controller
+                            control={form.control}
+                            name={`options.shopifyProductIds.${index}`}
+                            render={({ field, fieldState }) => (
+                              <Field
+                                className="flex-1"
+                                data-invalid={fieldState.invalid}
+                              >
+                                <FieldLabel>Product {index + 1}</FieldLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value ?? ""}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select Product" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {productData.map((prod) => (
+                                      <SelectItem
+                                        key={prod.value}
+                                        value={prod.value}
+                                      >
+                                        {prod.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </Field>
+                            )}
+                          />
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              const next = shopifyProductIds.filter(
+                                (_, i) => i !== index,
+                              );
+                              form.setValue("options.shopifyProductIds", next);
+                            }}
+                            className="text-muted-foreground hover:text-red-500"
+                            title="Remove product condition"
+                          >
+                            <Trash2Icon className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            form.setValue("options.shopifyProductIds", [
+                              ...shopifyProductIds,
+                              "",
+                            ]);
+                            if (!productData.length) {
+                              loadShopifyProducts();
+                            }
+                          }}
+                        >
+                          <PlusIcon className="w-4 h-4 mr-2" />
+                          Add product condition
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={loadShopifyProducts}
+                          disabled={loadingProducts}
+                          className="rounded-lg"
+                          title="Refresh products"
+                        >
+                          {loadingProducts ? (
+                            <Loader2 className="animate-spin h-4 w-4" />
+                          ) : (
+                            <IconRefresh size={18} />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                groupFields.map((group, groupIndex) => (
+                  <React.Fragment key={group.id}>
+                    {/* Condition Block */}
+                    <div className="border-2 border-purple-200 dark:border-purple-800 rounded-lg p-4 bg-purple-50/50 dark:bg-purple-950/20">
+                      <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-200 dark:border-purple-800">
+                        <span className="text-sm font-semibold text-purple-800 dark:text-purple-300">
+                          Condition Block {groupIndex + 1}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeGroup(groupIndex)}
+                          disabled={
+                            triggerEvent === "MESSAGE_RECEIVED" &&
+                            groupFields.length === 1
+                          }
+                          className="h-8 text-muted-foreground hover:text-red-500"
+                        >
+                          <Trash2Icon className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <ConditionList
+                        name={`groups.${groupIndex}.conditions`}
+                        groupOperator={
+                          (form.watch(`groups.${groupIndex}.operator`) as
+                            | "AND"
+                            | "OR") || "AND"
+                        }
+                        onOperatorChange={(operator) =>
+                          form.setValue(
+                            `groups.${groupIndex}.operator`,
+                            operator,
+                          )
+                        }
+                      />
+                    </div>
+                  </React.Fragment>
+                ))
+              )}
+
+              {!isShopifyTrigger && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-2 border-dashed border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20 hover:bg-purple-100 dark:hover:bg-purple-900/30"
+                  onClick={() => {
+                    const defaultField = isMessageReceivedTrigger
                       ? "MESSAGE_BODY"
                       : "CONTACT_EMAIL";
-                  appendGroup({
-                    operator: "AND",
-                    conditions: [
-                      {
-                        field: defaultField,
-                        operator: "CONTAINS",
-                        value: "",
-                      },
-                    ],
-                  });
-                }}
-              >
-                <PlusIcon className="w-4 h-4 mr-2" />
-                Add condition block
-              </Button>
+                    appendGroup({
+                      operator: "AND",
+                      conditions: [
+                        {
+                          field: defaultField,
+                          operator: "CONTAINS",
+                          value: "",
+                        },
+                      ],
+                    });
+                  }}
+                >
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Add condition block
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

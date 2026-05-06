@@ -31,7 +31,7 @@ export function AnalyticsStatCard({
     (trendPositiveWhen === "increase" ? trendValue >= 0 : trendValue <= 0);
 
   return (
-    <Card className="border p-0">
+    <Card className=" p-0">
       <CardContent className="p-4 flex flex-col gap-1">
         <div className="flex items-center justify-between mb-1">
           <div className="p-2 rounded-lg bg-blue-100 dark:bg-transparent">

@@ -100,7 +100,7 @@ function page() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border shadow-sm p-0">
+        <Card className="  p-0">
           <CardContent className="p-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               {/* Left Section */}
@@ -244,7 +244,7 @@ function page() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Card className=" border p-0">
+              <Card className=" p-0">
                 <CardContent className="p-4 flex flex-col gap-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="p-2 rounded-lg bg-blue-100 dark:bg-transparent">
@@ -266,7 +266,7 @@ function page() {
                   </p>
                 </CardContent>
               </Card>
-              <Card className=" border p-0">
+              <Card className="  p-0">
                 <CardContent className="p-4 flex flex-col gap-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="p-2 rounded-lg bg-orange-100 dark:bg-transparent">
@@ -289,7 +289,7 @@ function page() {
                   </p>
                 </CardContent>
               </Card>
-              <Card className=" border p-0">
+              <Card className="  p-0">
                 <CardContent className="p-4 flex flex-col gap-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="p-2 rounded-lg bg-green-100 dark:bg-transparent">

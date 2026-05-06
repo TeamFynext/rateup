@@ -217,7 +217,7 @@ const ContactGroupCard = ({ group, handleEdit, handleDelete }) => {
   return (
     <Card
       key={group.id}
-      className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+      className="p-4 cursor-pointer hover:ring-1 hover:ring-primary"
       onClick={(e) => {
         router.push(`/dashboard/contacts/groups/${group.id}`);
       }}
