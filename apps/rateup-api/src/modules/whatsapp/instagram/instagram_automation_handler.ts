@@ -93,7 +93,7 @@ async function findInstagramAutomationByCommand(
 
       // Fetch the Instagram automation
       const automation = await getInstagramAutomatedReplyById(automationId);
-      if (automation && automation.isEnabled) {
+      if (automation) {
         log.info(
           `[Instagram Automation Handler] Rule ${rule.id} matched for message "${messageBody}" - triggering automation ${automationId}`,
         );

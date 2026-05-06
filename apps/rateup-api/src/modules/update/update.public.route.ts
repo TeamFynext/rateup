@@ -11,7 +11,6 @@ import {
   updateUsageStatsAutomationHandler,
   updateUsageStatsTemplateMessageHandler,
   migrateTagsHandle,
-  migratePhoneIdsHandle,
   backfillWithSQLHandler,
   migrateWaTemplatePhoneIdsHandler,
   syncTeamFeaturesHandler,
@@ -26,7 +25,6 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.put("/free-plan", updateFreePlanExpiryHandler);
   server.put("/add-default-lifecycle", updateDefaultLifecycleHandler);
   server.put("/migrate-tags", migrateTagsHandle);
-  server.put("/migrate-to-whatsapp-phone-ids", migratePhoneIdsHandle);
   server.put("/backfill", backfillWithSQLHandler);
   server.put(
     "/migrate-wa-template-to-whatsapp-phone-id",

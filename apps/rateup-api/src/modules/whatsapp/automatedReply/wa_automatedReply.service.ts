@@ -69,7 +69,6 @@ export async function createAutomatedReply(
     data: {
       orgId,
       name: data.name,
-      matchType: "",
       matchData: data?.matchData,
       whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
       platform: data.platform
@@ -108,7 +107,6 @@ export async function cloneAutomatedReply(
     data: {
       orgId,
       name: name || `${source.name} Copy`,
-      matchType: source.matchType,
       matchData: source.matchData,
       platform: source.platform,
     },
@@ -170,9 +168,6 @@ export async function getCommandByOrgIdAndCommand(
       where: {
         orgId,
         command,
-        waAutomatedReply: {
-          isEnabled: true,
-        },
       },
       select: {
         command: true,
