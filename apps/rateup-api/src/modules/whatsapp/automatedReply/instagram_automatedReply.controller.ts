@@ -273,13 +273,6 @@ export async function initiateInstagramAutomationHandler(
       });
     }
 
-    if (!automation.isEnabled) {
-      return reply.code(400).send({
-        success: false,
-        error: "Automation is not active",
-      });
-    }
-
     // Start the automation flow
     await startInstagramAutomationFlow(igsId, automation as any, orgId, ibaId);
 

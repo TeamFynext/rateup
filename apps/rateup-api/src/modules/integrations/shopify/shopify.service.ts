@@ -1,8 +1,9 @@
 import prisma from "../../../utils/prisma.js";
+import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import shopify from "./shopify.config.js";
 import { GraphqlClient, Session, DataType } from "@shopify/shopify-api";
 import isEmpty from "lodash/isEmpty.js";
-import baseRedis, {
+import {
   notificationQueue,
   shopifySurveyQueue,
 } from "../../../utils/redisConnection.js";
@@ -21,6 +22,7 @@ import {
   wait,
 } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../../whatsapp/automatedReply/wa_automatedReply.utils.js";
 import {
   IntegratedApps,
   ShopifyEvents,
@@ -34,7 +36,6 @@ import { getDbTemplate } from "../../whatsapp/messageTemplates/wa_templates.serv
 import { getFlowIdFromTemplateComponents } from "../../whatsapp/messageTemplates/wa_templates.utils.js";
 import { parsePhoneNumber } from "libphonenumber-js";
 import {
-  getScheduledTime,
   PaymentSource,
   ShopifyOrderWebhookTopicEventMap,
   ShopifyPlanMap,
@@ -61,8 +62,13 @@ import { WEBHOOK_API_ROUTE } from "./shopify.handler.js";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
 import { getScheduleTime } from "../../../utils/date.js";
 import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth.js";
-import { PlatformType } from "../../../../generated/prisma/enums.js";
-import { getLCustomerByPhone } from "../../loyalty/accounts/account.service.js";
+import {
+  awardPoints,
+  getLCustomerByPhone,
+} from "../../loyalty/accounts/account.service.js";
+import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
+import { EarningRulesEngine } from "../../loyalty/earningRulesEngine.js";
+import { ShopifyBody } from "./shopify.types.js";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -1196,6 +1202,173 @@ export async function handleShopifyOrderEvents(webhook) {
     amount: Number(body?.total_price),
     body,
   });
+
+  await checkAndExecuteRuleByTriggerEvent(TriggerEvent.SHOPIFY_EVENT, {
+    orgId: shopifyInfo.orgId,
+    phone: customerPhone,
+    shopifyEvent: topic,
+    shopifyProductIds: productIds,
+    shopifyBody: body,
+  });
+
+  // Loyalty integration: handle points only on payment, cancellation, or edit
+  await manageLoyaltyTransactionsForOrder(
+    shopifyInfo,
+    customerPhone,
+    body,
+    topic,
+  );
+}
+
+async function manageLoyaltyTransactionsForOrder(
+  shopifyInfo: Integration & { credential: ShopifyCredential } & { org: Org },
+  customerPhone: any,
+  body: ShopifyBody,
+  topic: any,
+) {
+  try {
+    if (shopifyInfo?.orgId && customerPhone) {
+      const loyaltyProgram = await getLoyaltyProgramByOrg(shopifyInfo.orgId);
+      if (loyaltyProgram?.status === "active") {
+        const loyaltyCustomer = await getLCustomerByPhone(
+          customerPhone,
+          shopifyInfo.orgId,
+        );
+        if (loyaltyCustomer) {
+          const orderId = body?.id?.toString?.() || undefined;
+          // ORDERS_PAID: Award points
+          if (topic === ShopifyEvents.ORDERS_PAID) {
+            const purchaseAmount =
+              Number(
+                body?.total_line_items_price_set?.presentment_money?.amount ||
+                  body?.total_price,
+              ) || 0;
+            await awardPoints(
+              loyaltyProgram.id,
+              loyaltyCustomer.contactId,
+              purchaseAmount,
+              {
+                orderId,
+                channel: "shopify",
+                notes: "Shopify order auto-points (paid)",
+              },
+            );
+            log.info(
+              "Loyalty points awarded to customer %s for org %s via Shopify order (paid).",
+              customerPhone,
+              shopifyInfo.orgId,
+            );
+          }
+
+          // ORDERS_CANCELLED: Revoke points (create negative transaction)
+          else if (topic === ShopifyEvents.ORDERS_CANCELLED) {
+            // Find the original transaction for this order
+            const txn = await prisma.loyaltyTransaction.findFirst({
+              where: {
+                accountId: loyaltyCustomer.id,
+                programId: loyaltyProgram.id,
+                transactionType: "earn",
+                metadata: { path: ["orderId"], equals: orderId },
+              },
+              orderBy: { createdAt: "desc" },
+            });
+            if (txn && txn.points > 0) {
+              await prisma.customerLoyaltyAccount.update({
+                where: { id: loyaltyCustomer.id },
+                data: {
+                  currentPoints: { decrement: txn.points },
+                  lifetimePoints: { decrement: txn.points },
+                },
+              });
+              await prisma.loyaltyTransaction.create({
+                data: {
+                  accountId: loyaltyCustomer.id,
+                  programId: loyaltyProgram.id,
+                  transactionType: "adjust",
+                  source: "order_cancelled",
+                  points: -txn.points,
+                  balanceAfter: loyaltyCustomer.currentPoints - txn.points,
+                  metadata: {
+                    orderId,
+                    originalTxnId: txn.id,
+                    reason: "Order cancelled, points revoked",
+                  },
+                },
+              });
+              log.info(
+                "Loyalty points revoked for customer %s for cancelled Shopify order %s.",
+                customerPhone,
+                orderId,
+              );
+            }
+          }
+
+          // ORDERS_EDITED: Adjust points (difference)
+          else if (topic === ShopifyEvents.ORDERS_EDITED) {
+            // Find the original transaction for this order
+            const txn = await prisma.loyaltyTransaction.findFirst({
+              where: {
+                accountId: loyaltyCustomer.id,
+                programId: loyaltyProgram.id,
+                transactionType: "earn",
+                metadata: { path: ["orderId"], equals: orderId },
+              },
+              orderBy: { createdAt: "desc" },
+            });
+            const newAmount = Number(body?.total_price) || 0;
+            if (txn) {
+              // Calculate new points using EarningRulesEngine
+              const engine = new EarningRulesEngine();
+              const result = await engine.calculatePointsForPurchase(
+                loyaltyProgram.id,
+                loyaltyCustomer.id,
+                newAmount,
+                {
+                  purchase_amount: newAmount,
+                  order_total: newAmount,
+                  orderId,
+                  channel: "online",
+                },
+              );
+              const newPoints = result.points;
+              const diff = newPoints - txn.points;
+              if (diff !== 0) {
+                await prisma.customerLoyaltyAccount.update({
+                  where: { id: loyaltyCustomer.id },
+                  data: {
+                    currentPoints: { increment: diff },
+                    lifetimePoints: { increment: diff },
+                  },
+                });
+                await prisma.loyaltyTransaction.create({
+                  data: {
+                    accountId: loyaltyCustomer.id,
+                    programId: loyaltyProgram.id,
+                    transactionType: "adjust",
+                    source: "order_edited",
+                    points: diff,
+                    balanceAfter: loyaltyCustomer.currentPoints + diff,
+                    metadata: {
+                      orderId,
+                      originalTxnId: txn.id,
+                      reason: "Order edited, points adjusted",
+                    },
+                  },
+                });
+                log.info(
+                  "Loyalty points adjusted for customer %s for edited Shopify order %s.",
+                  customerPhone,
+                  orderId,
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (e) {
+    log.error({ e }, "Error handling loyalty points for Shopify order event");
+  }
 }
 
 export async function handleShopifyAppUnistalled(webhook) {

@@ -1,4 +1,5 @@
 import {
+  ShopifyEvents,
   SubscriptionFeaturePathName,
   WaAutomatedReplyMatchType,
   WaMessageAssignStatus,
@@ -39,6 +40,7 @@ import {
   getLastCreatedConversationForContact,
   updateClosedConversationStatus,
 } from "../../contact/conversation/conversation.service.js";
+import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrAfter);
@@ -709,6 +711,9 @@ export async function checkAndExecuteRuleByTriggerEvent(
     waMessage?: WaMessageBody;
     contactId?: string;
     buttonPayload?: string;
+    shopifyEvent?: ShopifyEvents;
+    shopifyProductIds?: string[];
+    shopifyBody?: ShopifyBody;
   },
 ): Promise<
   | {
@@ -785,6 +790,31 @@ export async function checkAndExecuteRuleByTriggerEvent(
     isBusinessHour: boolean,
   ) => {
     for (const rule of rulesToCheck) {
+      if (
+        triggerEvent === TriggerEvent.SHOPIFY_EVENT &&
+        rule.options?.shopifyEvent !== context.shopifyEvent
+      ) {
+        continue;
+      }
+
+      // Filter by product IDs if configured
+      if (triggerEvent === TriggerEvent.SHOPIFY_EVENT) {
+        const configuredProductIds = [
+          ...(rule.options?.shopifyProductIds ?? []),
+        ].map((id) => String(id));
+
+        if (!configuredProductIds.length) {
+          // No product-specific filter configured
+        } else if (!context.shopifyProductIds?.length) {
+          continue;
+        } else {
+          const hasProduct = context.shopifyProductIds.some((id) =>
+            configuredProductIds.includes(String(id)),
+          );
+          if (!hasProduct) continue;
+        }
+      }
+
       const isMatch = await validateRuleConditions(
         rule as RuleWithConditions,
         message,
@@ -806,6 +836,7 @@ export async function checkAndExecuteRuleByTriggerEvent(
           `${isBusinessHour ? "Business hour" : "Non-business hour"} rule matched! Executing actions for rule: %s`,
           rule.name,
         );
+
         const executedActions = await executeRuleActions(
           rule as RuleWithConditions,
           context,
@@ -1175,16 +1206,42 @@ async function executeSendWebSurveyAction(
 }
 
 async function executeSendTemplateAction(
-  templateId: string,
+  templateValue:
+    | string
+    | {
+        templateId: string;
+        variableMapping?: { templateParamIndex: number; shopifyPath: string }[];
+      },
   context: any,
 ): Promise<boolean> {
+  const { templateId, variableMapping } =
+    typeof templateValue === "string"
+      ? { templateId: templateValue, variableMapping: [] }
+      : {
+          templateId: templateValue?.templateId,
+          variableMapping: templateValue?.variableMapping ?? [],
+        };
+
   if (!context.phone || !templateId || !context.orgId) return false;
+
+  const hasContactMappings = variableMapping.some((m) =>
+    m.shopifyPath.startsWith("contact."),
+  );
+  const contactData = hasContactMappings
+    ? await getContactByPhoneNumberAndOrgId(context.phone, context.orgId)
+    : null;
+
+  const parameterData = buildTemplateParameterData(
+    variableMapping,
+    context.shopifyBody,
+    contactData,
+  );
 
   await sendTemplateToUserCore(
     context.orgId,
     templateId,
     context.phone,
-    [],
+    parameterData,
     undefined,
     undefined,
     undefined,
@@ -1193,6 +1250,70 @@ async function executeSendTemplateAction(
   );
 
   return true;
+}
+
+function resolveVariablePath(
+  path: string,
+  shopifyBody?: ShopifyBody,
+  contactData?: {
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    customFields?: Array<{ fieldId: string; value: string | null }>;
+  } | null,
+): string {
+  if (path.startsWith("contact.")) {
+    const subPath = path.slice("contact.".length);
+    if (subPath === "name") return String(contactData?.name ?? "");
+    if (subPath === "email") return String(contactData?.email ?? "");
+    if (subPath === "phone") return String(contactData?.phone ?? "");
+    if (subPath.startsWith("custom.")) {
+      const fieldId = subPath.slice("custom.".length);
+      const cf = contactData?.customFields?.find((f) => f.fieldId === fieldId);
+      return String(cf?.value ?? "");
+    }
+    return "";
+  }
+  // Shopify / generic dot-path resolution
+  return String(
+    path
+      .split(".")
+      .reduce((obj: any, key: string) => obj?.[key], shopifyBody) ?? "",
+  );
+}
+
+function buildTemplateParameterData(
+  variableMapping: { templateParamIndex: number; shopifyPath: string }[] = [],
+  shopifyBody?: ShopifyBody,
+  contactData?: {
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    customFields?: Array<{ fieldId: string; value: string | null }>;
+  } | null,
+): any[] {
+  if (!variableMapping.length) return [];
+
+  const sortedMappings = [...variableMapping].sort(
+    (a, b) => a.templateParamIndex - b.templateParamIndex,
+  );
+  const maxIndex = Math.max(
+    ...sortedMappings.map((m) => m.templateParamIndex),
+    -1,
+  );
+  if (maxIndex < 0) return [];
+
+  const bodyParameters: any[] = [];
+  for (let i = 0; i <= maxIndex; i++) {
+    const mapping = sortedMappings.find((m) => m.templateParamIndex === i);
+    const text = mapping
+      ? resolveVariablePath(mapping.shopifyPath, shopifyBody, contactData)
+      : "";
+
+    bodyParameters.push({ type: "text", text });
+  }
+
+  return [{ type: "body", parameters: bodyParameters }];
 }
 
 async function executeSendFlowAction(
