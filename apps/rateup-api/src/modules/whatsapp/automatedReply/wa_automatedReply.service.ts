@@ -61,57 +61,6 @@ export async function getAutomatedReplyById(id: string) {
   };
 }
 
-async function validateUniqueCommands(
-  orgId: string,
-  commands: string[],
-  businessHourId?: string | null,
-) {
-  for (const command of commands) {
-    const existingCommand = await prisma.waAutomatedReplyCommands.findFirst({
-      where: {
-        orgId,
-        command,
-        businessHourId: businessHourId || null,
-      },
-    });
-
-    if (existingCommand) {
-      throw new Error(
-        `Command '${command}' already exists for this organization with the same business hour configuration`,
-        {
-          cause: { code: "P2002" },
-        },
-      );
-    }
-  }
-}
-
-async function validateUniqueCommandsForUpdate(
-  orgId: string,
-  commands: string[],
-  businessHourId: string | null | undefined,
-  excludeAutomatedReplyId: string,
-) {
-  for (const command of commands) {
-    const existingCommand = await prisma.waAutomatedReplyCommands.findFirst({
-      where: {
-        orgId,
-        command,
-        businessHourId: businessHourId || null,
-        waAutomatedReplyId: {
-          not: excludeAutomatedReplyId,
-        },
-      },
-    });
-
-    if (existingCommand) {
-      throw new Error(
-        `Command '${command}' already exists for this organization with the same business hour configuration`,
-      );
-    }
-  }
-}
-
 export async function createAutomatedReply(
   data: CreateAutomatedReplySchema,
   orgId: string,
@@ -120,7 +69,6 @@ export async function createAutomatedReply(
     data: {
       orgId,
       name: data.name,
-      matchType: "",
       matchData: data?.matchData,
       whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
       platform: data.platform
@@ -159,7 +107,6 @@ export async function cloneAutomatedReply(
     data: {
       orgId,
       name: name || `${source.name} Copy`,
-      matchType: source.matchType,
       matchData: source.matchData,
       platform: source.platform,
     },
@@ -221,9 +168,6 @@ export async function getCommandByOrgIdAndCommand(
       where: {
         orgId,
         command,
-        waAutomatedReply: {
-          isEnabled: true,
-        },
       },
       select: {
         command: true,

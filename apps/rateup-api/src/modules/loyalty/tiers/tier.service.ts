@@ -53,14 +53,41 @@ export async function updateLoyaltyTier(
 
 export async function deleteLoyaltyTier(tierId: string) {
   // Check if there are customers in this tier
-  const customerCount = await prisma.customerLoyaltyAccount.count({
+  const customers = await prisma.customerLoyaltyAccount.findMany({
     where: { currentTierId: tierId },
+    select: { id: true },
   });
 
-  if (customerCount > 0) {
-    throw new Error(
-      "Cannot delete tier with customers. Move customers to another tier first.",
-    );
+  if (customers.length > 0) {
+    // Find the tier to delete
+    const tier = await prisma.loyaltyTier.findUnique({
+      where: { id: tierId },
+      select: { programId: true, priority: true },
+    });
+    if (!tier) {
+      throw new Error("Tier not found.");
+    }
+
+    // Find the previous tier by priority (lower priority number = higher tier)
+    const previousTier = await prisma.loyaltyTier.findFirst({
+      where: {
+        programId: tier.programId,
+        priority: { lt: tier.priority },
+      },
+      orderBy: { priority: "desc" },
+    });
+
+    if (!previousTier) {
+      throw new Error(
+        "Cannot delete tier with customers. Move customers to another tier first.",
+      );
+    }
+
+    // Move all customers to the previous tier
+    await prisma.customerLoyaltyAccount.updateMany({
+      where: { currentTierId: tierId },
+      data: { currentTierId: previousTier.id },
+    });
   }
 
   return await prisma.loyaltyTier.delete({
