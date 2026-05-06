@@ -6,6 +6,24 @@ import createNextIntlPlugin from "next-intl/plugin";
 import redirects from "./redirects";
 
 const nextConfig: NextConfig = {
+  async rewrites() {
+    function markdownRewrite(prefix) {
+      return {
+        source: `${prefix}/:path*`,
+        has: [
+          {
+            type: "header" as const,
+            key: "accept",
+            value: "(.*)text/markdown(.*)",
+          },
+        ],
+        destination: `${prefix}/md/:path*`,
+      };
+    }
+    return {
+      beforeFiles: [markdownRewrite("/blog"), markdownRewrite("/changelog")],
+    };
+  },
   reactStrictMode: false,
   // typedRoutes: true,
   images: {
