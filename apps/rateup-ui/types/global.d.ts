@@ -1167,6 +1167,7 @@ export type WaAutomatedReply = {
   name: string;
   createdAt: Date;
   matchData: WaAutomatedReplyMatchData;
+  commands: Array<string>;
   platform?: string; // "whatsapp" | "instagram"
   whatsappSettingsPhoneId: string;
 };
