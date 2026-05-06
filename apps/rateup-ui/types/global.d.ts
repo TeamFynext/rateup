@@ -1166,44 +1166,10 @@ export type WaAutomatedReply = {
   id: string;
   name: string;
   createdAt: Date;
-  teamId: string;
   matchData: WaAutomatedReplyMatchData;
-  matchType: WaAutomatedReplyMatchType;
   commands: Array<string>;
-  teamId: string;
-  assignedUserIds: Array<string>;
-  assignType: string;
-  memberChoice: string;
-  isEnabled: boolean;
   platform?: string; // "whatsapp" | "instagram"
-  WaAutomatedReplyAssignedUser: Array<{
-    userId: string;
-  }>;
-  other: {
-    assignType: string;
-    choice: string;
-  };
   whatsappSettingsPhoneId: string;
-  sendOnceIn24Hours: boolean;
-  businessHourId: string | null;
-  businessHour?: {
-    id: string;
-    name: string;
-    timezone: string;
-    schedule: {
-      [day: string]: {
-        isOpen: boolean;
-        timeSlots: Array<{
-          openTime: string;
-          closeTime: string;
-        }>;
-      };
-    };
-    channels: string[];
-    description?: string;
-    createdAt: string;
-    updatedAt: string;
-  };
 };
 
 //types related to wa inbox

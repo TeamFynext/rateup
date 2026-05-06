@@ -17,6 +17,8 @@ import { useTeamsByUser } from "@/backend/team/team.query";
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useAllInstagramAutomations } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
+import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
+import VariableMapping from "@/components/shopify/VariableMapping";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -47,6 +49,8 @@ const ActionValueInput = ({
   const { data: teamsData } = useTeamsByUser();
   const { data: flowsData } = useWaFlowsFromDb();
   const { data: surveysSummary } = useAllSurveysSummary();
+  const { data: templatesData, isLoading: isTemplatesLoading } =
+    useWaTemplates();
 
   // Combine both WhatsApp and Instagram automations
   const allAutomations = useMemo(() => {
@@ -72,6 +76,25 @@ const ActionValueInput = ({
     control,
     name: `actions.${index}.type`,
   });
+
+  const triggerEvent = useWatch({
+    control,
+    name: "triggerEvent",
+  });
+
+  const getTemplateValue = () => {
+    if (typeof valueField.value === "string") {
+      return {
+        templateId: valueField.value,
+        variableMapping: [],
+      };
+    }
+
+    return {
+      templateId: valueField.value?.templateId ?? "",
+      variableMapping: valueField.value?.variableMapping ?? [],
+    };
+  };
 
   // All fields are wrapped in Field for shadcn consistency
   if (actionType === "SEND_MESSAGE") {
@@ -198,6 +221,59 @@ const ActionValueInput = ({
       </Select>
     );
   }
+  if (actionType === "SEND_TEMPLATE") {
+    const templateValue = getTemplateValue();
+
+    return (
+      <div className="space-y-3 w-full">
+        <Select
+          onValueChange={(templateId) =>
+            valueField.onChange({
+              ...templateValue,
+              templateId,
+            })
+          }
+          value={templateValue.templateId || ""}
+          disabled={isTemplatesLoading}
+        >
+          <SelectTrigger className="w-full bg-background">
+            <SelectValue
+              placeholder={
+                isTemplatesLoading ? "Loading templates..." : "Select template"
+              }
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {templatesData?.length ? (
+              templatesData.map((template) => (
+                <SelectItem key={template.id} value={String(template.id)}>
+                  {template?.data?.name}
+                </SelectItem>
+              ))
+            ) : (
+              <div className="p-2 text-sm text-muted-foreground text-center">
+                No templates found
+              </div>
+            )}
+          </SelectContent>
+        </Select>
+
+        {templateValue.templateId && (
+          <VariableMapping
+            waTemplateId={templateValue.templateId}
+            value={templateValue.variableMapping}
+            onChange={(variableMapping) =>
+              valueField.onChange({
+                ...templateValue,
+                variableMapping,
+              })
+            }
+            triggerEvent={triggerEvent}
+          />
+        )}
+      </div>
+    );
+  }
   if (actionType === "CALL_EXTERNAL_API") {
     return (
       <Input
@@ -315,6 +391,13 @@ const ActionList: React.FC = () => {
                 <Select
                   onValueChange={(val) => {
                     field.onChange(val);
+                    if (val === "SEND_TEMPLATE") {
+                      setValue(`actions.${index}.value`, {
+                        templateId: "",
+                        variableMapping: [],
+                      });
+                      return;
+                    }
                     setValue(`actions.${index}.value`, "");
                   }}
                   defaultValue={field.value}

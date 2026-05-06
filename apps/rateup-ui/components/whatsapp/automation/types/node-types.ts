@@ -111,11 +111,15 @@ export interface StickerNodeData extends BaseNodeData {
 
 // CTA URL Node
 export interface CTAUrlNodeData extends BaseNodeData {
+  headerType?: string;
   header?: string;
   body: string;
   footer?: string;
   display_text: string;
   url: string;
+  caption?: string;
+  filename?: string;
+  link?: string;
 }
 
 // Template Node

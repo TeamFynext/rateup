@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+import { ShopifyEvents } from "@/types/enums";
+
+const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents) as [
+  string,
+  ...string[],
+];
+
 // Single source of truth for condition fields
 export const CONDITION_FIELDS = [
   { label: "Message Body", value: "MESSAGE_BODY" },
@@ -31,6 +38,7 @@ export const TRIGGER_EVENTS = [
   { label: "Chat Assigned", value: "CHAT_ASSIGNED" },
   { label: "Contact Created", value: "CONTACT_CREATED" },
   { label: "Lifecycle Updated", value: "LIFECYCLE_UPDATED" },
+  { label: "Shopify Event", value: "SHOPIFY_EVENT" },
 ] as const;
 
 // Single source of truth for action types
@@ -39,6 +47,7 @@ export const ACTION_TYPES = [
   { label: "Trigger Chatbot", value: "TRIGGER_CHATBOT" },
   { label: "Call External API", value: "CALL_EXTERNAL_API" },
   { label: "Send Web Survey", value: "SEND_WEB_SURVEY" },
+  { label: "Send Template", value: "SEND_TEMPLATE" },
   { label: "Send Message", value: "SEND_MESSAGE" },
   { label: "Send Flow", value: "SEND_FLOW" },
   { label: "Assign Team", value: "ASSIGN_TEAM" },
@@ -68,11 +77,32 @@ const externalApiActionSchema = z.object({
   value: z.url("Enter a valid full URL (e.g. https://example.com/webhook)"),
 });
 
+const sendTemplateActionValueSchema = z.object({
+  templateId: z.string().min(1, "Template is required"),
+  variableMapping: z
+    .array(
+      z.object({
+        templateParamIndex: z.number(),
+        shopifyPath: z.string(),
+      }),
+    )
+    .default([]),
+});
+
+const sendTemplateActionSchema = z.object({
+  id: z.string().optional(),
+  type: z.literal("SEND_TEMPLATE"),
+  value: z.union([
+    z.string().min(1, "Template is required"),
+    sendTemplateActionValueSchema,
+  ]),
+});
+
 const regularActionSchema = z.object({
   id: z.string().optional(),
   type: z.enum(
     ACTION_TYPES.map((t) => t.value).filter(
-      (v) => v !== "CALL_EXTERNAL_API",
+      (v) => v !== "CALL_EXTERNAL_API" && v !== "SEND_TEMPLATE",
     ) as [string, ...string[]],
   ),
   value: z.string().min(1, "Value is required"),
@@ -80,6 +110,7 @@ const regularActionSchema = z.object({
 
 export const ruleActionSchema = z.union([
   externalApiActionSchema,
+  sendTemplateActionSchema,
   regularActionSchema,
 ]);
 
@@ -106,6 +137,7 @@ export const ruleGroupSchema = z.object({
 
 const ruleOptionsSchema = z.object({
   sendOncePerDay: z.boolean().default(false),
+  shopifyEvent: z.enum(SHOPIFY_TRIGGER_EVENTS).optional(),
   businessHours: z
     .object({
       enabled: z.boolean().default(false),
@@ -115,6 +147,8 @@ const ruleOptionsSchema = z.object({
       enabled: false,
       businessHoursId: undefined,
     }),
+  // Shopify-specific options
+  shopifyProductIds: z.array(z.string()).default([]),
 });
 
 const createRuleBaseSchema = z.object({
@@ -137,7 +171,11 @@ const createRuleBaseSchema = z.object({
       (items) => {
         const seen = new Set();
         for (const item of items) {
-          const key = `${item.type}-${item.value}`;
+          const valueKey =
+            typeof item.value === "string"
+              ? item.value
+              : JSON.stringify(item.value ?? {});
+          const key = `${item.type}-${valueKey}`;
           if (seen.has(key)) return false;
           seen.add(key);
         }
@@ -149,26 +187,38 @@ const createRuleBaseSchema = z.object({
     ),
   options: ruleOptionsSchema.optional().default({
     sendOncePerDay: false,
+    shopifyEvent: undefined,
     businessHours: {
       enabled: false,
       businessHoursId: undefined,
     },
+    shopifyProductIds: [],
   }),
 });
 
-export const createRuleSchema = createRuleBaseSchema.refine(
-  (data) => {
-    // Only require groups/conditions for MESSAGE_RECEIVED trigger
+export const createRuleSchema = createRuleBaseSchema.superRefine(
+  (data, ctx) => {
     if (data.triggerEvent === "MESSAGE_RECEIVED") {
-      if (data.groups.length === 0) return false;
-      // Check if at least one group has conditions
-      return data.groups.some((group) => group.conditions.length > 0);
+      if (
+        data.groups.length === 0 ||
+        !data.groups.some((group) => group.conditions.length > 0)
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["groups"],
+          message:
+            "At least one condition is required for Message Received trigger",
+        });
+      }
     }
-    return true;
-  },
-  {
-    path: ["groups"],
-    error: "At least one condition is required for Message Received trigger",
+
+    if (data.triggerEvent === "SHOPIFY_EVENT" && !data.options?.shopifyEvent) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["options", "shopifyEvent"],
+        message: "Select a Shopify event",
+      });
+    }
   },
 );
 

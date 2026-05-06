@@ -413,3 +413,9 @@ img[data-align="right"] {
   margin-left: auto !important;
   margin-right: 0 !important;
 }
+
+.button-edge__label {
+  position: absolute;
+  pointer-events: all;
+  transform-origin: center;
+}
