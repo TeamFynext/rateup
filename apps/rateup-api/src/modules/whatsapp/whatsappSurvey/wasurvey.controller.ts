@@ -691,7 +691,7 @@ export async function handleWaJoinRegistration({
   sourceIdentifier: string;
 }) {
   const program = await getLoyaltyProgramByOrg(orgId);
-  if (!program || program.status !== "active") {
+  if (program?.status !== "active") {
     log.error(
       "Loyalty program not found or inactive for orgId: %s, status: %s",
       orgId,
@@ -1465,99 +1465,6 @@ async function handleAiBotNode(node: any, userPhone: string, orgId: string) {
   if (text) await sendTextMessage({ phone: userPhone, orgId }, null, text);
 
   await setAiBotActiveStatus(userPhone, orgId, true, chatbotId);
-}
-
-/**
- * Handle initial interaction with a user when no specific automation matches
- * @param orgId Organization ID
- * @param phone User's phone number
- * @param message User's message content
- * @param phone_number_id WhatsApp phone number ID
- */
-async function handleInitialInteraction(
-  orgId: string,
-  phone: string,
-  message: string,
-  phone_number_id: string,
-) {
-  try {
-    // Look for wildcard automation commands
-    const wildcardAutomations = await prisma.waAutomatedReplyCommands.findMany({
-      where: {
-        command: "*",
-        orgId: orgId,
-        waAutomatedReply: {
-          isEnabled: true,
-          whatsappSettingsPhoneIds: {
-            has: phone_number_id,
-          },
-        },
-      },
-      include: {
-        waAutomatedReply: true,
-        businessHour: true,
-      },
-    });
-
-    const selectedAutomation =
-      selectAutomationByBusinessHours(wildcardAutomations);
-
-    if (!selectedAutomation?.waAutomatedReply) {
-      log.info(`No wildcard automation found for org ${orgId}`);
-      return;
-    }
-
-    // Check if wildcard automation has an AI bot node
-    const aiBotNode = (
-      selectedAutomation?.waAutomatedReply?.matchData as any
-    )?.json?.nodes?.find((node: any) => node?.type === "aibotNode");
-
-    if (!aiBotNode) {
-      // If there's no AI bot node, check for recent activity
-      if (selectedAutomation?.waAutomatedReply?.sendOnceIn24Hours) {
-        const recentActivity = await findRecentAutomation(phone, orgId, {
-          timeWindow: 24 * 60 * 60 * 1000, // 24 hours
-        });
-        if (recentActivity) return;
-      }
-    }
-
-    const automation = selectedAutomation.waAutomatedReply as {
-      id: string;
-      matchData: { json: { nodes: any[]; edges: any[] } };
-    };
-    const startNode = automation?.matchData?.json?.nodes?.find(
-      (node: any) => node.type === "startNode",
-    );
-
-    if (!startNode) {
-      log.error("No start node found in the wildcard automation flow");
-      return;
-    }
-
-    // Create record of this interaction using the utility function
-    const automationLog = await logAutomationAction({
-      phone,
-      nodeId: startNode.id,
-      automationId: automation.id,
-      orgId,
-      response: {
-        value: message,
-        action: "initial_interaction",
-      },
-    });
-
-    // Process the automation flow
-    await processNextNode(
-      phone,
-      automation,
-      startNode.id,
-      orgId,
-      automationLog?.id,
-    );
-  } catch (error) {
-    log.error(`Error handling initial interaction: ${error.message}`);
-  }
 }
 
 async function handleWaSurveySession(

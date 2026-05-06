@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ShopifyEvents } from "../../../types/enums.js";
 import {
   ActionType,
   ConditionField,
@@ -6,6 +7,13 @@ import {
   RuleOperator,
   TriggerEvent,
 } from "../../../../generated/prisma/enums.js";
+
+const SHOPIFY_TRIGGER_EVENTS = Object.values(ShopifyEvents).filter(
+  (value) =>
+    value !== ShopifyEvents.ORDERS_EDITED &&
+    value !== ShopifyEvents.APP_UNINSTALLED &&
+    value !== ShopifyEvents.APP_SUBSCRIPTIONS_UPDATE,
+) as [string, ...string[]];
 
 export const ruleConditionSchema = z.object({
   id: z.string().optional(),
@@ -28,15 +36,18 @@ export const ruleActionSchema = z.object({
 
 export const ruleOptionsSchema = z.object({
   sendOncePerDay: z.boolean().optional(),
+  shopifyEvent: z.enum(SHOPIFY_TRIGGER_EVENTS).optional(),
   businessHours: z
     .object({
       enabled: z.boolean(),
       businessHoursId: z.string().optional(),
     })
     .optional(),
+  // Shopify-specific options
+  shopifyProductIds: z.array(z.string()).optional(),
 });
 
-export const createRuleSchema = z.object({
+const createRuleBaseSchema = z.object({
   whatsappSettingsPhoneIds: z.array(z.string()).min(1),
   name: z.string().min(1, "Rule name must be at least 1 characters long"),
   operator: z.enum(RuleOperator).default("AND"),
@@ -47,9 +58,31 @@ export const createRuleSchema = z.object({
   options: ruleOptionsSchema.optional(),
 });
 
+export const createRuleSchema = createRuleBaseSchema.superRefine(
+  (data, ctx) => {
+    if (data.triggerEvent === "SHOPIFY_EVENT" && !data.options?.shopifyEvent) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["options", "shopifyEvent"],
+        message: "Select a Shopify event",
+      });
+    }
+  },
+);
+
 export type CreateRuleInput = z.infer<typeof createRuleSchema>;
 
-export const updateRuleSchema = createRuleSchema.partial();
+export const updateRuleSchema = createRuleBaseSchema
+  .partial()
+  .superRefine((data, ctx) => {
+    if (data.triggerEvent === "SHOPIFY_EVENT" && !data.options?.shopifyEvent) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["options", "shopifyEvent"],
+        message: "Select a Shopify event",
+      });
+    }
+  });
 
 export type UpdateRuleInput = z.infer<typeof updateRuleSchema>;
 

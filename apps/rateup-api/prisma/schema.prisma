@@ -386,6 +386,7 @@ enum TriggerEvent {
   CHAT_ASSIGNED
   CONTACT_CREATED
   LIFECYCLE_UPDATED
+  SHOPIFY_EVENT
 }
 
 model RuleAction {
@@ -1575,15 +1576,10 @@ model WaAutomatedReply {
   name                     String
   createdAt                DateTime @default(now())
   matchData                Json
-  matchType                String // enums.ts: WaAutomatedReplyMatchType
   orgId                    String?  @db.Uuid
   org                      Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId  String?
-  whatsappSettingsPhoneIds String[] @default([]) //for multiple whatsapp integration
   platform                 String   @default("WHATSAPP") // enums.ts: AutomationPlatform (WHATSAPP | INSTAGRAM)
-
-  isEnabled         Boolean @default(true)
-  sendOnceIn24Hours Boolean @default(true)
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]

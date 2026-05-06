@@ -317,17 +317,42 @@ export async function convertNodeToWhatsAppMessage(
 
     case "ctaUrlNode": {
       const data = node.data as NodeTypeMap["ctaUrlNode"];
+      let header = undefined;
+      if (data?.header && data.headerType === "text") {
+        header = {
+          type: "text",
+          text: data.header || "",
+        };
+      } else if (data?.link && data.headerType === "image") {
+        header = {
+          type: "image",
+          image: {
+            link: getFileUrlFromKey(data.link) || "",
+          },
+        };
+      } else if (data?.link && data.headerType === "video") {
+        header = {
+          type: "video",
+          video: {
+            link: getFileUrlFromKey(data.link) || "",
+          },
+        };
+      } else if (data?.link && data.headerType === "document") {
+        header = {
+          type: "document",
+          document: {
+            link: getFileUrlFromKey(data.link) || "",
+            filename: data.filename || "document.pdf",
+          },
+        };
+      }
+
       return {
         ...baseMessage,
         type: "interactive",
         interactive: {
           type: "cta_url",
-          header: data.header
-            ? {
-                type: "text",
-                text: data.header,
-              }
-            : undefined,
+          header,
           body: data.body
             ? {
                 text: parseToWhatsAppFormat(data.body),
