@@ -21,7 +21,14 @@ const nextConfig: NextConfig = {
       };
     }
     return {
-      beforeFiles: [markdownRewrite("/blog"), markdownRewrite("/changelog")],
+      beforeFiles: [
+        markdownRewrite("/blog"),
+        markdownRewrite("/pricing"),
+        markdownRewrite("/products"),
+        markdownRewrite("/book-demo"),
+        markdownRewrite("/about-us"),
+        markdownRewrite("/"),
+      ],
     };
   },
   reactStrictMode: false,
