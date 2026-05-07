@@ -20,6 +20,7 @@ export const loyaltyProgramSchema = z.object({
   autoApproveAdjustments: z.boolean().default(false),
   emailNotifications: z.boolean().default(true),
   whatsappNotifications: z.boolean().default(true),
+  enableShopifyOrderPoints: z.boolean().default(false),
   enablePointsExpiration: z.boolean().default(false),
   pointsExpirationMonths: z.number().default(12),
   referralMessageTemplate: z.any(),

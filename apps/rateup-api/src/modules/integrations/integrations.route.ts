@@ -16,6 +16,7 @@ import {
   getWaPaymentConfigurationsHandler,
   updateIntegrationByNameHandler,
 } from "./integrations.controller.js";
+import { getIntegrationStatusesHandler } from "./integrations.controller.js";
 import {
   byNameSchema,
   integrationSchema,
@@ -41,6 +42,7 @@ export async function integrationsRoutes(server: FastifyInstance) {
     },
     getIntegrationByNameHandler,
   );
+  server.get("/statuses", {}, getIntegrationStatusesHandler);
   server.post(
     "/",
     {

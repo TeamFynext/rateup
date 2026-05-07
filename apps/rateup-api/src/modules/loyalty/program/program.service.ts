@@ -39,6 +39,7 @@ export async function createLoyaltyProgram(
       autoApproveAdjustments: data.autoApproveAdjustments,
       emailNotifications: data.emailNotifications,
       whatsappNotifications: data.whatsappNotifications,
+      enableShopifyOrderPoints: data.enableShopifyOrderPoints,
       enablePointsExpiration: data.enablePointsExpiration,
       pointsExpirationMonths: data.pointsExpirationMonths,
       whatsappSettingsId: data.whatsappSettingsId,
