@@ -46,6 +46,24 @@ export const getAllIntegrationsByOrgHandler = async (
   }
 };
 
+export const getIntegrationStatusesHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const { orgId } = request.user;
+    const integrations = await getAllIntegrationsByOrgId(orgId);
+    const statuses = Object.values(IntegratedApps).map((app) => ({
+      name: app,
+      isConnected: integrations.some((int) => int.name === app),
+    }));
+    reply.code(200).send(statuses);
+  } catch (error) {
+    log.error("Error fetching integration statuses");
+    return reply.code(500).send({ error: "Something went wrong" });
+  }
+};
+
 export const getIntegrationByNameHandler = async (
   request: FastifyRequest<{ Params: ByNameParams }>,
   reply: FastifyReply,

@@ -1786,6 +1786,7 @@ model LoyaltyProgram {
   autoApproveAdjustments  Boolean @default(false)
   emailNotifications      Boolean @default(true)
   whatsappNotifications   Boolean @default(true)
+  enableShopifyOrderPoints Boolean @default(false)
   enablePointsExpiration  Boolean @default(false)
   pointsExpirationMonths  Int     @default(12)
   referralMessageTemplate Json    @default("[{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"🎉 Welcome {{1}}!\\nYou are now registered in our Loyalty Program.\\n🔗 Your referral code: {{2}}\\nShare & earn rewards\"}]}]")

@@ -1229,7 +1229,10 @@ async function manageLoyaltyTransactionsForOrder(
   try {
     if (shopifyInfo?.orgId && customerPhone) {
       const loyaltyProgram = await getLoyaltyProgramByOrg(shopifyInfo.orgId);
-      if (loyaltyProgram?.status === "active") {
+      if (
+        loyaltyProgram?.status === "active" &&
+        loyaltyProgram?.enableShopifyOrderPoints
+      ) {
         const loyaltyCustomer = await getLCustomerByPhone(
           customerPhone,
           shopifyInfo.orgId,
