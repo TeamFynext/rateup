@@ -94,6 +94,7 @@ export const NotificationsSettingsSchema = z.object({
   autoApproveAdjustments: z.boolean(),
   emailNotifications: z.boolean(),
   whatsappNotifications: z.boolean(),
+  enableShopifyOrderPoints: z.boolean(),
 });
 
 export const ExpirationSettingsSchema = z.object({

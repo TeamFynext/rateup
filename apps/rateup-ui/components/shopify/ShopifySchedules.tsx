@@ -3,9 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import { Anchor, Group, Stack, Text, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconEye } from "@tabler/icons-react";
+import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { useExtracted } from "next-intl";
 
@@ -16,14 +15,83 @@ import {
 } from "@/types/global";
 import { ActiveStatusBadge } from "@/app/dashboard/apps&services/shopify/page";
 import { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { shopifyEventData } from "@/utils/constants";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime";
 
-import { RateupButtonSecondary } from "../Button/RateupButtons";
 import RefreshButton from "../Button/RefreshButton";
-import FormModalLayout from "../Modal/FormModalLayout";
-import PaperLayout from "../styled/Layouts/PaperLayout";
-import TableLayoutSecondary from "../styled/Table/TableLayoutSecondary";
+
+type ScheduleRowData = {
+  id: string;
+  phone: string;
+  scheduleTime: string;
+  sentAt: string;
+  status: string;
+  actionStatus: any;
+  apiStatus: string;
+  createdAt: string;
+  history: ShopifySchedule;
+  event_details: ShopifySurvey;
+};
+
+type HistoryRowData = {
+  id: string;
+  createdAt: string;
+  scheduledAt: string;
+  sentAt: string;
+  status: string;
+};
+
+interface EventDetailsCellProps {
+  eventDetails: ShopifySurvey | undefined;
+  onOpen: (event: ShopifySurvey) => void;
+  translations: any;
+}
+
+const EventDetailsCell = ({
+  eventDetails,
+  onOpen,
+  translations,
+}: EventDetailsCellProps) => (
+  <Button
+    variant="secondary"
+    size="xs"
+    onClick={(e) => {
+      e.stopPropagation();
+      onOpen(eventDetails);
+    }}
+  >
+    <IconEye data-icon="inline-start" />
+    {translations("view")}
+  </Button>
+);
+
+interface HistoryCellProps {
+  schedule: ShopifySchedule;
+  onOpen: (schedule: ShopifySchedule) => void;
+  translations: any;
+}
+
+const HistoryCell = ({ schedule, onOpen, translations }: HistoryCellProps) => (
+  <Button
+    variant="secondary"
+    size="xs"
+    onClick={(e) => {
+      e.stopPropagation();
+      onOpen(schedule);
+    }}
+  >
+    <IconEye data-icon="inline-start" />
+    {translations("view")}
+  </Button>
+);
 
 const ShopifySchedules = ({
   shopifyProducts,
@@ -41,12 +109,12 @@ const ShopifySchedules = ({
   );
   const [selectedShopifySurveyEvent, setSelectedShopifySurveyEvent] =
     useState<ShopifySurvey>(null);
-  const [opened, { open, close }] = useDisclosure(false);
-  const [historyOpened, { open: openHistory, close: closeHistory }] =
-    useDisclosure(false);
+  const [opened, setOpened] = useState(false);
+  const [historyOpened, setHistoryOpened] = useState(false);
   const [selectedSchedule, setSelectedSchedule] =
     useState<ShopifySchedule>(null);
   const translations = useExtracted();
+
   const templateAndteam = {
     templateName: waTemplates?.find(
       (t) => t.id === selectedShopifySurveyEvent?.waTemplateId,
@@ -61,87 +129,98 @@ const ShopifySchedules = ({
       : undefined,
   };
 
-  const columns = [
-    { key: "phone", value: translations("Customer Phone Number") },
-    { key: "scheduleTime", value: translations("Scheduled At") },
-    { key: "sentAt", value: translations("Sent At") },
-    { key: "status", value: translations("Status") },
+  const sortedSchedules = [...(schedules ?? [])].toSorted((a, b) =>
+    dayjs(b.createdAt).diff(dayjs(a.createdAt)),
+  );
+  const rows = sortedSchedules.map((schedule) => ({
+    id: schedule.webhookId || schedule.phone + schedule.createdAt,
+    phone: schedule.phone,
+    scheduleTime: formatIsoDateStringWithTime(schedule.scheduledAt),
+    sentAt: schedule.sentAt
+      ? formatIsoDateStringWithTime(schedule.sentAt)
+      : "----",
+    status: schedule.status ?? "----",
+    actionStatus: schedule.actionStatus,
+    apiStatus: schedule.apiStatus ?? "----",
+    createdAt: formatIsoDateStringWithTime(schedule.createdAt),
+    history: schedule,
+    event_details: shopifyInfo.credential.shopifySurveys?.find((s) =>
+      s.schedules.find((sc) => sc.webhookId === schedule.webhookId),
+    ),
+  }));
+
+  const columns: ColumnDef<ScheduleRowData>[] = [
     {
-      key: "event_details",
-      value: "Event Details",
-      renderCell: (value) => (
-        <RateupButtonSecondary
-          variant="light"
-          title={translations("view")}
-          size="xs"
-          onClick={() => {
-            setSelectedShopifySurveyEvent(value);
-            open();
-          }}
-          leftIcon={<IconEye size={"1rem"} />}
+      id: "phone",
+      header: createSortableHeader(translations("Customer Phone Number")),
+      cell: ({ row }) => row.original.phone,
+    },
+    {
+      id: "scheduleTime",
+      header: createSortableHeader(translations("Scheduled At")),
+      cell: ({ row }) => row.original.scheduleTime,
+    },
+    {
+      id: "sentAt",
+      header: createSortableHeader(translations("Sent At")),
+      cell: ({ row }) => row.original.sentAt,
+    },
+    {
+      id: "status",
+      header: createSortableHeader(translations("Status")),
+      cell: ({ row }) => row.original.status,
+    },
+    {
+      id: "eventDetails",
+      header: () => "Event Details",
+      cell: ({ row }) => (
+        <EventDetailsCell
+          eventDetails={row.original.event_details}
+          onOpen={setSelectedShopifySurveyEvent}
+          translations={translations}
         />
       ),
     },
     {
-      key: "history",
-      value: "History",
-      renderCell: (value) => (
-        <RateupButtonSecondary
-          variant="light"
-          title={translations("view")}
-          size="xs"
-          onClick={() => {
-            setSelectedSchedule(value);
-            openHistory();
+      id: "history",
+      header: () => "History",
+      cell: ({ row }) => (
+        <HistoryCell
+          schedule={row.original.history}
+          onOpen={(schedule) => {
+            setSelectedSchedule(schedule);
+            setHistoryOpened(true);
           }}
-          leftIcon={<IconEye size={"1rem"} />}
+          translations={translations}
         />
       ),
     },
-    { key: "createdAt", value: "Created At" },
+    {
+      id: "createdAt",
+      header: createSortableHeader("Created At"),
+      cell: ({ row }) => row.original.createdAt,
+    },
   ];
 
-  const rows = schedules
-    ? schedules
-        .sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)))
-        .map((schedule) => ({
-          phone: schedule.phone,
-          scheduleTime: formatIsoDateStringWithTime(schedule.scheduledAt),
-          sentAt: schedule.sentAt
-            ? formatIsoDateStringWithTime(schedule.sentAt)
-            : "----",
-          status: schedule.status ?? "----",
-          actionStatus: schedule.actionStatus,
-          apiStatus: schedule.apiStatus ?? "----",
-          createdAt: formatIsoDateStringWithTime(schedule.createdAt),
-          history: schedule,
-          event_details: shopifyInfo.credential.shopifySurveys?.find((s) =>
-            s.schedules.find((sc) => sc.webhookId === schedule.webhookId),
-          ),
-        }))
-    : [];
-
   return (
-    <Stack p={"sm"} mt={"lg"}>
-      <Group>
-        <Title order={3}>{translations("Schedules")}</Title>
+    <div className="mt-4 flex flex-col gap-4 h-full">
+      <div className="flex items-center gap-2">
+        <h3 className="text-lg font-semibold">{translations("Schedules")}</h3>
         <RefreshButton queryKeys={["shopifySchedules"]} />
-      </Group>
-      <PaperLayout>
-        <TableLayoutSecondary columns={columns} rows={rows} maxHeight={500} />
-      </PaperLayout>
+      </div>
+      <DataTable columns={columns} data={rows} />
       <EventDetailsModal
         opened={opened}
-        close={close}
+        close={() => setOpened(false)}
         shopifySurvey={selectedShopifySurveyEvent}
         templateAndTeam={templateAndteam}
       />
       <ScheduleHistoryModal
         opened={historyOpened}
         schedule={selectedSchedule}
-        close={closeHistory}
+        close={() => setHistoryOpened(false)}
       />
-    </Stack>
+    </div>
   );
 };
 
@@ -153,50 +232,54 @@ const EventDetailsModal = ({
 }) => {
   const translations = useExtracted();
   return (
-    <FormModalLayout opened={opened} onClose={close} title="" centered>
-      <Stack>
-        <Title order={4}>
-          {translations("Event :")}{" "}
-          {
-            shopifyEventData.find(
-              (event) => event.value == shopifySurvey?.event,
-            )?.label
-          }
-        </Title>
-        <Text>
-          {translations("WhatsApp Template :")}{" "}
-          <Anchor
-            href={`/dashboard/whatsapp/templates/${shopifySurvey?.waTemplateId}`}
-            component={Link}
-          >
-            {templateAndTeam?.templateName}
-          </Anchor>
-        </Text>
-        <Text>
-          {translations("Scheduled To Send")} :{" "}
-          {translations("After a delay of")} {shopifySurvey?.timeDelay}{" "}
-          {translations("minutes")}
-        </Text>
-        <Text>
-          {translations("Team : ")}
-          {templateAndTeam?.teamName}
-        </Text>
-        {shopifySurvey?.isProductSpecific && (
-          <Text>
-            {translations("Sent Only if")} {templateAndTeam?.product}{" "}
-            {translations("found")}
-          </Text>
-        )}
-        <Text>
-          {translations("Status : ")}
-          <ActiveStatusBadge active={shopifySurvey?.active} />
-        </Text>
-        <Text>
-          {translations("Created At : ")}
-          {formatIsoDateStringWithTime(shopifySurvey?.createdAt)}{" "}
-        </Text>
-      </Stack>
-    </FormModalLayout>
+    <Dialog open={opened} onOpenChange={(open) => !open && close()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {translations("Event :")}{" "}
+            {
+              shopifyEventData.find(
+                (event) => event.value == shopifySurvey?.event,
+              )?.label
+            }
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-3 text-sm">
+          <p>
+            {translations("WhatsApp Template :")}{" "}
+            <Link
+              href={`/dashboard/whatsapp/templates/${shopifySurvey?.waTemplateId}`}
+              className="text-primary underline"
+            >
+              {templateAndTeam?.templateName}
+            </Link>
+          </p>
+          <p>
+            {translations("Scheduled To Send")} :{" "}
+            {translations("After a delay of")} {shopifySurvey?.timeDelay}{" "}
+            {translations("minutes")}
+          </p>
+          <p>
+            {translations("Team : ")}
+            {templateAndTeam?.teamName}
+          </p>
+          {shopifySurvey?.isProductSpecific && (
+            <p>
+              {translations("Sent Only if")} {templateAndTeam?.product}{" "}
+              {translations("found")}
+            </p>
+          )}
+          <p>
+            {translations("Status : ")}
+            <ActiveStatusBadge active={shopifySurvey?.active} />
+          </p>
+          <p>
+            {translations("Created At : ")}
+            {formatIsoDateStringWithTime(shopifySurvey?.createdAt)}
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -209,34 +292,51 @@ const ScheduleHistoryModal = ({
   opened: boolean;
   close: () => void;
 }) => {
-  const columns = [
-    { key: "createdAt", value: "Created At" },
-    { key: "scheduledAt", value: "Scheduled At" },
-    { key: "sentAt", value: "Sent At" },
-    { key: "status", value: "Status" },
+  const sortedHistory = [...(schedule?.history ?? [])].toSorted((a, b) =>
+    dayjs(b.createdAt).diff(dayjs(a.createdAt)),
+  );
+  const rows = sortedHistory.map((s, idx) => ({
+    id: `history-${idx}`,
+    createdAt: formatIsoDateStringWithTime(s.createdAt),
+    scheduledAt: formatIsoDateStringWithTime(s.scheduledAt),
+    sentAt: formatIsoDateStringWithTime(s.sentAt),
+    status: s.status,
+  }));
+
+  type HistoryRow = (typeof rows)[0];
+
+  const columns: ColumnDef<HistoryRow>[] = [
+    {
+      id: "createdAt",
+      header: createSortableHeader("Created At"),
+      cell: ({ row }) => row.original.createdAt,
+    },
+    {
+      id: "scheduledAt",
+      header: createSortableHeader("Scheduled At"),
+      cell: ({ row }) => row.original.scheduledAt,
+    },
+    {
+      id: "sentAt",
+      header: createSortableHeader("Sent At"),
+      cell: ({ row }) => row.original.sentAt,
+    },
+    {
+      id: "status",
+      header: createSortableHeader("Status"),
+      cell: ({ row }) => row.original.status,
+    },
   ];
 
-  const rows =
-    schedule && schedule.history
-      ? schedule.history
-          .sort((a, b) => dayjs(b.createdAt).diff(dayjs(a.createdAt)))
-          .map((s) => ({
-            createdAt: formatIsoDateStringWithTime(s.createdAt),
-            scheduledAt: formatIsoDateStringWithTime(s.scheduledAt),
-            sentAt: formatIsoDateStringWithTime(s.sentAt),
-            status: s.status,
-          }))
-      : [];
   return (
-    <FormModalLayout
-      opened={opened}
-      onClose={close}
-      title={"Schedule History"}
-      size="lg"
-      centered
-    >
-      <TableLayoutSecondary columns={columns} rows={rows} />
-    </FormModalLayout>
+    <Dialog open={opened} onOpenChange={(open) => !open && close()}>
+      <DialogContent className="sm:max-w-175">
+        <DialogHeader>
+          <DialogTitle>Schedule History</DialogTitle>
+        </DialogHeader>
+        <DataTable columns={columns} data={rows} />
+      </DialogContent>
+    </Dialog>
   );
 };
 

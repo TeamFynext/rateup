@@ -9,8 +9,7 @@ import { ExternalLink, ShoppingBag } from "lucide-react";
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
-import TableLayoutSecondary from "@/components/styled/Table/TableLayoutSecondary";
-import { DataTable } from "@/components/Table/data-table";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table";
 import {
   Dialog,
   DialogContent,
@@ -131,24 +130,43 @@ const CatalogOrders = ({ catalogId }) => {
     let productItems = [];
     let totalPrice = 0;
     if (selectedOrder) {
-      productItems = selectedOrder.products.map((item) => {
+      productItems = selectedOrder.products.map((item, idx) => ({
+        id: `product-${idx}`,
+        retailerId: item.retailerId,
+        quantity: item.quantity,
+        price: `${item.currency} ${item.price}`,
+        total: `${item.currency} ${item.price * item.quantity}`,
+      }));
+      selectedOrder.products.forEach((item) => {
         totalPrice += item.price * item.quantity;
-        return {
-          retailerId: item.retailerId,
-          quantity: item.quantity,
-          price: `${item.currency} ${item.price}`,
-          total: `${item.currency} ${item.price * item.quantity}`,
-        };
       });
     }
-    return { productItems, totalPrice };
+    return { productItems, totalPrice, productColumnsData: productItems };
   }, [selectedOrder]);
 
-  const productItemsColumns = [
-    { key: "retailerId", value: "Retailer ID" },
-    { key: "quantity", value: "Quantity" },
-    { key: "price", value: "Price" },
-    { key: "total", value: "Total" },
+  type ProductRow = (typeof productItems)[0];
+
+  const productColumns: ColumnDef<ProductRow>[] = [
+    {
+      id: "retailerId",
+      header: createSortableHeader("Retailer ID"),
+      cell: ({ row }) => row.original.retailerId,
+    },
+    {
+      id: "quantity",
+      header: createSortableHeader("Quantity"),
+      cell: ({ row }) => row.original.quantity,
+    },
+    {
+      id: "price",
+      header: createSortableHeader("Price"),
+      cell: ({ row }) => row.original.price,
+    },
+    {
+      id: "total",
+      header: createSortableHeader("Total"),
+      cell: ({ row }) => row.original.total,
+    },
   ];
 
   if (error)
@@ -204,10 +222,7 @@ const CatalogOrders = ({ catalogId }) => {
             </div>
             <Separator />
             <p className="font-medium">Items Ordered</p>
-            <TableLayoutSecondary
-              columns={productItemsColumns}
-              rows={productItems}
-            />
+            <DataTable columns={productColumns} data={productItems} />
             <p className="font-semibold text-lg mt-2">
               Grand Total: {selectedOrder?.products?.[0]?.currency}{" "}
               {totalPrice.toFixed(2)}

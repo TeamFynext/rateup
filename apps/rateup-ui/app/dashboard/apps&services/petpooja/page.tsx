@@ -6,6 +6,7 @@ import { Divider, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
+import { ColumnDef } from "@tanstack/react-table";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
@@ -27,17 +28,16 @@ import WaTemplateSelector from "@/components/input/WaTemplateSelector";
 import { ActionIconCommon } from "@/components/menu/ActionIcon/ActionIconCommon";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import TableLayoutSecondary from "@/components/styled/Table/TableLayoutSecondary";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime";
 
 const PETPOOJA_WEBHOOK_ENDPOINT = `${process.env.NEXT_PUBLIC_API_URL}/api/public/integrations/petpooja`;
 
-const index = () => {
+const PetpoojaIntegration = () => {
   const { data: integration } = useIntegrationByType(IntegratedApps.petpooja);
   const updateIntegration = useUpdateIntegrationMutation(
     IntegratedApps.petpooja,
   );
-  const translations = useExtracted();
 
   return (
     <Stack>
@@ -244,16 +244,9 @@ const WaTemplateSendSettings = ({ integration, updateIntegration }) => {
 };
 
 const WaTemplateSentHistory = ({ integration }) => {
-  const columns = [
-    { key: "phone", value: "Phone Number" },
-    { key: "name", value: "Name" },
-    { key: "status", value: "Status" },
-    { key: "scheduledAt", value: "Scheduled At" },
-    { key: "createdAt", value: "Created At" },
-  ];
-
   const rows = integration
-    ? integration.credential?.history?.map((hist) => ({
+    ? integration.credential?.history?.map((hist, idx) => ({
+        id: `history-${idx}`,
         phone: hist.phone,
         name: hist.name,
         status: hist.status,
@@ -263,11 +256,42 @@ const WaTemplateSentHistory = ({ integration }) => {
         createdAt: formatIsoDateStringWithTime(hist.createdAt),
       }))
     : [];
+
+  type HistoryRow = (typeof rows)[0];
+
+  const columns: ColumnDef<HistoryRow>[] = [
+    {
+      id: "phone",
+      header: createSortableHeader("Phone Number"),
+      cell: ({ row }) => row.original.phone,
+    },
+    {
+      id: "name",
+      header: createSortableHeader("Name"),
+      cell: ({ row }) => row.original.name,
+    },
+    {
+      id: "status",
+      header: createSortableHeader("Status"),
+      cell: ({ row }) => row.original.status,
+    },
+    {
+      id: "scheduledAt",
+      header: createSortableHeader("Scheduled At"),
+      cell: ({ row }) => row.original.scheduledAt,
+    },
+    {
+      id: "createdAt",
+      header: createSortableHeader("Created At"),
+      cell: ({ row }) => row.original.createdAt,
+    },
+  ];
+
   return (
     <Stack>
-      <TableLayoutSecondary columns={columns} rows={rows} />
+      <DataTable columns={columns} data={rows} />
     </Stack>
   );
 };
 
-export default index;
+export default PetpoojaIntegration;

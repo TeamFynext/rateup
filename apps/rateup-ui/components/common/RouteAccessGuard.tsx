@@ -29,6 +29,7 @@ const ROUTE_FEATURE_MAP: Array<[string, TeamFeature]> = [
   ["/dashboard/apps&services", TeamFeature.AppsServices],
   ["/dashboard/menu", TeamFeature.DigitalMenu],
   ["/dashboard/settings/channels", TeamFeature.Automation],
+  ["/dashboard/settings/integrations", TeamFeature.AppsServices],
 ];
 
 /** The fallback route when a member has no feature permissions at all. */
