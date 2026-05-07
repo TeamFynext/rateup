@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type React from "react";
+import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Info, Loader2, Trash2, Webhook } from "lucide-react";
@@ -9,6 +10,7 @@ import { useExtracted } from "next-intl";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { useIntegrationStatuses } from "@/backend/appsIntegration/integration.query";
 import type { WebhookEvent } from "@/backend/webhook/webhook.api";
 import {
   useDeleteWebhookMutation,
@@ -137,72 +139,73 @@ function EventsField({
 
 type IntegrationStatus = "connected" | "disconnected";
 
-const integrations: {
+type IntegrationConfig = {
+  id: string;
   name: string;
   icon: React.ComponentType<{ className?: string }>;
-  status: IntegrationStatus;
   description: string;
-  lastSync: string;
-}[] = [
-  {
+};
+
+const INTEGRATIONS_CONFIG: Record<string, IntegrationConfig> = {
+  shopify: {
+    id: "shopify",
     name: "Shopify",
     icon: ShopifyLogo,
-    status: "disconnected",
     description: "Sync products and orders from your Shopify store",
-    lastSync: "Never",
   },
-  {
+  googlesheet: {
+    id: "googlesheet",
     name: "Google Sheets",
     icon: GoogleSheetsLogo,
-    status: "disconnected",
     description: "Export and sync data with Google Sheets",
-    lastSync: "Never",
   },
-  {
+  amelia: {
+    id: "amelia",
     name: "Amelia",
     icon: AmeliaLogo,
-    status: "disconnected",
     description: "Appointment booking and scheduling integration",
-    lastSync: "Never",
   },
-  {
+  waPayment: {
+    id: "waPayment",
     name: "WhatsApp Payment",
     icon: WhatsAppPaymentLogo,
-    status: "disconnected",
     description: "Enable payment collection via WhatsApp",
-    lastSync: "Never",
   },
-  {
+  petpooja: {
+    id: "petpooja",
     name: "Petpooja",
     icon: PetpoojaLogo,
-    status: "disconnected",
     description: "Restaurant POS integration for order management",
-    lastSync: "Never",
   },
-  {
+  zapier: {
+    id: "zapier",
     name: "Zapier",
     icon: ZapierLogo,
-    status: "disconnected",
     description: "Connect with 5000+ apps and automate workflows",
-    lastSync: "Never",
   },
-];
+};
 
 export default function IntegrationsPage() {
   const t = useExtracted();
+  const router = useRouter();
   const { data: webhook, isLoading } = useWebhook();
   const saveMutation = useSaveWebhookMutation();
   const deleteMutation = useDeleteWebhookMutation();
+  const { data: integrationStatuses = [], isLoading: statusesLoading } =
+    useIntegrationStatuses();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  // True when a saved webhook has a token but the backend didn't return its value
-  const [tokenMasked, setTokenMasked] = useState(false);
+  const [tokenRevealed, setTokenRevealed] = useState(false);
+
+  const getIntegrationStatus = (integrationId: string): IntegrationStatus => {
+    const status = integrationStatuses.find((s) => s.name === integrationId);
+    return status?.isConnected ? "connected" : "disconnected";
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { url: "", events: ["message_status"], verifyToken: "" },
   });
 
-  // Sync form when existing webhook loads
   useEffect(() => {
     if (webhook) {
       form.reset({
@@ -210,12 +213,13 @@ export default function IntegrationsPage() {
         events: webhook.events,
         verifyToken: "",
       });
-      // Backend doesn't return the token value — show masked placeholder if one was set
-      setTokenMasked(
-        !!webhook.verifyToken || webhook.verifyToken === undefined,
-      );
     }
   }, [webhook, form]);
+
+  const tokenMasked =
+    !!webhook &&
+    !tokenRevealed &&
+    (!!webhook.verifyToken || webhook.verifyToken === undefined);
 
   const [eventsSaving, setEventsSaving] = useState(false);
 
@@ -252,66 +256,68 @@ export default function IntegrationsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-        {/*integrations */}
-        {[].map((integration) => (
-          <Card
-            key={integration.name}
-            className="p-5 hover:shadow-lg transition-all group"
-          >
-            <div className="flex flex-col h-full">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-16 h-16 transition-all group-hover:scale-105">
-                  <integration.icon className="w-full h-full" />
-                </div>
-                <Badge
-                  variant={
-                    integration.status === "connected" ? "default" : "secondary"
-                  }
-                  className={
-                    integration.status === "connected"
-                      ? "bg-green-600 text-background"
-                      : "bg-gray-200 dark:bg-gray-800 text-foreground"
-                  }
-                >
-                  {integration.status}
-                </Badge>
-              </div>
+        {statusesLoading ? (
+          <div className="flex items-center justify-center py-8 col-span-full">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          Object.entries(INTEGRATIONS_CONFIG).map(([id, config]) => {
+            const status = getIntegrationStatus(id);
+            return (
+              <Card
+                key={id}
+                className="hover:ring-1 hover:ring-primary group cursor-pointer"
+                onClick={() =>
+                  router.push(`/dashboard/settings/integrations/${id}`)
+                }
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-16 h-16 transition-all group-hover:scale-105">
+                      <config.icon className="w-full h-full" />
+                    </div>
+                    <Badge
+                      variant={status === "connected" ? "default" : "secondary"}
+                      className={
+                        status === "connected"
+                          ? "bg-green-600 text-background"
+                          : "bg-gray-200 dark:bg-gray-800 text-foreground"
+                      }
+                    >
+                      {status}
+                    </Badge>
+                  </div>
+                  <CardTitle>{config.name}</CardTitle>
+                  <CardDescription>{config.description}</CardDescription>
+                </CardHeader>
 
-              <h4 className="mb-2 group-hover:text-primary transition-colors">
-                {integration.name}
-              </h4>
-              <p className="text-sm text-muted-foreground mb-4 flex-1 min-h-15">
-                {integration.description}
-              </p>
-
-              <div className="space-y-3 pt-3 border-t">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    {t("Last sync")}:
-                  </span>
-                  <span className="text-foreground">
-                    {integration.lastSync}
-                  </span>
-                </div>
-                <Button
-                  variant={
-                    integration.status === "connected" ? "outline" : "default"
-                  }
-                  size="sm"
-                  className={`w-full ${
-                    integration.status === "connected"
-                      ? "bg-gray-200 hover:bg-gray-300 text-foreground dark:bg-gray-800 dark:hover:bg-gray-700"
-                      : ""
-                  } transition-all`}
-                >
-                  {integration.status === "connected"
-                    ? t("Manage")
-                    : t("Connect")}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
+                <CardContent>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {t("Last sync")}:
+                    </span>
+                    <span className="text-foreground">Never</span>
+                  </div>
+                  <Button
+                    variant={status === "connected" ? "outline" : "default"}
+                    size="sm"
+                    className={`w-full mt-2 ${
+                      status === "connected"
+                        ? "bg-gray-200 hover:bg-gray-300 text-foreground dark:bg-gray-800 dark:hover:bg-gray-700"
+                        : ""
+                    } transition-all`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/dashboard/settings/integrations/${id}`);
+                    }}
+                  >
+                    {status === "connected" ? t("Manage") : t("Connect")}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
 
       <Card>
@@ -391,12 +397,12 @@ export default function IntegrationsPage() {
                       autoComplete="off"
                       onFocus={() => {
                         if (tokenMasked) {
-                          setTokenMasked(false);
+                          setTokenRevealed(true);
                           field.onChange("");
                         }
                       }}
                       onChange={(e) => {
-                        setTokenMasked(false);
+                        setTokenRevealed(true);
                         field.onChange(e);
                       }}
                     />
@@ -504,7 +510,7 @@ export default function IntegrationsPage() {
                       events: ["message_status"],
                       verifyToken: "",
                     });
-                    setTokenMasked(false);
+                    setTokenRevealed(false);
                     setConfirmDeleteOpen(false);
                   },
                 });

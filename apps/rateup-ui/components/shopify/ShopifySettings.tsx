@@ -3,15 +3,13 @@
 import { useState } from "react";
 
 import {
-  Group,
-  SimpleGrid,
-  Stack,
-  Switch,
-  Title,
-  Tooltip,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconChevronDown, IconChevronUp, IconTrash } from "@tabler/icons-react";
+  IconAlertTriangle,
+  IconChevronDown,
+  IconChevronUp,
+  IconPlugConnected,
+  IconTrash,
+  IconWebhook,
+} from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
@@ -28,21 +26,36 @@ import {
   useRegisterWebhookByTopic,
   useRegisterWebhooks,
 } from "@/backend/appsIntegration/shopify/shopify.query";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { shopifyEventData } from "@/utils/constants";
 
-import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import ConfirmationModal from "../Modal/ConfirmationModal";
-import PaperLayout from "../styled/Layouts/PaperLayout";
 
 const ShopifySettings = ({
   shopifyInfo,
 }: {
   shopifyInfo: ShopifyIntegration;
 }) => {
-  const [openedConfirm, { open: openConfirm, close: closeConfirm }] =
-    useDisclosure(false);
-  const [showEvents, { toggle }] = useDisclosure(false);
+  const [openedConfirm, setOpenedConfirm] = useState(false);
+  const [showEvents, setShowEvents] = useState(false);
   const [deleteCase, setDeleteCase] = useState(null);
   const [isWebhookEnabled, setIsWebhookEnabled] = useState(
     shopifyInfo?.credential?.isWebhookRegistered,
@@ -58,6 +71,7 @@ const ShopifySettings = ({
   const translations = useExtracted();
   const { data: webhooks } = useGetRegisteredWebhooks(showEvents);
   const session = shopifyInfo.credential.session;
+
   const handleDeleteWehooks = () => {
     if (!session) return;
     toast.loading(translations("hold on..deleting webhooks"), {
@@ -69,6 +83,7 @@ const ShopifySettings = ({
       },
     });
   };
+
   const handleDeleteSession = () => {
     if (!session) return;
     toast.loading(translations("hold on..deleting connection"), {
@@ -76,6 +91,7 @@ const ShopifySettings = ({
     });
     deleteIntgration.mutate();
   };
+
   const registerWebhooks = () => {
     toast.loading(translations("Hold On..Registering webhooks"), {
       id: "webhooks",
@@ -92,7 +108,7 @@ const ShopifySettings = ({
       registerWebhooks();
     } else {
       setDeleteCase(getLabelsforConfirmModal("webhooks", handleDeleteWehooks));
-      openConfirm();
+      setOpenedConfirm(true);
     }
   };
 
@@ -137,7 +153,7 @@ const ShopifySettings = ({
           { event: event.label },
         ),
       );
-      openConfirm();
+      setOpenedConfirm(true);
     }
   };
 
@@ -149,34 +165,136 @@ const ShopifySettings = ({
   };
 
   return (
-    <Stack>
-      <SimpleGrid cols={2}>
-        <PaperLayout p={"sm"}>
-          <Stack>
-            <Title order={4}>{translations("Connected Store")}</Title>
-            <ContainedTextField value={session?.shop} disabled />
-            <Group justify="flex-end">
-              <RateupButtonPrimary
-                color="red"
-                leftIcon={<IconTrash size={"1rem"} />}
-                title={translations("Delete connection")}
-                onClick={() => {
-                  setDeleteCase(
-                    getLabelsforConfirmModal("session", handleDeleteSession),
-                  );
-                  openConfirm();
-                }}
-              />
-            </Group>
-          </Stack>
-        </PaperLayout>
-        <PaperLayout>
-          <Stack w={"fit-content"}>
-            <Title order={4}>{translations("Danger Zone")}</Title>
-            <RateupButtonPrimary
-              color="red"
-              leftIcon={<IconTrash size={"1rem"} />}
-              title={translations("Delete All Survey Delivery Settings")}
+    <div className="flex flex-col gap-6">
+      {/* Connected Store */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <IconPlugConnected className="size-4 text-muted-foreground" />
+            <CardTitle>{translations("Connected Store")}</CardTitle>
+          </div>
+          <CardDescription>
+            {translations("Your active Shopify store connection")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <ContainedTextField value={session?.shop} disabled />
+          <Separator />
+          <div className="flex justify-end">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                setDeleteCase(
+                  getLabelsforConfirmModal("session", handleDeleteSession),
+                );
+                setOpenedConfirm(true);
+              }}
+            >
+              <IconTrash data-icon="inline-start" />
+              {translations("Delete connection")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Webhooks */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <IconWebhook className="size-4 text-muted-foreground" />
+              <CardTitle>Webhooks</CardTitle>
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setShowEvents((v) => !v)}
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label={translations("Show Events")}
+                  >
+                    {showEvents ? (
+                      <IconChevronUp className="size-4" />
+                    ) : (
+                      <IconChevronDown className="size-4" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>{translations("Show Events")}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <CardDescription>
+            {translations("Allow rateup to subscribe to your store events")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <Switch
+              id="webhook-master"
+              disabled={
+                registerWebhooksmutate.isPending ||
+                deleteAllWebhooksmt.isPending
+              }
+              checked={isWebhookEnabled}
+              onCheckedChange={(checked) => handleWebhookRegistration(checked)}
+            />
+            <Label htmlFor="webhook-master" className="font-normal">
+              {isWebhookEnabled
+                ? translations("Webhooks enabled")
+                : translations("Webhooks disabled")}
+            </Label>
+          </div>
+
+          {showEvents && (
+            <>
+              <Separator />
+              <div className="flex flex-col gap-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {translations("Event subscriptions")}
+                </p>
+                {shopifyEventData.map((event) =>
+                  event.value === ShopifyEvents.ABANDONED_CHECKOUTS ? null : (
+                    <div
+                      key={event.value}
+                      className="flex items-center justify-between rounded-md border px-3 py-2"
+                    >
+                      <Label
+                        htmlFor={`webhook-${event.value}`}
+                        className="cursor-pointer font-normal"
+                      >
+                        {event.label}
+                      </Label>
+                      <Switch
+                        id={`webhook-${event.value}`}
+                        checked={webhooks?.includes(event.value)}
+                        onCheckedChange={(checked) =>
+                          handleChangeWebhookByTopic(event, checked)
+                        }
+                      />
+                    </div>
+                  ),
+                )}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Alert variant="destructive" className="border-destructive/50">
+        <IconAlertTriangle className="size-4" />
+        <AlertTitle className="font-semibold">
+          {translations("Danger Zone")}
+        </AlertTitle>
+        <AlertDescription>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={updateIntegration.isPending}
               onClick={() => {
                 setDeleteCase(
                   getLabelsforConfirmModal(
@@ -184,14 +302,16 @@ const ShopifySettings = ({
                     handleDeleteAllShopifySurveys,
                   ),
                 );
-                openConfirm();
+                setOpenedConfirm(true);
               }}
+            >
+              <IconTrash data-icon="inline-start" />
+              {translations("Delete All Survey Delivery Settings")}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
               disabled={updateIntegration.isPending}
-            />
-            <RateupButtonPrimary
-              color="red"
-              leftIcon={<IconTrash size={"1rem"} />}
-              title={translations("Delete All Schedules")}
               onClick={() => {
                 setDeleteCase(
                   getLabelsforConfirmModal(
@@ -199,78 +319,21 @@ const ShopifySettings = ({
                     handleDeleteAllSchedules,
                   ),
                 );
-                openConfirm();
+                setOpenedConfirm(true);
               }}
-              disabled={updateIntegration.isPending}
-            />
-          </Stack>
-        </PaperLayout>
-        <PaperLayout>
-          <Stack>
-            <Title order={4}>Webhooks</Title>
-            <Group justify="space-between">
-              <Switch
-                label={translations(
-                  "Allow rateup to subscribe to your store events",
-                )}
-                styles={{
-                  label: {
-                    color: "dimgray",
-                  },
-                }}
-                disabled={
-                  registerWebhooksmutate.isPending ||
-                  deleteAllWebhooksmt.isPending
-                }
-                size="md"
-                checked={isWebhookEnabled}
-                onChange={(e) =>
-                  handleWebhookRegistration(e.currentTarget.checked)
-                }
-              />
-              <Tooltip label={translations("Show Events")}>
-                {showEvents ? (
-                  <IconChevronUp onClick={toggle} cursor={"pointer"} />
-                ) : (
-                  <IconChevronDown onClick={toggle} cursor={"pointer"} />
-                )}
-              </Tooltip>
-            </Group>
-            {showEvents && (
-              <Stack>
-                {shopifyEventData.map((event) =>
-                  event.value === ShopifyEvents.ABANDONED_CHECKOUTS ? null : (
-                    <Switch
-                      key={event.value}
-                      label={event.label}
-                      checked={webhooks?.includes(event.value)}
-                      size="md"
-                      styles={{
-                        label: {
-                          color: "dimgray",
-                        },
-                      }}
-                      onChange={(e) =>
-                        handleChangeWebhookByTopic(
-                          event,
-                          e.currentTarget.checked,
-                        )
-                      }
-                    />
-                  ),
-                )}
-              </Stack>
-            )}
-          </Stack>
-        </PaperLayout>
-      </SimpleGrid>
+            >
+              <IconTrash data-icon="inline-start" />
+              {translations("Delete All Schedules")}
+            </Button>
+          </div>
+        </AlertDescription>
+      </Alert>
+
       <ConfirmationModal
         confirmLabel={deleteCase?.confirmLabel || translations("Delete")}
         headerTitle={deleteCase?.headerTitle}
         headerLabel={deleteCase?.headerLabel}
-        onClose={() => {
-          closeConfirm();
-        }}
+        onClose={() => setOpenedConfirm(false)}
         opened={openedConfirm}
         onConfirm={() => {
           const funcArgs = deleteCase?.confirmFuncArgs;
@@ -281,7 +344,7 @@ const ShopifySettings = ({
         forDeleteFunctionality
         deleteQuotion={deleteCase?.deleteQuotion}
       />
-    </Stack>
+    </div>
   );
 };
 

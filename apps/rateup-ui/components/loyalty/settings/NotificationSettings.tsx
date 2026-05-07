@@ -203,6 +203,37 @@ export function NotificationSettings({
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="enableShopifyOrderPoints"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between p-2.5 border rounded-lg space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm font-medium">
+                        {t("Shopify Product Order Points")}
+                      </FormLabel>
+                      <FormDescription className="text-xs text-muted-foreground">
+                        {t("Automatically add points for Shopify paid orders")}
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={(val) => {
+                          if (!disabled) {
+                            field.onChange(val);
+                            onSave({
+                              enableShopifyOrderPoints: val,
+                            });
+                          }
+                        }}
+                        disabled={disabled}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </form>
           </Form>
         </CardContent>

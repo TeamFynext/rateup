@@ -13,6 +13,7 @@ import {
   getAllIntegrations,
   getGoogleSheetAuthorizationUrl,
   getIntegrationByType,
+  getIntegrationStatuses,
   getWaPaymentConfigurationByName,
   getWaPaymentConfigurations,
   regenerateWaPaymentConfigurationOauth,
@@ -210,5 +211,12 @@ export const useDeleteZapierTriggerHook = () => {
     onError: (error) => {
       toast.error(error?.message || "Failed");
     },
+  });
+};
+
+export const useIntegrationStatuses = () => {
+  return useQuery({
+    queryKey: ["integrationStatuses"],
+    queryFn: getIntegrationStatuses,
   });
 };

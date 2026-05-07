@@ -76,7 +76,6 @@ export function useNavMain({
   chatFilterStore,
   hiddenModules,
   handleFilter,
-  userId,
   allowedFeatures,
   user,
 }: any) {
@@ -633,12 +632,16 @@ export function useNavMain({
                     },
                   ]
                 : []),
-              {
-                title: "Integrations",
-                url: "/dashboard/settings/integrations",
-                icon: Webhook,
-                description: "Webhooks & external services",
-              },
+              ...(hasTeamFeature(TeamFeature.AppsServices)
+                ? [
+                    {
+                      title: "Integrations",
+                      url: "/dashboard/settings/integrations",
+                      icon: Webhook,
+                      description: "Webhooks & external services",
+                    },
+                  ]
+                : []),
             ],
           },
           {
@@ -682,15 +685,18 @@ export function useNavMain({
       },
     ],
     [
-      subscription,
-      lifecycles,
+      chatFilterStore.filter.labels,
+      chatFilterStore.filter.lifecycle,
       contactLabels,
-      t,
-      chatFilterStore.filter?.labels,
-      chatFilterStore.filter?.lifecycle,
+      handleFilter,
+      hasTeamFeature,
       hiddenModules,
-      allowedFeatures,
-      user,
+      lifecycles,
+      staff.length,
+      subscription,
+      t,
+      teams.length,
+      user?.role,
     ],
   );
 }

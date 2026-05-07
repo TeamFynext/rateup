@@ -1,28 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
-import {
-  ActionIcon,
-  Badge,
-  BadgeProps,
-  Center,
-  Group,
-  Image,
-  Stack,
-  Tooltip,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import {
-  IconHomeFilled,
-  IconPlus,
-  IconSettingsFilled,
-} from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 import { toast } from "sonner";
 
 import { IntegratedApps } from "@/types/enums";
 import { ShopifyIntegration } from "@/types/global";
+import { cn } from "@/lib/utils";
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
 import { useTeamsByUser } from "@/backend/team/team.query";
@@ -30,44 +17,44 @@ import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import ShopifySchedules from "@/components/shopify/ShopifySchedules";
 import ShopifySettings from "@/components/shopify/ShopifySettings";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../../components/Button/RateupButtons";
-import ShopifySurveySchedules from "../../../../components/shopify/ShopifySurveySchedules";
-
-interface ActiveBadgeProps extends BadgeProps {
+interface ActiveBadgeProps extends React.ComponentProps<typeof Badge> {
   active: boolean;
 }
-export const ActiveStatusBadge = ({ active, ...props }: ActiveBadgeProps) => {
+
+export const ActiveStatusBadge = ({
+  active,
+  className,
+  ...props
+}: ActiveBadgeProps) => {
   const translations = useExtracted();
   return (
-    <Badge color={active ? "var(--active-green-2)" : "red"} {...props}>
+    <Badge
+      variant="outline"
+      className={cn(
+        active
+          ? "border-green-200 bg-green-100 text-green-700"
+          : "border-red-200 bg-red-100 text-red-700",
+        className,
+      )}
+      {...props}
+    >
       {active ? translations("ACTIVE") : translations("INACTIVE")}
     </Badge>
   );
 };
 
-enum ShopifyActivePanel {
-  Home = "Home",
-  Settings = "Settings",
-}
 const Shopify = () => {
-  const [connectOpened, { open: openConnect, close: closeConnect }] =
-    useDisclosure(false);
   const { data: shopifyInfo, isLoading } = useIntegrationByType(
     IntegratedApps.shopify,
   ) as { data: ShopifyIntegration; isLoading: boolean };
-  const { data: templates, isPending, isError, refetch } = useWaTemplates();
+  const { data: templates } = useWaTemplates();
   const { data: teams } = useTeamsByUser();
   const translations = useExtracted();
-  const session = shopifyInfo?.credential?.session;
   const [shopifyProducts, setShopifyProducts] = useState([]);
-
-  const [activePanel, setActivePanel] = useState<ShopifyActivePanel>(
-    ShopifyActivePanel.Home,
-  );
 
   const handleLoadProducts = async () => {
     try {
@@ -79,7 +66,7 @@ const Shopify = () => {
       toast.success(translations("Products loaded successfully"), {
         id: "shopify-products",
       });
-    } catch (e) {
+    } catch {
       toast.error(translations("Product syncing failed"), {
         id: "shopify-products",
       });
@@ -90,78 +77,53 @@ const Shopify = () => {
 
   if (!shopifyInfo || !shopifyInfo?.active || !shopifyInfo.credential.session)
     return (
-      <Center h={"100%"}>
-        <Stack>
-          <Image src={"../../../images/shopifystore.jpeg"} />
-          <RateupButtonBlue
-            title={translations("Connect with shopify store")}
-            leftIcon={<IconPlus />}
+      <div className="flex h-full items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Image
+            src="/images/shopifystore.jpeg"
+            alt="Shopify Store"
+            width={320}
+            height={240}
+            className="max-w-xs"
+          />
+          <Button
+            style={{ backgroundColor: "#5e8e3e" }}
             onClick={() =>
               window.open("https://apps.shopify.com/rateup", "_blank")
             }
-            color="#5e8e3e"
-          />
-        </Stack>
-      </Center>
-    );
-  return (
-    <Stack>
-      <Group justify="flex-end">
-        <RateupButtonSecondary
-          title={translations("Sync products")}
-          onClick={handleLoadProducts}
-        />
-        <Tooltip
-          label={
-            activePanel === ShopifyActivePanel.Settings
-              ? ShopifyActivePanel.Home
-              : ShopifyActivePanel.Settings
-          }
-        >
-          <ActionIcon
-            onClick={() =>
-              setActivePanel(
-                activePanel === ShopifyActivePanel.Settings
-                  ? ShopifyActivePanel.Home
-                  : ShopifyActivePanel.Settings,
-              )
-            }
-            variant="subtle"
-            size={"lg"}
-            color="gray"
           >
-            {activePanel === ShopifyActivePanel.Settings ? (
-              <IconHomeFilled size={"1.5rem"} />
-            ) : (
-              <IconSettingsFilled size={"1.5rem"} />
-            )}
-          </ActionIcon>
-        </Tooltip>
-      </Group>
-      <Stack
-        display={activePanel == ShopifyActivePanel.Home ? "block" : "none"}
-        gap={"xl"}
-      >
-        <ShopifySurveySchedules
-          shopifyInfo={shopifyInfo}
-          shopifyProducts={shopifyProducts}
-          setShopifyProducts={setShopifyProducts}
-          waTemplates={templates}
-          teams={teams?.data}
-        />
+            <IconPlus data-icon="inline-start" />
+            {translations("Connect with shopify store")}
+          </Button>
+        </div>
+      </div>
+    );
+
+  return (
+    <Tabs defaultValue="schedules" className="w-full h-full">
+      <div className="mb-4 flex items-center justify-between">
+        <TabsList>
+          <TabsTrigger value="schedules">
+            {translations("Schedules")}
+          </TabsTrigger>
+          <TabsTrigger value="settings">{translations("Settings")}</TabsTrigger>
+        </TabsList>
+        <Button variant="outline" onClick={handleLoadProducts}>
+          {translations("Sync products")}
+        </Button>
+      </div>
+      <TabsContent value="schedules">
         <ShopifySchedules
           shopifyProducts={shopifyProducts}
           shopifyInfo={shopifyInfo}
           waTemplates={templates}
           teams={teams?.data}
         />
-      </Stack>
-      <Stack
-        display={activePanel == ShopifyActivePanel.Settings ? "block" : "none"}
-      >
+      </TabsContent>
+      <TabsContent value="settings">
         <ShopifySettings shopifyInfo={shopifyInfo} />
-      </Stack>
-    </Stack>
+      </TabsContent>
+    </Tabs>
   );
 };
 

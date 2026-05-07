@@ -99,6 +99,10 @@ export async function getAllIntegrations() {
   return (await axiosClient.get(`${ROUTE_URL}all`)).data;
 }
 
+export async function getIntegrationStatuses() {
+  return (await axiosClient.get(`${ROUTE_URL}statuses`)).data;
+}
+
 export async function deleteZapierTriggerHook(data) {
   return (await axiosClient.delete(`${ROUTE_URL}zapier-hook`, { data })).data;
 }
