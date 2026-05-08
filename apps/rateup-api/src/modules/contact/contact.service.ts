@@ -919,6 +919,82 @@ export async function getOrCreateContactByIgsId(
   }
 }
 
+export async function getOrCreateContactByPsid(
+  psid: string,
+  orgId: string,
+  additionalData?: Omit<updateContactSchema, "customFields">,
+  addToConversation: boolean = false,
+) {
+  try {
+    let contact = await prisma.contact.findUnique({
+      where: {
+        contact_psid_org_id_unique: {
+          psid,
+          orgId,
+        },
+      },
+    });
+
+    let conversation;
+
+    if (contact) {
+      if (!additionalData) {
+        return { contact, conversation };
+      }
+
+      contact = await prisma.contact.update({
+        where: {
+          id: contact.id,
+        },
+        data: {
+          ...additionalData,
+        },
+      });
+
+      return { contact, conversation };
+    }
+
+    const chatbot = await getChatbotDetails(orgId);
+
+    const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
+
+    contact = await prisma.contact.create({
+      data: {
+        ...additionalData,
+        aiWaChat,
+        psid,
+        orgId,
+      },
+    });
+
+    if (addToConversation) {
+      conversation = await createConversation({
+        contactId: contact.id,
+      });
+    }
+
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONTACT_CREATE,
+      {
+        [ZapierTriggers.CONTACT_CREATE]: contact,
+      },
+      orgId,
+    );
+
+    return { contact, conversation };
+  } catch (e) {
+    log.error(
+      {
+        err: e,
+        stack: e instanceof Error ? e.stack : undefined,
+      },
+      "Error in getOrCreateContactByPsid",
+    );
+
+    throw e;
+  }
+}
+
 export async function deleteManyContacts(contactIds: Array<string>) {
   const contacts = await prisma.contact.findMany({
     where: {

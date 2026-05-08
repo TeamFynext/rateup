@@ -771,8 +771,11 @@ export function createReplyImageMessage(
   imageId: string,
   platform: PlatformType = PlatformType.WHATSAPP,
   caption?: string,
-): WaSendMessageBody | IgSendMessageBody {
-  if (platform === PlatformType.INSTAGRAM) {
+): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
+  if (
+    platform === PlatformType.INSTAGRAM ||
+    platform === PlatformType.FACEBOOK
+  ) {
     return {
       recipient: {
         id: to,
@@ -968,8 +971,11 @@ export function createTextMessage(
   title: string,
   description = "",
   platform: PlatformType = PlatformType.WHATSAPP,
-): WaSendMessageBody | IgSendMessageBody {
-  if (platform === PlatformType.INSTAGRAM) {
+): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
+  if (
+    platform === PlatformType.INSTAGRAM ||
+    platform === PlatformType.FACEBOOK
+  ) {
     return {
       recipient: {
         id: to,
@@ -983,7 +989,7 @@ export function createTextMessage(
               : parseToWhatsAppFormat(description)
           }`,
       },
-    } as IgSendMessageBody;
+    } as IgSendMessageBody | FbSendMessageBody;
   }
   return {
     messaging_product: "whatsapp",
@@ -1184,10 +1190,10 @@ export function createReactionMessage(
   emoji,
   reaction,
   platform,
-): WaSendMessageBody | IgSendMessageBody {
+): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
   //do the instagram type
 
-  if (platform === PlatformType.INSTAGRAM)
+  if (platform === PlatformType.INSTAGRAM || platform === PlatformType.FACEBOOK)
     return {
       recipient: {
         id: to,
@@ -1215,7 +1221,45 @@ export function createDocumentMessage(
   link,
   filename,
   caption,
-): WaSendMessageBody {
+  platform,
+): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
+  if (platform === PlatformType.INSTAGRAM) {
+    return {
+      recipient: {
+        id: to,
+      },
+
+      message: {
+        attachment: {
+          type: "file",
+
+          payload: {
+            url: link,
+          },
+        },
+      },
+    };
+  }
+
+  // Facebook Messenger
+  if (platform === PlatformType.FACEBOOK) {
+    return {
+      recipient: {
+        id: to,
+      },
+
+      message: {
+        attachment: {
+          type: "file",
+
+          payload: {
+            url: link,
+          },
+        },
+      },
+    };
+  }
+
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -1234,7 +1278,7 @@ export function createVideoMessage(
   link,
   platform,
   caption,
-): WaSendMessageBody | IgSendMessageBody {
+): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
   if (platform === PlatformType.INSTAGRAM) {
     return {
       recipient: {
@@ -1251,6 +1295,24 @@ export function createVideoMessage(
       },
     };
   }
+  if (platform === PlatformType.FACEBOOK) {
+    return {
+      recipient: {
+        id: to,
+      },
+
+      message: {
+        attachment: {
+          type: "video",
+
+          payload: {
+            url: link,
+          },
+        },
+      },
+    };
+  }
+
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -1267,7 +1329,7 @@ export function createAudioMessage(
   to,
   link,
   platform,
-): WaSendMessageBody | IgSendMessageBody {
+): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
   if (platform === PlatformType.INSTAGRAM) {
     return {
       recipient: {
@@ -1284,6 +1346,24 @@ export function createAudioMessage(
       },
     };
   }
+  if (platform === PlatformType.FACEBOOK) {
+    return {
+      recipient: {
+        id: to,
+      },
+
+      message: {
+        attachment: {
+          type: "audio",
+
+          payload: {
+            url: link,
+          },
+        },
+      },
+    };
+  }
+
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",

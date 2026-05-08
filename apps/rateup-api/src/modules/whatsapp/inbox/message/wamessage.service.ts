@@ -1236,6 +1236,7 @@ export async function sendMediaMessages(
           item.url,
           item.name,
           captionMsg,
+          platform,
         );
         break;
       }

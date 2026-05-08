@@ -43,6 +43,7 @@ import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import {
   getWaSettings,
   getWaSettingsByIbaId,
+  getWaSettingsByPageId,
 } from "../settings/wa_settings.service.js";
 import { GraphApiError, callWhatsappApi } from "../wa_axios.js";
 import {
@@ -90,7 +91,7 @@ export const toBeIncludedWaSessionRelations = {
 
 export async function sendMessage(
   orgId: string,
-  messageData: WaSendMessageBody | IgSendMessageBody,
+  messageData: WaSendMessageBody | IgSendMessageBody | FbSendMessageBody,
   userName?: string,
   userId?: string,
   whatsappSettingsPhoneId?: string,
@@ -117,6 +118,16 @@ export async function sendMessage(
     configId = "me";
     accessToken = waSettings.pageAccessToken;
     sourceIdentifier = waSettings.ibaId;
+  } else if (platform === PlatformType.FACEBOOK) {
+    waSettings = await getWaSettingsByPageId(whatsappSettingsPhoneId);
+
+    to = (messageData as FbSendMessageBody).recipient.id;
+
+    configId = "me";
+
+    accessToken = waSettings.pageAccessToken;
+
+    sourceIdentifier = waSettings.fbPageId;
   } else if (platform !== PlatformType.WEBCHAT) {
     waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
     to = (messageData as WaSendMessageBody).to;
@@ -145,7 +156,10 @@ export async function sendMessage(
       log.trace(`sent successfully %o %o `, res.data, res.statusText);
     }
     let messageId;
-    if (platform === PlatformType.INSTAGRAM) {
+    if (
+      platform === PlatformType.INSTAGRAM ||
+      platform === PlatformType.FACEBOOK
+    ) {
       messageId = res?.data?.message_id;
     } else if (platform === PlatformType.WEBCHAT) {
       const phone = (messageData as WaSendMessageBody).to.replace(/\D/g, "");

@@ -142,6 +142,19 @@ export async function getWaSettingsByIbaId(ibaId: string) {
   return res.wabaId ? getWaSettingsWithAccessTokenDecrypted(res) : res;
 }
 
+export async function getWaSettingsByPageId(pageId: string) {
+  const res = await prisma.whatsappSettings.findFirst({
+    where: {
+      fbPageId: pageId,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+  if (!res) return null;
+  return getWaSettingsWithAccessTokenDecrypted(res);
+}
+
 export function getWaSettingsWithAccessTokenDecrypted(
   waSettings: WhatsappSettings,
 ): Omit<WhatsappSettings, "accessToken_iv"> {
@@ -218,11 +231,18 @@ export async function upsertWaSettings(
       ]);
       const { accessToken } =
         getWaSettingsWithAccessTokenDecrypted(existingSettings);
-      const igData = await callWhatsappApi(
-        `/${data.ibaId}?fields=username&access_token=${accessToken}`,
+      if (data.ibaId) {
+        const igData = await callWhatsappApi(
+          `/${data.ibaId}?fields=username&access_token=${accessToken}`,
+          "GET",
+        );
+        data.igUserName = igData.data.username;
+      }
+      const fbData = await callWhatsappApi(
+        `/${data.fbPageId}?fields=name&access_token=${accessToken}`,
         "GET",
       );
-      data.igUserName = igData.data.username;
+      data.fbUserName = fbData.data.name;
     }
     if (!data.fbPageId?.length && existingSettings.fbPageId?.length) {
       data.fbPageId = null;
@@ -230,6 +250,7 @@ export async function upsertWaSettings(
       data.pageAccessToken = null;
       data.igUserName = null;
       data.igDisplayName = null;
+      data.fbUserName = null;
     }
     return await updateWaSettings(orgId, phoneId, data);
   } else {

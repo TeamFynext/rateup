@@ -41,9 +41,13 @@ export async function returnAppropriateTimeStamp(
   platform: PlatformType,
 ) {
   if (messageBody.exchangeProcess === "receive") {
-    if (platform === PlatformType.INSTAGRAM) {
+    if (
+      platform === PlatformType.INSTAGRAM ||
+      platform === PlatformType.FACEBOOK
+    ) {
       return new Date(
-        (messageBody.receive as IgReceiveMessageBody).timestamp,
+        (messageBody.receive as IgReceiveMessageBody | FbReceiveMessageBody)
+          .timestamp,
       ).toISOString();
     }
     const unixTimeStamp = parseInt(
