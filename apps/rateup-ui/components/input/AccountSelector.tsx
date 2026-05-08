@@ -88,6 +88,16 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
           });
         }
       }
+    if (platform === "all" || platform === MessagePlatform.FACEBOOK)
+      if (account.fbPageId) {
+        if (!filterIds || filterIds.includes(account.fbPageId)) {
+          accountOptions.push({
+            value: account.fbPageId,
+            label: account.fbUserName ?? account.fbPageId,
+            status: account.status,
+          });
+        }
+      }
   }
 
   if (withAllOption) {

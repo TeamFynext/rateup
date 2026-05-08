@@ -138,7 +138,9 @@ export default function WaInboxChatSelectCard({
                 ? "bg-green-600 border"
                 : platform === MessagePlatform.INSTAGRAM
                   ? "bg-linear-to-br from-purple-600 via-pink-500 to-orange-500 border"
-                  : "bg-blue-600 border"
+                  : platform === MessagePlatform.FACEBOOK
+                    ? "bg-blue-400 border"
+                    : "bg-blue-600 border"
             }`}
           >
             {getSoucePlatformIconAndColor(platform)?.icon}

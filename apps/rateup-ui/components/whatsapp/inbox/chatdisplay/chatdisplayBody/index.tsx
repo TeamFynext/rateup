@@ -259,7 +259,8 @@ const MessageItem = ({ message, selectedContact, nextMessage }) => {
   const { messageType } = parseWaMessage(message);
   if (messageType === "reaction") return null;
   if (
-    message.sourcePlatform === MessagePlatform.INSTAGRAM &&
+    (message.sourcePlatform === MessagePlatform.INSTAGRAM ||
+      message.sourcePlatform === MessagePlatform.FACEBOOK) &&
     exchangeProcess === "receive" &&
     (receive as IgReceiveMessageBody)?.message?.is_deleted
   )

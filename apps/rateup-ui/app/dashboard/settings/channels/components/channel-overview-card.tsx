@@ -31,6 +31,16 @@ export function getIgStatus(
   return waConnected ? "pending" : "disconnected";
 }
 
+export function getFbStatus(
+  isLoading: boolean,
+  fbConnected: boolean,
+  waConnected: boolean,
+): ChannelStatus {
+  if (isLoading) return "pending";
+  if (fbConnected) return "connected";
+  return waConnected ? "pending" : "disconnected";
+}
+
 function getBadgeVariant(status: ChannelStatus) {
   return status === "connected" ? "default" : "secondary";
 }

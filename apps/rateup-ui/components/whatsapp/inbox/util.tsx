@@ -1,7 +1,11 @@
 import crypto from "crypto";
 
 import { ThemeIcon } from "@mantine/core";
-import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
+import {
+  IconBrandFacebook,
+  IconBrandInstagram,
+  IconBrandWhatsapp,
+} from "@tabler/icons-react";
 import { MessageCircle } from "lucide-react";
 
 import { MessagePlatform } from "@/types/enums";
@@ -23,6 +27,11 @@ export function getSoucePlatformIconAndColor(sourcePlatform) {
       return {
         icon: <MessageCircle className="w-4 h-4 text-white" />,
         bgColor: "bg-blue-600",
+      };
+    case MessagePlatform.FACEBOOK:
+      return {
+        icon: <IconBrandFacebook className="w-4 h-4 text-white" />,
+        bgColor: "bg-blue-400",
       };
   }
 }
