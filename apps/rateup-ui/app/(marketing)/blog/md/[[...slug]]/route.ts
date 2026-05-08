@@ -8,8 +8,6 @@ export async function GET(
 
   const slugPath = slug?.join("/") ?? "";
 
-  console.log("Slug:", slugPath);
-
   const content = await getMarkdownContent(slugPath);
 
   if (!content) {

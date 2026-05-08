@@ -3,12 +3,33 @@
 export async function GET() {
   return new Response(
     `# About RateUp
+RateUp is an AI-powered customer engagement platform for WhatsApp marketing, omnichannel support, loyalty automation, customer retention, surveys, ticketing, and workflow automation.
+
+Empowering businesses with insights to create exceptional customer experiences.
 
 RateUp is an AI-powered customer engagement platform designed to help businesses build stronger customer relationships through automation, omnichannel communication, and intelligent workflows.
 
 ## Our Mission
 
-Our mission is to simplify customer engagement for modern businesses by providing powerful tools for communication, retention, support, and growth — all from a unified platform.
+We are on a mission to empower businesses of all sizes with the insights they need to create exceptional, unforgettable customer experiences.
+
+Empowering businesses
+Through data, insights, and innovation — we help you elevate customer satisfaction at every touchpoint.
+
+The Rateup Commitment
+Our Values guide every decision we make.
+
+Innovation
+We are committed to continuous innovation, leveraging the latest technologies to provide our customers with cutting-edge solutions that drive growth and success.
+
+Customer-Centricity
+Our customers are at the heart of everything we do. We strive to understand their needs and deliver exceptional value through our products and services.
+
+Integrity
+We conduct our business with the highest level of integrity, ensuring transparency, honesty, and ethical practices in all our interactions.
+
+Transparency
+We believe in open communication and transparency with our customers, partners, and employees, fostering trust and collaboration.
 
 ## What We Do
 

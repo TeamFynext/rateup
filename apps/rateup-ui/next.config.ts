@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
             value: "(.*)text/markdown(.*)",
           },
         ],
-        destination: `${prefix}/md/:path*`,
+        destination: prefix === "/" ? "/md" : `${prefix}/md`,
       };
     }
     return {
@@ -25,7 +25,6 @@ const nextConfig: NextConfig = {
         markdownRewrite("/blog"),
         markdownRewrite("/pricing"),
         markdownRewrite("/products"),
-        markdownRewrite("/book-demo"),
         markdownRewrite("/about-us"),
         markdownRewrite("/"),
       ],
