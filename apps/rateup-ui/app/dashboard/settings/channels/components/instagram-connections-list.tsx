@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { Divider, Group } from "@mantine/core";
 import { IconBrandInstagram } from "@tabler/icons-react";
 import { useExtracted } from "next-intl";
 
@@ -42,9 +41,7 @@ export function InstagramConnectionsList({
     const { id, ...rest } = setting;
     upsertMutation.mutate({
       ...rest,
-      fbPageId: "",
       ibaId: "",
-      pageAccessToken: "",
       igUserName: "",
       igDisplayName: "",
     });
@@ -94,7 +91,7 @@ export function InstagramConnectionsList({
                       {translations("WhatsApp channel")} - {setting.wabaId}
                     </CardDescription>
                   </div>
-                  <Group gap="xs">
+                  <div className="flex items-center gap-2">
                     <Button
                       size="sm"
                       variant="outline"
@@ -116,7 +113,7 @@ export function InstagramConnectionsList({
                         {translations("Disconnect")}
                       </Button>
                     )}
-                  </Group>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -141,7 +138,6 @@ export function InstagramConnectionsList({
                           </p>
                         </div>
                       </div>
-                      <Divider />
                     </>
                   )}
                 </div>

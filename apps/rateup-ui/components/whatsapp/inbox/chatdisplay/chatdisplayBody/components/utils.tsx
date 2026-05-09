@@ -68,6 +68,7 @@ export const SingleMessage = ({ message }) => {
     case "video":
       return <WaInboxVideo messageContent={messageContent} />;
     case "document":
+    case "file":
       return <WaInboxDocument messageContent={messageContent} />;
     case "contacts":
       return <WaInboxContact messageContent={messageContent} />;
@@ -97,7 +98,8 @@ export function getReactionMessage({
   const exchangeProcess = message?.messageBody?.exchangeProcess;
   const isInsta =
     message?.sourcePlatform == MessagePlatform.INSTAGRAM ||
-    message?.sourcePlatform == MessagePlatform.WEBCHAT;
+    message?.sourcePlatform == MessagePlatform.WEBCHAT ||
+    message?.sourcePlatform == MessagePlatform.FACEBOOK;
   if (!exchangeProcess) return null;
   const wa_id =
     exchangeProcess === "send" || isInsta

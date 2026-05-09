@@ -2,12 +2,17 @@
 
 import { useRouter } from "next/navigation";
 
-import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
+import {
+  IconBrandFacebook,
+  IconBrandInstagram,
+  IconBrandWhatsapp,
+} from "@tabler/icons-react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 
 import {
   ChannelOverviewCard,
+  getFbStatus,
   getIgStatus,
   getWaStatus,
 } from "./components/channel-overview-card";
@@ -22,9 +27,15 @@ export default function ChannelsPage() {
   const igConnectedCount =
     waSettings?.filter((setting) => setting.ibaId?.length > 0).length ?? 0;
 
+  const fbConnected =
+    waSettings?.some((s) => s.fbPageId && s.fbPageId.length > 0) ?? false;
+
+  const fbConnectedCount =
+    waSettings?.filter((s) => s.fbPageId && s.fbPageId.length > 0).length ?? 0;
+
   const waStatus = getWaStatus(isLoading, waConnected);
   const igStatus = getIgStatus(isLoading, igConnected, waConnected);
-
+  const fbStatus = getFbStatus(isLoading, fbConnected, waConnected);
   return (
     <div className="space-y-6">
       <div>
@@ -50,6 +61,33 @@ export default function ChannelsPage() {
                 <span>Accounts</span>
                 <span className="text-foreground">
                   {waSettings.length} connected
+                </span>
+              </div>
+            ) : null
+          }
+        />
+
+        <ChannelOverviewCard
+          icon={<IconBrandFacebook className="h-8 w-8 text-blue-600" />}
+          title="Facebook Messenger"
+          description="Connect your Facebook Page to manage Messenger conversations and automate replies."
+          status={fbStatus}
+          isLoading={isLoading}
+          actionLabel={fbConnected ? "Configure" : "Connect"}
+          actionVariant={fbConnected ? "outline" : "default"}
+          actionDisabled={!waConnected && !isLoading}
+          onAction={() => router.push("/dashboard/settings/channels/facebook")}
+          helperText={
+            !waConnected && !isLoading
+              ? "Connect WhatsApp first to enable Facebook"
+              : undefined
+          }
+          summary={
+            fbConnectedCount > 0 ? (
+              <div className="flex items-center justify-between">
+                <span>Pages</span>
+                <span className="text-foreground">
+                  {fbConnectedCount} connected
                 </span>
               </div>
             ) : null
