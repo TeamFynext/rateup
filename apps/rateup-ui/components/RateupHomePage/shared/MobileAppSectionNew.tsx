@@ -26,14 +26,16 @@ export default function MobileAppSection() {
             <Link
               href="https://play.google.com/store/apps/details?id=com.rateupapp.rateup&pcampaignid=web_share"
               className="bg-white text-black px-5 py-3 rounded-sm font-semibold flex items-center gap-2 hover:bg-grey-color-5 transition duration-300 shadow-md w-full md:w-[15vw]"
+              target="_blank"
             >
               <IconBrandGooglePlay color="black" size={24} />
               <span className="text-sm sm:text-base">Google Play</span>
             </Link>
 
             <Link
-              href="#"
+              href="https://apps.apple.com/us/app/rateup/id6761990608"
               className="bg-black text-white px-5 py-3 rounded-sm font-semibold flex items-center gap-2 hover:bg-gray-800 transition duration-300 shadow-md w-full md:w-[15vw]"
+              target="_blank"
             >
               <IconBrandApple fill="white" size={24} />
               <span className="text-sm sm:text-base">App Store</span>

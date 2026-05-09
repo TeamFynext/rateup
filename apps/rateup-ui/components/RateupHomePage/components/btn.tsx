@@ -362,7 +362,7 @@ function AppStoreButton({ href = "#" }: { href?: string }) {
 
 export default function AppStoreButtons({
   googlePlayHref = "https://play.google.com/store/apps/details?id=com.rateupapp.rateup&pcampaignid=web_share",
-  appStoreHref = "#",
+  appStoreHref = "https://apps.apple.com/us/app/rateup/id6761990608",
 }: {
   googlePlayHref?: string;
   appStoreHref?: string;

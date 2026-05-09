@@ -265,7 +265,11 @@ export default function HomePageFooter() {
                   <span className="text-sm font-semibold">Google Play</span>
                 </div>
               </Link>
-              <div className="border border-light-blue-5 rounded-xl px-4 py-2 flex w-[60vw] sm:w-[300px] lg:w-[12vw] items-center justify-between cursor-pointer">
+              <Link
+                className="border border-light-blue-5 rounded-xl px-4 py-2 flex w-[60vw] sm:w-[300px] lg:w-[12vw] items-center justify-between cursor-pointer"
+                href={"https://apps.apple.com/us/app/rateup/id6761990608"}
+                target="_blank"
+              >
                 <div>
                   <Image
                     src={`${imagePath}/homepage/apple.svg`}
@@ -281,7 +285,7 @@ export default function HomePageFooter() {
                   </span>
                   <span className="text-sm font-semibold">App Store</span>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
