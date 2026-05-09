@@ -264,7 +264,13 @@ export default function WaInboxSingleMessageLayout(props: Props) {
         {exchangeProcess === "receive" && (
           <div className="mb-1">
             <CreativeAvatar
-              name={selectedContact?.name}
+              name={
+                selectedContact?.name ||
+                selectedContact?.whatsappUserName ||
+                selectedContact?.phone ||
+                selectedContact?.igsId ||
+                selectedContact?.psid
+              }
               size="xs"
               src={selectedContact?.profilePic}
               showRing={true}

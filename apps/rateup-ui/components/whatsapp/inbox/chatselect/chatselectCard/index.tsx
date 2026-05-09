@@ -119,6 +119,7 @@ export default function WaInboxChatSelectCard({
               contact?.whatsappUserName ||
               contact?.phone ||
               contact?.igsId ||
+              contact?.psid ||
               "Unknown"
             }
             size="lg"
@@ -154,6 +155,7 @@ export default function WaInboxChatSelectCard({
                   contact?.whatsappUserName ||
                   contact?.phone ||
                   contact?.igsId ||
+                  contact?.psid ||
                   "Unknown"}
               </p>
               {contact?.isIgVerifiedUser && (

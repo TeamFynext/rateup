@@ -593,6 +593,7 @@ declare global {
     whatsappUserName?: string;
     blockedOnWhatsApp: boolean;
     igsId: string;
+    psid: string;
     isIgVerifiedUser: boolean;
     followerCount: number;
     profilePic: string;

@@ -171,7 +171,13 @@ export default function WaInboxChatDisplayHeader({
           )}
           <div className="relative shrink-0">
             <CreativeAvatar
-              name={contact?.name || contact?.whatsappUserName || ""}
+              name={
+                contact?.name ||
+                contact?.whatsappUserName ||
+                contact?.phone ||
+                contact?.igsId ||
+                contact?.psid
+              }
               size="md"
               isOnline={!isSessionExpired}
               showOnlineStatus={!isSessionExpired}
@@ -192,7 +198,11 @@ export default function WaInboxChatDisplayHeader({
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-0.5">
                 <h3 className="truncate">
-                  {contact.name ?? contact.whatsappUserName}
+                  {contact?.name ||
+                    contact?.whatsappUserName ||
+                    contact?.phone ||
+                    contact?.igsId ||
+                    contact?.psid}
                 </h3>
                 {!contact.consent && (
                   <CustomTooltip
