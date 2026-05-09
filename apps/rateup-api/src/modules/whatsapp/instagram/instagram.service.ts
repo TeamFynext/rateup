@@ -104,7 +104,9 @@ export async function handleInstagramMessageSeen(data: InstagramWebhookBody) {
   const { timestamp, read } = messaginObj;
   const seentime = new Date(timestamp).toISOString();
   await updateWaMessageByMessageId(read.mid, {
-    stats: { sent: "", failed: "", delivered: "", read: seentime },
+    stats: {
+      read: seentime,
+    },
   });
 }
 

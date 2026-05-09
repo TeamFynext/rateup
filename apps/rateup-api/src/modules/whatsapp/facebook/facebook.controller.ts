@@ -26,7 +26,6 @@ export async function facebookWebhookEventHandler(
     await handleFacebookWebhook(data);
   } catch (e) {
     log.error("[Facebook] Error in webhook event handler: %o", e);
-    // Don't error out - always return 200 to Meta
     reply.code(500).send();
   }
 }

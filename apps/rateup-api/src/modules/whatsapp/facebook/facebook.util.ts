@@ -2,7 +2,7 @@ import { FacebookEvent } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 
 export function getFacebookWebhookEvent(
-  messagingObject: any,
+  messagingObject: FacebookWebhookBody["entry"][0]["messaging"][0],
 ): FacebookEvent | null {
   try {
     // Check specific message types first (before general message check)
@@ -31,10 +31,6 @@ export function getFacebookWebhookEvent(
     // Other event types
     if (messagingObject.postback) {
       return FacebookEvent.POSTBACK;
-    }
-
-    if (messagingObject.opt_in) {
-      return FacebookEvent.OPT_IN;
     }
 
     return null;

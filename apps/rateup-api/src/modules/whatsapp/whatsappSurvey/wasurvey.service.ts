@@ -120,13 +120,14 @@ export async function sendMessage(
     sourceIdentifier = waSettings.ibaId;
   } else if (platform === PlatformType.FACEBOOK) {
     waSettings = await getWaSettingsByPageId(whatsappSettingsPhoneId);
-
+    if (!waSettings) {
+      throw new Error(
+        `Facebook page is not configured for page ID: ${whatsappSettingsPhoneId}`,
+      );
+    }
     to = (messageData as FbSendMessageBody).recipient.id;
-
     configId = "me";
-
     accessToken = waSettings.pageAccessToken;
-
     sourceIdentifier = waSettings.fbPageId;
   } else if (platform !== PlatformType.WEBCHAT) {
     waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);

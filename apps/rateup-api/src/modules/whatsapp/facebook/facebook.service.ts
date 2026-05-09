@@ -6,6 +6,7 @@ import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { FacebookEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { getFacebookWebhookEvent } from "./facebook.util.js";
+import prisma from "../../../utils/prisma.js";
 
 export async function getFacebookUserDetailsFromMeta(
   userId: string,
@@ -53,25 +54,35 @@ export async function handleFacebookWebhook(data: FacebookWebhookBody) {
           continue;
         }
 
+        const currentEventData = {
+          ...data,
+          entry: [
+            {
+              ...entry,
+              messaging: [messaging],
+            },
+          ],
+        } as FacebookWebhookBody;
+
         switch (event) {
           case FacebookEvent.MESSAGE:
-            await handleFacebookMessages(data, waSettings);
+            await handleFacebookMessages(currentEventData, waSettings);
             break;
 
           case FacebookEvent.MESSAGE_DELIVERED:
-            await handleFacebookMessageDelivered(data);
+            await handleFacebookMessageDelivered(currentEventData);
             break;
 
           case FacebookEvent.MESSAGE_READ:
-            await handleFacebookMessageRead(data);
+            await handleFacebookMessageRead(currentEventData);
             break;
 
           case FacebookEvent.POSTBACK:
-            await handleFacebookPostback(data, waSettings);
+            await handleFacebookPostback(currentEventData, waSettings);
             break;
 
           case FacebookEvent.QUICK_REPLY:
-            await handleFacebookQuickReply(data, waSettings);
+            await handleFacebookQuickReply(currentEventData, waSettings);
             break;
 
           default:
@@ -140,10 +151,7 @@ export async function handleFacebookMessageDelivered(
       const deliveredTime = new Date().toISOString();
       await updateWaMessageByMessageId(mid, {
         stats: {
-          sent: "",
-          failed: "",
           delivered: deliveredTime,
-          read: "",
         },
       });
     } catch (error) {
@@ -157,15 +165,64 @@ export async function handleFacebookMessageDelivered(
 
 export async function handleFacebookMessageRead(data: FacebookWebhookBody) {
   const messaging = data.entry[0].messaging[0];
-  const { read } = messaging;
+  const { read, sender, recipient } = messaging;
 
   if (!read?.watermark) {
     return;
   }
-
   try {
-    const readTime = new Date(read.watermark).toISOString();
-    log.trace(`[Facebook] Messages read up to watermark: ${readTime}`);
+    const readTime = new Date(read.watermark);
+
+    log.trace(
+      `[Facebook] Messages read up to watermark: ${readTime.toISOString()}`,
+    );
+
+    const messages = await prisma.waMessage.findMany({
+      where: {
+        sourcePlatform: PlatformType.FACEBOOK,
+
+        // Your page/account id
+        sourceIdentifier: recipient.id,
+
+        // Only outbound messages
+        sendBy: {
+          not: null,
+        },
+
+        // Messages sent to this customer
+        messageBody: {
+          path: ["sent", "recipient", "id"],
+          equals: sender.id,
+        },
+
+        // Only older messages
+        waCreatedAt: {
+          lte: readTime,
+        },
+      },
+      select: {
+        id: true,
+        stats: true,
+      },
+    });
+
+    await Promise.all(
+      messages.map((message) =>
+        prisma.waMessage.update({
+          where: {
+            id: message.id,
+          },
+          data: {
+            stats: {
+              ...(message.stats as Record<string, any>),
+              read: readTime.toISOString(),
+            },
+          },
+        }),
+      ),
+    );
+
+    log.trace(`[Facebook] Updated ${messages.length} messages as read`);
   } catch (error) {
     log.error(`[Facebook] Error handling read receipt: %o`, error);
   }

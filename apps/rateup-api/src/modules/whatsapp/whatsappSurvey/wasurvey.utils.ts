@@ -1223,26 +1223,10 @@ export function createDocumentMessage(
   caption,
   platform,
 ): WaSendMessageBody | IgSendMessageBody | FbSendMessageBody {
-  if (platform === PlatformType.INSTAGRAM) {
-    return {
-      recipient: {
-        id: to,
-      },
-
-      message: {
-        attachment: {
-          type: "file",
-
-          payload: {
-            url: link,
-          },
-        },
-      },
-    };
-  }
-
-  // Facebook Messenger
-  if (platform === PlatformType.FACEBOOK) {
+  if (
+    platform === PlatformType.INSTAGRAM ||
+    platform === PlatformType.FACEBOOK
+  ) {
     return {
       recipient: {
         id: to,
