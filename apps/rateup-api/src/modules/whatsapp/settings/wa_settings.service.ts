@@ -223,7 +223,7 @@ export async function upsertWaSettings(
   });
 
   if (existingSettings) {
-    if (data.fbPageId?.length && existingSettings.fbPageId !== data.fbPageId) {
+    if (data.fbPageId?.length) {
       await subscribePageToApp(data.fbPageId, data.pageAccessToken, [
         "messages",
         "message_reads",

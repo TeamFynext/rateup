@@ -126,7 +126,8 @@ export async function handleWaMessages(
     );
     const contactCore: ContactCore = {
       name: userName,
-      ...(sourcePlatform === PlatformType.WEBCHAT
+      ...(sourcePlatform === PlatformType.WEBCHAT ||
+      sourcePlatform === PlatformType.FACEBOOK
         ? { other: from }
         : { phone: from }),
       psid: sourcePlatform === PlatformType.FACEBOOK ? from : undefined,
