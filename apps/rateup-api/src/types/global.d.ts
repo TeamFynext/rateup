@@ -615,12 +615,135 @@ declare global {
     };
   };
   type IgReceiveMessageBody = InstagramWebhookBody["entry"][0]["messaging"][0];
+
+  type FacebookWebhookBody = {
+    object: "page";
+
+    entry: [
+      {
+        time: number;
+
+        id: string; // Facebook Page ID
+
+        messaging: [
+          {
+            sender: {
+              id: string; // PSID (Page Scoped ID)
+            };
+
+            recipient: {
+              id: string; // Facebook Page ID
+            };
+
+            timestamp: number;
+
+            message?: {
+              mid: string;
+
+              text?: string;
+
+              attachments?: [
+                {
+                  type: "image" | "video" | "audio" | "file" | "fallback";
+
+                  payload: {
+                    url?: string;
+                  };
+                },
+              ];
+
+              is_deleted?: boolean;
+
+              is_echo?: boolean;
+
+              is_unsupported?: boolean;
+
+              quick_reply?: {
+                payload: any;
+              };
+
+              reply_to?: {
+                mid: string;
+              };
+            };
+
+            reaction?: {
+              mid: string;
+
+              action: "react" | "unreact";
+
+              reaction?: string;
+
+              emoji?: string;
+            };
+
+            read?: {
+              mid?: string;
+              watermark?: number;
+            };
+
+            delivery?: {
+              mids: string[];
+
+              watermark: number;
+            };
+
+            postback?: {
+              title?: string;
+
+              payload?: string;
+
+              referral?: {
+                ref?: string;
+
+                source?: string;
+
+                type?: string;
+              };
+            };
+          },
+        ];
+      },
+    ];
+  };
+
+  type FbSendMessageBody = {
+    recipient: {
+      id: string;
+    };
+
+    message?: {
+      text?: string;
+
+      attachment?: {
+        type: string;
+
+        payload?: {
+          url?: string;
+          attachment_id?: string;
+        };
+      };
+
+      quick_replies?: Array<{
+        content_type: "text";
+        title: string;
+        payload: string;
+      }>;
+    };
+
+    sender_action?: "typing_on" | "typing_off" | "mark_seen";
+  };
+
+  type FbReceiveMessageBody = FacebookWebhookBody["entry"][0]["messaging"][0];
   //---instagram
 
   type WaInboxMessageBody = {
     exchangeProcess: "send" | "receive" | "internal" | "privateNote";
-    send?: WaSendMessageBody | IgSendMessageBody;
-    receive?: WaReceiveMessageBody | IgReceiveMessageBody;
+    send?: WaSendMessageBody | IgSendMessageBody | FbSendMessageBody;
+    receive?:
+      | WaReceiveMessageBody
+      | IgReceiveMessageBody
+      | FbReceiveMessageBody;
     internal?: WaInternalMessageBody;
     privateNote?: WaPrivateMessageBody;
   };

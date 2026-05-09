@@ -468,6 +468,15 @@ export enum InstagramEvent {
   MESSAGE_SEEN = "MESSAGE_SEEN",
 }
 
+export enum FacebookEvent {
+  MESSAGE = "MESSAGE",
+  MESSAGE_DELIVERED = "MESSAGE_DELIVERED",
+  MESSAGE_READ = "MESSAGE_READ",
+  POSTBACK = "POSTBACK",
+  QUICK_REPLY = "QUICK_REPLY",
+  OPT_IN = "OPT_IN",
+}
+
 export enum SupportUserEvent {
   MESSAGE = "MESSAGE",
 }

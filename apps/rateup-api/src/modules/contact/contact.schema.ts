@@ -20,6 +20,7 @@ const contactCoreSchema = z.object({
   external_id: z.string().optional(),
   aiWaChat: z.boolean().optional(),
   igsId: z.string().optional(),
+  psid: z.string().optional(),
   labels: z.array(z.uuid()).optional(),
   contactGroupIds: z.array(z.string()).optional(),
   assignedUserIds: z.array(z.string()).optional(),

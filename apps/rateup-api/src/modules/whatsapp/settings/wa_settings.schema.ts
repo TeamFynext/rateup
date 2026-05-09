@@ -42,6 +42,7 @@ const updateWaSettingsInputSchema = z.object({
   igUserName: z.string().optional().nullable(),
   igDisplayName: z.string().optional().nullable(),
   phoneDisplayName: z.string().optional().nullable(),
+  fbUserName: z.string().optional().nullable(),
   paymentMethod: z.string().optional(),
 });
 
@@ -65,6 +66,7 @@ const getWaSettingsResponseSchema = z.array(
     igUserName: z.string().optional().nullable(),
     igDisplayName: z.string().optional().nullable(),
     phoneDisplayName: z.string().optional().nullable(),
+    fbUserName: z.string().optional().nullable(),
     assets: z.array(z.string()),
     paymentMethod: z.string().optional(),
   }),

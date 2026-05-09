@@ -63,6 +63,7 @@ import {
   getContactById,
   getOrCreateContactByIgsId,
   getOrCreateContactByPhone,
+  getOrCreateContactByPsid,
   updateContactById,
 } from "../../../contact/contact.service.js";
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller.js";
@@ -87,6 +88,7 @@ import {
   updateConversation,
 } from "../../../contact/conversation/conversation.service.js";
 import { WaMessageClosedStatus } from "../../constants.js";
+import { getFacebookUserDetailsFromMeta } from "../../facebook/facebook.service.js";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
@@ -117,7 +119,6 @@ export async function handleWaMessages(
       send: type === "send" ? messageBody : null,
       receive: type === "receive" ? messageBody : null,
     };
-
     // Prepare contact core data
     const waTimeStamp = await returnAppropriateTimeStamp(
       waMessageBody,
@@ -128,6 +129,7 @@ export async function handleWaMessages(
       ...(sourcePlatform === PlatformType.WEBCHAT
         ? { other: from }
         : { phone: from }),
+      psid: sourcePlatform === PlatformType.FACEBOOK ? from : undefined,
       igsId: sourcePlatform === PlatformType.INSTAGRAM ? from : undefined,
       source:
         sourcePlatform === PlatformType.WEBCHAT
@@ -151,6 +153,23 @@ export async function handleWaMessages(
         };
       } catch (e) {
         log.error("Error getting Instagram user details: %o", e);
+      }
+    }
+
+    // Fetch additional Facebook data if needed
+    if (sourcePlatform === PlatformType.FACEBOOK && type === "receive") {
+      try {
+        const userDetails = await getFacebookUserDetailsFromMeta(
+          from,
+          sourceIdentifier,
+        );
+        additionalData = {
+          name: userDetails?.name ?? undefined,
+          email: userDetails?.email ?? undefined,
+          profilePic: userDetails?.profile_pic ?? undefined,
+        };
+      } catch (e) {
+        log.error("Error getting Facebook user details: %o", e);
       }
     }
 
@@ -178,6 +197,9 @@ export async function handleWaMessages(
     let res;
     if (sourcePlatform === PlatformType.INSTAGRAM) {
       res = await getOrCreateContactByIgsId(from, orgId, contactData, true);
+    } else if (sourcePlatform === PlatformType.FACEBOOK) {
+      // Facebook uses phone field but stores the Facebook User ID
+      res = await getOrCreateContactByPsid(from, orgId, contactData, true);
     } else if (sourcePlatform === PlatformType.WEBCHAT) {
       res = await getOrCreateContactByPhone(
         from,
@@ -232,6 +254,7 @@ export async function handleWaMessages(
         });
       }
     }
+
     // Add new message to DB
     const waMessage = await addNewWaMessage(
       waMessageBody,
@@ -341,6 +364,9 @@ export async function sendNewWaMessageHandler(
     switch (platform) {
       case PlatformType.INSTAGRAM:
         to = contact?.igsId;
+        break;
+      case PlatformType.FACEBOOK:
+        to = contact?.psid;
         break;
       case PlatformType.WEBCHAT:
         to = contact?.other;
