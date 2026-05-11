@@ -373,7 +373,11 @@ export default function WaInboxChatDisplayFooter({
   };
 
   if (isSessionExpired) {
-    if (platform === MessagePlatform.INSTAGRAM) return null;
+    if (
+      platform === MessagePlatform.INSTAGRAM ||
+      platform === MessagePlatform.FACEBOOK
+    )
+      return null;
     return (
       <Flex className={classes.wrapper} justify="flex-start">
         <WaInboxFooterMenu
