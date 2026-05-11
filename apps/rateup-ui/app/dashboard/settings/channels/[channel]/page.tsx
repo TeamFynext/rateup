@@ -9,6 +9,7 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button";
 
+import { FacebookSettingsDetail } from "../components/facebook-settings-detail";
 import { InstagramSettingsDetail } from "../components/instagram-settings-detail";
 import { WhatsAppSettingsDetail } from "../components/whatsapp-settings-detail";
 
@@ -19,8 +20,9 @@ export default function ChannelDetailsPage() {
 
   const isWhatsapp = channel === "whatsapp";
   const isInstagram = channel === "instagram";
+  const isFacebook = channel === "facebook";
 
-  if (!isWhatsapp && !isInstagram) {
+  if (!isWhatsapp && !isInstagram && !isFacebook) {
     return (
       <div className="space-y-4 rounded-xl border bg-background p-4">
         <div className="flex items-center justify-between border-b pb-3">
@@ -55,13 +57,18 @@ export default function ChannelDetailsPage() {
         </Button>
       </div>
 
-      {isWhatsapp ? (
+      {isWhatsapp && (
         <WhatsAppSettingsDetail waSettings={waSettings} isLoading={isLoading} />
-      ) : (
+      )}
+      {isInstagram && (
         <InstagramSettingsDetail
           waSettings={waSettings}
           isLoading={isLoading}
         />
+      )}
+
+      {isFacebook && (
+        <FacebookSettingsDetail waSettings={waSettings} isLoading={isLoading} />
       )}
     </div>
   );

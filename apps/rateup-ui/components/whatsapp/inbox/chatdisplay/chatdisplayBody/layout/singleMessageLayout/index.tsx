@@ -121,7 +121,10 @@ export default function WaInboxSingleMessageLayout(props: Props) {
       return;
     }
     let reactionText;
-    if (platform === MessagePlatform.INSTAGRAM) {
+    if (
+      platform === MessagePlatform.INSTAGRAM ||
+      platform === MessagePlatform.FACEBOOK
+    ) {
       reactionText = emojiReactionMap(emojiData.unified);
       if (!reactionText) {
         toast.error(`${emoji} not supported`);
@@ -129,7 +132,8 @@ export default function WaInboxSingleMessageLayout(props: Props) {
       }
     }
     const messageId =
-      platform === MessagePlatform.INSTAGRAM
+      platform === MessagePlatform.INSTAGRAM ||
+      platform === MessagePlatform.FACEBOOK
         ? props?.messageObject.messageId
         : exchangeProcess === "receive"
           ? (props?.messageObject?.messageBody?.receive as WaReceiveMessageBody)
@@ -137,7 +141,11 @@ export default function WaInboxSingleMessageLayout(props: Props) {
           : props?.messageObject?.messageId;
     const reaction = {
       reaction: reactionText,
-      emoji: platform === MessagePlatform.INSTAGRAM ? undefined : emoji,
+      emoji:
+        platform === MessagePlatform.INSTAGRAM ||
+        platform === MessagePlatform.FACEBOOK
+          ? undefined
+          : emoji,
       toWaMessageId: messageId,
     };
     sendnewWaMessage.mutate({ reaction, type: "reaction" });
@@ -170,6 +178,8 @@ export default function WaInboxSingleMessageLayout(props: Props) {
       switch (messageObject.sourcePlatform) {
         case MessagePlatform.INSTAGRAM:
           return "bg-pink-300/10";
+        case MessagePlatform.FACEBOOK:
+          return "bg-blue-300/10";
         case MessagePlatform.WHATSAPP:
           return "bg-green-500/10 dark:bg-green-950";
         default:
@@ -254,7 +264,13 @@ export default function WaInboxSingleMessageLayout(props: Props) {
         {exchangeProcess === "receive" && (
           <div className="mb-1">
             <CreativeAvatar
-              name={selectedContact?.name}
+              name={
+                selectedContact?.name ||
+                selectedContact?.whatsappUserName ||
+                selectedContact?.phone ||
+                selectedContact?.igsId ||
+                selectedContact?.psid
+              }
               size="xs"
               src={selectedContact?.profilePic}
               showRing={true}

@@ -614,7 +614,6 @@ export default function AppSidebar({
     chatFilterStore,
     hiddenModules,
     handleFilter,
-    userId: user?.userId,
     allowedFeatures,
     user,
   });

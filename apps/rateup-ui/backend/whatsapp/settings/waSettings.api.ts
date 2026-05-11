@@ -19,6 +19,7 @@ export type WaSettings = {
   appId: string;
   type: WaConfigType;
   fbPageId: string;
+  fbUserName: string;
   ibaId: string;
   pageAccessToken: string;
   igUserName: string;

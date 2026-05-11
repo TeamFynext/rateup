@@ -26,6 +26,7 @@ export interface LoyaltyProgram {
   autoApproveAdjustments?: boolean;
   emailNotifications?: boolean;
   whatsappNotifications?: boolean;
+  enableShopifyOrderPoints?: boolean;
   createdAt: Date;
   updatedAt: Date;
   whatsappSettingsId?: string;
@@ -54,6 +55,7 @@ export interface LoyaltyProgramInput {
   autoApproveAdjustments?: boolean;
   emailNotifications?: boolean;
   whatsappNotifications?: boolean;
+  enableShopifyOrderPoints?: boolean;
   programActive?: boolean;
   pointsActivityAlerts?: boolean;
   enablePointsExpiration?: boolean;

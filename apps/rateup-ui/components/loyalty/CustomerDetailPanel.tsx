@@ -91,6 +91,7 @@ export function CustomerDetailPanel({
   const [issuePointsOpen, setIssuePointsOpen] = useState(false);
   const [assignRewardOpen, setAssignRewardOpen] = useState(false);
   const [claimRewardOpen, setClaimRewardOpen] = useState(false);
+  const [claimCouponOpen, setClaimCouponOpen] = useState(false);
   const [redeemCouponOpen, setRedeemCouponOpen] = useState(false);
   const [useRedemptionOpen, setUseRedemptionOpen] = useState(false);
 
@@ -98,6 +99,7 @@ export function CustomerDetailPanel({
   const [pointsAmount, setPointsAmount] = useState("");
   const [pointsNotes, setPointsNotes] = useState("");
   const [selectedRewardId, setSelectedRewardId] = useState("");
+  const [selectedCouponRewardId, setSelectedCouponRewardId] = useState("");
   const [assignRewardNotes, setAssignRewardNotes] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [selectedRedemptionId, setSelectedRedemptionId] = useState("");
@@ -110,6 +112,7 @@ export function CustomerDetailPanel({
 
   const availableRewards = rewardData?.availableRewards || [];
   const issuableRewards = rewardData?.issuableRewards || [];
+  const activeCoupons = rewardData?.activeCoupons || [];
   const redeemedRewards = rewardData?.redeemedRewards || [];
   const unusedRedemptions = redeemedRewards.filter(
     (r) => r.status === "approved" || r.status === "pending",
@@ -169,6 +172,35 @@ export function CustomerDetailPanel({
     }
   };
 
+  const handleClaimCoupon = async () => {
+    if (!selectedCouponRewardId) {
+      toast.error(t("Please select a reward"));
+      return;
+    }
+
+    try {
+      const result = await redeemRewardMutation.mutateAsync({
+        customerId: customer.id,
+        rewardId: selectedCouponRewardId,
+      });
+      if (result?.redemptionCode) {
+        toast.success(
+          `${t("Reward claimed successfully")}. ${t("Code:")} ${result.redemptionCode}`,
+          {
+            duration: Infinity,
+            closeButton: true,
+          },
+        );
+      } else {
+        toast.success(t("Reward claimed successfully"));
+      }
+      setClaimCouponOpen(false);
+      setSelectedCouponRewardId("");
+    } catch (error) {
+      toast.error(error?.message || t("Failed to claim reward"));
+    }
+  };
+
   const handleAssignReward = async () => {
     if (!selectedRewardId) {
       toast.error(t("Please select a reward"));
@@ -186,14 +218,22 @@ export function CustomerDetailPanel({
     }
   };
 
-  const handleRedeemCoupon = () => {
+  const handleRedeemCoupon = async () => {
     if (!couponCode) {
       toast.error(t("Please enter a coupon code"));
       return;
     }
-    redeemRewardByShortCode.mutate(couponCode);
-    setRedeemCouponOpen(false);
-    setCouponCode("");
+    try {
+      const result = await redeemRewardByShortCode.mutateAsync(couponCode);
+      const redeemedCode = result?.shortCode || couponCode;
+      toast.success(
+        `${t("Reward redeemed successfully")}. ${t("Code:")} ${redeemedCode}`,
+      );
+      setRedeemCouponOpen(false);
+      setCouponCode("");
+    } catch (error) {
+      toast.error(error?.message || t("Redemption failed"));
+    }
   };
 
   const handleUseRedemption = async () => {
@@ -425,9 +465,9 @@ export function CustomerDetailPanel({
           <CardTitle className="text-base">{t("Quick Actions")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button
-              className="h-auto py-3 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 justify-start border border-blue-100"
+              className="h-auto py-3 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 justify-start border border-blue-100 flex-1"
               onClick={() => {
                 setPointsAmount("");
                 setPointsNotes("");
@@ -448,7 +488,7 @@ export function CustomerDetailPanel({
             </Button>
 
             <Button
-              className="h-auto py-3 px-4 bg-purple-50 hover:bg-purple-100 text-purple-700 justify-start border border-purple-100"
+              className="h-auto py-3 px-4 bg-purple-50 hover:bg-purple-100 text-purple-700 justify-start border border-purple-100 flex-1"
               onClick={() => {
                 setSelectedRewardId("");
                 setAssignRewardNotes("");
@@ -469,7 +509,27 @@ export function CustomerDetailPanel({
             </Button>
 
             <Button
-              className="h-auto py-3 px-4 bg-orange-50 hover:bg-orange-100 text-orange-700 justify-start border border-orange-100"
+              className="h-auto py-3 px-4 bg-amber-50 hover:bg-amber-100 text-amber-700 justify-start border border-amber-100 flex-1"
+              onClick={() => {
+                setSelectedCouponRewardId("");
+                setClaimCouponOpen(true);
+              }}
+            >
+              <div className="flex items-center gap-3 w-full">
+                <div className="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center shrink-0">
+                  <Ticket className="w-4 h-4 text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-amber-900">
+                    {t("Redeem Coupon")}
+                  </p>
+                  <p className="text-xs text-amber-600">{t("Select Reward")}</p>
+                </div>
+              </div>
+            </Button>
+
+            <Button
+              className="h-auto py-3 px-4 bg-orange-50 hover:bg-orange-100 text-orange-700 justify-start border border-orange-100 flex-1"
               onClick={() => {
                 setCouponCode("");
                 setRedeemCouponOpen(true);
@@ -481,15 +541,15 @@ export function CustomerDetailPanel({
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-semibold text-orange-900">
-                    {t("Redeem Coupon")}
+                    {t("Use coupon")}
                   </p>
-                  <p className="text-xs text-orange-600">{t("Use coupon")}</p>
+                  <p className="text-xs text-orange-600">{t("Mark as Used")}</p>
                 </div>
               </div>
             </Button>
 
             <Button
-              className="h-auto py-3 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 justify-start border border-indigo-100"
+              className="h-auto py-3 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 justify-start border border-indigo-100 flex-1"
               onClick={() => {
                 setSelectedRewardId("");
                 setClaimRewardOpen(true);
@@ -809,10 +869,84 @@ export function CustomerDetailPanel({
       </Dialog>
 
       {/* Redeem Coupon Modal */}
-      <Dialog open={redeemCouponOpen} onOpenChange={setRedeemCouponOpen}>
+      <Dialog open={claimCouponOpen} onOpenChange={setClaimCouponOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("Redeem Coupon")}</DialogTitle>
+            <DialogDescription>{t("Select Reward")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>{t("Select Reward")}</Label>
+              <div className="space-y-2 max-h-75 overflow-y-auto">
+                {availableRewards
+                  .filter(
+                    (coupon) =>
+                      coupon.rewardType === "coupon" &&
+                      coupon.status === "ACTIVE",
+                  )
+                  .map((coupon) => (
+                    <button
+                      key={coupon.id}
+                      onClick={() => setSelectedCouponRewardId(coupon.id)}
+                      className={cn(
+                        "w-full flex items-center justify-between p-3 border rounded-lg text-left transition-colors",
+                        selectedCouponRewardId === coupon.id
+                          ? "border-primary bg-primary/5"
+                          : "hover:bg-muted",
+                      )}
+                    >
+                      <div>
+                        <p className="font-medium text-sm">{coupon.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {coupon.description || t("No description")}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {coupon.rewardValue?.code || t("Coupon Code")}
+                      </Badge>
+                    </button>
+                  ))}
+                {availableRewards.filter(
+                  (coupon) =>
+                    coupon.rewardType === "coupon" &&
+                    coupon.status === "ACTIVE",
+                ).length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    {t("No rewards available with current points")}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setClaimCouponOpen(false)}>
+              {t("Cancel")}
+            </Button>
+            <Button
+              onClick={handleClaimCoupon}
+              disabled={
+                !selectedCouponRewardId || redeemRewardMutation.isPending
+              }
+            >
+              {redeemRewardMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {t("Claiming...")}
+                </>
+              ) : (
+                t("Redeem Coupon")
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Redeem Coupon Modal */}
+      <Dialog open={redeemCouponOpen} onOpenChange={setRedeemCouponOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("Use coupon")}</DialogTitle>
             <DialogDescription>
               Enter a coupon code for {customer.name}.
             </DialogDescription>
@@ -840,7 +974,7 @@ export function CustomerDetailPanel({
               {t("Cancel")}
             </Button>
             <Button onClick={handleRedeemCoupon} disabled={!couponCode}>
-              {t("Redeem Coupon")}
+              {t("Mark as Used")}
             </Button>
           </DialogFooter>
         </DialogContent>

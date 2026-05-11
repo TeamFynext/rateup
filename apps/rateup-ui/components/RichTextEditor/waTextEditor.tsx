@@ -305,7 +305,10 @@ function WaTextEditor({
           },
         }}
         platform={platform as MessagePlatform}
-        disabled={platform === MessagePlatform.INSTAGRAM}
+        disabled={
+          platform === MessagePlatform.INSTAGRAM ||
+          platform === MessagePlatform.FACEBOOK
+        }
         hideLabel={true}
       />
     );
@@ -574,7 +577,10 @@ function WaTextEditor({
                         </RichTextEditor.ControlsGroup>
 
                         <RichTextEditor.ControlsGroup>
-                          {platform !== MessagePlatform.INSTAGRAM && (
+                          {!(
+                            platform === MessagePlatform.INSTAGRAM ||
+                            platform === MessagePlatform.FACEBOOK
+                          ) && (
                             <>
                               <InboxContactsControl />
                               <InboxLocationControl />

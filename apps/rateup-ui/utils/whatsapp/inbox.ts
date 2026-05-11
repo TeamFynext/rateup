@@ -40,7 +40,10 @@ export function parseWaMessage(
   let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
   let interactive: WaSendMessageBody["interactive"] =
     {} as WaSendMessageBody["interactive"];
-  if (message.sourcePlatform === MessagePlatform.INSTAGRAM) {
+  if (
+    message.sourcePlatform === MessagePlatform.INSTAGRAM ||
+    message.sourcePlatform === MessagePlatform.FACEBOOK
+  ) {
     if (messageBody?.exchangeProcess === "send") {
       const { send } = messageBody as { send: IgSendMessageBody };
       const { message, sender_action, payload } = send;

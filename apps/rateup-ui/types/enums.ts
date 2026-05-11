@@ -599,6 +599,7 @@ export enum MessagePlatform {
   INSTAGRAM = "INSTAGRAM",
   WHATSAPP = "WHATSAPP",
   WEBCHAT = "WEBCHAT",
+  FACEBOOK = "FACEBOOK",
 }
 
 export enum MetaLoginAssets {

@@ -163,6 +163,7 @@ export default function LoyaltySettingsPage() {
       autoApproveAdjustments: false,
       emailNotifications: true,
       whatsappNotifications: true,
+      enableShopifyOrderPoints: false,
     },
   });
 
@@ -199,6 +200,7 @@ export default function LoyaltySettingsPage() {
         autoApproveAdjustments: program.autoApproveAdjustments ?? false,
         emailNotifications: program.emailNotifications ?? true,
         whatsappNotifications: program.whatsappNotifications ?? true,
+        enableShopifyOrderPoints: program.enableShopifyOrderPoints ?? false,
       });
 
       expirationForm.reset({
