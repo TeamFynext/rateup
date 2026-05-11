@@ -83,11 +83,23 @@ export async function addNewWaMessage(
     initialStats.delivered = waCreatedAt;
   }
 
+  if (
+    sourcePlatform === PlatformType.INSTAGRAM ||
+    sourcePlatform === PlatformType.FACEBOOK
+  ) {
+    initialStats.sent = waCreatedAt;
+  }
+
   if (failed) {
     initialStats.failed = waCreatedAt;
   }
   let statsData = {};
-  if (failed || sourcePlatform === PlatformType.WEBCHAT) {
+  if (
+    failed ||
+    sourcePlatform === PlatformType.WEBCHAT ||
+    sourcePlatform === PlatformType.INSTAGRAM ||
+    sourcePlatform === PlatformType.FACEBOOK
+  ) {
     statsData = { stats: initialStats };
   }
 
@@ -564,6 +576,7 @@ export async function filterChats(
           c."blockedOnWhatsApp",
           c."source",
           c."igsId",
+          c."psid",
           c."profilePic",
           c."followerCount",
           c."isIgVerifiedUser",
@@ -1236,6 +1249,7 @@ export async function sendMediaMessages(
           item.url,
           item.name,
           captionMsg,
+          platform,
         );
         break;
       }
@@ -1371,30 +1385,35 @@ export async function updateWaMessageByMessageId(
   data: Partial<WaMessage>,
   id?: string,
 ) {
-  if (id)
-    return await prisma.waMessage.update({
-      where: {
-        id,
-      },
-      data,
-    });
-  if (messageId) {
-    const message = await prisma.waMessage.findFirst({
-      where: {
-        messageId,
-      },
-    });
-    if (!message) {
-      log.trace("Message not found on id: %s", messageId);
-      return null;
-    }
-    return await prisma.waMessage.update({
-      where: {
-        id: message.id,
-      },
-      data,
-    });
+  const whereClause = id ? { id } : { messageId };
+
+  const message = await prisma.waMessage.findFirst({
+    where: whereClause,
+  });
+
+  if (!message) {
+    log.trace(
+      "Message not found on %s: %s",
+      id ? "id" : "messageId",
+      id || messageId,
+    );
+    return null;
   }
+
+  return await prisma.waMessage.update({
+    where: {
+      id: message.id,
+    },
+    data: {
+      ...data,
+      stats: data.stats
+        ? {
+            ...(message.stats as Record<string, any>),
+            ...(data.stats as Record<string, any>),
+          }
+        : undefined,
+    },
+  });
 }
 
 export async function generateChatAnalytics(orgId: string) {

@@ -150,6 +150,11 @@ export async function updateWaSettingsByIdHandler(
         "GET",
       );
       request.body.igUserName = igData.data.username;
+      const fbData = await callWhatsappApi(
+        `/${request.body.fbPageId}?fields=name&access_token=${settings?.accessToken}`,
+        "GET",
+      );
+      request.body.fbUserName = fbData.data.name;
     }
     if (!request.body.fbPageId?.length && settings.fbPageId?.length) {
       request.body.fbPageId = null;
@@ -157,6 +162,7 @@ export async function updateWaSettingsByIdHandler(
       request.body.pageAccessToken = null;
       request.body.igUserName = null;
       request.body.igDisplayName = null;
+      request.body.fbUserName = null;
     }
     await updateWaSettingsById(whatsappSettingsId, request.body);
     reply.code(200).send();

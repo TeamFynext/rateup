@@ -219,6 +219,24 @@ export async function checkInactivityEventTriggers() {
               continue;
             }
 
+            // Atomically claim this customer by updating lastActivityAt only if it
+            // still matches the original value — prevents duplicate sends if the
+            // cron overlaps or runs concurrently across multiple instances.
+            const claimed = await prisma.customerLoyaltyAccount.updateMany({
+              where: {
+                id: customer.id,
+                lastActivityAt: customer.lastActivityAt,
+              },
+              data: { lastActivityAt: new Date() },
+            });
+
+            if (claimed.count === 0) {
+              log.info(
+                `Inactivity Event Trigger - Customer ${customer.id} already claimed by another process, skipping`,
+              );
+              continue;
+            }
+
             // Calculate days since last activity
             const daysSinceActivity = dayjs().diff(
               dayjs(customer.lastActivityAt),
@@ -228,7 +246,6 @@ export async function checkInactivityEventTriggers() {
             // Prepare dynamic variables for template
             const dynamicVariables = [
               customer.contact.name || "Valued Customer",
-              //   daysSinceActivity.toString(),
               customer?.currentPoints?.toString() || "0",
             ];
 
@@ -239,16 +256,10 @@ export async function checkInactivityEventTriggers() {
               customer.contact.phone,
               dynamicVariables,
             );
-
             // If a reward is configured to incentivize return, issue it
             if (trigger.rewardId) {
               await issueRewardToCustomer(customer.id, trigger.rewardId);
             }
-
-            await prisma.customerLoyaltyAccount.update({
-              where: { id: customer.id },
-              data: { lastActivityAt: new Date() },
-            });
 
             log.info(
               `Inactivity Event Trigger - Sent reminder to customer ${customer.id} (${daysSinceActivity} days inactive)`,

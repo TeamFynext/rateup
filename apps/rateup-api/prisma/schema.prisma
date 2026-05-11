@@ -305,6 +305,8 @@ model WhatsappSettings {
   igDisplayName    String?
   phoneDisplayName String?
 
+  fbUserName       String?
+
   type             String // enums.ts: WaConfigType
   status           String             @default("ACTIVE")
   createdAt        DateTime           @default(now())
@@ -689,6 +691,7 @@ model Contact {
   profilePic                   String?
   followerCount                Int?
   isIgVerifiedUser             Boolean?
+  psid                         String? // Page-Scoped ID for Facebook Messenger 
   other                        String?
   Lifecycle                    Lifecycle?                @relation(fields: [lifecycleId], references: [id])
   lifecycleId                  String?                   @db.Uuid
@@ -711,6 +714,7 @@ model Contact {
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
   @@unique([igsId, orgId], name: "contact_igsid_org_id_unique")
+  @@unique([psid, orgId], name: "contact_psid_org_id_unique")
   @@index([orgId])
   @@index([orgId, id])
   @@index([orgId, waMessageAssignStatus])
@@ -1519,6 +1523,7 @@ model Linktree {
 enum PlatformType {
   WHATSAPP
   INSTAGRAM
+  FACEBOOK
   WEBCHAT
   INTERNAL
 }
@@ -1786,6 +1791,7 @@ model LoyaltyProgram {
   autoApproveAdjustments  Boolean @default(false)
   emailNotifications      Boolean @default(true)
   whatsappNotifications   Boolean @default(true)
+  enableShopifyOrderPoints Boolean @default(false)
   enablePointsExpiration  Boolean @default(false)
   pointsExpirationMonths  Int     @default(12)
   referralMessageTemplate Json    @default("[{\"type\": \"paragraph\",\"content\": [{\"type\": \"text\",\"text\": \"🎉 Welcome {{1}}!\\nYou are now registered in our Loyalty Program.\\n🔗 Your referral code: {{2}}\\nShare & earn rewards\"}]}]")

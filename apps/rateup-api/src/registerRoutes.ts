@@ -53,6 +53,7 @@ import { mobileNotificationRoutes } from "./modules/mobileNotification/mobile.ro
 import { dashboardRoutes } from "./modules/dashboard/dashboard.route.js";
 import { notificationRoutes } from "./modules/notification/notification.route.js";
 import { instagramWebhookRoutes } from "./modules/whatsapp/instagram/instagram.webhook.route.js";
+import { facebookWebhookRoutes } from "./modules/whatsapp/facebook/facebook.webhook.route.js";
 import { lifecycleRoutes } from "./modules/lifecycle/lifecycle.route.js";
 import { bookDemoRoutes } from "./modules/BookDemo/bookDemo.route.js";
 import { supportUserWebhookRoutes } from "./modules/whatsapp/support-user/suport-user.webhook.route.js";
@@ -128,6 +129,7 @@ const routeConfigs = [
   { plugin: dashboardRoutes, prefix: "/api/dashboard" },
   { plugin: notificationRoutes, prefix: "/api/notification" },
   { plugin: instagramWebhookRoutes, prefix: "/api/instagram/webhook" },
+  { plugin: facebookWebhookRoutes, prefix: "/api/facebook/webhook" },
   { plugin: supportUserWebhookRoutes, prefix: "/api/support" },
   { plugin: lifecycleRoutes, prefix: "/api/lifecycles" },
   { plugin: bookDemoRoutes, prefix: "/api/bookdemo" },
