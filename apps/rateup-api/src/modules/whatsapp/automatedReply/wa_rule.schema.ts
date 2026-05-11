@@ -19,7 +19,7 @@ export const ruleConditionSchema = z.object({
   id: z.string().optional(),
   field: z.enum(ConditionField),
   operator: z.enum(ConditionOperator),
-  value: z.string().optional(),
+  value: z.string().trim().optional(),
 });
 
 export const ruleConditionGroupSchema = z.object({
