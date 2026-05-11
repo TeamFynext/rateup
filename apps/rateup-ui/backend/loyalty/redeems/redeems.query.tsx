@@ -29,7 +29,6 @@ export const useRedeemRewardByShortCode = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
-      toast.success("Reward redeemed successfully using short code");
     },
     onError: (error) => {
       toast.error(error?.message || `Redemption failed`);
@@ -48,7 +47,6 @@ export const useRedeemReward = (selectedPhone: string) => {
       qc.invalidateQueries({
         queryKey: ["loyalty-cashier-customer", selectedPhone],
       });
-      toast.success("Reward claimed successfully");
     },
     onError: (error) => {
       qc.invalidateQueries({ queryKey: ["loyaltyRedeems"] });

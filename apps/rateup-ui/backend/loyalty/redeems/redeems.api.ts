@@ -4,6 +4,21 @@ import { LOYALTY_BASE } from "../base";
 
 const base = LOYALTY_BASE + "/redemptions";
 
+export interface RedeemRewardResponse {
+  message?: string;
+  redemptionCode?: string;
+  redemption?: {
+    id: string;
+    status?: string;
+  };
+}
+
+export interface ShortCodeRedeemResponse {
+  id: string;
+  shortCode?: string;
+  status?: string;
+}
+
 export async function getLoyaltyRedeems() {
   return (await axiosClient.get(`${base}`)).data;
 }
@@ -15,7 +30,8 @@ export async function redeemReward(data: {
   orderId?: string;
   notes?: string;
 }) {
-  await axiosClient.post(`${base}/redeem`, data);
+  return (await axiosClient.post<RedeemRewardResponse>(`${base}/redeem`, data))
+    .data;
 }
 
 export async function updateRedeem({ redeemId, data }) {
@@ -35,6 +51,8 @@ export async function getRewardByShortCode(shortCode: string) {
 
 export async function redeemRewardByShortCode(shortCode: string) {
   return (
-    await axiosClient.post(`/loyalty/accounts/rewards/${shortCode}/redeem`)
+    await axiosClient.post<ShortCodeRedeemResponse>(
+      `/loyalty/accounts/rewards/${shortCode}/redeem`,
+    )
   ).data;
 }

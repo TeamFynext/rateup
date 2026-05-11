@@ -182,7 +182,7 @@ export function LoyaltyRewardForm({
                         min="0"
                         {...field}
                         onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || 0)
+                          field.onChange(Number.parseFloat(e.target.value) || 0)
                         }
                       />
                     </FormControl>
@@ -210,7 +210,7 @@ export function LoyaltyRewardForm({
                         max="100"
                         {...field}
                         onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || 0)
+                          field.onChange(Number.parseFloat(e.target.value) || 0)
                         }
                       />
                     </FormControl>
@@ -552,24 +552,51 @@ export function LoyaltyRewardForm({
             />
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                {/* Placeholder for Discount Type Select if needed in schema, assuming simplified for now or missing from provided excerpt logic */}
-                <Label>Discount Type</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="percentage">Percentage (%)</SelectItem>
-                    <SelectItem value="fixed">Fixed Amount</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {/* Placeholder for Discount Value, not in schema provided earlier but usually needed */}
-              <div className="space-y-2">
-                <Label>Discount Value</Label>
-                <Input type="number" placeholder="20" min="0" />
-              </div>
+              <FormField
+                control={couponForm.control}
+                name="discountType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Discount Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="percentage">
+                          Percentage (%)
+                        </SelectItem>
+                        <SelectItem value="fixed">Fixed Amount</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={couponForm.control}
+                name="discountValue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Discount Value</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="20"
+                        min="0"
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(parseFloat(e.target.value) || 0)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <FormField
@@ -613,7 +640,7 @@ export function LoyaltyRewardForm({
                           min="1"
                           {...field}
                           onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || 0)
+                            field.onChange(Number.parseInt(e.target.value) || 0)
                           }
                         />
                       </FormControl>
@@ -625,38 +652,91 @@ export function LoyaltyRewardForm({
                   )}
                 />
 
-                <div className="space-y-2">
-                  <Label>Per User Limit</Label>
-                  <Input type="number" placeholder="1" min="1" />
-                  <p className="text-xs text-muted-foreground">
-                    How many times a single user can redeem
-                  </p>
-                </div>
+                <FormField
+                  control={couponForm.control}
+                  name="perUserLimit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Per User Limit</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="1"
+                          min="1"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number.parseInt(e.target.value) || 0)
+                          }
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        How many times a single user can redeem
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
             <div className="pt-4 border-t">
               <h3 className="text-base font-medium mb-3">Validity Period</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Valid From</Label>
-                  <Input type="date" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Valid To</Label>
-                  <Input type="date" />
-                </div>
+                <FormField
+                  control={couponForm.control}
+                  name="validFrom"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valid From</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={couponForm.control}
+                  name="validTo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valid To</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
-            <div className="space-y-2 pt-4 border-t">
-              {/* Restrictions were simple text area in original */}
-              <Label>Terms and Conditions</Label>
-              <Textarea
-                className="min-h-20 resize-none"
-                placeholder="Enter any terms, conditions, or restrictions for this coupon..."
-              />
-            </div>
+            <FormField
+              control={couponForm.control}
+              name="termsAndConditions"
+              render={({ field }) => (
+                <FormItem className="pt-4 border-t">
+                  <FormLabel>Terms and Conditions</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      className="min-h-20 resize-none"
+                      placeholder="Enter any terms, conditions, or restrictions for this coupon..."
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="pt-4 border-t">
               <h3 className="text-base font-medium mb-3">

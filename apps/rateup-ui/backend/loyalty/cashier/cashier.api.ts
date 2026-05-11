@@ -36,6 +36,7 @@ interface CustomerReward {
     percentage?: number;
     amount?: number;
     itemId?: string;
+    code?: string | null;
   };
   stockQuantity: number | null;
   stockRedeemed: number;
