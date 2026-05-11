@@ -576,6 +576,7 @@ export async function filterChats(
           c."blockedOnWhatsApp",
           c."source",
           c."igsId",
+          c."psid",
           c."profilePic",
           c."followerCount",
           c."isIgVerifiedUser",
