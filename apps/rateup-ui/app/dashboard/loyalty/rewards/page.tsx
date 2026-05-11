@@ -124,7 +124,13 @@ export default function RewardsPage() {
     description: "",
     couponCode: "",
     couponDescription: "",
+    discountType: "percentage",
+    discountValue: 0,
     stockQuantity: 0,
+    perUserLimit: 1,
+    validFrom: "",
+    validTo: "",
+    termsAndConditions: "",
     minimumSpend: 0,
     waTemplateId: "",
     tierIds: [],
@@ -214,6 +220,60 @@ export default function RewardsPage() {
     setRewardTierRestriction(false);
   };
 
+  const resetPointRewardForm = (reward: any) => {
+    const pointRewardValue = reward.rewardValue || {};
+    const cashbackAmount = Number(pointRewardValue.cashbackAmount || 0);
+    const discountPercentage = Number(pointRewardValue.discountPercentage || 0);
+    const estimatedValue = Number(pointRewardValue.estimatedValue || 0);
+    const termsAndConditions =
+      pointRewardValue.termsAndConditions ||
+      pointRewardValue.restrictions ||
+      "";
+
+    const storedRewardType = pointRewardValue.rewardType;
+    let rewardType: z.infer<typeof pointRewardSchema>["rewardType"] =
+      "fixed-discount";
+
+    if (
+      storedRewardType === "fixed-discount" ||
+      storedRewardType === "percentage-discount" ||
+      storedRewardType === "free-item" ||
+      storedRewardType === "free-service"
+    ) {
+      rewardType = storedRewardType;
+    } else if (discountPercentage > 0) {
+      rewardType = "percentage-discount";
+    } else if (estimatedValue > 0) {
+      rewardType = "free-item";
+    }
+
+    const spendMin = reward.redemptionRules?.spend_requirements?.minimum_spend;
+    const timeRestrictions = reward.redemptionRules?.time_restrictions;
+
+    pointRewardForm.reset({
+      name: reward.name || "",
+      description: reward.description || "",
+      rewardType,
+      pointsCost: reward.pointsCost || 0,
+      waTemplateId: reward.waTemplateId || undefined,
+      tierIds: reward.availableForTiers || [],
+      cashbackAmount,
+      discountPercentage,
+      estimatedValue,
+      restrictions: termsAndConditions,
+      minimumSpend: spendMin ? Number(spendMin) : undefined,
+      availableDays: timeRestrictions?.allowed_days || [],
+      timeFrom: timeRestrictions?.allowed_time_ranges?.[0]?.start || undefined,
+      timeTo: timeRestrictions?.allowed_time_ranges?.[0]?.end || undefined,
+    });
+
+    setMinimumSpendEnabled(!!spendMin);
+    setTimeRestrictionsEnabled(
+      (timeRestrictions?.allowed_days?.length || 0) > 0 ||
+        (timeRestrictions?.allowed_time_ranges?.length || 0) > 0,
+    );
+  };
+
   useEffect(() => {
     if (loyaltyProgram) {
       setReferralBonus(loyaltyProgram.referralBonus || 0);
@@ -228,40 +288,35 @@ export default function RewardsPage() {
   useEffect(() => {
     if (editingReward) {
       if (editingReward.rewardType === "point") {
-        const spendMin =
-          editingReward.redemptionRules?.spend_requirements?.minimum_spend;
-        const timeRestrictions =
-          editingReward.redemptionRules?.time_restrictions;
-        pointRewardForm.reset({
-          name: editingReward.name || "",
-          description: editingReward.description || "",
-          rewardType: "fixed-discount", // Default as explicit type isn't stored in top level
-          pointsCost: editingReward.pointsCost || 0,
-          waTemplateId: editingReward.waTemplateId || undefined,
-          tierIds: editingReward.availableForTiers || [],
-          // Default others to 0/empty as in original code
-          cashbackAmount: 0,
-          discountPercentage: 0,
-          estimatedValue: 0,
-          restrictions: "",
-          minimumSpend: spendMin ? Number(spendMin) : undefined,
-          availableDays: timeRestrictions?.allowed_days || [],
-          timeFrom:
-            timeRestrictions?.allowed_time_ranges?.[0]?.start || undefined,
-          timeTo: timeRestrictions?.allowed_time_ranges?.[0]?.end || undefined,
-        });
-        setMinimumSpendEnabled(!!spendMin);
-        setTimeRestrictionsEnabled(
-          (timeRestrictions?.allowed_days?.length || 0) > 0 ||
-            (timeRestrictions?.allowed_time_ranges?.length || 0) > 0,
-        );
+        resetPointRewardForm(editingReward);
       } else if (editingReward.rewardType === "coupon") {
+        const couponRewardValue = editingReward.rewardValue || {};
+        const couponTimeRestrictions =
+          editingReward.redemptionRules?.time_restrictions;
         couponForm.reset({
           name: editingReward.name || "",
           description: editingReward.description || "",
           couponCode: editingReward.rewardValue?.code || "",
           couponDescription: editingReward.rewardValue?.description || "",
+          discountType:
+            couponRewardValue.discountType === "fixed" ? "fixed" : "percentage",
+          discountValue: Number(couponRewardValue.discountValue || 0),
           stockQuantity: editingReward.stockQuantity || 0,
+          perUserLimit:
+            Number(
+              editingReward.redemptionRules?.quantity_restrictions
+                ?.max_redemptions_per_customer,
+            ) || 1,
+          validFrom: couponTimeRestrictions?.valid_from
+            ? String(couponTimeRestrictions.valid_from).slice(0, 10)
+            : "",
+          validTo: couponTimeRestrictions?.valid_until
+            ? String(couponTimeRestrictions.valid_until).slice(0, 10)
+            : "",
+          termsAndConditions:
+            couponRewardValue.termsAndConditions ||
+            couponRewardValue.restrictions ||
+            "",
           minimumSpend:
             Number(
               editingReward.redemptionRules?.spend_requirements?.minimum_spend,
@@ -370,6 +425,12 @@ export default function RewardsPage() {
       pointsCost: data.pointsCost,
       rewardValue: {
         points: data.pointsCost,
+        cashbackAmount: data.cashbackAmount || undefined,
+        discountPercentage: data.discountPercentage || undefined,
+        estimatedValue: data.estimatedValue || undefined,
+        termsAndConditions: data.restrictions || undefined,
+        restrictions: data.restrictions || undefined,
+        rewardType: data.rewardType,
       },
       waTemplateId: data.waTemplateId || undefined,
       availableForTiers:
@@ -385,6 +446,31 @@ export default function RewardsPage() {
   };
 
   const onSubmitCoupon = (data: z.infer<typeof couponSchema>) => {
+    const redemptionRules: Record<string, unknown> = {};
+
+    if (data.minimumSpend !== undefined && data.minimumSpend > 0) {
+      redemptionRules.spend_requirements = {
+        minimum_spend: data.minimumSpend,
+      };
+    }
+
+    if (data.perUserLimit !== undefined && data.perUserLimit > 0) {
+      redemptionRules.quantity_restrictions = {
+        max_redemptions_per_customer: data.perUserLimit,
+      };
+    }
+
+    if (data.validFrom || data.validTo) {
+      redemptionRules.time_restrictions = {
+        ...(data.validFrom
+          ? { valid_from: new Date(data.validFrom).toISOString() }
+          : {}),
+        ...(data.validTo
+          ? { valid_until: new Date(data.validTo).toISOString() }
+          : {}),
+      };
+    }
+
     const payload: any = {
       name: data.name,
       description: data.description,
@@ -393,16 +479,16 @@ export default function RewardsPage() {
       rewardValue: {
         code: data.couponCode,
         description: data.couponDescription,
+        discountType: data.discountType || undefined,
+        discountValue: data.discountValue || undefined,
+        termsAndConditions: data.termsAndConditions || undefined,
+        restrictions: data.termsAndConditions || undefined,
       },
       stockQuantity: data.stockQuantity,
       waTemplateId: data.waTemplateId || undefined,
       availableForTiers:
         rewardTierRestriction && data.tierIds?.length ? data.tierIds : [],
-      redemptionRules: {
-        spend_requirements: {
-          minimum_spend: data.minimumSpend,
-        },
-      },
+      redemptionRules,
     };
 
     if (editingCouponId) {
