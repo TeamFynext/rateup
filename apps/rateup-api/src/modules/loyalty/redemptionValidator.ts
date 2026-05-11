@@ -205,13 +205,15 @@ export class RedemptionValidator {
   ): Promise<string[]> {
     const violations: string[] = [];
 
-    // One-time use check
+    // One-time use check - count any active redemption (APPROVED, PENDING, USED)
     if (restrictions.one_time_use) {
       const previousUse = await prisma.loyaltyRedemption.findFirst({
         where: {
           accountId: customerId,
           rewardId,
-          status: "USED",
+          status: {
+            in: ["APPROVED", "PENDING", "USED"],
+          },
         },
       });
       if (previousUse) {
@@ -219,13 +221,15 @@ export class RedemptionValidator {
       }
     }
 
-    // Max redemptions per customer
+    // Max redemptions per customer - count all active redemptions
     if (restrictions.max_redemptions_per_customer) {
       const totalRedemptions = await prisma.loyaltyRedemption.count({
         where: {
           accountId: customerId,
           rewardId,
-          status: "USED",
+          status: {
+            in: ["APPROVED", "PENDING", "USED"],
+          },
         },
       });
       if (totalRedemptions >= restrictions.max_redemptions_per_customer) {
@@ -233,7 +237,7 @@ export class RedemptionValidator {
       }
     }
 
-    // Max redemptions per day
+    // Max redemptions per day - use createdAt instead of usedAt
     if (restrictions.max_redemptions_per_day) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -241,7 +245,10 @@ export class RedemptionValidator {
         where: {
           accountId: customerId,
           rewardId,
-          usedAt: {
+          status: {
+            in: ["APPROVED", "PENDING", "USED"],
+          },
+          createdAt: {
             gte: today,
           },
         },
@@ -251,7 +258,7 @@ export class RedemptionValidator {
       }
     }
 
-    // Max redemptions per week
+    // Max redemptions per week - use createdAt instead of usedAt
     if (restrictions.max_redemptions_per_week) {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
@@ -259,7 +266,10 @@ export class RedemptionValidator {
         where: {
           accountId: customerId,
           rewardId,
-          usedAt: {
+          status: {
+            in: ["APPROVED", "PENDING", "USED"],
+          },
+          createdAt: {
             gte: weekAgo,
           },
         },
@@ -269,7 +279,7 @@ export class RedemptionValidator {
       }
     }
 
-    // Max redemptions per month
+    // Max redemptions per month - use createdAt instead of usedAt
     if (restrictions.max_redemptions_per_month) {
       const monthAgo = new Date();
       monthAgo.setMonth(monthAgo.getMonth() - 1);
@@ -277,7 +287,10 @@ export class RedemptionValidator {
         where: {
           accountId: customerId,
           rewardId,
-          usedAt: {
+          status: {
+            in: ["APPROVED", "PENDING", "USED"],
+          },
+          createdAt: {
             gte: monthAgo,
           },
         },
@@ -302,16 +315,18 @@ export class RedemptionValidator {
       where: {
         accountId: customerId,
         rewardId,
-        status: "USED",
+        status: {
+          in: ["APPROVED", "PENDING", "USED"],
+        },
       },
       orderBy: {
-        usedAt: "desc",
+        createdAt: "desc",
       },
     });
 
-    if (lastRedemption?.usedAt) {
+    if (lastRedemption?.createdAt) {
       const hoursSince =
-        (Date.now() - new Date(lastRedemption.usedAt).getTime()) /
+        (Date.now() - new Date(lastRedemption.createdAt).getTime()) /
         (1000 * 60 * 60);
       if (hoursSince < periodHours) {
         return `Please wait ${Math.ceil(periodHours - hoursSince)} hours`;
