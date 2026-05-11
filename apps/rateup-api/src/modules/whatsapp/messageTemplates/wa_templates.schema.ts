@@ -159,7 +159,7 @@ const waTemplateInput = {
     .optional(),
   whatsappSettingsPhoneId: z.string(),
   templateType: z.enum(TemplateType).optional(),
-  config: z.any(),
+  config: z.any().optional(),
 };
 
 const waTemplateFormattedInput = {
