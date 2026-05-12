@@ -66,7 +66,7 @@ const AppleLogin = ({ setError }: { setError: (msg: string) => void }) => {
       <Pressable
         onPress={handleAppleLogin}
         disabled={loading}
-        className="bg-black py-3 rounded-md items-center flex-row justify-center w-[86vw] gap-1"
+        className="bg-black py-3 rounded-md items-center flex-row justify-center w-[86vw] gap-1 dark:border dark:border-gray-500"
       >
         <IconBrandAppleFilled color="white" size={20} />
         <Text className="text-white font-medium text-[16px]">
