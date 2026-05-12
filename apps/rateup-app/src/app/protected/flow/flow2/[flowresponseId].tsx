@@ -3,6 +3,7 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
+  useColorScheme,
 } from "react-native";
 import React, { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,10 +22,14 @@ import ImageResponse from "@/components/flow/ImageResponse";
 import { ArrowLeft } from "lucide-react-native";
 
 const Flow2Response = () => {
+  const isDark = useColorScheme() === "dark";
+
   const { respondent } = useLocalSearchParams();
+
   const router = useRouter();
 
   const { flowData } = useFlowDataStore();
+
   const { data } = useFlowResponseDataStore();
 
   const flowQuestions = useMemo(() => {
@@ -46,9 +51,9 @@ const Flow2Response = () => {
             dataSource,
             name,
             header,
-          })
+          }),
         )
-        .filter(({ name }) => name)
+        .filter(({ name }) => name),
     );
   }, [flowData]);
 
@@ -59,23 +64,24 @@ const Flow2Response = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white dark:bg-slate-950">
       {/* Header */}
-      <View className="flex-row items-center gap-5 p-2">
+      <View className="flex-row items-center gap-5 p-4">
         <TouchableOpacity
           onPress={() => router.back()}
-          className="flex-row items-center space-x-3 mb-4"
+          className="flex-row items-center"
         >
-          <ArrowLeft />
+          <ArrowLeft color={isDark ? "white" : "black"} />
         </TouchableOpacity>
 
-        <View className="flex-row items-center space-x-4 mb-6 gap-3">
+        <View className="flex-row items-center gap-3">
           <View className="w-14 h-14 rounded-full bg-rateUpLightGreen items-center justify-center">
             <Text className="text-rateUpGreen font-bold text-2xl">
               {respondent ? "0" : "R"}
             </Text>
           </View>
-          <Text className="text-xl font-medium text-gray-900">
+
+          <Text className="text-xl font-medium text-gray-900 dark:text-white">
             {respondent || "Respondent"}
           </Text>
         </View>
@@ -83,35 +89,56 @@ const Flow2Response = () => {
 
       {/* Content */}
       {flowQuestions?.length && responses?.length ? (
-        <ScrollView className="px-4">
+        <ScrollView
+          className="px-4"
+          contentContainerStyle={{ paddingBottom: 30 }}
+          showsVerticalScrollIndicator={false}
+        >
           {flowQuestions.map((question, index) => {
             const raw = getResponseForQuestion(question.id);
+
             const response = raw?.response;
+
             const formatted = getCellData(response, question);
+
             const responseType = question.metaType;
 
             return (
-              <View key={question.id} className="mb-8">
-                {/* Index & Type Pill */}
-                <View className="flex-row items-center space-x-2 mb-2 gap-1">
-                  <View className="w-6 h-6 rounded-full bg-rateUpGreen items-center justify-center">
+              <View
+                key={question.id}
+                className="mb-5 rounded-2xl p-4 border"
+                style={{
+                  backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                  borderColor: isDark ? "#1e293b" : "#E5E7EB",
+                }}
+              >
+                {/* Index & Type */}
+                <View className="flex-row items-center mb-3 gap-2">
+                  <View className="w-7 h-7 rounded-full bg-rateUpGreen items-center justify-center">
                     <Text className="text-white text-xs font-semibold">
                       {index + 1}
                     </Text>
                   </View>
-                  <Text className="text-white bg-rateUpGreen px-2 py-1 rounded-full text-xs font-medium">
+
+                  <Text className="text-white bg-rateUpGreen px-3 py-1 rounded-full text-xs font-medium">
                     {responseType}
                   </Text>
                 </View>
 
-                {/* Question & Answer */}
-                <View className="pl-8">
-                  <Text className="text-md font-bold text-gray-800 mb-1">
-                    {question.header || question.label}
-                  </Text>
-                  <Text className="text-sm pl-3 text-gray-600">
-                    {formatted || "No response"}
-                  </Text>
+                {/* Question */}
+                <Text className="text-base font-bold text-gray-800 dark:text-white mb-2">
+                  {question.header || question.label}
+                </Text>
+
+                {/* Answer */}
+                <View className="pl-1">
+                  {typeof formatted === "string" ? (
+                    <Text className="text-sm leading-6 text-gray-600 dark:text-slate-300">
+                      {formatted || "No response"}
+                    </Text>
+                  ) : (
+                    formatted
+                  )}
                 </View>
               </View>
             );
@@ -119,7 +146,9 @@ const Flow2Response = () => {
         </ScrollView>
       ) : (
         <View className="flex-1 justify-center items-center">
-          <Text className="text-rateUpTextGray">No responses to be shown</Text>
+          <Text className="text-rateUpTextGray dark:text-slate-400">
+            No responses to be shown
+          </Text>
         </View>
       )}
     </SafeAreaView>
@@ -133,41 +162,52 @@ export const getCellData = (info, question) => {
   switch (question.metaType) {
     case WaQuestions.LD:
       return LDResponseMap[info] || "";
+
     case WaQuestions.YN:
       return YNResponseMap[info] || "";
+
     case WaQuestions.Smiley:
       return SmileyResponseMap[info] || "";
+
     case WaQuestions.Rating:
       return RatingScaleMap[info] || "";
+
     case WaQuestions.Opinion:
       return info || "";
+
     case WaQuestions.RadioButtonsGroup:
     case WaQuestions.Dropdown:
       return question.dataSource?.find((data) => data.id === info)?.title || "";
+
     case WaQuestions.CheckboxGroup:
     case WaQuestions.ChipsSelector:
       return (
         (Array.isArray(info) &&
           info
             .map(
-              (i) => question.dataSource?.find((data) => data.id === i)?.title
+              (i) => question.dataSource?.find((data) => data.id === i)?.title,
             )
             .filter(Boolean)
             .join(", ")) ||
         ""
       );
+
     case WaQuestions.DocumentPicker:
       return <DocumentResponse info={info} />;
+
     case WaQuestions.DatePicker:
       return info ? dayjs(info).format("DD-MM-YYYY") : "";
+
     case WaQuestions.TextArea:
       return info;
+
     case WaQuestions.PhotoPicker:
       return (
         <View>
           <ImageResponse info={info} />
         </View>
       );
+
     default:
       return info?.toString?.() || "";
   }

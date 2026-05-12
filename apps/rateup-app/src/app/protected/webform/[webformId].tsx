@@ -4,14 +4,13 @@ import {
   Text,
   ActivityIndicator,
   FlatList,
-  ScrollView,
   Dimensions,
   Pressable,
   TouchableOpacity,
+  useColorScheme,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import { SafeAreaView } from "react-native-safe-area-context";
 import {
   useResponseAnalytics,
   useResponsesBySurvey,
@@ -37,7 +36,10 @@ const AnalyticsTab = ({
   webformId: string;
   webform: any;
 }) => {
+  const isDark = useColorScheme() === "dark";
+
   const { data, isLoading } = useResponseAnalytics(webformId, {});
+
   const { data: questions } = useQuestions(webformId);
 
   const [npsOverView, choiceWiseOverView] = useMemo(
@@ -45,12 +47,12 @@ const AnalyticsTab = ({
       data
         ? [Object.entries(data?.nps), Object.entries(data?.choiceWise)]
         : [[], []],
-    [data]
+    [data],
   );
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
         <ActivityIndicator size="large" />
       </View>
     );
@@ -58,34 +60,43 @@ const AnalyticsTab = ({
 
   if (!data) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
         <Text className="text-red-500">Failed to load analytics data.</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white h-full">
+    <View className="flex-1 bg-white dark:bg-slate-950 h-full">
       <SurveyStatsWebForm surveyId={webformId} />
+
       <SubTab.Navigator
         screenOptions={({ route }) => ({
           lazy: true,
           tabBarScrollEnabled: true,
+
           tabBarLabel: ({ focused }) => (
             <Text
               className={`text-md font-bold ${
-                focused ? "text-rateUpBlue" : "text-gray-400"
+                focused
+                  ? "text-rateUpBlue"
+                  : isDark
+                    ? "text-slate-400"
+                    : "text-gray-400"
               }`}
             >
               {route.name}
             </Text>
           ),
+
           tabBarStyle: {
-            backgroundColor: "#fff",
+            backgroundColor: isDark ? "#020617" : "#fff",
+
             elevation: 0,
             height: 48,
             width: "100%",
           },
+
           tabBarIndicatorStyle: {
             backgroundColor: "#4A90E2",
             height: 2,
@@ -121,13 +132,19 @@ const AnalyticsTab = ({
 };
 
 const ResponsesTab = ({ webformId }: { webformId?: string }) => {
+  const isDark = useColorScheme() === "dark";
+
   const { data: dat1, isLoading } = useResponsesBySurvey(webformId, {});
+
   const totalResponse = dat1?.totalCount || 0;
+
   const { setData } = useWebFormResponseDataStore();
+
   const router = useRouter();
+
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
         <ActivityIndicator size="large" />
       </View>
     );
@@ -135,19 +152,22 @@ const ResponsesTab = ({ webformId }: { webformId?: string }) => {
 
   if (!dat1?.responses?.length) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-gray-500">No responses available.</Text>
+      <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
+        <Text className="text-gray-500 dark:text-slate-400">
+          No responses available.
+        </Text>
       </View>
     );
   }
 
   return (
-    <View className="bg-white h-full">
-      {/* ✅ Response Count Header */}
-      <View className="px-4 py-3 border-b border-gray-200 bg-rateUpGreen20 flex-row items-center justify-between">
+    <View className="bg-white dark:bg-slate-950 h-full">
+      {/* Response Count Header */}
+      <View className="px-4 py-3 border-b border-gray-200 dark:border-slate-800 bg-rateUpGreen20 dark:bg-slate-900 flex-row items-center justify-between">
         <Text className="text-base font-semibold text-rateUpGreen">
           Total Responses
         </Text>
+
         <View className="bg-rateUpGreen px-2.5 py-1 rounded-full">
           <Text className="text-white text-sm font-semibold">
             {totalResponse}
@@ -158,14 +178,21 @@ const ResponsesTab = ({ webformId }: { webformId?: string }) => {
       <FlatList
         data={dat1.responses}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16, gap: 12 }}
+        contentContainerStyle={{
+          padding: 16,
+          gap: 12,
+        }}
         renderItem={({ item }) => (
           <TouchableOpacity
             onPress={() => {
               setData([item]);
+
               router.push({
                 pathname: `/protected/webform/webformresponse/${item.id}`,
-                params: { webformId: webformId, respondent: item.phone },
+                params: {
+                  webformId: webformId,
+                  respondent: item.phone,
+                },
               });
             }}
           >
@@ -178,53 +205,74 @@ const ResponsesTab = ({ webformId }: { webformId?: string }) => {
 };
 
 const WebFormPage = () => {
+  const isDark = useColorScheme() === "dark";
+
   const { webformId, webFormName } = useLocalSearchParams();
+
   const { data: surveyData, isLoading: surveyLoading } = useSurvey(webformId);
+
   const screenWidth = Dimensions.get("window").width;
+
   const sw = Math.floor(screenWidth * 0.45);
+
   const router = useRouter();
 
   if (!webformId || typeof webformId !== "string") {
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
         <Text className="text-red-500">Invalid webform ID.</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white p-2">
+    <View className="flex-1 bg-white dark:bg-slate-950 p-2">
+      {/* Header */}
       <View className="flex-row items-center mt-4 mb-4 gap-2">
         <Pressable onPress={() => router.back()}>
-          <ArrowLeft />
+          <ArrowLeft color={isDark ? "white" : "black"} />
         </Pressable>
-        <Text className="text-black text-2xl font-bold">{webFormName}</Text>
+
+        <Text className="text-black dark:text-white text-2xl font-bold">
+          {webFormName}
+        </Text>
       </View>
 
+      {/* Tabs */}
       <Tab.Navigator
         screenOptions={({ route }) => ({
           swipeEnabled: false,
+
           tabBarLabel: ({ focused }) => (
             <View
               style={{ width: sw }}
-              className={`mx-auto p-3 rounded-lg ${
-                focused ? "bg-[#C4D7F5]" : "bg-white"
+              className={`mx-auto p-3 rounded-xl ${
+                focused
+                  ? "bg-rateUpGreen20 dark:bg-slate-800"
+                  : "bg-white dark:bg-slate-950"
               }`}
             >
               <Text
                 className={`text-base text-center font-semibold ${
-                  focused ? "text-rateUpBlue" : "text-gray-500"
+                  focused
+                    ? "text-rateUpBlue"
+                    : isDark
+                      ? "text-slate-400"
+                      : "text-gray-500"
                 }`}
               >
                 {route.name}
               </Text>
             </View>
           ),
+
           tabBarStyle: {
-            backgroundColor: "#fff",
+            backgroundColor: isDark ? "#020617" : "#fff",
+
             elevation: 0,
             height: 60,
           },
+
           tabBarIndicatorStyle: {
             backgroundColor: "transparent",
           },
@@ -233,6 +281,7 @@ const WebFormPage = () => {
         <Tab.Screen name="Analytics">
           {() => <AnalyticsTab webformId={webformId} webform={surveyData} />}
         </Tab.Screen>
+
         <Tab.Screen name="Responses">
           {() => <ResponsesTab webformId={webformId} />}
         </Tab.Screen>

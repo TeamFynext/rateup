@@ -67,7 +67,7 @@ export const renderChoiceItem = (
   ) => (
     <View
       key={index}
-      className="flex-row justify-between gap-10 items-center rounded-md px-6 py-2 bg-white"
+      className="flex-row justify-between gap-10 items-center rounded-md px-6 py-2 bg-white dark:bg-slate-800"
     >
       <View className="flex-row items-center gap-3">
         {badge ? (
@@ -99,7 +99,7 @@ export const renderChoiceItem = (
       return renderStatRow(
         <>
           {version === 2 ? (
-            <Text>{item.choice}</Text>
+            <Text className="text-sm text-gray-900 dark:text-gray-200">{item.choice}</Text>
           ) : (
             <Rating count={parseInt(item.choice)} />
           )}
@@ -114,7 +114,7 @@ export const renderChoiceItem = (
             isMostVoted ? "bg-[#C4D7F5]" : ""
           }`}
         >
-          <Text className="text-sm">{item.choice}</Text>
+          <Text className="text-sm text-gray-900 dark:text-gray-200">{item.choice}</Text>
         </View>
       );
 
@@ -123,11 +123,11 @@ export const renderChoiceItem = (
       return renderStatRow(
         <>
           {version === 2 ? (
-            <Text className="text-sm text-gray-900">{item.choice}</Text>
+            <Text className="text-sm text-gray-900 dark:text-gray-200">{item.choice}</Text>
           ) : (
             <View className="flex-row gap-1 items-center justify-center">
               <Text className="text-xl">{getSmiley(item.choice)}</Text>
-              <Text className="text-sm text-gray-900">{item.choice}</Text>
+              <Text className="text-sm text-gray-900 dark:text-gray-200">{item.choice}</Text>
             </View>
           )}
         </>
@@ -141,7 +141,7 @@ export const renderChoiceItem = (
             <Text>{item.choice}</Text>
           ) : (
             <View>
-              <Text className="text-sm text-gray-900">
+              <Text className="text-sm text-gray-900 dark:text-gray-200">
                 {choiceLower === "like" ? "👍 Like" : "👎 Dislike"}
               </Text>
             </View>
@@ -152,7 +152,7 @@ export const renderChoiceItem = (
     case QuestionType2.YN:
     case WaQuestions.YN:
       return renderStatRow(
-        <Text className="text-sm text-gray-900">
+        <Text className="text-sm text-gray-900 dark:text-gray-200">
           {choiceLower === "yes" ? "✅ Yes" : "❌ No"}
         </Text>
       );
@@ -160,7 +160,7 @@ export const renderChoiceItem = (
     default:
       return renderStatRow(
         <>
-          <Text>{item.choice}</Text>
+          <Text className="text-sm text-gray-900 dark:text-gray-200">{item.choice}</Text>
         </>
       );
   }

@@ -25,11 +25,11 @@ const SignIn = () => {
   };
 
   return (
-    <SafeAreaView className="flex-grow">
+    <SafeAreaView className="flex-1 bg-white dark:bg-black">
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0} // Adjust as needed
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
@@ -46,15 +46,18 @@ const SignIn = () => {
             <View className="space-y-8">
               <View className="flex flex-col items-center space-y-4 mb-8">
                 <RateLogo height={64} />
+
                 <View>
-                  <Text className="text-center font-bold text-2xl uppercase font-[Geist]">
+                  <Text className="text-center font-bold text-2xl uppercase font-[Geist] text-black dark:text-white">
                     LOGIN TO RATEUP
                   </Text>
-                  <Text className="text-[#7A8289] text-md mt-1 text-center font-[Geist]">
+
+                  <Text className="text-md mt-1 text-center font-[Geist] text-[#7A8289] dark:text-gray-400">
                     It's great to see you again!
                   </Text>
                 </View>
               </View>
+
               <SignInScreen setError={showError} />
               <GoogleLogin setError={showError} />
               <AppleLogin setError={showError} />

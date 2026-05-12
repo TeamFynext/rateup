@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   Keyboard,
+  useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { loggedUserDetails, signIn } from "@/api/api";
@@ -25,85 +26,93 @@ export default function SignInScreen({
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
   const { setUserId, setOrgId } = useAuth();
+  const isDark = useColorScheme() === "dark";
 
   const router = useRouter();
 
   const handleSignIn = async () => {
-  Keyboard.dismiss();
-  setLoading(true);
+    Keyboard.dismiss();
+    setLoading(true);
 
-  if (!email || !password) {
-    setError("Email and Password required");
-    setLoading(false);
-    return;
-  }
-
-  try {
-    const response = await signIn(email, password);
-
-    if (!response.success) {
-      setError(response.message);
+    if (!email || !password) {
+      setError("Email and Password required");
       setLoading(false);
       return;
     }
 
-    const userDetails = await loggedUserDetails();
-    const userData = userDetails.data;
-    const { userId, orgId } = userData;
-
-    setUserId(userId);
-    setOrgId(orgId);
-
     try {
-      const token = await registerForPushNotificationsAsync();
-      if (token) {
-        await addToken(token);
-      } else {
-        setError("Notification setup failed. You may not receive alerts.");
+      const response = await signIn(email, password);
+
+      if (!response.success) {
+        setError(response.message);
+        setLoading(false);
+        return;
       }
-    } catch (tokenError) {
-      console.error("Error registering for push notifications:", tokenError);
-      setError("Failed to enable notifications");
+
+      const userDetails = await loggedUserDetails();
+      const userData = userDetails.data;
+      const { userId, orgId } = userData;
+
+      setUserId(userId);
+      setOrgId(orgId);
+
+      try {
+        const token = await registerForPushNotificationsAsync();
+        if (token) {
+          await addToken(token);
+        } else {
+          setError("Notification setup failed. You may not receive alerts.");
+        }
+      } catch (tokenError) {
+        console.error("Error registering for push notifications:", tokenError);
+        setError("Failed to enable notifications");
+      }
+
+      router.replace("/protected/inbox");
+    } catch (err) {
+      console.error("Unexpected error during sign-in:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    router.replace("/protected/inbox");
-  } catch (err) {
-    console.error("Unexpected error during sign-in:", err);
-    setError("Something went wrong. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <View className="w-full px-2 relative">
       {/* Email */}
-      <Text className="text-sm text-[#7A8289] mb-1 mt-8">Email Address</Text>
+      {/* Email */}
+      <Text className="text-sm text-[#7A8289] dark:text-gray-400 mb-1 mt-8">
+        Email Address
+      </Text>
+
       <TextInput
-        className="w-full border border-[#E2E5ED] rounded-md px-4 py-2 mb-4 text-gray-900"
+        className="w-full h-14 border border-[#E2E5ED] dark:border-[#2A2A2A] rounded-md px-4 mb-4 text-gray-900 dark:text-white bg-white dark:bg-[#111111]"
         placeholder="Enter Your Email"
-        placeholderTextColor="#E2E5ED"
+        placeholderTextColor="#9CA3AF"
         onChangeText={setEmail}
         autoCapitalize="none"
       />
 
       {/* Password */}
-      <Text className="text-sm text-[#7A8289] mb-1">Password</Text>
-      <View className="flex-row items-center border border-[#E2E5ED] rounded-md px-4 py-2 mb-2">
+      <Text className="text-sm text-[#7A8289] dark:text-gray-400 mb-1">
+        Password
+      </Text>
+
+      <View className="flex-row items-center h-14 border border-[#E2E5ED] dark:border-[#2A2A2A] rounded-md px-4 mb-2 bg-white dark:bg-[#111111]">
         <TextInput
-          className="flex-1 text-gray-900"
+          className="flex-1 text-gray-900 dark:text-white"
           placeholder="Enter Password"
-          placeholderTextColor="#E2E5ED"
+          placeholderTextColor="#9CA3AF"
           secureTextEntry={!showPassword}
           onChangeText={setPassword}
           autoCapitalize="none"
         />
+
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
           {showPassword ? (
-            <Eye color={"black"} strokeWidth={1} />
+            <Eye color={isDark ? "white" : "black"} strokeWidth={1} />
           ) : (
-            <EyeClosed color={"black"} strokeWidth={1} />
+            <EyeClosed color={isDark ? "white" : "black"} strokeWidth={1} />
           )}
         </TouchableOpacity>
       </View>
@@ -141,10 +150,12 @@ export default function SignInScreen({
               borderRadius: 999,
             }}
           />
-          <Text className="ml-2 text-sm text-[#343A40]">Remember Me</Text>
+          <Text className="ml-2 text-sm text-[#343A40] dark:text-white">
+            Remember Me
+          </Text>
         </View>
         <TouchableOpacity onPress={() => router.push("/auth/ForgotPassword")}>
-          <Text className="text-[#004F98] text-sm font-medium">
+          <Text className="text-[#004F98] dark:text-blue-400 text-sm font-medium">
             Forgot Password?
           </Text>
         </TouchableOpacity>

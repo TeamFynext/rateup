@@ -1,4 +1,10 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  useColorScheme,
+} from "react-native";
 import React, { useMemo, useState } from "react";
 import {
   AngryIcon,
@@ -27,16 +33,20 @@ const SurveyQuestions = ({
   version,
   questions,
 }: SurveyQuestionProps) => {
+  const isDark = useColorScheme() === "dark";
+
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const toggleExpand = (id: string) => {
     setExpanded((prev) => {
       const newSet = new Set(prev);
+
       if (newSet.has(id)) {
         newSet.delete(id);
       } else {
         newSet.add(id);
       }
+
       return newSet;
     });
   };
@@ -52,7 +62,7 @@ const SurveyQuestions = ({
           name,
           header,
         }))
-        .filter(({ name }: { name: any }) => name)
+        .filter(({ name }: { name: any }) => name),
     );
   }, [flow]);
 
@@ -64,6 +74,7 @@ const SurveyQuestions = ({
 
     return {
       type: version === 1 ? question?.type : question?.metaType,
+
       questionTitle:
         version === 1
           ? question?.title || question?.label
@@ -77,59 +88,88 @@ const SurveyQuestions = ({
   if (choiceWise.length === 0) return null;
 
   return (
-    <ScrollView className="flex-1 bg-white">
+    <ScrollView className="flex-1 bg-white dark:bg-slate-950">
       {choiceWise?.map(([questionId, questionData], index) => {
         const questionDetails = getQuestion(questionId);
+
         const type = questionDetails?.type as QuestionType2;
+
         const title = questionDetails?.questionTitle;
+
         const npsEntry = NPS.find(([id]: any) => id === questionId)?.[1];
+
         const responseCount = questionData?.responseCount || 0;
+
         const npsscore = npsEntry?.npsData?.npsScore ?? 0;
+
         const npsScore = Math.round(npsscore);
+
         const promoters = npsEntry?.npsData?.promoters ?? 0;
+
         const passives = npsEntry?.npsData?.passives ?? 0;
+
         const detractors = npsEntry?.npsData?.detractors ?? 0;
+
         const total = promoters + passives + detractors;
+
         const chartData = questionData?.data.map(
           (item: any, index: number) => ({
             ...item,
             percentage: getPercentage(item?.count, responseCount),
-          })
+          }),
         );
+
         const maxCount = Math.max(...chartData.map((c: any) => c.count));
+
         const mostVotedChoice = chartData.find(
-          (c: any) => c.count === maxCount
+          (c: any) => c.count === maxCount,
         )?.choice;
+
         const isExpanded = expanded.has(questionId);
 
         return (
-          <View key={questionId} className="bg-white rounded-2xl">
+          <View
+            key={questionId}
+            className="rounded-2xl mb-3 overflow-hidden border"
+            style={{
+              backgroundColor: isDark ? "#0f172a" : "#ffffff",
+
+              borderColor: isDark ? "#1e293b" : "#E2E5ED",
+            }}
+          >
+            {/* Header */}
             <Pressable
               onPress={() => toggleExpand(questionId)}
               className="flex-row justify-between items-center px-4 py-5"
             >
-              <View className="flex-row items-center justify-center gap-2">
+              <View className="flex-row items-center gap-2 flex-1">
                 <View className="bg-rateUpBlue rounded-full w-6 h-6 flex justify-center items-center">
-                  <Text className="text-sm font-semibold text-white p-1">
+                  <Text className="text-sm font-semibold text-white">
                     {index + 1}
                   </Text>
                 </View>
-                <Text className=" font-semibold text-md max-w-[86%] min-w-[86%]">
+
+                <Text className="font-semibold text-md flex-1 text-black dark:text-white">
                   {getLocalizedText(title)}
                 </Text>
               </View>
+
               <View>
                 {isExpanded ? (
-                  <ChevronUp size={20} color="#4B5563" />
+                  <ChevronUp size={20} color={isDark ? "#CBD5E1" : "#4B5563"} />
                 ) : (
-                  <ChevronDown size={20} color="#4B5563" />
+                  <ChevronDown
+                    size={20}
+                    color={isDark ? "#CBD5E1" : "#4B5563"}
+                  />
                 )}
               </View>
             </Pressable>
 
             {isExpanded && (
-              <View className="flex gap-8">
-                <View>
+              <View className="flex gap-8 pb-4">
+                {/* Choices */}
+                <View className="flex gap-1 p-1">
                   {chartData?.length > 0 ? (
                     chartData.map((item: any, idx: number) =>
                       renderChoiceItem(
@@ -137,20 +177,22 @@ const SurveyQuestions = ({
                         item,
                         idx,
                         mostVotedChoice,
-                        version
-                      )
+                        version,
+                      ),
                     )
                   ) : (
-                    <Text className="text-gray-500 text-center">
+                    <Text className="text-gray-500 dark:text-slate-400 text-center">
                       No responses yet.
                     </Text>
                   )}
                 </View>
 
+                {/* NPS */}
                 {npsEntry && (
-                  <View className="px-4 py-1 flex justify-center gap-2">
+                  <View className="px-4 py-1 flex justify-center gap-3">
+                    {/* NPS Score */}
                     <View className="flex-row justify-between items-center">
-                      <View className="flex-row gap-2 items-center justify-between">
+                      <View className="flex-row gap-2 items-center">
                         <View className="rounded-lg p-1 bg-[#2B82DE1F]">
                           <TargetIcon
                             color={"#2B82DE"}
@@ -158,64 +200,82 @@ const SurveyQuestions = ({
                             height={25}
                           />
                         </View>
-                        <Text className="text-rateUpTextGray font-semibold text-md">
+
+                        <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
                           NPS Score
                         </Text>
                       </View>
+
                       <Text className="text-[#00BF83] font-bold text-xl">
                         {npsScore > 0
                           ? `+${Math.round(npsScore)}`
                           : Math.round(npsScore)}
                       </Text>
                     </View>
+
+                    {/* Total */}
                     <View className="flex-row justify-between items-center">
-                      <View className="flex-row gap-2 items-center justify-between">
+                      <View className="flex-row gap-2 items-center">
                         <View className="rounded-lg p-1 bg-[#2B82DE1F]">
                           <Users color={"#2B82DE"} width={25} height={25} />
                         </View>
-                        <Text className="text-rateUpTextGray font-semibold text-md">
+
+                        <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
                           Total Responses
                         </Text>
                       </View>
+
                       <Text className="text-[#00BF83] font-bold text-xl">
                         {total}
                       </Text>
                     </View>
+
+                    {/* Promoters */}
                     <View className="flex-row justify-between items-center">
-                      <View className="flex-row gap-2 items-center justify-between">
+                      <View className="flex-row gap-2 items-center">
                         <View className="rounded-full p-1 bg-[#00BF831F]">
                           <LaughIcon color={"#00BF83"} width={25} height={25} />
                         </View>
-                        <Text className="text-rateUpTextGray font-semibold text-md">
+
+                        <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
                           Promoters
                         </Text>
                       </View>
+
                       <Text className="text-[#00BF83] font-bold text-xl">
                         {promoters}
                       </Text>
                     </View>
+
+                    {/* Passives */}
                     <View className="flex-row justify-between items-center">
-                      <View className="flex-row gap-2 items-center justify-between">
+                      <View className="flex-row gap-2 items-center">
                         <View className="rounded-full p-1 bg-[#FFC1071F]">
                           <MehIcon color={"#FFC107"} width={25} height={25} />
                         </View>
-                        <Text className="text-rateUpTextGray font-semibold text-md">
+
+                        <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
                           Passives
                         </Text>
                       </View>
+
                       <Text className="text-[#FFC107] font-bold text-xl">
                         {passives}
                       </Text>
                     </View>
+
+                    {/* Detractors */}
                     <View className="flex-row justify-between items-center">
-                      <View className="flex-row gap-2 items-center justify-between">
+                      <View className="flex-row gap-2 items-center">
                         <View className="rounded-full p-1 bg-[#FF61611F]">
                           <AngryIcon color={"#FF6161"} width={25} height={25} />
                         </View>
-                        <Text className="text-rateUpTextGray font-semibold text-md">
+
+                        <Text className="text-rateUpTextGray dark:text-slate-300 font-semibold text-md">
                           Detractors
                         </Text>
                       </View>
+
                       <Text className="text-[#FF6161] font-bold text-xl">
                         {detractors}
                       </Text>
@@ -224,7 +284,6 @@ const SurveyQuestions = ({
                 )}
               </View>
             )}
-            <View className="border-b border-b-[#E2E5ED]" />
           </View>
         );
       })}
@@ -239,7 +298,8 @@ const getLocalizedText = (input: any) => {
     typeof input === "string"
       ? input
       : typeof input === "object" && input !== null
-      ? input.en || Object.values(input)[0]
-      : "";
+        ? input.en || Object.values(input)[0]
+        : "";
+
   return rawText.replace(/<[^>]+>/g, "").trim();
 };

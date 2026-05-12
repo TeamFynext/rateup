@@ -1,4 +1,10 @@
-import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
 import React, { useMemo } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,15 +13,20 @@ import { useQuestions } from "@/api/question/question.query";
 import { ArrowLeft } from "lucide-react-native";
 
 const ResponseId = () => {
+  const isDark = useColorScheme() === "dark";
+
   const { flowresponseId, surveyId, respondent } = useLocalSearchParams();
+
   const { data } = useFlowResponseDataStore();
+
   const { data: questions } = useQuestions(surveyId);
+
   const router = useRouter();
 
   if (!data?.length || !data[0]?.responses) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <Text>No response found.</Text>
+      <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
+        <Text className="text-black dark:text-white">No response found.</Text>
       </SafeAreaView>
     );
   }
@@ -24,21 +35,23 @@ const ResponseId = () => {
 
   const questionMap = useMemo(() => {
     const map: Record<string, string> = {};
+
     questions?.forEach((q) => {
       map[q.id] = q.title?.en || q.description?.en || q.label?.en || "";
     });
+
     return map;
   }, [questions]);
 
   return (
-    <SafeAreaView className="flex-1 bg-white px-4">
+    <SafeAreaView className="flex-1 bg-white dark:bg-slate-950 px-4">
       {/* Header */}
       <View className="flex-row items-center gap-5 p-2">
         <TouchableOpacity
           onPress={() => router.back()}
           className="flex-row items-center space-x-3 mb-4"
         >
-          <ArrowLeft />
+          <ArrowLeft color={isDark ? "white" : "black"} />
         </TouchableOpacity>
 
         {/* Avatar + Name */}
@@ -48,7 +61,8 @@ const ResponseId = () => {
               {respondent ? "0" : "R"}
             </Text>
           </View>
-          <Text className="text-xl font-medium text-gray-900">
+
+          <Text className="text-xl font-medium text-gray-900 dark:text-white">
             {respondent || "Respondent"}
           </Text>
         </View>
@@ -58,12 +72,17 @@ const ResponseId = () => {
       <FlatList
         data={responses}
         keyExtractor={(item, index) => `${item.questionId}-${index}`}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}
         renderItem={({ item, index }) => {
           const questionId = item.questionId;
+
           const responseType = item.type;
+
           const questionTitle = questionMap[questionId] || "Unknown Question";
 
           const value = item.response?.[responseType];
+
           const displayValue =
             typeof value === "string"
               ? value
@@ -76,30 +95,35 @@ const ResponseId = () => {
                   : JSON.stringify(value);
 
           return (
-            <View className="flex justify-center mb-8">
-              {/* Index & Label */}
-              <View className="flex-row items-center space-x-2 mb-2 gap-1">
-                <View className="w-6 h-6 rounded-full bg-rateUpGreen items-center justify-center">
+            <View
+              className="mb-5 rounded-2xl p-4 border"
+              style={{
+                backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                borderColor: isDark ? "#1e293b" : "#E5E7EB",
+              }}
+            >
+              {/* Index & Type */}
+              <View className="flex-row items-center mb-3 gap-2">
+                <View className="w-7 h-7 rounded-full bg-rateUpGreen items-center justify-center">
                   <Text className="text-white text-xs font-semibold">
                     {index + 1}
                   </Text>
                 </View>
-                <Text className="text-white bg-rateUpGreen px-2 py-1 rounded-full text-xs font-medium">
+
+                <Text className="text-white bg-rateUpGreen px-3 py-1 rounded-full text-xs font-medium capitalize">
                   {responseType}
                 </Text>
               </View>
 
-              {/* Question Title */}
-              <View className="pl-8">
-                <Text className="text-md font-bold text-gray-800 mb-1">
-                  {questionTitle}
-                </Text>
+              {/* Question */}
+              <Text className="text-base font-bold text-gray-800 dark:text-white mb-2">
+                {questionTitle}
+              </Text>
 
-                {/* Response Text / Badge */}
-                <Text className="text-sm pl-3 text-gray-600">
-                  {displayValue}
-                </Text>
-              </View>
+              {/* Answer */}
+              <Text className="text-sm leading-6 text-gray-600 dark:text-slate-300">
+                {displayValue}
+              </Text>
             </View>
           );
         }}
