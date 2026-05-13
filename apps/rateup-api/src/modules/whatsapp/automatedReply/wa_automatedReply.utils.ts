@@ -1434,6 +1434,7 @@ async function executeExternalApiAction(
 
   const headers = {
     "Content-Type": "application/json",
+    "User-Agent": "Rateup-API/1.0.1",
   };
 
   const payload = {
