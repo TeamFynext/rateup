@@ -308,7 +308,6 @@ export async function sendShopifySurveyCronAction() {
   }
 
   for (const integration of integrations) {
-    log.trace("integration => %o", integration);
     const {
       credential: { shopifySurveys, session },
       orgId,
