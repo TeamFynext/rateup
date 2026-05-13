@@ -41,6 +41,7 @@ import {
   updateClosedConversationStatus,
 } from "../../contact/conversation/conversation.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
+import axios from "axios";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrAfter);
@@ -1431,31 +1432,45 @@ async function executeExternalApiAction(
     return false;
   }
 
-  const requestOptions: RequestInit = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      user: context.phone ?? "",
-      action: context.message ?? "",
-      buttonPayload: context.buttonPayload ?? "",
-    }),
+  const headers = {
+    "Content-Type": "application/json",
   };
 
-  let response = await fetch(parsedUrl.toString(), requestOptions);
+  const payload = {
+    user: context.phone ?? "",
+    action: context.message ?? "",
+    buttonPayload: context.buttonPayload ?? "",
+  };
 
-  if (!response.ok) {
-    log.warn(
-      `External API call failed with status ${response.status} for ${parsedUrl.toString()}, retrying...`,
-    );
-    response = await fetch(parsedUrl.toString(), requestOptions);
-  }
+  try {
+    try {
+      await axios.post(parsedUrl.toString(), payload, {
+        headers,
+      });
+    } catch (error) {
+      const firstStatus = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined;
+      log.warn(
+        `External API call failed with status ${firstStatus ?? "unknown"} for ${parsedUrl.toString()}, retrying...`,
+      );
 
-  if (!response.ok) {
-    log.warn(
-      `External API call failed on retry with status ${response.status} for ${parsedUrl.toString()}`,
-    );
+      try {
+        await axios.post(parsedUrl.toString(), payload, {
+          headers,
+        });
+      } catch (retryError) {
+        const retryStatus = axios.isAxiosError(retryError)
+          ? retryError.response?.status
+          : undefined;
+        log.warn(
+          `External API call failed on retry with status ${retryStatus ?? "unknown"} for ${parsedUrl.toString()}`,
+        );
+        return false;
+      }
+    }
+  } catch (error) {
+    log.error(`Error calling external API at ${endpoint}: %o`, error);
     return false;
   }
 
