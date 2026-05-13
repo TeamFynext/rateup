@@ -1442,37 +1442,42 @@ async function executeExternalApiAction(
     buttonPayload: context.buttonPayload ?? "",
   };
 
-  try {
+  const config = {
+    headers,
+  };
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      await axios.post(parsedUrl.toString(), payload, {
-        headers,
-      });
+      await axios.post(parsedUrl.toString(), payload, config);
+
+      log.info(`External API call successful for ${parsedUrl.toString()}`);
+
+      return true;
     } catch (error) {
-      const firstStatus = axios.isAxiosError(error)
+      const status = axios.isAxiosError(error)
         ? error.response?.status
         : undefined;
+
+      const message = axios.isAxiosError(error)
+        ? error.message
+        : "Unknown error";
+
       log.warn(
-        `External API call failed with status ${firstStatus ?? "unknown"} for ${parsedUrl.toString()}, retrying...`,
+        `External API call attempt ${attempt} failed ` +
+          `for ${parsedUrl.toString()} ` +
+          `(status: ${status ?? "unknown"}, message: ${message})`,
       );
 
-      try {
-        await axios.post(parsedUrl.toString(), payload, {
-          headers,
-        });
-      } catch (retryError) {
-        const retryStatus = axios.isAxiosError(retryError)
-          ? retryError.response?.status
-          : undefined;
-        log.warn(
-          `External API call failed on retry with status ${retryStatus ?? "unknown"} for ${parsedUrl.toString()}`,
+      if (attempt === 2) {
+        log.error(
+          `External API failed after retry for ${parsedUrl.toString()}: %o`,
+          error,
         );
+
         return false;
       }
     }
-  } catch (error) {
-    log.error(`Error calling external API at ${endpoint}: %o`, error);
-    return false;
   }
 
-  return true;
+  return false;
 }
