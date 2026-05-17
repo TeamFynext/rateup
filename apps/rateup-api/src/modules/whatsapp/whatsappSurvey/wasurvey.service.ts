@@ -187,10 +187,6 @@ export async function sendMessage(
     return { status: true, message: messageId };
   } catch (e: any) {
     console.log("🚀 ~ file: wasurvey.service.ts:436 ~ sendMessage ~ e:", e);
-    console.log(
-      "🚀 ~ file: wasurvey.service.ts:436 ~ sendMessage ~ e - JSON:",
-      JSON.stringify(e, null, 2),
-    );
 
     console.log("🚀 main:", {
       orgId,
@@ -217,7 +213,7 @@ export async function sendMessage(
       data: {
         orgId,
         phone: to,
-        logs: [e?.error ?? "No error details available"],
+        logs: [e?.error || { message: "Network or unknown error" }],
       },
     });
     log.error({ error: e }, "Error sending message");
