@@ -7,27 +7,38 @@ async function axiosWithRetry<T = any>(
 ): Promise<AxiosResponse<T>> {
   let lastError: AxiosError | null = null;
 
+  const retryableErrors = new Set([
+    "ENETUNREACH",
+    "ECONNABORTED",
+    "ECONNRESET",
+    "ETIMEDOUT",
+    "EPROTO",
+    "EAI_AGAIN",
+  ]);
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await axios({
         ...config,
-        validateStatus: () => true, // prevent throwing on non-2xx
+        validateStatus: () => true,
       });
+
       return response;
     } catch (error: any) {
       lastError = error;
-      const isNetworkError =
-        error.code === "ENETUNREACH" ||
-        error.code === "ECONNABORTED" ||
-        error.code === "ECONNRESET" ||
-        error.code === "ETIMEDOUT";
 
-      if (!isNetworkError || attempt === retries) {
+      const isRetryable = retryableErrors.has(error.code);
+
+      if (!isRetryable || attempt === retries) {
         throw error;
       }
 
       log.warn(
-        `Retry attempt ${attempt} failed with ${error.code}. Retrying...`,
+        {
+          code: error.code,
+          attempt,
+        },
+        "WhatsApp API request failed. Retrying...",
       );
     }
   }
