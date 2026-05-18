@@ -657,15 +657,20 @@ export const handlePaymentConfirmation = async (
     orgId = order.catalog.orgId;
     await prisma.waCatalogOrder.update({
       where: { id: order.id },
-      data: { paymentStatus: "PAID" },
+      data: { paymentStatus: "PAID", orderStage: "COMPLETED" },
     });
 
     if (order.shopifyDraftOrderId) {
       try {
-        const orderTotal = (order.products as any[]).reduce(
+        const productsTotal = (order.products as any[]).reduce(
           (sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 1),
           0,
         );
+        const deliveryCharge = Number(
+          (order.deliveryOption as any)?.charge || 0,
+        );
+        const orderTotal = productsTotal + deliveryCharge;
+
         // We multiply by 100 because captureShopifyOrderPayment divides by 100
         await captureShopifyOrderPayment(
           orgId,

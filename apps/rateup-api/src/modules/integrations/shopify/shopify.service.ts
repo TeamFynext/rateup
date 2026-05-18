@@ -2023,27 +2023,49 @@ export async function captureShopifyOrderPayment(
   });
 
   try {
+    // First try completing it as a draft order
     const response: any = await restClient.post({
-      path: `orders/${orderId}/transactions`,
+      path: `draft_orders/${orderId}/complete`,
       type: DataType.JSON,
       data: {
-        transaction: {
-          kind: "sale",
-          status: "success",
-          amount: (amount / 100).toFixed(2), // Assumes the amount is in smallest currency unit (paise)
-          source: "external",
+        draft_order: {
+          payment_pending: false,
         },
       },
     });
-    log.info("Successfully captured payment for Shopify Order %s", orderId);
-    return response.body.transaction;
-  } catch (error: any) {
-    log.error(
-      "Failed to capture payment for Shopify Order %s => %o",
+    log.info(
+      "Successfully completed Shopify Draft Order %s into a paid order",
       orderId,
-      error.response?.body || error,
     );
-    return false;
+    return response.body?.draft_order?.order_id || true;
+  } catch (draftError: any) {
+    log.warn(
+      "Completing draft order failed (might be a direct order ID). Trying POST /orders/%s/transactions...",
+      orderId,
+    );
+    try {
+      const response: any = await restClient.post({
+        path: `orders/${orderId}/transactions`,
+        type: DataType.JSON,
+        data: {
+          transaction: {
+            kind: "sale",
+            status: "success",
+            amount: (amount / 100).toFixed(2), // Assumes the amount is in smallest currency unit (paise)
+            source: "external",
+          },
+        },
+      });
+      log.info("Successfully captured payment for Shopify Order %s", orderId);
+      return response.body.transaction;
+    } catch (error: any) {
+      log.error(
+        "Failed to capture payment for Shopify Order %s => %o",
+        orderId,
+        error.response?.body || error,
+      );
+      return false;
+    }
   }
 }
 
