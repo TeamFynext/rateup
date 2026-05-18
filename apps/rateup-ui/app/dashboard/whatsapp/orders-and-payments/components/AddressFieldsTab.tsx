@@ -263,60 +263,96 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
             Address Form Preview
           </h3>
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold bg-muted px-2 py-0.5 rounded">
-            WhatsApp Flow Mockup
+            Mobile Preview
           </span>
         </div>
 
-        <div className="max-w-md mx-auto bg-[#0b141a] text-[#e9edef] rounded-2xl shadow-2xl overflow-hidden border border-[#222e35] my-6 font-sans">
-          {/* Top drag handle */}
-          <div className="w-10 h-1 bg-[#3b4a54] rounded-full mx-auto my-2" />
+        {/* Smartphone Outer Frame */}
+        <div className="w-[320px] sm:w-[340px] mx-auto bg-[#0b141a] rounded-[52px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border-[14px] border-[#22272e] relative overflow-hidden flex flex-col font-sans ring-1 ring-black/20 my-8">
+          {/* Hardware Side Buttons */}
+          <div className="absolute -left-[17px] top-24 w-[3px] h-6 bg-[#22272e] rounded-l-md" />
+          <div className="absolute -left-[17px] top-36 w-[3px] h-12 bg-[#22272e] rounded-l-md" />
+          <div className="absolute -left-[17px] top-52 w-[3px] h-12 bg-[#22272e] rounded-l-md" />
+          <div className="absolute -right-[17px] top-36 w-[3px] h-16 bg-[#22272e] rounded-r-md" />
 
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#222e35]">
-            <X className="h-5 w-5 text-[#8696a0] cursor-pointer hover:text-[#e9edef] transition-colors" />
-            <span className="font-semibold text-base text-[#e9edef]">
-              Shipping Address
-            </span>
-            <MoreVertical className="h-5 w-5 text-[#8696a0] cursor-pointer hover:text-[#e9edef] transition-colors" />
+          {/* Dynamic Island */}
+          <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-28 h-7 bg-black rounded-full z-50 flex items-center justify-between px-2.5 shadow-md">
+            <div className="w-3 h-3 bg-[#111] rounded-full border border-gray-800 flex items-center justify-center">
+              <div className="w-1 h-1 bg-emerald-500 rounded-full" />
+            </div>
+            <div className="w-1.5 h-1.5 bg-gray-900 rounded-full" />
           </div>
 
-          {/* Form Body */}
-          <div className="p-4 space-y-3.5 max-h-[460px] overflow-y-auto">
-            {SHOPIFY_FIELDS.map((field) => {
-              const displayLabel = field.value
-                ? `${field.label}: ${field.value}`
-                : field.required
-                  ? field.label
-                  : `${field.label} (optional)`;
+          {/* Status Bar */}
+          <div className="flex items-center justify-between px-6 pt-3.5 pb-2 bg-[#0b141a] text-white text-xs font-semibold select-none">
+            <span>9:41</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold scale-90">5G</span>
+              {/* Battery Icon */}
+              <div className="w-5 h-2.5 border border-white/80 rounded-[3px] p-[1px] flex items-center">
+                <div className="h-full w-3.5 bg-white rounded-[1px]" />
+                <div className="w-[2px] h-1 bg-white/80 rounded-r-sm ml-[1px]" />
+              </div>
+            </div>
+          </div>
 
-              return (
-                <div key={field.shopifyKey} className="space-y-1">
-                  <div className="rounded-xl bg-[#1f2c34] border border-[#2f3e46] px-4 py-3 text-sm font-medium text-[#8696a0] flex items-center justify-between shadow-inner">
-                    <span>{displayLabel}</span>
-                    {field.fixed && (
-                      <span className="text-[10px] bg-[#3b4a54]/50 text-[#8696a0] px-1.5 py-0.5 rounded">
-                        Fixed
-                      </span>
+          {/* WhatsApp Flow Sheet Container */}
+          <div className="flex-1 flex flex-col bg-[#0b141a]">
+            {/* Top drag handle */}
+            <div className="w-10 h-1 bg-[#3b4a54] rounded-full mx-auto my-2" />
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#222e35]">
+              <X className="h-5 w-5 text-[#8696a0] cursor-pointer hover:text-[#e9edef] transition-colors" />
+              <span className="font-semibold text-base text-[#e9edef]">
+                Shipping Address
+              </span>
+              <MoreVertical className="h-5 w-5 text-[#8696a0] cursor-pointer hover:text-[#e9edef] transition-colors" />
+            </div>
+
+            {/* Form Body */}
+            <div className="p-4 space-y-3.5 max-h-[420px] overflow-y-auto custom-scrollbar">
+              {SHOPIFY_FIELDS.map((field) => {
+                const displayLabel = field.value
+                  ? `${field.label}: ${field.value}`
+                  : field.required
+                    ? field.label
+                    : `${field.label} (optional)`;
+
+                return (
+                  <div key={field.shopifyKey} className="space-y-1">
+                    <div className="rounded-xl bg-[#1f2c34] border border-[#2f3e46] px-4 py-3 text-sm font-medium text-[#8696a0] flex items-center justify-between shadow-inner">
+                      <span>{displayLabel}</span>
+                      {field.fixed && (
+                        <span className="text-[10px] bg-[#3b4a54]/50 text-[#8696a0] px-1.5 py-0.5 rounded">
+                          Fixed
+                        </span>
+                      )}
+                    </div>
+                    {field.shopifyKey === "address2" && (
+                      <p className="text-[11px] text-[#8696a0] px-1 italic">
+                        Optional — landmark, apartment, etc.
+                      </p>
                     )}
                   </div>
-                  {field.shopifyKey === "address2" && (
-                    <p className="text-[11px] text-[#8696a0] px-1 italic">
-                      Optional — landmark, apartment, etc.
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          {/* Bottom Bar */}
-          <div className="p-4 border-t border-[#222e35] bg-[#0b141a]">
-            <button
-              type="button"
-              className="w-full py-3 bg-[#00a884] text-[#111b21] font-semibold text-sm rounded-full flex items-center justify-center shadow-md hover:bg-[#06cf9c] transition-colors"
-            >
-              Confirm Address
-            </button>
+            {/* Bottom Bar */}
+            <div className="p-4 border-t border-[#222e35] bg-[#0b141a]">
+              <button
+                type="button"
+                className="w-full py-3 bg-[#00a884] text-[#111b21] font-semibold text-sm rounded-full flex items-center justify-center shadow-md hover:bg-[#06cf9c] transition-colors"
+              >
+                Confirm Address
+              </button>
+            </div>
+
+            {/* Home Indicator */}
+            <div className="pb-2.5 pt-1 bg-[#0b141a] flex justify-center">
+              <div className="w-32 h-1 bg-[#ffffff]/30 rounded-full" />
+            </div>
           </div>
         </div>
 
