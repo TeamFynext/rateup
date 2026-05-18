@@ -177,98 +177,133 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Flow status panel */}
-      <Card
-        className={`${status === "approved" ? "border-green-300 bg-green-50/40 dark:bg-green-950/20" : status === "rejected" ? "border-red-300 bg-red-50/40 dark:bg-red-950/20" : status === "review" ? "border-amber-300 bg-amber-50/40 dark:bg-amber-950/20" : ""}`}
-      >
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <CardTitle className="text-base">WhatsApp Address Flow</CardTitle>
-              <CardDescription className="text-xs mt-1">
-                A Meta-approved form sent to customers after they place an
-                order. Collects their shipping address inside WhatsApp.
-              </CardDescription>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* Left Column: Management Controls & Info Cards */}
+      <div className="lg:col-span-7 space-y-6">
+        {/* Flow status panel */}
+        <Card
+          className={`${status === "approved" ? "border-green-300 bg-green-50/40 dark:bg-green-950/20" : status === "rejected" ? "border-red-300 bg-red-50/40 dark:bg-red-950/20" : status === "review" ? "border-amber-300 bg-amber-50/40 dark:bg-amber-950/20" : ""}`}
+        >
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <CardTitle className="text-base">
+                  WhatsApp Address Flow
+                </CardTitle>
+                <CardDescription className="text-xs mt-1">
+                  A Meta-approved form sent to customers after they place an
+                  order. Collects their shipping address inside WhatsApp.
+                </CardDescription>
+              </div>
+              <Badge variant={cfg.badge} className="shrink-0">
+                {cfg.label}
+              </Badge>
             </div>
-            <Badge variant={cfg.badge} className="shrink-0">
-              {cfg.label}
-            </Badge>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3">
+              {cfg.icon}
+              <div>
+                <p className={`font-medium text-sm ${cfg.color}`}>
+                  {cfg.label}
+                </p>
+                {status === "review" && (
+                  <p className="text-xs text-muted-foreground">
+                    Meta review typically takes 1–3 business days. This page
+                    auto-refreshes every 10 seconds.
+                  </p>
+                )}
+                {status === "approved" && settings?.addressFlowId && (
+                  <p className="text-xs text-muted-foreground">
+                    Flow ID:{" "}
+                    <code className="font-mono bg-muted px-1 rounded">
+                      {settings.addressFlowId}
+                    </code>
+                  </p>
+                )}
+                {status === "idle" && (
+                  <p className="text-xs text-muted-foreground">
+                    Click "Create Address Flow" to generate the form and submit
+                    it to Meta for review.
+                  </p>
+                )}
+                {status === "rejected" && (
+                  <p className="text-xs text-muted-foreground">
+                    Meta rejected the flow. Click "Resubmit" to create a new
+                    one.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {canCreate && (
+              <Button
+                onClick={handleCreateFlow}
+                disabled={isCreating || !catalogId}
+                size="sm"
+                className="gap-2"
+              >
+                {isCreating ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Zap className="h-3.5 w-3.5" />
+                )}
+                {status === "rejected"
+                  ? "Resubmit Address Flow"
+                  : "Create Address Flow"}
+              </Button>
+            )}
+
+            {isPolling && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                Auto-refreshing…
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Delivery note */}
+        <Card className="border-dashed bg-muted/20">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">🚚</span>
+              <div>
+                <p className="text-sm font-medium">
+                  Delivery Selection (no Meta approval needed)
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  After address collection, the bot automatically sends a{" "}
+                  <strong>WhatsApp List Message</strong> — an interactive
+                  dropdown with your enabled delivery partners and their prices.
+                  The customer selects one and the bot calculates the final
+                  total. Configure delivery partners in the{" "}
+                  <strong>Delivery Options</strong> tab.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Right Column: Live Mobile Preview */}
+      <div className="lg:col-span-5 bg-gradient-to-b from-muted/30 to-muted/10 border rounded-2xl p-6 flex flex-col items-center justify-center shadow-sm">
+        <div className="w-full flex items-center justify-between border-b pb-3 mb-6">
+          <div>
+            <h3 className="text-sm font-semibold tracking-tight">
+              Address Form Preview
+            </h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Live smartphone simulation
+            </p>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-3">
-            {cfg.icon}
-            <div>
-              <p className={`font-medium text-sm ${cfg.color}`}>{cfg.label}</p>
-              {status === "review" && (
-                <p className="text-xs text-muted-foreground">
-                  Meta review typically takes 1–3 business days. This page
-                  auto-refreshes every 10 seconds.
-                </p>
-              )}
-              {status === "approved" && settings?.addressFlowId && (
-                <p className="text-xs text-muted-foreground">
-                  Flow ID:{" "}
-                  <code className="font-mono bg-muted px-1 rounded">
-                    {settings.addressFlowId}
-                  </code>
-                </p>
-              )}
-              {status === "idle" && (
-                <p className="text-xs text-muted-foreground">
-                  Click "Create Address Flow" to generate the form and submit it
-                  to Meta for review.
-                </p>
-              )}
-              {status === "rejected" && (
-                <p className="text-xs text-muted-foreground">
-                  Meta rejected the flow. Click "Resubmit" to create a new one.
-                </p>
-              )}
-            </div>
-          </div>
-
-          {canCreate && (
-            <Button
-              onClick={handleCreateFlow}
-              disabled={isCreating || !catalogId}
-              size="sm"
-              className="gap-2"
-            >
-              {isCreating ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Zap className="h-3.5 w-3.5" />
-              )}
-              {status === "rejected"
-                ? "Resubmit Address Flow"
-                : "Create Address Flow"}
-            </Button>
-          )}
-
-          {isPolling && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              Auto-refreshing…
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Field preview */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between border-b pb-2">
-          <h3 className="text-sm font-semibold tracking-tight">
-            Address Form Preview
-          </h3>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold bg-muted px-2 py-0.5 rounded">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold bg-background shadow-sm border px-2.5 py-1 rounded-full">
             Mobile Preview
           </span>
         </div>
 
         {/* Smartphone Outer Frame */}
-        <div className="w-[320px] sm:w-[340px] mx-auto bg-[#0b141a] rounded-[52px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border-[14px] border-[#22272e] relative overflow-hidden flex flex-col font-sans ring-1 ring-black/20 my-8">
+        <div className="w-[310px] sm:w-[330px] bg-[#0b141a] text-[#e9edef] rounded-[50px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border-[14px] border-[#22272e] relative overflow-hidden flex flex-col font-sans ring-1 ring-black/20 my-2">
           {/* Hardware Side Buttons */}
           <div className="absolute -left-[17px] top-24 w-[3px] h-6 bg-[#22272e] rounded-l-md" />
           <div className="absolute -left-[17px] top-36 w-[3px] h-12 bg-[#22272e] rounded-l-md" />
@@ -311,7 +346,7 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
             </div>
 
             {/* Form Body */}
-            <div className="p-4 space-y-3.5 max-h-[420px] overflow-y-auto custom-scrollbar">
+            <div className="p-4 space-y-3.5 max-h-[380px] overflow-y-auto custom-scrollbar">
               {SHOPIFY_FIELDS.map((field) => {
                 const displayLabel = field.value
                   ? `${field.label}: ${field.value}`
@@ -356,33 +391,11 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
           </div>
         </div>
 
-        <p className="text-[10px] text-muted-foreground text-center italic">
+        <p className="text-[10px] text-muted-foreground text-center italic mt-6">
           * Fields are pre-configured to ensure 1:1 compatibility with Shopify
           order fulfillment.
         </p>
       </div>
-
-      {/* Delivery note */}
-      <Card className="border-dashed bg-muted/20">
-        <CardContent className="pt-4 pb-4">
-          <div className="flex items-start gap-3">
-            <span className="text-xl">🚚</span>
-            <div>
-              <p className="text-sm font-medium">
-                Delivery Selection (no Meta approval needed)
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                After address collection, the bot automatically sends a{" "}
-                <strong>WhatsApp List Message</strong> — an interactive dropdown
-                with your enabled delivery partners and their prices. The
-                customer selects one and the bot calculates the final total.
-                Configure delivery partners in the{" "}
-                <strong>Delivery Options</strong> tab.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
