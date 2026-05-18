@@ -8,7 +8,9 @@ import {
   Clock,
   Loader2,
   MapPin,
+  MoreVertical,
   RefreshCw,
+  X,
   XCircle,
   Zap,
 } from "lucide-react";
@@ -261,34 +263,63 @@ export default function AddressFieldsTab({ catalogId }: { catalogId: string }) {
             Address Form Preview
           </h3>
           <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold bg-muted px-2 py-0.5 rounded">
-            Fixed Layout
+            WhatsApp Flow Mockup
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-          {SHOPIFY_FIELDS.map((field) => (
-            <div
-              key={field.shopifyKey}
-              className={`group flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 ${
-                field.fixed
-                  ? "bg-muted/30 border-muted-foreground/10"
-                  : "bg-background border-muted hover:border-primary/30 hover:shadow-sm"
-              }`}
+        <div className="max-w-md mx-auto bg-[#0b141a] text-[#e9edef] rounded-2xl shadow-2xl overflow-hidden border border-[#222e35] my-6 font-sans">
+          {/* Top drag handle */}
+          <div className="w-10 h-1 bg-[#3b4a54] rounded-full mx-auto my-2" />
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#222e35]">
+            <X className="h-5 w-5 text-[#8696a0] cursor-pointer hover:text-[#e9edef] transition-colors" />
+            <span className="font-semibold text-base text-[#e9edef]">
+              Shipping Address
+            </span>
+            <MoreVertical className="h-5 w-5 text-[#8696a0] cursor-pointer hover:text-[#e9edef] transition-colors" />
+          </div>
+
+          {/* Form Body */}
+          <div className="p-4 space-y-3.5 max-h-[460px] overflow-y-auto">
+            {SHOPIFY_FIELDS.map((field) => {
+              const displayLabel = field.value
+                ? `${field.label}: ${field.value}`
+                : field.required
+                  ? field.label
+                  : `${field.label} (optional)`;
+
+              return (
+                <div key={field.shopifyKey} className="space-y-1">
+                  <div className="rounded-xl bg-[#1f2c34] border border-[#2f3e46] px-4 py-3 text-sm font-medium text-[#8696a0] flex items-center justify-between shadow-inner">
+                    <span>{displayLabel}</span>
+                    {field.fixed && (
+                      <span className="text-[10px] bg-[#3b4a54]/50 text-[#8696a0] px-1.5 py-0.5 rounded">
+                        Fixed
+                      </span>
+                    )}
+                  </div>
+                  {field.shopifyKey === "address2" && (
+                    <p className="text-[11px] text-[#8696a0] px-1 italic">
+                      Optional — landmark, apartment, etc.
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="p-4 border-t border-[#222e35] bg-[#0b141a]">
+            <button
+              type="button"
+              className="w-full py-3 bg-[#00a884] text-[#111b21] font-semibold text-sm rounded-full flex items-center justify-center shadow-md hover:bg-[#06cf9c] transition-colors"
             >
-              <div
-                className={`flex-shrink-0 h-2 w-2 rounded-full ${field.required ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "bg-muted-foreground/30"}`}
-              />
-              <div className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold text-foreground/90">
-                  {field.label}
-                </span>
-                <span className="text-[10px] text-muted-foreground">
-                  {field.value || (field.required ? "Required" : "Optional")}
-                </span>
-              </div>
-            </div>
-          ))}
+              Confirm Address
+            </button>
+          </div>
         </div>
+
         <p className="text-[10px] text-muted-foreground text-center italic">
           * Fields are pre-configured to ensure 1:1 compatibility with Shopify
           order fulfillment.
