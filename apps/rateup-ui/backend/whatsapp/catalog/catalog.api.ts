@@ -37,3 +37,56 @@ export async function disconnectCatalogFromWaba(data) {
   return (await axiosClient.delete(`${waCatalogUrl}/disconnect`, { data }))
     .data;
 }
+
+// ─── Catalog Settings ──────────────────────────────────────────────────────
+
+export type DeliveryOption = {
+  id: string;
+  name: string;
+  charge: number;
+  days?: string;
+  enabled: boolean;
+};
+
+export type CatalogSettings = {
+  catalogId: string;
+  storeType: "standard" | "shopify";
+  paymentMethod?: string;
+  standardPaymentConfig?: Record<string, any>;
+  collectAddress: boolean;
+  collectDelivery: boolean;
+  fixedDeliveryCharge?: boolean;
+  fixedDeliveryAmount?: number;
+  addressFlowId?: string;
+  addressFlowDbId?: string;
+  addressFlowStatus: "idle" | "submitting" | "review" | "approved" | "rejected";
+  addressFlowFields?: any[];
+  deliveryOptions: DeliveryOption[];
+};
+
+export async function getCatalogSettings(
+  catalogId: string,
+): Promise<CatalogSettings> {
+  return (await axiosClient.get(`${waCatalogUrl}/${catalogId}/settings`)).data;
+}
+
+export async function updateCatalogSettings(
+  catalogId: string,
+  data: Partial<CatalogSettings>,
+) {
+  return (await axiosClient.put(`${waCatalogUrl}/${catalogId}/settings`, data))
+    .data;
+}
+
+export async function createCatalogAddressFlow(
+  catalogId: string,
+  json?: any,
+  map?: any,
+) {
+  return (
+    await axiosClient.post(`${waCatalogUrl}/${catalogId}/create-address-flow`, {
+      json,
+      map,
+    })
+  ).data;
+}
