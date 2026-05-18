@@ -552,6 +552,31 @@ async function whatsappMessageHandler(
     );
     return;
   }
+
+  // ── Delivery list reply: intercept before other handlers ─────────────────────
+  const rawMsg = (completeMessageObject as WaReceiveMessageBody)?.messages?.[0];
+  if (
+    rawMsg?.type === "interactive" &&
+    rawMsg?.interactive?.type === "list_reply"
+  ) {
+    const listReplyId = rawMsg.interactive?.list_reply?.id as string;
+    if (listReplyId?.startsWith("delivery_")) {
+      try {
+        const { handleDeliveryListReply } =
+          await import("../catalog/catalogSettings.service.js");
+        const handled = await handleDeliveryListReply({
+          orgId,
+          contactPhone: from,
+          listReplyId,
+          whatsappSettingsPhoneId: waSettings.phoneId,
+        });
+        if (handled) return;
+      } catch (e) {
+        log.error("Error handling delivery list reply: %o", e);
+      }
+    }
+  }
+
   const expoToken = await getTokensByOrgId(orgId);
   await notificationQueue.add("notification", {
     pushNotificationData: {
@@ -657,6 +682,28 @@ async function whatsappMessageHandler(
   } else if (!!parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
   } else if (parsedMessage.type === "nfm_reply") {
+    // ── Check if this is a catalog address flow response ──────────────────────
+    const addressData = parsedMessage.flowResponse;
+    const flowToken = addressData?.flow_token as string | undefined;
+    if (flowToken) {
+      try {
+        const { handleAddressFlowResponse } =
+          await import("../catalog/catalogSettings.service.js");
+        const handled = await handleAddressFlowResponse({
+          orgId,
+          orderId: flowToken,
+          addressData,
+          contactPhone: from,
+          whatsappSettingsPhoneId: waSettings?.phoneId,
+        });
+        if (handled) {
+          // Catalog address flow handled — skip regular flow handler
+          return;
+        }
+      } catch (e) {
+        log.error("Error handling catalog address flow response: %o", e);
+      }
+    }
     await handleStaticFlowReply(orgId, waMessage);
   } else if (
     messageLowerCase === WA_SUBSCRIBE_STATUS.STOP ||

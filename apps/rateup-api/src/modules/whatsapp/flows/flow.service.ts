@@ -520,6 +520,7 @@ interface CreateFlowCopyInDbArgs {
     body: string;
     cta: string;
   };
+  version?: number;
 }
 
 export async function createFlowCopyInDb({
@@ -535,6 +536,7 @@ export async function createFlowCopyInDb({
     body: "Would you like to start survey?",
     cta: "Open",
   },
+  version = 2,
 }: CreateFlowCopyInDbArgs) {
   const flow = await prisma.waFlow.create({
     data: {
@@ -547,7 +549,7 @@ export async function createFlowCopyInDb({
       surveyId: surveyId,
       status: status,
       name: name,
-      version: 2,
+      version: version,
     },
   });
 

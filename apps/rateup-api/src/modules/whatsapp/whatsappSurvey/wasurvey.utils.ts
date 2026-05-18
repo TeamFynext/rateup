@@ -1106,11 +1106,13 @@ export function createNativePaymentMessage(
   providerType: string,
   bodyText: string = "Confirm your order and pay",
   footerText?: string,
+  shipping?: { value: number; description?: string } | null,
 ): WaSendMessageBody {
-  const totalAmount = products.reduce(
+  const subtotalAmount = products.reduce(
     (acc, p) => acc + p.amount * p.quantity,
     0,
   );
+  const totalAmount = subtotalAmount + (shipping ? shipping.value : 0);
 
   return {
     messaging_product: "whatsapp",
@@ -1161,9 +1163,18 @@ export function createNativePaymentMessage(
               quantity: p.quantity,
             })),
             subtotal: {
-              value: totalAmount,
+              value: subtotalAmount,
               offset: 100,
             },
+            ...(shipping && {
+              shipping: {
+                value: shipping.value,
+                offset: 100,
+                ...(shipping.description && {
+                  description: shipping.description,
+                }),
+              },
+            }),
           },
         },
       } as any,

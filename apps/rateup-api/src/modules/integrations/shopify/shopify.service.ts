@@ -1861,6 +1861,152 @@ export async function createShopifyPendingOrder(
   }
 }
 
+// Create Shopify Draft Order with address + shipping line
+export async function createShopifyDraftOrderWithAddress(
+  orgId: string,
+  products: {
+    retailerId: string;
+    quantity: number;
+    title?: string;
+    price?: number | string;
+  }[],
+  shippingAddress?: {
+    first_name?: string;
+    last_name?: string;
+    address1?: string;
+    address2?: string;
+    city?: string;
+    province?: string;
+    zip?: string;
+    country_code?: string;
+    phone?: string;
+  } | null,
+  deliveryOption?: { name?: string; charge?: number } | null,
+) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    log.trace(
+      "Shopify not active for orgId %s - skipping draft order creation",
+      orgId,
+    );
+    return null;
+  }
+
+  const client = new shopify.clients.Graphql({
+    session: shopifyInfo.credential.session,
+  });
+  const variantMap = await resolveShopifyVariants(products, client);
+
+  const lineItems = [];
+  for (const product of products) {
+    const variantId = variantMap.get(product.retailerId);
+    if (variantId) {
+      lineItems.push({
+        variant_id: parseInt(variantId),
+        quantity: product.quantity,
+      });
+    } else {
+      // Fallback: custom line item with title and price from WA catalog data
+      const price = parseFloat(String(product.price ?? "0")) || 0;
+      lineItems.push({
+        title: product.title ?? product.retailerId,
+        price: price.toFixed(2),
+        quantity: product.quantity,
+        requires_shipping: true,
+      });
+    }
+  }
+
+  if (lineItems.length === 0) {
+    log.trace("No line items for draft order — skipping");
+    return null;
+  }
+
+  const restClient = new shopify.clients.Rest({
+    session: shopifyInfo.credential.session,
+  });
+
+  const draftOrderPayload: any = {
+    draft_order: {
+      line_items: lineItems,
+      ...(shippingAddress && { shipping_address: shippingAddress }),
+      ...(deliveryOption && {
+        shipping_line: {
+          custom: true,
+          title: deliveryOption.name ?? "Delivery",
+          price: String(deliveryOption.charge ?? 0),
+        },
+      }),
+      note: "Order from WhatsApp Catalog",
+    },
+  };
+
+  try {
+    const response: any = await restClient.post({
+      path: "draft_orders",
+      type: DataType.JSON,
+      data: draftOrderPayload,
+    });
+    log.info(
+      "Created Shopify draft order %s for orgId %s",
+      response.body.draft_order?.id,
+      orgId,
+    );
+    return response.body.draft_order;
+  } catch (error: any) {
+    log.error(
+      "Failed to create Shopify draft order => %o",
+      error.response?.body || error,
+    );
+    try {
+      log.warn(
+        "Draft order creation failed (likely missing write_draft_orders scope). Falling back to POST /orders...",
+      );
+      const orderPayload: any = {
+        order: {
+          line_items: lineItems,
+          financial_status: "pending",
+          ...(shippingAddress && { shipping_address: shippingAddress }),
+          ...(deliveryOption && {
+            shipping_lines: [
+              {
+                custom: true,
+                title: deliveryOption.name ?? "Delivery",
+                price: String(deliveryOption.charge ?? 0),
+              },
+            ],
+          }),
+          note: "Order from WhatsApp Catalog",
+        },
+      };
+      const fallbackResponse: any = await restClient.post({
+        path: "orders",
+        type: DataType.JSON,
+        data: orderPayload,
+      });
+      log.info(
+        "Created fallback Shopify order %s for orgId %s",
+        fallbackResponse.body.order?.id,
+        orgId,
+      );
+      const orderData = fallbackResponse.body.order;
+      return {
+        id: orderData.id,
+        invoice_url:
+          orderData.order_status_url ??
+          `https://${shopifyInfo.credential?.session?.shop}/account`,
+        ...orderData,
+      };
+    } catch (fallbackError: any) {
+      log.error(
+        "Fallback Shopify order creation also failed => %o",
+        fallbackError.response?.body || fallbackError,
+      );
+      return null;
+    }
+  }
+}
+
 export async function captureShopifyOrderPayment(
   orgId: string,
   orderId: string,

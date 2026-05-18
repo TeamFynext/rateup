@@ -4,6 +4,8 @@ import {
   CatalogIdParam,
   CatalogWhatsappSettingSchema,
   UpdateCatalogSchema,
+  UpdateCatalogSettingsSchema,
+  CreateAddressFlowSchema,
 } from "./catalog.schema.js";
 import {
   disconnectCatalogFromWaba,
@@ -14,8 +16,11 @@ import {
   updateConnectWaCatalog,
   updateWaCatalog,
 } from "./catalog.service.js";
-import { getWaSettings } from "../settings/wa_settings.service.js";
-import { whatsappSettingsIdParamSchema } from "../settings/wa_settings.schema.js";
+import {
+  getCatalogSettings,
+  updateCatalogSettings,
+  createAddressFlow,
+} from "./catalogSettings.service.js";
 
 export async function updateCatalogHandler(
   request: FastifyRequest<{
@@ -108,5 +113,56 @@ export async function disconnectCatalogFromWabaHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
+  }
+}
+
+// Catalog Settings
+
+export async function getCatalogSettingsHandler(
+  request: FastifyRequest<{ Params: CatalogIdParam }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { catalogId } = request.params;
+    const settings = await getCatalogSettings(catalogId);
+    reply.code(200).send(settings);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: String(e) });
+  }
+}
+
+export async function updateCatalogSettingsHandler(
+  request: FastifyRequest<{
+    Params: CatalogIdParam;
+    Body: UpdateCatalogSettingsSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { catalogId } = request.params;
+    const updated = await updateCatalogSettings(catalogId, request.body);
+    reply.code(200).send(updated);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: String(e) });
+  }
+}
+
+export async function createAddressFlowHandler(
+  req: FastifyRequest<{
+    Params: CatalogIdParam;
+    Body: CreateAddressFlowSchema;
+  }>,
+  res: FastifyReply,
+) {
+  try {
+    const { orgId, userId } = req.user;
+    const { catalogId } = req.params;
+    const { json, map } = req.body;
+    await createAddressFlow(orgId, userId, catalogId, req, json, map);
+    res.status(200).send();
+  } catch (error) {
+    res.status(400).send(error.message);
   }
 }
