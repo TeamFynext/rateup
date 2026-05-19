@@ -784,12 +784,19 @@ export async function checkAndExecuteRuleByTriggerEvent(
   );
 
   // Try to match rules in order: business hour rules, then non-business hour rules
-  let wildcardBusinessHourMatch: RuleWithConditions | undefined;
+  const isWildcardMessageBodyRule = (rule: any): boolean =>
+    rule.groups?.some((group: any) =>
+      group.conditions?.some(
+        (cond: any) => cond.field === "MESSAGE_BODY" && cond.value === "*",
+      ),
+    );
 
   const tryMatchRules = async (
     rulesToCheck: any[],
     isBusinessHour: boolean,
   ) => {
+    let wildcardMatch: RuleWithConditions | undefined;
+
     for (const rule of rulesToCheck) {
       if (
         triggerEvent === TriggerEvent.SHOPIFY_EVENT &&
@@ -824,15 +831,11 @@ export async function checkAndExecuteRuleByTriggerEvent(
       );
       if (isMatch) {
         // Prefer specific match over wildcard
-        const isWildcard = rule.groups?.some((group: any) =>
-          group.conditions?.some(
-            (cond: any) => cond.field === "MESSAGE_BODY" && cond.value === "*",
-          ),
-        );
-        if (isBusinessHour && isWildcard) {
-          wildcardBusinessHourMatch = rule;
+        if (isWildcardMessageBodyRule(rule)) {
+          wildcardMatch = rule as RuleWithConditions;
           continue;
         }
+
         log.trace(
           `${isBusinessHour ? "Business hour" : "Non-business hour"} rule matched! Executing actions for rule: %s`,
           rule.name,
@@ -848,9 +851,22 @@ export async function checkAndExecuteRuleByTriggerEvent(
         };
       }
     }
+
+    if (wildcardMatch) {
+      log.trace(
+        `${isBusinessHour ? "Business hour" : "Non-business hour"} wildcard rule matched! Executing actions for rule: %s`,
+        wildcardMatch.name,
+      );
+
+      const executedActions = await executeRuleActions(wildcardMatch, context);
+      return {
+        rule: wildcardMatch,
+        executedActions,
+      };
+    }
+
     return undefined;
   };
-
   // 1. Try business hour rules (prefer specific match)
   const businessHourResult = await tryMatchRules(businessHourRules, true);
   if (businessHourResult) return businessHourResult;
@@ -861,18 +877,6 @@ export async function checkAndExecuteRuleByTriggerEvent(
     false,
   );
   if (nonBusinessHourResult) return nonBusinessHourResult;
-
-  // 3. If only wildcard business hour rule matched, use it
-  if (wildcardBusinessHourMatch) {
-    const executedActions = await executeRuleActions(
-      wildcardBusinessHourMatch,
-      context,
-    );
-    return {
-      rule: wildcardBusinessHourMatch,
-      executedActions,
-    };
-  }
 
   log.trace(`No matching rules found for trigger event: ${triggerEvent}`);
   return undefined;
