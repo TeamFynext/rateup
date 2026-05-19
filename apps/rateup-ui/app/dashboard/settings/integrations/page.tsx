@@ -24,6 +24,7 @@ import {
   ShopifyLogo,
   WhatsAppPaymentLogo,
   ZapierLogo,
+  ZohoLogo,
 } from "@/components/integrations/logos";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -182,6 +183,12 @@ const INTEGRATIONS_CONFIG: Record<string, IntegrationConfig> = {
     name: "Zapier",
     icon: ZapierLogo,
     description: "Connect with 5000+ apps and automate workflows",
+  },
+  zoho: {
+    id: "zoho",
+    name: "Zoho CRM",
+    icon: ZohoLogo,
+    description: "Sync contacts and leads seamlessly with your Zoho CRM",
   },
 };
 
