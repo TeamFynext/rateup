@@ -2024,14 +2024,11 @@ export async function captureShopifyOrderPayment(
 
   try {
     // First try completing it as a draft order
-    const response: any = await restClient.post({
+    const response: any = await restClient.put({
       path: `draft_orders/${orderId}/complete`,
+      query: { payment_pending: "false" },
       type: DataType.JSON,
-      data: {
-        draft_order: {
-          payment_pending: false,
-        },
-      },
+      data: {},
     });
     log.info(
       "Successfully completed Shopify Draft Order %s into a paid order",
@@ -2040,7 +2037,8 @@ export async function captureShopifyOrderPayment(
     return response.body?.draft_order?.order_id || true;
   } catch (draftError: any) {
     log.warn(
-      "Completing draft order failed (might be a direct order ID). Trying POST /orders/%s/transactions...",
+      "Completing draft order failed (might be a direct order ID). Error: %o. Trying POST /orders/%s/transactions...",
+      draftError.response?.body || draftError,
       orderId,
     );
     try {
