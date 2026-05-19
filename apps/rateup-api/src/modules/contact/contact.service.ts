@@ -44,7 +44,15 @@ import {
   WaMessageClosedStatus,
 } from "../whatsapp/constants.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
-import { notificationQueue } from "../../utils/redisConnection.js";
+import {
+  integrationTriggerQueue,
+  notificationQueue,
+} from "../../utils/redisConnection.js";
+import {
+  addZohoContactToQueue,
+  buildZohoContactPayload,
+  ZohoTriggers,
+} from "../integrations/external/zoho/zoho.service.js";
 
 export async function createContact(
   contact: ContactCore & { orgId: string },
@@ -116,6 +124,7 @@ export async function createContact(
     { [ZapierTriggers.CONTACT_CREATE]: user },
     user.orgId,
   );
+  await addZohoContactToQueue(user, user?.orgId);
   return user;
 }
 
@@ -144,6 +153,7 @@ export async function getOrcreateContact(
     { [ZapierTriggers.CONTACT_CREATE]: user },
     user.orgId,
   );
+  await addZohoContactToQueue(user, user?.orgId);
   if (customFields?.length) {
     await prisma.contactCustomFieldValue.createMany({
       data: customFields.map((field) => ({
@@ -265,14 +275,19 @@ export async function createMultipleContacts(
     // Batch Zapier triggers
     for (let i = 0; i < createdContacts.length; i += BATCH_SIZE) {
       const batch = createdContacts.slice(i, i + BATCH_SIZE);
+
       await Promise.all(
-        batch.map((contact) =>
-          addZapierTriggerToQueue(
+        batch.map(async (contact) => {
+          await addZapierTriggerToQueue(
             ZapierTriggers.CONTACT_CREATE,
-            { [ZapierTriggers.CONTACT_CREATE]: contact },
+            {
+              [ZapierTriggers.CONTACT_CREATE]: contact,
+            },
             orgId,
-          ),
-        ),
+          );
+
+          await addZohoContactToQueue(contact, orgId);
+        }),
       );
     }
   }
@@ -517,6 +532,15 @@ export async function deleteContactById(contactId: string) {
     { [ZapierTriggers.CONTACT_DELETED]: user },
     user.orgId,
   );
+  const integrationIds = user.integrationIds as any;
+  await integrationTriggerQueue.add("zoho-contact-delete", {
+    integrationName: "zoho",
+    triggerKey: ZohoTriggers.CONTACT_DELETE,
+    orgId: user.orgId,
+    data: {
+      zohoContactId: integrationIds?.zoho?.id,
+    },
+  });
   return user;
 }
 
@@ -686,6 +710,21 @@ export async function updateContactById(
     { [ZapierTriggers.CONTACT_UPDATED]: updatedContact },
     updatedContact.orgId,
   );
+  const integrationIds = contact.integrationIds as {
+    zoho?: {
+      id: string;
+    };
+  };
+
+  await integrationTriggerQueue.add("zoho-contact-update", {
+    integrationName: "zoho",
+    triggerKey: ZohoTriggers.CONTACT_UPDATE,
+    orgId: updatedContact.orgId,
+    data: {
+      zohoContactId: integrationIds?.zoho?.id,
+      ...buildZohoContactPayload(contact),
+    },
+  });
   if (
     WaMessageClosedStatus.includes(
       updatedContact.waMessageAssignStatus as WaMessageAssignStatus,
@@ -864,6 +903,7 @@ export async function getOrCreateContactByPhone(
         { [ZapierTriggers.CONTACT_CREATE]: contact },
         orgId,
       );
+      await addZohoContactToQueue(contact, orgId);
       return { contact, conversation };
     }
   } catch (e) {
@@ -917,6 +957,7 @@ export async function getOrCreateContactByIgsId(
         { [ZapierTriggers.CONTACT_CREATE]: contact },
         orgId,
       );
+      await addZohoContactToQueue(contact, orgId);
       return { contact, conversation };
     }
   } catch (e) {
@@ -986,6 +1027,8 @@ export async function getOrCreateContactByPsid(
       orgId,
     );
 
+    await addZohoContactToQueue(contact, orgId);
+
     return { contact, conversation };
   } catch (e) {
     log.error(
@@ -1021,6 +1064,20 @@ export async function deleteManyContacts(contactIds: Array<string>) {
       { [ZapierTriggers.CONTACT_DELETED]: contact },
       contact.orgId,
     );
+    const integrationIds = contact.integrationIds as {
+      zoho?: {
+        id: string;
+      };
+    };
+
+    await integrationTriggerQueue.add("zoho-contact-delete", {
+      integrationName: "zoho",
+      triggerKey: ZohoTriggers.CONTACT_DELETE,
+      orgId: contact.orgId,
+      data: {
+        zohoContactId: integrationIds?.zoho?.id,
+      },
+    });
   }
   return res;
 }

@@ -67,6 +67,7 @@ const updateContactSchema = z.object({
   contactGroupIds: z.array(z.string()).optional(),
   assignedUserIds: z.array(z.string()).optional(),
   lifecycleId: z.string().optional(),
+  integrationIds: z.any().optional(),
   notes: z.string().optional(),
 });
 const updateContactLabelsSchema = z.object({

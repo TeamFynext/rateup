@@ -673,6 +673,7 @@ model Contact {
   contactGroups                ContactGroupMap[]
   campaignParticipants         CampaignParticipant[]
   tags                         Json?
+  integrationIds               Json?
   WaMessage                    WaMessage[]
   consent                      Boolean                   @default(true)
   email                        String?
