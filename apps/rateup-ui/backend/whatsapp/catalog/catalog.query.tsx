@@ -104,7 +104,7 @@ export const useUpdateCatalogSettings = (catalogId: string) => {
       toast.success("Settings saved");
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.error || "Failed to save settings");
+      toast.error(error?.message || "Failed to save settings");
     },
   });
 };
@@ -119,9 +119,7 @@ export const useCreateAddressFlow = (catalogId: string) => {
       toast.success("Address flow submitted to Meta for review!");
     },
     onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.error || "Failed to create address flow",
-      );
+      toast.error(error?.message || "Failed to create address flow");
     },
   });
 };

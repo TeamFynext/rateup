@@ -28,6 +28,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
+const CLOUDFRONT_BASE = process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL
+  ? process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL.replace(/\/+$/, "")
+  : "https://d2uj946b0i8y27.cloudfront.net";
+
 // ─── Shopify payment options ─────────────────────────────────────────────────
 const SHOPIFY_METHODS = [
   {
@@ -38,9 +42,12 @@ const SHOPIFY_METHODS = [
     label: "Shopify Checkout URL",
     desc: "Customer receives a Shopify cart link to complete address, delivery, and payment directly on your store.",
     logos: [
-      { src: "/images/visa.svg", alt: "Visa" },
-      { src: "/images/mastercard.svg", alt: "Mastercard" },
-      { src: "/images/rupay.svg", alt: "RuPay" },
+      { src: `${CLOUDFRONT_BASE}/payment-logos/visa.svg`, alt: "Visa" },
+      {
+        src: `${CLOUDFRONT_BASE}/payment-logos/mastercard.svg`,
+        alt: "Mastercard",
+      },
+      { src: `${CLOUDFRONT_BASE}/payment-logos/rupay.svg`, alt: "RuPay" },
     ],
     badges: [],
     collectAddressApplicable: false,
@@ -54,9 +61,9 @@ const SHOPIFY_METHODS = [
     label: "WhatsApp Native Payment",
     desc: "Customer submits address and delivery inside WhatsApp, then pays directly via WhatsApp Pay. Orders sync to Shopify.",
     logos: [
-      { src: "/images/gpay.svg", alt: "GPay" },
-      { src: "/images/phonepe.svg", alt: "PhonePe" },
-      { src: "/images/upi.svg", alt: "UPI" },
+      { src: `${CLOUDFRONT_BASE}/payment-logos/gpay.svg`, alt: "GPay" },
+      { src: `${CLOUDFRONT_BASE}/payment-logos/phonepe.svg`, alt: "PhonePe" },
+      { src: `${CLOUDFRONT_BASE}/payment-logos/upi.svg`, alt: "UPI" },
     ],
     badges: [],
     collectAddressApplicable: true,
@@ -87,9 +94,9 @@ const STANDARD_METHODS = [
     label: "UPI Payment Link",
     desc: "Customer receives an instant UPI payment link for the total order amount.",
     logos: [
-      { src: "/images/gpay.svg", alt: "GPay" },
-      { src: "/images/phonepe.svg", alt: "PhonePe" },
-      { src: "/images/upi.svg", alt: "UPI" },
+      { src: `${CLOUDFRONT_BASE}/payment-logos/gpay.svg`, alt: "GPay" },
+      { src: `${CLOUDFRONT_BASE}/payment-logos/phonepe.svg`, alt: "PhonePe" },
+      { src: `${CLOUDFRONT_BASE}/payment-logos/upi.svg`, alt: "UPI" },
     ],
     badges: [],
     fields: [
