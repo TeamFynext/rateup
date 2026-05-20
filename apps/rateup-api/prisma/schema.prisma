@@ -673,6 +673,7 @@ model Contact {
   contactGroups                ContactGroupMap[]
   campaignParticipants         CampaignParticipant[]
   tags                         Json?
+  integrationIds               Json?
   WaMessage                    WaMessage[]
   consent                      Boolean                   @default(true)
   email                        String?
@@ -2314,6 +2315,20 @@ model WhatsappCatalog {
   autoCheckoutEnabled Boolean @default(false)
   checkoutMessage     String?
 
+  storeType             String?  @default("standard")
+  paymentMethod         String?
+  standardPaymentConfig Json?
+  standardPaymentMethod String?
+  collectAddress  Boolean @default(false)
+  collectDelivery Boolean @default(false)
+  fixedDeliveryCharge Boolean @default(false)
+  fixedDeliveryAmount Float?
+  addressFlowId     String?
+  addressFlowDbId   String?
+  addressFlowStatus String? @default("idle")
+  addressFlowFields Json?
+  deliveryOptions Json?
+
   @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
 }
 
@@ -2377,7 +2392,17 @@ model WaCatalogOrder {
 
   shopifyDraftOrderId String?
   shopifyInvoiceUrl   String?
+
+  storeType       String?
+  shippingAddress Json?
+  deliveryOption  Json?
+  orderStage      String?  @default("PENDING_ADDRESS")
+
+  @@index([catalogId, createdAt(sort: Desc)])
+  @@index([contactId])
+  @@index([orderStage])
 }
+
 
 model MetaAssets {
   whatsappSettings   WhatsappSettings @relation(fields: [whatsappSettingsId], references: [id], onDelete: Cascade)

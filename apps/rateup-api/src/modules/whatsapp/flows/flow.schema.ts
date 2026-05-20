@@ -21,6 +21,8 @@ const createFlowInput = z.object({
   teamIds: z.array(z.string()),
   name: z.string(),
   categories: z.array(z.string()),
+  json: z.any().optional(),
+  map: z.any().optional(),
 });
 
 const updateFlowInput = z.object({

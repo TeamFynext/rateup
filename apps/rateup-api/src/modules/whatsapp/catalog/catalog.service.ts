@@ -18,14 +18,22 @@ import {
   getWaSettingsById,
   getWaSettingsWithAccessTokenDecrypted,
 } from "../settings/wa_settings.service.js";
-import { MetaLoginAssets, WaConfigType } from "../../../types/enums.js";
+import {
+  MetaLoginAssets,
+  WaConfigType,
+  CatalogPaymentMethod,
+  CatalogAddressFlowStatus,
+  CatalogOrderStage,
+  CatalogStoreType,
+} from "../../../types/enums.js";
 import { createNativePaymentMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import { generateOrderReferenceId } from "../automatedReply/wa_automatedReply.utils.js";
 import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
+import { buildShopifyCartUrl } from "../../integrations/shopify/shopify.service.js";
 import {
-  buildShopifyCartUrl,
-  createShopifyPendingOrder,
-} from "../../integrations/shopify/shopify.service.js";
+  sendAddressFlowToCustomer,
+  sendDeliveryListMessage,
+} from "./catalogSettings.service.js";
 
 export async function updateWaCatalog(
   catalogId: string,
@@ -293,34 +301,6 @@ export async function handleWaOrderfromCatalog(
     };
   });
 
-  let shopifyDraftOrderId = null;
-  if ((waSettings?.paymentMethod ?? "NATIVE") === "NATIVE") {
-    try {
-      const shopifyOrder = await createShopifyPendingOrder(
-        catalog.orgId,
-        productsWithDetails.map((p) => ({
-          retailerId: p.retailerId,
-          quantity: p.quantity,
-          title: p.title,
-        })),
-        data.messages[0].from,
-      );
-      if (shopifyOrder && shopifyOrder.id) {
-        shopifyDraftOrderId = shopifyOrder.id.toString();
-        log.info(
-          "Created Shopify pending order %s for orgId %s",
-          shopifyDraftOrderId,
-          catalog.orgId,
-        );
-      }
-    } catch (e) {
-      log.error(
-        "Failed to create pending order in Shopify during WA checkout => %o",
-        e,
-      );
-    }
-  }
-
   const newOrder = await prisma.waCatalogOrder.create({
     data: {
       catalogId: order.catalog_id,
@@ -328,26 +308,60 @@ export async function handleWaOrderfromCatalog(
       products: productsWithDetails,
       createdAt: messageObj.waCreatedAt,
       paymentMethod: waSettings?.paymentMethod ?? "NATIVE",
-      shopifyDraftOrderId,
+      storeType: (catalog as any).storeType ?? CatalogStoreType.STANDARD,
+      orderStage: CatalogOrderStage.PENDING_ADDRESS,
     },
   });
   log.info("Order placed => %o", newOrder);
 
-  if (waSettings?.paymentMethod === "SHOPIFY_LINK") {
+  // Fetch full catalog config
+  const catalogFull = await prisma.whatsappCatalog.findUnique({
+    where: { catalogId: order.catalog_id },
+    select: {
+      storeType: true,
+      paymentMethod: true,
+      collectAddress: true,
+      collectDelivery: true,
+      addressFlowId: true,
+      addressFlowStatus: true,
+      deliveryOptions: true,
+      standardPaymentConfig: true,
+      fixedDeliveryCharge: true,
+      fixedDeliveryAmount: true,
+      orgId: true,
+    },
+  });
+
+  const catalogPaymentMethod =
+    (catalogFull as any)?.paymentMethod ?? CatalogPaymentMethod.MANUAL;
+  const collectAddress = (catalogFull as any)?.collectAddress ?? false;
+  const collectDelivery = (catalogFull as any)?.collectDelivery ?? false;
+  const hasApprovedFlow =
+    catalogFull?.addressFlowId &&
+    catalogFull?.addressFlowStatus === CatalogAddressFlowStatus.APPROVED;
+
+  const contact = await prisma.contact.findUnique({
+    where: { id: messageObj.contactId },
+    select: { phone: true },
+  });
+  const customerPhone = contact?.phone ?? data.messages[0].from;
+
+  // Route 1: Shopify Checkout URL - send cart link immediately
+  if (
+    catalogPaymentMethod === CatalogPaymentMethod.SHOPIFY_CHECKOUT ||
+    waSettings?.paymentMethod === "SHOPIFY_LINK"
+  ) {
     try {
-      // Resolve retailer_ids (Shopify SKUs / product titles) → numeric variant IDs → cart URL
       const checkoutUrl = await buildShopifyCartUrl(
         catalog.orgId,
         (newOrder.products as any[]).map((p) => ({
           retailerId: p.retailerId,
           quantity: p.quantity,
-          title: p.title, // passed for title-based fallback lookup
+          title: p.title,
         })),
       );
-
       if (checkoutUrl) {
-        const products = newOrder.products as any[];
-        const productLines = products
+        const productLines = (newOrder.products as any[])
           .map((p) => {
             const qty = p.quantity > 1 ? ` ×${p.quantity}` : "";
             const price =
@@ -357,48 +371,123 @@ export async function handleWaOrderfromCatalog(
             return `• ${p.title}${qty}${price}`;
           })
           .join("\n");
-
-        await sendMessage(catalog.orgId, {
-          messaging_product: "whatsapp",
-          recipient_type: "individual",
-          to: (messageObj as any).from || data.messages[0].from,
-          type: "text",
-          text: {
-            body: `🛍️ *Order Summary*\n${productLines}\n\nPlease complete your purchase securely using the link below:\n\n${checkoutUrl}`,
-            preview_url: true,
+        await sendMessage(
+          catalog.orgId,
+          {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: customerPhone,
+            type: "text",
+            text: {
+              body: `🛍️ *Order Summary*\n${productLines}\n\nComplete your purchase securely:\n\n${checkoutUrl}`,
+              preview_url: true,
+            },
           },
+          undefined,
+          undefined,
+          waSettings?.phoneId,
+        );
+        await prisma.waCatalogOrder.update({
+          where: { id: newOrder.id },
+          data: { orderStage: CatalogOrderStage.PENDING_CHECKOUT } as any,
         });
       } else {
-        log.warn(
-          "Could not build Shopify cart URL for org %s — no message sent to customer",
-          catalog.orgId,
-        );
+        log.warn("Could not build Shopify cart URL for org %s", catalog.orgId);
       }
     } catch (e) {
       log.error("Error generating Shopify checkout link => %o", e);
     }
-    // Always return for SHOPIFY_LINK — do NOT fall through to native payment
-    return;
+    return; // Shopify checkout — done
   }
 
-  // Trigger Native Payment if configured
-  try {
-    const contact = await prisma.contact.findUnique({
-      where: { id: messageObj.contactId },
-    });
-
-    if (contact && contact.phone) {
-      await handleWaOrderNativePayment(
-        catalog.orgId,
-        contact.phone,
-        order.catalog_id,
-        newOrder.products as any,
-        waSettings,
-        newOrder.id,
-      );
+  //  Route 2: Collect address first (if enabled + flow approved)
+  if (collectAddress && hasApprovedFlow) {
+    try {
+      if (customerPhone) {
+        await sendAddressFlowToCustomer({
+          orgId: catalog.orgId,
+          phone: customerPhone,
+          orderId: newOrder.id,
+          waFlowId: catalogFull.addressFlowId,
+          whatsappSettingsPhoneId: waSettings?.phoneId,
+        });
+        log.info(
+          "Address flow sent for order %s to %s",
+          newOrder.id,
+          customerPhone,
+        );
+        return; // Continue when customer submits flow (handleAddressFlowResponse)
+      }
+    } catch (e) {
+      log.error("Failed to send address flow for order %s: %o", newOrder.id, e);
     }
+  }
+
+  // Route 3: Skip address - check delivery
+  const deliveryOptions = (catalogFull?.deliveryOptions as any[]) ?? [];
+  const shouldAskDelivery =
+    collectDelivery &&
+    !catalogFull.fixedDeliveryCharge &&
+    deliveryOptions.some((o: any) => o.enabled);
+
+  if (shouldAskDelivery) {
+    try {
+      const { sendDeliveryListMessage } =
+        await import("./catalogSettings.service.js");
+      await sendDeliveryListMessage({
+        orgId: catalog.orgId,
+        phone: customerPhone,
+        deliveryOptions,
+        whatsappSettingsPhoneId: waSettings?.phoneId,
+      });
+      await prisma.waCatalogOrder.update({
+        where: { id: newOrder.id },
+        data: { orderStage: CatalogOrderStage.PENDING_DELIVERY } as any,
+      });
+      log.info("Delivery list sent for order %s", newOrder.id);
+      return; // Continue when customer picks delivery (handleDeliveryListReply)
+    } catch (e) {
+      log.error("Error sending delivery list for order %s: %o", newOrder.id, e);
+    }
+  }
+
+  // Route 4: No address, no delivery — dispatch payment directly
+  try {
+    const fixedOption = catalogFull.fixedDeliveryCharge
+      ? { name: "Fixed Delivery", charge: catalogFull.fixedDeliveryAmount ?? 0 }
+      : null;
+
+    const { dispatchPaymentMessage } =
+      await import("./catalogSettings.service.js");
+    await dispatchPaymentMessage(
+      {
+        id: newOrder.id,
+        products: newOrder.products as any[],
+        shippingAddress: null,
+        deliveryOption: fixedOption,
+        catalogId: order.catalog_id,
+        contactId: messageObj.contactId,
+      },
+      {
+        orgId: catalog.orgId,
+        storeType: (catalogFull as any)?.storeType,
+        paymentMethod: catalogPaymentMethod,
+        standardPaymentConfig: (catalogFull as any)?.standardPaymentConfig,
+      },
+      customerPhone,
+      waSettings?.phoneId,
+    );
   } catch (e) {
-    log.error("Error triggering native payment => %o", e);
+    log.error("Error dispatching payment for order %s: %o", newOrder.id, e);
+    // Final fallback: native payment (existing behaviour)
+    await handleWaOrderNativePayment(
+      catalog.orgId,
+      customerPhone,
+      order.catalog_id,
+      newOrder.products as any,
+      waSettings,
+      newOrder.id,
+    );
   }
 }
 
@@ -414,6 +503,7 @@ export async function handleWaOrderNativePayment(
   }[],
   waSettings: Omit<WhatsappSettings, "accessToken_iv">,
   catalogOrderId?: string,
+  deliveryOption?: { name?: string; charge?: number } | null,
 ) {
   try {
     const waSetting = waSettings;
@@ -463,7 +553,7 @@ export async function handleWaOrderNativePayment(
       },
     });
 
-    const paymentProducts = productItems.map((p) => {
+    const paymentProducts: any[] = productItems.map((p) => {
       const dbP = dbProducts.find((dp) => dp.retailer_id === p.retailerId);
       return {
         name: (dbP?.productProps as any)?.title || `Product ${p.retailerId}`,
@@ -471,6 +561,14 @@ export async function handleWaOrderNativePayment(
         quantity: p.quantity,
       };
     });
+
+    const shippingObj =
+      deliveryOption && (deliveryOption.charge ?? 0) > 0
+        ? {
+            value: Number(deliveryOption.charge) * 100,
+            description: `🚚 Delivery (${deliveryOption.name ?? "Standard"})`,
+          }
+        : null;
 
     const referenceId = generateOrderReferenceId();
 
@@ -489,6 +587,8 @@ export async function handleWaOrderNativePayment(
       productItems[0].currency || "INR",
       providerType,
       "Thank you for your order! Please complete the payment below.",
+      undefined,
+      shippingObj,
     );
 
     await sendMessage(orgId, message);

@@ -394,6 +394,7 @@ export enum IntegratedApps {
   waPayment = "waPayment",
   petpooja = "petpooja",
   zapier = "zapier",
+  zoho = "zoho",
 }
 
 export enum PhotoSource {
@@ -487,4 +488,35 @@ export enum MetaLoginAssets {
   CATALOGS = "CATALOGS",
   INSTAGRAM = "INSTAGRAM ACCOUNTS",
   ADACCOUNTS = "AD ACCOUNTS",
+}
+
+export enum CatalogStoreType {
+  STANDARD = "standard",
+  SHOPIFY = "shopify",
+}
+
+export enum CatalogPaymentMethod {
+  SHOPIFY_CHECKOUT = "shopify_checkout",
+  SHOPIFY_NATIVE = "shopify_native",
+  UPI = "upi",
+  COD = "cod",
+  BANK = "bank",
+  NATIVE = "native",
+  MANUAL = "manual",
+}
+
+export enum CatalogAddressFlowStatus {
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  IDLE = "idle",
+  REVIEW = "review",
+  SUBMITTING = "submitting",
+}
+
+export enum CatalogOrderStage {
+  PENDING_ADDRESS = "PENDING_ADDRESS",
+  PENDING_DELIVERY = "PENDING_DELIVERY",
+  PENDING_PAYMENT = "PENDING_PAYMENT",
+  PENDING_CHECKOUT = "PENDING_CHECKOUT",
+  COMPLETED = "COMPLETED",
 }

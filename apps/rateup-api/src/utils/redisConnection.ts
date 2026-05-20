@@ -23,6 +23,11 @@ export const waStatusQueue = new Queue("wa-status-queue", { connection });
 export const zapierTriggerQueue = new Queue("zapierTriggerQueue", {
   connection,
 });
+
+export const integrationTriggerQueue = new Queue("integrationTriggerQueue", {
+  connection,
+});
+
 export const userStatusQueue = new Queue("user-availability", { connection });
 
 export const sendMessageQueue = new Queue("sendMessageQueue", { connection });
