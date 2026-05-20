@@ -181,7 +181,7 @@
 
 @theme inline {
   --font-sans: "Inter Variable", "Noto Color Emoji", sans-serif;
-   /* --font-sans: 'Inter Variable', sans-serif; */
+  /* --font-sans: 'Inter Variable', sans-serif; */
   --font-sora: "Sora Variable", "Noto Color Emoji", sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -374,6 +374,10 @@
   100% {
     transform: scale(1);
   }
+}
+
+body {
+  font-size: 14px !important;
 }
 
 ::view-transition-new(root) {
