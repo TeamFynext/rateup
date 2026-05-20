@@ -203,6 +203,18 @@ export default function HomePageFooter() {
               />
               Featured on StackMention
             </a>
+            <a
+              href="https://sellwithboost.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full"
+            >
+              <img
+                src="https://sellwithboost.com/badge/listing-dark.svg"
+                alt="Listed on Sell With boost"
+                className="w-full"
+              />
+            </a>
             <div className="w-full">
               <div className="text-left mb-2">Follow us</div>
               <div className="flex items-center gap-4 justify-center flex-wrap">
