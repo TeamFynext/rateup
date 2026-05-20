@@ -4,44 +4,48 @@ This file provides essential guidance for AI coding agents working in this codeb
 
 ## Project Overview
 
-- **Framework:** Next.js 16, React 19, TypeScript
-- **UI:** shadcn/ui, Tailwind CSS (migrated from Mantine)
+- **Framework:** TanStack Start + TanStack Router, React 19, TypeScript
+- **Build Tooling:** Vite 8 + Nitro runtime output
+- **UI:** Tailwind CSS with a mixed component stack (shadcn/ui and existing Mantine)
 - **Monorepo:** No (single app)
 
 ## Build & Test Commands
 
 - **Development:** `npm run dev`
 - **Build:** `npm run build`
+- **Preview:** `npm run preview`
 - **Start:** `npm run start`
-- **Typecheck:** `npm run typecheck`
 - **Lint:** `npm run lint`
-- **Prettier:** `npm run prettier:check` / `npm run prettier:write`
-- **Test (all checks):** `npm run test`
+- **Format (write):** `npm run format`
+- **Format (check):** `npm run check`
+- **Tests:** `npm run test`
 
 ## Key Conventions
 
-- **Component Library:** Use shadcn/ui components. Prefer composition and semantic tokens. See `.agents/skills/shadcn/SKILL.md` for rules. (Mantine is deprecated; use shadcn/ui for all new UI.)
-- **Styling:** Tailwind CSS with semantic tokens. Avoid raw color values. See shadcn skill for details.
+- **Routing Root:** Route tree lives under `src/routes/` (not `routes/`).
+- **Router APIs:** For TanStack Router links, use `to` (not `href`) on `Link`.
+- **Component Library:** Prefer existing local patterns in the touched area; for new UI, prefer shadcn/ui composition where practical.
+- **Styling:** Use Tailwind utility classes and project tokens; avoid introducing one-off raw color values.
+- **React/TypeScript:** Prefer immutable props (`Readonly<Props>` or readonly fields) and avoid syncing query data to local state through effect-based copies.
 - **File Structure:**
-  - `app/` — Next.js app directory (routes, layouts, pages)
-  - `components/` — Shared React components
-  - `backend/` — API clients and backend logic
-  - `config/` — App configuration (theme, frontend, etc.)
-  - `context/` — React context providers
-  - `hooks/`, `store/`, `types/`, `utils/` — Custom hooks, state, types, utilities
+  - `src/routes/` — Route tree and route modules
+  - `src/components/` — Unified UI/features layer (merged former components/modules)
+  - `src/backend/` — API clients and backend logic
+  - `src/config/` — App configuration (theme, frontend, etc.)
+  - `src/context/` — React context providers
+  - `src/hooks/`, `src/store/`, `src/types/`, `src/utils/` — Hooks, state, types, utilities
 
-## Next.js Best Practices
+## TanStack Best Practices
 
-- Follow `.agents/skills/next-best-practices/SKILL.md` for:
-  - File conventions, RSC boundaries, async patterns, runtime selection, directives, navigation, and server functions
-- Use [file-conventions.md], [rsc-boundaries.md], [async-patterns.md], etc. in `.agents/skills/next-best-practices/` for advanced topics
+- Follow `.agents/skills/tanstack-start-best-practices/SKILL.md` for server functions, middleware, SSR, and deployment patterns.
+- Follow `.agents/skills/tanstack-router-best-practices/SKILL.md` for type-safe routing, loaders, search params, and navigation.
 
 ## shadcn/ui Usage
 
 - Use `npx shadcn@latest` for component management
 - Always check for existing components before creating new ones
 - Compose UI using provided patterns (see shadcn skill)
-- For legacy Mantine code, migrate to shadcn/ui as needed.
+- Do not perform broad Mantine-to-shadcn rewrites unless explicitly requested.
 
 ## Error Handling & Monitoring
 
@@ -49,22 +53,24 @@ This file provides essential guidance for AI coding agents working in this codeb
 
 ## Internationalization
 
-- Uses `next-intl` and `dictionaries/` for locale messages
+- Uses `react-i18next` and `dictionaries/` for locale messages
 
 ## Additional Notes
 
 - For custom scripts, see `package.json` scripts section
-- For Tailwind config, see `config/`. For legacy Mantine theme config, see `config/mantineTheme.ts` (reference only).
+- For Tailwind and theme-related config, see `src/config/`.
+- `next.config.ts` may exist for legacy/transition context; prefer active TanStack Start + Vite conventions for new work.
 
 ---
 
 **For more details, see:**
 
 - [shadcn skill](.agents/skills/shadcn/SKILL.md)
-- [Next.js best practices skill](.agents/skills/next-best-practices/SKILL.md)
+- [TanStack Start best practices skill](.agents/skills/tanstack-start-best-practices/SKILL.md)
+- [TanStack Router best practices skill](.agents/skills/tanstack-router-best-practices/SKILL.md)
 - [package.json](package.json)
-- [next.config.ts](next.config.ts)
-- [config/mantineTheme.ts](config/mantineTheme.ts)
+- [vite.config.ts](vite.config.ts)
+- [src/config/mantineTheme.ts](src/config/mantineTheme.ts)
 
 ---
 

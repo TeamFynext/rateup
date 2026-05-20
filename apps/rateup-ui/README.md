@@ -1,92 +1,82 @@
 # rateup-ui
 
-This is a modern web application built with Next.js 16, React 19, and TypeScript. It uses shadcn/ui, Mantine, and Tailwind CSS for its UI and styling.
+rateup-ui is a React 19 + TypeScript web application built with TanStack Start and TanStack Router.
+The project uses Vite for development/build, Nitro for server output, and Tailwind CSS with a mixed UI stack (shadcn/ui and existing Mantine components).
 
-## Project Structure
+## Tech Stack
 
-- `app/` — Next.js app directory (routes, layouts, pages)
-- `components/` — Shared React components
-- `backend/` — API clients and backend logic
-- `config/` — App configuration (theme, frontend, etc.)
-- `context/` — React context providers
-- `hooks/`, `store/`, `types/`, `utils/` — Custom hooks, state, types, utilities
+- TanStack Start + TanStack Router
+- React 19 + TypeScript
+- Vite 8 + Nitro runtime output
+- Tailwind CSS
+- shadcn/ui (preferred for new UI) + existing Mantine components
+- Vitest for tests
+- ESLint + Prettier for linting/formatting
 
-## Getting Started
-
-### Prerequisites
+## Prerequisites
 
 - Node.js 24.x
-- npm (v9+ recommended)
+- npm
 
-### Installation
+## Install
 
 ```bash
 npm install
 ```
 
-### Development
+## Scripts
 
 ```bash
-npm run dev
+npm run dev        # Start development server (Vite)
+npm run build      # Build production output
+npm run preview    # Preview production build locally
+npm run start      # Start Nitro server from .output/server/index.mjs
+npm run test       # Run tests with Vitest
+npm run lint       # Run ESLint
+npm run format     # Prettier write + ESLint fix
+npm run check      # Prettier check
+npm run translate  # Run locale translation script
+npx i18next-cli extract  # Extract i18n keys to locale files
 ```
 
-### Build
+### Useful Commands
 
-```bash
-npm run build
+```powershell
+Stop-Process -Id (Get-NetTCPConnection -LocalPort 3000).OwningProcess -Force
 ```
 
-### Start (Production)
+Kill the process running on port 3000 (Windows PowerShell)
 
-```bash
-npm run start
-```
+## Project Structure
 
-### Type Checking
+- `src/routes/` - TanStack Router route tree and route modules
+- `src/components/` - Shared and feature components
+- `src/backend/` - API clients and backend-oriented logic
+- `src/config/` - Frontend/theme/app configuration
+- `src/context/` - React context providers
+- `src/hooks/`, `src/store/`, `src/types/`, `src/utils/` - Hooks, state, types, utilities
+- `public/` - Static assets
+- `public/locales/` - Localization message dictionaries
 
-```bash
-npm run typecheck
-```
+## Development Notes
 
-### Linting
-
-```bash
-npm run lint
-```
-
-### Prettier
-
-```bash
-npm run prettier:check   # Check formatting
-npm run prettier:write   # Auto-format
-```
-
-### Full Test (all checks)
-
-```bash
-npm run test
-```
-
-## UI & Styling
-
-- Use **shadcn/ui** components for all new UI. Prefer composition and semantic tokens.
-- Tailwind CSS is used for styling. Avoid raw color values; use semantic tokens.
-- **Migration note:** The project previously used Mantine. New development should use shadcn/ui. See `.agents/skills/shadcn/SKILL.md` for usage rules.
+- Routing lives under `src/routes/` (not `routes/`).
+- For TanStack Router links, use `to` instead of `href` on `Link`.
+- Prefer existing local patterns in touched areas.
+- For new UI, prefer shadcn/ui composition where practical; avoid broad Mantine-to-shadcn rewrites unless explicitly requested.
+- Use Tailwind utility classes and project tokens; avoid introducing one-off raw color values.
 
 ## Internationalization
 
-- Uses `next-intl` and `dictionaries/` for locale messages.
+- Uses `react-i18next` with locale files in `public/locales/`.
 
-## Error Handling & Monitoring
+## Error Monitoring
 
-- Sentry is integrated (see `sentry.edge.config.ts`, `sentry.server.config.ts`).
+- Sentry is integrated (see `sentry.edge.config.ts` and `sentry.server.config.ts`).
 
-## More Information
+## Reference Docs
 
-- See `.agents/skills/shadcn/SKILL.md` for shadcn/ui usage rules.
-- See `.agents/skills/next-best-practices/SKILL.md` for Next.js conventions.
-- See `config/mantineTheme.ts` for legacy Mantine theme config (for reference only).
-
----
-
-For AI coding agent instructions, see [AGENTS.md](AGENTS.md).
+- [AGENTS.md](AGENTS.md)
+- [.agents/skills/shadcn/SKILL.md](.agents/skills/shadcn/SKILL.md)
+- [.agents/skills/tanstack-start-best-practices/SKILL.md](.agents/skills/tanstack-start-best-practices/SKILL.md)
+- [.agents/skills/tanstack-router-best-practices/SKILL.md](.agents/skills/tanstack-router-best-practices/SKILL.md)
