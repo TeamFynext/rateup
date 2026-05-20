@@ -28,6 +28,9 @@ const PetpoojaPage = dynamic(
 const ZapierPage = dynamic(
   () => import("@/app/dashboard/apps&services/zapier/page"),
 );
+const ZohoPage = dynamic(
+  () => import("@/app/dashboard/apps&services/zoho/page"),
+);
 
 const INTEGRATION_PAGES: Record<string, React.ComponentType<any>> = {
   shopify: ShopifyPage,
@@ -36,6 +39,7 @@ const INTEGRATION_PAGES: Record<string, React.ComponentType<any>> = {
   waPayment: WaPaymentPage,
   petpooja: PetpoojaPage,
   zapier: ZapierPage,
+  zoho: ZohoPage,
 };
 
 const INTEGRATION_NAMES: Record<string, string> = {
@@ -45,6 +49,7 @@ const INTEGRATION_NAMES: Record<string, string> = {
   waPayment: "WhatsApp Payment",
   petpooja: "Petpooja",
   zapier: "Zapier",
+  zoho: "zoho",
 };
 
 export default function IntegrationDetailPage() {
@@ -59,7 +64,11 @@ export default function IntegrationDetailPage() {
   if (!Component) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push("/dashboard/settings/integrations")}
+        >
           <ChevronLeft className="h-4 w-4 mr-2" />
           {t("Back")}
         </Button>
@@ -76,7 +85,11 @@ export default function IntegrationDetailPage() {
 
   return (
     <div className="space-y-4 pb-2">
-      <Button variant="ghost" size="sm" onClick={() => router.back()}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => router.push("/dashboard/settings/integrations")}
+      >
         <ChevronLeft className="h-4 w-4 mr-2" />
         {t("Back")} {t("to")} {integrationName}
       </Button>
