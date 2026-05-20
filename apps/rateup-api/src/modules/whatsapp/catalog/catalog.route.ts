@@ -8,6 +8,9 @@ import {
   getWaCatalogInfoHandler,
   syncCatalogsHandler,
   updateCatalogHandler,
+  getCatalogSettingsHandler,
+  updateCatalogSettingsHandler,
+  createAddressFlowHandler,
 } from "./catalog.controller.js";
 import { waCatalogOrderRoutes } from "./orders/catalogOrder.route.js";
 import {
@@ -21,6 +24,8 @@ import {
   productSetIdParamSchema,
   syncProductSetsSchema,
   updateCatalogSchema,
+  updateCatalogSettingsSchema,
+  createAddressFlowSchema,
 } from "./catalog.schema.js";
 
 export async function waCatalogRoutes(server: FastifyInstance) {
@@ -40,7 +45,6 @@ export async function waCatalogRoutes(server: FastifyInstance) {
 
   server.post("/sync", syncCatalogsHandler);
 
-  server.get("/:catalogId", getWaCatalogInfoHandler);
   server.get("/", getWaCatalogByOrgHandler);
   server.get(
     "/connected/:whatsappSettingsPhoneId",
@@ -80,4 +84,31 @@ export async function waCatalogRoutes(server: FastifyInstance) {
     },
     getProductSetByIdHandler,
   );
+
+  // Catalog settings
+  server.get(
+    "/:catalogId/settings",
+    { schema: { params: catalogIdParams } },
+    getCatalogSettingsHandler,
+  );
+
+  server.put(
+    "/:catalogId/settings",
+    {
+      schema: {
+        params: catalogIdParams,
+        body: updateCatalogSettingsSchema,
+      },
+    },
+    updateCatalogSettingsHandler,
+  );
+
+  server.post(
+    "/:catalogId/create-address-flow",
+    { schema: { params: catalogIdParams, body: createAddressFlowSchema } },
+    createAddressFlowHandler,
+  );
+
+  // Keep /:catalogId last so it doesn't swallow /settings and /create-address-flow
+  server.get("/:catalogId", getWaCatalogInfoHandler);
 }

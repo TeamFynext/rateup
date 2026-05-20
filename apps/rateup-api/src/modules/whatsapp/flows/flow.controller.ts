@@ -200,11 +200,13 @@ export async function createFlowHandler(
     const dbFlow = await createFlowCopyInDb({
       orgId,
       flowId,
-      json: {
-        version: "7.2",
-        screens: [],
-      } as WaFlowJson,
-      flowMap: {},
+      json:
+        req.body.json ??
+        ({
+          version: "7.2",
+          screens: [],
+        } as WaFlowJson),
+      flowMap: req.body.map ?? {},
       surveyId: survey.id,
       status: WaFlowStatus.DRAFT,
       name: name,
