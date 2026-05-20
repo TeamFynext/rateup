@@ -2,32 +2,34 @@
 
 import React, { useEffect, useState } from "react";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { CreditCard, MapPin, Package, Truck } from "lucide-react";
 
-import { IntegratedApps } from "@/types/enums.ts";
-import {
-  useIntegrationByType,
-  useWaPaymentConfigurations,
-} from "@/backend/appsIntegration/integration.query";
-import {
-  useUpdateWaSettingsMutation,
-  useWaSettings,
-} from "@/backend/whatsapp/settings/waSettings.query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
-import { Label } from "@/components/ui/label.tsx";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import { IntegratedApps } from "@/types/enums";
+import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
+import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import AddressFieldsTab from "@/components/dashboard/whatsapp/orders-and-payments/components/AddressFieldsTab";
+import DeliveryOptionsTab from "@/components/dashboard/whatsapp/orders-and-payments/components/DeliveryOptionsTab";
+import OrdersTable from "@/components/dashboard/whatsapp/orders-and-payments/components/OrdersTable";
+import PaymentTab from "@/components/dashboard/whatsapp/orders-and-payments/components/PaymentTab";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import OrdersTable from "../../../../components/dashboard/whatsapp/orders-and-payments/components/OrdersTable.tsx";
+const TABS = [
+  { id: "payment", label: "Payment", icon: CreditCard },
+  { id: "address", label: "Address Fields", icon: MapPin },
+  { id: "delivery", label: "Delivery Options", icon: Truck },
+  { id: "orders", label: "Orders", icon: Package },
+];
 
 export const Route = createFileRoute(
   "/dashboard/whatsapp/orders-and-payments/",
@@ -36,108 +38,77 @@ export const Route = createFileRoute(
 });
 
 function OrdersAndPaymentsPage() {
-  const queryClient = useQueryClient();
   const { data: waSettings, isLoading: isLoadingSettings } = useWaSettings();
+  const { data: shopifyIntegration, isLoading: isLoadingShopify } =
+    useIntegrationByType(IntegratedApps.shopify);
 
   const [currentSettingId, setCurrentSettingId] = useState<string>("");
 
   useEffect(() => {
-    if (waSettings && waSettings.length > 0 && !currentSettingId) {
+    if (waSettings?.length && !currentSettingId) {
       setCurrentSettingId(waSettings[0].id);
     }
   }, [waSettings, currentSettingId]);
 
   const currentSetting =
-    waSettings?.find((s) => s.id === currentSettingId) || waSettings?.[0];
+    waSettings?.find((s) => s.id === currentSettingId) ?? waSettings?.[0];
 
-  const { mutateAsync: updateWaSettings } =
-    useUpdateWaSettingsMutation(currentSettingId);
-
-  const { data: waPaymentConfig, isLoading: isLoadingWaPayment } =
-    useWaPaymentConfigurations(currentSettingId);
-  const { data: shopifyIntegration, isLoading: isLoadingShopify } =
-    useIntegrationByType(IntegratedApps.shopify);
-
-  const [paymentMethod, setPaymentMethod] = useState<string>("NATIVE");
-
-  useEffect(() => {
-    if (currentSetting?.paymentMethod) {
-      setPaymentMethod(currentSetting.paymentMethod);
-    } else {
-      setPaymentMethod("NATIVE");
-    }
-  }, [currentSetting]);
-
-  const handlePaymentMethodChange = async (value: string) => {
-    setPaymentMethod(value);
-    if (currentSettingId) {
-      try {
-        await updateWaSettings({
-          paymentMethod: value,
-        });
-        toast.success("Payment method updated successfully");
-        queryClient.invalidateQueries({ queryKey: ["waSettings"] });
-      } catch (error) {
-        toast.error("Failed to update payment method");
-        // Revert on error
-        setPaymentMethod(currentSetting?.paymentMethod || "NATIVE");
-      }
-    }
-  };
-
-  // waPaymentConfig is the full Integration DB row; its `credential` is a flat
-  // array of payment_configuration objects returned from the Meta API.
-  // Each item has a `status` field that can be "ACTIVE" when fully configured.
-  const paymentCredentials = Array.isArray(waPaymentConfig?.credential)
-    ? waPaymentConfig.credential
-    : Array.isArray(waPaymentConfig)
-      ? waPaymentConfig
-      : [];
-  const isNativeAvailable = paymentCredentials.some(
-    (c: any) => c.status?.toLowerCase() === "active",
+  // Resolve catalogId from connected catalog for this phone number
+  const { data: connectedCatalog } = useConnectedWaCatalog(
+    currentSetting?.phoneId,
   );
+  const catalogId: string = connectedCatalog?.catalogId ?? "";
 
-  const isShopifyAvailable =
-    shopifyIntegration &&
-    shopifyIntegration.credential &&
-    shopifyIntegration.credential.session?.shop;
+  const isShopifyConnected = !!shopifyIntegration?.credential?.session?.shop;
 
-  if (isLoadingSettings || isLoadingWaPayment || isLoadingShopify) {
+  if (isLoadingSettings || isLoadingShopify) {
     return (
       <div className="p-6 space-y-6">
-        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-12 w-full" />
         <Skeleton className="h-96 w-full" />
       </div>
     );
   }
 
   if (!currentSetting) {
-    return <div className="p-6">WhatsApp settings not found.</div>;
+    return (
+      <div className="p-6 text-muted-foreground">
+        WhatsApp settings not found. Please set up a WhatsApp account first.
+      </div>
+    );
   }
 
   return (
     <div className="p-6 space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Orders and Payments
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Orders & Payments
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Configure payment, address collection, and delivery for WhatsApp
+            orders
+          </p>
+        </div>
 
         {waSettings && waSettings.length > 0 && (
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="wa-selector">WhatsApp Number</Label>
+          <div className="flex items-center gap-2 shrink-0">
+            <Label htmlFor="wa-selector" className="text-sm whitespace-nowrap">
+              WhatsApp Number
+            </Label>
             <Select
               value={currentSettingId}
               onValueChange={setCurrentSettingId}
             >
-              <SelectTrigger id="wa-selector" className="w-[250px]">
-                <SelectValue placeholder="Select a WhatsApp number" />
+              <SelectTrigger id="wa-selector" className="w-[220px]">
+                <SelectValue placeholder="Select number" />
               </SelectTrigger>
               <SelectContent>
-                {waSettings.map((setting) => (
-                  <SelectItem key={setting.id} value={setting.id}>
-                    {setting.phoneDisplayName ||
-                      setting.phone ||
-                      "Unknown Number"}
+                {waSettings.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.phoneDisplayName || s.phone || "Unknown"}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -146,86 +117,53 @@ function OrdersAndPaymentsPage() {
         )}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment Method Configuration</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RadioGroup
-            value={paymentMethod}
-            onValueChange={handlePaymentMethodChange}
-            className="space-y-4"
-          >
-            <div
-              className={`flex items-start space-x-3 space-y-0 rounded-md border p-4 ${!isNativeAvailable ? "opacity-50" : ""}`}
-            >
-              <RadioGroupItem
-                value="NATIVE"
-                id="native"
-                disabled={!isNativeAvailable}
-              />
-              <div className="grid gap-1.5 leading-none">
-                <Label
-                  htmlFor="native"
-                  className="font-medium text-lg cursor-pointer"
-                >
-                  WhatsApp Native Payments
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Accept payments directly within WhatsApp using supported
-                  gateways (Razorpay, PayU, etc.).
-                  {!isNativeAvailable && (
-                    <span className="block text-red-500 mt-1">
-                      (Requires active payment configuration in WhatsApp
-                      Manager)
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
+      {/* No catalog warning */}
+      {!catalogId && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          ⚠️ No WhatsApp catalog connected to this phone number. Connect a
+          catalog first in the <strong>Catalog</strong> section to enable
+          address collection and delivery features.
+        </div>
+      )}
 
-            <div
-              className={`flex items-start space-x-3 space-y-0 rounded-md border p-4 ${!isShopifyAvailable ? "opacity-50" : ""}`}
+      {/* 4-tab layout */}
+      <Tabs defaultValue="payment" className="space-y-6">
+        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+          {TABS.map((tab) => (
+            <TabsTrigger
+              key={tab.id}
+              value={tab.id}
+              className="flex items-center gap-1.5 text-xs sm:text-sm"
             >
-              <RadioGroupItem
-                value="SHOPIFY_LINK"
-                id="shopify"
-                disabled={!isShopifyAvailable}
-              />
-              <div className="grid gap-1.5 leading-none">
-                <Label
-                  htmlFor="shopify"
-                  className="font-medium text-lg cursor-pointer"
-                >
-                  Shopify Auto Checkout
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Automatically generate Shopify checkout links for orders.
-                  {!isShopifyAvailable && (
-                    <span className="block text-red-500 mt-1">
-                      (Requires active Shopify integration)
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-          </RadioGroup>
-        </CardContent>
-      </Card>
+              <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>WhatsApp Orders</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* We pass the catalogId from settings if available, though currently settings might exist without catalog linked in a strict 1:1 way, usually it's derived.
-              However, the requirement implies listing orders. I'll need to fetch catalog ID first or use a hook that handles it. 
-              The backend catalog service `getWaCatalogsByOrg` or similar might represent the catalog.
-              Let's assume we can get the catalog connected to this setting. 
-          */}
-          <OrdersTable />
-        </CardContent>
-      </Card>
+        <TabsContent value="payment" className="mt-0">
+          <PaymentTab
+            catalogId={catalogId}
+            isShopifyConnected={isShopifyConnected}
+          />
+        </TabsContent>
+
+        <TabsContent value="address" className="mt-0">
+          <AddressFieldsTab catalogId={catalogId} />
+        </TabsContent>
+
+        <TabsContent value="delivery" className="mt-0">
+          <DeliveryOptionsTab catalogId={catalogId} />
+        </TabsContent>
+
+        <TabsContent value="orders" className="mt-0">
+          <OrdersTable
+            settingId={currentSettingId}
+            phoneId={currentSetting?.phoneId}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

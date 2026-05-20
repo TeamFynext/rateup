@@ -2,11 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
+  createCatalogAddressFlow,
   disconnectCatalogFromWaba,
+  getCatalogSettings,
   getWaCatalogById,
   getWaCatalogs,
   getWaConnectedCatalog,
   syncWaCatalog,
+  updateCatalogSettings,
   updateWaCatalog,
 } from "./catalog.api";
 
@@ -73,7 +76,50 @@ export const useAllWaCatalogs = () => {
 export const useConnectedWaCatalog = (whatsappSettingsPhoneId) => {
   return useQuery({
     queryFn: () => getWaConnectedCatalog(whatsappSettingsPhoneId),
-    queryKey: ["connected_catalog"],
+    queryKey: ["connected_catalog", whatsappSettingsPhoneId],
     enabled: !!whatsappSettingsPhoneId,
+  });
+};
+
+// ─── Catalog Settings ─────────────────────────────────────────────────
+
+export const useCatalogSettings = (
+  catalogId: string,
+  pollingEnabled = false,
+) => {
+  return useQuery({
+    queryFn: () => getCatalogSettings(catalogId),
+    queryKey: ["catalogSettings", catalogId],
+    enabled: !!catalogId,
+    refetchInterval: pollingEnabled ? 10000 : false,
+  });
+};
+
+export const useUpdateCatalogSettings = (catalogId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => updateCatalogSettings(catalogId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["catalogSettings", catalogId] });
+      toast.success("Settings saved");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to save settings");
+    },
+  });
+};
+
+export const useCreateAddressFlow = (catalogId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ json, map }: { json?: any; map?: any } = {}) =>
+      createCatalogAddressFlow(catalogId, json, map),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["catalogSettings", catalogId] });
+      toast.success("Address flow submitted to Meta for review!");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to create address flow");
+    },
   });
 };
