@@ -1,0 +1,110 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { Group, Input, Stack, Text, Tooltip } from "@mantine/core";
+import { IconInfoCircle } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
+
+import { useGetWebhookClientSecret } from "@/backend/org/org.query";
+import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
+import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey.tsx";
+import {
+  ContainedPasswordInput,
+  ContainedTextField,
+} from "@/components/input/ContainedInput/ContainedInput.tsx";
+import PremiumFeature from "@/components/Premium/PremiumFeature.tsx";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { isValidUrl } from "@/utils/index.ts";
+
+const WebhookSettings = ({
+  responseWebhookEndpoint,
+  editSurvey,
+  enabledModules,
+}) => {
+  const [endpointUrl, setEndpointUrl] = useState("");
+  const [error, setError] = useState("");
+  const { data: webhookSecret } = useGetWebhookClientSecret(
+    responseWebhookEndpoint,
+  );
+  const { t: translations } = useTranslation();
+  useEffect(() => {
+    setEndpointUrl(responseWebhookEndpoint ?? "");
+  }, [responseWebhookEndpoint]);
+
+  const handleSave = () => {
+    if (
+      !responseWebhookEndpoint &&
+      (!endpointUrl || !endpointUrl.trim().length)
+    )
+      return;
+    if (!(responseWebhookEndpoint && !endpointUrl.trim().length)) {
+      if (!isValidUrl(endpointUrl)) {
+        setError(
+          translations("Invalid Url, eg: https://example.com/your-endpoint"),
+        );
+        return;
+      }
+    }
+    setError("");
+    editSurvey.mutate({ responseWebhookEndpoint: endpointUrl });
+  };
+
+  return (
+    <PaperLayout className="section-div">
+      <Stack gap={1} p={0}>
+        <h2 className={"settings-section-heading"}>
+          {translations("Webhooks")}
+        </h2>
+        <PremiumFeature isSubscribed={enabledModules.includes("webhook")}>
+          <Stack p={0}>
+            {responseWebhookEndpoint && (
+              <ContainedPasswordInput
+                value={webhookSecret}
+                readOnly
+                rightSection={<ApiCopyButton value={webhookSecret} />}
+                label={translations("Client Secret")}
+              />
+            )}
+            <Input.Wrapper>
+              <Input.Label>
+                <Group gap={1}>
+                  <Text size="xs">
+                    {translations("Enter webhook url endpoint for response")}
+                  </Text>
+                  <Tooltip
+                    label={translations(
+                      "Triggers when a response is submitted",
+                    )}
+                  >
+                    <IconInfoCircle size={"1rem"} />
+                  </Tooltip>
+                </Group>
+              </Input.Label>
+              <ContainedTextField
+                value={endpointUrl}
+                type="url"
+                placeholder={translations("https://example.com/webhook")}
+                onChange={(e) => {
+                  setError("");
+                  setEndpointUrl(e.currentTarget.value);
+                }}
+                error={error}
+              />
+            </Input.Wrapper>
+
+            <RateupButtonBlue
+              title={translations("Save Changes")}
+              onClick={handleSave}
+              w={"fit-content"}
+              sx={{ alignSelf: "center" }}
+              loading={editSurvey.isPending}
+            />
+          </Stack>
+        </PremiumFeature>
+      </Stack>
+    </PaperLayout>
+  );
+};
+
+export default WebhookSettings;

@@ -1,25 +1,19 @@
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
-import { defineConfig, globalIgnores } from "eslint/config";
+import { tanstackConfig } from "@tanstack/eslint-config";
 
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
+export default [
+  ...tanstackConfig,
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
+      "import/no-cycle": "off",
+      "import/order": "off",
+      "sort-imports": "off",
+      "@typescript-eslint/array-type": "off",
+      "@typescript-eslint/require-await": "off",
+      "pnpm/json-enforce-catalog": "off",
+      "@typescript-eslint/no-unnecessary-condition": "off",
     },
   },
-
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
-
-export default eslintConfig;
+  {
+    ignores: ["eslint.config.js", "prettier.config.js"],
+  },
+];

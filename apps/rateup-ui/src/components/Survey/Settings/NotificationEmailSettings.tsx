@@ -1,0 +1,83 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { Box, Group, Stack, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+
+import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
+import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
+
+import { RateupButtonBlue } from "../../Button/RateupButtons.tsx";
+import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
+import { updateEmailSurvey } from "./updateSettings.ts";
+
+const NotificationEmailSettings = ({ survey, surveyId }) => {
+  const [enableNotificationEmail, setEnabledNotificationEmail] = useState(
+    survey?.enableNotificationEmail,
+  );
+  const [notificationEmail, setNotificationEmail] = useState(
+    survey?.notificationEmail,
+  );
+  const { t: translations } = useTranslation();
+  const [error, setError] = useState("");
+  const editSurvey = useEditSurveyMutation(surveyId);
+  useEffect(() => {
+    if (!/^\S+@\S+$/.test(notificationEmail))
+      setError(translations("Invalid Email"));
+    else setError("");
+  }, [notificationEmail]);
+  return (
+    <Stack gap={"md"}>
+      <Group>
+        <RateupSwitch
+          offMessage={translations("Click here to enable email notification")}
+          onMessage={translations("Click here to disable email notification")}
+          checked={enableNotificationEmail}
+          onChange={() =>
+            updateEmailSurvey(setEnabledNotificationEmail, editSurvey)
+          }
+        />
+        <Box className={"switch-heading-and-desc-container"}>
+          <h3>{translations("Enable Email Notification")}</h3>
+        </Box>
+      </Group>
+      <Stack>
+        <ContainedTextField
+          disabled={!enableNotificationEmail}
+          withAsterisk
+          value={notificationEmail}
+          onChange={(e) => setNotificationEmail(e.target.value)}
+          placeholder={translations("Enter email ID")}
+          error={error}
+        />
+        {!survey?.notificationEmail?.length && (
+          <Text c="var(--tertiary-color)" fz={15}>
+            {translations(
+              "Please Enter Email ID and Save to complete the process.",
+            )}
+          </Text>
+        )}
+        <Group justify="center">
+          <RateupButtonBlue
+            title={
+              survey?.notificationEmail?.length
+                ? translations("Edit Email ID")
+                : translations("Save Email ID")
+            }
+            radius={"xl"}
+            disabled={error.length != 0 || !enableNotificationEmail}
+            onClick={() => {
+              editSurvey.mutate({
+                enableNotificationEmail: enableNotificationEmail,
+                notificationEmail: notificationEmail,
+              });
+            }}
+          />
+        </Group>
+      </Stack>
+    </Stack>
+  );
+};
+
+export default NotificationEmailSettings;

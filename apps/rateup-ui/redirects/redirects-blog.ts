@@ -1,6 +1,8 @@
-import { Redirect } from "next/dist/lib/load-custom-routes";
+// TanStack Start does not support declarative redirects via config files.
+// Use route handlers or redirect() in server functions instead.
+// Example: Use a route loader to detect and redirect conditions.
 
-const blogRedirects: Redirect[] = [
+const blogRedirects = [
   {
     source:
       "/blog/whatsapp-based-loyalty-programs-the-smartest-way-to-reward-customers-in-2025",

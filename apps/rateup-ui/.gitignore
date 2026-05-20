@@ -16,9 +16,17 @@
 # next.js
 /.next/
 /out/
+/.output/
 
 # production
 /build
+dist
+dist-ssr
+.nitro
+.tanstack
+.wrangler
+.output
+.vinxi
 
 # editor
 .vscode/
