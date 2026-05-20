@@ -24,10 +24,11 @@ import {
   ShopifyLogo,
   WhatsAppPaymentLogo,
   ZapierLogo,
-} from "@/components/integrations/logos.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
+  ZohoLogo,
+} from "@/components/integrations/logos";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -186,6 +187,12 @@ const INTEGRATIONS_CONFIG: Record<string, IntegrationConfig> = {
     name: "Zapier",
     icon: ZapierLogo,
     description: "Connect with 5000+ apps and automate workflows",
+  },
+  zoho: {
+    id: "zoho",
+    name: "Zoho CRM",
+    icon: ZohoLogo,
+    description: "Sync contacts and leads seamlessly with your Zoho CRM",
   },
 };
 

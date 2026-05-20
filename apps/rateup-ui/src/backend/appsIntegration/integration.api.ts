@@ -106,3 +106,17 @@ export async function getIntegrationStatuses() {
 export async function deleteZapierTriggerHook(data) {
   return (await axiosClient.delete(`${ROUTE_URL}zapier-hook`, { data })).data;
 }
+
+export async function connectZoho(code: string, orgId: string) {
+  const res = await axiosClient.post(
+    `/integration/external/zoho/auth`,
+    { code },
+    {
+      params: {
+        orgId,
+      },
+    },
+  );
+
+  return res.data;
+}

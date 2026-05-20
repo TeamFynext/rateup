@@ -61,3 +61,23 @@ export function ZapierLogo({ className }: LogoProps) {
     />
   );
 }
+
+export function ZohoLogo({ className }: LogoProps) {
+  return (
+    <img
+      src="/images/zoho.jpg"
+      alt="Zoho"
+      className={cn("object-contain", className)}
+    />
+  );
+}
+
+export function RateupStar({ className }: LogoProps) {
+  return (
+    <img
+      src="/images/rateup-star.svg"
+      alt="rateup"
+      className={cn("object-contain", className)}
+    />
+  );
+}

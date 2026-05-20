@@ -46,6 +46,11 @@ const ZapierPage = lazy(() =>
     default: m.Zapier,
   })),
 );
+const ZohoPage = lazy(() =>
+  import("@/components/app&services/Zoho.tsx").then((m) => ({
+    default: m.Zoho,
+  })),
+);
 
 const INTEGRATION_PAGES: Record<string, React.ComponentType<any>> = {
   shopify: ShopifyPage,
@@ -54,6 +59,7 @@ const INTEGRATION_PAGES: Record<string, React.ComponentType<any>> = {
   waPayment: WaPaymentPage,
   petpooja: PetpoojaPage,
   zapier: ZapierPage,
+  zoho: ZohoPage,
 };
 
 const INTEGRATION_NAMES: Record<string, string> = {
@@ -63,6 +69,7 @@ const INTEGRATION_NAMES: Record<string, string> = {
   waPayment: "WhatsApp Payment",
   petpooja: "Petpooja",
   zapier: "Zapier",
+  zoho: "Zoho",
 };
 
 function IntegrationDetailPage() {

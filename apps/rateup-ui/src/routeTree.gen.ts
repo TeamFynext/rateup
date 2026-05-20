@@ -103,6 +103,7 @@ import { Route as DashboardContactsGroupsIndexRouteImport } from './routes/dashb
 import { Route as DashboardContactsCustomFieldsIndexRouteImport } from './routes/dashboard/contacts/custom-fields/index'
 import { Route as DashboardCampaignCampaignIdIndexRouteImport } from './routes/dashboard/campaign/$campaignId/index'
 import { Route as DashboardAutomationAutomationIdIndexRouteImport } from './routes/dashboard/automation/$automationId/index'
+import { Route as DashboardAppsChar38servicesZohoIndexRouteImport } from './routes/dashboard/apps&services/zoho/index'
 import { Route as DashboardAppsChar38servicesZapierIndexRouteImport } from './routes/dashboard/apps&services/zapier/index'
 import { Route as DashboardAppsChar38servicesWidgetIndexRouteImport } from './routes/dashboard/apps&services/widget/index'
 import { Route as DashboardAppsChar38servicesWaPaymentIndexRouteImport } from './routes/dashboard/apps&services/waPayment/index'
@@ -165,6 +166,7 @@ import { Route as authLoginCallbackGoogleIndexRouteImport } from './routes/(auth
 import { Route as authLoginCallbackAppleIndexRouteImport } from './routes/(auth)/login/callback/apple/index'
 import { Route as DashboardWhatsappFlowsV2DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v2/$dbFlowId/index'
 import { Route as DashboardWhatsappFlowsV1DbFlowIdIndexRouteImport } from './routes/dashboard/whatsapp/flows/v1/$dbFlowId/index'
+import { Route as DashboardSettingsIntegrationsZohoCallbackIndexRouteImport } from './routes/dashboard/settings/integrations/zoho/callback/index'
 import { Route as publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport } from './routes/(public-facing)/public/wa/$surveyTeamMapId/redirect/index'
 import { Route as publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/review-us-on-google/index'
 import { Route as publicFacingPublicSurveySurveyIdEndIndexRouteImport } from './routes/(public-facing)/public/survey/$surveyId/end/index'
@@ -689,6 +691,12 @@ const DashboardAutomationAutomationIdIndexRoute =
     path: '/automation/$automationId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardAppsChar38servicesZohoIndexRoute =
+  DashboardAppsChar38servicesZohoIndexRouteImport.update({
+    id: '/apps&services/zoho/',
+    path: '/apps&services/zoho/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardAppsChar38servicesZapierIndexRoute =
   DashboardAppsChar38servicesZapierIndexRouteImport.update({
     id: '/apps&services/zapier/',
@@ -1056,6 +1064,12 @@ const DashboardWhatsappFlowsV1DbFlowIdIndexRoute =
     path: '/whatsapp/flows/v1/$dbFlowId/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardSettingsIntegrationsZohoCallbackIndexRoute =
+  DashboardSettingsIntegrationsZohoCallbackIndexRouteImport.update({
+    id: '/settings/integrations/zoho/callback/',
+    path: '/settings/integrations/zoho/callback/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute =
   publicFacingPublicWaSurveyTeamMapIdRedirectIndexRouteImport.update({
     id: '/(public-facing)/public/wa/$surveyTeamMapId/redirect/',
@@ -1176,6 +1190,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/apps&services/waPayment/': typeof DashboardAppsChar38servicesWaPaymentIndexRoute
   '/dashboard/apps&services/widget/': typeof DashboardAppsChar38servicesWidgetIndexRoute
   '/dashboard/apps&services/zapier/': typeof DashboardAppsChar38servicesZapierIndexRoute
+  '/dashboard/apps&services/zoho/': typeof DashboardAppsChar38servicesZohoIndexRoute
   '/dashboard/automation/$automationId/': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId/': typeof DashboardCampaignCampaignIdIndexRoute
   '/dashboard/contacts/custom-fields/': typeof DashboardContactsCustomFieldsIndexRoute
@@ -1240,6 +1255,7 @@ export interface FileRoutesByFullPath {
   '/public/survey/$surveyId/end/': typeof publicFacingPublicSurveySurveyIdEndIndexRoute
   '/public/survey/$surveyId/review-us-on-google/': typeof publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute
   '/public/wa/$surveyTeamMapId/redirect/': typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute
+  '/dashboard/settings/integrations/zoho/callback/': typeof DashboardSettingsIntegrationsZohoCallbackIndexRoute
   '/dashboard/whatsapp/flows/v1/$dbFlowId/': typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   '/dashboard/whatsapp/flows/v2/$dbFlowId/': typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
 }
@@ -1335,6 +1351,7 @@ export interface FileRoutesByTo {
   '/dashboard/apps&services/waPayment': typeof DashboardAppsChar38servicesWaPaymentIndexRoute
   '/dashboard/apps&services/widget': typeof DashboardAppsChar38servicesWidgetIndexRoute
   '/dashboard/apps&services/zapier': typeof DashboardAppsChar38servicesZapierIndexRoute
+  '/dashboard/apps&services/zoho': typeof DashboardAppsChar38servicesZohoIndexRoute
   '/dashboard/automation/$automationId': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId': typeof DashboardCampaignCampaignIdIndexRoute
   '/dashboard/contacts/custom-fields': typeof DashboardContactsCustomFieldsIndexRoute
@@ -1399,6 +1416,7 @@ export interface FileRoutesByTo {
   '/public/survey/$surveyId/end': typeof publicFacingPublicSurveySurveyIdEndIndexRoute
   '/public/survey/$surveyId/review-us-on-google': typeof publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute
   '/public/wa/$surveyTeamMapId/redirect': typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute
+  '/dashboard/settings/integrations/zoho/callback': typeof DashboardSettingsIntegrationsZohoCallbackIndexRoute
   '/dashboard/whatsapp/flows/v1/$dbFlowId': typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   '/dashboard/whatsapp/flows/v2/$dbFlowId': typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
 }
@@ -1498,6 +1516,7 @@ export interface FileRoutesById {
   '/dashboard/apps&services/waPayment/': typeof DashboardAppsChar38servicesWaPaymentIndexRoute
   '/dashboard/apps&services/widget/': typeof DashboardAppsChar38servicesWidgetIndexRoute
   '/dashboard/apps&services/zapier/': typeof DashboardAppsChar38servicesZapierIndexRoute
+  '/dashboard/apps&services/zoho/': typeof DashboardAppsChar38servicesZohoIndexRoute
   '/dashboard/automation/$automationId/': typeof DashboardAutomationAutomationIdIndexRoute
   '/dashboard/campaign/$campaignId/': typeof DashboardCampaignCampaignIdIndexRoute
   '/dashboard/contacts/custom-fields/': typeof DashboardContactsCustomFieldsIndexRoute
@@ -1562,6 +1581,7 @@ export interface FileRoutesById {
   '/(public-facing)/public/survey/$surveyId/end/': typeof publicFacingPublicSurveySurveyIdEndIndexRoute
   '/(public-facing)/public/survey/$surveyId/review-us-on-google/': typeof publicFacingPublicSurveySurveyIdReviewUsOnGoogleIndexRoute
   '/(public-facing)/public/wa/$surveyTeamMapId/redirect/': typeof publicFacingPublicWaSurveyTeamMapIdRedirectIndexRoute
+  '/dashboard/settings/integrations/zoho/callback/': typeof DashboardSettingsIntegrationsZohoCallbackIndexRoute
   '/dashboard/whatsapp/flows/v1/$dbFlowId/': typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   '/dashboard/whatsapp/flows/v2/$dbFlowId/': typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
 }
@@ -1662,6 +1682,7 @@ export interface FileRouteTypes {
     | '/dashboard/apps&services/waPayment/'
     | '/dashboard/apps&services/widget/'
     | '/dashboard/apps&services/zapier/'
+    | '/dashboard/apps&services/zoho/'
     | '/dashboard/automation/$automationId/'
     | '/dashboard/campaign/$campaignId/'
     | '/dashboard/contacts/custom-fields/'
@@ -1726,6 +1747,7 @@ export interface FileRouteTypes {
     | '/public/survey/$surveyId/end/'
     | '/public/survey/$surveyId/review-us-on-google/'
     | '/public/wa/$surveyTeamMapId/redirect/'
+    | '/dashboard/settings/integrations/zoho/callback/'
     | '/dashboard/whatsapp/flows/v1/$dbFlowId/'
     | '/dashboard/whatsapp/flows/v2/$dbFlowId/'
   fileRoutesByTo: FileRoutesByTo
@@ -1821,6 +1843,7 @@ export interface FileRouteTypes {
     | '/dashboard/apps&services/waPayment'
     | '/dashboard/apps&services/widget'
     | '/dashboard/apps&services/zapier'
+    | '/dashboard/apps&services/zoho'
     | '/dashboard/automation/$automationId'
     | '/dashboard/campaign/$campaignId'
     | '/dashboard/contacts/custom-fields'
@@ -1885,6 +1908,7 @@ export interface FileRouteTypes {
     | '/public/survey/$surveyId/end'
     | '/public/survey/$surveyId/review-us-on-google'
     | '/public/wa/$surveyTeamMapId/redirect'
+    | '/dashboard/settings/integrations/zoho/callback'
     | '/dashboard/whatsapp/flows/v1/$dbFlowId'
     | '/dashboard/whatsapp/flows/v2/$dbFlowId'
   id:
@@ -1983,6 +2007,7 @@ export interface FileRouteTypes {
     | '/dashboard/apps&services/waPayment/'
     | '/dashboard/apps&services/widget/'
     | '/dashboard/apps&services/zapier/'
+    | '/dashboard/apps&services/zoho/'
     | '/dashboard/automation/$automationId/'
     | '/dashboard/campaign/$campaignId/'
     | '/dashboard/contacts/custom-fields/'
@@ -2047,6 +2072,7 @@ export interface FileRouteTypes {
     | '/(public-facing)/public/survey/$surveyId/end/'
     | '/(public-facing)/public/survey/$surveyId/review-us-on-google/'
     | '/(public-facing)/public/wa/$surveyTeamMapId/redirect/'
+    | '/dashboard/settings/integrations/zoho/callback/'
     | '/dashboard/whatsapp/flows/v1/$dbFlowId/'
     | '/dashboard/whatsapp/flows/v2/$dbFlowId/'
   fileRoutesById: FileRoutesById
@@ -2772,6 +2798,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAutomationAutomationIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/apps&services/zoho/': {
+      id: '/dashboard/apps&services/zoho/'
+      path: '/apps&services/zoho'
+      fullPath: '/dashboard/apps&services/zoho/'
+      preLoaderRoute: typeof DashboardAppsChar38servicesZohoIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/apps&services/zapier/': {
       id: '/dashboard/apps&services/zapier/'
       path: '/apps&services/zapier'
@@ -3206,6 +3239,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardWhatsappFlowsV1DbFlowIdIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/settings/integrations/zoho/callback/': {
+      id: '/dashboard/settings/integrations/zoho/callback/'
+      path: '/settings/integrations/zoho/callback'
+      fullPath: '/dashboard/settings/integrations/zoho/callback/'
+      preLoaderRoute: typeof DashboardSettingsIntegrationsZohoCallbackIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/(public-facing)/public/wa/$surveyTeamMapId/redirect/': {
       id: '/(public-facing)/public/wa/$surveyTeamMapId/redirect/'
       path: '/public/wa/$surveyTeamMapId/redirect'
@@ -3304,6 +3344,7 @@ interface DashboardRouteRouteChildren {
   DashboardAppsChar38servicesWaPaymentIndexRoute: typeof DashboardAppsChar38servicesWaPaymentIndexRoute
   DashboardAppsChar38servicesWidgetIndexRoute: typeof DashboardAppsChar38servicesWidgetIndexRoute
   DashboardAppsChar38servicesZapierIndexRoute: typeof DashboardAppsChar38servicesZapierIndexRoute
+  DashboardAppsChar38servicesZohoIndexRoute: typeof DashboardAppsChar38servicesZohoIndexRoute
   DashboardAutomationAutomationIdIndexRoute: typeof DashboardAutomationAutomationIdIndexRoute
   DashboardCampaignCampaignIdIndexRoute: typeof DashboardCampaignCampaignIdIndexRoute
   DashboardContactsCustomFieldsIndexRoute: typeof DashboardContactsCustomFieldsIndexRoute
@@ -3353,6 +3394,7 @@ interface DashboardRouteRouteChildren {
   DashboardWhatsappCatalogCatalogIdIndexRoute: typeof DashboardWhatsappCatalogCatalogIdIndexRoute
   DashboardWhatsappFlowbotsFlowbotIdIndexRoute: typeof DashboardWhatsappFlowbotsFlowbotIdIndexRoute
   DashboardWhatsappTemplatesTemplateIdIndexRoute: typeof DashboardWhatsappTemplatesTemplateIdIndexRoute
+  DashboardSettingsIntegrationsZohoCallbackIndexRoute: typeof DashboardSettingsIntegrationsZohoCallbackIndexRoute
   DashboardWhatsappFlowsV1DbFlowIdIndexRoute: typeof DashboardWhatsappFlowsV1DbFlowIdIndexRoute
   DashboardWhatsappFlowsV2DbFlowIdIndexRoute: typeof DashboardWhatsappFlowsV2DbFlowIdIndexRoute
 }
@@ -3397,6 +3439,8 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
     DashboardAppsChar38servicesWidgetIndexRoute,
   DashboardAppsChar38servicesZapierIndexRoute:
     DashboardAppsChar38servicesZapierIndexRoute,
+  DashboardAppsChar38servicesZohoIndexRoute:
+    DashboardAppsChar38servicesZohoIndexRoute,
   DashboardAutomationAutomationIdIndexRoute:
     DashboardAutomationAutomationIdIndexRoute,
   DashboardCampaignCampaignIdIndexRoute: DashboardCampaignCampaignIdIndexRoute,
@@ -3465,6 +3509,8 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
     DashboardWhatsappFlowbotsFlowbotIdIndexRoute,
   DashboardWhatsappTemplatesTemplateIdIndexRoute:
     DashboardWhatsappTemplatesTemplateIdIndexRoute,
+  DashboardSettingsIntegrationsZohoCallbackIndexRoute:
+    DashboardSettingsIntegrationsZohoCallbackIndexRoute,
   DashboardWhatsappFlowsV1DbFlowIdIndexRoute:
     DashboardWhatsappFlowsV1DbFlowIdIndexRoute,
   DashboardWhatsappFlowsV2DbFlowIdIndexRoute:
