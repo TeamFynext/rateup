@@ -14,7 +14,7 @@ new Worker(
       await processNotification(job);
       log.info("Notification queue processing completed successfully");
     } catch (error) {
-      log.error("Error updating user availability: %s", error);
+      log.error("Error processing notification: %s", error);
     }
   },
   {

@@ -4,6 +4,7 @@ async function registerWorkers() {
   await import("./webhook.worker.js");
   await import("./notification.worker.js");
   await import("./outgoingWebhook.worker.js");
+  await import("./integration.worker.js");
 }
 
 export default registerWorkers;
