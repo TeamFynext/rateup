@@ -1,0 +1,181 @@
+---
+title: Configuring Loyalty WhatsApp Commands
+description: Learn how to configure WhatsApp commands for loyalty automation in RateUp.
+---
+import ScreenShot from "../../../../components/Screenshot";
+import { CDN } from '../../../../lib/cdn';
+
+The Loyalty WhatsApp Command Configuration allows businesses to automate loyalty interactions through WhatsApp.
+
+Customers can send predefined keywords to trigger loyalty actions such as:
+
+- Customer registration
+- Point balance requests
+- Reward information
+- Referral actions
+- Loyalty updates
+
+Administrators can configure how these commands behave and what response customers receive.
+
+---
+
+## Open Command Configuration
+
+To configure loyalty WhatsApp commands:
+
+1. Open **Loyalty** from the sidebar
+2. Click **Commands**
+3. Create a new command or edit an existing command
+
+The Loyalty WhatsApp Command Configuration modal will open.
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/commands/command-configuration-modal.png`}
+  alt="Loyalty WhatsApp Command Configuration"
+/>
+
+---
+
+## Configure Service Type
+
+The **Service Type** determines which loyalty action the command will trigger.
+
+### Available Service Types
+
+Examples include:
+
+- Customer Registration
+- Point Information
+- Rewards List
+- Referral Program
+- Customer Deregistration
+
+Select the appropriate service before configuring the response.
+
+---
+
+## Configure Request Message
+
+The **Request Message** is the keyword or phrase customers send through WhatsApp.
+
+### Example
+
+```txt
+Join loyalty
+```
+
+When a customer sends this message, the configured loyalty automation will execute automatically.
+
+Keep request messages simple and easy for customers to remember.
+
+---
+
+## Select Response Type
+
+The **Response Type** controls how the customer receives the reply.
+
+### Available Response Types
+
+- **Text** – Sends a plain text response
+- **Template** – Sends a WhatsApp template message
+
+---
+
+## Configure Text Response
+
+When **Text** is selected:
+
+1. Enter the response message
+2. Add dynamic placeholders if required
+3. Review the live preview
+
+### Dynamic Variables
+
+Dynamic placeholders can be inserted inside the message.
+
+Example:
+
+```txt
+{{1}}
+```
+
+The system automatically replaces placeholders with customer data.
+
+### Example Usage
+
+```txt
+Hi {{1}}, thank you for registering for our Loyalty Program!
+```
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/commands/text-response-preview.png`}
+  alt="Text Response Configuration"
+/>
+
+---
+
+## Configure Template Response
+
+When **Template** is selected:
+
+1. Choose a WhatsApp template
+2. Review the available variables
+3. Verify the preview before saving
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/commands/template-response-dropdown.png`}
+  alt="WhatsApp Template Selection"
+/>
+
+### Example Templates
+
+Available templates may include:
+
+- loyalty_register_success
+- loyalty_referee_template
+- loyalty_referrer_template
+- notification_tier_upgrade
+- notification_points_adjustment
+
+---
+
+## Live Preview
+
+The **Live Preview** section displays how the final WhatsApp message will appear to customers.
+
+This helps administrators:
+
+- Validate formatting
+- Verify placeholders
+- Review customer-facing output
+- Prevent messaging errors
+
+Sample variables are shown below the preview section.
+
+---
+
+## Save Command Configuration
+
+After configuring the command:
+
+1. Review the request message
+2. Verify the response type
+3. Check the live preview
+4. Click **Save**
+
+The command will then become active for customer WhatsApp interactions.
+
+---
+
+## Important Notes
+
+- Commands are triggered only when customers send the exact configured message
+- Template responses require approved WhatsApp templates
+- Dynamic variables are populated automatically during execution
+- Preview data uses sample customer information for testing
+
+---
+
+## What’s Next?
+
+Return to the **Commands** page to manage all loyalty WhatsApp automations and command mappings.

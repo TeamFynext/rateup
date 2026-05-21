@@ -1,0 +1,99 @@
+---
+title: "Profile Settings"
+---
+
+{/* # Profile Settings */}
+
+To access your settings, you must be logged in to your RateUp account. 
+To go to settings, Click on ` > ` icon right to your organization name or organization profile icon on bottom left corner .
+
+Then click on settings.
+
+## User Settings
+
+To update your profile you can go to `User` tab under Settings. 
+
+#### Update Profile Info.
+
+You can update your profile information such as
+
+- First Name and Last name
+- Phone Number with country code
+- Password
+
+Once you updated your info click on `Save Changes` to reflect on the site.
+
+import ScreenShot from "@/components/Screenshot"
+
+<ScreenShot src={"/screenshots/user-settings.png"} alt="user settings"/>
+
+#### Update Profile picture
+
+- To update profile picture click on `Change Image` and upload a photo.
+- You can also remove your profile picture by clicking on `Remove Image`.
+
+
+## Organization Settings
+
+To update your organization profile you can go to `Organization` tab under Settings. 
+
+#### Update Organization Info.
+
+You can update your organization information such as
+
+- Name of your organization
+- Phone Number with country code
+- Address
+
+Once you updated your info click on `Save Changes` to reflect on the site.
+
+#### Update Profile picture
+
+- To update organization profile picture click on `Change Image` and upload a photo.
+- You can also remove your organization profile picture by clicking on `Remove Image`.
+
+## Account Settings
+
+You can manage your subscriptions and orders in the account settings. To manage your Billings and orders, Go to 
+Settings and Switch to `Account` Tab. In the account settings you can find 3 tabs.
+
+#### 1.Usage Stats
+
+It summarizes the overall statistics of your usage across all the features available in your subscription.
+
+#### 2. Billing
+
+It provides your current subscription plan details. You can find the validity of your current plan here.
+
+  - You can upgrade your plan by clicking on `Upgrade plan` button right to the plan name.
+  - Also, you can cancel the current plan by clicking on `Cancle Subscription`.
+  - The current plan will continue till the validity expires if you cancelled your subscription before the validity of current plan.
+
+#### 3. Order History
+
+It provides all your orders on the subscription plans and its details.
+
+## Advances Settings
+ 
+RateUp provides some advanced features such as Google sheet syncing and end-to-end encryption. 
+
+#### Sync with Google Sheet
+
+To sync your survey results with your google sheet account, first you need to sync your google account with rateup. In order to do that, 
+
+ - Go to `Advanced Settings` tab under settings, and then click on `sync account`.
+ - It will redirect to google consent page, select your account and click on continue.
+ - Mark check on accessing google drive and the continue
+ - It will show `Your account has been synced with RateUp`. Click on `Go back`.
+ - Your synced account ID will be shown in the settings.
+
+To remove the access, Click on `sign out of synced account`. You can again sync if you want.
+
+#### End-to-End Encryption
+
+To enable end-to-end encryption for your survey results, 
+
+  - Go to `Advanced Settings` tab under settings, and then click on `Generate Key Pair` under `End-to-End Encryption`.
+  - Provide a strong password. It will be required to view the results of end-to-end encrypted surveys.
+  - Note that this password is not recoverable.
+

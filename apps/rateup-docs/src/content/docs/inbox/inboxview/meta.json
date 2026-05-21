@@ -1,0 +1,9 @@
+{
+  "pages": [
+    "index",
+    "newchat",
+    "assigned",
+    "mine",
+    "closed"
+  ]
+}

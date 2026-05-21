@@ -1,0 +1,277 @@
+---
+title: "Managing WhatsApp Templates"
+description: Learn how to create, manage, and customize loyalty WhatsApp templates in RateUp.
+---
+import ScreenShot from "../../../components/Screenshot";
+import { CDN } from '../../../lib/cdn';
+
+The WhatsApp Templates section allows administrators to create and manage WhatsApp message templates used across the loyalty platform.
+
+Templates are used for:
+
+- Customer registration messages
+- Loyalty point notifications
+- Reward redemption alerts
+- Referral messages
+- Tier upgrade notifications
+- Birthday rewards
+- Inactivity reminders
+
+These templates are used in loyalty automations and customer notifications.
+
+---
+
+## Open WhatsApp Templates
+
+To access WhatsApp templates:
+
+1. Open **Loyalty** from the sidebar
+2. Click **WhatsApp Templates**
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/templates-overview.png`}
+  alt="WhatsApp Templates Overview"
+/>
+
+---
+
+## Understanding the Templates List
+
+The Templates page displays all loyalty-related WhatsApp templates.
+
+Each template card displays:
+
+- Template Name
+- Category
+- Approval Status
+- Created Date
+
+### Template Status
+
+Templates may have statuses such as:
+
+- Draft
+- Approved
+- Pending Review
+- Rejected
+
+Only approved templates can be used in live WhatsApp automations.
+
+---
+
+## Create a New WhatsApp Template
+
+To create a template:
+
+1. Click **Create**
+2. Select a predefined loyalty template
+3. Create a draft
+4. Configure the template details
+5. Submit the template for approval
+
+---
+
+## Select a Predefined Template
+
+When creating a new template, the system displays predefined loyalty templates.
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/pick-template-modal.png`}
+  alt="Pick Template Modal"
+/>
+
+### Available Template Examples
+
+Examples include:
+
+- loyalty_customer_registration
+- loyalty_point_information
+- loyalty_referral
+- loyalty_reward_redeemed
+- loyalty_tier_upgraded
+- loyalty_birthday
+- loyalty_inactivity_reminder
+
+Each predefined template contains suggested message content and variables.
+
+---
+
+## Create Draft from Template
+
+After selecting a predefined template:
+
+1. Select the WhatsApp account
+2. Click **Create Draft**
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/create-draft-modal.png`}
+  alt="Create Draft Modal"
+  width={500}
+/>
+
+The system creates a draft template that can be customized before submission.
+
+---
+
+## Configure Template Details
+
+After the draft is created, the template editor opens.
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/loyalty/template-editor.png`}
+  alt="WhatsApp Template Editor"
+/>
+
+---
+
+## Template Configuration Fields
+
+### Template Name
+
+Defines the internal name of the template.
+
+Requirements:
+
+- Lowercase letters only
+- Underscores supported
+- Must be unique
+
+Example:
+
+```txt
+loyalty_customer_registration
+```
+
+---
+
+## Template Type
+
+Defines the type of loyalty template.
+
+Example:
+
+```txt
+LOYALTY
+```
+
+---
+
+## Category
+
+Defines the WhatsApp template category.
+
+Example:
+
+```txt
+UTILITY
+```
+
+---
+
+## Language
+
+Select the template language.
+
+Example:
+
+```txt
+English
+```
+
+---
+
+## Broadcast Header
+
+The Broadcast Header section allows businesses to add optional media or branding.
+
+Supported options may include:
+
+- None
+- Image
+- Video
+- Document
+
+---
+
+## Configure Message Body
+
+The Body section contains the customer-facing WhatsApp message.
+
+### Example
+
+```txt
+Hi {{1}}, welcome to our loyalty program!
+```
+
+### Dynamic Variables
+
+Templates support dynamic placeholders.
+
+Example:
+
+- `{{1}}` – Customer Name
+
+These values are automatically populated during message delivery.
+
+---
+
+## Footer
+
+The Footer section allows optional disclaimers or additional information.
+
+Example:
+
+```txt
+Powered by rateup.app
+```
+
+---
+
+## Add Action Buttons
+
+Templates can include optional interactive buttons.
+
+### Supported Actions
+
+Examples may include:
+
+- Visit Website
+- Call Phone Number
+- Quick Reply
+- Copy Coupon Code
+
+### Important Notes
+
+- More than three buttons may appear as a list
+- Custom buttons may need to be positioned correctly
+
+---
+
+## Live Preview
+
+The Preview section displays how the template appears inside WhatsApp.
+
+This helps administrators:
+
+- Review formatting
+- Validate variables
+- Test readability
+- Verify branding
+
+---
+
+## Save or Submit Template
+
+After configuring the template:
+
+### Save as Draft
+
+Click **Save as Draft** to continue editing later.
+
+### Save & Submit
+
+Click **Save & Submit** to send the template for WhatsApp approval.
+
+Only approved templates can be used in loyalty automations.
+
+---

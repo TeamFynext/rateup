@@ -1,0 +1,27 @@
+{
+  "pages": [
+    "index",
+    "title",
+    "getting-started",
+    "inbox",
+    "analytics",
+    "contacts",
+    "campaign",
+    "whatsapp",
+    "automation",
+    "loyality",
+    "profile-settings",
+    "teams",
+    "web-survey",
+    "whatsapp-survey",
+    "menu",
+    "landing-page",
+    "ticket",
+    "testimonial",
+    "type",
+    "advanced-features",
+    "apidoc",
+    "app-link",
+    "href"
+  ]
+}

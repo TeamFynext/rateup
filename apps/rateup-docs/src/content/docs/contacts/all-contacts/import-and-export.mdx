@@ -1,0 +1,147 @@
+---
+title: "Import and Export Contacts"
+---
+
+The **Import and Export** feature allows you to add contacts in bulk and download contact data for reporting, backups, or external use. These options are available from the top bar of the **All Contacts** page.
+
+import ScreenShot from "@/components/Screenshot";
+import { CDN } from "@/lib/cdn";
+
+---
+
+## Import Contacts
+
+Import contacts in bulk using CSV or Excel files. This is useful when migrating data or adding large contact lists at once.
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/contacts/import-contacts-modal.png`}
+  alt="Import contacts modal"
+  width={450}
+/>
+
+---
+
+### Supported File Formats
+
+- **CSV (.csv)**
+- **Excel (.xlsx)**
+
+---
+
+### Required Fields
+
+To successfully import contacts, the file must include the following required fields:
+
+- **name**
+- **phone**
+
+If these fields are missing, the import will fail.
+
+---
+
+### Custom Fields
+
+- Custom fields (for example, **coupon**) can be included during import.
+- Custom fields must already exist in the system before importing.
+- Values from the file will be mapped to the corresponding custom fields.
+
+---
+
+### Update Existing Contacts
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/contacts/import-update-existing.png`}
+  alt="Update existing contacts while importing"
+  width={450}
+/>
+
+To update existing contacts:
+
+1. Enable **Update the existing data while importing**
+2. Upload the import file
+3. Matching is done using the contact’s phone number
+4. Existing contact values are replaced with imported values
+
+Use this carefully, as existing data will be overwritten..
+
+---
+
+### Demo CSV File
+
+- Click **Download Demo CSV File** to get a sample file format.
+- Use this file as a reference before preparing your own import file.
+
+---
+
+### Completing the Import
+
+1. Choose the file to upload
+2. Review selected options
+3. Click **Import** to start the process
+4. Click **Cancel** to exit without importing
+
+---
+
+## Export Contacts
+
+Export allows you to download contact data from RateUp for offline use or reporting.
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/contacts/export-options.png`}
+  alt="Export contacts options"
+  width={300}
+/>
+
+---
+
+### Export Formats
+
+To export contacts:
+
+1. Open the export options
+2. Select the required format:
+   - **CSV**
+   - **Excel**
+3. Start the export process
+
+The file is downloaded to your device.
+
+---
+
+### Export Behavior
+
+- Exported data includes all visible and relevant contact fields.
+- If filters are applied, only the filtered contacts are exported.
+- Export respects the current contact list view.
+
+---
+
+### Common Use Cases
+
+- Creating backups
+- Sharing contact data with external tools
+- Offline analysis and reporting
+
+---
+
+## Best Practices
+
+- Always validate files before importing
+- Use the demo CSV to avoid formatting issues
+- Apply filters before exporting to limit data
+- Handle exported files securely
+
+---
+
+## Why Import and Export Matter
+
+Import and Export help teams:
+
+- Save time when adding large contact lists
+- Maintain clean and up-to-date contact data
+- Perform analysis outside the platform
+
+---
+
+
+

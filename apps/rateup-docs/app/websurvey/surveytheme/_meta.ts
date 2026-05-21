@@ -1,8 +1,0 @@
-export default {
-  themes: "Customize Your Web Survey",
-  welcomepage: "Welcome Page Theme",
-  languagepage: "Language Selection Page Theme",
-  surveypage: "Survey Page Theme",
-  htmlpage: "Custom HTML Page",
-  thankyoupage: "Thank You Page Theme",
-};

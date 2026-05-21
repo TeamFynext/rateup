@@ -1,0 +1,10 @@
+{
+  "pages": [
+    "themes",
+    "welcomepage",
+    "languagepage",
+    "surveypage",
+    "htmlpage",
+    "thankyoupage"
+  ]
+}
