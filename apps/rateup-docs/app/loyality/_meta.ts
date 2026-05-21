@@ -7,5 +7,6 @@ export default {
   transctions: "Transctions",
   approvals: "Approvals",
   commands: "Commands",
+  templates: "Templates",
   settings: "Settings",
 };

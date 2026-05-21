@@ -6,6 +6,7 @@ export default {
   inbox:"Inbox",
   analytics:"Analytics",
   contacts:"Contacts",
+  campaign:"Campaigns",
   whatsapp:"Whatsapp",
   automation:"Automation",
   loyality:"Loyality",
