@@ -1,0 +1,344 @@
+---
+title: Creating Campaigns
+description: Learn how to create Broadcast and Drip WhatsApp campaigns in RateUp.
+---
+
+import ScreenShot from "../../components/Screenshot";
+import { CDN } from "../../lib/cdn";
+
+# Creating Campaigns
+
+This guide explains how to create WhatsApp campaigns in RateUp.
+
+RateUp supports:
+
+- Broadcast Campaigns
+- Drip Campaigns
+
+Both campaign types use approved WhatsApp templates for sending messages.
+
+---
+
+# Creating a Broadcast Campaign
+
+Broadcast campaigns are used to send one-time messages to customers.
+
+Examples include:
+
+- Promotions
+- Discounts
+- Announcements
+- Loyalty updates
+
+---
+
+## Open Campaigns
+
+To access Campaigns:
+
+1. Open the RateUp dashboard
+2. From the sidebar, click **Campaigns**
+
+---
+
+## Start Creating a Broadcast Campaign
+
+To create a broadcast campaign:
+
+1. Click **Create Campaign**
+2. Select **Broadcast Campaign**
+
+The campaign creation dialog will open.
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/create-campaign-basic-info.png`}
+  alt="Broadcast campaign basic info"
+  width={450}
+/>
+
+---
+
+## Configure Basic Information
+
+In the **Basic Info** tab:
+
+### Select Team
+
+Choose the team that will manage the campaign.
+
+Example:
+- Main
+- Calicut
+
+---
+
+### Enter Campaign Name
+
+Provide a campaign name.
+
+Examples:
+
+- Summer Sale 2025
+- Weekend Offer
+- Loyalty Promotion
+
+---
+
+### Enable User Consent
+
+The **User Consent** option ensures messages are only sent to customers who have agreed to receive communication.
+
+Keeping this enabled is recommended for compliance.
+
+---
+
+## Continue to Templates
+
+After entering the required details:
+
+1. Click **Next**
+2. Open the **Templates** tab
+
+---
+
+## Select a WhatsApp Template
+
+Choose an approved WhatsApp template.
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/create-campaign-template-step.png`}
+  alt="Broadcast campaign template selection"
+  width={450}
+/>
+
+---
+
+## View Available Templates
+
+Click the template dropdown to view approved templates.
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/create-campaign-template-dropdown.png`}
+  alt="Campaign template dropdown"
+  width={450}
+/>
+
+Examples include:
+
+- loyalty_register_success
+- loyalty_buy_and_earn
+- notification_reward_redemption
+- notification_points_earning
+- notification_birthday_rewards
+
+Only approved templates can be used in campaigns.
+
+---
+
+## Create a New Template
+
+If a suitable template is unavailable:
+
+1. Click **Create Template**
+2. Create and submit the WhatsApp template
+3. Wait for approval
+4. Return and select the template
+
+For detailed steps, see [WhatsApp Templates](/automation/templates).
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/create-campaign-template-empty.png`}
+  alt="Create new campaign template"
+  width={450}
+/>
+
+---
+
+## Configure Dynamic Variables
+
+Some templates contain placeholders for dynamic customer information.
+
+Map each variable to the correct data field.
+
+Example:
+
+- Variable 1 → Name
+- Variable 2 → Phone Number
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/create-campaign-dynamic-variables.png`}
+  alt="Campaign dynamic variables"
+  width={450}
+/>
+
+Dynamic variables personalize campaign messages automatically.
+
+---
+
+## Create the Broadcast Campaign
+
+After configuration:
+
+1. Review the campaign settings
+2. Click **Create Campaign**
+
+The campaign will appear in the Campaigns dashboard.
+
+---
+
+# Creating a Drip Campaign
+
+Drip campaigns allow businesses to send automated message sequences over time.
+
+These campaigns are commonly used for:
+
+- Customer onboarding
+- Follow-up reminders
+- Loyalty nurturing
+- Engagement automation
+
+---
+
+## Start Creating a Drip Campaign
+
+To create a drip campaign:
+
+1. Click **Create Campaign**
+2. Select **Drip Campaign**
+
+The drip campaign creation dialog will open.
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/create-drip-campaign-basic-info.png`}
+  alt="Drip campaign basic info"
+  width={450}
+/>
+
+---
+
+## Configure Drip Campaign Information
+
+In the **Basic Info** tab:
+
+### Select Team
+
+Choose the team responsible for the campaign.
+
+---
+
+### Enter Campaign Name
+
+Provide a name for the drip campaign.
+
+Examples:
+
+- Welcome Journey
+- Loyalty Follow-up
+- Customer Retention Flow
+
+---
+
+### Enable User Consent
+
+The **User Consent** option ensures messages are sent only to customers who have given consent.
+
+---
+
+## Continue to Templates
+
+After configuring the campaign details:
+
+1. Click **Next**
+2. Open the **Templates** tab
+
+---
+
+## Configure Drip Campaign Stages
+
+Drip campaigns support multiple stages.
+
+Each stage can:
+
+- Use a different WhatsApp template
+- Be delayed by a specific time
+- Be scheduled for a specific hour
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/create-drip-campaign-stages.png`}
+  alt="Drip campaign stages"
+  width={450}
+/>
+
+---
+
+## Configure a Stage
+
+For each stage:
+
+### Select Template
+
+Choose an approved WhatsApp template.
+
+Or click **Create Template** to create a new one.
+
+---
+
+### Configure Delay
+
+Enter how long the system should wait before sending the message.
+
+Example:
+- 1 Day
+- 2 Hours
+- 7 Days
+
+---
+
+### Select Delay Unit
+
+Choose the delay type:
+
+- Minutes
+- Hours
+- Days
+
+---
+
+### Configure Send Time
+
+Choose the exact time the message should be delivered.
+
+Example:
+- 09:00 AM
+
+---
+
+## Add More Stages
+
+To create additional drip steps:
+
+1. Click **Add Stage**
+2. Configure another template and delay
+
+This allows businesses to build complete automated journeys.
+
+---
+
+## Create the Drip Campaign
+
+After configuring all stages:
+
+1. Review the campaign flow
+2. Click **Create Campaign**
+
+The drip campaign will appear in the Drip Campaigns list.
+
+---
+
+## Important Notes
+
+- Only approved WhatsApp templates can be used
+- Drip campaigns can contain multiple stages
+- Delays determine when each stage is sent
+- User consent should remain enabled for compliance
+- Campaigns can be activated or paused anytime

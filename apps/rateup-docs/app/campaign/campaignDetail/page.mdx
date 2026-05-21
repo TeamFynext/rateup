@@ -1,0 +1,180 @@
+---
+title: Campaign Details
+description: Learn how to monitor campaigns, manage participants, resend messages, and review campaign performance in RateUp.
+---
+
+import ScreenShot from "../../../components/Screenshot";
+import { CDN } from "../../../lib/cdn";
+
+# Campaign Details
+
+The Campaign Details page helps you monitor campaign performance, manage participants, resend messages, and review delivery statistics.
+
+---
+
+# Open Campaign Details
+
+To open a campaign:
+
+1. Open the **Campaigns** page
+2. Locate the campaign card
+3. Click the campaign
+
+---
+
+# Campaign Overview
+
+The **Overview** tab displays campaign information and delivery performance.
+
+The overview includes:
+
+- Campaign name
+- Campaign ID
+- Team
+- Template used
+- Campaign status
+- Total participants
+- Delivery metrics
+
+Metrics shown:
+
+- Sent
+- Delivered
+- Read
+- Pending
+- Failed
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/campaign-details-overview.png`}
+  alt="Campaign overview"
+  width={900}
+/>
+
+---
+
+# Open Participants Tab
+
+To manage recipients:
+
+1. Open the campaign details page
+2. Click the **Participants** tab
+
+The Participants section allows you to:
+
+- View participants
+- Search participants
+- Check consent status
+- Resend messages
+- Add participants
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/campaign-participants-tab.png`}
+  alt="Campaign participants"
+  width={900}
+/>
+
+---
+
+# Add Participants
+
+Participants can be added from:
+
+- Individual contacts
+- Groups
+- Existing campaigns
+
+## Add New Participants
+
+1. Open the **Participants** tab
+2. Click **Add Participant**
+3. Select:
+   - Individual
+   - Group
+   - Campaign
+4. Search and select contacts
+5. Click **Add Participants**
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/campaign-add-participants.png`}
+  alt="Add campaign participants"
+  width={500}
+/>
+
+---
+
+# Resend Campaign Messages
+
+Campaign messages can be resent to selected participant statuses.
+
+Supported statuses:
+
+- Failed
+- Pending
+- Sent
+- Delivered
+- Read
+- Completed
+
+---
+
+## Resend Immediately
+
+To resend messages instantly:
+
+1. Open the campaign details page
+2. Click **Resend**
+3. Select **Send Now**
+4. Choose participant statuses
+5. Click **Resend Campaign**
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/campaign-resend-send-now.png`}
+  alt="Resend campaign immediately"
+  width={400}
+/>
+
+---
+
+## Schedule Resend
+
+To resend messages later:
+
+1. Open the **Resend** modal
+2. Select **Schedule Later**
+3. Choose:
+   - Date
+   - Time
+4. Select participant statuses
+5. Click **Resend Campaign**
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/campaign/campaign-resend-schedule-later.png`}
+  alt="Schedule campaign resend"
+  width={400}
+/>
+
+---
+
+# Delivery Report
+
+To review delivery statistics:
+
+1. Open the campaign details page
+2. Click **Delivery Report**
+
+The report helps analyze:
+
+- Delivery status
+- Failed messages
+- Read rate
+- Campaign engagement
+
+---
+
+# Important Notes
+
+- Campaign performance updates automatically
+- Participants can be managed anytime
+- Messages can be resent to selected statuses
+- Delivery reports help track engagement
+- Consent-enabled contacts are recommended

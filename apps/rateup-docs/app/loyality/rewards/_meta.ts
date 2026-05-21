@@ -3,4 +3,5 @@ export default {
   createPoint: "Creating points",
   createCoupon: "Creating coupons",
   createGift: "Creating gifts",
+  referalProgram: "Referal program",
 };
