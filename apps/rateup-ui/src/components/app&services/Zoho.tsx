@@ -98,8 +98,8 @@ const ZohoAuthentication = ({ integration }) => {
   const deleteMut = useDeleteIntegrationMutation(IntegratedApps.zoho);
 
   function handleConnect() {
-    const clientId = process.env.VITE_ZOHO_CLIENT_ID;
-    const redirectUri = `${process.env.VITE_FRONTEND_URL}/dashboard/settings/integrations/zoho/callback`;
+    const clientId = import.meta.env.VITE_ZOHO_CLIENT_ID;
+    const redirectUri = `${import.meta.env.VITE_FRONTEND_URL}/dashboard/settings/integrations/zoho/callback`;
 
     const scope =
       "ZohoCRM.modules.ALL ZohoCRM.settings.ALL ZohoCRM.users.ALL offline_access";
