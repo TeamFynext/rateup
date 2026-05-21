@@ -73,6 +73,20 @@ export async function deleteZohoContact(
   return response.data;
 }
 
+export async function createZohoLead(
+  accessToken: string,
+  data: Record<string, any>,
+  baseUrl?: string,
+) {
+  const client = createZohoAxios(accessToken, baseUrl);
+
+  const response = await client.post("/crm/v8/Leads", {
+    data: [data],
+  });
+
+  return response.data;
+}
+
 export async function getZohoLeads(
   accessToken: string,
   baseUrl?: string,
@@ -83,7 +97,8 @@ export async function getZohoLeads(
 
   const response = await client.get("/crm/v8/Leads", {
     params: {
-      fields: "First_Name,Last_Name,Email,Phone,Description,Modified_Time",
+      fields:
+        "First_Name,Last_Name,Email,Phone,Description,Lead_Status,Modified_Time",
 
       per_page: 200,
 
@@ -95,6 +110,21 @@ export async function getZohoLeads(
           "If-Modified-Since": modifiedSince,
         }
       : undefined,
+  });
+
+  return response.data;
+}
+
+export async function updateZohoLead(
+  accessToken: string,
+  leadId: string,
+  data: Record<string, any>,
+  baseUrl?: string,
+) {
+  const client = createZohoAxios(accessToken, baseUrl);
+
+  const response = await client.put(`/crm/v8/Leads/${leadId}`, {
+    data: [data],
   });
 
   return response.data;
