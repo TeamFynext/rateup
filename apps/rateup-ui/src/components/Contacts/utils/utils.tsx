@@ -213,8 +213,8 @@ export const contactColumn = (
       ? [
           {
             header: "Lifecycle Stage",
-            accessorKey: "Lifecycle",
-            cell: (info) => info?.name,
+            accessorKey: "Lifecycle.name",
+            cell: (info) => info.getValue(),
             enableSorting: false,
             meta: { title: "Lifecycle Stage" },
           },
