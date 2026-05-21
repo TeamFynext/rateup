@@ -15,7 +15,19 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "Rateup docs",
+        title: "RateUp Documentation",
+      },
+      {
+        name: "description",
+        content: "Welcome to the RateUp documentation",
+      },
+      {
+        property: "og:title",
+        content: "RateUp Documentation",
+      },
+      {
+        property: "og:description",
+        content: "Welcome to the RateUp documentation",
       },
     ],
     links: [
@@ -23,22 +35,15 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: appCss,
       },
+      {
+        rel: "icon",
+        href: "/favicon.png",
+      },
     ],
   }),
   shellComponent: RootDocument,
 });
-  // title: {
-  //   default: "RateUp Documentation",
-  //   template: "RateUp Documentation", // will allow page-specific titles
-  // },
-  // description: "Welcome to the RateUp documentation",
-  // openGraph: {
-  //   title: "RateUp Documentation",
-  //   description: "Welcome to the RateUp documentation",
-  // },
-  // icons: {
-  //   icon: "/favicon.png",
-  // },
+
 
 function RootDocument({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
