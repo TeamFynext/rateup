@@ -5,22 +5,30 @@
   "engines": {
     "node": "24.x"
   },
+  "type": "module",
   "scripts": {
-    "dev": "next -p 7000",
-    "build": "next build",
-    "start": "next start"
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "node .output/server/index.mjs"
   },
   "dependencies": {
-    "@next/mdx": "16.1.6",
-    "next": "16.1.6",
-    "nextra": "^4.6.1",
-    "nextra-theme-docs": "^4.6.1",
+    "@tanstack/react-router": "^1.170.6",
+    "@tanstack/react-start": "^1.168.9",
+    "@types/mdx": "^2.0.13",
+    "@vitejs/plugin-react": "^6.0.2",
+    "fumadocs-core": "^16.9.0",
+    "fumadocs-mdx": "^15.0.7",
+    "fumadocs-ui": "^16.9.0",
+    "nitro": "^3.0.260429-beta",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "vite": "^8.0.14"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
     "@types/node": "25.3.3",
     "@types/react": "19.2.14",
+    "tailwindcss": "^4.3.0",
     "typescript": "5.9.3"
   }
 }

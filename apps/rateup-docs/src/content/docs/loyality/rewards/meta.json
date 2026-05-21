@@ -1,0 +1,9 @@
+{
+  "pages": [
+    "index",
+    "create-point",
+    "create-coupon",
+    "create-gift",
+    "referal-program"
+  ]
+}

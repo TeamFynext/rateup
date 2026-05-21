@@ -1,0 +1,11 @@
+{
+  "pages": [
+    "index",
+    "surveytemplates",
+    "editsurvey",
+    "surveytheme",
+    "settings",
+    "sharesurvey",
+    "result"
+  ]
+}

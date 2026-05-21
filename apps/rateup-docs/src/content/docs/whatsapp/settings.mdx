@@ -1,0 +1,175 @@
+---
+title: "WhatsApp Settings"
+---
+
+The WhatsApp Settings section is used to configure and manage your WhatsApp Business Account connection. This configuration enables message delivery, webhooks, catalogs, flows, and automation.
+
+import ScreenShot from "@/components/Screenshot";
+import { CDN } from "@/lib/cdn";
+
+---
+
+## Accessing WhatsApp Settings
+
+WhatsApp settings can be accessed from **WhatsApp → Settings**.
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/whatsapp/settings-manual-configuration.png`}
+  alt="WhatsApp settings manual configuration"
+ />
+
+This page allows you to configure WhatsApp either automatically or manually.
+
+---
+
+## Configuration Modes
+
+At the top of the page, two configuration modes are available:
+
+- **Automated**
+- **Manual**
+
+Select **Manual** to enter WhatsApp Business configuration details manually.
+
+---
+
+## WhatsApp Configuration
+
+The **WhatsApp Configuration** section is used to connect your WhatsApp Business Account.
+
+### Channel Name
+
+- Enter a unique name to identify this WhatsApp channel.
+- This name is used internally for reference.
+
+---
+
+### WABA ID
+
+- Enter the **WhatsApp Business Account ID**.
+- This value is provided by Meta.
+
+This ID links your WhatsApp Business Account to the platform.
+
+---
+
+### Phone ID
+
+- Enter the **Phone Number ID** associated with the WhatsApp Business Account.
+- This ID represents the phone number used for sending messages.
+
+---
+
+### App ID
+
+- Enter the **Facebook App ID** connected to your WhatsApp integration.
+- This app is used for authentication and webhook communication.
+
+---
+
+### Access Token
+
+- Paste the **Permanent Access Token** generated from Meta.
+- This token is required to:
+  - Send messages
+  - Fetch templates
+  - Sync catalogs
+  - Trigger flows
+
+Keep this token secure and up to date.
+
+---
+
+### Webhook Password
+
+- Enter a secure password for webhook verification.
+- This password is used to validate incoming webhook events.
+
+---
+
+### Instagram Connected Facebook Page
+
+- Select the Facebook Page connected to Instagram (optional).
+- Use the refresh icon to reload available pages.
+
+This is required only if Instagram-related automation is enabled.
+
+---
+
+## Webhook Configuration
+
+The **Webhook Configuration** section provides the webhook URL required for Meta.
+
+<ScreenShot
+  src={`${CDN}/docs/screenshots/whatsapp/settings-webhook-configuration.png`}
+  alt="Webhook configuration URL"
+ />
+
+### WhatsApp Webhook URL
+
+- Copy the provided webhook URL.
+- Paste this URL into your **Facebook App → Webhooks** configuration.
+
+This enables real-time event delivery from WhatsApp.
+
+---
+
+### Webhook Configuration Note
+
+Ensure the webhook URL is correctly added in:
+- Facebook App settings
+- WhatsApp webhook subscriptions
+
+Without this step, message delivery and status updates will not work.
+
+---
+
+## Saving Configuration
+
+To apply the configuration:
+
+1. Review all entered values carefully
+2. Click **Save Changes**
+
+The system validates and stores the configuration.
+
+---
+
+## Deleting Configuration
+
+To remove the WhatsApp configuration:
+
+1. Click **Delete Configuration**
+2. Confirm the action
+
+This immediately disconnects the WhatsApp Business Account.
+
+---
+
+## When to Use Manual Configuration
+
+Manual configuration is recommended when:
+- Advanced control over credentials is required
+- Automated setup is not available
+- Custom webhook handling is needed
+- Migrating from another WhatsApp provider
+
+---
+
+## Best Practices
+
+- Use permanent access tokens where possible
+- Store credentials securely
+- Verify webhook setup after saving
+- Avoid deleting configuration during active campaigns
+
+---
+
+## Why WhatsApp Settings Matter
+
+Correct WhatsApp configuration ensures reliable message delivery, real-time event handling, and smooth operation of templates, catalogs, flows, and automations.
+
+---
+
+
+

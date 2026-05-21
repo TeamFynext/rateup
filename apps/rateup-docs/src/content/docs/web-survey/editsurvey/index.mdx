@@ -1,0 +1,81 @@
+---
+title: "Edit Web Survey"
+---
+
+## Adding Questions to Your Survey
+
+Once your survey is created, you can seamlessly add questions by navigating to the`Edit` tab of the selected survey. 
+Here, you'll find the `Add Content` button, which opens up a list of available pages and question types. By default a welcome page and thank you page will be added.
+Choose any question type from the categories, and it will generate a blank question that you can customize according to your preferences.
+
+import ScreenShot from "@/components/Screenshot";
+
+<ScreenShot src={"/screenshots/question-types.png"} alt="Question Types"/>
+
+### Steps to Add Questions
+
+1. Click on `Add Content` in the `Edit` tab of your selected survey.
+2. Choose a question type from the available categories.
+3. A blank question will be created, and you can modify it to suit your needs.
+
+### Question Details
+
+For all questions, provide the following details and save the changes.
+
+1. **Question Title:** Clearly state your question in the text edior. You can also use [`variables`](../../advancedft/variables) , smileys, images and videos in question title.
+
+2. **Multiple Languages:** Input the question in all selected languages by switching language in right corner of question editor .
+
+
+
+### Preview 
+
+Preview your question to ensure it appears as intended. Preview of the question type will be shown bottom in question editor. 
+
+
+### Question Categories
+
+There are five categories of question types available in web survey :
+
+##### 1. Contact Questions
+   - [**Contact**](./editsurvey/questiontypes/contact#contact-questions) : Accepts only name, phone and email responses.
+
+##### 2. NPS Questions
+   - [**Rating**](./editsurvey/questiontypes/nps#1-rating) : Rate out of 5 stars.
+   - [**Smiley**](./editsurvey/questiontypes/nps#2-smiley) : Choose from 5 smileys (very sad, sad, average, happy, very happy).
+   - [**Yes or No**](./editsurvey/questiontypes/nps#3-yes-or-no) : Provide a yes or no response.
+   - [**Like or Dislike**](./editsurvey/questiontypes/nps#4-like-or-dislike) : Indicate whether the response is like or dislike.
+   - [**Opinion Scale**](./editsurvey/questiontypes/nps#5-opinion-scale) : Rate on a scale of 10.
+   - [**Custom NPS**](./editsurvey/questiontypes/nps#6-custom-nps) : Choose from multiple options with assigned weightage (promoter, passive, detractor).
+
+##### 3. Choice Questions
+   - [**Single Select**](./editsurvey/questiontypes/choice#1-single-select) : Allows selecting one choice from multiple options.
+   - [**Multiple Select**](./editsurvey/questiontypes/choice#2-multiple-select) : Permits choosing more than one option.
+   - [**Dropdown Single Select**](./editsurvey/questiontypes/choice#3-dropdown-single-select) : Requires selecting one choice from a dropdown list.
+   - [**Dropdown Multiple Select**](./editsurvey/questiontypes/choice#4-dropdown-multiple-select) : Permits choosing multiple options from a dropdown list.
+   - [**Picture Choice**](./editsurvey/questiontypes/choice#5-picture-choice) : Allows selecting one picture from multiple picture choices
+   - [**Single Select Grid**](./editsurvey/questiontypes/choice#6-single-select-grid) : Provides multiple questions with same choices which allows selecting on choice for each question.
+
+##### 4. Input Question
+   - [**Text Input**](./editsurvey/questiontypes/input#1-text-input) : Accepts text responses only.
+   - [**Large Text**](./editsurvey/questiontypes/input#2-large-text) : Allows multiline responses.
+   - [**Number**](./editsurvey/questiontypes/input#3-number) : Requires a numerical response.
+   - [**Date**](./editsurvey/questiontypes/input#4-date) : Requires a date response.
+   - [**Photo**](./editsurvey/questiontypes/input#5-photo) : Allows image uploads.
+   - [**Multi Text Input**](./editsurvey/questiontypes/input#6-multi-text-input) : Provide multiple text fields which can be customized.
+   - [**File Input**](./editsurvey/questiontypes/input#7-file-input) : Allows file upload.
+
+##### 5. Other Questions
+   - [**Testimonial**](./editsurvey/questiontypes/other#testimonial) : Gathers testimonial details.
+   - [**Terms & Conditions**](./editsurvey/questiontypes/other#terms--conditions) : Provides a checkbox for accepting Terms & Conditions.
+   - [**Info Message**](./editsurvey/questiontypes/other#info-message) : Allows providing messages without accepting any response.
+   - [**Email OTP**](./editsurvey/questiontypes/other#email-otp) : Provide an option to generate otp which will be sent to the provided email.
+   - [**Wheel of Price**](./editsurvey/questiontypes/other#wheel-of-price) : Provides a spinnable wheel of prices. 
+
+
+### Additional Features
+
+Some question types support [Google Review](../../advancedft/googlereview), [Logic Jump](../../advancedft/logicjump) or [Custom Validation](../../advancedft/customvalidation). If supported, the respective buttons will be enabled in the question view, providing you with additional functionality for your survey.
+
+Enhance your survey experience by leveraging these diverse question types and features tailored to your specific needs.
+

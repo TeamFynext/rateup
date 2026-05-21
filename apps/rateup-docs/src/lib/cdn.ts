@@ -1,0 +1,1 @@
+export const CDN = import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL ?? "";

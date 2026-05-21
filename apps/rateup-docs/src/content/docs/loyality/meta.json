@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "index",
+    "cashier-portal",
+    "customers",
+    "earning-rules",
+    "rewards",
+    "transctions",
+    "approvals",
+    "commands",
+    "templates",
+    "settings"
+  ]
+}

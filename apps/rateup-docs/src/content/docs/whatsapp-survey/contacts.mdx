@@ -1,0 +1,53 @@
+---
+title: "Customer Contact"
+---
+
+In the RateUp Customer Engagement Platform, we understand the critical role that customer contacts play in your business success. Our Customer Contact Management feature allows you to efficiently save and organize customer contacts, empowering you to create targeted groups for campaigns and personalized engagement.
+
+import ScreenShot from "@/components/Screenshot";
+import YoutubeVideo from "@/components/YoutubeVideo";
+
+<ScreenShot src={"/screenshots/contacts.png"} alt="Contacts"/>
+
+#### Create Contact
+
+To create contact navigate `contacts` on the WhatsApp section and switch to contacts. Then, click on `Create`.
+
+There are 2 choices:
+
+1. **Manual :** Enter information manually, such as `name` and `phone`. If you have added extra fields like `location` in the settings, you can include this information as well.
+2. **Import csv :** Upload a CSV file containing customer contact information with headers such as `name` and `phone`. If you have configured extra fields like `location` in the settings, you can also include these in the CSV.If you want to update the content, select the `Switch True` option above the CSV upload field.
+
+Note: These extra field values and name can be used in the template to send as variable values.
+
+#### Create Group
+
+To create a cutomer group click, switch to `Group` and then click on `Create`.
+
+Provide information such as group name, select a team to the which group belongs to and upload an profile picture for the group.
+
+##### Add customer to Group
+
+Once you created group, you can add customers to the group by clicking on `Add Member`.
+
+There are 2 choices:
+
+1. **Add new contact :** You can create similar like [creating contact](#create-contact). It will create new contact and add the member to group.
+2. **Add existing contact :** You can select the already created customers and can add to group.
+
+
+#### Edit Contact and Group
+ - To update or delete contact info click on `select Action` in the action column of the contact you want to update and select `Edit` or `delete contact` respectively.
+ - To update and delete Group info click on `select Action` in the action column of the group you want to update and select `Edit` or `Delete contact group` respectively.
+
+#### Remove customer from Group
+- To remove customers from group there are 2 methods:
+
+Navigate to group. Then,
+  1. To remove individual customer click on `select Action` in the action column of the contact you want to delete in the member table and select `Remove customer`.
+  2. To remove more customers at once, select members and click on trash icon.
+
+<YoutubeVideo  src={"https://youtube.com/embed/0zItiAdHWEk"} />
+
+
+

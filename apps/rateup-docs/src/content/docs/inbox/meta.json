@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "index",
+    "accessing-inbox",
+    "layout",
+    "inboxview",
+    "asigning-conversation",
+    "conversation-lifecycle",
+    "responding-to-conversation",
+    "inbox-filter",
+    "toolbar",
+    "inbox-settings"
+  ]
+}
