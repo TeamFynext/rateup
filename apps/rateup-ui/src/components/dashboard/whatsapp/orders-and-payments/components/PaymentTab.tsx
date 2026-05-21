@@ -28,8 +28,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
-const CLOUDFRONT_BASE = process.env.VITE_AWS_CLOUDFRONT_URL
-  ? process.env.VITE_AWS_CLOUDFRONT_URL.replace(/\/+$/, "")
+const CLOUDFRONT_BASE = import.meta.env.VITE_AWS_CLOUDFRONT_URL
+  ? import.meta.env.VITE_AWS_CLOUDFRONT_URL.replace(/\/+$/, "")
   : "https://d2uj946b0i8y27.cloudfront.net";
 
 // ─── Shopify payment options ─────────────────────────────────────────────────
