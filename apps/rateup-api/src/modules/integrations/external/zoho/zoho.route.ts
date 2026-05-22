@@ -44,6 +44,9 @@ export async function zohoRoutes(server: FastifyInstance) {
     "/contacts/sync",
     {
       preHandler: checkSession,
+      schema: {
+        querystring: zohoQuerySchema,
+      },
     },
     syncZohoContactsHandler,
   );

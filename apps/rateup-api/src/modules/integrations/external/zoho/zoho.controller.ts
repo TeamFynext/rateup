@@ -13,6 +13,7 @@ import {
   syncZohoLeads,
 } from "./zoho.service.js";
 import axios from "axios";
+import { ZohoProduct } from "./zoho.client.js";
 
 interface ZohoAuthBody {
   code: string;
@@ -71,6 +72,11 @@ export async function zohoAuthenticationHandler(
       });
     }
 
+    const supportedProducts = {
+      crm: scope.includes("ZohoCRM"),
+      bigin: scope.includes("ZohoBigin"),
+    };
+
     // Calculate expiry time
     const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
 
@@ -79,6 +85,7 @@ export async function zohoAuthenticationHandler(
       refresh_token,
       api_domain,
       scope,
+      supportedProducts,
       expires_at: expiresAt,
       triggerSubscriptions: [],
     };
@@ -126,31 +133,33 @@ export async function zohoAuthenticationHandler(
 }
 
 export async function syncZohoContactsHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{
+    Querystring: {
+      product?: ZohoProduct;
+    };
+  }>,
   reply: FastifyReply,
 ) {
   try {
     const orgId = request.user.orgId;
-
+    const { product = "crm" } = request.query;
     if (!orgId) {
       return reply.code(400).send({
         success: false,
         error: "Missing orgId",
       });
     }
-
-    await syncZohoContacts(orgId);
-
+    await syncZohoContacts(orgId, product);
     return reply.send({
       success: true,
-      message: "Zoho contact sync completed",
+      message: `${product} contact sync completed`,
     });
   } catch (error) {
     log.error("Zoho sync controller error => %o", error);
 
     return reply.code(500).send({
       success: false,
-      error: "Failed to sync Zoho contacts",
+      error: "Failed to sync contacts",
     });
   }
 }
@@ -189,12 +198,13 @@ export async function getZohoContactsHandler(
   request: FastifyRequest<{
     Querystring: {
       orgId: string;
+      product?: ZohoProduct;
     };
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.query;
+    const { orgId, product = "crm" } = request.query;
 
     if (!orgId) {
       return reply.code(400).send({
@@ -203,7 +213,7 @@ export async function getZohoContactsHandler(
       });
     }
 
-    const contacts = await fetchZohoContacts(orgId);
+    const contacts = await fetchZohoContacts(orgId, product);
 
     return reply.send({
       success: true,
@@ -214,7 +224,7 @@ export async function getZohoContactsHandler(
 
     return reply.code(500).send({
       success: false,
-      error: "Failed to fetch Zoho contacts",
+      error: "Failed to fetch contacts",
     });
   }
 }
