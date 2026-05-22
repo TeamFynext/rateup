@@ -127,12 +127,29 @@ export async function createContact(
     user.orgId,
   );
   await addZohoContactToQueue(user, user?.orgId);
+
+  let lifecycleName;
+  if (user.lifecycleId) {
+    const lifecycle = await prisma.lifecycle.findUnique({
+      where: {
+        id: user.lifecycleId,
+      },
+      select: {
+        name: true,
+      },
+    });
+
+    if (lifecycle) {
+      lifecycleName = lifecycle.name;
+    }
+  }
   await integrationTriggerQueue.add("zoho-lead-create", {
     integrationName: "zoho",
     triggerKey: ZohoTriggers.LEAD_CREATE,
     orgId: user?.orgId,
     data: buildZohoLeadPayload({
       ...user,
+      leadStatus: lifecycleName,
     }),
     rateupContactId: user.id,
   });
@@ -567,7 +584,16 @@ export async function deleteContactById(contactId: string) {
     triggerKey: ZohoTriggers.CONTACT_DELETE,
     orgId: user.orgId,
     data: {
-      zohoContactId: integrationIds?.zoho?.id,
+      zohoContactId: integrationIds?.zoho?.contact?.id,
+    },
+  });
+  // Also enqueue Bigin contact delete
+  await integrationTriggerQueue.add("zoho-bigin-contact-delete", {
+    integrationName: "zoho",
+    triggerKey: ZohoTriggers.BIGIN_CONTACT_DELETE,
+    orgId: user.orgId,
+    data: {
+      biginContactId: integrationIds?.bigin?.contact?.id,
     },
   });
   return user;
@@ -741,8 +767,15 @@ export async function updateContactById(
   );
   const integrationIds = updatedContact.integrationIds as {
     zoho?: {
-      id: string;
-      module: string;
+      contact?: {
+        id: string;
+      };
+      lead?: { id: string };
+    };
+    bigin?: {
+      contact?: {
+        id: string;
+      };
     };
   };
 
@@ -751,16 +784,22 @@ export async function updateContactById(
     triggerKey: ZohoTriggers.CONTACT_UPDATE,
     orgId: updatedContact.orgId,
     data: {
-      zohoContactId: integrationIds?.zoho?.id,
+      zohoContactId: integrationIds?.zoho?.contact?.id,
+      ...buildZohoContactPayload(updatedContact),
+    },
+  });
+  // Also enqueue Bigin contact update
+  await integrationTriggerQueue.add("zoho-bigin-contact-update", {
+    integrationName: "zoho",
+    triggerKey: ZohoTriggers.BIGIN_CONTACT_UPDATE,
+    orgId: updatedContact.orgId,
+    data: {
+      biginContactId: integrationIds?.bigin?.contact?.id,
       ...buildZohoContactPayload(updatedContact),
     },
   });
 
-  if (
-    updatedContact.lifecycleId &&
-    integrationIds?.zoho?.id &&
-    integrationIds?.zoho?.module === "Leads"
-  ) {
+  if (updatedContact.lifecycleId && integrationIds?.zoho?.lead?.id) {
     const lifecycle = await prisma.lifecycle.findUnique({
       where: {
         id: updatedContact.lifecycleId,
@@ -773,7 +812,7 @@ export async function updateContactById(
     if (lifecycle) {
       await updateZohoLeadQueue(
         updatedContact.orgId,
-        integrationIds.zoho.id,
+        integrationIds.zoho.lead.id,
         buildZohoLeadPayload({
           ...updatedContact,
           leadStatus: lifecycle.name,
@@ -1149,7 +1188,14 @@ export async function deleteManyContacts(contactIds: Array<string>) {
     );
     const integrationIds = contact.integrationIds as {
       zoho?: {
-        id: string;
+        contact?: {
+          id: string;
+        };
+      };
+      bigin?: {
+        contact?: {
+          id: string;
+        };
       };
     };
 
@@ -1158,7 +1204,16 @@ export async function deleteManyContacts(contactIds: Array<string>) {
       triggerKey: ZohoTriggers.CONTACT_DELETE,
       orgId: contact.orgId,
       data: {
-        zohoContactId: integrationIds?.zoho?.id,
+        zohoContactId: integrationIds?.zoho?.contact?.id,
+      },
+    });
+    // Also enqueue Bigin contact delete
+    await integrationTriggerQueue.add("zoho-bigin-contact-delete", {
+      integrationName: "zoho",
+      triggerKey: ZohoTriggers.BIGIN_CONTACT_DELETE,
+      orgId: contact.orgId,
+      data: {
+        biginContactId: integrationIds?.bigin?.contact?.id,
       },
     });
   }
@@ -1420,8 +1475,17 @@ export async function updateMulitplceContacts(
       );
       const integrationIds = updatedContact.integrationIds as {
         zoho?: {
-          id: string;
-          module: string;
+          contact?: {
+            id: string;
+          };
+          lead?: {
+            id: string;
+          };
+        };
+        bigin?: {
+          contact?: {
+            id: string;
+          };
         };
       };
 
@@ -1430,21 +1494,26 @@ export async function updateMulitplceContacts(
         triggerKey: ZohoTriggers.CONTACT_UPDATE,
         orgId: updatedContact.orgId,
         data: {
-          zohoContactId: integrationIds?.zoho?.id,
+          zohoContactId: integrationIds?.zoho?.contact?.id,
+          ...buildZohoContactPayload(updatedContact),
+        },
+      });
+      // Also enqueue Bigin contact update for bulk upserts
+      await integrationTriggerQueue.add("zoho-bigin-contact-update", {
+        integrationName: "zoho",
+        triggerKey: ZohoTriggers.BIGIN_CONTACT_UPDATE,
+        orgId: updatedContact.orgId,
+        data: {
+          biginContactId: integrationIds?.bigin?.contact?.id,
           ...buildZohoContactPayload(updatedContact),
         },
       });
 
-      if (
-        updatedContact.lifecycleId &&
-        integrationIds?.zoho?.id &&
-        integrationIds?.zoho?.module === "Leads"
-      ) {
+      if (updatedContact.lifecycleId && integrationIds?.zoho?.lead?.id) {
         const lifecycle = await prisma.lifecycle.findUnique({
           where: {
             id: updatedContact.lifecycleId,
           },
-
           select: {
             name: true,
           },
@@ -1453,7 +1522,7 @@ export async function updateMulitplceContacts(
         if (lifecycle) {
           await updateZohoLeadQueue(
             updatedContact.orgId,
-            integrationIds.zoho.id,
+            integrationIds.zoho.lead.id,
             buildZohoLeadPayload({
               ...updatedContact,
               leadStatus: lifecycle.name,
@@ -1575,13 +1644,17 @@ export async function updateLifecycleStageofContacts(lifecycleId, contactIds) {
   for (const contact of contacts) {
     const integrationIds = contact.integrationIds as {
       zoho?: {
-        id: string;
-        module: string;
+        contact?: {
+          id: string;
+        };
+        lead?: {
+          id: string;
+        };
       };
     };
 
-    if (integrationIds?.zoho?.id && integrationIds?.zoho?.module === "Leads") {
-      await updateZohoLeadQueue(contact.orgId, integrationIds.zoho.id, {
+    if (integrationIds?.zoho?.lead?.id) {
+      await updateZohoLeadQueue(contact.orgId, integrationIds.zoho?.lead?.id, {
         Lead_Status: lifecycle.name,
       });
     }
