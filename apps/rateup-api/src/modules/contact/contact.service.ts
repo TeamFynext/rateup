@@ -51,6 +51,8 @@ import {
 import {
   addZohoContactToQueue,
   buildZohoContactPayload,
+  buildZohoLeadPayload,
+  updateZohoLeadQueue,
   ZohoTriggers,
 } from "../integrations/external/zoho/zoho.service.js";
 
@@ -125,6 +127,15 @@ export async function createContact(
     user.orgId,
   );
   await addZohoContactToQueue(user, user?.orgId);
+  await integrationTriggerQueue.add("zoho-lead-create", {
+    integrationName: "zoho",
+    triggerKey: ZohoTriggers.LEAD_CREATE,
+    orgId: user?.orgId,
+    data: buildZohoLeadPayload({
+      ...user,
+    }),
+    rateupContactId: user.id,
+  });
   return user;
 }
 
@@ -154,6 +165,15 @@ export async function getOrcreateContact(
     user.orgId,
   );
   await addZohoContactToQueue(user, user?.orgId);
+  await integrationTriggerQueue.add("zoho-lead-create", {
+    integrationName: "zoho",
+    triggerKey: ZohoTriggers.LEAD_CREATE,
+    orgId: user?.orgId,
+    data: buildZohoLeadPayload({
+      ...user,
+    }),
+    rateupContactId: user.id,
+  });
   if (customFields?.length) {
     await prisma.contactCustomFieldValue.createMany({
       data: customFields.map((field) => ({
@@ -287,6 +307,15 @@ export async function createMultipleContacts(
           );
 
           await addZohoContactToQueue(contact, orgId);
+          await integrationTriggerQueue.add("zoho-lead-create", {
+            integrationName: "zoho",
+            triggerKey: ZohoTriggers.LEAD_CREATE,
+            orgId: orgId,
+            data: buildZohoLeadPayload({
+              ...contact,
+            }),
+            rateupContactId: contact.id,
+          });
         }),
       );
     }
@@ -710,9 +739,10 @@ export async function updateContactById(
     { [ZapierTriggers.CONTACT_UPDATED]: updatedContact },
     updatedContact.orgId,
   );
-  const integrationIds = contact.integrationIds as {
+  const integrationIds = updatedContact.integrationIds as {
     zoho?: {
       id: string;
+      module: string;
     };
   };
 
@@ -722,9 +752,35 @@ export async function updateContactById(
     orgId: updatedContact.orgId,
     data: {
       zohoContactId: integrationIds?.zoho?.id,
-      ...buildZohoContactPayload(contact),
+      ...buildZohoContactPayload(updatedContact),
     },
   });
+
+  if (
+    updatedContact.lifecycleId &&
+    integrationIds?.zoho?.id &&
+    integrationIds?.zoho?.module === "Leads"
+  ) {
+    const lifecycle = await prisma.lifecycle.findUnique({
+      where: {
+        id: updatedContact.lifecycleId,
+      },
+      select: {
+        name: true,
+      },
+    });
+
+    if (lifecycle) {
+      await updateZohoLeadQueue(
+        updatedContact.orgId,
+        integrationIds.zoho.id,
+        buildZohoLeadPayload({
+          ...updatedContact,
+          leadStatus: lifecycle.name,
+        }),
+      );
+    }
+  }
   if (
     WaMessageClosedStatus.includes(
       updatedContact.waMessageAssignStatus as WaMessageAssignStatus,
@@ -904,6 +960,15 @@ export async function getOrCreateContactByPhone(
         orgId,
       );
       await addZohoContactToQueue(contact, orgId);
+      await integrationTriggerQueue.add("zoho-lead-create", {
+        integrationName: "zoho",
+        triggerKey: ZohoTriggers.LEAD_CREATE,
+        orgId: orgId,
+        data: buildZohoLeadPayload({
+          ...contact,
+        }),
+        rateupContactId: contact.id,
+      });
       return { contact, conversation };
     }
   } catch (e) {
@@ -958,6 +1023,15 @@ export async function getOrCreateContactByIgsId(
         orgId,
       );
       await addZohoContactToQueue(contact, orgId);
+      await integrationTriggerQueue.add("zoho-lead-create", {
+        integrationName: "zoho",
+        triggerKey: ZohoTriggers.LEAD_CREATE,
+        orgId: orgId,
+        data: buildZohoLeadPayload({
+          ...contact,
+        }),
+        rateupContactId: contact.id,
+      });
       return { contact, conversation };
     }
   } catch (e) {
@@ -1028,6 +1102,15 @@ export async function getOrCreateContactByPsid(
     );
 
     await addZohoContactToQueue(contact, orgId);
+    await integrationTriggerQueue.add("zoho-lead-create", {
+      integrationName: "zoho",
+      triggerKey: ZohoTriggers.LEAD_CREATE,
+      orgId: orgId,
+      data: buildZohoLeadPayload({
+        ...contact,
+      }),
+      rateupContactId: contact.id,
+    });
 
     return { contact, conversation };
   } catch (e) {
@@ -1335,6 +1418,49 @@ export async function updateMulitplceContacts(
         { [ZapierTriggers.CONTACT_UPDATED]: contact },
         orgId,
       );
+      const integrationIds = updatedContact.integrationIds as {
+        zoho?: {
+          id: string;
+          module: string;
+        };
+      };
+
+      await integrationTriggerQueue.add("zoho-contact-update", {
+        integrationName: "zoho",
+        triggerKey: ZohoTriggers.CONTACT_UPDATE,
+        orgId: updatedContact.orgId,
+        data: {
+          zohoContactId: integrationIds?.zoho?.id,
+          ...buildZohoContactPayload(updatedContact),
+        },
+      });
+
+      if (
+        updatedContact.lifecycleId &&
+        integrationIds?.zoho?.id &&
+        integrationIds?.zoho?.module === "Leads"
+      ) {
+        const lifecycle = await prisma.lifecycle.findUnique({
+          where: {
+            id: updatedContact.lifecycleId,
+          },
+
+          select: {
+            name: true,
+          },
+        });
+
+        if (lifecycle) {
+          await updateZohoLeadQueue(
+            updatedContact.orgId,
+            integrationIds.zoho.id,
+            buildZohoLeadPayload({
+              ...updatedContact,
+              leadStatus: lifecycle.name,
+            }),
+          );
+        }
+      }
     }
   }
 }
@@ -1420,6 +1546,46 @@ export async function updateLifecycleStageofContacts(lifecycleId, contactIds) {
       lifecycleId,
     },
   });
+
+  const lifecycle = await prisma.lifecycle.findUnique({
+    where: {
+      id: lifecycleId,
+    },
+    select: {
+      name: true,
+    },
+  });
+
+  if (!lifecycle) return;
+
+  const contacts = await prisma.contact.findMany({
+    where: {
+      id: {
+        in: contactIds,
+      },
+    },
+
+    select: {
+      id: true,
+      orgId: true,
+      integrationIds: true,
+    },
+  });
+
+  for (const contact of contacts) {
+    const integrationIds = contact.integrationIds as {
+      zoho?: {
+        id: string;
+        module: string;
+      };
+    };
+
+    if (integrationIds?.zoho?.id && integrationIds?.zoho?.module === "Leads") {
+      await updateZohoLeadQueue(contact.orgId, integrationIds.zoho.id, {
+        Lead_Status: lifecycle.name,
+      });
+    }
+  }
 }
 
 export async function bulkUpdateWaMessageAssignStatus(
