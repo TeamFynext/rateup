@@ -99,14 +99,14 @@ function FlowEditorContent({
     return () => {
       isMountedRef.current = false;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateUndoRedoState = useCallback(() => {
     if (isMountedRef.current) {
       setCanUndo(historyManager.canUndo());
       setCanRedo(historyManager.canRedo());
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const saveFlow = useCallback(() => {
     if (!reactFlowInstance || !waAutomationData) return;
@@ -332,7 +332,7 @@ function FlowEditorContent({
   const handleTabSwitch = useCallback(
     (tab: string) => {
       navigate({
-        to: `${flowbotId}?tab=${tab}`,
+        to: `?tab=${tab}`,
       });
     },
     [flowbotId],

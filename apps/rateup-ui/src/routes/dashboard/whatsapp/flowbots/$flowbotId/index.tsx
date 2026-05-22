@@ -19,14 +19,21 @@ import {
 import { useInstagramAutomationById } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import {
+  createSortableHeader,
+  DataTable,
+} from "@/components/Table/data-table.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 import FlowEditor from "@/components/whatsapp/automation/components/flow-editor.tsx";
 
-import { AutomatedReplyForm } from "../../../../../components/dashboard/whatsapp/flowbots/create.tsx";
 import { DataTableToolbar } from "../../../../../components/dashboard/whatsapp/flowbots/$flowbotId/data-table-toolbar.tsx";
-
+import { AutomatedReplyForm } from "../../../../../components/dashboard/whatsapp/flowbots/create.tsx";
 
 export const Route = createFileRoute(
   "/dashboard/whatsapp/flowbots/$flowbotId/",
@@ -128,7 +135,7 @@ function FlowbotId() {
       onValueChange={(value) => {
         refetch();
         navigate({
-          to: `${flowbotId}?tab=${value}`,
+          to: `?tab=${value}`,
         });
       }}
       className="h-full flex flex-col"

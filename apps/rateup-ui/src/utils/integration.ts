@@ -14,6 +14,8 @@ export function getIntegrationDisplayName(name) {
       return "Petpooja";
     case IntegratedApps.zapier:
       return "Zapier";
+    case IntegratedApps.zoho:
+      return "Zoho";
     default:
       return "Not defined";
   }

@@ -38,6 +38,10 @@ function getAppIconImageUrl(app) {
       return {
         src: "/images/zapier.png",
       };
+    case IntegratedApps.zoho:
+      return {
+        src: "/images/zoho.png",
+      };
   }
 }
 

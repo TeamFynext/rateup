@@ -298,7 +298,7 @@ function NavLink({
       asChild
       isActive={isActive}
       tooltip={item.title}
-      className={showDescription ? "h-auto py-2" : undefined}
+      className={showDescription ? "h-11 py-2" : undefined}
     >
       <Link
         to={item.url || "#"}
