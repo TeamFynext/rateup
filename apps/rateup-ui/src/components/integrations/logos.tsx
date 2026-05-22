@@ -81,3 +81,27 @@ export function RateupStar({ className }: LogoProps) {
     />
   );
 }
+
+export function BiginLogo({ className }: LogoProps) {
+  return (
+    <img
+      src="/images/bigin.png"
+      alt="Bigin"
+      className={cn("object-contain", className)}
+    />
+  );
+}
+
+export function ZohoCombinedLogo({ className }: { className?: string }) {
+  return (
+    <div className={cn("relative h-16 w-20", className)}>
+      <div className="absolute left-0 top-1 z-10 flex h-12 w-12 items-center justify-center rounded-2xl border bg-background shadow-sm">
+        <ZohoLogo className="h-7 w-7" />
+      </div>
+
+      <div className="absolute left-8 top-4 flex h-12 w-12 items-center justify-center rounded-2xl border bg-background shadow-sm">
+        <BiginLogo className="h-7 w-7" />
+      </div>
+    </div>
+  );
+}

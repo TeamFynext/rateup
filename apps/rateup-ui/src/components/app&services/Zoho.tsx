@@ -28,18 +28,12 @@ import {
 import RefreshButton from "@/components/Button/RefreshButton";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
-import { ZohoLogo } from "@/components/integrations/logos";
+import { BiginLogo, ZohoLogo } from "@/components/integrations/logos";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { DataTable } from "@/components/Table/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useUser } from "@/context/UserContext";
 
 import {
@@ -65,6 +59,9 @@ export enum ZohoTriggers {
   CONTACT_DELETE = "contact_deleted",
   LEAD_UPDATE = "lead_updated",
   LEAD_CREATE = "lead_created",
+  BIGIN_CONTACT_CREATE = "bigin_contact_created",
+  BIGIN_CONTACT_UPDATE = "bigin_contact_updated",
+  BIGIN_CONTACT_DELETE = "bigin_contact_deleted",
 }
 
 export function Zoho() {
@@ -81,15 +78,25 @@ export function Zoho() {
   return (
     <div className="flex flex-col gap-6 p-4">
       <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center shadow-sm">
-          <ZohoLogo />
+        <div className="relative flex h-12 w-16 items-center">
+          <div className="absolute left-0 z-10 flex h-12 w-12 items-center justify-center rounded-xl bg-background shadow-sm border">
+            <ZohoLogo className="h-7 w-7" />
+          </div>
+
+          <div className="absolute left-7 flex h-12 w-12 items-center justify-center rounded-xl bg-background shadow-sm border">
+            <BiginLogo className="h-7 w-7" />
+          </div>
         </div>
 
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">{t("Zoho CRM")}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("Zoho CRM/Bigin")}
+          </h1>
 
           <p className="text-sm text-muted-foreground">
-            {t("Manage your Zoho CRM integration and trigger subscriptions")}
+            {t(
+              "Manage your Zoho CRM/Bigin integration and trigger subscriptions",
+            )}
           </p>
         </div>
       </div>
@@ -101,8 +108,15 @@ export function Zoho() {
           refetch={refetch}
           isLoading={isRefetching}
         />
-        <ZohoLeadsTable integration={integration} />
-        <ZohoContactsTable integration={integration} />
+        {integration?.credential?.supportedProducts?.crm && (
+          <ZohoLeadsTable integration={integration} />
+        )}
+        {integration?.credential?.supportedProducts?.crm && (
+          <ZohoContactsTable integration={integration} />
+        )}
+        {integration?.credential?.supportedProducts?.bigin && (
+          <BiginContactsTable integration={integration} />
+        )}
       </div>
     </div>
   );
@@ -111,14 +125,37 @@ export function Zoho() {
 const ZohoAuthentication = ({ integration }) => {
   const { t } = useTranslation();
   const user = useUser();
+  const [connectionMode, setConnectionMode] = useState<
+    "crm" | "bigin" | "both" | null
+  >(null);
   const deleteMut = useDeleteIntegrationMutation(IntegratedApps.zoho);
 
   function handleConnect() {
+    if (!connectionMode) return;
     const clientId = import.meta.env.VITE_ZOHO_CLIENT_ID;
     const redirectUri = `${import.meta.env.VITE_FRONTEND_URL}/dashboard/settings/integrations/zoho/callback`;
 
-    const scope =
-      "ZohoCRM.modules.ALL ZohoCRM.settings.ALL ZohoCRM.users.ALL offline_access";
+    const scopes: string[] = [];
+
+    if (connectionMode === "crm" || connectionMode === "both") {
+      scopes.push(
+        "ZohoCRM.modules.ALL",
+        "ZohoCRM.settings.ALL",
+        "ZohoCRM.users.ALL",
+      );
+    }
+
+    if (connectionMode === "bigin" || connectionMode === "both") {
+      scopes.push(
+        "ZohoBigin.modules.ALL",
+        "ZohoBigin.settings.ALL",
+        "ZohoBigin.users.ALL",
+      );
+    }
+
+    scopes.push("offline_access");
+
+    const scope = scopes.join(" ");
 
     const authUrl =
       `https://accounts.zoho.in/oauth/v2/auth` +
@@ -138,50 +175,67 @@ const ZohoAuthentication = ({ integration }) => {
 
   return (
     <Card className="w-full rounded-2xl border shadow-sm">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle>{t("Zoho Connection")}</CardTitle>
       </CardHeader>
 
-      <CardContent>
-        <div className="flex items-end gap-4">
-          <div className="flex-1">
-            <ContainedTextField
-              label={"Organization ID"}
-              value={user.user.orgId}
-              readOnly
-              rightSection={<ApiCopyButton value={user.user.orgId} />}
-            />
-          </div>
+      <CardContent className="space-y-4">
+        <ContainedTextField
+          label={t("Organization ID")}
+          value={user.user.orgId}
+          readOnly
+          rightSection={<ApiCopyButton value={user.user.orgId} />}
+        />
 
-          {integration ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    onClick={handleDelete}
-                    className="shrink-0"
-                  >
-                    <IconTrash className="h-4 w-4" />
+        {!integration && (
+          <div className="space-y-2 rounded-xl border bg-muted/30 p-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">{t("Connection Mode")}</p>
 
-                    {t("Disconnect Zoho")}
-                  </Button>
-                </TooltipTrigger>
+              <p className="text-xs text-muted-foreground">
+                {t("Choose which Zoho products to connect")}
+              </p>
+            </div>
 
-                <TooltipContent>{t("Disconnect Zoho")}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : (
-            <Button
-              onClick={handleConnect}
-              className="gap-2 rounded-xl shrink-0"
+            <Select
+              value={connectionMode || ""}
+              onValueChange={(value: any) => setConnectionMode(value)}
             >
-              <IconPlugConnected className="h-4 w-4" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t("Select integration")} />
+              </SelectTrigger>
 
-              {t("Connect Zoho")}
-            </Button>
-          )}
-        </div>
+              <SelectContent>
+                <SelectItem value="crm">Zoho CRM Only</SelectItem>
+
+                <SelectItem value="bigin">Zoho Bigin Only</SelectItem>
+
+                <SelectItem value="both">Zoho CRM + Bigin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {integration ? (
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            className="w-full gap-2 rounded-xl"
+          >
+            <IconTrash className="h-4 w-4" />
+
+            {t("Disconnect Zoho")}
+          </Button>
+        ) : (
+          <Button
+            onClick={handleConnect}
+            className="w-full gap-2 rounded-xl"
+            disabled={!connectionMode}
+          >
+            <IconPlugConnected className="h-4 w-4" />
+
+            {t("Connect Zoho")}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
@@ -236,13 +290,25 @@ const ZohoTriggerList = ({
 
   if (!integration) return null;
   const supportedTriggers = [
-    ZohoTriggers.CONTACT_CREATE,
-    ZohoTriggers.CONTACT_UPDATE,
-    ZohoTriggers.CONTACT_DELETE,
-    ZohoTriggers.LEAD_UPDATE,
-    ZohoTriggers.LEAD_CREATE,
-  ];
+    ...(integration?.credential?.supportedProducts?.crm
+      ? [
+          ZohoTriggers.CONTACT_CREATE,
+          ZohoTriggers.CONTACT_UPDATE,
+          ZohoTriggers.CONTACT_DELETE,
 
+          ZohoTriggers.LEAD_UPDATE,
+          ZohoTriggers.LEAD_CREATE,
+        ]
+      : []),
+
+    ...(integration?.credential?.supportedProducts?.bigin
+      ? [
+          ZohoTriggers.BIGIN_CONTACT_CREATE,
+          ZohoTriggers.BIGIN_CONTACT_UPDATE,
+          ZohoTriggers.BIGIN_CONTACT_DELETE,
+        ]
+      : []),
+  ];
   return (
     <Card className="w-full rounded-2xl border shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -262,18 +328,26 @@ const ZohoTriggerList = ({
               key={triggerKey}
               className="flex items-start justify-between rounded-2xl border bg-muted/40 p-4"
             >
-              <div className="space-y-1 pr-4">
-                <p className="font-semibold text-sm">
-                  {getTriggerLabel(triggerKey)}
-                </p>
+              <div className="flex items-start gap-3 pr-4">
+                <div className="mt-0.5 rounded-lg border bg-background p-1.5">
+                  {triggerKey.startsWith("bigin") ? (
+                    <BiginLogo className="h-4 w-4" />
+                  ) : (
+                    <ZohoLogo className="h-4 w-4" />
+                  )}
+                </div>
 
-                <p className="text-xs text-muted-foreground">
-                  {getTriggerDescription(triggerKey)}
-                </p>
-
-                <p className="text-xs text-muted-foreground">
-                  {subscribed ? "Enabled" : "Disabled"}
-                </p>
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm">
+                    {getTriggerLabel(triggerKey)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {getTriggerDescription(triggerKey)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {subscribed ? "Enabled" : "Disabled"}
+                  </p>
+                </div>
               </div>
 
               <Switch
@@ -296,7 +370,7 @@ function ZohoContactsTable({ integration }: { integration: any }) {
   const { user } = useUser();
   const { t } = useTranslation();
 
-  const syncMutation = useSyncZohoContactsMutation();
+  const syncMutation = useSyncZohoContactsMutation("crm");
   const { data, isLoading, refetch, isRefetching } = useZohoContacts(
     user.orgId,
   );
@@ -312,7 +386,7 @@ function ZohoContactsTable({ integration }: { integration: any }) {
       await syncMutation.mutateAsync();
 
       await queryClient.invalidateQueries({
-        queryKey: ["zoho-contacts", user.orgId],
+        queryKey: ["zoho-contacts", user.orgId, "crm"],
       });
 
       toast.success(t("Zoho contacts synced successfully"), {
@@ -359,12 +433,14 @@ function ZohoContactsTable({ integration }: { integration: any }) {
   return (
     <Card className="w-full rounded-2xl border shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>{t("Zoho Contacts")}</CardTitle>
-
-          <p className="text-sm text-muted-foreground">
-            {t("Synced contacts from Zoho CRM")}
-          </p>
+        <div className="flex items-center gap-3">
+          <ZohoLogo className="h-8 w-8" />
+          <div>
+            <CardTitle>{t("Zoho Contacts")}</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {t("Synced contacts from Zoho CRM")}
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -495,12 +571,16 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
     <>
       <Card className="w-full rounded-2xl border shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>{t("Zoho Leads")}</CardTitle>
+          <div className="flex items-center gap-3">
+            <ZohoLogo className="h-8 w-8" />
 
-            <p className="text-sm text-muted-foreground">
-              {t("Synced leads from Zoho CRM")}
-            </p>
+            <div>
+              <CardTitle>{t("Zoho Leads")}</CardTitle>
+
+              <p className="text-sm text-muted-foreground">
+                {t("Synced leads from Zoho CRM")}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -614,6 +694,104 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
   );
 }
 
+function BiginContactsTable({ integration }: { integration: any }) {
+  const { user } = useUser();
+  const { t } = useTranslation();
+  const syncMutation = useSyncZohoContactsMutation("bigin");
+  const { data, isLoading, refetch, isRefetching } = useZohoContacts(
+    user.orgId,
+    "bigin",
+  );
+  const contacts = data?.contacts?.contacts || [];
+  const queryClient = useQueryClient();
+  async function handleSync() {
+    const toastId = toast.loading(t("Syncing Bigin contacts to Rateup..."));
+    try {
+      await syncMutation.mutateAsync();
+      await queryClient.invalidateQueries({
+        queryKey: ["zoho-contacts", user.orgId, "bigin"],
+      });
+      toast.success(t("Bigin contacts synced successfully"), {
+        id: toastId,
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error(t("Failed to sync Bigin contacts"), {
+        id: toastId,
+      });
+    }
+  }
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor(
+        (row) => `${row.First_Name || ""} ${row.Last_Name || ""}`,
+        {
+          id: "name",
+          header: "Name",
+          cell: (info) => info.getValue(),
+        },
+      ),
+      columnHelper.accessor("Email", {
+        header: "Email",
+      }),
+      columnHelper.accessor("Phone", {
+        header: "Phone",
+      }),
+      columnHelper.accessor("Modified_Time", {
+        header: "Modified",
+        cell: (info) =>
+          info.getValue() ? new Date(info.getValue()).toLocaleString() : "-",
+      }),
+    ],
+    [],
+  );
+
+  if (!integration?.credential?.supportedProducts?.bigin) {
+    return null;
+  }
+
+  return (
+    <Card className="w-full rounded-2xl border shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div className="flex items-center gap-3">
+          <BiginLogo className="h-8 w-8" />
+
+          <div>
+            <CardTitle>{t("Zoho Bigin Contacts")}</CardTitle>
+
+            <p className="text-sm text-muted-foreground">
+              {t("Synced contacts from Zoho Bigin")}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          {integration?.credential?.lastBiginSyncAt && (
+            <p className="text-sm text-muted-foreground">
+              {t("Last Sync")}:{" "}
+              {new Date(
+                integration.credential.lastBiginSyncAt,
+              ).toLocaleString()}
+            </p>
+          )}
+
+          <div className="flex items-center gap-2">
+            <RefreshButton onClick={refetch} isLoading={isRefetching} />
+
+            <Button onClick={handleSync} disabled={syncMutation.isPending}>
+              {syncMutation.isPending ? t("Syncing") : t("Sync to Rateup")}
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        <DataTable columns={columns} data={contacts} isPending={isLoading} />
+      </CardContent>
+    </Card>
+  );
+}
+
 function getTriggerLabel(triggerKey: ZohoTriggers) {
   switch (triggerKey) {
     case ZohoTriggers.CONTACT_CREATE:
@@ -626,6 +804,12 @@ function getTriggerLabel(triggerKey: ZohoTriggers) {
       return "Update Lead";
     case ZohoTriggers.LEAD_CREATE:
       return "Create Lead";
+    case ZohoTriggers.BIGIN_CONTACT_CREATE:
+      return "Create Bigin Contact";
+    case ZohoTriggers.BIGIN_CONTACT_UPDATE:
+      return "Update Bigin Contact";
+    case ZohoTriggers.BIGIN_CONTACT_DELETE:
+      return "Delete Bigin Contact";
     default:
       return "Not Supported";
   }
@@ -643,6 +827,12 @@ function getTriggerDescription(triggerKey: ZohoTriggers) {
       return "Create Zoho CRM leads from newly created Rateup contacts.";
     case ZohoTriggers.LEAD_UPDATE:
       return "Update Zoho lead status when lifecycle stages change.";
+    case ZohoTriggers.BIGIN_CONTACT_CREATE:
+      return "Automatically create contacts in Zoho Bigin.";
+    case ZohoTriggers.BIGIN_CONTACT_UPDATE:
+      return "Sync contact updates to Zoho Bigin.";
+    case ZohoTriggers.BIGIN_CONTACT_DELETE:
+      return "Delete contacts from Zoho Bigin when removed in Rateup.";
     default:
       return "Not Supported";
   }
