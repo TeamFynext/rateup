@@ -2,17 +2,19 @@ import React, { useEffect, useState } from "react";
 
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import {
-  CheckSquare,
+  CheckCircle,
+  ChevronDown,
   Clock,
   Download,
   Filter,
   RefreshCcw,
   Search,
-  UserPlus,
+  Users,
   X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { cn } from "@/lib/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import {
@@ -34,6 +36,7 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select.tsx";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal/index.tsx";
@@ -99,15 +102,18 @@ const ChatselectPanelHeader = ({
     setFilterCount(getFilterActiveCount());
   }, [filter, tab]);
 
+  const actionButtonClass =
+    "h-7 w-7 p-0 border-0 bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 rounded transition-all";
+
   return (
-    <div className="p-3 border-b space-y-3 shrink-0 relative">
+    <div className="relative shrink-0">
       {showSearchBar && (
-        <div className="absolute inset-0 bg-card z-50 flex items-center px-3 animate-in fade-in duration-200">
+        <div className="absolute inset-0 z-50 flex items-center bg-card px-3 animate-in fade-in duration-200">
           <div className="relative flex-1">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 transform text-muted-foreground" />
             <Input
               placeholder="Search contact..."
-              className="pl-8 pr-8 h-8 text-xs w-full placeholder:text-sm"
+              className="h-8 w-full pl-8 pr-8 text-xs placeholder:text-sm"
               value={filter?.searchTerm}
               onChange={(e) =>
                 setFilter({ ...filter, searchTerm: e.currentTarget.value })
@@ -117,7 +123,7 @@ const ChatselectPanelHeader = ({
             <Button
               size="sm"
               variant="ghost"
-              className="absolute right-0.5 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              className="absolute right-0.5 top-1/2 h-6 w-6 -translate-y-1/2 transform p-0"
               onClick={() => {
                 setShowSearchBar(false);
                 setFilter({ ...filter, searchTerm: "" });
@@ -128,14 +134,19 @@ const ChatselectPanelHeader = ({
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+
+      <header className="flex items-center gap-2 p-2.5">
+        <div className="flex items-center gap-1 rounded-lg bg-slate-100/50 p-1 dark:bg-slate-900">
           <Dialog>
             <CustomTooltip
               trigger={
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                    <UserPlus className="w-3.5 h-3.5" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className={actionButtonClass}
+                  >
+                    <Users className="h-3.5 w-3.5" />
                   </Button>
                 </DialogTrigger>
               }
@@ -172,14 +183,36 @@ const ChatselectPanelHeader = ({
             trigger={
               <Button
                 size="sm"
-                variant="outline"
-                className="h-8 w-8 p-0"
+                variant="ghost"
+                className={actionButtonClass}
                 onClick={() => setShowSearchBar(true)}
               >
-                <Search className="w-3.5 h-3.5" />
+                <Search className="h-3.5 w-3.5" />
               </Button>
             }
             content={<p>Search</p>}
+            side="bottom"
+          />
+
+          <CustomTooltip
+            trigger={
+              <Button
+                size="sm"
+                variant="ghost"
+                className={cn(
+                  actionButtonClass,
+                  isSelectionMode &&
+                    "bg-white text-primary dark:bg-slate-800 dark:text-primary",
+                )}
+                onClick={() => {
+                  setIsSelectionMode(!isSelectionMode);
+                  setSelectedChats([]);
+                }}
+              >
+                <CheckCircle className="h-3.5 w-3.5" />
+              </Button>
+            }
+            content={<p>Select Chats</p>}
             side="bottom"
           />
 
@@ -189,33 +222,11 @@ const ChatselectPanelHeader = ({
                 <PopoverTrigger asChild>
                   <Button
                     size="sm"
-                    variant={isSelectionMode ? "default" : "outline"}
-                    className="h-8 w-8 p-0"
-                    onClick={() => {
-                      setIsSelectionMode(!isSelectionMode);
-                      setSelectedChats([]);
-                    }}
+                    variant="ghost"
+                    className={cn(actionButtonClass, "relative")}
                   >
-                    <CheckSquare className="w-3.5 h-3.5" />
-                  </Button>
-                </PopoverTrigger>
-              }
-              content={<p>Select Chats</p>}
-              side="bottom"
-            />
-          </Popover>
-
-          <Popover>
-            <CustomTooltip
-              trigger={
-                <PopoverTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 w-8 p-0 relative"
-                  >
-                    <Filter className="w-3.5 h-3.5" />
-                    <div className="absolute -top-2 -right-1 bg-blue-500 rounded-xl w-4 h-4 text-xs text-white">
+                    <Filter className="h-3.5 w-3.5" />
+                    <div className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] text-white">
                       {filterCount}
                     </div>
                   </Button>
@@ -232,8 +243,12 @@ const ChatselectPanelHeader = ({
             <CustomTooltip
               trigger={
                 <PopoverTrigger asChild>
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                    <Download className="w-3.5 h-3.5" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className={actionButtonClass}
+                  >
+                    <Download className="h-3.5 w-3.5" />
                   </Button>
                 </PopoverTrigger>
               }
@@ -247,35 +262,60 @@ const ChatselectPanelHeader = ({
           <CustomTooltip
             trigger={
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
+                className={actionButtonClass}
                 onClick={() => refetchFilteredContacts()}
               >
                 <RefreshCcw
-                  className={`w-3 h-3 ${isRefetchingFilteredContacts ? "animate-spin" : ""}`}
+                  className={`h-3.5 w-3.5 ${isRefetchingFilteredContacts ? "animate-spin" : ""}`}
                 />
               </Button>
             }
             content={<span>{translations("Refresh")}</span>}
           />
         </div>
-        <div className="flex items-center text-xs">
-          <CustomTooltip
-            trigger={
-              <SortMenu
-                data={sortData}
-                value={filter?.sortBy}
-                onChange={(value) => setFilter({ ...filter, sortBy: value })}
-                defaultValue="newest"
-              />
-            }
-            content={<span>{translations("Sort")}</span>}
+
+        <div className="ml-auto flex items-center text-xs">
+          {/* <CustomTooltip
+            trigger={ */}
+          <SortMenu
+            data={sortData}
+            value={filter?.sortBy}
+            onChange={(value) => setFilter({ ...filter, sortBy: value })}
+            defaultValue="newest"
+            selectTriggerClassName="h-7 gap-1 border-0 bg-transparent px-1 text-xs font-medium text-slate-400 shadow-none hover:bg-transparent hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+            customSelectTrigger={<Clock className="h-3 w-3" />}
           />
+          {/* }
+            content={<span>{translations("Sort")}</span>}
+          /> */}
         </div>
-      </div>
+      </header>
     </div>
   );
 };
+export function ActionIcon({
+  icon,
+  className,
+  onClick,
+}: Readonly<{
+  icon: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}>) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 rounded transition-all cursor-pointer focus-visible:outline-none",
+        className,
+      )}
+    >
+      {icon}
+    </button>
+  );
+}
 
 const SortMenu = ({
   data,
@@ -283,17 +323,23 @@ const SortMenu = ({
   value,
   defaultValue,
   customSelectTrigger,
+  selectTriggerClassName,
 }: {
   data: { items: { label: string; value: string }[]; groupName: string }[];
   value: string;
   onChange: (value) => void;
   defaultValue: string;
   customSelectTrigger?: React.ReactNode;
+  selectTriggerClassName?: string;
 }) => {
   return (
     <Select onValueChange={onChange} value={value} defaultValue={defaultValue}>
-      <SelectTrigger>
-        {customSelectTrigger ?? <Clock className="w-3 h-3 mr-1" />}
+      <SelectTrigger className={selectTriggerClassName}>
+        <SelectValue
+          placeholder={
+            customSelectTrigger ?? <Clock className="w-3 h-3 mr-1" />
+          }
+        />
       </SelectTrigger>
       <SelectContent>
         {data.map((g, index) => (

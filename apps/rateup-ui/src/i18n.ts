@@ -2,11 +2,11 @@ import i18n from "i18next";
 import languageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 
-import ar from "../public/locales/ar.json";
-import de from "../public/locales/de.json";
-import en from "../public/locales/en.json";
-import fr from "../public/locales/fr.json";
-import hi from "../public/locales/hi.json";
+import ar from "./locales/ar.json";
+import de from "./locales/de.json";
+import en from "./locales/en.json";
+import fr from "./locales/fr.json";
+import hi from "./locales/hi.json";
 
 export const i18CookieName = "i18next";
 i18n

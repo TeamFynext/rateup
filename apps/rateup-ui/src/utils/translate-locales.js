@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const DICT_DIR = join(process.cwd(), "public/locales");
+const DICT_DIR = join(process.cwd(), "src/locales");
 
 const TARGETS = [
   { file: "de.json", lang: "de" },

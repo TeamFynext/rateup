@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { IconPlugConnected, IconTrash } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,6 +21,10 @@ import {
   useZohoContacts,
   useZohoLeads,
 } from "@/backend/appsIntegration/zoho/zoho.query";
+import {
+  useCreateLifeCycleMutation,
+  useLifecyclesWithContactCount,
+} from "@/backend/lifecycle/lifecycle.query";
 import RefreshButton from "@/components/Button/RefreshButton";
 import { ApiCopyButton } from "@/components/ExternalApi/ApiAccessKey";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
@@ -38,14 +42,29 @@ import {
 } from "@/components/ui/tooltip";
 import { useUser } from "@/context/UserContext";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+
 export enum ZohoTriggers {
   CONTACT_CREATE = "contact_created",
   CONTACT_UPDATE = "contact_updated",
   CONTACT_DELETE = "contact_deleted",
-  DEAL_CREATE = "deal_created",
-  DEAL_UPDATE = "deal_updated",
-  LEAD_CREATE = "lead_created",
   LEAD_UPDATE = "lead_updated",
+  LEAD_CREATE = "lead_created",
 }
 
 export function Zoho() {
@@ -76,15 +95,12 @@ export function Zoho() {
       </div>
 
       <div className="flex flex-col items-start gap-6">
-        <div className="flex gap-4 w-full">
-          <ZohoAuthentication integration={integration} />
-
-          <ZohoTriggerList
-            integration={integration}
-            refetch={refetch}
-            isLoading={isRefetching}
-          />
-        </div>
+        <ZohoAuthentication integration={integration} />
+        <ZohoTriggerList
+          integration={integration}
+          refetch={refetch}
+          isLoading={isRefetching}
+        />
         <ZohoLeadsTable integration={integration} />
         <ZohoContactsTable integration={integration} />
       </div>
@@ -121,26 +137,34 @@ const ZohoAuthentication = ({ integration }) => {
   }
 
   return (
-    <Card className="w-[500px] rounded-2xl border shadow-sm">
+    <Card className="w-full rounded-2xl border shadow-sm">
       <CardHeader>
         <CardTitle>{t("Zoho Connection")}</CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-6">
-        <ContainedTextField
-          label={"Organization ID"}
-          value={user.user.orgId}
-          readOnly
-          rightSection={<ApiCopyButton value={user.user.orgId} />}
-        />
+      <CardContent>
+        <div className="flex items-end gap-4">
+          <div className="flex-1">
+            <ContainedTextField
+              label={"Organization ID"}
+              value={user.user.orgId}
+              readOnly
+              rightSection={<ApiCopyButton value={user.user.orgId} />}
+            />
+          </div>
 
-        <div className="flex">
           {integration ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="destructive" onClick={handleDelete}>
-                    <IconTrash className="h-4 w-4" /> {t("Disconnect Zoho")}
+                  <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    className="shrink-0"
+                  >
+                    <IconTrash className="h-4 w-4" />
+
+                    {t("Disconnect Zoho")}
                   </Button>
                 </TooltipTrigger>
 
@@ -148,8 +172,12 @@ const ZohoAuthentication = ({ integration }) => {
               </Tooltip>
             </TooltipProvider>
           ) : (
-            <Button onClick={handleConnect} className="gap-2 rounded-xl">
+            <Button
+              onClick={handleConnect}
+              className="gap-2 rounded-xl shrink-0"
+            >
               <IconPlugConnected className="h-4 w-4" />
+
               {t("Connect Zoho")}
             </Button>
           )}
@@ -211,17 +239,19 @@ const ZohoTriggerList = ({
     ZohoTriggers.CONTACT_CREATE,
     ZohoTriggers.CONTACT_UPDATE,
     ZohoTriggers.CONTACT_DELETE,
+    ZohoTriggers.LEAD_UPDATE,
+    ZohoTriggers.LEAD_CREATE,
   ];
 
   return (
-    <Card className="w-full max-w-4xl rounded-2xl border shadow-sm">
+    <Card className="w-full rounded-2xl border shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{t("Trigger Subscriptions")}</CardTitle>
 
         <RefreshButton onClick={refetch} isLoading={isLoading} />
       </CardHeader>
 
-      <CardContent className="space-y-2">
+      <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {supportedTriggers.map((triggerKey) => {
           const subscribed = triggers.find(
             (t) => t.subscribed_field === triggerKey && t.active,
@@ -230,14 +260,18 @@ const ZohoTriggerList = ({
           return (
             <div
               key={triggerKey}
-              className="flex items-center justify-between rounded-2xl border bg-muted/40 px-4 py-2"
+              className="flex items-start justify-between rounded-2xl border bg-muted/40 p-4"
             >
-              <div className="space-y-1">
+              <div className="space-y-1 pr-4">
                 <p className="font-semibold text-sm">
                   {getTriggerLabel(triggerKey)}
                 </p>
 
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
+                  {getTriggerDescription(triggerKey)}
+                </p>
+
+                <p className="text-xs text-muted-foreground">
                   {subscribed ? "Enabled" : "Disabled"}
                 </p>
               </div>
@@ -361,16 +395,48 @@ function ZohoContactsTable({ integration }: { integration: any }) {
 function ZohoLeadsTable({ integration }: { integration: any }) {
   const { user } = useUser();
   const { t } = useTranslation();
-
+  const { data: lifecycles, isLoading: isLifecycleLoading } =
+    useLifecyclesWithContactCount();
+  const createLifecycleMutation = useCreateLifeCycleMutation();
+  const [openLifecycleModal, setOpenLifecycleModal] = useState(false);
+  const [missingStatuses, setMissingStatuses] = useState<any[]>([]);
   const syncMutation = useSyncZohoLeadsMutation();
-
   const { data, isLoading, refetch, isRefetching } = useZohoLeads(user.orgId);
-
   const leads = data?.leads?.leads || [];
-
   const queryClient = useQueryClient();
 
   async function handleSync() {
+    if (!lifecycles || !leads.length) return;
+
+    const existingLifecycleNames = lifecycles.map((l) =>
+      l.name.trim().toLowerCase(),
+    );
+
+    const uniqueLeadStatuses = Array.from(
+      new Set<string>(
+        leads
+          .map((lead) => lead.Lead_Status)
+          .filter((status): status is string => !!status),
+      ),
+    );
+
+    const missing = uniqueLeadStatuses.filter(
+      (status) => !existingLifecycleNames.includes(status.trim().toLowerCase()),
+    );
+
+    if (missing.length > 0) {
+      setMissingStatuses(
+        missing.map((status) => ({
+          name: status,
+          category: "active",
+        })),
+      );
+      setOpenLifecycleModal(true);
+      return;
+    }
+    await startSync();
+  }
+  async function startSync() {
     const toastId = toast.loading(t("Syncing Zoho leads to Rateup..."));
 
     try {
@@ -398,32 +464,24 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
         (row) => `${row.First_Name || ""} ${row.Last_Name || ""}`,
         {
           id: "name",
-
           header: "Name",
-
           cell: (info) => info.getValue(),
         },
       ),
-
       columnHelper.accessor("Email", {
         header: "Email",
       }),
-
       columnHelper.accessor("Phone", {
         header: "Phone",
       }),
-
       columnHelper.accessor("Company", {
         header: "Company",
       }),
-
       columnHelper.accessor("Lead_Status", {
         header: "Status",
       }),
-
       columnHelper.accessor("Modified_Time", {
         header: "Modified",
-
         cell: (info) =>
           info.getValue() ? new Date(info.getValue()).toLocaleString() : "-",
       }),
@@ -434,40 +492,125 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
   if (!integration) return null;
 
   return (
-    <Card className="w-full rounded-2xl border shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>{t("Zoho Leads")}</CardTitle>
+    <>
+      <Card className="w-full rounded-2xl border shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>{t("Zoho Leads")}</CardTitle>
 
-          <p className="text-sm text-muted-foreground">
-            {t("Synced leads from Zoho CRM")}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {integration?.credential?.lastZohoLeadSyncAt && (
             <p className="text-sm text-muted-foreground">
-              {t("Last Sync")}:{" "}
-              {new Date(
-                integration.credential.lastZohoLeadSyncAt,
-              ).toLocaleString()}
+              {t("Synced leads from Zoho CRM")}
             </p>
-          )}
-
-          <div className="flex items-center gap-2">
-            <RefreshButton onClick={refetch} isLoading={isRefetching} />
-
-            <Button onClick={handleSync} disabled={syncMutation.isPending}>
-              {syncMutation.isPending ? t("Syncing") : t("Sync Leads")}
-            </Button>
           </div>
-        </div>
-      </CardHeader>
 
-      <CardContent>
-        <DataTable columns={columns} data={leads} isPending={isLoading} />
-      </CardContent>
-    </Card>
+          <div className="flex items-center gap-4">
+            {integration?.credential?.lastZohoLeadSyncAt && (
+              <p className="text-sm text-muted-foreground">
+                {t("Last Sync")}:{" "}
+                {new Date(
+                  integration.credential.lastZohoLeadSyncAt,
+                ).toLocaleString()}
+              </p>
+            )}
+
+            <div className="flex items-center gap-2">
+              <RefreshButton onClick={refetch} isLoading={isRefetching} />
+              <Button onClick={handleSync} disabled={syncMutation.isPending}>
+                {syncMutation.isPending ? t("Syncing") : t("Sync Leads")}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          <DataTable columns={columns} data={leads} isPending={isLoading} />
+        </CardContent>
+      </Card>
+      <Dialog open={openLifecycleModal} onOpenChange={setOpenLifecycleModal}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t("Create missing lifecycles")}</DialogTitle>
+            <DialogDescription>
+              {t(
+                "Some Zoho lead statuses do not exist in your CRM lifecycles.",
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {missingStatuses.map((status, index) => (
+              <div
+                key={status.name}
+                className="flex items-center gap-4 rounded-xl border p-4"
+              >
+                <div className="flex-1">
+                  <Input
+                    value={status.name}
+                    onChange={(e) => {
+                      const updated = [...missingStatuses];
+                      updated[index].name = e.target.value;
+                      setMissingStatuses(updated);
+                    }}
+                  />
+                </div>
+
+                <Select
+                  value={status.category}
+                  onValueChange={(value) => {
+                    const updated = [...missingStatuses];
+                    updated[index].category = value;
+                    setMissingStatuses(updated);
+                  }}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="lost">Lost</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setOpenLifecycleModal(false)}
+            >
+              {t("Cancel")}
+            </Button>
+
+            <Button
+              onClick={async () => {
+                try {
+                  await Promise.all(
+                    missingStatuses.map((status, index) =>
+                      createLifecycleMutation.mutateAsync({
+                        name: status.name,
+                        category: status.category,
+                        ordering: index + 1,
+                        emoji: status.category === "lost" ? "❌" : "🆕",
+                        description: "",
+                        isWon: false,
+                        color: "#00a2ffff",
+                      }),
+                    ),
+                  );
+                  setOpenLifecycleModal(false);
+                  await startSync();
+                } catch (err) {
+                  console.error(err);
+                }
+              }}
+            >
+              {t("Create & Sync")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -475,13 +618,31 @@ function getTriggerLabel(triggerKey: ZohoTriggers) {
   switch (triggerKey) {
     case ZohoTriggers.CONTACT_CREATE:
       return "Create Contact";
-
     case ZohoTriggers.CONTACT_UPDATE:
       return "Update Contact";
-
     case ZohoTriggers.CONTACT_DELETE:
       return "Delete Contact";
+    case ZohoTriggers.LEAD_UPDATE:
+      return "Update Lead";
+    case ZohoTriggers.LEAD_CREATE:
+      return "Create Lead";
+    default:
+      return "Not Supported";
+  }
+}
 
+function getTriggerDescription(triggerKey: ZohoTriggers) {
+  switch (triggerKey) {
+    case ZohoTriggers.CONTACT_CREATE:
+      return "Automatically create contacts in Zoho CRM when new contacts are added.";
+    case ZohoTriggers.CONTACT_UPDATE:
+      return "Sync contact changes like name, email, and phone to Zoho CRM.";
+    case ZohoTriggers.CONTACT_DELETE:
+      return "Delete Zoho CRM contacts when contacts are removed in Rateup.";
+    case ZohoTriggers.LEAD_CREATE:
+      return "Create Zoho CRM leads from newly created Rateup contacts.";
+    case ZohoTriggers.LEAD_UPDATE:
+      return "Update Zoho lead status when lifecycle stages change.";
     default:
       return "Not Supported";
   }

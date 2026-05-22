@@ -183,8 +183,8 @@ export function CreativeAvatar({
   const colors =
     variant || ringClassName
       ? {
-          bg: "bg-linear-to-br from-chat-light-blue-2 to-chat-light-blue-1",
-          ring: ringClassName ?? "ring-gray-200",
+          bg: "bg-primary/10",
+          ring: ringClassName ?? "ring-1 ring-slate-100 dark:ring-slate-800",
         }
       : platform
         ? getAvatarColorFromPlatform(platform)
@@ -199,7 +199,7 @@ export function CreativeAvatar({
       >
         <AvatarImage src={src || undefined} alt={name} />
         <AvatarFallback
-          className={`${colors.bg} text-white ${sizes.text} font-semibold tracking-tight`}
+          className={`${colors.bg} text-primary ${sizes.text} font-semibold tracking-tight`}
         >
           <span className="drop-shadow-sm">{initials}</span>
         </AvatarFallback>
