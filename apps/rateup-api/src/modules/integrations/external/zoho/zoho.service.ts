@@ -4,16 +4,20 @@ import { log } from "../../../../utils/logger.js";
 import axios from "axios";
 import {
   createZohoContact,
+  createZohoLead,
   deleteZohoContact,
   getZohoContacts,
   getZohoLeads,
   updateZohoContact,
+  updateZohoLead,
 } from "./zoho.client.js";
 
 export enum ZohoTriggers {
   CONTACT_CREATE = "contact_created",
   CONTACT_UPDATE = "contact_updated",
   CONTACT_DELETE = "contact_deleted",
+  LEAD_UPDATE = "lead_updated",
+  LEAD_CREATE = "lead_created",
 }
 
 export interface ZohoPayload {
@@ -150,6 +154,66 @@ async function processZoho(
       );
 
       log.info("Zoho contact deleted successfully");
+      return;
+    }
+
+    case ZohoTriggers.LEAD_CREATE: {
+      log.info("Zoho lead create payload => %o", data);
+      const response = await createZohoLead(
+        accessToken,
+        data,
+        credential.api_domain,
+      );
+
+      log.info("Zoho lead created successfully => %o", response);
+
+      if (response?.data && Array.isArray(response.data) && response.data[0]) {
+        const zohoLeadData = response.data[0];
+        const zohoLeadId = zohoLeadData.details?.id;
+        if (zohoLeadId && rateupContactId) {
+          await prisma.contact.update({
+            where: {
+              id: rateupContactId,
+            },
+            data: {
+              integrationIds: {
+                zoho: {
+                  id: zohoLeadId,
+
+                  module: "Leads",
+                },
+              },
+            },
+          });
+
+          log.info(
+            "Updated contact %s with Zoho Lead ID %s",
+            rateupContactId,
+            zohoLeadId,
+          );
+        }
+      }
+
+      return;
+    }
+    case ZohoTriggers.LEAD_UPDATE: {
+      const { zohoLeadId, ...payload } = data;
+
+      if (!zohoLeadId) {
+        log.warn("No Zoho lead id found for update");
+
+        return;
+      }
+
+      await updateZohoLead(
+        accessToken,
+        zohoLeadId,
+        payload,
+        credential.api_domain,
+      );
+
+      log.info("Zoho lead updated successfully");
+
       return;
     }
 
@@ -477,41 +541,54 @@ export async function syncZohoLeads(orgId: string) {
   return leads;
 }
 export async function syncZohoLeadsToRateup(leads: any[], orgId: string) {
+  const lifecycles = await prisma.lifecycle.findMany({
+    where: {
+      orgId,
+    },
+  });
+
+  const lifecycleMap = new Map(
+    lifecycles.map((lifecycle) => [
+      lifecycle.name.trim().toLowerCase(),
+      lifecycle.id,
+    ]),
+  );
+
   for (const zohoLead of leads) {
     try {
       const zohoId = zohoLead.id;
-
       const firstName = zohoLead.First_Name || "";
-
       const lastName = zohoLead.Last_Name || "";
-
       const name = `${firstName} ${lastName}`.trim();
+      const leadStatus = String(zohoLead.Lead_Status || "")
+        .trim()
+        .toLowerCase();
+
+      const orConditions: any[] = [
+        {
+          integrationIds: {
+            path: ["zoho", "id"],
+            equals: zohoId,
+          },
+        },
+      ];
+
+      if (zohoLead.Phone) {
+        orConditions.push({
+          phone: zohoLead.Phone,
+        });
+      }
+
+      if (zohoLead.Email) {
+        orConditions.push({
+          email: zohoLead.Email,
+        });
+      }
 
       const existingContact = await prisma.contact.findFirst({
         where: {
           orgId,
-
-          OR: [
-            {
-              integrationIds: {
-                path: ["zoho", "id"],
-
-                equals: zohoId,
-              },
-            },
-
-            zohoLead.Phone
-              ? {
-                  phone: zohoLead.Phone,
-                }
-              : {},
-
-            zohoLead.Email
-              ? {
-                  email: zohoLead.Email,
-                }
-              : {},
-          ],
+          OR: orConditions,
         },
       });
 
@@ -537,6 +614,9 @@ export async function syncZohoLeadsToRateup(leads: any[], orgId: string) {
         integrationIds,
 
         notes: zohoLead.Description || "",
+
+        lifecycleId:
+          lifecycleMap.get(leadStatus) || existingContact?.lifecycleId || null,
       };
 
       if (existingContact) {
@@ -562,4 +642,37 @@ export async function syncZohoLeadsToRateup(leads: any[], orgId: string) {
   }
 
   log.info("Zoho leads sync completed");
+}
+
+export function buildZohoLeadPayload(contact: any) {
+  const [firstName, ...rest] = (contact.name || "Unknown").split(" ");
+  return {
+    First_Name: firstName,
+    Last_Name: rest.join(" ") || firstName,
+    Email: contact.email || "",
+    Phone: contact.phone || "",
+    Lead_Status: contact.leadStatus || "New",
+    Description: `
+      Source: ${contact.source}
+      PSID: ${contact.psid || ""}
+      IGSID: ${contact.igsId || ""}
+      Rateup Contact ID: ${contact.id}
+    `,
+  };
+}
+
+export async function updateZohoLeadQueue(
+  orgId: string,
+  zohoLeadId: string,
+  fields: Record<string, any>,
+) {
+  await integrationTriggerQueue.add("zoho-lead-update", {
+    integrationName: "zoho",
+    triggerKey: ZohoTriggers.LEAD_UPDATE,
+    orgId,
+    data: {
+      zohoLeadId,
+      ...fields,
+    },
+  });
 }
