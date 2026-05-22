@@ -7,19 +7,22 @@ import {
   syncZohoLeads,
 } from "./zoho.api";
 
-export function useZohoContacts(orgId?: string) {
+export function useZohoContacts(
+  orgId?: string,
+  product: "crm" | "bigin" = "crm",
+) {
   return useQuery({
-    queryKey: ["zoho-contacts", orgId],
+    queryKey: ["zoho-contacts", orgId, product],
 
-    queryFn: () => getZohoContacts(orgId!),
+    queryFn: () => getZohoContacts(orgId!, product),
 
     enabled: !!orgId,
   });
 }
 
-export function useSyncZohoContactsMutation() {
+export function useSyncZohoContactsMutation(product: "crm" | "bigin" = "crm") {
   return useMutation({
-    mutationFn: syncZohoContacts,
+    mutationFn: () => syncZohoContacts(product),
   });
 }
 
