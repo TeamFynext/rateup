@@ -26,6 +26,12 @@ import type { WaInboxMessage } from "@/types/global";
 import { useBulkAssignStatusMutation } from "@/backend/campaign/contacts/contacts.query";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import useContactStore, {
+  makeFilterKey,
+  useChatContactCountStore,
+  useContactsStore,
+  useMessagesStore,
+} from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -43,12 +49,6 @@ import {
 } from "@/components/ui/tooltip.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
-import useContactStore, {
-  makeFilterKey,
-  useChatContactCountStore,
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
 
 import WhatsAppInboxLoader from "../loader/index.tsx";
 import AddUnknownContactModal from "./addUnknownContactModal/index.tsx";
@@ -536,20 +536,17 @@ const WaInboxChatSelect = () => {
                   >
                     {isBottomLoader ? (
                       <div className="flex items-center justify-center py-2">
-                        <Loader className="h-5 w-5 animate-spin text-[#009987]" />
+                        <Loader className="h-5 w-5 animate-spin text-primary" />
                       </div>
                     ) : (
-                      <>
-                        <WaInboxChatSelectCard
-                          contact={contact}
-                          waSettings={waSettings}
-                          lifeCycleLabels={lifeCycleLabels}
-                          isSelectionMode={isSelectionMode}
-                          selectedChats={selectedChats}
-                          setSelectedChats={setSelectedChats}
-                        />
-                        <Divider />
-                      </>
+                      <WaInboxChatSelectCard
+                        contact={contact}
+                        waSettings={waSettings}
+                        lifeCycleLabels={lifeCycleLabels}
+                        isSelectionMode={isSelectionMode}
+                        selectedChats={selectedChats}
+                        setSelectedChats={setSelectedChats}
+                      />
                     )}
                   </div>
                 );

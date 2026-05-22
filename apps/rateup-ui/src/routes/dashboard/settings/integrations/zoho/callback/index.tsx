@@ -16,7 +16,7 @@ export const Route = createFileRoute(
   component: ZohoCallback,
 });
 
-export default function ZohoCallback() {
+function ZohoCallback() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 

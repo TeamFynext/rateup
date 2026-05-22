@@ -56,7 +56,7 @@ Kill the process running on port 3000 (Windows PowerShell)
 - `src/context/` - React context providers
 - `src/hooks/`, `src/store/`, `src/types/`, `src/utils/` - Hooks, state, types, utilities
 - `public/` - Static assets
-- `public/locales/` - Localization message dictionaries
+- `src/locales/` - Localization message dictionaries
 
 ## Development Notes
 
@@ -68,7 +68,7 @@ Kill the process running on port 3000 (Windows PowerShell)
 
 ## Internationalization
 
-- Uses `react-i18next` with locale files in `public/locales/`.
+- Uses `react-i18next` with locale files in `src/locales/`.
 
 ## Error Monitoring
 

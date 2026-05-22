@@ -409,11 +409,7 @@ export const UserSelector = ({
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className={`${className}`}>
-        <div
-          className={
-            "rounded-md flex items-center justify-center shrink-0 size-7 bg-muted"
-          }
-        >
+        <div>
           <User className="size-4 text-muted-foreground" />
         </div>
         <span className="text-sm ">

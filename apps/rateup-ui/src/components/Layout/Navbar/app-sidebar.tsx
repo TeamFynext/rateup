@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Link, useRouterState, useSearch } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronRight, ExternalLink, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 
-import { cn } from "@/lib/utils.ts";
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 import { UserSelector } from "@/components/Contacts/CreateContactModal.tsx";
@@ -15,7 +14,11 @@ import NotificationBellIcon from "@/components/Layout/Notification/index.tsx";
 import { checkExpiry } from "@/components/Premium/ExpiryComponent.tsx";
 import { ModeToggle } from "@/components/theme/ModeToggle.tsx";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar.tsx";
 import {
   Collapsible,
   CollapsibleContent,
@@ -34,6 +37,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
+  SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
   SidebarSeparator,
@@ -236,61 +240,37 @@ function getMostSpecificChildRoute(children: any[], currentRoute: string) {
   return bestMatch.routeKey;
 }
 
-/** Shared class builder for every nav item wrapper. */
-function navItemClass(isActive: boolean) {
-  return cn(
-    "flex items-center gap-2 rounded-lg transition-all w-full px-2 h-10",
-    "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:mx-auto",
-    isActive
-      ? "bg-primary/10 border border-primary/20 shadow-sm"
-      : "hover:bg-muted/50 border border-transparent",
-  );
-}
-
 /** Shared visual: icon box + label + optional chevron. Used by every nav item variant. */
 function NavItemContent({
   item,
   isActive,
   showRotatingChevron,
+  showDescription,
 }: Readonly<{
   item: any;
   isActive: boolean;
   showRotatingChevron?: boolean;
+  showDescription?: boolean;
 }>) {
-  const iconClass = cn(
-    "size-4",
-    isActive ? "text-white" : "text-muted-foreground",
-  );
-  const iconBoxClass = cn(
-    "rounded-md flex items-center justify-center shrink-0 size-7",
-    isActive ? "bg-primary" : "bg-muted",
-  );
-  const labelClass = cn(
-    "text-sm font-medium truncate",
-    isActive ? "text-primary" : "text-foreground",
-  );
-
   const chevron = showRotatingChevron ? (
-    <ChevronRight className="ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
   ) : null;
   const activeChevron =
     !showRotatingChevron && isActive ? (
-      <ChevronRight className="size-4 text-primary shrink-0" />
+      <ChevronRight className="ml-auto" />
     ) : null;
 
   return (
     <>
-      <div className={iconBoxClass}>
-        {item.icon && <item.icon className={iconClass} />}
-      </div>
-      <div className="flex flex-1 min-w-0 items-center group-data-[collapsible=icon]:hidden">
-        <div className="flex-1 min-w-0">
-          <p className={labelClass}>{item.title}</p>
-          {item.description && (
-            <p className="text-[11px] text-muted-foreground truncate leading-tight">
+      {item.icon && <item.icon />}
+      <div className="flex min-w-0 flex-1 items-center gap-2 group-data-[collapsible=icon]:hidden">
+        <div className="min-w-0 flex-1">
+          <span className="block truncate">{item.title}</span>
+          {showDescription && item.description ? (
+            <span className="block truncate text-xs text-muted-foreground">
               {item.description}
-            </p>
-          )}
+            </span>
+          ) : null}
         </div>
         {chevron}
         {activeChevron}
@@ -305,25 +285,37 @@ function NavLink({
   isActive,
   onRouteGuard,
   onClick,
+  showDescription,
 }: Readonly<{
   item: any;
   isActive: boolean;
   onRouteGuard: RouteGuard;
   onClick?: () => void;
+  showDescription?: boolean;
 }>) {
   return (
-    <Link
-      to={item.url || "#"}
-      title={item.title}
-      aria-label={item.title}
-      onClick={(e) => {
-        if (!onRouteGuard(item.url)) e.preventDefault();
-        onClick?.();
-      }}
-      className={navItemClass(isActive)}
+    <SidebarMenuButton
+      asChild
+      isActive={isActive}
+      tooltip={item.title}
+      className={showDescription ? "h-auto py-2" : undefined}
     >
-      <NavItemContent item={item} isActive={isActive} />
-    </Link>
+      <Link
+        to={item.url || "#"}
+        title={item.title}
+        aria-label={item.title}
+        onClick={(e) => {
+          if (!onRouteGuard(item.url)) e.preventDefault();
+          onClick?.();
+        }}
+      >
+        <NavItemContent
+          item={item}
+          isActive={isActive}
+          showDescription={showDescription}
+        />
+      </Link>
+    </SidebarMenuButton>
   );
 }
 
@@ -356,12 +348,34 @@ function NavItem({
         : isPathPrefixActive(fullPathname, item.url));
     return (
       <SidebarMenuSubItem>
-        <NavLink
-          item={item}
-          isActive={isActive}
-          onRouteGuard={onRouteGuard}
-          onClick={item?.handleClick}
-        />
+        <SidebarMenuSubButton asChild isActive={isActive}>
+          {item.url === "#" || !item.url ? (
+            <button
+              aria-label={item.title}
+              className="w-full"
+              onClick={(e) => {
+                if (!onRouteGuard(item.url)) e.preventDefault();
+                item?.handleClick?.();
+              }}
+            >
+              {item.icon && <item.icon />}
+              <span>{item.title}</span>
+            </button>
+          ) : (
+            <Link
+              to={item.url}
+              title={item.title}
+              aria-label={item.title}
+              onClick={(e) => {
+                if (!onRouteGuard(item.url)) e.preventDefault();
+                item?.handleClick?.();
+              }}
+            >
+              {item.icon && <item.icon />}
+              <span>{item.title}</span>
+            </Link>
+          )}
+        </SidebarMenuSubButton>
       </SidebarMenuSubItem>
     );
   }
@@ -369,7 +383,12 @@ function NavItem({
   if (variant === "settings") {
     const isActive = isPathPrefixActive(fullPathname, item.url);
     return (
-      <NavLink item={item} isActive={isActive} onRouteGuard={onRouteGuard} />
+      <NavLink
+        item={item}
+        isActive={isActive}
+        onRouteGuard={onRouteGuard}
+        showDescription
+      />
     );
   }
 
@@ -394,10 +413,7 @@ function NavItem({
       <Collapsible asChild defaultOpen={false} className="group/collapsible">
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton
-              tooltip={item.title}
-              className={navItemClass(false)}
-            >
+            <SidebarMenuButton tooltip={item.title}>
               <NavItemContent
                 item={item}
                 isActive={false}
@@ -490,7 +506,7 @@ function NavSection({
       {item.showTitle && <SidebarGroupLabel>{item.group}</SidebarGroupLabel>}
       <SidebarSeparator className="m-0 hidden group-data-[collapsible=icon]:block" />
       <SidebarGroupContent className="flex p-2">
-        <SidebarMenu>
+        <SidebarMenu className="group-data-[collapsible=icon]:items-center">
           {item.items.map((groupItem: any) => (
             <NavItem
               key={groupItem.title ?? groupItem.url}
@@ -556,8 +572,7 @@ export default function AppSidebar({
   staff: any[];
   teams: any[];
 }>) {
-  const hiddenModules =
-    import.meta.env.VITE_HIDDEN_MODULES?.split(",") || [];
+  const hiddenModules = import.meta.env.VITE_HIDDEN_MODULES?.split(",") || [];
 
   const pathname = useRouterState({
     select: (s) => s.location.pathname,
@@ -653,7 +668,7 @@ export default function AppSidebar({
         <UserSelector
           allowAll
           value={chatFilterStore.filter.assignedUserIds[0] ?? "all"}
-          className="h-9 w-full"
+          className="w-full group-data-[collapsible=icon]:[&>svg]:hidden group-data-[collapsible=icon]:[&>span]:hidden"
           onChange={(value, isAll) =>
             handleFilter("assignedStaff", isAll ? "all" : value)
           }
@@ -664,7 +679,7 @@ export default function AppSidebar({
           enableAll
           value={chatFilterStore.filter.assignedTeams[0] ?? "all"}
           onChange={(value) => handleFilter("assignedTeams", value)}
-          className="h-9 w-full"
+          className="h-9 w-full group-data-[collapsible=icon]:[&>svg]:hidden group-data-[collapsible=icon]:[&>span]:hidden"
         />
       ),
     }),
@@ -778,11 +793,11 @@ export default function AppSidebar({
           className="w-60 border-r relative hidden md:flex"
           collapsible="icon"
         >
-          <SidebarHeader className="gap-3.5 border-b p-3 bg-background">
-            <div className="flex w-full items-center justify-between">
-              <h2 className="flex text-foreground text-lg gap-1 font-medium group-data-[collapsible=icon]:hidden">
+          <SidebarHeader className="gap-3.5 border-b bg-background p-3 group-data-[collapsible=icon]:px-2">
+            <div className="flex w-full items-center justify-between group-data-[collapsible=icon]:justify-center">
+              <h2 className="flex text-foreground text-lg gap-1 font-bold group-data-[collapsible=icon]:hidden">
                 {activeItem.icon && (
-                  <div className="rounded-md flex items-center justify-center shrink-0 size-7 bg-muted">
+                  <div className="rounded-md flex items-center justify-center shrink-0 size-7 text-primary">
                     <activeItem.icon className="ml-1 size-5 m-auto" />
                   </div>
                 )}
@@ -824,8 +839,8 @@ export default function AppSidebar({
                           key={item.title ?? item.url}
                           className="p-0"
                         >
-                          <SidebarGroupContent className="flex flex-col px-2">
-                            <SidebarMenu className="gap-1">
+                          <SidebarGroupContent className="flex flex-col px-2 group-data-[collapsible=icon]:px-0">
+                            <SidebarMenu className="gap-1 group-data-[collapsible=icon]:items-center">
                               <NavItem
                                 item={item}
                                 fullPathname={fullPathname}

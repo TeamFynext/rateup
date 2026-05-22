@@ -20,12 +20,12 @@ import { useTranslation } from "react-i18next";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
+import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
+import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
 import {
   formatDateWithRelativeTime,
@@ -93,7 +93,7 @@ export default function WaInboxChatSelectCard({
         setSelectedContact(contact);
         setIsChatDisplayOpen(true);
       }}
-      className={`p-3 cursor-pointer transition-all hover:bg-accent/50 ${selectedContact?.id === contact?.id && "bg-accent border-l-2 border-b-1 border-blue-600"} ${contact?.unReadMessageCount > 0 && "bg-blue-50/30"}`}
+      className={`p-3 cursor-pointer transition-all hover:bg-primary/10 ${selectedContact?.id === contact?.id && "bg-primary/5 border-l-4 border-primary"} ${contact?.unReadMessageCount > 0 && "bg-blue-50/30"}`}
     >
       <div className="flex items-start space-x-2">
         {isSelectionMode && (
@@ -131,7 +131,6 @@ export default function WaInboxChatSelectCard({
             src={contact?.profilePic}
             showRing={true}
             variant="light-blue"
-            ringClassName="ring-white"
           />
           <div
             className={`absolute -bottom-0.5 -right-0.5 rounded-full p-0.5 ${
@@ -150,7 +149,9 @@ export default function WaInboxChatSelectCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-0.5">
             <div className="flex items-center gap-1 flex-1 min-w-0">
-              <p className={`truncate text-sm`}>
+              <p
+                className={`truncate text-[13px] font-bold ${selectedContact?.id === contact?.id && "text-primary"}`}
+              >
                 {contact?.name ||
                   contact?.whatsappUserName ||
                   contact?.phone ||

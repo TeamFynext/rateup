@@ -34,6 +34,12 @@ import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBlockWhatsAppUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
+import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
+import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
+import {
+  useContactsStore,
+  useMessagesStore,
+} from "@/components/dashboard/inbox/store.ts";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
@@ -57,12 +63,6 @@ import {
 } from "@/components/ui/popover.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
-import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
-import {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
 import { useChatbotStore } from "@/store/chatbot.store";
 import { TicketType } from "@/utils/enums/ticket.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
@@ -157,7 +157,7 @@ export default function WaInboxChatDisplayHeader({
   const sourcePlatform = getSoucePlatformIconAndColor(platform);
   if (!contact) return null;
   return (
-    <div className="p-2.5 border-b shrink-0 bg-background">
+    <div className="p-2 border-b shrink-0 bg-background">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 shrink">
           {isMobile && (
