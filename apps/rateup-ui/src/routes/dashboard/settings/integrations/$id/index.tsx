@@ -51,6 +51,25 @@ const ZohoPage = lazy(() =>
     default: m.Zoho,
   })),
 );
+const ApiServicePage = lazy(() =>
+  import("@/components/ExternalApi/ApiAccessKey.tsx").then((m) => ({
+    default: m.default,
+  })),
+);
+const WidgetPage = lazy(() =>
+  import("@/components/dashboard/settings/integrations/WidgetIntegration.tsx").then(
+    (m) => ({
+      default: m.default,
+    }),
+  ),
+);
+const WebhookPage = lazy(() =>
+  import("@/components/dashboard/settings/integrations/WebhookIntegration.tsx").then(
+    (m) => ({
+      default: m.default,
+    }),
+  ),
+);
 
 const INTEGRATION_PAGES: Record<string, React.ComponentType<any>> = {
   shopify: ShopifyPage,
@@ -60,6 +79,9 @@ const INTEGRATION_PAGES: Record<string, React.ComponentType<any>> = {
   petpooja: PetpoojaPage,
   zapier: ZapierPage,
   zoho: ZohoPage,
+  apiservice: ApiServicePage,
+  widget: WidgetPage,
+  webhook: WebhookPage,
 };
 
 const INTEGRATION_NAMES: Record<string, string> = {
@@ -70,7 +92,12 @@ const INTEGRATION_NAMES: Record<string, string> = {
   petpooja: "Petpooja",
   zapier: "Zapier",
   zoho: "Zoho",
+  apiservice: "API Service",
+  widget: "Widget",
+  webhook: "Webhook",
 };
+
+const INTERNAL_SERVICE_IDS = new Set(["apiservice", "widget", "webhook"]);
 
 function IntegrationDetailPage() {
   const params = useParams({
@@ -82,6 +109,7 @@ function IntegrationDetailPage() {
   const id = params.id as string;
   const Component = INTEGRATION_PAGES[id];
   const integrationName = INTEGRATION_NAMES[id];
+  const isInternalService = INTERNAL_SERVICE_IDS.has(id);
   const backToIntegrations = () =>
     navigate({ to: "/dashboard/settings/integrations/" });
 
@@ -112,7 +140,9 @@ function IntegrationDetailPage() {
       <div>
         <h2 className="text-2xl mb-1">{integrationName}</h2>
         <p className="text-sm text-muted-foreground">
-          {t("Configure your")} {integrationName} {t("integration")}
+          {isInternalService
+            ? `${t("Configure your")} ${integrationName} ${t("settings")}`
+            : `${t("Configure your")} ${integrationName} ${t("integration")}`}
         </p>
       </div>
       <Suspense
