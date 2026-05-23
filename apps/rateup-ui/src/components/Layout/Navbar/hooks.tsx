@@ -2,21 +2,16 @@ import { useMemo } from "react";
 
 import {
   IconActivity,
-  IconApi,
-  IconApps,
   IconAward,
   IconBrandWhatsapp,
   IconBrowser,
-  IconBuildings,
   IconBuildingStore,
   IconCirclePlus,
   IconDashboard,
-  IconFileAnalytics,
   IconFileDescription,
   IconGift,
   IconLabel,
   IconLinkPlus,
-  IconLogs,
   IconMessageChatbot,
   IconQrcode,
   IconRobotFace,
@@ -24,7 +19,6 @@ import {
   IconSitemap,
   IconTemplate,
   IconTerminal2,
-  IconTicket,
   IconUser,
   IconUsers,
   IconWaveSine,
@@ -343,11 +337,6 @@ export function useNavMain({
                   icon: IconBuildingStore,
                 },
                 {
-                  title: t("Logs"),
-                  url: "/dashboard/whatsapp/logs",
-                  icon: IconLogs,
-                },
-                {
                   title: "Orders and Payments",
                   url: "/dashboard/whatsapp/orders-and-payments",
                   icon: IconBrandWhatsapp, // Or a more specific icon like IconCreditCard if available, or just keep it simple. Using IconBrandWhatsapp as placeholder or reuse IconSettings
@@ -460,17 +449,17 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.Ticket) &&
-      hasTeamFeature(TeamFeature.Tickets)
-        ? [
-            {
-              title: t("Tickets"),
-              url: "/dashboard/tickets",
-              icon: IconTicket,
-              items: [],
-            },
-          ]
-        : []),
+      // ...(hasFeature(subscription, sfpn.Ticket) &&
+      // hasTeamFeature(TeamFeature.Tickets)
+      //   ? [
+      //       {
+      //         title: t("Tickets"),
+      //         url: "/dashboard/tickets",
+      //         icon: IconTicket,
+      //         items: [],
+      //       },
+      //     ]
+      //   : []),
       ...(hasTeamFeature(TeamFeature.QrStudio)
         ? [
             {
@@ -508,84 +497,17 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasTeamFeature(TeamFeature.AppsServices)
-        ? [
-            {
-              title: t("Apps & Services"),
-              url: "/dashboard/apps&services",
-              icon: IconApps,
-              items: [
-                {
-                  title: "Home",
-                  url: "/dashboard/apps&services",
-                  icon: IconApps,
-                },
-                {
-                  title: "Apps",
-                  icon: IconApps,
-                  items: [
-                    {
-                      title: "Shopify",
-                      url: "/dashboard/apps&services/shopify",
-                      icon: IconBuildingStore,
-                    },
-                    {
-                      title: "Google Sheet",
-                      url: "/dashboard/apps&services/googlesheet",
-                      icon: IconFileAnalytics,
-                    },
-                    {
-                      title: "Amelia",
-                      url: "/dashboard/apps&services/amelia",
-                      icon: IconUser,
-                    },
-                    {
-                      title: "Whatsapp Payment",
-                      url: "/dashboard/apps&services/waPayment",
-                      icon: IconBrandWhatsapp,
-                    },
-                    {
-                      title: "Petpooja",
-                      url: "/dashboard/apps&services/petpooja",
-                      icon: IconBuildings,
-                    },
-                    {
-                      title: "Zapier",
-                      url: "/dashboard/apps&services/zapier",
-                      icon: IconApi,
-                    },
-                  ],
-                },
-                {
-                  title: "Encryption",
-                  url: "/dashboard/apps&services/encryption",
-                  icon: IconTerminal2,
-                },
-                {
-                  title: "API Service",
-                  url: "/dashboard/apps&services/apiservice",
-                  icon: IconApi,
-                },
-                {
-                  title: "Widget",
-                  url: "/dashboard/apps&services/widget",
-                  icon: IconBrowser,
-                },
-              ],
-            },
-          ]
-        : []),
-      ...(hasFeature(subscription, sfpn.Menu) &&
-      hasTeamFeature(TeamFeature.DigitalMenu)
-        ? [
-            {
-              title: t("Digital Menu"),
-              url: "/dashboard/menu",
-              icon: IconFileDescription,
-              items: [],
-            },
-          ]
-        : []),
+      // ...(hasFeature(subscription, sfpn.Menu) &&
+      // hasTeamFeature(TeamFeature.DigitalMenu)
+      //   ? [
+      //       {
+      //         title: t("Digital Menu"),
+      //         url: "/dashboard/menu",
+      //         icon: IconFileDescription,
+      //         items: [],
+      //       },
+      //     ]
+      //   : []),
       {
         title: t("Settings"),
         url: "/dashboard/settings",

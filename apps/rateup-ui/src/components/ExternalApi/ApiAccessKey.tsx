@@ -29,8 +29,8 @@ import {
   CardTitle,
 } from "@/components/ui/card.tsx";
 import { Input } from "@/components/ui/input.tsx";
-
 import { useUser } from "@/context/UserContext.tsx";
+
 import ConfirmationModal from "../Modal/ConfirmationModal.tsx";
 
 export default function ApiAccessKeyPage() {
@@ -41,11 +41,7 @@ export default function ApiAccessKeyPage() {
   const { t: translations } = useTranslation();
 
   const apiEndpoint =
-    import.meta.env.VITE_API_URL +
-    "/api/external/" +
-    "v1/" +
-    user?.orgId +
-    "/";
+    import.meta.env.VITE_API_URL + "/api/external/" + "v1/" + user?.orgId + "/";
 
   function handleGenerateApiKey() {
     generateMutation.mutate(undefined, {
@@ -59,14 +55,6 @@ export default function ApiAccessKeyPage() {
 
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <div>
-        <h3 className="text-2xl font-semibold tracking-tight text-foreground">
-          API Configuration
-        </h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage your API access keys and view connection details.
-        </p>
-      </div>
       <div className="grid gap-6">
         {/* API Access Key Card */}
         <Card>

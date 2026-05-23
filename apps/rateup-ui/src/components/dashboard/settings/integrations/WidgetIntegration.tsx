@@ -1,13 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-
 import SupportWidget from "@/components/app&services/support-widget.tsx";
 import TerminalBlock from "@/components/TerminalBlock.tsx";
 
-export const Route = createFileRoute("/dashboard/apps&services/widget/")({
-  component: Home,
-});
-
-function Home() {
+export default function WidgetIntegration() {
   const codeExample = `
 import SupportWidget from "@rateup/support-widget";
 
@@ -23,7 +17,6 @@ import SupportWidget from "@rateup/support-widget";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Hero Section */}
       <section className="relative bg-linear-to-br from-primary/10 to-background py-12 mb-0 flex items-center justify-center">
         <div className="absolute inset-0 pointer-events-none">
           <div className="w-72 h-72 bg-primary/20 rounded-full blur-2xl opacity-20 absolute left-1/2 top-0 -translate-x-1/2"></div>
@@ -50,7 +43,6 @@ import SupportWidget from "@rateup/support-widget";
         </div>
       </section>
 
-      {/* Steps Section */}
       <section className="container mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto">
           <ol className="space-y-8">
@@ -70,7 +62,7 @@ import SupportWidget from "@rateup/support-widget";
                   Get your <span className="text-primary">orgId</span>
                 </div>
                 <div className="text-muted-foreground">
-                  Copy it from the Apps & Services dashboard.
+                  Copy it from Settings → Integrations.
                 </div>
               </div>
             </li>
@@ -79,7 +71,7 @@ import SupportWidget from "@rateup/support-widget";
               <div>
                 <div className="font-semibold mb-2">Create an API token</div>
                 <div className="text-muted-foreground">
-                  Generate it in the API section of Apps & Services.
+                  Generate it in Settings → Integrations → API Service.
                 </div>
               </div>
             </li>
@@ -98,7 +90,6 @@ import SupportWidget from "@rateup/support-widget";
         </div>
       </section>
 
-      {/* Props Table */}
       <section className="container mx-auto px-4 pb-12">
         <div className="max-w-2xl mx-auto bg-muted p-6 rounded-lg">
           <h3 className="text-lg font-semibold mb-4">Widget Props</h3>
@@ -146,7 +137,6 @@ import SupportWidget from "@rateup/support-widget";
         </div>
       </section>
 
-      {/* Live Demo Section */}
       <section className="container mx-auto px-4 pb-20">
         <div className="max-w-2xl mx-auto text-center">
           <h3 className="text-lg font-semibold mb-4">Live Widget Demo</h3>

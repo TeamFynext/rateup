@@ -26,7 +26,6 @@ import { useUpdateOrgDetailsMutation } from "@/backend/org/org.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
 import { ContainedPasswordInput } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import SimpleModalLayout from "@/components/Modal/SimpleModalLayout.tsx";
-
 import { useUser } from "@/context/UserContext.tsx";
 import {
   decryptPrivateKey,
@@ -34,8 +33,10 @@ import {
   generateKeyPair,
   passwordToKey,
 } from "@/utils/encryption/index.ts";
+
 import styles from "../setting.module.css";
 
+// page of end to end encryption settings in advanced settings section of the dashboard
 export default function ETESettings() {
   const searchParams = useSearch({ strict: false });
   const { t: translations } = useTranslation();
@@ -229,4 +230,3 @@ export default function ETESettings() {
     </>
   );
 }
-
