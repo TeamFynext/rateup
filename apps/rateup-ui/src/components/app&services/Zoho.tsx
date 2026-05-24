@@ -607,7 +607,7 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
         </CardContent>
       </Card>
       <Dialog open={openLifecycleModal} onOpenChange={setOpenLifecycleModal}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>{t("Create missing lifecycles")}</DialogTitle>
             <DialogDescription>
@@ -617,44 +617,48 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            {missingStatuses.map((status, index) => (
-              <div
-                key={status.name}
-                className="flex items-center gap-4 rounded-xl border p-4"
-              >
-                <div className="flex-1">
-                  <Input
-                    value={status.name}
-                    onChange={(e) => {
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto pr-2">
+            <div className="space-y-4">
+              {missingStatuses.map((status, index) => (
+                <div
+                  key={status.name}
+                  className="flex items-center gap-4 rounded-xl border p-4"
+                >
+                  <div className="flex-1">
+                    <Input
+                      value={status.name}
+                      onChange={(e) => {
+                        const updated = [...missingStatuses];
+                        updated[index].name = e.target.value;
+                        setMissingStatuses(updated);
+                      }}
+                    />
+                  </div>
+
+                  <Select
+                    value={status.category}
+                    onValueChange={(value) => {
                       const updated = [...missingStatuses];
-                      updated[index].name = e.target.value;
+                      updated[index].category = value;
                       setMissingStatuses(updated);
                     }}
-                  />
-                </div>
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue />
+                    </SelectTrigger>
 
-                <Select
-                  value={status.category}
-                  onValueChange={(value) => {
-                    const updated = [...missingStatuses];
-                    updated[index].category = value;
-                    setMissingStatuses(updated);
-                  }}
-                >
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="lost">Lost</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="lost">Lost</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="pt-4 border-t">
             <Button
               variant="outline"
               onClick={() => setOpenLifecycleModal(false)}
@@ -678,6 +682,7 @@ function ZohoLeadsTable({ integration }: { integration: any }) {
                       }),
                     ),
                   );
+
                   setOpenLifecycleModal(false);
                   await startSync();
                 } catch (err) {
