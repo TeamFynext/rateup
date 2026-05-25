@@ -11,7 +11,7 @@ export default async function healthRoutes(server: FastifyInstance) {
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const data = await axios.post(
-          "http://62.215.187.166/rate_up/api/send-confiramtion-result",
+          "https://www.invita.com.kw/api/send-confiramtion-result-test",
           { user: "919876543210", action: "ping", buttonPayload: "rateup" },
           {
             headers: {
