@@ -100,10 +100,13 @@ export type automationProps = {
   sendOnceIn24Hours: boolean;
 };
 // Helper to check whole word match
-function includesWholePhrase(text, phrase, caseSensitive) {
+function includesWholePhrase(text, phrase, caseSensitive = false) {
   const flags = caseSensitive ? "g" : "gi";
+
   const escaped = phrase.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-  const regex = new RegExp(escaped, flags);
+
+  const regex = new RegExp(`\\b${escaped}\\b`, flags);
+
   return regex.test(text);
 }
 
@@ -471,6 +474,8 @@ export type RuleWithConditions = {
       enabled: boolean;
       businessHoursId: string;
     };
+    shopifyEvent?: ShopifyEvents;
+    shopifyProductIds?: string[];
   } | null;
   groups: Array<{
     id: string;
@@ -526,7 +531,7 @@ async function validateRuleCondition(
 
       switch (operator) {
         case "CONTAINS":
-          return includesWholePhrase(value, message, caseSensitive);
+          return includesWholePhrase(message, value, caseSensitive);
         case "EQUALS":
           return messageToCheck === valueToCheck;
         case "STARTS_WITH":
@@ -728,6 +733,8 @@ export async function checkAndExecuteRuleByTriggerEvent(
   | undefined
 > {
   const { orgId, phoneNumberId, message, phone } = context;
+  const messageText = message ?? "";
+  const phoneText = phone ?? "";
 
   // Fetch all active rules for the given trigger event
   const rules = await prisma.rule.findMany({
@@ -764,17 +771,19 @@ export async function checkAndExecuteRuleByTriggerEvent(
     return undefined;
   }
 
+  const typedRules = rules as RuleWithConditions[];
+
   // Helper to determine if a rule has any business hour configuration
-  const hasBusinessHours = (rule: any): boolean => {
+  const hasBusinessHours = (rule: RuleWithConditions): boolean => {
     if (rule.options?.businessHours?.enabled) return true;
-    return rule.groups?.some((group: any) =>
-      group.conditions?.some((cond: any) => cond.messageBodyLock?.businessHour),
+    return rule.groups?.some((group) =>
+      group.conditions?.some((cond) => cond.messageBodyLock?.businessHour),
     );
   };
 
   // Partition rules
-  const [businessHourRules, nonBusinessHourRules] = rules.reduce<
-    [any[], any[]]
+  const [businessHourRules, nonBusinessHourRules] = typedRules.reduce<
+    [RuleWithConditions[], RuleWithConditions[]]
   >(
     (acc, rule) => {
       hasBusinessHours(rule) ? acc[0].push(rule) : acc[1].push(rule);
@@ -783,20 +792,18 @@ export async function checkAndExecuteRuleByTriggerEvent(
     [[], []],
   );
 
-  // Try to match rules in order: business hour rules, then non-business hour rules
-  const isWildcardMessageBodyRule = (rule: any): boolean =>
-    rule.groups?.some((group: any) =>
+  const isWildcardMessageBodyRule = (rule: RuleWithConditions): boolean =>
+    rule.groups?.some((group) =>
       group.conditions?.some(
-        (cond: any) => cond.field === "MESSAGE_BODY" && cond.value === "*",
+        (cond) => cond.field === "MESSAGE_BODY" && cond.value === "*",
       ),
     );
 
   const tryMatchRules = async (
-    rulesToCheck: any[],
+    rulesToCheck: RuleWithConditions[],
     isBusinessHour: boolean,
+    isWildcardBatch: boolean,
   ) => {
-    let wildcardMatch: RuleWithConditions | undefined;
-
     for (const rule of rulesToCheck) {
       if (
         triggerEvent === TriggerEvent.SHOPIFY_EVENT &&
@@ -824,59 +831,69 @@ export async function checkAndExecuteRuleByTriggerEvent(
       }
 
       const isMatch = await validateRuleConditions(
-        rule as RuleWithConditions,
-        message,
+        rule,
+        messageText,
         orgId,
-        phone,
+        phoneText,
       );
-      if (isMatch) {
-        // Prefer specific match over wildcard
-        if (isWildcardMessageBodyRule(rule)) {
-          wildcardMatch = rule as RuleWithConditions;
-          continue;
-        }
+      if (!isMatch) continue;
 
-        log.trace(
-          `${isBusinessHour ? "Business hour" : "Non-business hour"} rule matched! Executing actions for rule: %s`,
-          rule.name,
-        );
-
-        const executedActions = await executeRuleActions(
-          rule as RuleWithConditions,
-          context,
-        );
-        return {
-          rule: rule as RuleWithConditions,
-          executedActions,
-        };
-      }
-    }
-
-    if (wildcardMatch) {
       log.trace(
-        `${isBusinessHour ? "Business hour" : "Non-business hour"} wildcard rule matched! Executing actions for rule: %s`,
-        wildcardMatch.name,
+        `${isBusinessHour ? "Business hour" : "Non-business hour"} ${isWildcardBatch ? "wildcard " : ""}rule matched! Executing actions for rule: %s`,
+        rule.name,
       );
 
-      const executedActions = await executeRuleActions(wildcardMatch, context);
+      const executedActions = await executeRuleActions(rule, context);
       return {
-        rule: wildcardMatch,
+        rule,
         executedActions,
       };
     }
 
     return undefined;
   };
-  // 1. Try business hour rules (prefer specific match)
-  const businessHourResult = await tryMatchRules(businessHourRules, true);
-  if (businessHourResult) return businessHourResult;
 
-  // 2. Try non-business hour rules
-  const nonBusinessHourResult = await tryMatchRules(
-    nonBusinessHourRules,
-    false,
-  );
-  if (nonBusinessHourResult) return nonBusinessHourResult;
+  const evaluationBatches: Array<{
+    rules: RuleWithConditions[];
+    isBusinessHour: boolean;
+    isWildcardBatch: boolean;
+  }> = [
+    {
+      rules: businessHourRules.filter(
+        (rule) => !isWildcardMessageBodyRule(rule),
+      ),
+      isBusinessHour: true,
+      isWildcardBatch: false,
+    },
+    {
+      rules: nonBusinessHourRules.filter(
+        (rule) => !isWildcardMessageBodyRule(rule),
+      ),
+      isBusinessHour: false,
+      isWildcardBatch: false,
+    },
+    {
+      rules: businessHourRules.filter(isWildcardMessageBodyRule),
+      isBusinessHour: true,
+      isWildcardBatch: true,
+    },
+    {
+      rules: nonBusinessHourRules.filter(isWildcardMessageBodyRule),
+      isBusinessHour: false,
+      isWildcardBatch: true,
+    },
+  ];
+
+  for (const batch of evaluationBatches) {
+    if (!batch.rules.length) continue;
+
+    const result = await tryMatchRules(
+      batch.rules,
+      batch.isBusinessHour,
+      batch.isWildcardBatch,
+    );
+    if (result) return result;
+  }
 
   log.trace(`No matching rules found for trigger event: ${triggerEvent}`);
   return undefined;
