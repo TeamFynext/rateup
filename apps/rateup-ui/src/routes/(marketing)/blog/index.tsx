@@ -2,6 +2,7 @@ import { Avatar, Image } from "@mantine/core";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { getAuthors, getPosts, getTags } from "@/lib/posts.ts";
+import NewsletterSubscription from "@/components/(marketing)/blog/newsletter-subscription.tsx";
 import Layout from "@/components/blog/Layout.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
 
@@ -275,6 +276,8 @@ function BlogIndex() {
             ))}
           </div>
         </section>
+
+        <NewsletterSubscription />
       </div>
     </Layout>
   );
