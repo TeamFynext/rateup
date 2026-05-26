@@ -23,6 +23,7 @@ import { partnerApplicationSchema } from "@/components/RateupHomePage/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CountryDropdown } from "@/components/ui/country-dropdown";
 import {
   Dialog,
   DialogContent,
@@ -72,7 +73,7 @@ const INITIAL: FormData = {
   phone: "",
   companyName: "",
   website: "",
-  country: "",
+  country: "India",
   businessType: "",
   companySize: "",
   yearsInBusiness: "",
@@ -270,29 +271,13 @@ function Step1({
           />
         </FormField>
         <FormField label="Country / Region" error={errors.country}>
-          <Select value={data.country} onValueChange={(v) => set("country", v)}>
-            <SelectTrigger className={errors.country ? "border-red-500" : ""}>
-              <SelectValue placeholder="Select country" />
-            </SelectTrigger>
-            <SelectContent>
-              {[
-                "India",
-                "United States",
-                "United Kingdom",
-                "UAE",
-                "Singapore",
-                "Philippines",
-                "Nigeria",
-                "Pakistan",
-                "Bangladesh",
-                "Other",
-              ].map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <CountryDropdown
+            placeholder="Select Country"
+            defaultValue={data.country}
+            onChange={(country) => {
+              set("country", country.name);
+            }}
+          />
         </FormField>
       </FieldGroup>
     </div>
