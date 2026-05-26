@@ -2446,6 +2446,27 @@ model BookDemo {
   updatedAt      DateTime @updatedAt
 }
 
+model PartnerData {
+  id               String   @id @default(cuid())
+  fullName         String
+  workEmail        String
+  phone            String
+  companyName      String
+  website          String
+  country          String
+  businessType     String
+  companySize      String
+  yearsInBusiness  String
+  whyPartner       String
+  services         String[]
+  referralVolume   String
+  managesClients   String
+  apiExperience    String
+  canOnboard       String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
 model AuditLog {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId    String   @db.Uuid

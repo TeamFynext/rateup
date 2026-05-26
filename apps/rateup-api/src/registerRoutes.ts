@@ -56,6 +56,7 @@ import { instagramWebhookRoutes } from "./modules/whatsapp/instagram/instagram.w
 import { facebookWebhookRoutes } from "./modules/whatsapp/facebook/facebook.webhook.route.js";
 import { lifecycleRoutes } from "./modules/lifecycle/lifecycle.route.js";
 import { bookDemoRoutes } from "./modules/BookDemo/bookDemo.route.js";
+import { partnerDataRoutes } from "./modules/PartnerData/partnerData.route.js";
 import { supportUserWebhookRoutes } from "./modules/whatsapp/support-user/suport-user.webhook.route.js";
 import { externalIntegrationRoutes } from "./modules/integrations/external/external.route.js";
 import healthRoutes from "./routes/health.js";
@@ -133,6 +134,7 @@ const routeConfigs = [
   { plugin: supportUserWebhookRoutes, prefix: "/api/support" },
   { plugin: lifecycleRoutes, prefix: "/api/lifecycles" },
   { plugin: bookDemoRoutes, prefix: "/api/bookdemo" },
+  { plugin: partnerDataRoutes, prefix: "/api/partnerdata" },
   { plugin: externalIntegrationRoutes, prefix: "/api/integration/external" },
   { plugin: apiAnalyticsRoutes, prefix: "/api/apianalytics" },
   { plugin: webhookRoutes, prefix: "/api/webhook" },
