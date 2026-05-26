@@ -57,6 +57,7 @@ const company = [
   { title: "About Us", href: "/company/about" },
   { title: "Contact", href: "/company/contact" },
   { title: "Careers", href: "/company/careers" },
+  { title: "Partners", href: "/partner-page" },
   { title: "Support Center", href: "/company/support" },
 ];
 
