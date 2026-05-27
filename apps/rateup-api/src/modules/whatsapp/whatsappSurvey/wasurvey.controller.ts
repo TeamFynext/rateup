@@ -685,7 +685,9 @@ async function whatsappMessageHandler(
     // ── Check if this is a catalog address flow response ──────────────────────
     const addressData = parsedMessage.flowResponse;
     const flowToken = addressData?.flow_token as string | undefined;
-    if (flowToken) {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (flowToken && uuidRegex.test(flowToken)) {
       try {
         const { handleAddressFlowResponse } =
           await import("../catalog/catalogSettings.service.js");
