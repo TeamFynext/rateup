@@ -7,7 +7,10 @@ import { useTranslation } from "react-i18next";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums.ts";
+import {
+  WaMessageAssignStatus,
+  WaMessageAssignStatusTab,
+} from "@/types/enums.ts";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useChatFilterData } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
@@ -169,6 +172,8 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
               flex={1}
               usePhoneNumber
               withAllOption
+              optional
+              showClearButton={false}
               styles={{
                 input: {
                   background: "var(--mantine-primary-color-filled)",
@@ -372,11 +377,9 @@ const intialValues: ChatFilter = {
   tags: [],
   waMessageAssignStatus: null,
   blockedUsers: false,
-  status: Object.values(WaMessageAssignStatus).filter(
-    (st) => st !== WaMessageAssignStatus.NEW,
-  ),
+  status: [],
   assignedTeams: [],
-  phone: "all",
+  phone: "",
   labels: [],
   lifecycle: "",
   sortBy: "newest",

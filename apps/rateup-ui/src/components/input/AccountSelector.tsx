@@ -33,6 +33,7 @@ interface CommonAccountSelectorProps {
   optional?: boolean;
   className?: string;
   filterIds?: string[];
+  showClearButton?: boolean;
 }
 
 type AccountSelectorProps =
@@ -52,6 +53,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     optional = false,
     className,
     filterIds,
+    showClearButton = true,
     ...restProps
   } = props;
   const { data, isPending, isError } = useWaSettings();
@@ -149,7 +151,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
             {label ?? translations("Account")}
           </Label>
         )}
-        {optional && value && (
+        {optional && value && showClearButton && (
           <Button
             variant="ghost"
             size="sm"
