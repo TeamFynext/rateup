@@ -807,6 +807,12 @@ export async function handleAddressFlowResponse({
   contactPhone: string;
   whatsappSettingsPhoneId?: string;
 }) {
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(orderId)) {
+    log.warn("Invalid orderId format (not a UUID): %s", orderId);
+    return false;
+  }
   const order = await prisma.waCatalogOrder.findFirst({
     where: { id: orderId, orderStage: CatalogOrderStage.PENDING_ADDRESS },
   });
