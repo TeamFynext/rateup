@@ -72,9 +72,7 @@ const CountryDropdownComponent = (
     if (defaultValue) {
       const initialCountry = options.find(
         (country) =>
-          country.alpha3 === defaultValue ||
-          country.alpha2 === defaultValue ||
-          country.name === defaultValue,
+          country.alpha3 === defaultValue || country.alpha2 === defaultValue,
       );
       if (initialCountry) {
         setSelectedCountry(initialCountry);

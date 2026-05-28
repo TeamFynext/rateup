@@ -20,13 +20,12 @@ import {
 } from "lucide-react";
 
 import { pageMetadata } from "@/lib/metadata.ts";
+import { PartnerApplyModal } from "@/components/(marketing)/partner/partnerData";
 import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter";
 import Layout from "@/components/RateupHomePage/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-
-import { PartnerApplyModal } from "../../../../components/HomePage/partnerData";
 
 ("use client");
 
@@ -42,10 +41,7 @@ interface PartnershipPageProps {
   onBackToHome?: () => void;
 }
 
-export default function PartnershipPage({
-  onGetStarted,
-  onBackToHome,
-}: PartnershipPageProps) {
+function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   const toggleFaq = (index: number) => {
