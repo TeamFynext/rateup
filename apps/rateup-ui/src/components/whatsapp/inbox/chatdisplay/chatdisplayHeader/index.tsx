@@ -318,6 +318,13 @@ const ChatHeaderMenu = ({ contact }) => {
     () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     [subscription],
   );
+  const isChatClosed = [
+    WaMessageAssignStatus.CLOSED,
+    WaMessageAssignStatus.RESOLVED,
+    WaMessageAssignStatus.SPAM,
+    WaMessageAssignStatus.UNRESOLVED,
+  ].includes(contact?.waMessageAssignStatus);
+
   function handleBlock() {
     blockmut.mutate(
       { phoneNumbersList: [contact.phone] },
@@ -396,6 +403,7 @@ const ChatHeaderMenu = ({ contact }) => {
       },
     );
   }
+  if (isChatClosed) return null;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

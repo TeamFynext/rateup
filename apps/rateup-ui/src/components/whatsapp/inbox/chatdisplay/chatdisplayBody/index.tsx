@@ -78,9 +78,9 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
   }, [tempMessages]);
 
   useEffect(() => {
-    if (!selectedContact || !filter?.phone) return;
+    if (!selectedContact) return;
     setEnabled(false);
-    setSelected(selectedContact.id, filter?.phone);
+    setSelected(selectedContact.id, filter?.phone || "all");
   }, [selectedContact, filter?.phone]);
 
   const {
