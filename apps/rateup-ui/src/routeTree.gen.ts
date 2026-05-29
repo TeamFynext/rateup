@@ -37,6 +37,7 @@ import { Route as marketingBlogTagSitemapDotxmlRouteImport } from "./routes/(mar
 import { Route as marketingBookdemoIndexRouteImport } from "./routes/(marketing)/bookdemo/index";
 import { Route as marketingContactUsIndexRouteImport } from "./routes/(marketing)/contact-us/index";
 import { Route as marketingIndexRouteImport } from "./routes/(marketing)/index";
+import { Route as marketingPartnerPageIndexRouteImport } from "./routes/(marketing)/partner-page/index";
 import { Route as marketingPricingIndexRouteImport } from "./routes/(marketing)/pricing/index";
 import { Route as marketingPricingShopifyIndexRouteImport } from "./routes/(marketing)/pricing/shopify/index";
 import { Route as marketingPrivacyPolicyIndexRouteImport } from "./routes/(marketing)/privacy-policy/index";
@@ -385,6 +386,12 @@ const marketingPricingIndexRoute = marketingPricingIndexRouteImport.update({
   path: "/pricing/",
   getParentRoute: () => rootRouteImport,
 } as any);
+const marketingPartnerPageIndexRoute =
+  marketingPartnerPageIndexRouteImport.update({
+    id: "/(marketing)/partner-page/",
+    path: "/partner-page/",
+    getParentRoute: () => rootRouteImport,
+  } as any);
 const marketingContactUsIndexRoute = marketingContactUsIndexRouteImport.update({
   id: "/(marketing)/contact-us/",
   path: "/contact-us/",
@@ -1034,6 +1041,7 @@ export interface FileRoutesByFullPath {
   "/blog/": typeof marketingBlogIndexRoute;
   "/bookdemo/": typeof marketingBookdemoIndexRoute;
   "/contact-us/": typeof marketingContactUsIndexRoute;
+  "/partner-page/": typeof marketingPartnerPageIndexRoute;
   "/pricing/": typeof marketingPricingIndexRoute;
   "/privacy-policy/": typeof marketingPrivacyPolicyIndexRoute;
   "/terms-of-service/": typeof marketingTermsOfServiceIndexRoute;
@@ -1183,6 +1191,7 @@ export interface FileRoutesByTo {
   "/blog": typeof marketingBlogIndexRoute;
   "/bookdemo": typeof marketingBookdemoIndexRoute;
   "/contact-us": typeof marketingContactUsIndexRoute;
+  "/partner-page": typeof marketingPartnerPageIndexRoute;
   "/pricing": typeof marketingPricingIndexRoute;
   "/privacy-policy": typeof marketingPrivacyPolicyIndexRoute;
   "/terms-of-service": typeof marketingTermsOfServiceIndexRoute;
@@ -1336,6 +1345,7 @@ export interface FileRoutesById {
   "/(marketing)/blog/": typeof marketingBlogIndexRoute;
   "/(marketing)/bookdemo/": typeof marketingBookdemoIndexRoute;
   "/(marketing)/contact-us/": typeof marketingContactUsIndexRoute;
+  "/(marketing)/partner-page/": typeof marketingPartnerPageIndexRoute;
   "/(marketing)/pricing/": typeof marketingPricingIndexRoute;
   "/(marketing)/privacy-policy/": typeof marketingPrivacyPolicyIndexRoute;
   "/(marketing)/terms-of-service/": typeof marketingTermsOfServiceIndexRoute;
@@ -1490,6 +1500,7 @@ export interface FileRouteTypes {
     | "/blog/"
     | "/bookdemo/"
     | "/contact-us/"
+    | "/partner-page/"
     | "/pricing/"
     | "/privacy-policy/"
     | "/terms-of-service/"
@@ -1639,6 +1650,7 @@ export interface FileRouteTypes {
     | "/blog"
     | "/bookdemo"
     | "/contact-us"
+    | "/partner-page"
     | "/pricing"
     | "/privacy-policy"
     | "/terms-of-service"
@@ -1791,6 +1803,7 @@ export interface FileRouteTypes {
     | "/(marketing)/blog/"
     | "/(marketing)/bookdemo/"
     | "/(marketing)/contact-us/"
+    | "/(marketing)/partner-page/"
     | "/(marketing)/pricing/"
     | "/(marketing)/privacy-policy/"
     | "/(marketing)/terms-of-service/"
@@ -1939,6 +1952,7 @@ export interface RootRouteChildren {
   marketingAboutUsIndexRoute: typeof marketingAboutUsIndexRoute;
   marketingBookdemoIndexRoute: typeof marketingBookdemoIndexRoute;
   marketingContactUsIndexRoute: typeof marketingContactUsIndexRoute;
+  marketingPartnerPageIndexRoute: typeof marketingPartnerPageIndexRoute;
   marketingPricingIndexRoute: typeof marketingPricingIndexRoute;
   marketingPrivacyPolicyIndexRoute: typeof marketingPrivacyPolicyIndexRoute;
   marketingTermsOfServiceIndexRoute: typeof marketingTermsOfServiceIndexRoute;
@@ -2286,6 +2300,13 @@ declare module "@tanstack/react-router" {
       path: "/pricing";
       fullPath: "/pricing/";
       preLoaderRoute: typeof marketingPricingIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/(marketing)/partner-page/": {
+      id: "/(marketing)/partner-page/";
+      path: "/partner-page";
+      fullPath: "/partner-page/";
+      preLoaderRoute: typeof marketingPartnerPageIndexRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/(marketing)/contact-us/": {
@@ -3290,6 +3311,7 @@ const rootRouteChildren: RootRouteChildren = {
   marketingAboutUsIndexRoute: marketingAboutUsIndexRoute,
   marketingBookdemoIndexRoute: marketingBookdemoIndexRoute,
   marketingContactUsIndexRoute: marketingContactUsIndexRoute,
+  marketingPartnerPageIndexRoute: marketingPartnerPageIndexRoute,
   marketingPricingIndexRoute: marketingPricingIndexRoute,
   marketingPrivacyPolicyIndexRoute: marketingPrivacyPolicyIndexRoute,
   marketingTermsOfServiceIndexRoute: marketingTermsOfServiceIndexRoute,

@@ -139,45 +139,48 @@ const CountryDropdownComponent = (
         side="bottom"
         className="min-w-[--radix-popper-anchor-width] p-0"
       >
-        <Command className="w-full max-h-[200px] sm:max-h-[270px]">
-          <CommandList>
-            <div className="sticky top-0 z-10 bg-popover">
-              <CommandInput placeholder="Search country..." />
-            </div>
-            <CommandEmpty>No country found.</CommandEmpty>
-            <CommandGroup>
-              {options
-                .filter((x) => x.name)
-                .map((option, key: number) => (
-                  <CommandItem
-                    className="flex items-center w-full gap-2"
-                    key={key}
-                    onSelect={() => handleSelect(option)}
-                  >
-                    <div className="flex grow w-0 space-x-2 overflow-hidden">
-                      <div className="inline-flex items-center justify-center w-5 h-5 shrink-0 overflow-hidden rounded-full">
-                        <CircleFlag
-                          countryCode={option.alpha2.toLowerCase()}
-                          height={20}
-                        />
+        <div className="flex flex-col w-full max-h-[250px] sm:max-h-[330px]">
+          <Command className="w-full flex flex-col">
+            <CommandInput
+              placeholder="Search country..."
+              className="border-0 border-b rounded-none flex-shrink-0"
+            />
+            <CommandList className="flex-1 overflow-y-auto">
+              <CommandEmpty>No country found.</CommandEmpty>
+              <CommandGroup>
+                {options
+                  .filter((x) => x.name)
+                  .map((option, key: number) => (
+                    <CommandItem
+                      className="flex items-center w-full gap-2"
+                      key={key}
+                      onSelect={() => handleSelect(option)}
+                    >
+                      <div className="flex grow w-0 space-x-2 overflow-hidden">
+                        <div className="inline-flex items-center justify-center w-5 h-5 shrink-0 overflow-hidden rounded-full">
+                          <CircleFlag
+                            countryCode={option.alpha2.toLowerCase()}
+                            height={20}
+                          />
+                        </div>
+                        <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+                          {option.name}
+                        </span>
                       </div>
-                      <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-                        {option.name}
-                      </span>
-                    </div>
-                    <CheckIcon
-                      className={cn(
-                        "ml-auto h-4 w-4 shrink-0",
-                        option.name === selectedCountry?.name
-                          ? "opacity-100"
-                          : "opacity-0",
-                      )}
-                    />
-                  </CommandItem>
-                ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+                      <CheckIcon
+                        className={cn(
+                          "ml-auto h-4 w-4 shrink-0",
+                          option.name === selectedCountry?.name
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </div>
       </PopoverContent>
     </Popover>
   );

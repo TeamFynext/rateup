@@ -27,9 +27,14 @@ import DropDownMobileNavItems from "./helpers/DropDownMobileNavItems.tsx";
 interface LayoutProps {
   children: React.ReactNode;
   isBlog?: boolean;
+  navbarClassName?: string;
 }
 
-export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
+export default function Layout({
+  children,
+  isBlog,
+  navbarClassName,
+}: Readonly<LayoutProps>) {
   const hasSession = useCheckSession();
   const rateupLogoUrl = `${imagesPath}/rateupLogo.svg`;
   const navItems = [
@@ -55,7 +60,12 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   const navigate = useNavigate();
 
   return (
-    <div className={`${!isBlog && "bg-rateup-darkblue"} relative w-full py-2`}>
+    <div
+      className={`relative w-full py-2 ${
+        navbarClassName || (!isBlog ? "bg-rateup-darkblue" : "")
+      }`}
+    >
+      {" "}
       <Navbar>
         {/* Desktop Navigation */}
         <NavBody className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 ">
