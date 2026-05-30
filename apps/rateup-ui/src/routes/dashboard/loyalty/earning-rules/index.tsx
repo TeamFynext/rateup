@@ -35,6 +35,7 @@ import {
   useUpdateLoyaltyEarningRuleMutation,
 } from "@/backend/loyalty/earningRules.query";
 import type { LoyaltyTierInput } from "@/backend/loyalty/tiers.api";
+import { getLoyaltyTierById } from "@/backend/loyalty/tiers.api";
 import {
   useCreateLoyaltyTierMutation,
   useDeleteLoyaltyTierMutation,
@@ -66,8 +67,8 @@ import {
 } from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import { randomHexColor } from "@/utils/index.ts";
 import { docsPath } from "@/utils/constants.ts";
+import { randomHexColor } from "@/utils/index.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/earning-rules/")({
   component: EarningRulesPage,
@@ -265,17 +266,51 @@ function EarningRulesPage() {
   };
 
   const handleTierDelete = async (tierId: string, tierName: string) => {
-    const confirmed = await confirm({
-      title: t("Delete {name} tier", { name: tierName }),
-      description: t(
-        "All earning rules in this tier will be permanently removed. This cannot be undone.",
-      ),
-    });
+    let hasCustomersInTier = false;
+
+    try {
+      const tierDetails = await getLoyaltyTierById(tierId);
+      hasCustomersInTier = (tierDetails.customers?.length ?? 0) > 0;
+    } catch {
+      hasCustomersInTier = false;
+    }
+
+    const confirmed = await confirm(
+      hasCustomersInTier
+        ? {
+            title: t("Delete {name} tier", { name: tierName }),
+            description: t(
+              "This tier has customers. If you continue, those customers will be downgraded to the previous tier and this tier will be deleted.",
+            ),
+            confirmLabel: t("Downgrade & Delete"),
+          }
+        : {
+            title: t("Delete {name} tier", { name: tierName }),
+            description: t(
+              "All earning rules in this tier will be permanently removed. This cannot be undone.",
+            ),
+          },
+    );
+
     if (!confirmed) return;
-    deleteTierMutation.mutate(tierId, {
-      onSuccess: () =>
-        toast.success(t("{name} tier deleted", { name: tierName })),
-    });
+
+    deleteTierMutation.mutate(
+      {
+        id: tierId,
+        downgradeCustomers: hasCustomersInTier,
+      },
+      {
+        onSuccess: () =>
+          toast.success(
+            hasCustomersInTier
+              ? t(
+                  "{name} tier deleted and customers were downgraded to the previous tier",
+                  { name: tierName },
+                )
+              : t("{name} tier deleted", { name: tierName }),
+          ),
+      },
+    );
   };
 
   const handleAddTier = () => {
