@@ -314,12 +314,26 @@ function EarningRulesPage() {
   };
 
   const handleAddTier = () => {
+    const createRandomTierName = () => {
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const randomLetter = letters[Math.floor(Math.random() * letters.length)];
+      const nextTierNumber =
+        loyaltyTiers.reduce((maxNumber, tier) => {
+          const match = tier.name.match(/-(\d+)$/);
+          const tierNumber = match ? Number.parseInt(match[1], 10) : 0;
+          return Math.max(maxNumber, tierNumber);
+        }, 0) + 1;
+
+      return `Tier ${randomLetter}-${nextTierNumber}`;
+    };
+
     const maxPoints = Math.max(
       ...loyaltyTiers.map((tier) => tier.threshold),
       0,
     );
+
     const newTierData: LoyaltyTierInput = {
-      name: "Tier " + loyaltyTiers.length,
+      name: createRandomTierName(),
       color: randomHexColor(),
       pointsMultiplier: 10,
       threshold: maxPoints + 1000,
