@@ -141,6 +141,7 @@ export async function zohoAuthenticationHandler(
 
         credential.crmWebhook = {
           channelId: crmWebhook.channelId,
+          expiry: crmWebhook.expiry,
           product: "crm",
         };
       }
@@ -155,13 +156,16 @@ export async function zohoAuthenticationHandler(
             "Contacts.create",
             "Contacts.edit",
             "Contacts.delete",
-            "Pipelines.edit",
+            "Deals.create",
+            "Deals.edit",
+            "Deals.delete",
           ],
           zohoWebhookSecret,
         });
 
         credential.biginWebhook = {
           channelId: biginWebhook.channelId,
+          expiry: biginWebhook.expiry,
           product: "bigin",
         };
       }

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { formatZohoDateTime } from "./zoho.utils.js";
+import { log } from "../../../../utils/logger.js";
 
 export type ZohoProduct = "crm" | "bigin";
 
@@ -201,8 +202,10 @@ export async function registerZohoWebhook({
   const client = createZohoAxios(accessToken, apiDomain);
   const apiPath = getZohoApiPath(product);
   const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  const channelId = Date.now().toString();
-  await client.post(`${apiPath}/actions/watch`, {
+  const channelId = BigInt(
+    `${Date.now()}${Math.floor(Math.random() * 1000)}`,
+  ).toString();
+  const response = await client.post(`${apiPath}/actions/watch`, {
     watch: [
       {
         channel_id: channelId,
@@ -214,8 +217,14 @@ export async function registerZohoWebhook({
       },
     ],
   });
+
+  const eventDetails = response.data?.watch?.[0]?.details?.events?.[0];
+  log.info("Zoho webhook registration success");
+
   return {
-    channelId,
+    channelId: eventDetails?.channel_id || channelId,
+    expiry: eventDetails?.channel_expiry,
+    response: response.data,
   };
 }
 
@@ -231,9 +240,18 @@ export async function unsubscribeZohoWebhook({
   channelIds: string[];
 }) {
   const client = createZohoAxios(accessToken, apiDomain);
-  const apiUrl =
-    product === "crm" ? "/crm/v8/actions/watch" : "/bigin/v2/actions/watch";
-  return client.delete(apiUrl, {
+  // CRM uses POST unsubscribe
+  if (product === "crm") {
+    return client.post("/crm/v8/actions/watch", {
+      watch: channelIds.map((channelId) => ({
+        channel_id: channelId,
+        operation: "unsubscribe",
+      })),
+    });
+  }
+
+  // BIGIN uses DELETE
+  return client.delete("/bigin/v2/actions/watch", {
     params: {
       channel_ids: channelIds.join(","),
     },

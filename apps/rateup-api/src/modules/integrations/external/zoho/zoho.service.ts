@@ -8,6 +8,8 @@ import {
   getZohoFieldMetadata,
   getZohoLayoutsMetadata,
   getZohoRecords,
+  registerZohoWebhook,
+  unsubscribeZohoWebhook,
   updateZohoRecord,
   ZohoProduct,
 } from "./zoho.client.js";
@@ -508,14 +510,18 @@ export async function getValidZohoAccessToken(
   const expiresAt = new Date(credential.expires_at);
   const refreshBuffer = 5 * 60 * 1000;
   const shouldRefresh = Date.now() >= expiresAt.getTime() - refreshBuffer;
+  // token still valid
   if (!shouldRefresh) {
     return credential.access_token;
   }
+
   log.info("Refreshing Zoho access token for integration=%s", integration.id);
+
   try {
     const response = await refreshZohoToken(credential.refresh_token);
     const newAccessToken = response.access_token;
     const expiresIn = response.expires_in;
+
     const updatedCredential = {
       ...credential,
       access_token: newAccessToken,
@@ -526,16 +532,177 @@ export async function getValidZohoAccessToken(
       where: {
         id: integration.id,
       },
-
       data: {
         credential: updatedCredential,
       },
     });
     log.info("Zoho access token refreshed successfully");
+
     return newAccessToken;
   } catch (error) {
     log.error("Zoho token refresh failed => %o", error);
+
     throw new Error("Failed to refresh Zoho access token");
+  }
+}
+
+export async function refreshZohoIntegrationCredential(integration: any) {
+  const credential = integration.credential as any;
+  const response = await refreshZohoToken(credential.refresh_token);
+  const newAccessToken = response.access_token;
+  const expiresIn = response.expires_in;
+  let updatedCredential = {
+    ...credential,
+    access_token: newAccessToken,
+    expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
+  };
+
+  if (credential.supportedProducts?.crm) {
+    try {
+      if (credential.crmWebhook?.channelId) {
+        try {
+          await unsubscribeZohoWebhook({
+            accessToken: newAccessToken,
+            apiDomain: credential.api_domain,
+            product: "crm",
+            channelIds: [credential.crmWebhook.channelId],
+          });
+
+          log.info(
+            "Old CRM webhook unsubscribed successfully for integration=%s",
+            integration.id,
+          );
+        } catch (err) {
+          log.warn("CRM webhook unsubscribe failed, continuing => %o", err);
+        }
+      }
+
+      // ALWAYS REGISTER NEW WEBHOOK
+
+      const crmWebhook = await registerZohoWebhook({
+        accessToken: newAccessToken,
+        apiDomain: credential.api_domain,
+        product: "crm",
+        events: [
+          "Contacts.create",
+          "Contacts.edit",
+          "Contacts.delete",
+          "Leads.create",
+          "Leads.edit",
+          "Leads.delete",
+        ],
+        zohoWebhookSecret: credential.zohoWebhookSecret,
+      });
+
+      updatedCredential = {
+        ...updatedCredential,
+
+        crmWebhook: {
+          product: "crm",
+          channelId: crmWebhook.channelId,
+          expiry:
+            crmWebhook.response?.watch?.[0]?.details?.events?.[0]
+              ?.channel_expiry || null,
+        },
+      };
+
+      log.info(
+        "CRM webhook re-registered successfully for integration=%s",
+        integration.id,
+      );
+    } catch (err) {
+      log.error(
+        "Failed registering CRM webhook for integration=%s => %o",
+        integration.id,
+        err,
+      );
+    }
+  }
+
+  if (credential.supportedProducts?.bigin) {
+    try {
+      if (credential.biginWebhook?.channelId) {
+        await unsubscribeZohoWebhook({
+          accessToken: newAccessToken,
+          apiDomain: credential.api_domain,
+          product: "bigin",
+          channelIds: [credential.biginWebhook.channelId],
+        });
+
+        log.info(
+          "Old Bigin webhook unsubscribed successfully for integration=%s",
+          integration.id,
+        );
+      }
+
+      const biginWebhook = await registerZohoWebhook({
+        accessToken: newAccessToken,
+        apiDomain: credential.api_domain,
+        product: "bigin",
+        events: [
+          "Contacts.create",
+          "Contacts.edit",
+          "Contacts.delete",
+          "Deals.create",
+          "Deals.edit",
+          "Deals.delete",
+        ],
+        zohoWebhookSecret: credential.zohoWebhookSecret,
+      });
+
+      updatedCredential = {
+        ...updatedCredential,
+        biginWebhook: {
+          product: "bigin",
+          channelId: biginWebhook.channelId,
+          expiry:
+            biginWebhook.response?.watch?.[0]?.details?.events?.[0]
+              ?.channel_expiry || null,
+        },
+      };
+      log.info(
+        "Bigin webhook re-registered successfully for integration=%s",
+        integration.id,
+      );
+    } catch (err) {
+      log.error(
+        "Failed re-registering Bigin webhook for integration=%s => %o",
+        integration.id,
+        err,
+      );
+    }
+  }
+
+  await prisma.integration.update({
+    where: {
+      id: integration.id,
+    },
+    data: {
+      credential: updatedCredential,
+    },
+  });
+
+  return updatedCredential;
+}
+
+export async function refreshZohoTokensAndWebhooks() {
+  const integrations = await prisma.integration.findMany({
+    where: {
+      name: "zoho",
+      active: true,
+    },
+  });
+
+  for (const integration of integrations) {
+    try {
+      await refreshZohoIntegrationCredential(integration);
+    } catch (err) {
+      log.error(
+        "Zoho scheduled refresh failed for integration=%s => %o",
+        integration.id,
+        err,
+      );
+    }
   }
 }
 
