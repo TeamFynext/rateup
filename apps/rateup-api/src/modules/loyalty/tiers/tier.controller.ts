@@ -8,6 +8,7 @@ import {
 } from "./tier.service.js";
 import { log } from "../../../utils/logger.js";
 import {
+  DeleteTierQuery,
   LoyaltyTierInput,
   LoyaltyTierUpdateInput,
   TierIdParam,
@@ -87,14 +88,40 @@ export async function updateLoyaltyTierHandler(
 }
 
 export async function deleteLoyaltyTierHandler(
-  request: FastifyRequest<{ Params: TierIdParam }>,
+  request: FastifyRequest<{
+    Params: TierIdParam;
+    Querystring: DeleteTierQuery;
+  }>,
   reply: FastifyReply,
 ) {
   try {
-    await deleteLoyaltyTier(request.params.tierId);
+    const downgradeCustomers =
+      request.query?.downgradeCustomers === true ||
+      request.query?.downgradeCustomers === "true";
+
+    await deleteLoyaltyTier(request.params.tierId, {
+      downgradeCustomers,
+    });
     reply.code(204).send();
   } catch (e) {
     log.error(e);
+
+    if (e?.code === "TIER_HAS_CUSTOMERS") {
+      return reply.code(409).send({
+        error: e.message,
+        code: e.code,
+        customerCount: e.customerCount,
+        requiresDowngrade: true,
+      });
+    }
+
+    if (e?.code === "TIER_DOWNGRADE_TARGET_NOT_FOUND") {
+      return reply.code(400).send({
+        error: e.message,
+        code: e.code,
+      });
+    }
+
     reply.code(500).send({ error: e.message });
   }
 }

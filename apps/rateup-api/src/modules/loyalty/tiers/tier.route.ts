@@ -7,6 +7,7 @@ import {
   updateLoyaltyTierHandler,
 } from "./tier.controller.js";
 import {
+  deleteTierQuerySchema,
   loyaltyTierSchema,
   tierIdParamSchema,
   loyaltyTierUpdateSchema,
@@ -51,6 +52,7 @@ export async function loyaltyTierRoutes(server: FastifyInstance) {
     {
       schema: {
         params: tierIdParamSchema,
+        querystring: deleteTierQuerySchema,
       },
     },
     deleteLoyaltyTierHandler,

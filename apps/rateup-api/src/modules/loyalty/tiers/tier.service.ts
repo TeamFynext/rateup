@@ -1,6 +1,10 @@
 import prisma from "../../../utils/prisma.js";
 import { LoyaltyTierInput, LoyaltyTierUpdateInput } from "./tier.schema.js";
 
+interface DeleteLoyaltyTierOptions {
+  downgradeCustomers?: boolean;
+}
+
 export async function createLoyaltyTier(
   data: LoyaltyTierInput,
   programId: string,
@@ -51,14 +55,31 @@ export async function updateLoyaltyTier(
   });
 }
 
-export async function deleteLoyaltyTier(tierId: string) {
+export async function deleteLoyaltyTier(
+  tierId: string,
+  options: DeleteLoyaltyTierOptions = {},
+) {
   // Check if there are customers in this tier
   const customers = await prisma.customerLoyaltyAccount.findMany({
     where: { currentTierId: tierId },
     select: { id: true },
   });
 
-  if (customers.length > 0) {
+  const customerCount = customers.length;
+
+  if (customerCount > 0) {
+    if (!options.downgradeCustomers) {
+      const error = new Error(
+        "This tier has customers. Confirm downgrade to previous tier before deleting.",
+      ) as Error & {
+        code: string;
+        customerCount: number;
+      };
+      error.code = "TIER_HAS_CUSTOMERS";
+      error.customerCount = customerCount;
+      throw error;
+    }
+
     // Find the tier to delete
     const tier = await prisma.loyaltyTier.findUnique({
       where: { id: tierId },
@@ -78,9 +99,11 @@ export async function deleteLoyaltyTier(tierId: string) {
     });
 
     if (!previousTier) {
-      throw new Error(
-        "Cannot delete tier with customers. Move customers to another tier first.",
-      );
+      const error = new Error(
+        "Cannot downgrade customers because no previous tier exists.",
+      ) as Error & { code: string };
+      error.code = "TIER_DOWNGRADE_TARGET_NOT_FOUND";
+      throw error;
     }
 
     // Move all customers to the previous tier

@@ -1,6 +1,9 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { createBookDemo } from "./bookDemo.service.js";
-import { CreateBookDemoInput } from "./bookDemo.schema.js";
+import {
+  CreateBookDemoInput,
+  CreatePartnerDataInput,
+} from "./bookDemo.schema.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
 
 export async function bookDemoHandler(
@@ -320,6 +323,110 @@ export async function bookDemoHandler(
     return reply.status(500).send({
       success: false,
       message: "Something went wrong while booking a demo.",
+    });
+  }
+}
+
+export async function partnerDataHandler(
+  request: FastifyRequest<{ Body: CreatePartnerDataInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const {
+      fullName,
+      workEmail,
+      phone,
+      companyName,
+      website,
+      country,
+      businessType,
+      companySize,
+      yearsInBusiness,
+      whyPartner,
+      services,
+      referralVolume,
+      managesClients,
+      apiExperience,
+      canOnboard,
+    } = request.body;
+
+    // Send email notification
+    // const emailResult = await sendPartnerDataEmail({
+    //   fullName,
+    //   workEmail,
+    //   phone,
+    //   companyName,
+    //   website,
+    //   country,
+    //   businessType,
+    //   companySize,
+    //   yearsInBusiness,
+    //   whyPartner,
+    //   services,
+    //   referralVolume,
+    //   managesClients,
+    //   apiExperience,
+    //   canOnboard,
+    // });
+
+    const subject = `New Partner Inquiry from ${fullName}`;
+    const text = `
+      You have a new partner inquiry:
+
+      Name: ${fullName}
+      Email: ${workEmail}
+      Phone: ${phone}
+      Company: ${companyName}
+      Website: ${website}
+      Country: ${country}
+      Business Type: ${businessType}
+      Company Size: ${companySize}
+      Years in Business: ${yearsInBusiness}
+      Why Partner: ${whyPartner}
+      Services: ${services.join(", ")}
+      Referral Volume: ${referralVolume}
+      Manages Clients: ${managesClients}
+      API Experience: ${apiExperience}
+      Can Onboard: ${canOnboard}
+    `;
+
+    const html = `
+      <h2>New Partner Inquiry</h2>
+      <p><strong>Name:</strong> ${fullName}</p>
+      <p><strong>Email:</strong> ${workEmail}</p>
+      <p><strong>Phone:</strong> ${phone}</p>
+      <p><strong>Company:</strong> ${companyName}</p>
+      <p><strong>Website:</strong> ${website}</p>
+      <p><strong>Country:</strong> ${country}</p>
+      <p><strong>Business Type:</strong> ${businessType}</p>
+      <p><strong>Company Size:</strong> ${companySize}</p>
+      <p><strong>Years in Business:</strong> ${yearsInBusiness}</p>
+      <p><strong>Why Partner:</strong> ${whyPartner}</p>
+      <p><strong>Services:</strong> ${services.join(", ")}</p>
+      <p><strong>Referral Volume:</strong> ${referralVolume}</p>
+      <p><strong>Manages Clients:</strong> ${managesClients}</p>
+      <p><strong>API Experience:</strong> ${apiExperience}</p>
+      <p><strong>Can Onboard:</strong> ${canOnboard}</p>
+    `;
+
+    await notificationQueue.add("notification", {
+      emailData: {
+        to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
+        subject: subject,
+        html: html,
+        text: text,
+      },
+    });
+
+    return reply.status(200).send({
+      success: true,
+      message: "Partner inquiry submitted successfully",
+    });
+  } catch (error) {
+    console.error("Error in partnerDataHandler:", error);
+    return reply.status(500).send({
+      success: false,
+      message: "Internal server error",
     });
   }
 }
