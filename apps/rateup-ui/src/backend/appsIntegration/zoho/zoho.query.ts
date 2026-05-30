@@ -3,8 +3,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   getZohoContacts,
   getZohoLeads,
+  getZohoPipelines,
   syncZohoContacts,
   syncZohoLeads,
+  unsubscribeZoho,
 } from "./zoho.api";
 
 export function useZohoContacts(
@@ -36,8 +38,23 @@ export function useZohoLeads(orgId?: string) {
   });
 }
 
+export function useZohoPipelines(product: string) {
+  return useQuery({
+    queryKey: ["zoho-pipelines", product],
+    queryFn: () => getZohoPipelines(product),
+  });
+}
+
 export function useSyncZohoLeadsMutation() {
   return useMutation({
     mutationFn: syncZohoLeads,
+  });
+}
+
+export function useUnsubscribeZoho() {
+  return useMutation({
+    mutationFn: async (orgId: string) => {
+      return await unsubscribeZoho(orgId);
+    },
   });
 }
