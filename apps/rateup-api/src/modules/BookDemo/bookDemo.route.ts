@@ -15,11 +15,8 @@ export async function bookDemoRoutes(server: FastifyInstance) {
     },
     bookDemoHandler,
   );
-}
-
-export async function partnerDataRoutes(server: FastifyInstance) {
   server.post(
-    "/",
+    "/partner",
     {
       schema: {
         body: createPartnerDataInputSchema,
