@@ -13,6 +13,7 @@ import {
   sendShopifySurveyCronAction,
   sendTemplateForShopifyAbandonedCheckouts,
 } from "../modules/integrations/shopify/shopify.service.js";
+import { refreshZohoTokensAndWebhooks } from "../modules/integrations/external/zoho/zoho.service.js";
 import { subscriptionExpiryAlert } from "../utils/email/payments/subscriptionExpiryAlert.js";
 import {
   processDripCampaigns,
@@ -67,6 +68,18 @@ export async function registerCronJobs(
           await sendTemplateForShopifyAbandonedCheckouts();
         },
         start: true,
+      },
+      {
+        name: "zohoRefresh",
+        cronTime: "*/45 * * * *",
+        onTick: async () => {
+          server.log.info(
+            "Running every 45min JOB --> Zoho token refresh and webhook registration",
+          );
+          await refreshZohoTokensAndWebhooks();
+        },
+        start: true,
+        timeZone: "Etc/UTC",
       },
       {
         name: "midnightStatsReset",

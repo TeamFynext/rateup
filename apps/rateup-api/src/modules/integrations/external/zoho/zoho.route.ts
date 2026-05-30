@@ -1,8 +1,11 @@
 import { FastifyInstance } from "fastify";
 import { checkSession } from "../../../../utils/checkSession.js";
 import {
+  disconnectZohoIntegrationHandler,
   getZohoContactsHandler,
   getZohoLeadsHandler,
+  getZohoPipelinesHandler,
+  handleZohoWebhook,
   syncZohoContactsHandler,
   syncZohoLeadsHandler,
   zohoAuthenticationHandler,
@@ -62,6 +65,17 @@ export async function zohoRoutes(server: FastifyInstance) {
     getZohoLeadsHandler,
   );
 
+  server.get(
+    "/pipelines",
+    {
+      preHandler: checkSession,
+      schema: {
+        querystring: zohoQuerySchema,
+      },
+    },
+    getZohoPipelinesHandler,
+  );
+
   server.post(
     "/leads/sync",
     {
@@ -69,4 +83,8 @@ export async function zohoRoutes(server: FastifyInstance) {
     },
     syncZohoLeadsHandler,
   );
+
+  server.post("/webhooks/:product", handleZohoWebhook);
+
+  server.post("/unsubscribe/:orgId", disconnectZohoIntegrationHandler);
 }

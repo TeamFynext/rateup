@@ -49,12 +49,14 @@ import {
   notificationQueue,
 } from "../../utils/redisConnection.js";
 import {
-  addZohoContactToQueue,
-  buildZohoContactPayload,
-  buildZohoLeadPayload,
   updateZohoLeadQueue,
   ZohoTriggers,
 } from "../integrations/external/zoho/zoho.service.js";
+import {
+  addZohoContactToQueue,
+  buildZohoContactPayload,
+  buildZohoLeadPayload,
+} from "../integrations/external/zoho/zoho.utils.js";
 
 export async function createContact(
   contact: ContactCore & { orgId: string },
@@ -153,6 +155,23 @@ export async function createContact(
     }),
     rateupContactId: user.id,
   });
+
+  if (user.lifecycleId) {
+    await integrationTriggerQueue.add("bigin-deal-create", {
+      integrationName: "zoho",
+      triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
+      orgId: user.orgId,
+      data: {
+        name: user.name,
+        source: user.source,
+        email: user.email,
+        phone: user.phone,
+        notes: user.notes,
+        lifecycleId: user.lifecycleId,
+      },
+      rateupContactId: user.id,
+    });
+  }
   return user;
 }
 
@@ -333,6 +352,22 @@ export async function createMultipleContacts(
             }),
             rateupContactId: contact.id,
           });
+          if (contact.lifecycleId) {
+            await integrationTriggerQueue.add("bigin-deal-create", {
+              integrationName: "zoho",
+              triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
+              orgId,
+              data: {
+                name: contact.name,
+                source: contact.source,
+                email: contact.email,
+                phone: contact.phone,
+                notes: contact.notes,
+                lifecycleId: contact.lifecycleId,
+              },
+              rateupContactId: contact.id,
+            });
+          }
         }),
       );
     }
@@ -820,6 +855,22 @@ export async function updateContactById(
       );
     }
   }
+  if (updatedContact.lifecycleId) {
+    await integrationTriggerQueue.add("zoho-bigin-deal-update", {
+      integrationName: "zoho",
+      triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
+      orgId: updatedContact.orgId,
+      data: {
+        name: updatedContact.name,
+        source: updatedContact.source,
+        email: updatedContact.email,
+        phone: updatedContact.phone,
+        notes: updatedContact.notes,
+        lifecycleId: updatedContact.lifecycleId,
+      },
+      rateupContactId: updatedContact.id,
+    });
+  }
   if (
     WaMessageClosedStatus.includes(
       updatedContact.waMessageAssignStatus as WaMessageAssignStatus,
@@ -1008,6 +1059,22 @@ export async function getOrCreateContactByPhone(
         }),
         rateupContactId: contact.id,
       });
+      if (contact.lifecycleId) {
+        await integrationTriggerQueue.add("bigin-deal-create", {
+          integrationName: "zoho",
+          triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
+          orgId,
+          data: {
+            name: contact.name,
+            source: contact.source,
+            email: contact.email,
+            phone: contact.phone,
+            notes: contact.notes,
+            lifecycleId: contact.lifecycleId,
+          },
+          rateupContactId: contact.id,
+        });
+      }
       return { contact, conversation };
     }
   } catch (e) {
@@ -1071,6 +1138,22 @@ export async function getOrCreateContactByIgsId(
         }),
         rateupContactId: contact.id,
       });
+      if (contact.lifecycleId) {
+        await integrationTriggerQueue.add("bigin-deal-create", {
+          integrationName: "zoho",
+          triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
+          orgId,
+          data: {
+            name: contact.name,
+            source: contact.source,
+            email: contact.email,
+            phone: contact.phone,
+            notes: contact.notes,
+            lifecycleId: contact.lifecycleId,
+          },
+          rateupContactId: contact.id,
+        });
+      }
       return { contact, conversation };
     }
   } catch (e) {
@@ -1150,6 +1233,22 @@ export async function getOrCreateContactByPsid(
       }),
       rateupContactId: contact.id,
     });
+    if (contact.lifecycleId) {
+      await integrationTriggerQueue.add("bigin-deal-create", {
+        integrationName: "zoho",
+        triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
+        orgId,
+        data: {
+          name: contact.name,
+          source: contact.source,
+          email: contact.email,
+          phone: contact.phone,
+          notes: contact.notes,
+          lifecycleId: contact.lifecycleId,
+        },
+        rateupContactId: contact.id,
+      });
+    }
 
     return { contact, conversation };
   } catch (e) {
@@ -1530,6 +1629,22 @@ export async function updateMulitplceContacts(
           );
         }
       }
+      if (updatedContact.lifecycleId) {
+        await integrationTriggerQueue.add("zoho-bigin-deal-update", {
+          integrationName: "zoho",
+          triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
+          orgId: updatedContact.orgId,
+          data: {
+            name: updatedContact.name,
+            source: updatedContact.source,
+            email: updatedContact.email,
+            phone: updatedContact.phone,
+            notes: updatedContact.notes,
+            lifecycleId: updatedContact.lifecycleId,
+          },
+          rateupContactId: updatedContact.id,
+        });
+      }
     }
   }
 }
@@ -1633,11 +1748,16 @@ export async function updateLifecycleStageofContacts(lifecycleId, contactIds) {
         in: contactIds,
       },
     },
-
     select: {
       id: true,
       orgId: true,
       integrationIds: true,
+      name: true,
+      email: true,
+      phone: true,
+      source: true,
+      notes: true,
+      lifecycleId: true,
     },
   });
 
@@ -1656,6 +1776,22 @@ export async function updateLifecycleStageofContacts(lifecycleId, contactIds) {
     if (integrationIds?.zoho?.lead?.id) {
       await updateZohoLeadQueue(contact.orgId, integrationIds.zoho?.lead?.id, {
         Lead_Status: lifecycle.name,
+      });
+    }
+    if (lifecycleId) {
+      await integrationTriggerQueue.add("zoho-bigin-deal-update", {
+        integrationName: "zoho",
+        triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
+        orgId: contact.orgId,
+        data: {
+          name: contact.name,
+          source: contact.source,
+          email: contact.email,
+          phone: contact.phone,
+          notes: contact.notes,
+          lifecycleId,
+        },
+        rateupContactId: contact.id,
       });
     }
   }
