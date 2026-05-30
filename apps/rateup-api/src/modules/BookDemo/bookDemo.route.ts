@@ -1,6 +1,9 @@
 import { FastifyInstance } from "fastify";
-import { bookDemoHandler } from "./bookDemo.controller.js";
-import { createBookDemoInputSchema } from "./bookDemo.schema.js";
+import { bookDemoHandler, partnerDataHandler } from "./bookDemo.controller.js";
+import {
+  createBookDemoInputSchema,
+  createPartnerDataInputSchema,
+} from "./bookDemo.schema.js";
 
 export async function bookDemoRoutes(server: FastifyInstance) {
   server.post(
@@ -11,5 +14,14 @@ export async function bookDemoRoutes(server: FastifyInstance) {
       },
     },
     bookDemoHandler,
+  );
+  server.post(
+    "/partner",
+    {
+      schema: {
+        body: createPartnerDataInputSchema,
+      },
+    },
+    partnerDataHandler,
   );
 }
