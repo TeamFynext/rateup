@@ -154,7 +154,7 @@ export function useNavMain({
                               icon: (props) => (
                                 <div
                                   {...props}
-                                  className={`rounded-full ${props?.className ?? ""}`}
+                                  className={`rounded-full ${props?.className ?? ""} w-3 h-3`}
                                   style={{
                                     background: lbl?.color,
                                   }}

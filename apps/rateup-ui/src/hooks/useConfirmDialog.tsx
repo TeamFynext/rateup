@@ -51,7 +51,7 @@ export function useConfirmDialog() {
 
   const ConfirmDialog = () => (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogContent size="sm">
+      <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
             {options.title ?? "Are you sure?"}

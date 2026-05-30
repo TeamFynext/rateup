@@ -57,6 +57,7 @@ const company = [
   { title: "About Us", href: "/company/about" },
   { title: "Contact", href: "/company/contact" },
   { title: "Careers", href: "/company/careers" },
+  { title: "Become a Partner", href: "/partner-page" },
   { title: "Support Center", href: "/company/support" },
 ];
 
@@ -190,31 +191,14 @@ export default function HomePageFooter() {
                 </span>
               </div>
             </div>
-            <a
-              href="https://stackmention.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center bg-[#0a0f22] border border-[rgba(0,174,255,0.25)] px-4 py-2.5 rounded-xl no-underline font-semibold text-[#eaf3ff]"
-            >
+            <a href="https://fazier.com/launches/rateup.app" target="_blank">
               <img
-                src="https://stackmention.com/wp-content/uploads/2025/11/StackMention.com-Logo-1.png"
-                alt="StackMention Logo"
-                className="w-9 h-9 rounded-md mr-2.5"
-              />
-              Featured on StackMention
-            </a>
-            <a
-              href="https://sellwithboost.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full"
-            >
-              <img
-                src="https://sellwithboost.com/badge/listing-dark.svg"
-                alt="Listed on Sell With boost"
-                className="w-full"
+                src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=light"
+                width="120"
+                alt="Fazier badge"
               />
             </a>
+
             <div className="w-full">
               <div className="text-left mb-2">Follow us</div>
               <div className="flex items-center gap-4 justify-center flex-wrap">

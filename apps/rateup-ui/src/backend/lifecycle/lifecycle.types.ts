@@ -11,3 +11,14 @@ export type GetLabelsRes = {
   createdAt: string;
   updatedAt: string;
 };
+export interface LifecycleStage {
+  id?: string;
+  name: string;
+  ordering: number;
+  isDefault: boolean;
+  category: "active" | "won" | "lost";
+  emoji: string;
+  description: string;
+  isWon: boolean;
+  color: string;
+}
