@@ -9,10 +9,20 @@ import { IntegratedApps } from "../../../../types/enums.js";
 import {
   fetchZohoContacts,
   fetchZohoLeads,
+  fetchZohoPipelineMeta,
+  getIntegrationByZohoChannelId,
+  getValidZohoAccessToken,
+  syncContactFromZohoRecord,
   syncZohoContacts,
   syncZohoLeads,
 } from "./zoho.service.js";
 import axios from "axios";
+import {
+  getZohoRecordById,
+  registerZohoWebhook,
+  unsubscribeZohoWebhook,
+} from "./zoho.client.js";
+import { generateRandomAlphaId } from "../../../../utils/misc/random.utils.js";
 import { ZohoProduct } from "./zoho.client.js";
 
 interface ZohoAuthBody {
@@ -43,6 +53,19 @@ export async function zohoAuthenticationHandler(
 
     log.info("Starting Zoho OAuth authentication for orgId=%s", orgId);
 
+    // Prevent duplicate active integrations
+    const existingIntegration = await getIntegrationByName(
+      orgId,
+      IntegratedApps.zoho,
+    );
+
+    if (existingIntegration?.active) {
+      return reply.code(200).send({
+        success: true,
+        message: "Zoho already connected",
+      });
+    }
+
     const redirect_uri = `${process.env.FRONTEND_URL}/dashboard/settings/integrations/zoho/callback`;
 
     // Exchange authorization code for tokens
@@ -54,7 +77,7 @@ export async function zohoAuthenticationHandler(
           grant_type: "authorization_code",
           client_id: process.env.ZOHO_CLIENT_ID,
           client_secret: process.env.ZOHO_CLIENT_SECRET,
-          redirect_uri: redirect_uri,
+          redirect_uri,
           code,
         },
       },
@@ -72,6 +95,8 @@ export async function zohoAuthenticationHandler(
       });
     }
 
+    log.info("Zoho granted access");
+
     const supportedProducts = {
       crm: scope.includes("ZohoCRM"),
       bigin: scope.includes("ZohoBigin"),
@@ -80,7 +105,7 @@ export async function zohoAuthenticationHandler(
     // Calculate expiry time
     const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
 
-    const credential = {
+    const credential: any = {
       access_token,
       refresh_token,
       api_domain,
@@ -88,14 +113,69 @@ export async function zohoAuthenticationHandler(
       supportedProducts,
       expires_at: expiresAt,
       triggerSubscriptions: [],
+      isWebhookRegistered: false,
     };
 
-    // Check existing integration
-    const existingIntegration = await getIntegrationByName(
-      orgId,
-      IntegratedApps.zoho,
-    );
+    // Generate webhook secret
+    const zohoWebhookSecret = generateRandomAlphaId(32);
+    credential.zohoWebhookSecret = zohoWebhookSecret;
+    log.info("Generated Zoho webhook secret for orgId=%s", orgId);
 
+    try {
+      // CRM webhook registration
+      if (supportedProducts.crm) {
+        const crmWebhook = await registerZohoWebhook({
+          accessToken: access_token,
+          apiDomain: api_domain,
+          product: "crm",
+          events: [
+            "Contacts.create",
+            "Contacts.edit",
+            "Contacts.delete",
+            "Leads.create",
+            "Leads.edit",
+            "Leads.delete",
+          ],
+          zohoWebhookSecret,
+        });
+
+        credential.crmWebhook = {
+          channelId: crmWebhook.channelId,
+          product: "crm",
+        };
+      }
+
+      // Bigin webhook registration
+      if (supportedProducts.bigin) {
+        const biginWebhook = await registerZohoWebhook({
+          accessToken: access_token,
+          apiDomain: api_domain,
+          product: "bigin",
+          events: [
+            "Contacts.create",
+            "Contacts.edit",
+            "Contacts.delete",
+            "Pipelines.edit",
+          ],
+          zohoWebhookSecret,
+        });
+
+        credential.biginWebhook = {
+          channelId: biginWebhook.channelId,
+          product: "bigin",
+        };
+      }
+
+      credential.isWebhookRegistered = true;
+    } catch (err: any) {
+      log.error(
+        "Failed to register Zoho webhook => %o",
+        err?.response?.data || err,
+      );
+      credential.isWebhookRegistered = false;
+    }
+
+    // Save integration
     if (existingIntegration) {
       await updateIntegrationByName(orgId, IntegratedApps.zoho, {
         credential,
@@ -262,3 +342,292 @@ export async function getZohoLeadsHandler(
     });
   }
 }
+
+export async function getZohoPipelinesHandler(
+  request: FastifyRequest<{
+    Querystring: {
+      product?: ZohoProduct;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { product = "bigin" } = request.query;
+    const orgId = request.user.orgId;
+    if (!orgId) {
+      return reply.code(400).send({
+        success: false,
+        error: "Missing orgId",
+      });
+    }
+    const pipelines = await fetchZohoPipelineMeta(orgId, product);
+    return reply.send(pipelines);
+  } catch (error) {
+    log.error("Get Zoho pipelines error => %o", error);
+
+    return reply.code(500).send({
+      success: false,
+      error: "Failed to fetch pipelines",
+    });
+  }
+}
+
+export const handleZohoWebhook = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const { product } = request.params as {
+      product: ZohoProduct;
+    };
+
+    const payload = request.body as any;
+
+    log.info("Received Zoho webhook for product=%s", product);
+
+    if (!payload?.channel_id || !payload?.token || !payload?.ids) {
+      return reply.code(400).send({
+        success: false,
+        error: "Invalid webhook payload",
+      });
+    }
+
+    const integration = await getIntegrationByZohoChannelId(payload.channel_id);
+
+    if (!integration) {
+      return reply.code(404).send({
+        success: false,
+        error: "Integration not found",
+      });
+    }
+
+    const credential = integration.credential as {
+      zohoWebhookSecret?: string;
+      access_token: string;
+      api_domain: string;
+    };
+
+    if (credential.zohoWebhookSecret !== payload.token) {
+      return reply.code(401).send({
+        success: false,
+        error: "Invalid webhook token",
+      });
+    }
+
+    const accessToken = await getValidZohoAccessToken(integration);
+    const recordId = payload.ids?.[0];
+
+    if (!recordId) {
+      return reply.code(400).send({
+        success: false,
+        error: "Missing record id",
+      });
+    }
+
+    let record: any = null;
+
+    if (product === "crm") {
+      switch (payload.module) {
+        case "Leads": {
+          const response = await getZohoRecordById(
+            accessToken,
+            "Leads",
+            recordId,
+            credential.api_domain,
+            "crm",
+          );
+
+          record = response.data?.[0];
+          // sync local contact
+          await syncContactFromZohoRecord({
+            orgId: integration.orgId,
+            product: "crm",
+            module: "Leads",
+            zohoRecord: record,
+            credential,
+          });
+
+          break;
+        }
+
+        case "Contacts": {
+          const response = await getZohoRecordById(
+            accessToken,
+            "Contacts",
+            recordId,
+            credential.api_domain,
+            "crm",
+          );
+
+          record = response.data?.[0];
+          // sync local contact
+          await syncContactFromZohoRecord({
+            orgId: integration.orgId,
+            product: "crm",
+            module: "Contacts",
+            zohoRecord: record,
+            credential,
+          });
+
+          break;
+        }
+
+        default:
+          log.warn("Unsupported CRM module => %s", payload.module);
+      }
+    }
+
+    if (product === "bigin") {
+      switch (payload.module) {
+        case "Contacts": {
+          const response = await getZohoRecordById(
+            accessToken,
+            "Contacts",
+            recordId,
+            credential.api_domain,
+            "bigin",
+          );
+
+          record = response.data?.[0];
+          // sync local contact
+          await syncContactFromZohoRecord({
+            orgId: integration.orgId,
+            product: "bigin",
+            module: "Contacts",
+            zohoRecord: record,
+            credential,
+          });
+
+          break;
+        }
+
+        // Pipelines internally = Deals
+        case "Deals": {
+          const response = await getZohoRecordById(
+            accessToken,
+            "Deals",
+            recordId,
+            credential.api_domain,
+            "bigin",
+          );
+
+          record = response.data?.[0];
+          // sync lifecycle/contact
+          await syncContactFromZohoRecord({
+            orgId: integration.orgId,
+            product: "bigin",
+            module: "Deals",
+            zohoRecord: record,
+            credential,
+          });
+
+          break;
+        }
+
+        default:
+          log.warn("Unsupported Bigin module => %s", payload.module);
+      }
+    }
+
+    return reply.code(200).send({
+      success: true,
+    });
+  } catch (error) {
+    log.error("Error handling Zoho webhook => %o", error);
+
+    return reply.code(500).send({
+      success: false,
+      error: "Internal server error",
+    });
+  }
+};
+export const disconnectZohoIntegrationHandler = async (
+  request: FastifyRequest<{
+    Params: {
+      orgId: string;
+    };
+  }>,
+  reply: FastifyReply,
+) => {
+  try {
+    const { orgId } = request.params;
+
+    if (!orgId) {
+      return reply.code(400).send({
+        success: false,
+        error: "Missing orgId",
+      });
+    }
+
+    const integration = await getIntegrationByName(orgId, IntegratedApps.zoho);
+
+    if (!integration) {
+      return reply.code(404).send({
+        success: false,
+        error: "Zoho integration not found",
+      });
+    }
+    const credential: any = integration.credential;
+    const accessToken = credential.access_token;
+    const apiDomain = credential.api_domain;
+
+    // Unsubscribe CRM webhook
+    if (credential.crmWebhook?.channelId) {
+      try {
+        await unsubscribeZohoWebhook({
+          accessToken,
+          apiDomain,
+          product: "crm",
+          channelIds: [credential.crmWebhook.channelId],
+        });
+
+        log.info("CRM webhook unsubscribed successfully for orgId=%s", orgId);
+      } catch (err) {
+        log.error("Failed to unsubscribe CRM webhook => %o", err);
+      }
+    }
+
+    // Unsubscribe Bigin webhook
+    if (credential.biginWebhook?.channelId) {
+      try {
+        await unsubscribeZohoWebhook({
+          accessToken,
+          apiDomain,
+          product: "bigin",
+          channelIds: [credential.biginWebhook.channelId],
+        });
+
+        log.info("Bigin webhook unsubscribed successfully for orgId=%s", orgId);
+      } catch (err) {
+        log.error("Failed to unsubscribe Bigin webhook => %o", err);
+      }
+    }
+
+    // Revoke OAuth token
+    try {
+      await axios.post("https://accounts.zoho.in/oauth/v2/token/revoke", null, {
+        params: {
+          token: credential.refresh_token,
+        },
+      });
+
+      log.info("Zoho token revoked successfully for orgId=%s", orgId);
+    } catch (err) {
+      log.error("Failed to revoke Zoho token => %o", err);
+    }
+
+    log.info("Zoho integration disconnected successfully for orgId=%s", orgId);
+
+    return reply.code(200).send({
+      success: true,
+      message: "Zoho disconnected successfully",
+    });
+  } catch (error) {
+    log.error("Error disconnecting Zoho integration => %o", error);
+
+    return reply.code(500).send({
+      success: false,
+      error: "Failed to disconnect Zoho integration",
+    });
+  }
+};
