@@ -8,6 +8,7 @@ import {
   IconBrandInstagram,
   IconBrandWhatsappFilled,
   IconCategoryPlus,
+  IconChevronDown,
   IconWebhook,
 } from "@tabler/icons-react";
 import {
@@ -228,14 +229,15 @@ export default function WaInboxChatDisplayHeader({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="flex items-center justify-center h-8 w-8 cursor-pointer rounded-md hover:bg-accent transition-colors">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center justify-center gap-0.5 h-8 w-10 cursor-pointer rounded-md hover:bg-accent transition-colors">
                 <IconCategoryPlus className="h-5 w-5" strokeWidth={1.5} />
+                <IconChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
-            </PopoverTrigger>
+            </DropdownMenuTrigger>
 
-            <PopoverContent className="p-1 w-fit min-w-36">
+            <DropdownMenuContent align="end" className="p-1 w-fit min-w-36">
               <div className="flex flex-col gap-2 p-2">
                 {/* Lifecycle */}
                 <LifecycleSelector
@@ -259,8 +261,8 @@ export default function WaInboxChatDisplayHeader({
                 />
                 <AddtoContactGroup selectedContactIds={[contact.id]} />
               </div>
-            </PopoverContent>
-          </Popover>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {hasAIFeature &&
             chatbot?.enableWaChat &&
             chatbot?.enableAllWaChat && (
