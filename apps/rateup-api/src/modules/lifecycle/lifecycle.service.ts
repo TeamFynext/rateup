@@ -79,6 +79,13 @@ export async function reorderLabels(
         data: {
           ordering: lifecycle.ordering,
           isDefault: lifecycle.ordering === 0 && lifecycle.category !== "lost",
+          isWon: lifecycle.isWon,
+          category:
+            lifecycle.category === "lost"
+              ? "lost"
+              : lifecycle.isWon
+                ? "won"
+                : "active",
         },
       }),
     ),

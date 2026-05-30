@@ -22,6 +22,7 @@ const lifecycleReorderSchema = z.object({
       id: z.string(),
       ordering: z.number().int(),
       category: z.enum(StageCategory),
+      isWon: z.boolean(),
     }),
   ),
 });

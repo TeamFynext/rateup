@@ -15,6 +15,10 @@ export const tierIdParamSchema = z.object({
   tierId: z.string(),
 });
 
+export const deleteTierQuerySchema = z.object({
+  downgradeCustomers: z.union([z.boolean(), z.string()]).optional(),
+});
+
 export const programIdParamSchema = z.object({
   programId: z.string(),
 });
@@ -22,4 +26,5 @@ export const programIdParamSchema = z.object({
 export type LoyaltyTierInput = z.infer<typeof loyaltyTierSchema>;
 export type LoyaltyTierUpdateInput = z.infer<typeof loyaltyTierUpdateSchema>;
 export type TierIdParam = z.infer<typeof tierIdParamSchema>;
+export type DeleteTierQuery = z.infer<typeof deleteTierQuerySchema>;
 export type ProgramIdParamTier = z.infer<typeof programIdParamSchema>;
