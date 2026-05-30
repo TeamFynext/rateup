@@ -26,6 +26,10 @@ export interface LoyaltyTierInput {
   benefits?: string[];
 }
 
+export interface LoyaltyTierDetails extends LoyaltyTier {
+  customers?: Array<{ id: string }>;
+}
+
 export async function getLoyaltyTiers() {
   const res = await axiosClient.get(`${LOYALTY_BASE}/tiers`);
   return res.data as LoyaltyTier[];
@@ -36,6 +40,11 @@ export async function createLoyaltyTier(data: LoyaltyTierInput) {
   return res.data as LoyaltyTier;
 }
 
+export async function getLoyaltyTierById(id: string) {
+  const res = await axiosClient.get(`${LOYALTY_BASE}/tiers/${id}`);
+  return res.data as LoyaltyTierDetails;
+}
+
 export async function updateLoyaltyTier(
   id: string,
   data: Partial<LoyaltyTierInput>,
@@ -44,7 +53,14 @@ export async function updateLoyaltyTier(
   return res.data as LoyaltyTier;
 }
 
-export async function deleteLoyaltyTier(id: string) {
-  const res = await axiosClient.delete(`${LOYALTY_BASE}/tiers/${id}`);
+export async function deleteLoyaltyTier(
+  id: string,
+  options?: { downgradeCustomers?: boolean },
+) {
+  const res = await axiosClient.delete(`${LOYALTY_BASE}/tiers/${id}`, {
+    params: {
+      downgradeCustomers: options?.downgradeCustomers,
+    },
+  });
   return res.data;
 }

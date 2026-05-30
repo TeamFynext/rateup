@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import languageDetector from "i18next-browser-languagedetector";
+import ICU from "i18next-icu";
 import { initReactI18next } from "react-i18next";
 
 import ar from "./locales/ar.json";
@@ -10,6 +11,7 @@ import hi from "./locales/hi.json";
 
 export const i18CookieName = "i18next";
 i18n
+  .use(ICU)
   .use(languageDetector) // Detects user language and caches it in a cookie
   .use(initReactI18next) // passes i18n down to react-i18next
   .init({

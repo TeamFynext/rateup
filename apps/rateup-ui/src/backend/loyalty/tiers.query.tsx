@@ -60,7 +60,10 @@ export const useDeleteLoyaltyTierMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => deleteLoyaltyTier(id),
+    mutationFn: (input: { id: string; downgradeCustomers?: boolean }) =>
+      deleteLoyaltyTier(input.id, {
+        downgradeCustomers: input.downgradeCustomers,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
     },
