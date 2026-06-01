@@ -416,16 +416,24 @@ function ContactSettings() {
     }
 
     const currentStages = isLost ? lostStages : activeStages;
+    const isFirstActiveStage = !isLost && activeStages.length === 0;
+    let nextCategory: "active" | "won" | "lost" = "active";
+
+    if (isLost) {
+      nextCategory = "lost";
+    } else if (isFirstActiveStage) {
+      nextCategory = "won";
+    }
 
     createLifecycle.mutate(
       {
         name: addName.trim(),
         ordering: currentStages.length,
-        isDefault: false,
-        category: isLost ? "lost" : "active",
+        isDefault: isFirstActiveStage,
+        category: nextCategory,
         emoji: addEmoji,
         description: addDesc.trim(),
-        isWon: false,
+        isWon: isFirstActiveStage,
         color: getColorHex(addColor),
       },
       {
@@ -449,7 +457,7 @@ function ContactSettings() {
     );
   }
 
-  if (!lifecycles || lifecycles.length === 0) {
+  if ((!lifecycles || lifecycles.length === 0) && !isSettingUp) {
     return (
       <>
         <ConfirmDialog />
@@ -588,7 +596,7 @@ function ContactSettings() {
             </>
           ) : (
             <SetupView
-              backendStages={lifecycles}
+              backendStages={lifecycles || []}
               showStagesGlobal={showStagesGlobal}
               setShowStagesGlobal={setShowStagesGlobal}
               showAddActiveForm={showAddActiveForm}
