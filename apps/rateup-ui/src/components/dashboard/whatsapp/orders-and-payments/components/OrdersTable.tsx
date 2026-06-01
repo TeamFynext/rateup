@@ -52,9 +52,11 @@ function calcTotal(products: any[], deliveryOption?: any): string {
 export default function OrdersTable({
   settingId,
   phoneId,
+  storeType,
 }: {
   settingId: string;
   phoneId?: string;
+  storeType?: string;
 }) {
   const [page, setPage] = useState(0);
   const pageSize = 10;
@@ -67,7 +69,7 @@ export default function OrdersTable({
 
   const { data: ordersData, isLoading: isLoadingOrders } = useWaCatalogOrders(
     catalogId,
-    { pageIndex: page, pageSize },
+    { pageIndex: page, pageSize, storeType },
   );
 
   const orders = ordersData?.data ?? [];
