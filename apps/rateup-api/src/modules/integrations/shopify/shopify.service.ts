@@ -2320,3 +2320,293 @@ export async function createShopifyProduct(
 
   return product;
 }
+
+// Fetch shipping rates dynamically from Shopify
+export async function fetchShopifyShippingRates(
+  orgId: string,
+  products: {
+    retailerId: string;
+    quantity: number;
+    title?: string;
+    price?: number | string;
+  }[],
+  shippingAddress: {
+    address1?: string;
+    address2?: string;
+    city?: string;
+    province?: string;
+    zip?: string;
+    country_code?: string;
+    phone?: string;
+  },
+) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    log.trace(
+      "Shopify not active for orgId %s - skipping shipping rates query",
+      orgId,
+    );
+    return [];
+  }
+
+  const client = new shopify.clients.Graphql({
+    session: shopifyInfo.credential.session,
+  });
+  const variantMap = await resolveShopifyVariants(products, client);
+
+  const lineItems = [];
+  for (const product of products) {
+    const variantId = variantMap.get(product.retailerId);
+    if (variantId) {
+      const fullVariantGid = variantId.startsWith("gid://")
+        ? variantId
+        : `gid://shopify/ProductVariant/${variantId}`;
+      lineItems.push({
+        variantId: fullVariantGid,
+        quantity: product.quantity,
+      });
+    } else {
+      log.warn(
+        `SKU ${product.retailerId} could not be resolved to a Shopify variant for rates calculation.`,
+      );
+    }
+  }
+
+  if (lineItems.length === 0) {
+    log.trace("No line items resolved for shipping rates query");
+    return [];
+  }
+
+  const graphqlAddress = {
+    address1: shippingAddress.address1,
+    address2: shippingAddress.address2,
+    city: shippingAddress.city,
+    province: shippingAddress.province,
+    countryCode: shippingAddress.country_code || "IN",
+    zip: shippingAddress.zip,
+    phone: shippingAddress.phone,
+  };
+
+  try {
+    const response: any = await client.request(
+      `query getAvailableShippingRates($input: DraftOrderAvailableDeliveryOptionsInput!) {
+        draftOrderAvailableDeliveryOptions(input: $input) {
+          availableShippingRates {
+            handle
+            title
+            price {
+              amount
+              currencyCode
+            }
+          }
+        }
+      }`,
+      {
+        variables: {
+          input: {
+            lineItems,
+            shippingAddress: graphqlAddress,
+          },
+        },
+      },
+    );
+
+    const rates =
+      response.data?.draftOrderAvailableDeliveryOptions
+        ?.availableShippingRates ?? [];
+    return rates.map((r: any) => ({
+      id: r.handle,
+      name: r.title,
+      charge: parseFloat(r.price?.amount || "0"),
+      enabled: true,
+    }));
+  } catch (error: any) {
+    log.error(
+      "Failed to fetch available shipping rates from Shopify => %o",
+      error.response?.body || error,
+    );
+    return [];
+  }
+}
+
+// Resolve order ID from a draft order ID
+export async function getOrderIdFromDraftOrder(
+  orgId: string,
+  draftOrderId: string,
+): Promise<string> {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    throw new Error(
+      `Shopify integration not active for organization: ${orgId}`,
+    );
+  }
+
+  const restClient = new shopify.clients.Rest({
+    session: shopifyInfo.credential.session,
+  });
+
+  try {
+    const response: any = await restClient.get({
+      path: `draft_orders/${draftOrderId}`,
+    });
+    const orderId = response.body?.draft_order?.order_id;
+    if (!orderId) {
+      throw new Error(
+        `Draft order ${draftOrderId} has not been completed yet.`,
+      );
+    }
+    return String(orderId);
+  } catch (error: any) {
+    log.error(
+      "Failed to fetch Shopify draft order to resolve order_id => %o",
+      error.response?.body || error,
+    );
+    return draftOrderId;
+  }
+}
+
+// Retrieve fulfillment orders for an order
+export async function getFulfillmentOrders(
+  orgId: string,
+  waCatalogOrderId: string,
+) {
+  const waCatalogOrder = await prisma.waCatalogOrder.findUnique({
+    where: { id: waCatalogOrderId },
+  });
+  if (!waCatalogOrder) {
+    throw new Error(`WaCatalogOrder not found for ID: ${waCatalogOrderId}`);
+  }
+  if (!waCatalogOrder.shopifyDraftOrderId) {
+    throw new Error(
+      `No Shopify Draft Order ID associated with order: ${waCatalogOrderId}`,
+    );
+  }
+
+  const shopifyOrderId = await getOrderIdFromDraftOrder(
+    orgId,
+    waCatalogOrder.shopifyDraftOrderId,
+  );
+
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    throw new Error(
+      `Shopify integration not active for organization: ${orgId}`,
+    );
+  }
+
+  const client = new shopify.clients.Graphql({
+    session: shopifyInfo.credential.session,
+  });
+
+  const fullOrderGid = shopifyOrderId.startsWith("gid://")
+    ? shopifyOrderId
+    : `gid://shopify/Order/${shopifyOrderId}`;
+
+  try {
+    const response: any = await client.request(
+      `query getFulfillmentOrders($orderId: ID!) {
+        order(id: $orderId) {
+          id
+          name
+          fulfillmentOrders(first: 20) {
+            nodes {
+              id
+              status
+              requestStatus
+              lineItems(first: 100) {
+                nodes {
+                  id
+                  sku
+                  productTitle
+                  totalQuantity
+                  remainingQuantity
+                }
+              }
+            }
+          }
+        }
+      }`,
+      {
+        variables: { orderId: fullOrderGid },
+      },
+    );
+
+    const nodes = response.data?.order?.fulfillmentOrders?.nodes ?? [];
+    nodes.forEach((node: any) => {
+      node.lineItems?.nodes?.forEach((item: any) => {
+        item.title = item.productTitle;
+      });
+    });
+    return nodes;
+  } catch (error: any) {
+    log.error(
+      "Failed to fetch Shopify fulfillment orders => %o",
+      error.response?.body || error,
+    );
+    throw error;
+  }
+}
+
+// Create fulfillment in Shopify
+export async function createShopifyFulfillment(
+  orgId: string,
+  fulfillmentInput: {
+    lineItemsByFulfillmentOrder: {
+      fulfillmentOrderId: string;
+      fulfillmentOrderLineItems?: {
+        id: string;
+        quantity: number;
+      }[];
+    }[];
+    trackingInfo?: {
+      company?: string;
+      number?: string;
+      url?: string;
+    };
+    notifyCustomer?: boolean;
+  },
+) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    throw new Error(
+      `Shopify integration not active for organization: ${orgId}`,
+    );
+  }
+
+  const client = new shopify.clients.Graphql({
+    session: shopifyInfo.credential.session,
+  });
+
+  try {
+    const response: any = await client.request(
+      `mutation CreateFulfillment($fulfillment: FulfillmentInput!) {
+        fulfillmentCreate(fulfillment: $fulfillment) {
+          fulfillment {
+            id
+            status
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }`,
+      {
+        variables: { fulfillment: fulfillmentInput },
+      },
+    );
+
+    const result = response.data?.fulfillmentCreate;
+    if (result?.userErrors?.length > 0) {
+      throw new Error(result.userErrors[0].message);
+    }
+
+    return result?.fulfillment;
+  } catch (error: any) {
+    log.error(
+      "Failed to create Shopify fulfillment => %o",
+      error.response?.body || error,
+    );
+    throw error;
+  }
+}
