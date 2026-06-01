@@ -1,11 +1,21 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import { Image } from "@unpic/react";
 import { format } from "date-fns";
-import { ExternalLink, MapPin, Truck } from "lucide-react";
+import {
+  ExternalLink,
+  Loader2,
+  MapPin,
+  Package,
+  ShoppingBag,
+  Truck,
+} from "lucide-react";
+import { toast } from "sonner";
 
+import { COMMON_CARRIERS, EXCLUDED_KEYS, STAGE_LABELS } from "@/types/enums";
+import { axiosClient } from "@/backend/apiClient";
 import { Badge } from "@/components/ui/badge.tsx";
 import {
   Dialog,
@@ -23,30 +33,6 @@ import {
   TableRow,
 } from "@/components/ui/table.tsx";
 
-const EXCLUDED_KEYS = new Set([
-  "retailerId",
-  "currency",
-  "price",
-  "quantity",
-  "title",
-  "image",
-  "image_link",
-  "name",
-  "description",
-  "availability",
-  "condition",
-  "visibility",
-  "url",
-]);
-const STAGE_LABELS: Record<string, string> = {
-  PENDING_ADDRESS: "Awaiting Address",
-  PENDING_DELIVERY: "Awaiting Delivery",
-  PENDING_PAYMENT: "Awaiting Payment",
-  PENDING_CHECKOUT: "Checkout Sent",
-  COMPLETED: "Completed",
-  CANCELLED: "Cancelled",
-};
-
 export default function OrderDetailsDialog({
   open,
   onOpenChange,
@@ -56,6 +42,105 @@ export default function OrderDetailsDialog({
   onOpenChange: (b: boolean) => void;
   order: any;
 }) {
+  const [fulfillmentOrders, setFulfillmentOrders] = useState<any[]>([]);
+  const [loadingFulfillments, setLoadingFulfillments] = useState(false);
+  const [submittingFulfillment, setSubmittingFulfillment] = useState(false);
+  const [trackingCompany, setTrackingCompany] = useState("");
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [trackingUrl, setTrackingUrl] = useState("");
+  const [selectedCarrier, setSelectedCarrier] = useState("");
+  const [customCarrierName, setCustomCarrierName] = useState("");
+  const [notifyCustomer, setNotifyCustomer] = useState(true);
+  const [quantitiesToFulfill, setQuantitiesToFulfill] = useState<
+    Record<string, number>
+  >({});
+
+  const fetchFulfillmentOrders = async () => {
+    if (!order?.id || !order?.shopifyDraftOrderId) return;
+    setLoadingFulfillments(true);
+    try {
+      const response = await axiosClient.get(
+        `/integrations/shopify/orders/${order.id}/fulfillment-orders`,
+      );
+      setFulfillmentOrders(response.data || []);
+      const initialQtys: Record<string, number> = {};
+      response.data?.forEach((fo: any) => {
+        fo.lineItems?.nodes?.forEach((item: any) => {
+          if (item.remainingQuantity > 0) {
+            initialQtys[item.id] = item.remainingQuantity;
+          }
+        });
+      });
+      setQuantitiesToFulfill(initialQtys);
+    } catch (e: any) {
+      console.error("Failed to fetch fulfillment orders", e);
+    } finally {
+      setLoadingFulfillments(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open && order?.shopifyDraftOrderId) {
+      fetchFulfillmentOrders();
+    } else {
+      setFulfillmentOrders([]);
+    }
+  }, [open, order?.id]);
+
+  const handleCreateFulfillment = async (fulfillmentOrderId: string) => {
+    const fo = fulfillmentOrders.find((f: any) => f.id === fulfillmentOrderId);
+    if (!fo) return;
+
+    const lineItemsToFulfill = fo.lineItems?.nodes
+      ?.map((item: any) => ({
+        id: item.id,
+        quantity: quantitiesToFulfill[item.id] ?? 0,
+      }))
+      .filter((item: any) => item.quantity > 0);
+
+    if (!lineItemsToFulfill || lineItemsToFulfill.length === 0) {
+      toast.error(
+        "Please enter a quantity greater than 0 for at least one item.",
+      );
+      return;
+    }
+
+    setSubmittingFulfillment(true);
+    try {
+      const payload: any = {
+        lineItemsByFulfillmentOrder: [
+          {
+            fulfillmentOrderId,
+            fulfillmentOrderLineItems: lineItemsToFulfill,
+          },
+        ],
+        notifyCustomer,
+      };
+
+      if (trackingNumber || trackingCompany || trackingUrl) {
+        payload.trackingInfo = {
+          ...(trackingNumber && { number: trackingNumber }),
+          ...(trackingCompany && { company: trackingCompany }),
+          ...(trackingUrl && { url: trackingUrl }),
+        };
+      }
+
+      await axiosClient.post("/integrations/shopify/orders/fulfill", payload);
+      toast.success("Fulfillment created successfully!");
+      setTrackingNumber("");
+      setTrackingCompany("");
+      setTrackingUrl("");
+      setSelectedCarrier("");
+      setCustomCarrierName("");
+      await fetchFulfillmentOrders();
+    } catch (e: any) {
+      console.error("Failed to create fulfillment", e);
+      toast.error(e.message || "Failed to create fulfillment in Shopify");
+    } finally {
+      setSubmittingFulfillment(false);
+    }
+  };
+
   if (!order) return null;
 
   const products: any[] = order.products ?? [];
@@ -75,7 +160,7 @@ export default function OrderDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Order Details</DialogTitle>
         </DialogHeader>
@@ -265,28 +350,280 @@ export default function OrderDetailsDialog({
 
         {/* Shopify */}
         {(order.shopifyDraftOrderId || order.shopifyInvoiceUrl) && (
-          <div>
-            <p className="text-sm font-semibold mb-2">🛍️ Shopify Order</p>
-            <div className="rounded-lg bg-muted/30 p-3 text-sm space-y-1">
-              {order.shopifyDraftOrderId && (
-                <p className="text-muted-foreground">
-                  Draft Order ID:{" "}
-                  <code className="font-mono text-xs bg-background px-1 rounded">
-                    {order.shopifyDraftOrderId}
-                  </code>
-                </p>
-              )}
-              {order.shopifyInvoiceUrl && (
-                <a
-                  href={order.shopifyInvoiceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
-                >
-                  Open Checkout Link <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <ShoppingBag className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold">Shopify Order</p>
+              </div>
+              <div className="rounded-lg bg-muted/30 p-3 text-sm space-y-1">
+                {order.shopifyDraftOrderId && (
+                  <p className="text-muted-foreground">
+                    Draft Order ID:{" "}
+                    <code className="font-mono text-xs bg-background px-1 rounded">
+                      {order.shopifyDraftOrderId}
+                    </code>
+                  </p>
+                )}
+                {order.shopifyInvoiceUrl && (
+                  <a
+                    href={order.shopifyInvoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
+                  >
+                    Open Checkout Link <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </div>
             </div>
+
+            {order.shopifyDraftOrderId && (
+              <div className="space-y-4 border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold">
+                      Shopify Fulfillment
+                    </span>
+                    {loadingFulfillments && (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+                </div>
+
+                {loadingFulfillments ? (
+                  <div className="rounded-lg border p-4 bg-muted/10 flex items-center justify-center text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Loading fulfillment status from Shopify...
+                  </div>
+                ) : fulfillmentOrders.length === 0 ? (
+                  <div className="rounded-lg border p-4 bg-muted/10 text-sm text-muted-foreground">
+                    No active fulfillment orders found. Make sure the draft
+                    order is completed and paid in Shopify.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {fulfillmentOrders.map((fo: any) => {
+                      const unfulfilledItems =
+                        fo.lineItems?.nodes?.filter(
+                          (item: any) => item.remainingQuantity > 0,
+                        ) || [];
+                      const isFulfilled = fo.status === "FULFILLED";
+
+                      return (
+                        <div
+                          key={fo.id}
+                          className="rounded-lg border p-4 bg-muted/5 space-y-3"
+                        >
+                          <div className="flex justify-between items-center text-xs">
+                            <div>
+                              <span className="font-semibold text-muted-foreground mr-1">
+                                Fulfillment Order ID:
+                              </span>
+                              <code className="font-mono text-[10px] bg-background px-1 py-0.5 rounded">
+                                {fo.id.split("/").pop()}
+                              </code>
+                            </div>
+                            <Badge
+                              variant={isFulfilled ? "default" : "secondary"}
+                            >
+                              {fo.status}
+                            </Badge>
+                          </div>
+
+                          <div className="text-sm space-y-2">
+                            {fo.lineItems?.nodes?.map((item: any) => {
+                              const hasRemaining = item.remainingQuantity > 0;
+                              return (
+                                <div
+                                  key={item.id}
+                                  className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0"
+                                >
+                                  <div>
+                                    <p className="font-medium text-xs">
+                                      {item.title}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground">
+                                      SKU: {item.sku || "N/A"}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-4 text-xs">
+                                    <div>
+                                      <span className="text-muted-foreground">
+                                        Total:
+                                      </span>{" "}
+                                      {item.totalQuantity}
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">
+                                        Remaining:
+                                      </span>{" "}
+                                      {item.remainingQuantity}
+                                    </div>
+                                    {hasRemaining && (
+                                      <div className="flex items-center gap-1.5 ml-2">
+                                        <span className="text-[10px] text-muted-foreground">
+                                          Fulfill:
+                                        </span>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          max={item.remainingQuantity}
+                                          value={
+                                            quantitiesToFulfill[item.id] ?? 0
+                                          }
+                                          onChange={(e) => {
+                                            const val = Math.min(
+                                              item.remainingQuantity,
+                                              Math.max(
+                                                0,
+                                                parseInt(e.target.value) || 0,
+                                              ),
+                                            );
+                                            setQuantitiesToFulfill((prev) => ({
+                                              ...prev,
+                                              [item.id]: val,
+                                            }));
+                                          }}
+                                          className="w-12 h-6 border rounded text-center px-1 font-mono text-[11px] bg-background"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {unfulfilledItems.length > 0 && (
+                            <div className="pt-2 space-y-3">
+                              <Separator />
+                              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                Tracking Details
+                              </p>
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-3 gap-2">
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] text-muted-foreground">
+                                      Carrier / Company
+                                    </label>
+                                    <select
+                                      value={selectedCarrier}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setSelectedCarrier(val);
+                                        if (val === "Custom") {
+                                          setTrackingCompany(customCarrierName);
+                                        } else {
+                                          setTrackingCompany(val);
+                                        }
+                                      }}
+                                      className="w-full h-8 text-xs border rounded px-2 bg-background"
+                                    >
+                                      <option value="">
+                                        Select carrier...
+                                      </option>
+                                      {COMMON_CARRIERS.map((c) => (
+                                        <option key={c} value={c}>
+                                          {c}
+                                        </option>
+                                      ))}
+                                      <option value="Custom">
+                                        Custom / Other
+                                      </option>
+                                    </select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] text-muted-foreground">
+                                      Tracking Number
+                                    </label>
+                                    <input
+                                      type="text"
+                                      placeholder="e.g. DEL123456"
+                                      value={trackingNumber}
+                                      onChange={(e) =>
+                                        setTrackingNumber(e.target.value)
+                                      }
+                                      className="w-full h-8 text-xs border rounded px-2 bg-background"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] text-muted-foreground">
+                                      Tracking URL
+                                    </label>
+                                    <input
+                                      type="text"
+                                      placeholder="https://..."
+                                      value={trackingUrl}
+                                      onChange={(e) =>
+                                        setTrackingUrl(e.target.value)
+                                      }
+                                      className="w-full h-8 text-xs border rounded px-2 bg-background"
+                                    />
+                                  </div>
+                                </div>
+
+                                {selectedCarrier === "Custom" && (
+                                  <div className="grid grid-cols-3 gap-2">
+                                    <div className="col-span-3 space-y-1">
+                                      <label className="text-[10px] text-muted-foreground">
+                                        Custom Carrier Name
+                                      </label>
+                                      <input
+                                        type="text"
+                                        placeholder="e.g. My Local Delivery Partner"
+                                        value={customCarrierName}
+                                        onChange={(e) => {
+                                          const val = e.target.value;
+                                          setCustomCarrierName(val);
+                                          setTrackingCompany(val);
+                                        }}
+                                        className="w-full h-8 text-xs border rounded px-2 bg-background"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex items-center justify-between pt-1">
+                                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+                                  <input
+                                    type="checkbox"
+                                    checked={notifyCustomer}
+                                    onChange={(e) =>
+                                      setNotifyCustomer(e.target.checked)
+                                    }
+                                    className="rounded border-gray-300"
+                                  />
+                                  Notify customer
+                                </label>
+
+                                <button
+                                  type="button"
+                                  disabled={submittingFulfillment}
+                                  onClick={() => handleCreateFulfillment(fo.id)}
+                                  className="h-8 px-4 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 rounded flex items-center justify-center disabled:opacity-50"
+                                >
+                                  {submittingFulfillment ? (
+                                    <>
+                                      <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                                      Fulfilling...
+                                    </>
+                                  ) : (
+                                    "Fulfill Selected Items"
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </DialogContent>
