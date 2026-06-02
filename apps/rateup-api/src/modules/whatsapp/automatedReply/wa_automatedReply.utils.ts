@@ -42,6 +42,11 @@ import {
 } from "../../contact/conversation/conversation.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
 import axios from "axios";
+import { integrationTriggerQueue } from "../../../utils/redisConnection.js";
+import {
+  updateZohoLeadQueue,
+  ZohoTriggers,
+} from "../../integrations/external/zoho/zoho.service.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrAfter);
@@ -1152,7 +1157,7 @@ async function executeAssignLifecycleAction(
 ): Promise<boolean> {
   if (!context.phone || !context.orgId || !lifecycleId) return false;
 
-  await prisma.contact.update({
+  const updatedContact = await prisma.contact.update({
     where: {
       contact_phone_org_id_unique: {
         phone: context.phone,
@@ -1160,6 +1165,66 @@ async function executeAssignLifecycleAction(
       },
     },
     data: { lifecycleId },
+    select: {
+      id: true,
+      orgId: true,
+      integrationIds: true,
+      name: true,
+      email: true,
+      phone: true,
+      source: true,
+      notes: true,
+      lifecycleId: true,
+    },
+  });
+
+  const lifecycle = await prisma.lifecycle.findUnique({
+    where: {
+      id: lifecycleId,
+    },
+    select: {
+      name: true,
+    },
+  });
+
+  if (!lifecycle) return true;
+
+  const integrationIds = updatedContact.integrationIds as {
+    zoho?: {
+      contact?: {
+        id: string;
+      };
+      lead?: {
+        id: string;
+      };
+    };
+  };
+
+  // Update Zoho Lead
+  if (integrationIds?.zoho?.lead?.id) {
+    await updateZohoLeadQueue(
+      updatedContact.orgId,
+      integrationIds.zoho.lead.id,
+      {
+        Lead_Status: lifecycle.name,
+      },
+    );
+  }
+
+  // Trigger Zoho automation / deal sync
+  await integrationTriggerQueue.add("zoho-bigin-deal-update", {
+    integrationName: "zoho",
+    triggerKey: ZohoTriggers.BIGIN_DEAL_CREATE,
+    orgId: updatedContact.orgId,
+    data: {
+      name: updatedContact.name,
+      source: updatedContact.source,
+      email: updatedContact.email,
+      phone: updatedContact.phone,
+      notes: updatedContact.notes,
+      lifecycleId,
+    },
+    rateupContactId: updatedContact.id,
   });
 
   return true;
