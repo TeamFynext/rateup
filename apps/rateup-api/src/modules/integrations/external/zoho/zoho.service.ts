@@ -53,7 +53,7 @@ export async function processIntegration(job) {
   });
 
   if (!integration || !integration.active) {
-    throw new Error(`Integration not found or inactive: ${integrationName}`);
+    return;
   }
 
   switch (integrationName) {
