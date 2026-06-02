@@ -1,105 +1,158 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { createFileRoute } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
+import { CreditCard, MapPin, Truck } from "lucide-react";
 
+import { IntegratedApps } from "@/types/enums";
+import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
+import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import AddressFieldsTab from "@/components/dashboard/whatsapp/orders-and-payments/components/AddressFieldsTab";
+import DeliveryOptionsTab from "@/components/dashboard/whatsapp/orders-and-payments/components/DeliveryOptionsTab";
+import PaymentTab from "@/components/dashboard/whatsapp/orders-and-payments/components/PaymentTab";
+import { Label } from "@/components/ui/label";
 import {
-  useUpdateWaSettingsMutation,
-  useWaSettings,
-} from "@/backend/whatsapp/settings/waSettings.query";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import { Label } from "@/components/ui/label.tsx";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const TABS = [
+  { id: "payment", label: "Payment", icon: CreditCard },
+  { id: "address", label: "Address Fields", icon: MapPin },
+  { id: "delivery", label: "Delivery Options", icon: Truck },
+];
 
 export const Route = createFileRoute("/dashboard/whatsapp/payments/")({
   component: PaymentsPage,
 });
 
 function PaymentsPage() {
-  const { data: waSettingsData, isLoading } = useWaSettings();
-  const waSettings = waSettingsData?.[0];
-  const updateMutation = useUpdateWaSettingsMutation(waSettings?.id);
-  const [value, setValue] = useState(waSettings?.paymentMethod || "NATIVE");
-  const { t: translations } = useTranslation();
+  const { data: waSettings, isLoading: isLoadingSettings } = useWaSettings();
+  const { data: shopifyIntegration, isLoading: isLoadingShopify } =
+    useIntegrationByType(IntegratedApps.shopify);
+
+  const [currentSettingId, setCurrentSettingId] = useState<string>("");
 
   useEffect(() => {
-    if (waSettings?.paymentMethod) {
-      setValue(waSettings.paymentMethod);
+    if (waSettings?.length && !currentSettingId) {
+      setCurrentSettingId(waSettings[0].id);
     }
-  }, [waSettings?.paymentMethod]);
+  }, [waSettings, currentSettingId]);
 
-  const handleChange = (val) => {
-    setValue(val);
-    updateMutation.mutate({ paymentMethod: val });
-  };
+  const currentSetting =
+    waSettings?.find((s) => s.id === currentSettingId) ?? waSettings?.[0];
 
-  if (isLoading) {
-    return <div className="p-6">Loading...</div>;
+  // Resolve catalogId from connected catalog for this phone number
+  const { data: connectedCatalog } = useConnectedWaCatalog(
+    currentSetting?.phoneId,
+  );
+  const catalogId: string = connectedCatalog?.catalogId ?? "";
+
+  const isShopifyConnected = !!shopifyIntegration?.credential?.session?.shop;
+
+  if (isLoadingSettings || isLoadingShopify) {
+    return (
+      <div className="p-6 space-y-6">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
+  if (!currentSetting) {
+    return (
+      <div className="p-6 text-muted-foreground">
+        WhatsApp settings not found. Please set up a WhatsApp account first.
+      </div>
+    );
   }
 
   return (
-    <div className="p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{translations("Payment Configuration")}</CardTitle>
-          <CardDescription>
-            {translations(
-              "Select how you want to process payments on WhatsApp",
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Label>{translations("Payment Method")}</Label>
-            <div className="flex flex-col space-y-2">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  id="native"
-                  name="paymentMethod"
-                  value="NATIVE"
-                  checked={value === "NATIVE"}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <Label htmlFor="native">
-                  {translations("WhatsApp Native Payments")}
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  id="shopify"
-                  name="paymentMethod"
-                  value="SHOPIFY_LINK"
-                  checked={value === "SHOPIFY_LINK"}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <Label htmlFor="shopify">
-                  {translations("Shopify Auto Checkout")}
-                </Label>
-              </div>
-            </div>
-            <p className="text-sm text-gray-500">
-              {value === "NATIVE"
-                ? translations(
-                    "Users will pay directly within WhatsApp using your configured payment gateway.",
-                  )
-                : translations(
-                    "Users will be redirected to a pre-filled Shopify checkout page to complete their purchase.",
-                  )}
-            </p>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Payments & Checkout
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Configure payment, address collection, and delivery for WhatsApp
+            orders
+          </p>
+        </div>
+
+        {waSettings && waSettings.length > 0 && (
+          <div className="flex items-center gap-2 shrink-0">
+            <Label htmlFor="wa-selector" className="text-sm whitespace-nowrap">
+              WhatsApp Number
+            </Label>
+            <Select
+              value={currentSettingId}
+              onValueChange={setCurrentSettingId}
+            >
+              <SelectTrigger id="wa-selector" className="w-[220px]">
+                <SelectValue placeholder="Select number" />
+              </SelectTrigger>
+              <SelectContent>
+                {waSettings.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.phoneDisplayName || s.phone || "Unknown"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
+      {/* No catalog warning */}
+      {!catalogId && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          ⚠️ No WhatsApp catalog connected to this phone number. Connect a
+          catalog first in the <strong>Catalog</strong> section to enable
+          address collection and delivery features.
+        </div>
+      )}
+
+      {/* 3-tab layout */}
+      <Tabs defaultValue="payment" className="space-y-6">
+        <TabsList className="grid grid-cols-3 w-full max-w-2xl">
+          {TABS.map((tab) => (
+            <TabsTrigger
+              key={tab.id}
+              value={tab.id}
+              className="flex items-center gap-1.5 text-xs sm:text-sm"
+            >
+              <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="payment" className="mt-0">
+          <PaymentTab
+            catalogId={catalogId}
+            isShopifyConnected={isShopifyConnected}
+          />
+        </TabsContent>
+
+        <TabsContent value="address" className="mt-0">
+          <AddressFieldsTab catalogId={catalogId} />
+        </TabsContent>
+
+        <TabsContent value="delivery" className="mt-0">
+          <DeliveryOptionsTab catalogId={catalogId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

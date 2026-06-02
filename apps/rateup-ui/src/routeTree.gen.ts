@@ -65,7 +65,7 @@ import { Route as marketingBlogSitemapDotxmlRouteImport } from './routes/(market
 import { Route as marketingBlogRssDotxmlRouteImport } from './routes/(marketing)/blog/rss[.]xml'
 import { Route as DashboardWhatsappTemplatesIndexRouteImport } from './routes/dashboard/whatsapp/templates/index'
 import { Route as DashboardWhatsappPaymentsIndexRouteImport } from './routes/dashboard/whatsapp/payments/index'
-import { Route as DashboardWhatsappOrdersAndPaymentsIndexRouteImport } from './routes/dashboard/whatsapp/orders-and-payments/index'
+import { Route as DashboardWhatsappOrdersIndexRouteImport } from './routes/dashboard/whatsapp/orders/index'
 import { Route as DashboardWhatsappFlowsIndexRouteImport } from './routes/dashboard/whatsapp/flows/index'
 import { Route as DashboardWhatsappFlowbotsIndexRouteImport } from './routes/dashboard/whatsapp/flowbots/index'
 import { Route as DashboardWhatsappCatalogIndexRouteImport } from './routes/dashboard/whatsapp/catalog/index'
@@ -452,10 +452,10 @@ const DashboardWhatsappPaymentsIndexRoute =
     path: '/whatsapp/payments/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
-const DashboardWhatsappOrdersAndPaymentsIndexRoute =
-  DashboardWhatsappOrdersAndPaymentsIndexRouteImport.update({
-    id: '/whatsapp/orders-and-payments/',
-    path: '/whatsapp/orders-and-payments/',
+const DashboardWhatsappOrdersIndexRoute =
+  DashboardWhatsappOrdersIndexRouteImport.update({
+    id: '/whatsapp/orders/',
+    path: '/whatsapp/orders/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardWhatsappFlowsIndexRoute =
@@ -1140,7 +1140,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/whatsapp/catalog/': typeof DashboardWhatsappCatalogIndexRoute
   '/dashboard/whatsapp/flowbots/': typeof DashboardWhatsappFlowbotsIndexRoute
   '/dashboard/whatsapp/flows/': typeof DashboardWhatsappFlowsIndexRoute
-  '/dashboard/whatsapp/orders-and-payments/': typeof DashboardWhatsappOrdersAndPaymentsIndexRoute
+  '/dashboard/whatsapp/orders/': typeof DashboardWhatsappOrdersIndexRoute
   '/dashboard/whatsapp/payments/': typeof DashboardWhatsappPaymentsIndexRoute
   '/dashboard/whatsapp/templates/': typeof DashboardWhatsappTemplatesIndexRoute
   '/login/callback/apple/': typeof authLoginCallbackAppleIndexRoute
@@ -1290,7 +1290,7 @@ export interface FileRoutesByTo {
   '/dashboard/whatsapp/catalog': typeof DashboardWhatsappCatalogIndexRoute
   '/dashboard/whatsapp/flowbots': typeof DashboardWhatsappFlowbotsIndexRoute
   '/dashboard/whatsapp/flows': typeof DashboardWhatsappFlowsIndexRoute
-  '/dashboard/whatsapp/orders-and-payments': typeof DashboardWhatsappOrdersAndPaymentsIndexRoute
+  '/dashboard/whatsapp/orders': typeof DashboardWhatsappOrdersIndexRoute
   '/dashboard/whatsapp/payments': typeof DashboardWhatsappPaymentsIndexRoute
   '/dashboard/whatsapp/templates': typeof DashboardWhatsappTemplatesIndexRoute
   '/login/callback/apple': typeof authLoginCallbackAppleIndexRoute
@@ -1444,7 +1444,7 @@ export interface FileRoutesById {
   '/dashboard/whatsapp/catalog/': typeof DashboardWhatsappCatalogIndexRoute
   '/dashboard/whatsapp/flowbots/': typeof DashboardWhatsappFlowbotsIndexRoute
   '/dashboard/whatsapp/flows/': typeof DashboardWhatsappFlowsIndexRoute
-  '/dashboard/whatsapp/orders-and-payments/': typeof DashboardWhatsappOrdersAndPaymentsIndexRoute
+  '/dashboard/whatsapp/orders/': typeof DashboardWhatsappOrdersIndexRoute
   '/dashboard/whatsapp/payments/': typeof DashboardWhatsappPaymentsIndexRoute
   '/dashboard/whatsapp/templates/': typeof DashboardWhatsappTemplatesIndexRoute
   '/(auth)/login/callback/apple/': typeof authLoginCallbackAppleIndexRoute
@@ -1599,7 +1599,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/catalog/'
     | '/dashboard/whatsapp/flowbots/'
     | '/dashboard/whatsapp/flows/'
-    | '/dashboard/whatsapp/orders-and-payments/'
+    | '/dashboard/whatsapp/orders/'
     | '/dashboard/whatsapp/payments/'
     | '/dashboard/whatsapp/templates/'
     | '/login/callback/apple/'
@@ -1749,7 +1749,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/catalog'
     | '/dashboard/whatsapp/flowbots'
     | '/dashboard/whatsapp/flows'
-    | '/dashboard/whatsapp/orders-and-payments'
+    | '/dashboard/whatsapp/orders'
     | '/dashboard/whatsapp/payments'
     | '/dashboard/whatsapp/templates'
     | '/login/callback/apple'
@@ -1902,7 +1902,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp/catalog/'
     | '/dashboard/whatsapp/flowbots/'
     | '/dashboard/whatsapp/flows/'
-    | '/dashboard/whatsapp/orders-and-payments/'
+    | '/dashboard/whatsapp/orders/'
     | '/dashboard/whatsapp/payments/'
     | '/dashboard/whatsapp/templates/'
     | '/(auth)/login/callback/apple/'
@@ -2390,11 +2390,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardWhatsappPaymentsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/whatsapp/orders-and-payments/': {
-      id: '/dashboard/whatsapp/orders-and-payments/'
-      path: '/whatsapp/orders-and-payments'
-      fullPath: '/dashboard/whatsapp/orders-and-payments/'
-      preLoaderRoute: typeof DashboardWhatsappOrdersAndPaymentsIndexRouteImport
+    '/dashboard/whatsapp/orders/': {
+      id: '/dashboard/whatsapp/orders/'
+      path: '/whatsapp/orders'
+      fullPath: '/dashboard/whatsapp/orders/'
+      preLoaderRoute: typeof DashboardWhatsappOrdersIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/whatsapp/flows/': {
@@ -3151,7 +3151,7 @@ interface DashboardRouteRouteChildren {
   DashboardWhatsappCatalogIndexRoute: typeof DashboardWhatsappCatalogIndexRoute
   DashboardWhatsappFlowbotsIndexRoute: typeof DashboardWhatsappFlowbotsIndexRoute
   DashboardWhatsappFlowsIndexRoute: typeof DashboardWhatsappFlowsIndexRoute
-  DashboardWhatsappOrdersAndPaymentsIndexRoute: typeof DashboardWhatsappOrdersAndPaymentsIndexRoute
+  DashboardWhatsappOrdersIndexRoute: typeof DashboardWhatsappOrdersIndexRoute
   DashboardWhatsappPaymentsIndexRoute: typeof DashboardWhatsappPaymentsIndexRoute
   DashboardWhatsappTemplatesIndexRoute: typeof DashboardWhatsappTemplatesIndexRoute
   DashboardAnalyticsTeamTeamidIndexRoute: typeof DashboardAnalyticsTeamTeamidIndexRoute
@@ -3235,8 +3235,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardWhatsappCatalogIndexRoute: DashboardWhatsappCatalogIndexRoute,
   DashboardWhatsappFlowbotsIndexRoute: DashboardWhatsappFlowbotsIndexRoute,
   DashboardWhatsappFlowsIndexRoute: DashboardWhatsappFlowsIndexRoute,
-  DashboardWhatsappOrdersAndPaymentsIndexRoute:
-    DashboardWhatsappOrdersAndPaymentsIndexRoute,
+  DashboardWhatsappOrdersIndexRoute: DashboardWhatsappOrdersIndexRoute,
   DashboardWhatsappPaymentsIndexRoute: DashboardWhatsappPaymentsIndexRoute,
   DashboardWhatsappTemplatesIndexRoute: DashboardWhatsappTemplatesIndexRoute,
   DashboardAnalyticsTeamTeamidIndexRoute:
