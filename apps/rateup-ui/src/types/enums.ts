@@ -658,3 +658,50 @@ export enum LoyaltyRewardStatus {
   EXPIRED = "EXPIRED",
   OUT_OF_STOCK = "OUT_OF_STOCK",
 }
+
+export const EXCLUDED_KEYS = new Set([
+  "retailerId",
+  "currency",
+  "price",
+  "quantity",
+  "title",
+  "image",
+  "image_link",
+  "name",
+  "description",
+  "availability",
+  "condition",
+  "visibility",
+  "url",
+]);
+
+export const STAGE_LABELS: Record<string, string> = {
+  PENDING_ADDRESS: "Awaiting Address",
+  PENDING_DELIVERY: "Awaiting Delivery",
+  PENDING_PAYMENT: "Awaiting Payment",
+  PENDING_CHECKOUT: "Checkout Sent",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
+};
+
+export const COMMON_CARRIERS = [
+  "Delhivery",
+  "DHL Express",
+  "Blue Dart",
+  "DTDC",
+  "Ekart",
+  "Xpressbees",
+  "Shadowfax",
+  "India Post",
+  "FedEx",
+  "UPS",
+  "USPS",
+  "4PX",
+  "Amazon Logistics",
+  "Canada Post",
+  "Royal Mail",
+  "Australia Post",
+  "Japan Post",
+  "GLS",
+  "Hermes",
+];

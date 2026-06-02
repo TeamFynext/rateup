@@ -337,9 +337,14 @@ export function useNavMain({
                   icon: IconBuildingStore,
                 },
                 {
-                  title: "Orders and Payments",
-                  url: "/dashboard/whatsapp/orders-and-payments",
-                  icon: IconBrandWhatsapp, // Or a more specific icon like IconCreditCard if available, or just keep it simple. Using IconBrandWhatsapp as placeholder or reuse IconSettings
+                  title: t("Orders"),
+                  url: "/dashboard/whatsapp/orders",
+                  icon: ShoppingCart,
+                },
+                {
+                  title: t("Payments"),
+                  url: "/dashboard/whatsapp/payments",
+                  icon: CreditCard,
                 },
               ],
             },

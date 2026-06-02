@@ -5,9 +5,9 @@ import { waCatalogUrl } from "../catalog.api";
 const baseUrl = `${waCatalogUrl}/orders`;
 
 export async function getWaCatalogOrders(catalogId, filter) {
-  return (
-    await axiosClient.get(
-      `${baseUrl}/${catalogId}?page=${filter.pageIndex}&limit=${filter.pageSize}`,
-    )
-  ).data;
+  let url = `${baseUrl}/${catalogId}?page=${filter.pageIndex}&limit=${filter.pageSize}`;
+  if (filter?.storeType) {
+    url += `&storeType=${filter.storeType}`;
+  }
+  return (await axiosClient.get(url)).data;
 }
