@@ -845,7 +845,24 @@ export async function handleAddressFlowResponse({
   });
   if (!catalog) return false;
 
-  const deliveryOptions = (catalog.deliveryOptions as any[]) ?? [];
+  let deliveryOptions = (catalog.deliveryOptions as any[]) ?? [];
+  if (catalog.storeType === "shopify" || catalog.storeType === "SHOPIFY") {
+    try {
+      const { fetchShopifyShippingRates } =
+        await import("../../integrations/shopify/shopify.service.js");
+      const shopifyRates = await fetchShopifyShippingRates(
+        orgId,
+        order.products as any[],
+        addressData as any,
+      );
+      if (shopifyRates && shopifyRates.length > 0) {
+        deliveryOptions = shopifyRates;
+      }
+    } catch (e) {
+      log.error("Failed to fetch Shopify shipping rates dynamically: %o", e);
+    }
+  }
+
   const shouldAskDelivery =
     catalog.collectDelivery &&
     !catalog.fixedDeliveryCharge &&
@@ -921,7 +938,27 @@ export async function handleDeliveryListReply({
   });
   if (!catalog) return false;
 
-  const deliveryOptions = (catalog.deliveryOptions as any[]) ?? [];
+  let deliveryOptions = (catalog.deliveryOptions as any[]) ?? [];
+  if (catalog.storeType === "shopify" || catalog.storeType === "SHOPIFY") {
+    try {
+      const { fetchShopifyShippingRates } =
+        await import("../../integrations/shopify/shopify.service.js");
+      const shopifyRates = await fetchShopifyShippingRates(
+        orgId,
+        order.products as any[],
+        (order as any).shippingAddress as any,
+      );
+      if (shopifyRates && shopifyRates.length > 0) {
+        deliveryOptions = shopifyRates;
+      }
+    } catch (e) {
+      log.error(
+        "Failed to fetch Shopify shipping rates dynamically on reply: %o",
+        e,
+      );
+    }
+  }
+
   const optionId = listReplyId.replace("delivery_", "");
   const selectedOption = deliveryOptions.find(
     (o: any) => String(o.id) === optionId && o.enabled,

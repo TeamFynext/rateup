@@ -5,15 +5,18 @@ export async function getWaCatalogOrders(
   catalogId: string,
   filter: OrderPaginateSchema,
 ) {
+  const where: any = {
+    catalogId,
+  };
+  if (filter.storeType) {
+    where.storeType = filter.storeType;
+  }
+
   const totalCount = await prisma.waCatalogOrder.count({
-    where: {
-      catalogId,
-    },
+    where,
   });
   const data = await prisma.waCatalogOrder.findMany({
-    where: {
-      catalogId,
-    },
+    where,
     include: {
       contact: {
         select: {
@@ -21,6 +24,9 @@ export async function getWaCatalogOrders(
           phone: true,
         },
       },
+    },
+    orderBy: {
+      createdAt: "desc",
     },
     take: filter.limit,
     skip: filter.page * filter.limit,

@@ -16,6 +16,8 @@ import {
   sendShopifySurveyCronAction,
   updateShopifyIntegrationByOrgId,
   updateShopifyIntegrationByShop,
+  getFulfillmentOrders,
+  createShopifyFulfillment,
 } from "./shopify.service.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import shopify from "./shopify.config.js";
@@ -326,5 +328,54 @@ export async function testShopifyCronActionFnHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
+  }
+}
+
+export async function getFulfillmentOrdersHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user as any;
+    const { id } = request.params;
+    const fulfillmentOrders = await getFulfillmentOrders(orgId, id);
+    reply.code(200).send(fulfillmentOrders);
+  } catch (e: any) {
+    log.error("Error fetching fulfillment orders: %o", e);
+    reply
+      .code(500)
+      .send({ error: e.message || "Failed to fetch fulfillment orders" });
+  }
+}
+
+export async function createFulfillmentHandler(
+  request: FastifyRequest<{
+    Body: {
+      lineItemsByFulfillmentOrder: {
+        fulfillmentOrderId: string;
+        fulfillmentOrderLineItems?: {
+          id: string;
+          quantity: number;
+        }[];
+      }[];
+      trackingInfo?: {
+        company?: string;
+        number?: string;
+        url?: string;
+      };
+      notifyCustomer?: boolean;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user as any;
+    const fulfillment = await createShopifyFulfillment(orgId, request.body);
+    reply.code(200).send(fulfillment);
+  } catch (e: any) {
+    log.error("Error creating Shopify fulfillment: %o", e);
+    reply
+      .code(500)
+      .send({ error: e.message || "Failed to create fulfillment" });
   }
 }
