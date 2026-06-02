@@ -1263,6 +1263,7 @@ export async function fetchZohoPipelineMeta(
 }
 
 export async function getIntegrationByZohoChannelId(channelId: string) {
+  const normalizedChannelId = String(channelId);
   const integration = await prisma.integration.findFirst({
     where: {
       name: IntegratedApps.zoho,
@@ -1271,13 +1272,13 @@ export async function getIntegrationByZohoChannelId(channelId: string) {
         {
           credential: {
             path: ["crmWebhook", "channelId"],
-            equals: channelId,
+            equals: normalizedChannelId,
           },
         },
         {
           credential: {
             path: ["biginWebhook", "channelId"],
-            equals: channelId,
+            equals: normalizedChannelId,
           },
         },
       ],
