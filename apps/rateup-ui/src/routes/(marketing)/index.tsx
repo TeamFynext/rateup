@@ -125,7 +125,7 @@ function RouteComponent() {
     const timer = window.setTimeout(() => {
       setLikeWhatOpen(true);
       window.localStorage.setItem("likeWhatUSeeShown", "true");
-    }, 10000);
+    }, 20000);
 
     return () => window.clearTimeout(timer);
   }, [shouldShowLikeWhat]);

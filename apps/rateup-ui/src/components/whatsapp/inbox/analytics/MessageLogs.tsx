@@ -321,7 +321,7 @@ function MessageLogs({ dateRange }) {
 
       {
         accessorKey: "messagePreview",
-        header: t("Message"),
+        header: t("Template"),
         cell: ({ row }) => {
           if (row.original.isSkeleton) {
             return (
