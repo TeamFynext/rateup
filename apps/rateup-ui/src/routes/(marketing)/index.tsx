@@ -1,23 +1,21 @@
 "use client";
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
 
-import ClientLogos from "@/components/RateupHomePage/helpers/ClientLogos.tsx";
-import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooterNew.tsx";
+import DemoModal from "@/components/RateupHomePage/helpers/BookDemoComponent";
+import LikeWhatUSee from "@/components/RateupHomePage/helpers/LikeWhatUSee";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
-import AutomateInteraction from "@/components/RateupHomePage/shared/AutomateInteraction.tsx";
-import FeatureCards2 from "@/components/RateupHomePage/shared/FeatureCards2New.tsx";
-import Features from "@/components/RateupHomePage/shared/FeaturesNew.tsx";
-import HeroAnalytics from "@/components/RateupHomePage/shared/HeroAnalyticsNew.tsx";
-import HeroSection from "@/components/RateupHomePage/shared/HeroSectionNew.tsx";
-import Integration from "@/components/RateupHomePage/shared/IntegrationsNew.tsx";
-import LoyalityAd from "@/components/RateupHomePage/shared/LoyalityAdNew.tsx";
-import MobileAppSection from "@/components/RateupHomePage/shared/MobileAppSectionNew.tsx";
-import StartRateupHero from "@/components/RateupHomePage/shared/StartRateup.tsx";
+import Features from "@/components/RateupHomePage/shared/Features";
+import HeroSectionNew from "@/components/RateupHomePage/shared/HeroSectionNew";
+import HomePageFooter from "@/components/RateupHomePage/shared/HomePageFooter";
+import HowItWorks from "@/components/RateupHomePage/shared/HowItWorks";
+import Problem from "@/components/RateupHomePage/shared/Problem";
+import TrustedBy from "@/components/RateupHomePage/shared/TrustedBy";
+import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 import { homepageMarkdown } from "../../markdown/homepage";
 import { createMarkdownMiddleware } from "../../markdown/serveMarkdown";
@@ -88,27 +86,91 @@ export const Route = createFileRoute("/(marketing)/")({
   }),
 });
 
+function useScrollReveal() {
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("in");
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -6% 0px" },
+    );
+
+    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+}
+
 function RouteComponent() {
+  const [likeWhatOpen, setLikeWhatOpen] = useState(false);
+  const [bookDemoOpen, setBookDemoOpen] = useState(false);
+  const [shouldShowLikeWhat, setShouldShowLikeWhat] = useState(false);
+
+  useScrollReveal();
+
+  useEffect(() => {
+    const hasSeenPopup = window.localStorage.getItem("likeWhatUSeeShown");
+    if (!hasSeenPopup) {
+      setShouldShowLikeWhat(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!shouldShowLikeWhat) return;
+
+    const timer = window.setTimeout(() => {
+      setLikeWhatOpen(true);
+      window.localStorage.setItem("likeWhatUSeeShown", "true");
+    }, 10000);
+
+    return () => window.clearTimeout(timer);
+  }, [shouldShowLikeWhat]);
+
+  const handleLikeWhatOpenChange = (open: boolean) => {
+    if (!open) {
+      window.localStorage.setItem("likeWhatUSeeShown", "true");
+    }
+    setLikeWhatOpen(open);
+  };
+
+  const handleLikeWhatBookDemo = () => {
+    window.localStorage.setItem("likeWhatUSeeShown", "true");
+    setLikeWhatOpen(false);
+    setBookDemoOpen(true);
+  };
+
+  const handleLikeWhatWhatsapp = () => {
+    window.localStorage.setItem("likeWhatUSeeShown", "true");
+    setLikeWhatOpen(false);
+  };
+
   return (
-    <Layout>
-      <HeroSection />
-      <HeroAnalytics />
-      <ClientLogos />
-      <FeatureCards2 />
-      <LoyalityAd />
-      <Features />
-      <AutomateInteraction />
-      {/* <Clients/> */}
-      <Integration />
-      <MobileAppSection />
-      <StartRateupHero />
-      <HomePageFooter />
-      <Suspense fallback={null}>
-        <SupportWidget
-          orgId={import.meta.env.VITE_ROOT_ORG || ""}
-          token={import.meta.env.VITE_ROOT_TOKEN || ""}
-        />
-      </Suspense>
-    </Layout>
+    <div className={styles.theme}>
+      <Layout>
+        <HeroSectionNew />
+        <TrustedBy />
+        <Problem />
+        <HowItWorks />
+        <Features />
+        <HomePageFooter />
+        <Suspense fallback={null}>
+          <SupportWidget
+            orgId={import.meta.env.VITE_ROOT_ORG || ""}
+            token={import.meta.env.VITE_ROOT_TOKEN || ""}
+          />
+        </Suspense>
+      </Layout>
+      <LikeWhatUSee
+        open={likeWhatOpen}
+        onOpenChange={handleLikeWhatOpenChange}
+        onBookDemo={handleLikeWhatBookDemo}
+        onWhatsapp={handleLikeWhatWhatsapp}
+      />
+      <DemoModal open={bookDemoOpen} onClose={() => setBookDemoOpen(false)} />
+    </div>
   );
 }
