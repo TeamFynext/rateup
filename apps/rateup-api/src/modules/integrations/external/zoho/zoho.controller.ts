@@ -10,6 +10,7 @@ import {
   fetchZohoContacts,
   fetchZohoLeads,
   fetchZohoPipelineMeta,
+  fetchZohoUsers,
   getIntegrationByZohoChannelId,
   getValidZohoAccessToken,
   syncContactFromZohoRecord,
@@ -309,6 +310,40 @@ export async function getZohoContactsHandler(
     return reply.code(500).send({
       success: false,
       error: "Failed to fetch contacts",
+    });
+  }
+}
+
+export async function getZohoUsersHandler(
+  request: FastifyRequest<{
+    Querystring: {
+      orgId: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.query;
+
+    if (!orgId) {
+      return reply.code(400).send({
+        success: false,
+        error: "Missing orgId",
+      });
+    }
+
+    const users = await fetchZohoUsers(orgId);
+
+    return reply.send({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    log.error("Get Zoho users error => %o", error);
+
+    return reply.code(500).send({
+      success: false,
+      error: "Failed to fetch Zoho users",
     });
   }
 }

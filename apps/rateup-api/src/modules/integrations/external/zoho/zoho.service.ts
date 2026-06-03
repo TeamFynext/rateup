@@ -258,10 +258,17 @@ async function processZoho(
     case ZohoTriggers.BIGIN_CONTACT_CREATE: {
       log.info("Bigin contact create payload");
 
+      const contactPayload = {
+        ...data,
+        ...(credential?.bigin?.biginOwner
+          ? { Owner: { id: credential.bigin.biginOwner } }
+          : {}),
+      };
+
       const response = await createZohoRecord(
         accessToken,
         "Contacts",
-        data,
+        contactPayload,
         credential.api_domain,
         "bigin",
       );
@@ -420,6 +427,94 @@ async function processZoho(
         payload.Contact_Name = {
           id: biginContactId,
         };
+      }
+
+      if (credential?.bigin?.biginOwner) {
+        payload.Owner = { id: credential.bigin.biginOwner };
+      }
+
+      // If there is no Bigin contact but creating contacts is enabled, create one first
+      const createContactEnabled = (triggerSubscriptions || []).some(
+        (s: any) => s.subscribed_field === "bigin_contact_created" && s.active,
+      );
+
+      if (!biginContactId && createContactEnabled) {
+        try {
+          // Build a contact payload from available data
+          const contactPayload: any = {};
+
+          const nameVal = data.name || data.Full_Name || data.fullName || "";
+          if (nameVal) {
+            const parts = String(nameVal).split(" ");
+            contactPayload.First_Name = parts.shift() || "";
+            contactPayload.Last_Name = parts.join(" ") || "";
+          } else {
+            contactPayload.First_Name = data.firstName || data.First_Name || "";
+            contactPayload.Last_Name = data.lastName || data.Last_Name || "";
+          }
+
+          contactPayload.Email = data.email || data.Email || "";
+          contactPayload.Phone = data.phone || data.Phone || "";
+          if (credential?.bigin?.biginOwner) {
+            contactPayload.Owner = { id: credential.bigin.biginOwner };
+          }
+
+          const contactResponse = await createZohoRecord(
+            accessToken,
+            "Contacts",
+            contactPayload,
+            credential.api_domain,
+            "bigin",
+          );
+
+          if (
+            contactResponse?.data &&
+            Array.isArray(contactResponse.data) &&
+            contactResponse.data[0]
+          ) {
+            const createdContactId = contactResponse.data[0]?.details?.id;
+            if (createdContactId) {
+              biginContactId = createdContactId;
+
+              // Update Rateup contact integrationIds if we have a Rateup contact id
+              if (rateupContactId) {
+                const existingContact = await prisma.contact.findUnique({
+                  where: { id: rateupContactId },
+                  select: { integrationIds: true },
+                });
+
+                const existingIntegrationIds =
+                  (existingContact?.integrationIds as any) || {};
+
+                await prisma.contact.update({
+                  where: { id: rateupContactId },
+                  data: {
+                    integrationIds: {
+                      ...existingIntegrationIds,
+                      bigin: {
+                        ...(existingIntegrationIds.bigin || {}),
+                        contact: {
+                          ...(existingIntegrationIds.bigin?.contact || {}),
+                          id: createdContactId,
+                        },
+                      },
+                    },
+                  },
+                });
+
+                log.info("Created and linked Bigin contact to Rateup contact");
+              }
+
+              // attach to payload for deal creation
+              payload.Contact_Name = { id: biginContactId };
+            }
+          }
+        } catch (err: any) {
+          log.error(
+            "Failed creating Bigin contact before deal create => %o",
+            err,
+          );
+        }
       }
 
       let response: any;
@@ -1403,4 +1498,51 @@ export async function syncContactFromZohoRecord({
   });
   log.info("Synced contact from Zoho");
   return updatedContact;
+}
+
+export async function fetchZohoUsers(
+  orgId: string,
+  product: ZohoProduct = "bigin",
+) {
+  const integration = await prisma.integration.findUnique({
+    where: {
+      orgid_integration_name_unique: {
+        orgId,
+        name: "zoho",
+      },
+    },
+  });
+
+  if (!integration) {
+    throw new Error("Zoho integration not found");
+  }
+
+  const credential = integration.credential as any;
+  const accessToken = await getValidZohoAccessToken(integration);
+  const response = await getZohoRecords(
+    accessToken,
+    "users",
+    credential.api_domain,
+    {
+      type: "ActiveUsers",
+    },
+    undefined,
+    product,
+  );
+
+  const users =
+    response?.users?.map((user: any) => ({
+      id: String(user.id),
+      name:
+        user.full_name ||
+        `${user.first_name || ""} ${user.last_name || ""}`.trim(),
+      email: user.email,
+      status: user.status,
+      zuid: user.zuid,
+    })) || [];
+
+  return {
+    success: true,
+    users,
+  };
 }
