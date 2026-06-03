@@ -32,6 +32,20 @@ export async function getZohoLeads(orgId: string) {
   ).data;
 }
 
+export async function getZohoUsers(
+  orgId: string,
+  product: "crm" | "bigin" = "crm",
+) {
+  return (
+    await axiosClient.get(`${ZOHO_BASE_URL}/users`, {
+      params: {
+        orgId,
+        product,
+      },
+    })
+  ).data;
+}
+
 export async function getZohoPipelines(product: string) {
   return (
     await axiosClient.get(`${ZOHO_BASE_URL}/pipelines`, {
