@@ -5,6 +5,7 @@ import {
   getZohoContactsHandler,
   getZohoLeadsHandler,
   getZohoPipelinesHandler,
+  getZohoUsersHandler,
   handleZohoWebhook,
   syncZohoContactsHandler,
   syncZohoLeadsHandler,
@@ -63,6 +64,17 @@ export async function zohoRoutes(server: FastifyInstance) {
       },
     },
     getZohoLeadsHandler,
+  );
+
+  server.get(
+    "/users",
+    {
+      preHandler: checkSession,
+      schema: {
+        querystring: zohoQuerySchema,
+      },
+    },
+    getZohoUsersHandler,
   );
 
   server.get(
