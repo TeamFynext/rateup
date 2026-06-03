@@ -91,9 +91,9 @@ export default function DropDownNavItems() {
     >
       <span
         onClick={() => setOpen(!open)}
-        className="px-4 py-2 text-[16px] text-white font-semibold cursor-pointer flex items-center gap-1 hover:text-gray-100 transition-colors duration-200"
+        className="px-4 py-2 text-rateup-graytext text-[16px] font-semibold cursor-pointer flex items-center gap-1 hover:text-gray-600 transition-colors duration-200"
       >
-        Product
+        Platform
         <div className="bg-[#F5F5F5] p-1 rounded-full">
           <ChevronDown
             className={`h-5 w-5 text-rateup-graytext transition-transform duration-300 ${
