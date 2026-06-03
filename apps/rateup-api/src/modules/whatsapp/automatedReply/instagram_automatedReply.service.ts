@@ -68,11 +68,8 @@ export async function createInstagramAutomatedReply(data: {
         orgId: data.orgId,
         name: data.name,
         matchData: data.matchData,
-        matchType: "message",
         platform: PlatformType.INSTAGRAM,
         whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
-        sendOnceIn24Hours: data.sendOnceIn24Hours ?? false,
-        isEnabled: data.isActive ?? true,
       },
     });
 
