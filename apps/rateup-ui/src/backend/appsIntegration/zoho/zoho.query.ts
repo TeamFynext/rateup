@@ -4,6 +4,7 @@ import {
   getZohoContacts,
   getZohoLeads,
   getZohoPipelines,
+  getZohoUsers,
   syncZohoContacts,
   syncZohoLeads,
   unsubscribeZoho,
@@ -34,6 +35,14 @@ export function useZohoLeads(orgId?: string) {
 
     queryFn: () => getZohoLeads(orgId!),
 
+    enabled: !!orgId,
+  });
+}
+
+export function useZohoUsers(orgId?: string, product: "crm" | "bigin" = "crm") {
+  return useQuery({
+    queryKey: ["zoho-users", orgId, product],
+    queryFn: () => getZohoUsers(orgId!, product),
     enabled: !!orgId,
   });
 }

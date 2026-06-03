@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { IconPlugConnected, IconTrash } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -20,6 +20,7 @@ import {
   useUnsubscribeZoho,
   useZohoLeads,
   useZohoPipelines,
+  useZohoUsers,
 } from "@/backend/appsIntegration/zoho/zoho.query";
 import { useLifecyclesWithContactCount } from "@/backend/lifecycle/lifecycle.query";
 import RefreshButton from "@/components/Button/RefreshButton";
@@ -256,11 +257,43 @@ const ZohoTriggerList = ({
   refetch: () => void;
   isLoading: boolean;
 }) => {
+  const { user } = useUser();
   const { t } = useTranslation();
+  const { data: zohoUsersResponse, isLoading: zohoUsersLoading } = useZohoUsers(
+    user.orgId,
+    "bigin",
+  );
+
+  const [selectedBiginOwnerId, setSelectedBiginOwnerId] = useState<string>(
+    integration?.credential?.bigin?.biginOwner ?? "",
+  );
+
+  useEffect(() => {
+    if (integration?.credential?.bigin?.biginOwner) {
+      setSelectedBiginOwnerId(integration.credential.bigin.biginOwner);
+    }
+  }, [integration?.credential?.bigin?.biginOwner]);
+
+  const zohoUsers = Array.isArray(zohoUsersResponse?.users)
+    ? zohoUsersResponse.users
+    : Array.isArray(zohoUsersResponse?.users?.users)
+      ? zohoUsersResponse.users.users
+      : [];
 
   const triggers = integration
     ? (integration.credential?.triggerSubscriptions ?? [])
     : [];
+
+  const biginCreateEnabled = triggers.some(
+    (t) =>
+      (t.subscribed_field === ZohoTriggers.BIGIN_DEAL_CREATE ||
+        t.subscribed_field === ZohoTriggers.BIGIN_CONTACT_CREATE) &&
+      t.active,
+  );
+
+  const selectedOwner = zohoUsers.find(
+    (owner: any) => owner.id === selectedBiginOwnerId,
+  );
 
   const savedPipeline =
     integration?.credential?.bigin?.pipeline?.selectedPipeline;
@@ -515,6 +548,93 @@ const ZohoTriggerList = ({
           })}
         </CardContent>
       </Card>
+
+      {biginCreateEnabled &&
+        integration?.credential?.supportedProducts?.bigin && (
+          <Card className="overflow-hidden rounded-3xl border shadow-sm">
+            <CardHeader className="border-b bg-muted/30">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl border bg-background p-2 shadow-sm">
+                  <BiginLogo className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <CardTitle className="text-lg">
+                    {t("Assign Bigin Owner")}
+                  </CardTitle>
+
+                  <p className="text-muted-foreground text-sm">
+                    {t(
+                      "Select a Zoho user to assign as the owner for created Bigin contacts and deals.",
+                    )}
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-6 p-6">
+              <div className="space-y-2">
+                <Label>{t("Bigin Owner")}</Label>
+                <Select
+                  value={selectedBiginOwnerId}
+                  onValueChange={(value) =>
+                    setSelectedBiginOwnerId(String(value))
+                  }
+                  disabled={zohoUsersLoading}
+                >
+                  <SelectTrigger className="h-11 rounded-xl w-full">
+                    <SelectValue
+                      placeholder={
+                        zohoUsersLoading
+                          ? t("Loading users...")
+                          : t("Select a Zoho user")
+                      }
+                    />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {zohoUsers.map((owner: any) => (
+                      <SelectItem key={owner.id} value={owner.id}>
+                        {owner.name} {owner.email ? `(${owner.email})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <p className="text-sm text-muted-foreground">
+                  {t(
+                    "The selected user id will be saved as the Bigin owner in your Zoho credential.",
+                  )}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <Button
+                  onClick={() =>
+                    updateMut.mutate({
+                      credential: {
+                        ...integration.credential,
+                        bigin: {
+                          ...integration?.credential?.bigin,
+                          biginOwner: selectedBiginOwnerId,
+                        },
+                      },
+                    })
+                  }
+                  disabled={!selectedBiginOwnerId}
+                >
+                  {t("Save Owner")}
+                </Button>
+
+                {selectedOwner ? (
+                  <p className="text-sm text-muted-foreground">
+                    {t("Current owner")}: {selectedOwner.name}
+                  </p>
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       {/* Bigin Config */}
       {triggers.some(
