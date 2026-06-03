@@ -11,55 +11,27 @@ export async function bookDemoHandler(
   reply: FastifyReply,
 ) {
   try {
-    const {
-      firstName,
-      lastName,
-      workEmail,
-      phoneNumber,
-      companyName,
-      teamSize,
-      preferredTime,
-      primaryUseCase,
-      additionalInfo,
-    } = request.body;
+    const { name, businessName, phone, message, workEmail } = request.body;
 
-    const savedDemo = await createBookDemo({
-      firstName,
-      lastName,
-      workEmail,
-      phoneNumber,
-      companyName,
-      teamSize,
-      preferredTime,
-      primaryUseCase,
-      additionalInfo,
-    });
-
-    const subject = `New Demo Request from ${firstName} ${lastName}`;
+    const subject = `New Demo Request from ${name}`;
     const text = `
-      You have a new demo request:
+You have a new demo request:
 
-      Name: ${firstName} ${lastName}
-      Email: ${workEmail}
-      Phone: ${phoneNumber}
-      Company: ${companyName}
-      Team Size: ${teamSize}
-      Preferred Time: ${preferredTime}
-      Use Case: ${primaryUseCase}
-      Additional Info: ${additionalInfo}
-    `;
+Name: ${name}
+Business: ${businessName}
+Phone: ${phone}
+Message: ${message || "N/A"}
+Work Email: ${workEmail}
+`;
 
     const html = `
-      <h2>New Demo Request</h2>
-      <p><strong>Name:</strong> ${firstName} ${lastName}</p>
-      <p><strong>Email:</strong> ${workEmail}</p>
-      <p><strong>Phone:</strong> ${phoneNumber}</p>
-      <p><strong>Company:</strong> ${companyName}</p>
-      <p><strong>Team Size:</strong> ${teamSize}</p>
-      <p><strong>Preferred Time:</strong> ${preferredTime}</p>
-      <p><strong>Primary Use Case:</strong> ${primaryUseCase}</p>
-      <p><strong>Additional Info:</strong> ${additionalInfo}</p>
-    `;
+  <h2>New Demo Request</h2>
+  <p><strong>Name:</strong> ${name}</p>
+  <p><strong>Business:</strong> ${businessName}</p>
+  <p><strong>Phone:</strong> ${phone}</p>
+  <p><strong>Message:</strong> ${message || "N/A"}</p>
+  <p><strong>Work Email:</strong> ${workEmail}</p>
+`;
 
     await notificationQueue.add("notification", {
       emailData: {
@@ -249,21 +221,17 @@ export async function bookDemoHandler(
         <p class="subtitle">Thank you for your interest in RateUp</p>
 
         <p class="body-text">
-          Hello, ${firstName} <br />
+          Hello, ${name} <br />
           We’ve received your demo request. We will contact you soon.
           Here are your booking details:
         </p>
 
         <div class="details">
           <h4>Booking Details</h4>
-          <div class="detail-item"><strong>Name:</strong> ${firstName} ${lastName}</div>
-          <div class="detail-item"><strong>Email:</strong> ${workEmail}</div>
-          <div class="detail-item"><strong>Phone:</strong> ${phoneNumber}</div>
-          <div class="detail-item"><strong>Company:</strong> ${companyName}</div>
-          <div class="detail-item"><strong>Team Size:</strong> ${teamSize}</div>
-          <div class="detail-item"><strong>Preferred Time:</strong> ${preferredTime}</div>
-          <div class="detail-item"><strong>Use Case:</strong> ${primaryUseCase}</div>
-          <div class="detail-item"><strong>Additional Info:</strong> ${additionalInfo || "N/A"}</div>
+          <div class="detail-item"><strong>Name:</strong> ${name}</div>
+          <div class="detail-item"><strong>Business:</strong> ${businessName}</div>
+          <div class="detail-item"><strong>Phone:</strong> ${phone}</div>
+          <div class="detail-item"><strong>Message:</strong> ${message || "N/A"}</div>
         </div>
 
         <div class="cta-row">
@@ -316,7 +284,6 @@ export async function bookDemoHandler(
     return reply.status(200).send({
       success: true,
       message: "Your demo request has been received. We’ll contact you soon!",
-      data: savedDemo,
     });
   } catch (err) {
     console.error("Error handling demo booking:", err);
