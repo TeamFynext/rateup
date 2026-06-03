@@ -445,12 +445,17 @@ async function processZoho(
 
           const nameVal = data.name || data.Full_Name || data.fullName || "";
           if (nameVal) {
-            const parts = String(nameVal).split(" ");
-            contactPayload.First_Name = parts.shift() || "";
-            contactPayload.Last_Name = parts.join(" ") || "";
+            const parts = String(nameVal).trim().split(" ").filter(Boolean);
+            // SINGLE WORD NAME
+            if (parts.length === 1) {
+              contactPayload.Last_Name = parts[0];
+            } else {
+              contactPayload.First_Name = parts.shift() || "";
+              contactPayload.Last_Name = parts.join(" ");
+            }
           } else {
-            contactPayload.First_Name = data.firstName || data.First_Name || "";
-            contactPayload.Last_Name = data.lastName || data.Last_Name || "";
+            // FALLBACK
+            contactPayload.Last_Name = data.phone || "Unknown";
           }
 
           contactPayload.Email = data.email || data.Email || "";
