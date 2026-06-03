@@ -1,11 +1,15 @@
 import { axiosClient } from "../apiClient";
 
 export interface BookDemo {
-  name: string;
+  firstName: string;
+  lastName: string;
   workEmail: string;
-  businessName: string;
-  phone: string;
-  message?: string;
+  phoneNumber: string;
+  companyName: string;
+  teamSize: string;
+  preferredTime: string;
+  primaryUseCase: string;
+  additionalInfo?: string;
 }
 
 export async function bookDemo(data: BookDemo) {

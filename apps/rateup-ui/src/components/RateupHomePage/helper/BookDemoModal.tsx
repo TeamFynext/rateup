@@ -1,23 +1,27 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
-import DemoModal from "../helpers/BookDemoComponent";
+import { useNavigate } from "@tanstack/react-router";
 
 export function BookDemoModal1() {
-  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
       <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="text-white px-6 cursor-pointer sm:px-7 py-2.5 text-base sm:text-lg font-semibold rounded-md bg-linear-to-r from-[#00397b] via-[#1c518e] to-[#3f5ba9] hover:opacity-90"
+        onClick={() =>
+          navigate({
+            to: "/bookdemo",
+          })
+        }
+        className="text-white px-6 cursor-pointer sm:px-7 py-2.5
+                 text-base sm:text-lg font-semibold rounded-md bg-linear-to-r from-[#00397b]
+                  via-[#1c518e] to-[#3f5ba9] hover:opacity-90"
         aria-label="Book a Demo"
       >
         Book a Demo
       </button>
-      <DemoModal open={open} onClose={() => setOpen(false)} />
     </>
   );
 }
@@ -27,17 +31,21 @@ interface BookDemoModalProps {
 }
 
 export function BookDemoModal({ children }: BookDemoModalProps) {
-  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
+      {/* Trigger - any custom button passed as children */}
       <span
-        onClick={() => setOpen(true)}
-        className="inline-block cursor-pointer"
+        onClick={() =>
+          navigate({
+            to: "/bookdemo",
+          })
+        }
+        className="inline-block"
       >
         {children}
       </span>
-      <DemoModal open={open} onClose={() => setOpen(false)} />
     </>
   );
 }
