@@ -15,10 +15,12 @@ import {
   NavBody,
   NavItems,
 } from "@/components/ui/resizable-navbar.tsx";
+import styles from "@/styles/commonCssModules/homepagecss.module.css";
 import { imagesPath } from "@/utils/constants.ts";
 import { fbConsent } from "@/utils/fbpixel.ts";
 import { setGAConsent } from "@/utils/gtag.ts";
 
+import { RateupStar } from "../integrations/logos.tsx";
 import { Button } from "../ui/button.tsx";
 import { CookieConsent } from "../ui/cookie-consent.tsx";
 import { BookDemoModal } from "./helper/BookDemoModal.tsx";
@@ -60,37 +62,30 @@ export default function Layout({
   const navigate = useNavigate();
 
   return (
-    <div
-      className={`relative w-full py-2 ${
-        navbarClassName || (!isBlog ? "bg-rateup-darkblue" : "")
-      }`}
-    >
+    <div className={`relative w-full py-2 ${navbarClassName}`}>
       {" "}
       <Navbar>
         {/* Desktop Navigation */}
-        <NavBody className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 ">
+        <NavBody className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 ">
           <Link
             to="/"
             className="relative z-20 mr-4 flex items-center
              space-x-2 px-2 py-1 text-sm font-normal text-black"
           >
-            <Image
-              src={rateupLogoUrl}
-              alt="RateUp logo"
-              width={140}
-              height={60}
-              className="h-9 w-auto object-contain"
-              priority
-            />
+            <a className={styles.brand} href="#top">
+              <RateupStar />
+              <span className={styles.wm}>
+                Rate
+                <span className={styles.up}>Up</span>
+              </span>
+            </a>
           </Link>
           <NavItems items={navItems} />
           {hasSession ? (
             <div className="flex  items-center gap-4">
               <Link to={"/dashboard"}>
                 <Button
-                  className="font-medium 
-               border-rateup-blue-4 bg-rateup-blue-4
-              text-white transition"
+                  className={` ${styles["btn"]} ${styles["btn-primary"]} ${styles["btn-sm"]}`}
                   size="lg"
                 >
                   Dashboard
@@ -99,39 +94,21 @@ export default function Layout({
             </div>
           ) : (
             <div className="flex items-center gap-4 justify-center">
-              <Link
-                to={"/signup"}
-                // className="px-4 text-[14px] relative py-2 rounded-xl border font-semibold border-rateup-blue-4 bg-rateup-blue-5 text-white transition"
-              >
-                <Button
-                  className="border-rateup-blue-4 bg-rateup-blue-5 text-white transition"
-                  size="lg"
-                >
-                  <span className="font-semibold text-[14px]">
-                    Start Free Trial
-                  </span>
-                </Button>
-              </Link>
               <BookDemoModal>
-                <Button
-                  className="bg-rateup-light-blue text-rateup-dark-blue hover:bg-rateup-darkblue-2 hover:text-white transition"
-                  size="lg"
-                >
-                  <span className="font-semibold text-[14px]">Book A Demo</span>
-                </Button>
+                <span className={styles["signin"]}>Book a Demo</span>
               </BookDemoModal>
-              <Button
-                onClick={() =>
-                  navigate({
-                    to: "/login",
-                  })
-                }
-                size="lg"
-                variant="outline"
-                className="px-10 text-rateup-blue border border-rateup-light-blue hover:bg-rateup-blue-4 hover:text-white transition bg-white"
+              <button
+                onClick={() => navigate({ to: "/login" })}
+                className={` ${styles["btn"]} ${styles["btn-ghost"]} ${styles["btn-sm"]}`}
               >
-                <span className="font-semibold text-[14px]">Login</span>
-              </Button>
+                Sign In
+              </button>
+              <button
+                onClick={() => navigate({ to: "/signup" })}
+                className={` ${styles["btn"]} ${styles["btn-primary"]} ${styles["btn-sm"]}`}
+              >
+                Sign Up for Free
+              </button>
             </div>
           )}
         </NavBody>
