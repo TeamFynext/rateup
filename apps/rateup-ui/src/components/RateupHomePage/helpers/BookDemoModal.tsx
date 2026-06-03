@@ -1,52 +1,47 @@
 "use client";
 
-import type { ReactNode } from "react";
-import React from "react";
+import { useState, type ReactNode } from "react";
 
-import { useNavigate } from "@tanstack/react-router";
+import DemoModal from "../helpers/BookDemoComponent";
 
 export function BookDemoModal1() {
-  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
 
   return (
     <>
       <button
-        onClick={() =>
-          navigate({
-            to: "/bookdemo",
-          })
-        }
-        className="text-white px-6 cursor-pointer sm:px-7 py-2.5
-                 text-base sm:text-lg font-semibold rounded-md bg-linear-to-r from-[#00397b]
-                  via-[#1c518e] to-[#3f5ba9] hover:opacity-90"
+        type="button"
+        onClick={() => setOpen(true)}
+        className="text-white px-6 cursor-pointer sm:px-7 py-2.5 text-base sm:text-lg font-semibold rounded-md bg-linear-to-r from-[#00397b] via-[#1c518e] to-[#3f5ba9] hover:opacity-90"
         aria-label="Book a Demo"
       >
         Book a Demo
       </button>
+      <DemoModal open={open} onClose={() => setOpen(false)} />
     </>
   );
 }
 
 interface BookDemoModalProps {
   children: ReactNode; // custom trigger button
+  onOpen?: () => void;
 }
 
-export function BookDemoModal({ children }: BookDemoModalProps) {
-  const navigate = useNavigate();
+export function BookDemoModal({ children, onOpen }: BookDemoModalProps) {
+  const [open, setOpen] = useState(false);
 
   return (
     <>
-      {/* Trigger - any custom button passed as children */}
       <span
-        onClick={() =>
-          navigate({
-            to: "/bookdemo",
-          })
-        }
-        className="inline-block"
+        onClick={() => {
+          setOpen(true);
+          onOpen?.();
+        }}
+        className="inline-block cursor-pointer"
       >
         {children}
       </span>
+      <DemoModal open={open} onClose={() => setOpen(false)} />
     </>
   );
 }
