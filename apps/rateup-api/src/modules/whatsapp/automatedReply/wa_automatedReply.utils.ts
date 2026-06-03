@@ -104,15 +104,13 @@ export type automationProps = {
   isEnabled: boolean;
   sendOnceIn24Hours: boolean;
 };
-// Helper to check whole word match
+// Helper to check substring match while preserving optional case sensitivity
 function includesWholePhrase(text, phrase, caseSensitive = false) {
-  const flags = caseSensitive ? "g" : "gi";
+  if (caseSensitive) {
+    return text.includes(phrase);
+  }
 
-  const escaped = phrase.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-
-  const regex = new RegExp(`\\b${escaped}\\b`, flags);
-
-  return regex.test(text);
+  return text.toLowerCase().includes(phrase.toLowerCase());
 }
 
 /**
