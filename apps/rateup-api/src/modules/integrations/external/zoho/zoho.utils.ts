@@ -1,16 +1,38 @@
 import { integrationTriggerQueue } from "../../../../utils/redisConnection.js";
 import { ZohoTriggers } from "./zoho.service.js";
 
-export function buildZohoLeadPayload(contact: any) {
-  const [firstName, ...rest] = (contact.name || "Unknown").split(" ");
+function parseZohoName(name?: string) {
+  const cleanName = (name || "").trim();
+  if (!cleanName) {
+    return {
+      First_Name: "",
+      Last_Name: "Unknown",
+    };
+  }
+  const parts = cleanName.split(" ").filter(Boolean);
+  // SINGLE WORD NAME
+  if (parts.length === 1) {
+    return {
+      First_Name: "",
+      Last_Name: parts[0],
+    };
+  }
   return {
-    First_Name: firstName,
-    Last_Name: rest.join(" ") || firstName,
+    First_Name: parts.shift() || "",
+    Last_Name: parts.join(" ") || "Unknown",
+  };
+}
+
+export function buildZohoLeadPayload(contact: any) {
+  const parsedName = parseZohoName(contact.name);
+
+  return {
+    ...parsedName,
     Email: contact.email || "",
     Phone: contact.phone || "",
     Lead_Status: contact.leadStatus || "New",
     Description: `
-      Source: ${contact.source}
+      Source: ${contact.source || ""}
       PSID: ${contact.psid || ""}
       IGSID: ${contact.igsId || ""}
     `,
@@ -18,14 +40,14 @@ export function buildZohoLeadPayload(contact: any) {
 }
 
 export function buildZohoContactPayload(contact: any) {
-  const [firstName, ...rest] = (contact.name || "Unknown").split(" ");
+  const parsedName = parseZohoName(contact.name);
+
   return {
-    First_Name: firstName,
-    Last_Name: rest.join(" ") || firstName,
+    ...parsedName,
     Email: contact.email || "",
     Phone: contact.phone || "",
     Description: `
-      Source: ${contact.source}
+      Source: ${contact.source || ""}
       PSID: ${contact.psid || ""}
       IGSID: ${contact.igsId || ""}
     `,
@@ -33,19 +55,7 @@ export function buildZohoContactPayload(contact: any) {
 }
 
 export async function addZohoContactToQueue(contact: any, orgId: string) {
-  const [firstName, ...rest] = (contact.name || "Unknown").split(" ");
-
-  const zohoContactPayload = {
-    Last_Name: rest.join(" ") || firstName,
-    First_Name: firstName,
-    Email: contact.email,
-    Phone: contact.phone,
-    Description: `
-    Source: ${contact.source}
-    PSID: ${contact.psid || ""}
-    IGSID: ${contact.igsId || ""}
-    `,
-  };
+  const zohoContactPayload = buildZohoContactPayload(contact);
 
   await integrationTriggerQueue.add("zoho-contact-create", {
     integrationName: "zoho",
