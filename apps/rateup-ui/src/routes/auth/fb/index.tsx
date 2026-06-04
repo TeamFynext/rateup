@@ -44,6 +44,12 @@ function FbLoginRedirect({
   useEffect(() => {
     const waSettingId = localStorage.getItem("waSettingsId");
     const automationId = localStorage.getItem("automationId");
+    const automationRouteBase =
+      localStorage.getItem("automationRouteBase") ||
+      "/dashboard/whatsapp/flowbots";
+    const targetRoute = automationId
+      ? `${automationRouteBase}/${automationId}`
+      : "/dashboard/whatsapp/flowbots";
     if (code) {
       update.mutate(
         { code, waSettingId },
@@ -51,15 +57,17 @@ function FbLoginRedirect({
           onSuccess: () => {
             localStorage.removeItem("waSettingsId");
             localStorage.removeItem("automationId");
+            localStorage.removeItem("automationRouteBase");
             navigate({
-              to: `/dashboard/whatsapp/flowbots/${automationId}`,
+              to: targetRoute,
             });
           },
           onError: () => {
             localStorage.removeItem("waSettingsId");
             localStorage.removeItem("automationId");
+            localStorage.removeItem("automationRouteBase");
             navigate({
-              to: `/dashboard/whatsapp/flowbots/${automationId}`,
+              to: targetRoute,
             });
           },
         },
@@ -69,8 +77,9 @@ function FbLoginRedirect({
       toast.error("Failed " + error);
       localStorage.removeItem("waSettingsId");
       localStorage.removeItem("automationId");
+      localStorage.removeItem("automationRouteBase");
       navigate({
-        to: `/dashboard/whatsapp/flowbots/${automationId}`,
+        to: targetRoute,
       });
     }
   }, [code, error]);

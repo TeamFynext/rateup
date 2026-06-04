@@ -38,16 +38,6 @@ import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { useImmer } from "use-immer";
 
 import { SubscriptionFeaturePathName } from "@/types/enums.ts";
-import type {
-  CatalogNodeData,
-  LeadgenNodeData,
-  NodeData,
-  NodeType,
-  NodeTypeMap,
-  TypedNode,
-  WhatsappProductSet,
-} from "../types/node-types.ts";
-import { validateNodeData } from "../types/node-types.ts";
 import { useAllChatbots } from "@/backend/chatbot/chatbot.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
@@ -94,6 +84,16 @@ import {
 } from "@/utils/file-upload/upload.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
+import type {
+  CatalogNodeData,
+  LeadgenNodeData,
+  NodeData,
+  NodeType,
+  NodeTypeMap,
+  TypedNode,
+  WhatsappProductSet,
+} from "../types/node-types.ts";
+import { validateNodeData } from "../types/node-types.ts";
 import styles from "./node-editor.module.css";
 
 // Node editor props
@@ -2436,6 +2436,12 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   async function handleFbLogin() {
     localStorage.setItem("waSettingsId", waSetting.id);
     localStorage.setItem("automationId", flowbotId);
+    localStorage.setItem(
+      "automationRouteBase",
+      globalThis.location.pathname.includes("/dashboard/instagram/flowbots")
+        ? "/dashboard/instagram/flowbots"
+        : "/dashboard/whatsapp/flowbots",
+    );
 
     const url = `https://www.facebook.com/v25.0/dialog/oauth?client_id=${import.meta.env.VITE_META_APP_ID}&redirect_uri=${encodeURIComponent(`${import.meta.env.VITE_FRONTEND_URL}/auth/fb`)}&config_id=${import.meta.env.VITE_META_USER_CONFIG_ID}`;
     if (url) {

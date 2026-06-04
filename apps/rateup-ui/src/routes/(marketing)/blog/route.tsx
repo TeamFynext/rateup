@@ -1,13 +1,11 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-import { pageMetadata } from "@/lib/metadata";
+import { buildPageHead } from "@/lib/metadata";
 import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooterNew";
 
 export const Route = createFileRoute("/(marketing)/blog")({
   component: RouteComponent,
-  head: () => ({
-    meta: [pageMetadata["/blog"]],
-  }),
+  head: () => buildPageHead("/blog"),
 });
 
 function RouteComponent() {

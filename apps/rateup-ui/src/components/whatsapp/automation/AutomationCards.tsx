@@ -43,23 +43,36 @@ import { Input } from "@/components/ui/input.tsx";
 
 interface WaAutomationCardsProps {
   data: WaAutomatedReply[];
+  detailsBasePath?: string;
 }
-export function WaAutomationCards({ data }: Readonly<WaAutomationCardsProps>) {
+export function WaAutomationCards({
+  data,
+  detailsBasePath = "/dashboard/whatsapp/flowbots",
+}: Readonly<WaAutomationCardsProps>) {
   if (!data || !Array.isArray(data)) return null;
 
   return (
     <GenericCardGrid
       items={data}
       getKey={(automation) => automation.id}
-      renderItem={(automation) => <AutomationCard automation={automation} />}
+      renderItem={(automation) => (
+        <AutomationCard
+          automation={automation}
+          detailsBasePath={detailsBasePath}
+        />
+      )}
     />
   );
 }
 
 interface WaAutomationCardProps {
   automation: WaAutomatedReply;
+  detailsBasePath: string;
 }
-function AutomationCard({ automation }: Readonly<WaAutomationCardProps>) {
+function AutomationCard({
+  automation,
+  detailsBasePath,
+}: Readonly<WaAutomationCardProps>) {
   const navigate = useNavigate();
 
   const matchData = automation.matchData?.json;
@@ -103,21 +116,19 @@ function AutomationCard({ automation }: Readonly<WaAutomationCardProps>) {
       }
       content={
         <div className="space-y-1">
-          {nodeCount > 0 ? (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <IconMessageCircle className="size-3.5" />
-              <span>
-                {nodeCount} {nodeCount === 1 ? "step" : "steps"}
-              </span>
-            </div>
-          ) : null}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <IconMessageCircle className="size-3.5" />
+            <span>
+              {nodeCount} {nodeCount === 1 ? "step" : "steps"}
+            </span>
+          </div>
         </div>
       }
       footerLeft={platformBadge}
       createdAt={automation.createdAt}
       onClick={() =>
         navigate({
-          to: `/dashboard/whatsapp/flowbots/${automation.id}`,
+          to: `${detailsBasePath}/${automation.id}`,
         })
       }
     />

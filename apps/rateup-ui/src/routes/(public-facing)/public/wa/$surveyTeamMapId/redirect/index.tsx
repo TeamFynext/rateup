@@ -10,14 +10,11 @@ export const Route = createFileRoute(
   component: Redirect,
   head: ({ params }) => ({
     meta: [
+      { title: "Rateup - Welcome" },
       { charSet: "utf-8" },
       {
         name: "viewport",
         content: "width=device-width, initial-scale=1",
-      },
-      {
-        name: "title",
-        content: "Rateup - Welcome",
       },
       {
         name: "description",

@@ -90,7 +90,6 @@ export default function QrHeroSection() {
             width={500}
             alt="Decorative background"
             className="absolute top-0 left-0 w-full h-full z-0 object-contain"
-            priority
           />
 
           {/* Foreground image - phone with feedback screen */}
@@ -100,7 +99,6 @@ export default function QrHeroSection() {
             width={500}
             alt="Phone screen with feedback form"
             className="relative z-10 w-full h-full object-contain"
-            priority
           />
         </div>
       </div>

@@ -74,7 +74,6 @@ const Hero = () => {
             height={500}
             alt="Dashboard showing testimonial management system"
             className="w-full sm:mt-0 mt-4 rounded-bl-3xl"
-            priority
           />
         </motion.div>
       </div>

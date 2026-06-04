@@ -55,7 +55,7 @@ interface MobileNavMenuProps {
 }
 
 export const Navbar = ({ children, className }: NavbarProps) => {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLElement>(null);
   const { scrollY } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -71,7 +71,7 @@ export const Navbar = ({ children, className }: NavbarProps) => {
   });
 
   return (
-    <motion.div
+    <motion.nav
       ref={ref}
       // IMPORTANT: Change this to class of `fixed` if you want the navbar to be fixed
       className={cn(
@@ -87,7 +87,7 @@ export const Navbar = ({ children, className }: NavbarProps) => {
             )
           : child,
       )}
-    </motion.div>
+    </motion.nav>
   );
 };
 
@@ -157,14 +157,15 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 
 export const MobileNav = ({ children, className, visible }: MobileNavProps) => {
   return (
-    <div
+    <nav
+      aria-label="Mobile navigation"
       className={cn(
         "relative z-50 mx-auto flex w-full flex-col items-center justify-between bg-transparent p-2 xl:hidden",
         className,
       )}
     >
       {children}
-    </div>
+    </nav>
   );
 };
 
@@ -215,10 +216,20 @@ export const MobileNavToggle = ({
   isOpen: boolean;
   onClick: () => void;
 }) => {
-  return isOpen ? (
-    <IconX className="text-black" onClick={onClick} />
-  ) : (
-    <IconMenu2 className="text-white" onClick={onClick} />
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={isOpen}
+      aria-label={isOpen ? "Close menu" : "Open menu"}
+      className="inline-flex items-center justify-center"
+    >
+      {isOpen ? (
+        <IconX className="text-black" />
+      ) : (
+        <IconMenu2 className="text-white" />
+      )}
+    </button>
   );
 };
 

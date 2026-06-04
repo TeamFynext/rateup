@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { pageMetadata } from "@/lib/metadata.ts";
+import { buildPageHead } from "@/lib/metadata.ts";
 import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection.tsx";
 import BusinessTypes from "@/components/products/Whatsapp-loyalty/helpers/BusinessTypes.tsx";
 import CTASection from "@/components/products/Whatsapp-loyalty/helpers/CTASection.tsx";
@@ -196,7 +196,7 @@ export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")(
     },
     component: page,
     head: () => ({
-      meta: [pageMetadata["/products/whatsapp-loyalty"]],
+      ...buildPageHead("/products/whatsapp-loyalty"),
       scripts: [
         {
           type: "application/ld+json",

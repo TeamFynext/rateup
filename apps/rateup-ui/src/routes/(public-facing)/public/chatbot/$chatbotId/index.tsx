@@ -10,6 +10,7 @@ import { v4 as uuid } from "uuid";
 
 import { ChatbotPublicPageStatus, ChatBotSource } from "@/types/enums.ts";
 import type { ChatBotMessage } from "@/types/global";
+import useLocalStorage from "@/hooks/localStorage.tsx";
 import {
   useDeletePublicChatHistory,
   useGetChatbotPublicPageStatus,
@@ -17,22 +18,17 @@ import {
 } from "@/backend/chatbot/chatbot.query";
 import ChatbotMessageContainer from "@/components/ChatBot/ChatbotMessageContainer.tsx";
 
-import useLocalStorage from "@/hooks/localStorage.tsx";
-
 export const Route = createFileRoute(
   "/(public-facing)/public/chatbot/$chatbotId/",
 )({
   component: ChatbotId,
   head: ({ params }) => ({
     meta: [
+      { title: "ChatBot" },
       { charSet: "utf-8" },
       {
         name: "viewport",
         content: "width=device-width, initial-scale=1",
-      },
-      {
-        name: "title",
-        content: "ChatBot",
       },
       {
         property: "og:type",
@@ -157,4 +153,3 @@ function ChatbotId() {
     </Center>
   );
 }
-

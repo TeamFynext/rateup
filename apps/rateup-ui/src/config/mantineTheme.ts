@@ -1,29 +1,26 @@
 import type { MantineColorsTuple, MantineThemeOverride } from "@mantine/core";
 import { createTheme } from "@mantine/core";
 
-// import { inter, notoColorEmogi } from "../utils/fonts.ts";
-
 const rateupBlue: MantineColorsTuple = [
-  "#e6f5ff", 
-  "#d1e5ff",
-  "#a3c8f7",
-  "#72aaf1",
-  "#4a90eb",
-  "#3080e9",
-  "#1873e8",
-  "#0e66d0",
-  "#005abb",
-  "#004ea6",
+  "#ebf5ff",
+  "#d4e8fa",
+  "#a4cef7",
+  "#73b4f6",
+  "#4e9ef5",
+  "#3b90f5",
+  "#3289f6",
+  "#2776dc",
+  "#1c69c5",
+  "#004f98",
 ];
 const componentStyles: MantineThemeOverride = {
   components: {},
 };
 export const theme = createTheme({
-  // fontFamily: `${inter.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
   fontFamily: '"Inter Variable", "Noto Color Emoji", sans-serif',
   headings: { fontFamily: '"Inter Variable", "Noto Color Emoji", sans-serif' },
   primaryColor: "rateup-blue",
-  primaryShade: 6,
+  primaryShade: 9,
   colors: { "rateup-blue": rateupBlue },
   breakpoints: {
     xs: "30em",
