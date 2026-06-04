@@ -961,6 +961,19 @@ nav.top .row {
   }
 }
 
+@media (max-width: 640px) {
+  .prob-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .probstats {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-top: 40px;
+  }
+}
+
 /* HOW IT WORKS */
 .flow {
   position: relative;
@@ -1125,9 +1138,67 @@ nav.top .row {
   .flow-line-fill {
     display: none;
   }
+
   .flow-steps {
     grid-template-columns: repeat(3, 1fr);
     gap: 28px 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  .flow-steps {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 12px;
+  }
+
+  .fstep {
+    text-align: center;
+  }
+
+  .fstep .badge {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 10px;
+    border-radius: 18px;
+  }
+
+  .fstep .badge svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .fstep .num {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+    top: -6px;
+    right: -6px;
+  }
+
+  .fstep h4 {
+    font-size: 14px;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .fstep p {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .flow-steps {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 10px;
+  }
+
+  .fstep .badge {
+    width: 64px;
+    height: 64px;
+  }
+
+  .fstep h4 {
+    font-size: 13px;
   }
 }
 
@@ -1440,6 +1511,48 @@ nav.top .row {
   border-radius: 50%;
   background: radial-gradient(circle, rgba(47, 163, 255, 0.4), transparent 70%);
 }
+.footer-theme {
+  --page-0: #04101f;
+  --page-1: #071a33;
+  --page-2: #0a2244;
+
+  --panel: rgba(255, 255, 255, 0.045);
+  --panel-2: rgba(255, 255, 255, 0.07);
+
+  --hair: rgba(255, 255, 255, 0.09);
+  --hair-2: rgba(255, 255, 255, 0.14);
+
+  --ink: #ffffff;
+  --ink-2: rgba(255, 255, 255, 0.74);
+  --ink-3: rgba(255, 255, 255, 0.52);
+  --ink-4: rgba(255, 255, 255, 0.38);
+
+  --cyan: #4fc3ff;
+  --cyan-2: #2fa3ff;
+  --blue: #2c6fd6;
+
+  --warm-logo-gradient: linear-gradient(135deg, #ffd54c 0%, #f8951d 100%);
+  --warm-400: #ffb638;
+  --success: #16a34a;
+
+  --font-display: "Nunito Variable", ui-rounded, system-ui, sans-serif;
+  --font-body: "Inter Variable", system-ui, sans-serif;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 9999px;
+
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --dur-2: 180ms;
+  --dur-3: 240ms;
+
+  background: var(--page-1);
+}
 .cta-band h2 {
   position: relative;
   font-family: var(--font-display);
@@ -1578,5 +1691,31 @@ footer {
   .orbit-node,
   .orbit-rings .ring {
     animation: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .foot-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .foot-about p {
+    max-width: 100%;
+  }
+
+  .foot-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    gap: 12px;
+  }
+
+  .foot-socials {
+    flex-wrap: wrap;
+  }
+
+  .foot-col a {
+    margin-bottom: 10px;
   }
 }

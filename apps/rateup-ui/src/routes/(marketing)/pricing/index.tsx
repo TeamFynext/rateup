@@ -5,8 +5,8 @@ import { Faq } from "@/components/HomePage/pages/Pricing/FAQ.tsx";
 import { PricingPlanReview } from "@/components/HomePage/pages/Pricing/PricingPlanReview.tsx";
 import PricingSection from "@/components/HomePage/pages/Pricing/PricingSection.tsx";
 import { ClientLogoSectionNew } from "@/components/products/ReviewWithAiComponents/shared/ReviewTestimonials.tsx";
-import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter.tsx";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
+import HomePageFooter from "@/components/RateupHomePage/shared/HomePageFooter";
 
 import { buildPricingMarkdown } from "../../../markdown/pricing";
 import { createMarkdownMiddleware } from "../../../markdown/serveMarkdown";
