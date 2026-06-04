@@ -13,6 +13,7 @@ import Features from "@/components/RateupHomePage/shared/Features";
 import HeroSectionNew from "@/components/RateupHomePage/shared/HeroSectionNew";
 import HomePageFooter from "@/components/RateupHomePage/shared/HomePageFooter";
 import HowItWorks from "@/components/RateupHomePage/shared/HowItWorks";
+import LoyaltySection from "@/components/RateupHomePage/shared/LoyaltySection";
 import Problem from "@/components/RateupHomePage/shared/Problem";
 import TrustedBy from "@/components/RateupHomePage/shared/TrustedBy";
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
@@ -149,13 +150,14 @@ function RouteComponent() {
   };
 
   return (
-    <div className={styles.theme}>
-      <Layout>
+    <>
+      <Layout contentClassName={styles.theme}>
         <HeroSectionNew />
         <TrustedBy />
         <Problem />
         <HowItWorks />
         <Features />
+        <LoyaltySection />
         <HomePageFooter />
         <Suspense fallback={null}>
           <SupportWidget
@@ -171,6 +173,6 @@ function RouteComponent() {
         onWhatsapp={handleLikeWhatWhatsapp}
       />
       <DemoModal open={bookDemoOpen} onClose={() => setBookDemoOpen(false)} />
-    </div>
+    </>
   );
 }

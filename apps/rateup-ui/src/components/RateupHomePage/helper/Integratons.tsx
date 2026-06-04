@@ -1,6 +1,6 @@
-import { ArrowButton } from "../components/btn.tsx";
 import { imagesPath } from "@/utils/constants.ts";
-import { sora } from "@/utils/fonts.ts";
+
+import { ArrowButton } from "../components/btn.tsx";
 
 export function Integrations() {
   return (
@@ -22,7 +22,7 @@ export function Integrations() {
           </div>
           <div className="relative z-10 space-y-2 py-4 px-4 sm:px-8 text-center">
             <h2
-              className={`text-2xl sm:text-3xl md:text-5xl text-white tracking-tight ${sora.className}`}
+              className={`text-2xl sm:text-3xl md:text-5xl text-white tracking-tight`}
             >
               Connect Rateup To Your Favourite Tools
             </h2>

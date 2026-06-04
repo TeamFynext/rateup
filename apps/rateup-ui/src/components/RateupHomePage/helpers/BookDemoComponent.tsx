@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
 import { useBookDemoMutation } from "@/backend/bookdemo/bookdemo.query";
@@ -9,6 +10,7 @@ import { RateupStar } from "@/components/integrations/logos";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
@@ -42,8 +44,10 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
     if (!formData.businessName.trim()) {
       newErrors.businessName = "Business name is required";
     }
-    if (!formData.phone.trim()) {
+    if (!formData.phone) {
       newErrors.phone = "Phone number is required";
+    } else if (!isValidPhoneNumber(formData.phone)) {
+      newErrors.phone = "Invalid phone number";
     }
 
     setErrors(newErrors);
@@ -161,12 +165,15 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-bold">Phone</label>
-
-              <Input
-                placeholder="+1 555 000 0000"
-                className="rounded-sm px-4 text-sm"
+              <PhoneInput
+                id="demo-phone"
+                defaultCountry="IN"
+                international
+                countryCallingCodeEditable={false}
+                placeholder="Enter phone number"
+                className="w-full"
                 value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
+                onChange={(value) => handleInputChange("phone", value ?? "")}
               />
               {errors.phone && (
                 <p className="text-red-500 text-xs">{errors.phone}</p>
