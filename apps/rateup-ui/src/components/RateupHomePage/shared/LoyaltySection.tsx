@@ -12,10 +12,7 @@ function LoyaltySection() {
         <div className={`${styles["cta-band"]} ${styles.reveal}`}>
           <h2>Ready To Turn One Sale Into A Lifetime?</h2>
 
-          <p>
-            Launch loyalty, referrals and automated engagement on WhatsApp — all
-            for a flat <b style={{ color: "#fff" }}>$31/month</b>.
-          </p>
+          <p>Launch loyalty, referrals and automated engagement on WhatsApp.</p>
 
           <div className={styles["cta-row"]}>
             <button
