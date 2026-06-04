@@ -108,7 +108,6 @@ export const Route = createRootRoute({
         rel: "shortcut icon",
         href: "/favicon.png",
       },
-      { rel: "canonical", href: rateupUrl },
     ],
     scripts: [
       isProduction && {

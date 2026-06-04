@@ -17,6 +17,7 @@ import LoyaltySection from "@/components/RateupHomePage/shared/LoyaltySection";
 import Problem from "@/components/RateupHomePage/shared/Problem";
 import TrustedBy from "@/components/RateupHomePage/shared/TrustedBy";
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
+import { rateupUrl } from "@/utils/constants.ts";
 
 import { homepageMarkdown } from "../../markdown/homepage";
 import { createMarkdownMiddleware } from "../../markdown/serveMarkdown";
@@ -78,6 +79,12 @@ export const Route = createFileRoute("/(marketing)/")({
     return null;
   },
   head: () => ({
+    links: [
+      {
+        rel: "canonical",
+        href: rateupUrl,
+      },
+    ],
     scripts: [
       {
         type: "application/ld+json",

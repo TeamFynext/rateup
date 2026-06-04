@@ -99,7 +99,7 @@ export default function Layout({
             ) : (
               <div className="flex items-center gap-4 justify-center">
                 <BookDemoModal>
-                  <span className={styles["signin"]}>Book a Demo</span>
+                  <button className={styles["signin"]}>Book a Demo</button>
                 </BookDemoModal>
                 <button
                   onClick={() => navigate({ to: "/login" })}

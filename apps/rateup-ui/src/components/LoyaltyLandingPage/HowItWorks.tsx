@@ -19,11 +19,11 @@ export default function HowItWorks() {
           <div className={`${styles.step} ${styles.reveal}`} data-d="1">
             <div className={styles.top}>
               <span className={styles.num}>1</span>
-              <h4>
+              <h3>
                 Connect
                 <br />
                 WhatsApp
-              </h4>
+              </h3>
             </div>
             <p>Link your WhatsApp Business account in just a few clicks</p>
             <div className={styles.bgicon}>
@@ -45,11 +45,11 @@ export default function HowItWorks() {
           <div className={`${styles.step} ${styles.reveal}`} data-d="2">
             <div className={styles.top}>
               <span className={styles.num}>2</span>
-              <h4>
+              <h3>
                 Set Up
                 <br />
                 Rewards
-              </h4>
+              </h3>
             </div>
             <p>Define your points system and rewards structure</p>
             <div className={styles.bgicon}>
@@ -69,11 +69,11 @@ export default function HowItWorks() {
           <div className={`${styles.step} ${styles.reveal}`} data-d="3">
             <div className={styles.top}>
               <span className={styles.num}>3</span>
-              <h4>
+              <h3>
                 Invite
                 <br />
                 Customers
-              </h4>
+              </h3>
             </div>
             <p>Share your unique WhatsApp link with customers</p>
             <div className={styles.bgicon}>
@@ -96,11 +96,11 @@ export default function HowItWorks() {
           <div className={`${styles.step} ${styles.reveal}`} data-d="4">
             <div className={styles.top}>
               <span className={styles.num}>4</span>
-              <h4>
+              <h3>
                 Start
                 <br />
                 Rewarding
-              </h4>
+              </h3>
             </div>
             <p>Automatically track purchases and send rewards</p>
             <div className={styles.bgicon}>

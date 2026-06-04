@@ -64,7 +64,7 @@ export default function WhyWhatsApp() {
                   </text>
                 </svg>
               </div>
-              <h4>Direct Communication</h4>
+              <h3>Direct Communication</h3>
               <p>
                 Reach customers instantly through their preferred messaging
                 platform
@@ -89,7 +89,7 @@ export default function WhyWhatsApp() {
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
               </div>
-              <h4>Customer Engagement</h4>
+              <h3>Customer Engagement</h3>
               <p>
                 Drive 3x higher engagement rates compared to email campaigns
               </p>
@@ -111,7 +111,7 @@ export default function WhyWhatsApp() {
                   <polyline points="17 6 23 6 23 12" />
                 </svg>
               </div>
-              <h4>Increased Retention</h4>
+              <h3>Increased Retention</h3>
               <p>
                 Boost repeat purchases by up to 40% with personalized rewards
               </p>
@@ -194,7 +194,7 @@ export default function WhyWhatsApp() {
                   <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
               </div>
-              <h4>Easy Setup</h4>
+              <h3>Easy Setup</h3>
               <p>
                 Launch your loyalty program in minutes without technical
                 complexity
@@ -220,7 +220,7 @@ export default function WhyWhatsApp() {
                   <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
                 </svg>
               </div>
-              <h4>Reward System</h4>
+              <h3>Reward System</h3>
               <p>Flexible points and rewards that match your business goals</p>
             </div>
             <div
@@ -239,7 +239,7 @@ export default function WhyWhatsApp() {
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                 </svg>
               </div>
-              <h4>Instant Updates</h4>
+              <h3>Instant Updates</h3>
               <p>
                 Send real-time notifications about points, rewards, and offers
               </p>
