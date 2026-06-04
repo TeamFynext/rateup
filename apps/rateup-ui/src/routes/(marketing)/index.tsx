@@ -149,8 +149,8 @@ function RouteComponent() {
   };
 
   return (
-    <div className={styles.theme}>
-      <Layout>
+    <>
+      <Layout contentClassName={styles.theme}>
         <HeroSectionNew />
         <TrustedBy />
         <Problem />
@@ -171,6 +171,6 @@ function RouteComponent() {
         onWhatsapp={handleLikeWhatWhatsapp}
       />
       <DemoModal open={bookDemoOpen} onClose={() => setBookDemoOpen(false)} />
-    </div>
+    </>
   );
 }
