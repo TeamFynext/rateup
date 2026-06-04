@@ -1,5 +1,5 @@
 import prisma from "../../../utils/prisma.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 import {
   getWaSettingsByIbaId,
   getWaSettingsById,
@@ -15,7 +15,7 @@ import { handleInstagramAutomation } from "./instagram_automation_handler.js";
 export async function getIgUserDetailsFromMeta(igsId, ibaId) {
   const { pageAccessToken } = await getWaSettingsByIbaId(ibaId);
   const url = `/${igsId}?fields=name,username,profile_pic,follower_count,is_verified_user,is_user_follow_business,is_business_follow_user&access_token=${pageAccessToken}`;
-  const res = await callWhatsappApi(url, "GET");
+  const res = await callMetaApi(url, "GET");
   log.info("Instagram user details: %o", res.data);
   return res.data as {
     name: string;
@@ -129,7 +129,7 @@ export async function handleInstagramMessageReaction(
 
 export async function getFbPages(settingsId) {
   const { accessToken } = await getWaSettingsById(settingsId);
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`,
     "GET",
   );

@@ -4,7 +4,7 @@ import {
   WhatsappSettings,
 } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
-import { callWhatsappApi, GraphApiError } from "../wa_axios.js";
+import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import {
   CatalogWhatsappSettingSchema,
   UpdateCatalogSchema,
@@ -59,7 +59,7 @@ export async function getWaCatalog(catalogId) {
 }
 
 async function getMetaBusinessInfoByWABAId(wabaId, accessToken) {
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${wabaId}?fields=on_behalf_of_business_info&access_token=${accessToken}`,
     "GET",
   );
@@ -88,7 +88,7 @@ export async function syncWaCatalogs(orgId: string) {
       }
       const businessId = businessInfo.id;
 
-      const res = await callWhatsappApi(
+      const res = await callMetaApi(
         `/${businessId}/owned_product_catalogs?fields=name,vertical&access_token=${accessToken}`,
         "GET",
       );
@@ -149,7 +149,7 @@ export async function syncWaCatalogs(orgId: string) {
           }
         }
       });
-      const connectedCatalog = await callWhatsappApi(
+      const connectedCatalog = await callMetaApi(
         `/${wabaId}/product_catalogs?access_token=${accessToken}`,
         "GET",
       );
@@ -517,7 +517,7 @@ export async function handleWaOrderNativePayment(
     }
 
     // Fetch payment configurations from Meta
-    const paymentConfigsResponse = await callWhatsappApi(
+    const paymentConfigsResponse = await callMetaApi(
       `/${waSetting.wabaId}/payment_configurations`,
       "GET",
       waSetting.accessToken,
@@ -630,7 +630,7 @@ export async function updateConnectWaCatalog(wabaId, orgId, catalogId) {
   let url = `/${wabaId}/product_catalogs`;
 
   try {
-    const res = await callWhatsappApi(url, "POST", accessToken, {
+    const res = await callMetaApi(url, "POST", accessToken, {
       catalog_id: catalogId,
     });
 
@@ -684,7 +684,7 @@ export async function disconnectCatalogFromWaba({
 }: CatalogWhatsappSettingSchema) {
   const waSettings = await getWaSettingsById(whatsappSettingsId);
   const { wabaId, accessToken } = waSettings;
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${wabaId}/product_catalogs`,
     "DELETE",
     accessToken,

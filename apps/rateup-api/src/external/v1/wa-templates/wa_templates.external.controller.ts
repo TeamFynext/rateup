@@ -19,7 +19,7 @@ import {
 import { WaTemplateComponentType } from "../../../types/enums.js";
 import { templateFileUploadSchema } from "./wa_templates.utils.js";
 import FormData from "form-data";
-import { callWhatsappApi } from "../../../modules/whatsapp/wa_axios.js";
+import { callMetaApi } from "../../../modules/whatsapp/wa_axios.js";
 
 export async function getTemplatesExternalController(
   request: FastifyRequest<{
@@ -188,7 +188,7 @@ export async function sendTemplateByNameToPhoneWithFileExternalController(
         filename: file.filename,
         contentType: file.mimetype,
       });
-      const uploadedFile = await callWhatsappApi(
+      const uploadedFile = await callMetaApi(
         `/${waSettings?.phoneId}/media`,
         "POST",
         waSettings?.accessToken,

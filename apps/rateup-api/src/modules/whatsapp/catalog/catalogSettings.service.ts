@@ -1,7 +1,7 @@
 import { FastifyRequest } from "fastify";
 import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
 import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { UpdateCatalogSettingsSchema } from "./catalog.schema.js";
@@ -124,7 +124,7 @@ async function checkFlowStatusFromMeta(
     const waSettings = await getWaSettingsForCatalog(catalogId, orgId);
     if (!waSettings?.accessToken) return null;
 
-    const res = await callWhatsappApi(
+    const res = await callMetaApi(
       `/${flowId}?fields=status,name`,
       "GET",
       waSettings.accessToken,
