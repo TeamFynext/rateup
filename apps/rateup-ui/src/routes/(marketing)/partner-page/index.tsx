@@ -19,7 +19,7 @@ import {
   Users,
 } from "lucide-react";
 
-import { pageMetadata } from "@/lib/metadata.ts";
+import { buildPageHead } from "@/lib/metadata.ts";
 import { PartnerApplyModal } from "@/components/(marketing)/partner/partnerData";
 import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter";
 import Layout from "@/components/RateupHomePage/Layout";
@@ -31,9 +31,7 @@ import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/(marketing)/partner-page/")({
   component: PartnershipPage,
-  head: () => ({
-    meta: [pageMetadata["/contact-us"]],
-  }),
+  head: () => buildPageHead("/contact-us"),
 });
 
 interface PartnershipPageProps {

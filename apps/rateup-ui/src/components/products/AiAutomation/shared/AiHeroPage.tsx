@@ -51,7 +51,6 @@ export default function AiHeroPage() {
           aspectRatio={1}
           objectFit="contain"
           className="object-contain object-right"
-          priority
         />
       </div>
     </section>

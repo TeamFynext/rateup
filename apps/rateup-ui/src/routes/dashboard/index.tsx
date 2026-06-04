@@ -1,316 +1,76 @@
 "use client";
 
-import { useEffect } from "react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-
-import { TeamFeature } from "@/types/enums.ts";
-import { useUserInfo } from "@/backend/user/user.query";
+import { getTeamFeatures } from "@/backend/team/team.api";
+import { fetchUserInfo } from "@/backend/user/user.api";
+import { getQueryClient } from "@/components/providers.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
-import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
+import { getDashboardLandingTarget } from "@/utils/dashboard-feature-access.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 
+async function getMemberAllowedFeatures(
+  teamIds: string[],
+): Promise<Set<string>> {
+  const teamFeaturesResponses = await Promise.all(
+    teamIds.map((id) => getTeamFeatures(id)),
+  );
+  const allowedFeatures = new Set<string>();
+
+  for (const result of teamFeaturesResponses) {
+    for (const feature of result.features) {
+      allowedFeatures.add(feature.feature);
+    }
+  }
+
+  return allowedFeatures;
+}
+
 export const Route = createFileRoute("/dashboard/")({
-  component: DashboardHome,
-});
-
-dayjs.extend(relativeTime);
-
-function DashboardHome() {
-  // const { data: activeSurveyData, isLoading: activeSurveyLoading } =
-  //   useActiveSurveyStats();
-  const navigate = useNavigate();
-  const {
-    isPending: isLoadingUserInfo,
-    data: userQueryData,
-    isFetched,
-  } = useUserInfo();
-  // const { data: overallData, isLoading: overallStatsLoading } =
-  //   useOverallStats();
-  //  const { t: translations } = useTranslation();
-  const { allowedFeatures, isPending } = useTeamFeatures();
-  useEffect(() => {
+  ssr: false,
+  loader: async () => {
+    const queryClient = getQueryClient();
+    const userQueryData = await queryClient.fetchQuery({
+      queryKey: ["userInfoQuery"],
+      queryFn: fetchUserInfo,
+      staleTime: 60 * 1000,
+    });
     const user =
       userQueryData && "data" in userQueryData ? userQueryData.data : null;
-    if (!user) return;
+
+    if (!user) {
+      throw redirect({
+        to: "/login",
+        replace: true,
+      });
+    }
+
     if (!user.onboardingChecklistCompleted && user.role === UserRole.SUPADM) {
-      void navigate({
+      throw redirect({
         to: "/login/setup",
         replace: true,
       });
-      return;
     }
-    if (isPending) return;
-    // For members with a restricted feature set, redirect to the first
-    // permitted route instead of always going to inbox (which may be blocked).
-    if (allowedFeatures !== null) {
-      if (allowedFeatures.has(TeamFeature.Inbox)) {
-        void navigate({
-          to: "/dashboard/inbox?tab=New",
-          replace: true,
-        });
-        return;
-      }
-      // Fall back through other common features in priority order
-      if (allowedFeatures.has(TeamFeature.Analytics)) {
-        void navigate({
-          to: "/dashboard/analytics",
-          replace: true,
-        });
-        return;
-      }
-      if (allowedFeatures.has(TeamFeature.Contacts)) {
-        void navigate({
-          to: "/dashboard/contacts",
-          replace: true,
-        });
-        return;
-      }
-      if (allowedFeatures.has(TeamFeature.Campaigns)) {
-        void navigate({
-          to: "/dashboard/campaign",
-          replace: true,
-        });
-        return;
-      }
-      if (allowedFeatures.has(TeamFeature.Loyalty)) {
-        void navigate({
-          to: "/dashboard/loyalty/dashboard",
-          replace: true,
-        });
-        return;
-      }
-      if (allowedFeatures.has(TeamFeature.Tickets)) {
-        void navigate({
-          to: "/dashboard/tickets",
-          replace: true,
-        });
-        return;
-      }
-      // No feature permissions at all — settings is always allowed
-      void navigate({
-        to: "/dashboard/settings",
+
+    const teamIds = user.role === UserRole.SUPADM ? [] : (user.teams ?? []);
+
+    if (teamIds.length > 0) {
+      const allowedFeatures = await getMemberAllowedFeatures(teamIds);
+      const firstAllowedTarget = getDashboardLandingTarget(allowedFeatures);
+      throw redirect({
+        to: firstAllowedTarget,
         replace: true,
       });
-      return;
     }
-    // Owners / admins: go straight to inbox
-    void navigate({
+
+    throw redirect({
       to: "/dashboard/inbox?tab=New",
       replace: true,
     });
-  }, [userQueryData, isFetched, isLoadingUserInfo, allowedFeatures, isPending]);
+  },
+  component: DashboardHome,
+});
 
-  return (
-    // <div className="py-6 px-6 flex flex-col gap-4">
-    //   <div className="text-[#343A40] text-xl font-semibold">
-    //     {translations("Overview")}
-    //   </div>
-    //   <div className="space-y-10">
-    //     {/* dashboard stats */}
-    //     {overallStatsLoading ? (
-    //       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    //         {Array.from({ length: 8 }).map((_, idx) => (
-    //           <StatCardSkeleton key={`stat-skeleton-${idx}`} />
-    //         ))}
-    //       </div>
-    //     ) : (
-    //       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    //         <StatCards
-    //           label="New Conversations"
-    //           value={overallData?.newChatCount ?? 0}
-    //           valueColor="#009987"
-    //           icon={<IconMessage width={30} height={30} color="#009987" />}
-    //           iconBgColor="#00998733"
-    //           OnClickAction={"/dashboard/inbox?tab=Mine"}
-    //         />
-    //         <StatCards
-    //           label="Active Campaigns"
-    //           value={overallData?.activeCampaignsCount ?? 0}
-    //           valueColor="#009987"
-    //           icon={<IconSpeakerphone width={30} height={30} color="#009987" />}
-    //           iconBgColor="#00998733"
-    //           OnClickAction={"/dashboard/campaign"}
-    //         />
-    //         <StatCards
-    //           label="Active Flows"
-    //           value={overallData?.publishedFlowsCount ?? 0}
-    //           valueColor="#009987"
-    //           icon={<IconWaveSine width={30} height={30} color="#009987" />}
-    //           iconBgColor="#00998733"
-    //           OnClickAction={"/dashboard/whatsapp/flows"}
-    //         />
-    //         <StatCards
-    //           label="Active Automations"
-    //           value={overallData?.automationsCount ?? 0}
-    //           valueColor="#009987"
-    //           icon={<IconAutomation width={30} height={30} color="#009987" />}
-    //           iconBgColor="#00998733"
-    //           OnClickAction={"/dashboard/whatsapp/automated-replies"}
-    //         />
-    //         <StatCards
-    //           label="Loyalty Customers"
-    //           value={overallData?.loyaltyCustomersCount ?? 0}
-    //           valueColor="#004F98"
-    //           icon={<IconUsers width={30} height={30} color="#004F98" />}
-    //           iconBgColor="#004F9833"
-    //           OnClickAction={"/dashboard/loyalty/customer"}
-    //         />
-    //         <StatCards
-    //           label="Active Surveys"
-    //           value={overallData?.activeWebSurveysCount ?? 0}
-    //           valueColor="#004F98"
-    //           icon={<PanelsTopLeft width={30} height={30} color="#004F98" />}
-    //           iconBgColor="#004F9833"
-    //           OnClickAction={"/dashboard/surveys"}
-    //         />
-    //         <StatCards
-    //           label="New Tickets"
-    //           value={overallData?.ticketCount ?? 0}
-    //           valueColor="#004F98"
-    //           icon={<IconTicket width={30} height={30} color="#004F98" />}
-    //           iconBgColor="#004F9833"
-    //           OnClickAction={"/dashboard/tickets"}
-    //         />
-    //         <StatCards
-    //           label="Teams Created"
-    //           value={overallData?.teamsCount ?? 0}
-    //           valueColor="#004F98"
-    //           icon={<IconUsersGroup width={30} height={30} color="#004F98" />}
-    //           iconBgColor="#004F9833"
-    //           OnClickAction={"/dashboard/teams"}
-    //         />
-    //       </div>
-    //     )}
-    //     {/* Active Flows Section */}
-    //     {activeSurveyLoading ||
-    //     activeSurveyData?.filter((item: any) => item.type === "waFlow").length >
-    //       0 ? (
-    //       <section>
-    //         <div className="flex items-center gap-1 mb-2">
-    //           <div className="p-1.5 rounded-md bg-[#00998733]">
-    //             <IconWaveSine color="#009987" />
-    //           </div>
-    //           <h2 className="text-xl font-semibold text-black">
-    //             {translations("Active Flows")}
-    //           </h2>
-    //         </div>
-    //         <div className="flex flex-col items-center gap-2">
-    //           {activeSurveyLoading ? (
-    //             <GridWrapper>
-    //               {Array.from({ length: 10 }).map((_, idx) => (
-    //                 <SurveyDashCardSkeleton key={`flow-skeleton-${idx}`} />
-    //               ))}
-    //             </GridWrapper>
-    //           ) : (
-    //             <>
-    //               <GridWrapper>
-    //                 {activeSurveyData
-    //                   ?.filter((item: any) => item.type === "waFlow")
-    //                   .map((item: any) => (
-    //                     <SurveyDashCard
-    //                       key={item.id}
-    //                       title={item.title}
-    //                       itemId={item.dbFlowId}
-    //                       createdAt={item.createdAt}
-    //                       responseCount={item.responseCount}
-    //                       type="flow"
-    //                       OnClickAction={`/dashboard/whatsapp/flows/v${item.version}`}
-    //                     />
-    //                   ))}
-    //               </GridWrapper>
-    //               <div className="mt-4 flex justify-center">
-    //                 <Button
-    //                   variant="filled"
-    //                   color="#009987"
-    //                   radius="md"
-    //                   size="sm"
-    //                   className="bg-[#009987] hover:bg-[#00b29f] transition-all duration-200 hover:scale-[1.01]"
-    //                   onClick={() => router.push("/dashboard/whatsapp/flows")}
-    //                 >
-    //                   <div className="flex items-center gap-1">
-    //                     {translations("Go to All Flows")}
-    //                     <span>
-    //                       <MoveRight color="white" />
-    //                     </span>
-    //                   </div>
-    //                 </Button>
-    //               </div>
-    //             </>
-    //           )}
-    //         </div>
-    //       </section>
-    //     ) : null}
-    //     {/* Active Surveys Section */}
-    //     {activeSurveyLoading ||
-    //     activeSurveyData?.filter((item: any) => item.type === "web").length >
-    //       0 ? (
-    //       <section>
-    //         <div className="flex items-center gap-1 mb-2">
-    //           <div className="p-1.5 rounded-md bg-[#004F9833]">
-    //             <PanelsTopLeft color="#004F98" />
-    //           </div>
-    //           <h2 className="text-xl font-semibold text-black">
-    //             {translations("Active Surveys")}
-    //           </h2>
-    //         </div>
-    //         <div className="flex flex-col items-center gap-2">
-    //           {activeSurveyLoading ? (
-    //             <GridWrapper>
-    //               {Array.from({ length: 10 }).map((_, idx) => (
-    //                 <SurveyDashCardSkeleton key={`web-skeleton-${idx}`} />
-    //               ))}
-    //             </GridWrapper>
-    //           ) : (
-    //             <>
-    //               <GridWrapper>
-    //                 {activeSurveyData
-    //                   ?.filter((item: any) => item.type === "web")
-    //                   .map((item: any) => (
-    //                     <SurveyDashCard
-    //                       key={item.id}
-    //                       title={item.title}
-    //                       itemId={item.id}
-    //                       createdAt={item.createdAt}
-    //                       responseCount={item.responseCount}
-    //                       type="web"
-    //                       OnClickAction={"/dashboard/surveys"}
-    //                     />
-    //                   ))}
-    //               </GridWrapper>
-    //               <div className="mt-4 flex justify-center">
-    //                 <Button
-    //                   variant="filled"
-    //                   radius="md"
-    //                   size="sm"
-    //                   className="bg-[#004f98] hover:bg-[#0063b1] transition-all duration-200 hover:scale-[1.01]"
-    //                   onClick={() => router.push("/dashboard/surveys")}
-    //                 >
-    //                   <div className="flex items-center gap-1">
-    //                     {translations("Go to All Surveys")}
-    //                     <span>
-    //                       <MoveRight color="white" />
-    //                     </span>
-    //                   </div>
-    //                 </Button>
-    //               </div>
-    //             </>
-    //           )}
-    //         </div>
-    //       </section>
-    //     ) : null}
-    //     <div className="flex flex-col lg:flex-row gap-4 w-full">
-    //       <div className="w-full lg:w-[65%]">
-    //         <TeamMembers />
-    //       </div>
-    //       <div className="w-full lg:w-[35%]">
-    //         <SubscriptionCard />
-    //       </div>
-    //     </div>
-    //   </div>
-    // </div>
-    <Loader />
-  );
+function DashboardHome() {
+  return <Loader />;
 }

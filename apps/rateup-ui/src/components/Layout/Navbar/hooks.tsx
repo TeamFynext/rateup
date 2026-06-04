@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import {
   IconActivity,
   IconAward,
+  IconBrandInstagram,
   IconBrandWhatsapp,
   IconBrowser,
   IconBuildingStore,
@@ -348,6 +349,17 @@ export function useNavMain({
                 },
               ],
             },
+            ...(hasFeature(subscription, sfpn.WhatsAppAutomation) &&
+            hasTeamFeature(TeamFeature.Chatbots)
+              ? [
+                  {
+                    title: t("Instagram"),
+                    url: "/dashboard/instagram/flowbots",
+                    icon: IconBrandInstagram,
+                    items: [],
+                  },
+                ]
+              : []),
             ...(hasFeature(subscription, sfpn.WhatsAppAutomation) &&
             hasTeamFeature(TeamFeature.Automation)
               ? [

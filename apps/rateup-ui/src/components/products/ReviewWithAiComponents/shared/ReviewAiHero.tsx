@@ -50,7 +50,6 @@ const ReviewAiHero = () => {
               src={`${imagesPath}/ai-powered-insights/AI Powered Insights.png`}
               width={600}
               height={600}
-              priority
               alt="ticket hero"
             />
           </div>

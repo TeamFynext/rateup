@@ -16,68 +16,66 @@ export const Route = createFileRoute(
 )({
   component: Collections,
   loader: ({ params }) => getAllTestimonialsByCollection(params.collectionId),
-    head: ({ params, loaderData }) => {
-      const collectionName = loaderData?.name ?? "";
-      const collectionId = loaderData?.id ?? params.collectionId;
+  head: ({ params, loaderData }) => {
+    const collectionName = loaderData?.name ?? "";
+    const collectionId = loaderData?.id ?? params.collectionId;
 
-      return {
-        meta: [
-          { charSet: "utf-8" },
-          {
-            name: "viewport",
-            content: "width=device-width, initial-scale=1",
-          },
-          {
-            name: "title",
-            content: "gg",
-          },
-          {
-            name: "description",
-            content: "Testimonials",
-          },
-          {
-            property: "og:type",
-            content: "website",
-          },
-          {
-            property: "og:site_name",
-            content: "Rateup",
-          },
-          {
-            property: "og:url",
-            content: `https://rateup.app/public/testimonial/${collectionId}`,
-          },
-          {
-            property: "og:title",
-            content: `Rateup - Testimonial ${collectionName}`,
-          },
-          {
-            property: "og:description",
-            content: `Testimonial ${collectionName}`,
-          },
-          {
-            property: "og:image",
-            content: "https://djd7kjh9uwow0.cloudfront.net/images/rateup_logo.png",
-          },
-          {
-            property: "og:image:type",
-            content: "image/png",
-          },
-          {
-            property: "og:image:width",
-            content: "1086",
-          },
-          {
-            property: "og:image:height",
-            content: "832",
-          },
-          {
-            property: "og:image:alt",
-            content: "Star Icon",
-          },
-        ],
-      };
-    },
+    return {
+      title: `Rateup - Testimonial ${collectionName}`,
+      meta: [
+        { charSet: "utf-8" },
+        {
+          name: "viewport",
+          content: "width=device-width, initial-scale=1",
+        },
+        {
+          name: "description",
+          content: "Testimonials",
+        },
+        {
+          property: "og:type",
+          content: "website",
+        },
+        {
+          property: "og:site_name",
+          content: "Rateup",
+        },
+        {
+          property: "og:url",
+          content: `https://rateup.app/public/testimonial/${collectionId}`,
+        },
+        {
+          property: "og:title",
+          content: `Rateup - Testimonial ${collectionName}`,
+        },
+        {
+          property: "og:description",
+          content: `Testimonial ${collectionName}`,
+        },
+        {
+          property: "og:image",
+          content:
+            "https://djd7kjh9uwow0.cloudfront.net/images/rateup_logo.png",
+        },
+        {
+          property: "og:image:type",
+          content: "image/png",
+        },
+        {
+          property: "og:image:width",
+          content: "1086",
+        },
+        {
+          property: "og:image:height",
+          content: "832",
+        },
+        {
+          property: "og:image:alt",
+          content: "Star Icon",
+        },
+      ],
+    };
+  },
 });
 
 function Collections() {

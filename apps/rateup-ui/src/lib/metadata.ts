@@ -1,4 +1,20 @@
-export const pageMetadata: Record<string, any> = {
+type PageMetadata = {
+  title: string;
+  description: string;
+  openGraph?: {
+    title?: string;
+    description?: string;
+  };
+  alternates?: {
+    canonical?: string;
+  };
+  robots?: {
+    index?: boolean;
+    follow?: boolean;
+  };
+};
+
+export const pageMetadata: Record<string, PageMetadata> = {
   "/terms-of-service": {
     title:
       "Terms of Service of RateUp Omnichannel Customer Engagement Platform",
@@ -116,7 +132,7 @@ export const pageMetadata: Record<string, any> = {
       canonical: "/about-us",
     },
   },
-  "/products/whatsapp-loyality": {
+  "/products/whatsapp-loyalty": {
     title: "Best Whatsapp Customer Loyalty Program Software by RateUp",
     description:
       "Boost customer retention with RateUp WhatsApp Customer Loyalty Program Software. Automate rewards, engage buyers, and grow repeat sales through AI-powered engagement flows.",
@@ -177,3 +193,77 @@ export const pageMetadata: Record<string, any> = {
     },
   },
 };
+
+const BASE_URL = "https://rateup.app";
+
+export function buildPageHead(path: string) {
+  const page = pageMetadata[path];
+  if (!page) return {};
+
+  const canonicalPath = page.alternates?.canonical;
+  let canonicalUrl: string | undefined;
+  if (canonicalPath) {
+    const normalizedCanonicalPath = canonicalPath.startsWith("/")
+      ? canonicalPath
+      : `/${canonicalPath}`;
+    canonicalUrl = `${BASE_URL}${normalizedCanonicalPath}`;
+  }
+
+  return {
+    meta: [
+      { title: page.title },
+      {
+        name: "description",
+        content: page.description,
+      },
+      {
+        property: "og:type",
+        content: "website",
+      },
+      {
+        property: "og:title",
+        content: page.openGraph?.title ?? page.title,
+      },
+      {
+        property: "og:description",
+        content: page.openGraph?.description ?? page.description,
+      },
+      ...(canonicalUrl
+        ? [
+            {
+              property: "og:url",
+              content: canonicalUrl,
+            },
+          ]
+        : []),
+      {
+        name: "twitter:card",
+        content: "summary_large_image",
+      },
+      {
+        name: "twitter:title",
+        content: page.openGraph?.title ?? page.title,
+      },
+      {
+        name: "twitter:description",
+        content: page.openGraph?.description ?? page.description,
+      },
+      ...(page.robots
+        ? [
+            {
+              name: "robots",
+              content: `${page.robots.index === false ? "noindex" : "index"}, ${page.robots.follow === false ? "nofollow" : "follow"}`,
+            },
+          ]
+        : []),
+    ],
+    links: canonicalUrl
+      ? [
+          {
+            rel: "canonical",
+            href: canonicalUrl,
+          },
+        ]
+      : [],
+  };
+}

@@ -66,7 +66,6 @@ const TicketHero = () => {
               src={`${imagesPath}/ticketing/ticketcover.png`}
               width={600}
               height={600}
-              priority
               alt="ticket hero"
             />
           </div>

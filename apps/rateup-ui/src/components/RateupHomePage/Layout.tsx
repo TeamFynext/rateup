@@ -31,6 +31,7 @@ interface LayoutProps {
   isBlog?: boolean;
   contentClassName?: string;
   navbarClassName?: string;
+  footer?: React.ReactNode;
 }
 
 export default function Layout({
@@ -38,6 +39,7 @@ export default function Layout({
   isBlog,
   contentClassName,
   navbarClassName,
+  footer,
 }: Readonly<LayoutProps>) {
   const hasSession = useCheckSession();
   const rateupLogoUrl = `${imagesPath}/rateupLogo.svg`;
@@ -65,7 +67,7 @@ export default function Layout({
 
   return (
     <div className={`relative w-full ${navbarClassName}`}>
-      <div className={`${styles.theme} contents`}>
+      <header className={styles.theme}>
         <Navbar>
           {/* Desktop Navigation */}
           <NavBody className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 ">
@@ -74,13 +76,13 @@ export default function Layout({
               className="relative z-20 mr-4 flex items-center
              space-x-2 px-2 py-1 text-sm font-normal text-black"
             >
-              <a className={styles.brand} href="#top">
+              <span className={styles.brand}>
                 <RateupStar />
                 <span className={styles.wm}>
                   Rate
                   <span className={styles.up}>Up</span>
                 </span>
-              </a>
+              </span>
             </Link>
             <NavItems items={navItems} />
             {hasSession ? (
@@ -129,7 +131,6 @@ export default function Layout({
                   width={70}
                   height={30}
                   className="w-14 h-10"
-                  priority
                 />
               </Link>
               <MobileNavToggle
@@ -196,8 +197,9 @@ export default function Layout({
             </MobileNavMenu>
           </MobileNav>
         </Navbar>
-      </div>
-      <div className={contentClassName}>{children}</div>
+      </header>
+      <main className={contentClassName}>{children}</main>
+      {footer}
       <CookieConsent
         variant="small"
         onAcceptCallback={() => {

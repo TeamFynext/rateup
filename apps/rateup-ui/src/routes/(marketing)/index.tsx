@@ -151,14 +151,13 @@ function RouteComponent() {
 
   return (
     <>
-      <Layout contentClassName={styles.theme}>
+      <Layout contentClassName={styles.theme} footer={<HomePageFooter />}>
         <HeroSectionNew />
         <TrustedBy />
         <Problem />
         <HowItWorks />
         <Features />
         <LoyaltySection />
-        <HomePageFooter />
         <Suspense fallback={null}>
           <SupportWidget
             orgId={import.meta.env.VITE_ROOT_ORG || ""}

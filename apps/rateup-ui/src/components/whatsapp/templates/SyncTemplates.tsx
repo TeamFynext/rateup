@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 import {
   Box,
-  Button,
   Checkbox,
   Flex,
   Group,
@@ -30,6 +29,7 @@ import {
   useSyncTemplatesMutation,
   useUnregisteredTemplates,
 } from "@/backend/whatsapp/whatsapp.query";
+import { Button } from "@/components/ui/button.tsx";
 
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput.tsx";
 import { WaResponseMessage } from "../MessageComponents.tsx";
@@ -195,25 +195,20 @@ function ConfigureTemplate({
       >
         <Button
           variant="outline"
-          leftSection={<IconChevronLeft size={20} />}
           disabled={templateIndex === 0}
           onClick={selectPreviousTemplate}
         >
+          <IconChevronLeft size={20} />
           {translations("Previous")}
         </Button>
-        <Button
-          rightSection={
-            templateIndex === totalTemplates - 1 ? undefined : (
-              <IconChevronRight size={20} />
-            )
-          }
-          disabled={acceptButton === ""}
-          onClick={handleNext}
-          loading={isSubmitting}
-        >
-          {templateIndex === totalTemplates - 1
-            ? translations("Import Templates")
-            : translations("Next")}
+        <Button disabled={acceptButton === ""} onClick={handleNext}>
+          {templateIndex === totalTemplates - 1 ? (
+            translations("Import Templates")
+          ) : (
+            <>
+              <IconChevronRight size={20} /> {translations("Next")}
+            </>
+          )}
         </Button>
       </Group>
     </Stack>
@@ -343,16 +338,10 @@ export function ImportTemplatesButton() {
 
   return (
     <>
-      <Button
-        leftSection={
-          <IconRefresh
-            className={isLoading && openModal ? classes.rotateInfinitely : ""}
-          />
-        }
-        variant="outline"
-        onClick={open}
-        radius={"lg"}
-      >
+      <Button variant="outline" onClick={open}>
+        <IconRefresh
+          className={isLoading && openModal ? classes.rotateInfinitely : ""}
+        />
         {translations("Import")}
       </Button>
       <SyncTemplatesModal
@@ -382,17 +371,10 @@ export function SyncTemplatesButton({
   }
 
   return (
-    <Button
-      leftSection={
-        <IconRefresh
-          className={syncMutation.isPending ? classes.rotateInfinitely : ""}
-        />
-      }
-      variant="outline"
-      onClick={handleSyncClick}
-      radius={"lg"}
-      disabled={disabled}
-    >
+    <Button variant="outline" onClick={handleSyncClick} disabled={disabled}>
+      <IconRefresh
+        className={syncMutation.isPending ? classes.rotateInfinitely : ""}
+      />
       {translations("Sync")}
     </Button>
   );
