@@ -53,7 +53,6 @@ import { Route as marketingTermsOfServiceIndexRouteImport } from './routes/(mark
 import { Route as marketingPrivacyPolicyIndexRouteImport } from './routes/(marketing)/privacy-policy/index'
 import { Route as marketingPricingIndexRouteImport } from './routes/(marketing)/pricing/index'
 import { Route as marketingPartnerPageIndexRouteImport } from './routes/(marketing)/partner-page/index'
-import { Route as marketingLoyaltyLandingPageIndexRouteImport } from './routes/(marketing)/loyalty-landing-page/index'
 import { Route as marketingContactUsIndexRouteImport } from './routes/(marketing)/contact-us/index'
 import { Route as marketingBlogIndexRouteImport } from './routes/(marketing)/blog/index'
 import { Route as marketingAboutUsIndexRouteImport } from './routes/(marketing)/about-us/index'
@@ -387,12 +386,6 @@ const marketingPartnerPageIndexRoute =
   marketingPartnerPageIndexRouteImport.update({
     id: '/(marketing)/partner-page/',
     path: '/partner-page/',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const marketingLoyaltyLandingPageIndexRoute =
-  marketingLoyaltyLandingPageIndexRouteImport.update({
-    id: '/(marketing)/loyalty-landing-page/',
-    path: '/loyalty-landing-page/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const marketingContactUsIndexRoute = marketingContactUsIndexRouteImport.update({
@@ -1038,7 +1031,6 @@ export interface FileRoutesByFullPath {
   '/about-us/': typeof marketingAboutUsIndexRoute
   '/blog/': typeof marketingBlogIndexRoute
   '/contact-us/': typeof marketingContactUsIndexRoute
-  '/loyalty-landing-page/': typeof marketingLoyaltyLandingPageIndexRoute
   '/partner-page/': typeof marketingPartnerPageIndexRoute
   '/pricing/': typeof marketingPricingIndexRoute
   '/privacy-policy/': typeof marketingPrivacyPolicyIndexRoute
@@ -1188,7 +1180,6 @@ export interface FileRoutesByTo {
   '/about-us': typeof marketingAboutUsIndexRoute
   '/blog': typeof marketingBlogIndexRoute
   '/contact-us': typeof marketingContactUsIndexRoute
-  '/loyalty-landing-page': typeof marketingLoyaltyLandingPageIndexRoute
   '/partner-page': typeof marketingPartnerPageIndexRoute
   '/pricing': typeof marketingPricingIndexRoute
   '/privacy-policy': typeof marketingPrivacyPolicyIndexRoute
@@ -1342,7 +1333,6 @@ export interface FileRoutesById {
   '/(marketing)/about-us/': typeof marketingAboutUsIndexRoute
   '/(marketing)/blog/': typeof marketingBlogIndexRoute
   '/(marketing)/contact-us/': typeof marketingContactUsIndexRoute
-  '/(marketing)/loyalty-landing-page/': typeof marketingLoyaltyLandingPageIndexRoute
   '/(marketing)/partner-page/': typeof marketingPartnerPageIndexRoute
   '/(marketing)/pricing/': typeof marketingPricingIndexRoute
   '/(marketing)/privacy-policy/': typeof marketingPrivacyPolicyIndexRoute
@@ -1497,7 +1487,6 @@ export interface FileRouteTypes {
     | '/about-us/'
     | '/blog/'
     | '/contact-us/'
-    | '/loyalty-landing-page/'
     | '/partner-page/'
     | '/pricing/'
     | '/privacy-policy/'
@@ -1647,7 +1636,6 @@ export interface FileRouteTypes {
     | '/about-us'
     | '/blog'
     | '/contact-us'
-    | '/loyalty-landing-page'
     | '/partner-page'
     | '/pricing'
     | '/privacy-policy'
@@ -1800,7 +1788,6 @@ export interface FileRouteTypes {
     | '/(marketing)/about-us/'
     | '/(marketing)/blog/'
     | '/(marketing)/contact-us/'
-    | '/(marketing)/loyalty-landing-page/'
     | '/(marketing)/partner-page/'
     | '/(marketing)/pricing/'
     | '/(marketing)/privacy-policy/'
@@ -1949,7 +1936,6 @@ export interface RootRouteChildren {
   authSignupIndexRoute: typeof authSignupIndexRoute
   marketingAboutUsIndexRoute: typeof marketingAboutUsIndexRoute
   marketingContactUsIndexRoute: typeof marketingContactUsIndexRoute
-  marketingLoyaltyLandingPageIndexRoute: typeof marketingLoyaltyLandingPageIndexRoute
   marketingPartnerPageIndexRoute: typeof marketingPartnerPageIndexRoute
   marketingPricingIndexRoute: typeof marketingPricingIndexRoute
   marketingPrivacyPolicyIndexRoute: typeof marketingPrivacyPolicyIndexRoute
@@ -2305,13 +2291,6 @@ declare module '@tanstack/react-router' {
       path: '/partner-page'
       fullPath: '/partner-page/'
       preLoaderRoute: typeof marketingPartnerPageIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/loyalty-landing-page/': {
-      id: '/(marketing)/loyalty-landing-page/'
-      path: '/loyalty-landing-page'
-      fullPath: '/loyalty-landing-page/'
-      preLoaderRoute: typeof marketingLoyaltyLandingPageIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(marketing)/contact-us/': {
@@ -3307,7 +3286,6 @@ const rootRouteChildren: RootRouteChildren = {
   authSignupIndexRoute: authSignupIndexRoute,
   marketingAboutUsIndexRoute: marketingAboutUsIndexRoute,
   marketingContactUsIndexRoute: marketingContactUsIndexRoute,
-  marketingLoyaltyLandingPageIndexRoute: marketingLoyaltyLandingPageIndexRoute,
   marketingPartnerPageIndexRoute: marketingPartnerPageIndexRoute,
   marketingPricingIndexRoute: marketingPricingIndexRoute,
   marketingPrivacyPolicyIndexRoute: marketingPrivacyPolicyIndexRoute,
