@@ -7,7 +7,7 @@
 
 @import "@fontsource-variable/inter";
 /* @import "@fontsource/noto-color-emoji"; */
-@import "@fontsource-variable/sora";
+@import "@fontsource-variable/nunito";
 
 :root {
   --radius: 0.625rem;
@@ -182,7 +182,7 @@
 @theme inline {
   --font-sans: "Inter Variable", sans-serif;
   /* --font-sans: 'Inter Variable', sans-serif; */
-  --font-sora: "Sora Variable", sans-serif;
+  --font-nunito: "Nunito Variable", sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
