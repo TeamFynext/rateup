@@ -1,5 +1,8 @@
 import { useEffect, useRef } from "react";
 
+import { useNavigate } from "@tanstack/react-router";
+
+import { BookDemoModal } from "../RateupHomePage/helper/BookDemoModal";
 import styles from "./loyalty.landing.module.css";
 
 const chevronSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform:scaleX(-1)"><polyline points="9 6 15 12 9 18"/></svg>`;
@@ -19,6 +22,7 @@ function countUp(el: HTMLElement, from: number, to: number, dur: number) {
 }
 
 export default function Hero() {
+  const navigate = useNavigate();
   const waBodyRef = useRef<HTMLDivElement>(null);
   const heroRunningRef = useRef(false);
   const heroVisibleRef = useRef(false);
@@ -220,7 +224,14 @@ export default function Hero() {
               through the messaging app they already use daily.
             </p>
             <div className={styles["hero-cta"]}>
-              <button className={`${styles.btn} ${styles["btn-primary"]}`}>
+              <button
+                className={`${styles.btn} ${styles["btn-primary"]}`}
+                onClick={() =>
+                  navigate({
+                    to: "/signup",
+                  })
+                }
+              >
                 Start WhatsApp Loyalty
                 <span className={styles.chip}>
                   <svg
@@ -235,24 +246,26 @@ export default function Hero() {
                   </svg>
                 </span>
               </button>
-              <button className={`${styles.btn} ${styles["btn-secondary"]}`}>
-                Book A Demo
-                <span className={styles.chip}>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                </span>
-              </button>
+              <BookDemoModal>
+                <button className={`${styles.btn} ${styles["btn-secondary"]}`}>
+                  Book A Demo
+                  <span className={styles.chip}>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  </span>
+                </button>
+              </BookDemoModal>
             </div>
           </div>
 

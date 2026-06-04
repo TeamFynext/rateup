@@ -1,10 +1,11 @@
 import { useState } from "react";
 
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import styles from "./loyalty.landing.module.css";
 
 export default function CustomerProfiles() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<
     "profiles" | "segments" | "campaigns" | "referrals" | "analytics"
   >("profiles");
@@ -369,9 +370,13 @@ export default function CustomerProfiles() {
                     <span className={styles.tp}>Engagement History</span>
                   </div>
                   <div className={styles["hero-cta"]}>
-                    <Link
-                      to="/trial"
+                    <button
                       className={`${styles.btn} ${styles["btn-primary"]}`}
+                      onClick={() =>
+                        navigate({
+                          to: "/signup",
+                        })
+                      }
                     >
                       Get Started Now
                       <span className={styles.chip}>
@@ -386,7 +391,7 @@ export default function CustomerProfiles() {
                           <polyline points="9 6 15 12 9 18" />
                         </svg>
                       </span>
-                    </Link>
+                    </button>
                     <a
                       href="#how"
                       className={`${styles.btn} ${styles["btn-secondary"]}`}
@@ -481,9 +486,13 @@ export default function CustomerProfiles() {
                     <span className={styles.tp}>Spend Tiers</span>
                   </div>
                   <div className={styles["hero-cta"]}>
-                    <Link
-                      to="/trial"
+                    <button
                       className={`${styles.btn} ${styles["btn-primary"]}`}
+                      onClick={() =>
+                        navigate({
+                          to: "/signup",
+                        })
+                      }
                     >
                       Get Started Now
                       <span className={styles.chip}>
@@ -498,7 +507,7 @@ export default function CustomerProfiles() {
                           <polyline points="9 6 15 12 9 18" />
                         </svg>
                       </span>
-                    </Link>
+                    </button>
                     <a
                       href="#how"
                       className={`${styles.btn} ${styles["btn-secondary"]}`}
@@ -591,9 +600,13 @@ export default function CustomerProfiles() {
                     <span className={styles.tp}>Click Tracking</span>
                   </div>
                   <div className={styles["hero-cta"]}>
-                    <Link
-                      to="/trial"
+                    <button
                       className={`${styles.btn} ${styles["btn-primary"]}`}
+                      onClick={() =>
+                        navigate({
+                          to: "/signup",
+                        })
+                      }
                     >
                       Get Started Now
                       <span className={styles.chip}>
@@ -608,7 +621,7 @@ export default function CustomerProfiles() {
                           <polyline points="9 6 15 12 9 18" />
                         </svg>
                       </span>
-                    </Link>
+                    </button>
                     <a
                       href="#how"
                       className={`${styles.btn} ${styles["btn-secondary"]}`}
@@ -707,9 +720,13 @@ export default function CustomerProfiles() {
                     <span className={styles.tp}>Viral Growth</span>
                   </div>
                   <div className={styles["hero-cta"]}>
-                    <Link
-                      to="/trial"
+                    <button
                       className={`${styles.btn} ${styles["btn-primary"]}`}
+                      onClick={() =>
+                        navigate({
+                          to: "/signup",
+                        })
+                      }
                     >
                       Get Started Now
                       <span className={styles.chip}>
@@ -724,7 +741,7 @@ export default function CustomerProfiles() {
                           <polyline points="9 6 15 12 9 18" />
                         </svg>
                       </span>
-                    </Link>
+                    </button>
                     <a
                       href="#how"
                       className={`${styles.btn} ${styles["btn-secondary"]}`}
@@ -823,9 +840,13 @@ export default function CustomerProfiles() {
                     <span className={styles.tp}>Revenue Impact</span>
                   </div>
                   <div className={styles["hero-cta"]}>
-                    <Link
-                      to="/trial"
+                    <button
                       className={`${styles.btn} ${styles["btn-primary"]}`}
+                      onClick={() =>
+                        navigate({
+                          to: "/signup",
+                        })
+                      }
                     >
                       Get Started Now
                       <span className={styles.chip}>
@@ -840,7 +861,7 @@ export default function CustomerProfiles() {
                           <polyline points="9 6 15 12 9 18" />
                         </svg>
                       </span>
-                    </Link>
+                    </button>
                     <a
                       href="#how"
                       className={`${styles.btn} ${styles["btn-secondary"]}`}

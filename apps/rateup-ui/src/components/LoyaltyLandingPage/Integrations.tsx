@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 
+import { useNavigate } from "@tanstack/react-router";
+
 import styles from "./loyalty.landing.module.css";
 
 export default function Integrations() {
   const stageRef = useRef<HTMLDivElement>(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -255,7 +257,14 @@ export default function Integrations() {
             communication platforms to automate loyalty, rewards, and customer
             engagement effortlessly.
           </p>
-          <button className={`${styles.btn} ${styles["btn-primary"]}`}>
+          <button
+            className={`${styles.btn} ${styles["btn-primary"]}`}
+            onClick={() =>
+              navigate({
+                to: "/signup",
+              })
+            }
+          >
             Try For Free
             <span className={styles.chip}>
               <svg

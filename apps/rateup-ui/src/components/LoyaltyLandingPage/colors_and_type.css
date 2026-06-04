@@ -101,9 +101,9 @@
   /* ==========================================================
      TYPOGRAPHY
      ========================================================== */
-  --font-display: "Sora", ui-rounded, system-ui, -apple-system, sans-serif;
-  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+  --font-display:
+    "Nunito Variable", ui-rounded, system-ui, -apple-system, sans-serif;
+  --font-body: "Inter Variable", system-ui, -apple-system, sans-serif;
 
   /* Type scale (desktop). Use fluid clamp()s where responsive.  */
   --fs-display-1: clamp(48px, 6vw, 88px);

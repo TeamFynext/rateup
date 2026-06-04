@@ -1,6 +1,9 @@
+import { useNavigate } from "@tanstack/react-router";
+
 import styles from "./loyalty.landing.module.css";
 
 export default function WhyWhatsApp() {
+  const navigate = useNavigate();
   return (
     <section
       className={`${styles.why} ${styles["light-sec"]}`}
@@ -18,7 +21,14 @@ export default function WhyWhatsApp() {
           className={`${styles["center-cta"]} ${styles.reveal}`}
           style={{ marginTop: 34 }}
         >
-          <button className={`${styles.btn} ${styles["btn-primary"]}`}>
+          <button
+            className={`${styles.btn} ${styles["btn-primary"]}`}
+            onClick={() =>
+              navigate({
+                to: "/signup",
+              })
+            }
+          >
             Start Loyalty On WhatsApp
             <span className={styles.chip}>
               <svg
