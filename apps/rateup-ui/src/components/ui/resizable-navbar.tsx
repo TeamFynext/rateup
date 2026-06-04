@@ -102,7 +102,7 @@ export const NavBody = ({ children, className }: NavBodyProps) => {
         },
       }}
       className={cn(
-        "relative z-60 mx-auto hidden flex-row items-center justify-between self-start rounded-2xl px-4 py-2 xl:flex shadow-md max-w-6xl w-[calc(100%-4rem)]",
+        "relative z-60 mx-auto hidden flex-row items-center justify-between self-start rounded-2xl px-4 py-2 xl:flex max-w-6xl w-[calc(100%-4rem)]",
         className,
       )}
     >
@@ -126,7 +126,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
       )}
     >
       {/* Services Dropdown */}
-      <DropDownNavItems />
+      <DropDownNavItems style={"text-white hover:text-gray-100"} />
       {items.map((item, idx) => (
         <Link
           onMouseEnter={() => setHovered(idx)}

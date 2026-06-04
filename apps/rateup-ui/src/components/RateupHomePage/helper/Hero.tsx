@@ -5,10 +5,10 @@ import React from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
+import { imagesPath } from "@/utils/constants.ts";
+
 import { ArrowButton } from "../components/btn.tsx";
 import { SocialBadge } from "../components/socialBadge.tsx";
-import { imagesPath } from "@/utils/constants.ts";
-import { sora } from "@/utils/fonts.ts";
 
 const socialBadges = [
   { src: `${imagesPath}/landing/logos/ico-whatsapp.svg`, label: "WhatsApp" },
@@ -45,7 +45,7 @@ export default function Hero() {
 
         {/* Heading */}
         <h1
-          className={`text-3xl sm:text-4xl xl:text-5xl font-semibold leading-tight ${sora.className}`}
+          className={`text-3xl sm:text-4xl xl:text-5xl font-semibold leading-tight`}
         >
           <span className="text-light-blue-5">What Happens After A</span>
           <br />
@@ -54,7 +54,7 @@ export default function Hero() {
 
         {/* Body */}
         <p
-          className={`text-sm text-slate-400 leading-relaxed mb-6 max-w-md pb-3 ${sora.className}`}
+          className={`text-sm text-slate-400 leading-relaxed mb-6 max-w-md pb-3`}
         >
           Most businesses focus on acquiring customers — but the real money is
           in what happens after the sale. RateUp automates feedback collection,

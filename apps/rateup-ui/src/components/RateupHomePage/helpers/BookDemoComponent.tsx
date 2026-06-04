@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
 import { toast } from "sonner";
 
 import { useBookDemoMutation } from "@/backend/bookdemo/bookdemo.query";
@@ -11,6 +14,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
+
+import "react-phone-number-input/style.css";
 
 interface DemoModalProps {
   open: boolean;
@@ -42,8 +47,10 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
     if (!formData.businessName.trim()) {
       newErrors.businessName = "Business name is required";
     }
-    if (!formData.phone.trim()) {
+    if (!formData.phone) {
       newErrors.phone = "Phone number is required";
+    } else if (!isValidPhoneNumber(formData.phone)) {
+      newErrors.phone = "Invalid phone number";
     }
 
     setErrors(newErrors);
@@ -162,11 +169,14 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
             <div className="space-y-2">
               <label className="text-sm font-bold">Phone</label>
 
-              <Input
-                placeholder="+1 555 000 0000"
-                className="rounded-sm px-4 text-sm"
+              <PhoneInputWithCountrySelect
+                defaultCountry="IN"
+                international
+                countryCallingCodeEditable={false}
+                placeholder="Enter phone number"
                 value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
+                onChange={(value) => handleInputChange("phone", value ?? "")}
+                className="w-full border border-input rounded-md px-3 py-2 text-sm [&>input]:bg-transparent [&>input]:focus:outline-none focus-within:ring-2 focus-within:ring-ring/50"
               />
               {errors.phone && (
                 <p className="text-red-500 text-xs">{errors.phone}</p>

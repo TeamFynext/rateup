@@ -4,7 +4,6 @@ import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 
 import { imagesPath } from "@/utils/constants.ts";
-import { sora } from "@/utils/fonts.ts";
 
 const logo1 = `${imagesPath}/homepage/CLIENTS/1.png`;
 const logo2 = `${imagesPath}/homepage/CLIENTS/2.png`;
@@ -43,7 +42,7 @@ const ClientLogos = () => {
 
   return (
     <section
-      className={`bg-white flex items-center justify-center py-6 sm:py-8 lg:pb-7 ${sora.className}`}
+      className={`bg-white flex items-center justify-center py-6 sm:py-8 lg:pb-7`}
     >
       <div className="border border-light-blue-5 w-[95vw] sm:w-[90vw] lg:w-[80vw] flex flex-col sm:flex-row items-stretch justify-between rounded-lg overflow-hidden">
         {/* Left Section */}
