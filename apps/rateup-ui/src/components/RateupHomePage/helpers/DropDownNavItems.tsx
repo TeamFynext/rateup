@@ -6,6 +6,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { ChevronDown, MessageCircle, Monitor } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
+import { cn } from "@/lib/utils";
+
 export default function DropDownNavItems({ style }: { style?: string }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -91,7 +93,10 @@ export default function DropDownNavItems({ style }: { style?: string }) {
     >
       <span
         onClick={() => setOpen(!open)}
-        className={`px-4 py-2 text-[16px] font-semibold cursor-pointer flex items-center gap-1 transition-colors duration-200 ${style}`}
+        className={cn(
+          "px-4 py-2 text-[16px] font-semibold cursor-pointer flex items-center gap-1 transition-colors duration-200",
+          style,
+        )}
       >
         Product
         <div className="bg-[#F5F5F5] p-1 rounded-full">
