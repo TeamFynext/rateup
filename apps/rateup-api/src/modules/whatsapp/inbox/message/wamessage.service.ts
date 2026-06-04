@@ -1988,6 +1988,8 @@ export async function getWaMessageLogs(
       messageType: string | null;
       messagePreview: string;
       status: string | null;
+      logs: any;
+      errorMessage: string | null;
     }>
   >`
     SELECT
@@ -1995,6 +1997,8 @@ export async function getWaMessageLogs(
       wm."createdAt",
       wm."sourceMessage",
       wm."contactId",
+      wm.logs,
+      wm."errorMessage",
       c.phone,
 
       wm."messageBody"->'send'->>'type' AS "messageType",
