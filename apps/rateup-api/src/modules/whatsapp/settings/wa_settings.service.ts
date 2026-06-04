@@ -12,7 +12,7 @@ import {
   PaginationQuery,
   updateWaSettingsInput,
 } from "./wa_settings.schema.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 import { subscribePageToApp } from "./wa_settings.controller.js";
 
 export async function createWaSettings(
@@ -232,13 +232,13 @@ export async function upsertWaSettings(
       const { accessToken } =
         getWaSettingsWithAccessTokenDecrypted(existingSettings);
       if (data.ibaId) {
-        const igData = await callWhatsappApi(
+        const igData = await callMetaApi(
           `/${data.ibaId}?fields=username&access_token=${accessToken}`,
           "GET",
         );
         data.igUserName = igData.data.username;
       }
-      const fbData = await callWhatsappApi(
+      const fbData = await callMetaApi(
         `/${data.fbPageId}?fields=name&access_token=${accessToken}`,
         "GET",
       );
@@ -323,7 +323,7 @@ export async function getFbPagesFromWa(settingsId) {
     throw new Error("accesstoken not found");
   }
   const url = `/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`;
-  const res = await callWhatsappApi(url, "GET");
+  const res = await callMetaApi(url, "GET");
   log.info("Pages fetched from meta:%o", res?.data);
   return res.data?.data;
 }
@@ -334,7 +334,7 @@ export async function getAdsFromWa(whatsappSettingsId, adAccountId) {
     throw new Error("accesstoken not found");
   }
   const url = `/${adAccountId}/ads?fields=id,name&access_token=${accessToken}`;
-  const res = await callWhatsappApi(url, "GET");
+  const res = await callMetaApi(url, "GET");
   return res.data?.data;
 }
 
@@ -344,10 +344,10 @@ export async function getAdAccountsFromWa(whatsappSettingsId) {
     throw new Error("accesstoken not found");
   }
   const url = `/me/adaccounts?fields=id,name&access_token=${accessToken}`;
-  const res = await callWhatsappApi(url, "GET");
+  const res = await callMetaApi(url, "GET");
   const adAccounts = [...res.data?.data];
   for (const acc of adAccounts) {
-    const ads = await callWhatsappApi(
+    const ads = await callMetaApi(
       `/${acc?.id}/ads?fields=id,name&access_token=${accessToken}`,
       "GET",
     );
@@ -358,13 +358,13 @@ export async function getAdAccountsFromWa(whatsappSettingsId) {
 
 export async function getLeadgenFormsFromWa(fbPageId, pageAccessToken) {
   const url = `/${fbPageId}/leadgen_forms?fields=id,name,questions&access_token=${pageAccessToken}`;
-  const res = await callWhatsappApi(url, "GET");
+  const res = await callMetaApi(url, "GET");
   return res.data.data;
 }
 
 export async function subscribeFieldtoPage(fbPageId, pageAccessToken, fields) {
   const url = `/${fbPageId}/subscribed_apps?subscribed_fields=${fields.join(",")}&access_token=${pageAccessToken}`;
-  const res = await callWhatsappApi(url, "POST");
+  const res = await callMetaApi(url, "POST");
   return res.data;
 }
 
@@ -374,7 +374,7 @@ export async function getLeadgenFormQuestionsFromWa(
   pageAccessToken,
 ) {
   const url = `/${fbPageId}/${leadgenFormId}?fields=questions&access_token=${pageAccessToken}`;
-  const res = await callWhatsappApi(url, "GET");
+  const res = await callMetaApi(url, "GET");
   return res.data?.data;
 }
 

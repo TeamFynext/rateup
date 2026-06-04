@@ -16,7 +16,7 @@ import {
   WaMessageAssignBody,
 } from "./wamessage.schema.js";
 import { log } from "../../../../utils/logger.js";
-import { callWhatsappApi } from "../../wa_axios.js";
+import { callMetaApi } from "../../wa_axios.js";
 import { getWaSettings } from "../../settings/wa_settings.service.js";
 import axios from "axios";
 import {
@@ -713,7 +713,7 @@ export async function filterChats(
 
 export async function getMediaFile(mediaId: string, orgId: string) {
   const waSettings = await getWaSettings(orgId);
-  const fileUrl = await callWhatsappApi(
+  const fileUrl = await callMetaApi(
     `/${mediaId}`,
     "GET",
     waSettings.accessToken,

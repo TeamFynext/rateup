@@ -1,5 +1,5 @@
 import { log } from "../../../utils/logger.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 
 /**
  * Get Business Integration System User Access Token from the code recieved from MetaLogin process
@@ -13,7 +13,7 @@ export async function getAccessTokenFromCode(
   url = url + `&client_secret=${process.env.waclient_secret}`;
   url = url + `&code=${code}`;
   url = url + `&redirect_uri=${redirect_uri}`;
-  const res = await callWhatsappApi(url, "GET");
+  const res = await callMetaApi(url, "GET");
 
   log.trace("Access token response: %o", res.data);
   return res.data.access_token;
@@ -26,7 +26,7 @@ export async function getAccessTokenFromCode(
 export async function debug_token(tokenToDebug: string, accessToken: string) {
   let url = `/debug_token`;
   url = url + `?input_token=${tokenToDebug}`;
-  const res = await callWhatsappApi(url, "GET", accessToken);
+  const res = await callMetaApi(url, "GET", accessToken);
 
   log.trace("Business details response: %o", res.data);
   return res.data as DebugTokenResponse;
@@ -52,7 +52,7 @@ type DebugTokenResponse = {
 
 export async function getSharedWABAs(businessId: string, accessToken: string) {
   let url = `/${businessId}/client_whatsapp_business_accounts`;
-  const res = await callWhatsappApi(url, "GET", accessToken);
+  const res = await callMetaApi(url, "GET", accessToken);
 
   log.trace("Shared WhatsApp Business Accounts response: %o", res.data);
   return res.data;
@@ -63,7 +63,7 @@ export async function getPhoneNumbersFromWABA(
   accessToken: string,
 ): Promise<WABAPhoneNumbersResponse> {
   let url = `/${wabaId}/phone_numbers?fields=status,display_phone_number,verified_name`;
-  const res = await callWhatsappApi(url, "GET", accessToken);
+  const res = await callMetaApi(url, "GET", accessToken);
 
   log.trace("Phone Numbers response: %o", res.data);
   return res.data;
@@ -83,12 +83,12 @@ export async function subscribeWABAToWebhook(
   accessToken: string,
 ) {
   let url = `/${wabaId}/subscribed_apps`;
-  const res = await callWhatsappApi(url, "POST", accessToken);
+  const res = await callMetaApi(url, "POST", accessToken);
   return res.data;
 }
 export async function getSubscribedApps(wabaId: string, accessToken: string) {
   let url = `/${wabaId}/subscribed_apps`;
-  const res = await callWhatsappApi(url, "GET", accessToken);
+  const res = await callMetaApi(url, "GET", accessToken);
   return res.data;
 }
 
@@ -97,7 +97,7 @@ export async function registerPhoneNumber(
   accessToken: string,
 ) {
   let url = `/${wa_phone_id}/register`;
-  const res = await callWhatsappApi(url, "POST", accessToken, {
+  const res = await callMetaApi(url, "POST", accessToken, {
     messaging_product: "whatsapp",
     pin: "123456", // TODO
   });
@@ -117,6 +117,6 @@ type WaPhoneDetailsRes = {
 };
 export async function getPhoneDetails(phoneId: string, accessToken: string) {
   const url = `/${phoneId}`;
-  const res = await callWhatsappApi(url, "GET", accessToken);
+  const res = await callMetaApi(url, "GET", accessToken);
   return res.data as WaPhoneDetailsRes;
 }

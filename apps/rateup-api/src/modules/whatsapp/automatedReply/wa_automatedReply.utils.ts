@@ -105,12 +105,13 @@ export type automationProps = {
   sendOnceIn24Hours: boolean;
 };
 // Helper to check substring match while preserving optional case sensitivity
-function includesWholePhrase(text, phrase, caseSensitive = false) {
-  if (caseSensitive) {
-    return text.includes(phrase);
-  }
+export function includesWholePhrase(text, phrase, caseSensitive = false) {
+  const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+  const flags = caseSensitive ? "" : "i";
 
-  return text.toLowerCase().includes(phrase.toLowerCase());
+  return new RegExp(String.raw`(?<!\w)${escapedPhrase}(?!\w)`, flags).test(
+    text,
+  );
 }
 
 /**

@@ -46,8 +46,9 @@ async function axiosWithRetry<T = any>(
   throw lastError!;
 }
 
-const WA_API_VERSION = "v25.0";
-export async function callWhatsappApi(
+const META_API_VERSION = "v25.0";
+
+export async function callMetaApi(
   url: string,
   method: AxiosRequestConfig["method"],
   accessToken?: string,
@@ -60,7 +61,7 @@ export async function callWhatsappApi(
     ? { Authorization: `Bearer ${accessToken}` }
     : {};
   const config: AxiosRequestConfig = {
-    url: `https://graph.facebook.com/${WA_API_VERSION}${url}`,
+    url: `https://graph.facebook.com/${META_API_VERSION}${url}`,
     method,
     data,
     params,
@@ -72,7 +73,7 @@ export async function callWhatsappApi(
     ...otherConfig,
   };
   log.trace(
-    "Calling WhatsApp API with config: %s %s \n%o",
+    "Calling Meta API with config: %s %s \n%o",
     config.method,
     config.url,
     config.data,
@@ -81,13 +82,13 @@ export async function callWhatsappApi(
   if (res.status.toString().startsWith("2")) {
     return res;
   } else {
-    log.error("Error calling WhatsApp API: %o", res);
+    log.error("Error calling Meta API: %o", res);
     log.error("\nError Response => %o", res.data);
     if (res.data?.error) {
       throw new GraphApiError(res);
     } else {
       log.fatal("FIXME: Couldn't identify error response");
-      throw new Error("Error calling WhatsApp API");
+      throw new Error("Error calling Meta API");
     }
   }
 }

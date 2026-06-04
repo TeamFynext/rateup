@@ -18,7 +18,7 @@ import {
   updateWaSettings,
 } from "../settings/wa_settings.service.js";
 import { WaConfigType } from "../../../types/enums.js";
-import { callWhatsappApi, GraphApiError } from "../wa_axios.js";
+import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import { handleWhatsappError } from "../wa_error_handler.js";
 import {
   generateKeyPairsForWaEncryption,
@@ -154,7 +154,7 @@ export async function getUserAccessTokenHanlder(
       ),
     );
     const url = `/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${userAccessToken}`;
-    const res = await callWhatsappApi(url, "GET");
+    const res = await callMetaApi(url, "GET");
     log.info("Pages fetched from meta by user access token:%o", res?.data);
     const metaAssets = await getMetaAssets(waSettingsId);
     const data =

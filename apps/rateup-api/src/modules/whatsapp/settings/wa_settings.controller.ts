@@ -35,7 +35,7 @@ import {
 } from "./wa_settings.service.js";
 import { WaConfigType } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 
 export async function createWaSettingsHandler(
   req: FastifyRequest<{ Body: createWaSettingsInput }>,
@@ -120,7 +120,7 @@ export async function upsertWaSettingsHandler(
 }
 
 export async function subscribePageToApp(pageId, pageAccessToken, fields) {
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${pageId}/subscribed_apps?subscribed_fields=${fields.join(",")}&access_token=${pageAccessToken}`,
     "POST",
   );
@@ -145,12 +145,12 @@ export async function updateWaSettingsByIdHandler(
         request.body.pageAccessToken,
         ["messages", "message_reads", "message_reactions"],
       );
-      const igData = await callWhatsappApi(
+      const igData = await callMetaApi(
         `/${request.body.ibaId}?fields=username&access_token=${settings?.accessToken}`,
         "GET",
       );
       request.body.igUserName = igData.data.username;
-      const fbData = await callWhatsappApi(
+      const fbData = await callMetaApi(
         `/${request.body.fbPageId}?fields=name&access_token=${settings?.accessToken}`,
         "GET",
       );
@@ -431,7 +431,7 @@ export async function getWaSettingsForOrgHandler(
     let verificationStatus = null;
 
     if (accessToken && businessId) {
-      const res = await callWhatsappApi(
+      const res = await callMetaApi(
         `/${businessId}`,
         "GET",
         accessToken,
