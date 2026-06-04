@@ -50,7 +50,6 @@ const QrFinalCTA = () => {
             aspectRatio={16 / 9}
             objectFit="contain"
             className="object-contain rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.2)]"
-            priority
           />
         </div>
       </div>

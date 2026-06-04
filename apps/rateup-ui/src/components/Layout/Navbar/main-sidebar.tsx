@@ -1,199 +1,56 @@
 "use client";
 
-import { useEffect } from "react";
-
-import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useRouterState, useSearch } from "@tanstack/react-router";
-import SessionReact from "supertokens-auth-react/recipe/session";
+import type { CSSProperties, ReactNode } from "react";
 
 import { useChatSocket } from "@/hooks/useChatSocket.tsx";
-import {
-  useContactLabels,
-  useCustomFields,
-} from "@/backend/campaign/contacts/contacts.query";
-import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
-import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
-import { useSubscription } from "@/backend/subscription/subscription.query";
-import { useTeamsByUser } from "@/backend/team/team.query";
-import type { IUserInfoApiResponse } from "@/backend/user/user.api";
-import { useUserInfo } from "@/backend/user/user.query";
-import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { RouteAccessGuard } from "@/components/common/RouteAccessGuard.tsx";
 import { CustomFieldsProvider } from "@/context/CustomFieldsContext.tsx";
 import { LifecycleContext } from "@/context/LifecycleContext.ts";
 import { TeamFeaturesProvider } from "@/context/TeamFeaturesContext.tsx";
-import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 
-import { useUser } from "@/context/UserContext.tsx";
-import useLocalStorage from "@/hooks/localStorage.tsx";
 import NavbarSkeleton from "../../animation/skeleton/Navbar.Skeleton";
 import { SidebarProvider } from "../../ui/sidebar.tsx";
-import { useChatFilterStore } from "../../whatsapp/inbox/chatselect/chatFilter/index.tsx";
 import AppSidebar from "./app-sidebar.tsx";
 import CorruptedSessionScreen from "./corrupted-session.tsx";
+import { useMainSidebar } from "./use-main-sidebar.tsx";
 
-// WebSocketHandler Component
 const WebSocketHandler = () => {
   useChatSocket();
+
   return null;
 };
 
-// MainContent Component
-export default function MainSidebar({ children }) {
+type MainSidebarProps = Readonly<{
+  children: ReactNode;
+  welcomeMessage?: boolean;
+}>;
+
+export default function MainSidebar({
+  children,
+  welcomeMessage = false,
+}: MainSidebarProps) {
   const {
-    isPending: isLoadingUserInfo,
-    data: userQueryData,
-    isFetched,
-    refetch,
-  } = useUserInfo();
-
-  const navigate = useNavigate();
-  const pathname = useRouterState({
-    select: (s) => s.location.pathname,
-  });
-
-  const query = useSearch({ strict: false }) as {
-    msg?: string;
-    tab?: string;
-  };
-  const [userInfo, setUserInfo] = useLocalStorage<IUserInfoApiResponse | null>(
-    "userInfo",
-    null,
-  );
-
-  const { setUser } = useUser();
-  const queryClient = useQueryClient();
-
-  const { data: sub, isPending } = useSubscription();
-  const { data: lifecycles, isPending: isPendingLifecycles } =
-    useLifeCyclesQuery();
-  const { data: customFieldData, isPending: isCustomFieldPending } =
-    useCustomFields();
-  const { data: contactLabels = [], isPending: isPendingContactLabels } =
-    useContactLabels();
-  const { data: userRes, isLoading: isStaffLoading } = useTeamsMembersOfOrg();
-  const { data: teamRes, isLoading: isTeamLoading } = useTeamsByUser();
-  const isLoading =
-    isPending ||
-    isPendingLifecycles ||
-    isLoadingUserInfo ||
-    isCustomFieldPending ||
-    isPendingContactLabels ||
-    isStaffLoading ||
-    isTeamLoading;
-
-  if (
-    !isLoading &&
-    isFetched &&
-    (!userQueryData || !("data" in userQueryData) || !userQueryData.data)
-  ) {
-    return <CorruptedSessionScreen />;
-  }
-
-  if (query.msg === "welcome") {
-    refetch();
-  }
-
-  useEffect(() => {
-    if (userQueryData && "data" in userQueryData) {
-      if (userQueryData?.data) {
-        setUserInfo(userQueryData); // update localStorage
-      }
-      if (userQueryData?.data?.email && !userQueryData?.data?.orgId) {
-        if (query?.msg !== "welcome") {
-          navigate({
-            to: "/signup?auth=google",
-          });
-        }
-      }
-    } else if (userQueryData && "error" in userQueryData) {
-      if (userQueryData?.error?.message === "Google User missing in Rateup") {
-        console.error("Google User missing in Rateup");
-        if (query?.msg !== "welcome") {
-          // welcome is to avoid repetition of push
-          navigate({
-            to: "/signup?auth=google",
-          });
-        }
-      } else if (userQueryData?.error?.message === "User missing in Rateup") {
-        console.error("User missing in Rateup");
-        // TODO : handle case of email user missing signup in rateup db
-      }
-    }
-
-    if (!userQueryData) {
-      refetch();
-    }
-  }, [userQueryData]);
-
-  useEffect(() => {
-    setUser(userInfo?.data);
-
-    if (userInfo?.data?.isOrgPaused)
-      navigate({
-        to: `/login/callback/paused?pausedby=rateup`,
-      });
-    if (userInfo?.data?.isPaused)
-      navigate({
-        to: `/login/callback/paused?pausedby=${userInfo?.data?.pausedBy}`,
-      });
-    const shopifySetUpFinishRoute = localStorage.getItem(
-      "shopify-auth-callback",
-    );
-    if (shopifySetUpFinishRoute)
-      navigate({
-        to: shopifySetUpFinishRoute,
-      });
-
-    const shopifySubscriptionReturn = localStorage.getItem(
-      "shopify-subscription-callback",
-    );
-    if (shopifySubscriptionReturn)
-      navigate({
-        to: shopifySubscriptionReturn,
-      });
-
-    if (userInfo === null)
-      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
-  }, [userInfo]);
-
-  const { setTotalCount } = useChatContactCountStore();
-  const { filter } = useChatFilterStore();
-  const isInbox = pathname?.includes("/dashboard/inbox");
-  const paddingExclusion = isInbox
-    ? true
-    : pathname?.includes("/dashboard/whatsapp/flows/v2/");
-  const { data: inboxCount } = useGetInboxUserCount(isInbox);
-
-  useEffect(() => {
-    if (inboxCount) {
-      const { assignedTeamWiseCount, ...rest } = inboxCount;
-      if (filter.assignedTeams?.length) {
-        setTotalCount({
-          ...rest,
-          assigned: assignedTeamWiseCount.reduce((count, t) => {
-            count += filter.assignedTeams.includes(t.teamId)
-              ? t.assignedCount
-              : 0;
-            return count;
-          }, 0),
-          assignedToMe: assignedTeamWiseCount.reduce((count, t) => {
-            count += filter.assignedTeams.includes(t.teamId)
-              ? t.assignedToMeCount
-              : 0;
-            return count;
-          }, 0),
-        });
-      } else {
-        setTotalCount(rest);
-      }
-    }
-  }, [inboxCount, filter.assignedTeams]);
+    contactLabels,
+    customFieldData,
+    isCorruptedSession,
+    isLoading,
+    lifecycles,
+    paddingExclusion,
+    pathname,
+    resolvedUserInfo,
+    staff,
+    subscription,
+    teams,
+  } = useMainSidebar({ welcomeMessage });
 
   if (!pathname) return null;
 
+  if (isCorruptedSession) {
+    return <CorruptedSessionScreen />;
+  }
+
   return (
-    <SessionReact.SessionAuth>
+    <>
       <WebSocketHandler />
 
       <TeamFeaturesProvider>
@@ -203,25 +60,19 @@ export default function MainSidebar({ children }) {
             {
               "--sidebar-width": "0px", // for custom second sidebar width
               "--sidebar-width-icon": "53px",
-            } as React.CSSProperties
+            } as CSSProperties
           }
         >
           {isLoading ? (
             <NavbarSkeleton />
           ) : (
             <AppSidebar
-              subscription={sub}
+              subscription={subscription}
               contactLabels={contactLabels}
               lifecycles={lifecycles}
-              userData={
-                userQueryData &&
-                "message" in userQueryData &&
-                "data" in userQueryData
-                  ? userQueryData
-                  : undefined
-              }
-              staff={userRes?.data ?? []}
-              teams={teamRes?.data ?? []}
+              userData={resolvedUserInfo ?? undefined}
+              staff={staff}
+              teams={teams}
             />
           )}
 
@@ -236,6 +87,6 @@ export default function MainSidebar({ children }) {
           </div>
         </SidebarProvider>
       </TeamFeaturesProvider>
-    </SessionReact.SessionAuth>
+    </>
   );
 }

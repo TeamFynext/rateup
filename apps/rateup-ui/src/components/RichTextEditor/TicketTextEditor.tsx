@@ -2,7 +2,6 @@
 
 import { Button } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
-import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
@@ -31,7 +30,6 @@ export default function TicketTextEditor({
       TextStyle,
       Youtube,
       Video,
-      Highlight,
       TextAlign.configure({ types: ["paragraph"] }),
       Placeholder.configure({ placeholder }),
     ],

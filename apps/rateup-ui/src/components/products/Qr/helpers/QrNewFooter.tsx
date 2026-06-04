@@ -14,7 +14,6 @@ export const QrNewFooter = () => {
             alt="RateUp Logo"
             width={100}
             height={40}
-            priority
           />
 
           {/* Our Company */}
@@ -79,10 +78,7 @@ export const QrNewFooter = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    to="/terms-of-service"
-                    className="hover:text-gray-900"
-                  >
+                  <Link to="/terms-of-service" className="hover:text-gray-900">
                     Terms of Service
                   </Link>
                 </li>

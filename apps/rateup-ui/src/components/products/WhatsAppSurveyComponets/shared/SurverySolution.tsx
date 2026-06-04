@@ -41,7 +41,6 @@ export default function SurveySection() {
           width={500}
           alt="Dashboard Illustration"
           className="w-full h-auto rounded-2xl"
-          priority
         />
       </div>
 
@@ -54,7 +53,6 @@ export default function SurveySection() {
             width={500}
             alt="Dashboard Illustration"
             className="w-full h-auto rounded-xl "
-            priority
           />
         </div>
       </div>

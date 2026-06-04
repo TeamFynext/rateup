@@ -64,7 +64,6 @@ const TestimonialHero = () => {
             width={500}
             alt="Dashboard showing testimonial management system"
             className="w-full rounded-2xl shadow-xl"
-            priority
           />
         </motion.div>
       </div>

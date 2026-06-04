@@ -25,16 +25,11 @@ const HomePageFooter = () => {
               width={56}
               height={56}
               className="w-14 h-14 object-contain"
-              priority
             />
           </Link>
           <p className="mb-3 font-medium">Follow Us On:</p>
           <div className="flex gap-4">
-            <Link
-              to="https://x.com/rateup_app"
-              aria-label="X"
-              target="_blank"
-            >
+            <Link to="https://x.com/rateup_app" aria-label="X" target="_blank">
               <IconBrandX className="w-6 h-6 text-gray-800 hover:text-black transition" />
             </Link>
             <Link

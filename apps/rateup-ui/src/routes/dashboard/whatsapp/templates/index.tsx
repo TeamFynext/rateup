@@ -365,10 +365,13 @@ function TemplateCard({
         status={template?.data?.category as never}
         defaultType
       />
-      <WaTemplateStatusBadge
-        status={template?.templateType as never}
-        defaultType
-      />
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <WaTemplateStatusBadge
+          status={template?.templateType as never}
+          defaultType
+          className="block max-w-full truncate whitespace-nowrap"
+        />
+      </div>
     </div>
   );
 

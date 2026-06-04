@@ -76,7 +76,8 @@ export function RateupStar({ className }: LogoProps) {
   return (
     <img
       src="/images/rateup-star.svg"
-      alt="rateup"
+      alt=""
+      aria-hidden="true"
       className={cn("object-contain", className)}
     />
   );
@@ -92,7 +93,9 @@ export function BiginLogo({ className }: LogoProps) {
   );
 }
 
-export function ZohoCombinedLogo({ className }: { className?: string }) {
+export function ZohoCombinedLogo({
+  className,
+}: Readonly<{ className?: string }>) {
   return (
     <div className={cn("relative h-16 w-20", className)}>
       <div className="absolute left-0 top-1 z-10 flex h-12 w-12 items-center justify-center rounded-2xl border bg-background shadow-sm">

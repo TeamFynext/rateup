@@ -16,7 +16,6 @@ import {
   useWaAutomatedRepliesMessageById,
   useWaAutomatedReplyById,
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
-import { useInstagramAutomationById } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import {
@@ -86,30 +85,18 @@ function FlowbotId() {
     refetch: waRefetch,
   } = useWaAutomatedReplyById(flowbotId);
 
-  // Only try Instagram API if WhatsApp query completed with no data
-  const {
-    data: igData,
-    isPending: igPending,
-    isError: igError,
-    refetch: igRefetch,
-  } = useInstagramAutomationById(!waPending && !waData ? flowbotId : "");
-
   const { data: waAutomtedReplyMessage, isLoading } =
     useWaAutomatedRepliesMessageById(flowbotId);
-  const { data: waSettings, isPending: waPendingSettings } = useWaSettings();
+  const { isPending: waPendingSettings } = useWaSettings();
 
-  // Use whichever data is available (WhatsApp or Instagram)
-  const data = waData || igData;
-
-  // Still loading if WA is pending, or if WA failed and IG is pending
-  const isQueryPending = waPending || (!waData && igPending);
+  const data = waData;
+  const isQueryPending = waPending;
   const isPending = isQueryPending || isLoading || waPendingSettings;
 
-  // Only show error if both queries have completed and both failed with no data
-  const hasError = !isQueryPending && waError && igError && !data;
+  const hasError = !isQueryPending && waError && !data;
 
   const refetch = async () => {
-    await Promise.all([waRefetch(), igRefetch()]);
+    await waRefetch();
   };
 
   if (isPending) return <RateupLoader />;

@@ -28,7 +28,6 @@ import {
   useCreateInstagramAutomationMutation,
   useUpdateInstagramAutomationMutation,
 } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -42,9 +41,18 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
   Tooltip,
@@ -61,12 +69,14 @@ interface TemplatePickerProps {
   open: boolean;
   onClose: () => void;
   onSelect: (template: (typeof DEMO_TEMPLATES)[0]) => void;
+  platform?: AutomationPlatform;
 }
 
 function TemplatePicker({
   open,
   onClose,
   onSelect,
+  platform,
 }: Readonly<TemplatePickerProps>) {
   // FIX: search state persists across dialog open/close via useRef-backed state
   const searchRef = useRef("");
@@ -85,15 +95,19 @@ function TemplatePicker({
     setSearch(value);
   }
 
-  const filtered = DEMO_TEMPLATES.filter(
-    (t) =>
-      t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.description.toLowerCase().includes(search.toLowerCase()) ||
-      t.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase())),
-  );
+  const filtered = DEMO_TEMPLATES.filter((template) => {
+    return (
+      (!platform || template.platform === platform) &&
+      (template.name.toLowerCase().includes(search.toLowerCase()) ||
+        template.description.toLowerCase().includes(search.toLowerCase()) ||
+        template.tags.some((tag) =>
+          tag.toLowerCase().includes(search.toLowerCase()),
+        ))
+    );
+  });
 
   function handleApply() {
-    const tpl = DEMO_TEMPLATES.find((t) => t.id === selected);
+    const tpl = DEMO_TEMPLATES.find((template) => template.id === selected);
     if (tpl) {
       onSelect(tpl);
       onClose();
@@ -101,7 +115,9 @@ function TemplatePicker({
     }
   }
 
-  const selectedTemplate = DEMO_TEMPLATES.find((t) => t.id === selected);
+  const selectedTemplate = DEMO_TEMPLATES.find(
+    (template) => template.id === selected,
+  );
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -280,12 +296,12 @@ function ConfirmDiscardDialog({
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>{t("Discard Changes?")}</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            {t(
+              "You have unsaved changes. Are you sure you want to discard them?",
+            )}
+          </DialogDescription>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground">
-          {t(
-            "You have unsaved changes. Are you sure you want to discard them?",
-          )}
-        </p>
         <div className="flex justify-end gap-2 mt-2">
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             {t("Keep Editing")}
@@ -301,60 +317,6 @@ function ConfirmDiscardDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-// ─── Platform Toggle ──────────────────────────────────────────────────────────
-
-interface PlatformToggleProps {
-  value: AutomationPlatform;
-  onChange: (value: AutomationPlatform) => void;
-}
-
-// FIX: Replaced Select dropdown with a clear 2-option toggle for better UX
-function PlatformToggle({ value, onChange }: Readonly<PlatformToggleProps>) {
-  const { t } = useTranslation();
-
-  return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium">{t("Platform")}</label>
-      <div className="flex rounded-lg border bg-muted/30 p-1 gap-1">
-        <button
-          type="button"
-          onClick={() => onChange(AutomationPlatform.WHATSAPP)}
-          className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150 ${
-            value === AutomationPlatform.WHATSAPP
-              ? "bg-background shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <IconBrandWhatsapp
-            size={16}
-            className={
-              value === AutomationPlatform.WHATSAPP ? "text-green-500" : ""
-            }
-          />
-          {t("WhatsApp")}
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange(AutomationPlatform.INSTAGRAM)}
-          className={`flex-1 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150 ${
-            value === AutomationPlatform.INSTAGRAM
-              ? "bg-background shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <IconBrandInstagram
-            size={16}
-            className={
-              value === AutomationPlatform.INSTAGRAM ? "text-pink-500" : ""
-            }
-          />
-          {t("Instagram")}
-        </button>
-      </div>
-    </div>
   );
 }
 
@@ -382,11 +344,20 @@ export default function CreateAutomatedReplyPage() {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-function getInitialValues(initialValues?: WaAutomatedReply) {
-  if (initialValues) return initialValues;
+function getInitialValues(
+  initialValues?: WaAutomatedReply,
+  forcedPlatform?: AutomationPlatform,
+) {
+  if (initialValues) {
+    return {
+      ...initialValues,
+      platform: forcedPlatform ?? initialValues.platform,
+    };
+  }
+
   return {
     name: "",
-    platform: AutomationPlatform.WHATSAPP,
+    platform: forcedPlatform ?? AutomationPlatform.WHATSAPP,
     matchData: {
       json: {
         nodes: [
@@ -413,25 +384,34 @@ interface AutoPilotFormProps {
   initialValues?: WaAutomatedReply;
   editMode?: boolean;
   close?: () => void;
+  platform?: AutomationPlatform;
 }
 
 export function AutomatedReplyForm({
   initialValues,
   editMode,
   close,
+  platform = AutomationPlatform.WHATSAPP,
 }: Readonly<AutoPilotFormProps>) {
   const { t } = useTranslation();
 
   // FIX: Added validation rules
   const rootForm = useForm({
-    initialValues: getInitialValues(initialValues),
+    initialValues: getInitialValues(initialValues, platform),
     validate: {
-      name: (value) =>
-        !value?.trim()
-          ? t("Chatbot name is required")
-          : value.trim().length < 3
-            ? t("Name must be at least 3 characters")
-            : null,
+      name: (value) => {
+        const trimmedValue = value?.trim();
+
+        if (!trimmedValue) {
+          return t("Chatbot name is required");
+        }
+
+        if (trimmedValue.length < 3) {
+          return t("Name must be at least 3 characters");
+        }
+
+        return null;
+      },
     },
   });
 
@@ -441,9 +421,13 @@ export function AutomatedReplyForm({
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
-    if (!initialValues) return;
-    rootForm.setInitialValues(getInitialValues(initialValues));
-  }, [initialValues]);
+    rootForm.setInitialValues(getInitialValues(initialValues, platform));
+  }, [initialValues, platform]);
+
+  useEffect(() => {
+    if (!platform) return;
+    rootForm.setFieldValue("platform", platform);
+  }, [platform]);
 
   const qc = useQueryClient();
   const searchParams = useSearch({ strict: false });
@@ -501,37 +485,38 @@ export function AutomatedReplyForm({
           },
         });
       }
-    } else {
-      if (isInstagram) {
-        createInstagramMutation.mutate(data, {
-          onSuccess: () => {
-            toast.success(t("Instagram automation created!"));
-            setSaveSuccess(true);
-          },
-          onSettled: () => {
-            rootForm.reset();
-            close?.();
-          },
-        });
-      } else {
-        createMutation.mutate(data, {
-          onSuccess: () => {
-            toast.success(t("Chatbot created successfully!"));
-            setSaveSuccess(true);
-          },
-          onSettled: () => {
-            rootForm.reset();
-            close?.();
-          },
-        });
-      }
+      return;
     }
+
+    if (isInstagram) {
+      createInstagramMutation.mutate(data, {
+        onSuccess: () => {
+          toast.success(t("Instagram automation created!"));
+          setSaveSuccess(true);
+        },
+        onSettled: () => {
+          rootForm.reset();
+          close?.();
+        },
+      });
+      return;
+    }
+
+    createMutation.mutate(data, {
+      onSuccess: () => {
+        setSaveSuccess(true);
+      },
+      onSettled: () => {
+        rootForm.reset();
+        close?.();
+      },
+    });
   }
 
   function handleTemplateSelect(template: (typeof DEMO_TEMPLATES)[0]) {
     rootForm.setValues({
       name: template.name,
-      platform: template.platform,
+      platform: platform ?? template.platform,
       matchData: template.matchData,
       whatsappSettingsPhoneId: null,
     });
@@ -547,12 +532,23 @@ export function AutomatedReplyForm({
     createInstagramMutation.isPending ||
     updateInstagramMutation.isPending;
 
+  const nameErrorMessage =
+    typeof rootForm.errors.name === "string" ? rootForm.errors.name : undefined;
+
+  let submitLabel = t("Save Chatbot");
+  if (isSaving) {
+    submitLabel = t("Saving…");
+  } else if (saveSuccess && editMode) {
+    submitLabel = t("Saved");
+  }
+
   return (
     <TooltipProvider>
       <TemplatePicker
         open={templatePickerOpen}
         onClose={() => setTemplatePickerOpen(false)}
         onSelect={handleTemplateSelect}
+        platform={platform}
       />
       <ConfirmDiscardDialog
         open={confirmDiscardOpen}
@@ -576,10 +572,9 @@ export function AutomatedReplyForm({
             </div>
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => setTemplatePickerOpen(true)}
-              className="flex items-center gap-2 bg-primary text-white hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
             >
               <IconTemplate size={16} />
               {t("Use Template")}
@@ -587,50 +582,66 @@ export function AutomatedReplyForm({
           </CardHeader>
 
           <CardContent className="space-y-5">
-            {/* FIX: Validation error shown below name field */}
-            <ContainedTextField
-              label={t("Chatbot Name")}
-              placeholder={t("e.g. Welcome Bot, Support Bot...")}
-              required
-              {...rootForm.getInputProps("name")}
-              error={rootForm.errors.name}
-            />
+            <FieldGroup>
+              <Field data-invalid={!!rootForm.errors.name}>
+                <FieldLabel htmlFor="chatbot-name">
+                  {t("Chatbot Name")} <span aria-hidden="true">*</span>
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="chatbot-name"
+                    placeholder={t("e.g. Welcome Bot, Support Bot...")}
+                    aria-invalid={!!rootForm.errors.name}
+                    {...rootForm.getInputProps("name")}
+                  />
+                  <FieldDescription>
+                    {t("Give this bot a clear internal name.")}
+                  </FieldDescription>
+                  <FieldError
+                    errors={
+                      nameErrorMessage
+                        ? [{ message: nameErrorMessage }]
+                        : undefined
+                    }
+                  />
+                </FieldContent>
+              </Field>
 
-            {/* FIX: Platform toggle instead of dropdown */}
-            <PlatformToggle
-              value={rootForm.values.platform as AutomationPlatform}
-              onChange={(value) => rootForm.setFieldValue("platform", value)}
-            />
-
-            {/* FIX: Shortened label with tooltip for explanation */}
-            {!isInstagram && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <label className="text-sm font-medium">
+              {/* FIX: Shortened label with tooltip for explanation */}
+              {!isInstagram && (
+                <Field>
+                  <FieldLabel className="items-center gap-1.5">
                     {t("WhatsApp Account")}
-                  </label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="cursor-help text-xs text-muted-foreground bg-muted rounded-full w-4 h-4 flex items-center justify-center font-medium">
-                        ?
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-xs text-xs">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="cursor-help text-xs text-muted-foreground bg-muted rounded-full size-4 flex items-center justify-center font-medium">
+                          ?
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="max-w-xs text-xs">
+                        {t(
+                          "Only required if this chatbot includes a lead automation step that sends messages via a specific WhatsApp number.",
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                    <span className="text-xs text-muted-foreground">
+                      ({t("Optional")})
+                    </span>
+                  </FieldLabel>
+                  <FieldContent>
+                    <AccountSelector
+                      optional={true}
+                      {...rootForm.getInputProps("whatsappSettingsPhoneId")}
+                    />
+                    <FieldDescription>
                       {t(
-                        "Only required if this chatbot includes a lead automation step that sends messages via a specific WhatsApp number.",
+                        "Link a specific phone number only when your flow sends outgoing WhatsApp messages.",
                       )}
-                    </TooltipContent>
-                  </Tooltip>
-                  <span className="text-xs text-muted-foreground">
-                    ({t("Optional")})
-                  </span>
-                </div>
-                <AccountSelector
-                  optional={true}
-                  {...rootForm.getInputProps("whatsappSettingsPhoneId")}
-                />
-              </div>
-            )}
+                    </FieldDescription>
+                  </FieldContent>
+                </Field>
+              )}
+            </FieldGroup>
           </CardContent>
         </Card>
 
@@ -647,20 +658,12 @@ export function AutomatedReplyForm({
           </Button>
 
           {/* Right: Save with proper spinner */}
-          <Button type="submit" disabled={isSaving} className="min-w-[120px]">
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t("Saving…")}
-              </>
-            ) : saveSuccess && editMode ? (
-              <>
-                <IconCheck size={16} className="mr-2" />
-                {t("Saved")}
-              </>
-            ) : (
-              t("Save Chatbot")
+          <Button type="submit" disabled={isSaving} className="min-w-30">
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {!isSaving && saveSuccess && editMode && (
+              <IconCheck size={16} className="mr-2" />
             )}
+            {submitLabel}
           </Button>
         </div>
       </form>

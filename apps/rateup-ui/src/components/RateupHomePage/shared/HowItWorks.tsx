@@ -255,7 +255,7 @@ export default function HowItWorks() {
                     {s.icon}
                   </div>
 
-                  <h4>{s.title}</h4>
+                  <h3>{s.title}</h3>
 
                   <p>{s.desc}</p>
                 </div>

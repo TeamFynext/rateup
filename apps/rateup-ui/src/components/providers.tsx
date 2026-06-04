@@ -61,7 +61,7 @@ function makeQueryClient() {
 
 let browserQueryClient: QueryClient | undefined = undefined;
 
-function getQueryClient() {
+export function getQueryClient() {
   if (environmentManager.isServer()) {
     // Server: always make a new query client
     return makeQueryClient();

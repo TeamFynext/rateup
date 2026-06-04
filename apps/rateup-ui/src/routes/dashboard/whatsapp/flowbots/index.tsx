@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 
 import type { WaAutomatedReply } from "@/types/global";
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
-import { useAllInstagramAutomations } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
@@ -32,12 +31,6 @@ function FlowbotsPage() {
     isError: waError,
     refetch: waRefetch,
   } = useAllWaAutomatedReplies();
-  const {
-    data: igData,
-    isPending: igPending,
-    isError: igError,
-    refetch: igRefetch,
-  } = useAllInstagramAutomations();
 
   const [opened, setOpened] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,29 +38,25 @@ function FlowbotsPage() {
   const { t: translations } = useTranslation();
   const debouncedSearchQuery = useDebounce(searchQuery.trim(), 200);
 
-  const isLoading = waPending || igPending;
-  const isError = waError || igError;
-
-  const combinedData = useMemo<WaAutomatedReply[]>(() => {
-    return [...(waData || []), ...(igData || [])];
-  }, [waData, igData]);
+  const isLoading = waPending;
+  const isError = waError;
 
   const filteredData = useMemo<WaAutomatedReply[]>(() => {
     const normalizedSearch = debouncedSearchQuery.toLowerCase();
 
     const filtered = normalizedSearch
-      ? combinedData.filter((automation) => {
+      ? (waData || []).filter((automation) => {
           return automation.name?.toLowerCase().includes(normalizedSearch);
         })
-      : combinedData;
+      : waData || [];
 
     return sortData(filtered, sortOption) as WaAutomatedReply[];
-  }, [combinedData, debouncedSearchQuery, sortOption]);
+  }, [waData, debouncedSearchQuery, sortOption]);
 
   const isEmpty = !isLoading && !isError && filteredData.length === 0;
 
   const handleRefetch = () => {
-    void Promise.all([waRefetch(), igRefetch()]);
+    void waRefetch();
   };
 
   return (
@@ -78,7 +67,7 @@ function FlowbotsPage() {
         createDisabledText=""
         docsUrl="whatsapp/chatbot"
         isLoading={isLoading}
-        queryKeys={["allWaAutomatedReplies", "allInstagramAutomations"]}
+        queryKeys={["allWaAutomatedReplies"]}
         search={searchQuery}
         searchPlaceholder={translations("Search chatbots...")}
         tourSteps={[]}
@@ -102,7 +91,10 @@ function FlowbotsPage() {
               )
         }
       >
-        <WaAutomationCards data={filteredData} />
+        <WaAutomationCards
+          data={filteredData}
+          detailsBasePath="/dashboard/whatsapp/flowbots"
+        />
       </ListPageLayout>
       <Dialog open={opened} onOpenChange={setOpened}>
         <DialogContent className="sm:max-w-175">

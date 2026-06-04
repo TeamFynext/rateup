@@ -63,7 +63,6 @@ function AboutUs() {
             width={900}
             height={700}
             className="w-full max-w-5xl h-auto drop-shadow-2xl rounded-xl"
-            priority
           />
         </div>
       </section>

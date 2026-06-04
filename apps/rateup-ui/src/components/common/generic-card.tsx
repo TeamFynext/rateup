@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { cx } from "class-variance-authority";
 import { Calendar } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 
 import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText/index.tsx";
 import {
@@ -32,16 +33,36 @@ export function GenericCardGrid<T>({
   className,
 }: Readonly<GenericCardGridProps<T>>) {
   return (
-    <div
+    <motion.div
+      layout
       className={
         className ??
         "grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5"
       }
     >
-      {items.map((item, index) => (
-        <div key={getKey(item, index)}>{renderItem(item, index)}</div>
-      ))}
-    </div>
+      <AnimatePresence initial={false}>
+        {items.map((item, index) => {
+          const key = getKey(item, index);
+
+          return (
+            <motion.div
+              key={key}
+              layout
+              initial={{ opacity: 0, y: 14, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -14, scale: 0.98 }}
+              transition={{
+                duration: 0.24,
+                ease: "easeOut",
+                layout: { duration: 0.28, ease: "easeInOut" },
+              }}
+            >
+              {renderItem(item, index)}
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -80,9 +101,11 @@ export function GenericActionCard({
   onSwitchChange,
 }: Readonly<GenericActionCardProps>) {
   const footerRightNode = createdAt ? (
-    <div className="flex items-center gap-1 text-muted-foreground">
-      <Calendar className="size-4" />
-      <CreatedSinceText createdAt={createdAt} />
+    <div className="ml-auto flex min-w-0 max-w-[60%] items-center gap-1 text-muted-foreground">
+      <Calendar className="size-4 shrink-0" />
+      <div className="min-w-0 overflow-hidden">
+        <CreatedSinceText createdAt={createdAt} />
+      </div>
     </div>
   ) : (
     footerRight
@@ -120,7 +143,7 @@ export function GenericActionCard({
       </CardHeader>
       {content && <CardContent>{content}</CardContent>}
       <Separator className="max-w-[calc(100%-45px)] mx-auto" />
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex items-center justify-between gap-2">
         {footerLeft}
         {footerRightNode}
       </CardFooter>

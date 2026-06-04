@@ -13,7 +13,7 @@ import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 export default function HomePageFooter() {
   return (
-    <footer className={`${styles.footer} ${styles["footer-theme"]}`}>
+    <footer className={`${styles.footer} ${styles["footer-theme"]} mt-0!`}>
       <div className={styles.page}>
         <div className={styles["foot-grid"]}>
           <div className={styles["foot-about"]}>
@@ -98,7 +98,7 @@ export default function HomePageFooter() {
           </div>
 
           <div className={styles["foot-col"]}>
-            <h5>Product</h5>
+            <h3>Product</h3>
 
             <a href="#features">Omnichannel Inbox</a>
             <a href="#features">WhatsApp Loyalty</a>
@@ -108,7 +108,7 @@ export default function HomePageFooter() {
           </div>
 
           <div className={styles["foot-col"]}>
-            <h5>Company</h5>
+            <h3>Company</h3>
 
             <a href="/about-us">About</a>
             <a href="#">Customers</a>
@@ -118,7 +118,7 @@ export default function HomePageFooter() {
           </div>
 
           <div className={styles["foot-col"]}>
-            <h5>Resources</h5>
+            <h3>Resources</h3>
 
             <a href="/blog">Blog</a>
             <a href="https://docs.rateup.app">Help Center</a>

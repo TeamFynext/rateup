@@ -5,6 +5,7 @@ import { WaTemplateStatus } from "@/types/enums.ts";
 interface WaTemplateStatusBadgeProps {
   status: WaTemplateStatus;
   defaultType?: boolean;
+  className?: string;
 }
 const colorMap = {
   [WaTemplateStatus.APPROVED]: "green",
@@ -15,9 +16,11 @@ const colorMap = {
 export default function WaTemplateStatusBadge({
   status,
   defaultType = false,
-}: WaTemplateStatusBadgeProps) {
+  className,
+}: Readonly<WaTemplateStatusBadgeProps>) {
   return (
     <Badge
+      className={className}
       color={defaultType ? "var(--tertiary-color)" : colorMap[status]}
       variant="light"
       radius={8}
