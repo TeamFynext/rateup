@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 
-import PhoneInputWithCountrySelect, {
-  isValidPhoneNumber,
-} from "react-phone-number-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
 import { useBookDemoMutation } from "@/backend/bookdemo/bookdemo.query";
@@ -12,6 +10,7 @@ import { RateupStar } from "@/components/integrations/logos";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
@@ -168,15 +167,15 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-bold">Phone</label>
-
-              <PhoneInputWithCountrySelect
+              <PhoneInput
+                id="demo-phone"
                 defaultCountry="IN"
                 international
                 countryCallingCodeEditable={false}
                 placeholder="Enter phone number"
+                className="w-full"
                 value={formData.phone}
                 onChange={(value) => handleInputChange("phone", value ?? "")}
-                className="w-full border border-input rounded-md px-3 py-2 text-sm [&>input]:bg-transparent [&>input]:focus:outline-none focus-within:ring-2 focus-within:ring-ring/50"
               />
               {errors.phone && (
                 <p className="text-red-500 text-xs">{errors.phone}</p>
