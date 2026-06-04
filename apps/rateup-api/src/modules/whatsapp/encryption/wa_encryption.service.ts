@@ -1,5 +1,5 @@
 import { log } from "../../../utils/logger.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 import qs from "querystring";
 
 /**
@@ -15,7 +15,7 @@ export async function setBusinessPublicKey(
     business_public_key: businessPublicKey,
   });
   try {
-    const res = await callWhatsappApi(
+    const res = await callMetaApi(
       `/${phoneId}/whatsapp_business_encryption`,
       "POST",
       accessToken,
@@ -43,7 +43,7 @@ export async function getBusinessPublicKey(
   accessToken: string,
 ) {
   try {
-    const res = await callWhatsappApi(
+    const res = await callMetaApi(
       `/${phoneId}/whatsapp_business_encryption`,
       "GET",
       accessToken,

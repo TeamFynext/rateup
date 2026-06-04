@@ -1,4 +1,4 @@
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 import { getWaSettingsByPageId } from "../settings/wa_settings.service.js";
 import { log } from "../../../utils/logger.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
@@ -21,7 +21,7 @@ export async function getFacebookUserDetailsFromMeta(
 
     const { pageAccessToken } = waSettings;
     const url = `/${userId}?fields=name,profile_pic&access_token=${pageAccessToken}`;
-    const res = await callWhatsappApi(url, "GET");
+    const res = await callMetaApi(url, "GET");
 
     return res.data as {
       name: string;

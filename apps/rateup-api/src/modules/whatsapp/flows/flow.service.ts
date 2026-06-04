@@ -1,7 +1,7 @@
 import axios from "axios";
 import prisma from "../../../utils/prisma.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 import {
   convertHeaderToNewQuestion,
   generateFlowMessageData,
@@ -78,7 +78,7 @@ dayjs.extend(timezone);
 export async function getFlowsFromWa(orgId: string) {
   const waSettings = await getWaSettings(orgId);
 
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${waSettings.wabaId}/flows`,
     "GET",
     waSettings.accessToken,
@@ -99,11 +99,7 @@ export async function getFlowFromWa(orgId: string, flowId: string) {
   const waSettings = await getWaSettings(orgId);
   //query: fields=id,name,categories,preview,status,validation_errors,json_version,data_api_version,data_channel_uri,whatsapp_business_account,application
 
-  const res = await callWhatsappApi(
-    `/${flowId}`,
-    "GET",
-    waSettings.accessToken,
-  );
+  const res = await callMetaApi(`/${flowId}`, "GET", waSettings.accessToken);
 
   const flow = res.data as WaFlowWa;
 
@@ -113,7 +109,7 @@ export async function getFlowFromWa(orgId: string, flowId: string) {
 export async function getFlowPreviewFromWa(orgId: string, waFlowId: string) {
   const waSettings = await getWaSettings(orgId);
 
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${waFlowId}?fields=preview`,
     "GET",
     waSettings.accessToken,
@@ -463,7 +459,7 @@ export async function getFlowAssets(orgId: string, waFlowId: string) {
   const waSettings = await getWaSettings(orgId);
   // TODO: handle pagination
 
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${waFlowId}/assets`,
     "GET",
     waSettings.accessToken,
@@ -567,7 +563,7 @@ export async function createFlowInWa(
 ) {
   const { wabaId, accessToken } = await getWaSettings(orgId);
 
-  const { data } = await callWhatsappApi(
+  const { data } = await callMetaApi(
     `/${wabaId}/flows`,
     "POST",
     accessToken,
@@ -586,7 +582,7 @@ export async function cloneFlowInWa(
 ) {
   const { wabaId, accessToken } = await getWaSettings(orgId);
 
-  const { data } = await callWhatsappApi(
+  const { data } = await callMetaApi(
     `/${wabaId}/flows`,
     "POST",
     accessToken,
@@ -637,7 +633,7 @@ export async function updateFlowMetaDataInWa(
   updatedData: { name?: string; categories?: string[]; endpoint_uri?: string },
 ) {
   const { accessToken } = await getWaSettings(orgId);
-  const { data } = await callWhatsappApi(
+  const { data } = await callMetaApi(
     `/${flowId}`,
     "POST",
     accessToken,
@@ -692,7 +688,7 @@ export async function updateFlowJsonInWa(
 
 export async function deleteFlowInWa(orgId: string, waFlowId: string) {
   const { accessToken } = await getWaSettings(orgId);
-  const res = await callWhatsappApi(`/${waFlowId}`, "DELETE", accessToken);
+  const res = await callMetaApi(`/${waFlowId}`, "DELETE", accessToken);
   return res.data;
 }
 
@@ -706,21 +702,13 @@ export async function deleteFlowInDb(dbFlowId: string) {
 
 export async function deprecateFlowInWa(orgId: string, waFlowId: string) {
   const { accessToken } = await getWaSettings(orgId);
-  const res = await callWhatsappApi(
-    `/${waFlowId}/deprecate`,
-    "POST",
-    accessToken,
-  );
+  const res = await callMetaApi(`/${waFlowId}/deprecate`, "POST", accessToken);
   return res.data;
 }
 
 export async function publishFlowInWa(orgId: string, waFlowId: string) {
   const { accessToken } = await getWaSettings(orgId);
-  const res = await callWhatsappApi(
-    `/${waFlowId}/publish`,
-    "POST",
-    accessToken,
-  );
+  const res = await callMetaApi(`/${waFlowId}/publish`, "POST", accessToken);
   return res.data;
 }
 export async function getFlowBySurveyId(surveyId: string) {

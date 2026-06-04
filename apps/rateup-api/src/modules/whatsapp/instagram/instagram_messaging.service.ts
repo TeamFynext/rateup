@@ -5,7 +5,7 @@
  */
 
 import { log } from "../../../utils/logger.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 import { getWaSettingsByIbaId } from "../settings/wa_settings.service.js";
 
 /**
@@ -38,11 +38,11 @@ export async function sendInstagramTextMessage(
     };
 
     // Send via Meta Graph API
-    const response = await callWhatsappApi(
-      `/${ibaId}/messages`,
+    const response = await callMetaApi(
+      `/me/messages`,
       "POST",
       pageAccessToken,
-      payload as any,
+      payload,
     );
 
     log.info(
@@ -96,18 +96,18 @@ export async function sendInstagramImage(
     };
 
     // Send the image
-    const response = await callWhatsappApi(
-      `/${ibaId}/messages`,
+    const response = await callMetaApi(
+      `/me/messages`,
       "POST",
       pageAccessToken,
-      payload as any,
+      payload,
     );
 
     log.info(`[Instagram Messaging] Sent image to igsId ${igsId}: ${imageUrl}`);
 
     // If caption is provided, send it as a separate text message
     if (caption) {
-      await sendInstagramTextMessage(igsId, caption, orgId!, ibaId!);
+      await sendInstagramTextMessage(igsId, caption, orgId, ibaId);
     }
 
     return response.data;
@@ -174,10 +174,11 @@ export async function sendInstagramGenericTemplate(
       },
     };
 
-    const response = await callWhatsappApi(
-      `/${ibaId}/messages?access_token=${pageAccessToken}`,
+    const response = await callMetaApi(
+      `/me/messages`,
       "POST",
-      payload as any,
+      pageAccessToken,
+      payload,
     );
 
     log.info(
@@ -233,10 +234,11 @@ export async function sendInstagramQuickReply(
       },
     };
 
-    const response = await callWhatsappApi(
-      `/${ibaId}/messages?access_token=${pageAccessToken}`,
+    const response = await callMetaApi(
+      `/me/messages`,
       "POST",
-      payload as any,
+      pageAccessToken,
+      payload,
     );
 
     log.info(
@@ -309,10 +311,11 @@ export async function sendInstagramProductTemplate(
       },
     };
 
-    const response = await callWhatsappApi(
-      `/${ibaId}/messages?access_token=${pageAccessToken}`,
+    const response = await callMetaApi(
+      `/me/messages`,
       "POST",
-      payload as any,
+      pageAccessToken,
+      payload,
     );
 
     log.info(
@@ -363,10 +366,11 @@ export async function sendInstagramStoryReply(
       },
     };
 
-    const response = await callWhatsappApi(
-      `/${ibaId}/messages?access_token=${pageAccessToken}`,
+    const response = await callMetaApi(
+      `/me/messages`,
       "POST",
-      payload as any,
+      pageAccessToken,
+      payload,
     );
 
     log.info(
@@ -411,11 +415,11 @@ export async function setInstagramIceBreakers(
       })),
     };
 
-    const response = await callWhatsappApi(
+    const response = await callMetaApi(
       `/${ibaId}/messenger_profile`,
       "POST",
       pageAccessToken,
-      payload as any,
+      payload,
     );
 
     log.info(
@@ -465,10 +469,11 @@ export async function sendInstagramVideo(
       },
     };
 
-    const response = await callWhatsappApi(
-      `/${ibaId}/messages?access_token=${pageAccessToken}`,
+    const response = await callMetaApi(
+      `/me/messages`,
       "POST",
-      payload as any,
+      pageAccessToken,
+      payload,
     );
 
     log.info(`[Instagram Messaging] Sent video to igsId ${igsId}: ${videoUrl}`);
@@ -516,10 +521,11 @@ export async function sendInstagramFile(
       },
     };
 
-    const response = await callWhatsappApi(
-      `/${ibaId}/messages?access_token=${pageAccessToken}`,
+    const response = await callMetaApi(
+      `/me/messages`,
       "POST",
-      payload as any,
+      pageAccessToken,
+      payload,
     );
 
     log.info(`[Instagram Messaging] Sent file to igsId ${igsId}: ${fileUrl}`);

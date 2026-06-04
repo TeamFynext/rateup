@@ -7,7 +7,7 @@ import {
   UpdateIntgrationInput,
   WaPaymentCreateSchema,
 } from "./integrations.schema.js";
-import { callWhatsappApi } from "../whatsapp/wa_axios.js";
+import { callMetaApi } from "../whatsapp/wa_axios.js";
 import { log } from "../../utils/logger.js";
 import {
   getWaSettings,
@@ -57,7 +57,7 @@ export const getWaPaymentConfigurations = async (
     throw new Error("WhatsApp settings not found");
   }
 
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${waSettings.wabaId}/payment_configurations`,
     "GET",
     waSettings.accessToken,
@@ -109,7 +109,7 @@ export const getWaPaymentConfigurations = async (
 
 export const getWaPaymentConfigByName = async (orgId: string, name: string) => {
   const waSettings = await getWaSettings(orgId);
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${waSettings.wabaId}/payment_configuration/${name}`,
     "GET",
     waSettings.accessToken,
@@ -156,7 +156,7 @@ export const getRegenerateWaPaymentConfigOauth = async (
   });
   if (!data) throw new Error("No integration found");
   const waSettings = await getWaSettings(orgId);
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${waSettings.wabaId}/generate_payment_configuration_oauth_link`,
     "POST",
     waSettings.accessToken,
@@ -196,7 +196,7 @@ export const createWaPaymentConfigurations = async (
 ) => {
   const waSettings = await getWaSettings(orgId);
 
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${waSettings.wabaId}/payment_configuration`,
     "POST",
     waSettings.accessToken,
@@ -258,7 +258,7 @@ export const deleteWaPaymentConfiguration = async (
   });
   if (!wa_payment_configuration) throw new Error("No Configurations Found");
   const waSettings = await getWaSettings(orgId);
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${waSettings.wabaId}/payment_configuration`,
     "DELETE",
     waSettings.accessToken,

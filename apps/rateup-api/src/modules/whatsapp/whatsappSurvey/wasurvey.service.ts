@@ -45,7 +45,7 @@ import {
   getWaSettingsByIbaId,
   getWaSettingsByPageId,
 } from "../settings/wa_settings.service.js";
-import { GraphApiError, callWhatsappApi } from "../wa_axios.js";
+import { GraphApiError, callMetaApi } from "../wa_axios.js";
 import {
   createCTAButtonMessage,
   createNativeListMessage,
@@ -145,7 +145,7 @@ export async function sendMessage(
   try {
     let res;
     if (platform !== PlatformType.WEBCHAT) {
-      res = await callWhatsappApi(
+      res = await callMetaApi(
         `/${configId}/${messageUrl}`,
         "POST",
         platform === PlatformType.INSTAGRAM ? null : accessToken,
@@ -258,7 +258,7 @@ export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
   const waSettings = await getWaSettings(orgId);
   const body = createBlockWhatsappUserBody(phoneNumbers);
   try {
-    const res = await callWhatsappApi(
+    const res = await callMetaApi(
       `/${waSettings.phoneId}/block_users`,
       "POST",
       waSettings.accessToken,
@@ -319,7 +319,7 @@ export async function unblockWhatsappUser(
   const waSettings = await getWaSettings(orgId);
   const body = createBlockWhatsappUserBody(phoneNumbers);
   try {
-    const res = await callWhatsappApi(
+    const res = await callMetaApi(
       `/${waSettings.phoneId}/block_users`,
       "DELETE",
       waSettings.accessToken,
@@ -735,7 +735,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
       // Step 1: Download the media from WhatsApp API
       for await (let response of responsesWithSha256) {
         let parsedResponse = response.response?.[0];
-        const fileUrl = await callWhatsappApi(
+        const fileUrl = await callMetaApi(
           `/${parsedResponse?.id}`,
           "GET",
           settings.accessToken,
@@ -1229,7 +1229,7 @@ export async function handleLeadGen(body: WaMessageBody) {
     let errorMessage = "";
     let leadData;
     try {
-      const res = await callWhatsappApi(
+      const res = await callMetaApi(
         `/${leadgen_id}?access_token=${leadgenNodeData.pageUserAccessToken}`,
         "GET",
       );

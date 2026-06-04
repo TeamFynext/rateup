@@ -2,7 +2,7 @@ import { MultipartFile } from "@fastify/multipart";
 import { log } from "../../../utils/logger.js";
 import prisma from "../../../utils/prisma.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 import { CreateWaTemplateInput } from "./wa_templates.schema.js";
 import {
   generateTemplate,
@@ -40,7 +40,7 @@ export async function fetchTemplates(
     }
 
     log.trace("Fetching templates from whatsapp");
-    const res = await callWhatsappApi(
+    const res = await callMetaApi(
       `/${waSettings.wabaId}/message_templates`,
       "GET",
       waSettings.accessToken,
@@ -63,7 +63,7 @@ export async function fetchTemplate(
     log.trace("fetching template %s", templateName);
     const {
       data: { data: templates },
-    } = await callWhatsappApi(
+    } = await callMetaApi(
       `/${waSettings.wabaId}/message_templates?name=${templateName}`,
       "GET",
       waSettings.accessToken,
@@ -210,7 +210,7 @@ export async function createTemplate(
   if (!waSettings) {
     throw new Error("No WhatsApp settings found for orgId " + orgId);
   }
-  const res = await callWhatsappApi(
+  const res = await callMetaApi(
     `/${waSettings.wabaId}/message_templates`,
     "POST",
     waSettings.accessToken,
@@ -281,7 +281,7 @@ export async function deleteTemplate(
   log.trace("Sending Delete req %o", { templateId, templateName });
   try {
     const waSettings = await getWaSettings(orgId);
-    const res = await callWhatsappApi(
+    const res = await callMetaApi(
       `/${waSettings.wabaId}/message_templates?hsm_id=${templateId}&name=${templateName}`,
       "DELETE",
       waSettings.accessToken,
@@ -356,7 +356,7 @@ export async function editTemplate(
   log.trace(`Updating template %o`, { templateId: hsm_id, components });
   try {
     const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
-    const res = await callWhatsappApi(
+    const res = await callMetaApi(
       `/${hsm_id}`,
       "POST",
       waSettings.accessToken,
@@ -645,7 +645,7 @@ export async function uploadFileToWaTemplate(
   if (!accessToken || !appId) {
     throw Error("AccessToken and AppId should be present in whatsapp settings");
   }
-  const sessionRes = await callWhatsappApi(
+  const sessionRes = await callMetaApi(
     `/${appId}/uploads`,
     "POST",
     undefined,
@@ -667,7 +667,7 @@ export async function uploadFileToWaTemplate(
     "Content-Length": size?.toString(),
   };
 
-  const imageUploadRes = callWhatsappApi(
+  const imageUploadRes = callMetaApi(
     `/${uploadSessionId}`,
     "POST",
     undefined,

@@ -1,5 +1,5 @@
 import prisma from "../../../utils/prisma.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 import { log } from "../../../utils/logger.js";
 
 /**
@@ -12,7 +12,7 @@ export async function syncProductSetsForCatalog(
 ) {
   try {
     // Fetch product sets from Meta Graph API
-    const response = await callWhatsappApi(
+    const response = await callMetaApi(
       `/${catalogId}/product_sets?fields=name,filter,product_count&access_token=${accessToken}`,
       "GET",
     );
@@ -24,7 +24,7 @@ export async function syncProductSetsForCatalog(
     const productSetsWithProducts = await Promise.all(
       productSets.map(async (set: any) => {
         try {
-          const productsResponse = await callWhatsappApi(
+          const productsResponse = await callMetaApi(
             `/${set.id}/products?fields=retailer_id&access_token=${accessToken}`,
             "GET",
           );

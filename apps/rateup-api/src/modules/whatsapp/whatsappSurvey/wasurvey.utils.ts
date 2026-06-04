@@ -15,7 +15,7 @@ import {
 } from "../../../types/whatsapp.types.js";
 import { log } from "../../../utils/logger.js";
 import { QuestionType as Q } from "../../../types/enums.js";
-import { callWhatsappApi } from "../wa_axios.js";
+import { callMetaApi } from "../wa_axios.js";
 import {
   getWaSettings,
   getWaSettingsByPhone,
@@ -1685,15 +1685,11 @@ export async function parseResponse(
 /* Downloads image from whatsapp & uploads it to s3 */
 export async function downloadAndUpload(orgId: string, imageId: string) {
   const waSettings = await getWaSettings(orgId);
-  const res = await callWhatsappApi(
-    `/${imageId}`,
-    "GET",
-    waSettings.accessToken,
-  );
+  const res = await callMetaApi(`/${imageId}`, "GET", waSettings.accessToken);
   log.trace(`got image link => %o`, res.data);
   const { url: imageUrl, mime_type } = res.data;
   // Need auth token to download image
-  const imageResponse = await callWhatsappApi(
+  const imageResponse = await callMetaApi(
     "",
     "GET",
     waSettings.accessToken,

@@ -43,7 +43,7 @@ import {
 } from "../../../types/enums.js";
 import { createSurvey, deleteSurveyById } from "../../survey/survey.service.js";
 import { Survey } from "../../../../generated/prisma/client.js";
-import { GraphApiError, callWhatsappApi } from "../wa_axios.js";
+import { GraphApiError, callMetaApi } from "../wa_axios.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
 import { getGraphApiErrorMessage } from "../wa_error_handler.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
@@ -99,7 +99,7 @@ export async function getFlowMetricsHandler(
     const { waFlowId } = req.params;
     const { orgId } = req.user;
     const { accessToken } = await getWaSettings(orgId);
-    const response = await callWhatsappApi(
+    const response = await callMetaApi(
       `/${waFlowId}?fields=metric.name(ENDPOINT_REQUEST_COUNT).granularity(LIFETIME)`,
       "GET",
       accessToken,
@@ -295,7 +295,7 @@ export async function updateFlowMetaDataHandler(
     const previousFlow = await getFlowFromDb(dbFlowId);
     await updateFlowInDb(orgId, dbFlowId, req.body);
     const { accessToken } = await getWaSettings(orgId);
-    const { data } = await callWhatsappApi(
+    const { data } = await callMetaApi(
       `/${previousFlow?.flowId}`,
       "POST",
       accessToken,
