@@ -1,10 +1,9 @@
-
 import { createFileRoute } from "@tanstack/react-router";
 
 import { pageMetadata } from "@/lib/metadata.ts";
 import ContactUsPage from "@/components/HomePage/pages/ContactUs/index.tsx";
-import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter.tsx";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
+import HomePageFooter from "@/components/RateupHomePage/shared/HomePageFooter";
 
 export const Route = createFileRoute("/(marketing)/contact-us/")({
   component: ContactUs,
@@ -12,7 +11,6 @@ export const Route = createFileRoute("/(marketing)/contact-us/")({
     meta: [pageMetadata["/contact-us"]],
   }),
 });
-
 
 function ContactUs() {
   return (
