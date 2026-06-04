@@ -24,6 +24,11 @@ import { DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -341,21 +346,34 @@ function MessageLogs({ dateRange }) {
         accessorKey: "logs",
         header: t("Logs"),
         cell: ({ row }) => {
-          if (row.original.isSkeleton) {
-            return (
-              <div className="h-4 w-32 bg-gray-200 animate-pulse rounded" />
-            );
+          const logsObj = row.original.logs;
+          const status = row.original.status;
+          if (status !== "failed") {
+            return <span className="text-muted-foreground">-</span>;
           }
-
-          const logs =
-            typeof row.original.logs === "object"
-              ? safeStringify(row.original.logs)
-              : row.original.logs || "-";
+          if (!logsObj) {
+            return <span className="text-muted-foreground">Failed</span>;
+          }
+          const shortMessage =
+            logsObj?.error_data?.details || logsObj?.message || "View error";
 
           return (
-            <div className="text-xs text-red-500 whitespace-pre-wrap max-w-80">
-              {logs}
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="max-w-64 truncate text-xs text-red-500 cursor-pointer hover:underline">
+                  {shortMessage}
+                </div>
+              </PopoverTrigger>
+
+              <PopoverContent
+                align="start"
+                className="w-[500px] border border-slate-200 bg-white text-black dark:bg-black dark:text-white shadow-lg"
+              >
+                <pre className="text-xs whitespace-pre-wrap break-words max-h-96 overflow-auto font-mono">
+                  {JSON.stringify(logsObj, null, 2)}
+                </pre>
+              </PopoverContent>
+            </Popover>
           );
         },
       },

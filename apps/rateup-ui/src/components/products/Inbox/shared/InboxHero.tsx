@@ -95,7 +95,6 @@ const InboxHero = () => {
             width={500}
             alt="Dashboard showing testimonial management system"
             className="w-full "
-            priority
           />
         </div>
       </div>

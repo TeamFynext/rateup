@@ -11,7 +11,7 @@ const NotFoundPage = () => {
   const pathname = useRouterState({
     select: (s) => s.location.pathname,
   });
-  const lastSegment = pathname.split("/").filter(Boolean).pop() || "page";
+  const lastSegment = pathname.split("/").findLast(Boolean) || "page";
   const { history } = useRouter();
 
   return (
@@ -29,7 +29,6 @@ const NotFoundPage = () => {
             width={120}
             height={60}
             className="mx-auto mb-6"
-            priority
           />
         </Link>
 

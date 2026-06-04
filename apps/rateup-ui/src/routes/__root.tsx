@@ -46,18 +46,22 @@ function LocaleProviders({
 export const Route = createRootRoute({
   head: () => ({
     meta: [
+      {
+        title: "RateUp #1 AI Powered Omnichannel Customer Engagement Platform",
+      },
       { charSet: "utf-8" },
       {
         name: "viewport",
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "RateUp #1 AI Powered Omnichannel Customer Engagement Platform",
-        description:
+        name: "description",
+        content:
           "RateUp is the #1 AI-powered WhatsApp Business API & omnichannel customer engagement platform. The only inbox for chat automation, collect feedback & build loyalty.",
       },
       // Open Graph
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "RateUp" },
       { property: "og:url", content: rateupUrl },
       {
         property: "og:title",
@@ -104,7 +108,6 @@ export const Route = createRootRoute({
         rel: "shortcut icon",
         href: "/favicon.png",
       },
-      { rel: "canonical", href: rateupUrl },
     ],
     scripts: [
       isProduction && {

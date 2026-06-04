@@ -78,7 +78,6 @@ export const ReputationManagement = () => {
               className="w-full h-auto "
               width={2432}
               height={1442}
-              priority
             />
           </motion.div>
         </div>

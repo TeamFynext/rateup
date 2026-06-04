@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { pageMetadata } from "@/lib/metadata.ts";
+import { buildPageHead } from "@/lib/metadata.ts";
 import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection.tsx";
 import ClientsSectionSurvey from "@/components/products/WhatsAppSurveyComponets/helpers/ClientsSectionSurvey.tsx";
 import CustomerFeedbackSection from "@/components/products/WhatsAppSurveyComponets/helpers/CustomerFeedbackSection.tsx";
@@ -24,9 +24,7 @@ export const Route = createFileRoute("/(marketing)/products/whatsapp-survey/")({
     middleware: [createMarkdownMiddleware(productsMarkdown)],
   },
   component: Page,
-  head: () => ({
-    meta: [pageMetadata["/products/whatsapp-survey"]],
-  }),
+  head: () => buildPageHead("/products/whatsapp-survey"),
 });
 
 function Page() {

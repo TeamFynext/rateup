@@ -2,10 +2,10 @@ import { Avatar, Image } from "@mantine/core";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
 import { getMarkdownContent } from "@/lib/content.ts";
-import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
 import { getSinglePost } from "@/lib/posts.ts";
 import Layout from "@/components/blog/Layout.tsx";
 import SharePopover from "@/components/blog/ShareBlog.tsx";
+import { createMarkdownMiddleware } from "@/markdown/serveMarkdown";
 
 export const Route = createFileRoute("/(marketing)/blog/$slug/")({
   server: {
@@ -38,9 +38,8 @@ export const Route = createFileRoute("/(marketing)/blog/$slug/")({
     if (!post) return {};
 
     return {
+      title: post.meta_title || post.title,
       meta: [
-        { title: post.meta_title || post.title },
-
         {
           name: "description",
           content: post.meta_description || post.excerpt || undefined,
@@ -86,7 +85,6 @@ export const Route = createFileRoute("/(marketing)/blog/$slug/")({
     };
   },
 });
-
 
 // For rendering post content
 function PostContent({ html }: Readonly<{ html: string }>) {

@@ -50,7 +50,6 @@ export default function WhatsAppSurveyHero() {
             aspectRatio={1}
             objectFit="contain"
             className="object-contain"
-            priority
           />
         </div>
       </div>

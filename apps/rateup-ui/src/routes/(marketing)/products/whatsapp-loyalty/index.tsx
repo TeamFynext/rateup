@@ -1,22 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { pageMetadata } from "@/lib/metadata.ts";
-import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection.tsx";
-import BusinessTypes from "@/components/products/Whatsapp-loyalty/helpers/BusinessTypes.tsx";
-import CTASection from "@/components/products/Whatsapp-loyalty/helpers/CTASection.tsx";
-import LoyalityHeader from "@/components/products/Whatsapp-loyalty/helpers/LoyalityHeader.tsx";
-import Testimonials from "@/components/products/Whatsapp-loyalty/helpers/Testimonials.tsx";
-import WhatsAppLoyalityFooter from "@/components/products/Whatsapp-loyalty/helpers/WhatsAppLoyalityFooter.tsx";
-import DidYouKnow from "@/components/products/Whatsapp-loyalty/shared/DidYouKnow.tsx";
-import { Faq } from "@/components/products/Whatsapp-loyalty/shared/Faq.tsx";
-import FeaturesWhatsApp from "@/components/products/Whatsapp-loyalty/shared/FeaturesWhatsApp.tsx";
-import Hero from "@/components/products/Whatsapp-loyalty/shared/Hero.tsx";
-import HowItWorks from "@/components/products/Whatsapp-loyalty/shared/HowItWorks.tsx";
-import LaunchAnalyzeScale from "@/components/products/Whatsapp-loyalty/shared/LaunchAnalyzeScale.tsx";
-import LoyaltySteps from "@/components/products/Whatsapp-loyalty/shared/LoyaltySteps.tsx";
-import ShopifyIntegration from "@/components/products/Whatsapp-loyalty/shared/ShopifyIntegration.tsx";
-import WhatsAppBroadcast from "@/components/products/Whatsapp-loyalty/shared/WhatsAppBroadcast.tsx";
-import WhatsAppTemplate from "@/components/products/Whatsapp-loyalty/shared/WhatsAppTemplate.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
+import { useRevealAnimation } from "@/hooks/useRevealAnimation";
+import CustomerProfiles from "@/components/LoyaltyLandingPage/CustomerProfiles";
+import Faq from "@/components/LoyaltyLandingPage/Faq";
+import Hero from "@/components/LoyaltyLandingPage/Hero";
+import HowItWorks from "@/components/LoyaltyLandingPage/HowItWorks";
+import Integrations from "@/components/LoyaltyLandingPage/Integrations";
+import Trusted from "@/components/LoyaltyLandingPage/Trusted";
+import WhyWhatsApp from "@/components/LoyaltyLandingPage/WhyWhatsApp";
+import Layout from "@/components/RateupHomePage/Layout";
+import HomePageFooter from "@/components/RateupHomePage/shared/HomePageFooter";
 
 import { productsMarkdown } from "../../../../markdown/products";
 import { createMarkdownMiddleware } from "../../../../markdown/serveMarkdown";
@@ -194,9 +188,9 @@ export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")(
     server: {
       middleware: [createMarkdownMiddleware(productsMarkdown)],
     },
-    component: page,
+    component: LoyaltyLandingPage,
     head: () => ({
-      meta: [pageMetadata["/products/whatsapp-loyalty"]],
+      ...buildPageHead("/products/whatsapp-loyalty"),
       scripts: [
         {
           type: "application/ld+json",
@@ -207,27 +201,19 @@ export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")(
   },
 );
 
-function page() {
+function LoyaltyLandingPage() {
+  useRevealAnimation();
   return (
-    <div className="min-h-screen flex flex-col ">
-      <LoyalityHeader />
-      <main>
-        <Hero />
-        <DidYouKnow />
-        <LoyaltySteps />
-        <LaunchAnalyzeScale />
-        <WhatsAppTemplate />
-        <WhatsAppBroadcast />
-        <HowItWorks />
-        <FeaturesWhatsApp />
-        <Testimonials />
-        <BusinessTypes />
-        <ShopifyIntegration />
-        <Faq />
-        <PricingSection color2="#009987" color1="#1cad9f" />
-        <CTASection />
-      </main>
-      <WhatsAppLoyalityFooter />
-    </div>
+    <Layout navbarClassName="heroNav">
+      <span id="top"></span>
+      <Hero />
+      <HowItWorks />
+      <WhyWhatsApp />
+      <CustomerProfiles />
+      <Integrations />
+      <Trusted />
+      <Faq />
+      <HomePageFooter />
+    </Layout>
   );
 }

@@ -62,7 +62,7 @@ function FlowEditorContent({
   readonly refetch: () => void;
 }) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const isLeadAutomation = waAutomationData?.commands[0]?.startsWith("lead");
+  const isLeadAutomation = waAutomationData?.commands?.[0]?.startsWith("lead");
   const [nodes, setNodes, onNodesChange] = useNodesState(
     isLeadAutomation ? leadAutomationinitialNodes : initialNodes,
   );

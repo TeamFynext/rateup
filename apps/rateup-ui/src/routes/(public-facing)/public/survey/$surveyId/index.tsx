@@ -39,10 +39,12 @@ export const Route = createFileRoute(
     const ogImage = survey.orgLogo
       ? `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${survey.orgLogo}`
       : DEFAULT_OG_IMAGE;
+    const surveyDescription = `Take the ${surveyTitle} survey on Rateup.`;
 
     return {
+      title: surveyTitle,
       meta: [
-        { name: "title", content: surveyTitle },
+        { name: "description", content: surveyDescription },
         { property: "og:type", content: "website" },
         { property: "og:site_name", content: "Rateup" },
         {
@@ -50,6 +52,7 @@ export const Route = createFileRoute(
           content: `https://rateup.app/public/survey/${surveyId}`,
         },
         { property: "og:title", content: surveyTitle },
+        { property: "og:description", content: surveyDescription },
         { property: "og:image", content: ogImage },
         {
           property: "og:image:type",

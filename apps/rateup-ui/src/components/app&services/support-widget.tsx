@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { schemaResolver, useForm } from "@mantine/form";
 import { useClickOutside, useScrollIntoView } from "@mantine/hooks";
-import { useNavigate } from "@tanstack/react-router";
 import axios from "axios";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import {
@@ -16,13 +15,18 @@ import {
   Send,
   Smile,
 } from "lucide-react";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 import { getBrowserId } from "@/lib/browserId.ts";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 
 import PhoneInputWithCountry from "../input/PhoneInputWithCountry.tsx";
 import { parseWhatsAppToReact } from "../RichTextEditor/waTextEditor.tsx";
@@ -87,7 +91,6 @@ export default function SupportWidget({
   const socketRef = useRef<WebSocket | null>(null);
   const retryCountRef = useRef(0);
   const browserId = getBrowserId();
-  const navigate = useNavigate();
   const { scrollIntoView, targetRef, scrollableRef } = useScrollIntoView<
     HTMLDivElement,
     HTMLDivElement
@@ -142,6 +145,7 @@ export default function SupportWidget({
     let closedByUser = false;
 
     function connect() {
+      if (!orgId || !token) return null;
       ws = new WebSocket(WEBHOOK_URL);
       socketRef.current = ws;
 
@@ -273,6 +277,7 @@ export default function SupportWidget({
       }
     }
   };
+  if (!orgId || !token) return null;
 
   return (
     <div className="fixed right-1 bottom-8 sm:right-8 z-50">

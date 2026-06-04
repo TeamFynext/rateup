@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { pageMetadata } from "@/lib/metadata.ts";
+import { buildPageHead } from "@/lib/metadata.ts";
 import AboutUsPage from "@/components/HomePage/pages/AboutUs/index.tsx";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
 import HomePageFooter from "@/components/RateupHomePage/shared/HomePageFooter";
@@ -13,9 +13,7 @@ export const Route = createFileRoute("/(marketing)/about-us/")({
     middleware: [createMarkdownMiddleware(aboutUsMarkdown)],
   },
   component: AboutUs,
-  head: () => ({
-    meta: [pageMetadata["/about-us"]],
-  }),
+  head: () => buildPageHead("/about-us"),
 });
 
 function AboutUs() {
