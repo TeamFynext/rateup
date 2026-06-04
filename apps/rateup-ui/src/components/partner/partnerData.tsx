@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 
 import {
@@ -171,10 +169,10 @@ const validateStep = (step: number, data: FormData): ValidationErrors => {
 function FieldGroup({
   children,
   className,
-}: {
+}: Readonly<{
   children: React.ReactNode;
   className?: string;
-}) {
+}>) {
   return <div className={cn("grid gap-4", className)}>{children}</div>;
 }
 
@@ -183,12 +181,12 @@ function FormField({
   children,
   className,
   error,
-}: {
+}: Readonly<{
   label: string;
   children: React.ReactNode;
   className?: string;
   error?: string;
-}) {
+}>) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -200,7 +198,7 @@ function FormField({
   );
 }
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
+function SectionHeading({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase mb-1">
       {children}
@@ -214,11 +212,11 @@ function Step1({
   data,
   set,
   errors,
-}: {
+}: Readonly<{
   data: FormData;
   set: (k: keyof FormData, v: string) => void;
   errors: ValidationErrors;
-}) {
+}>) {
   return (
     <div className="space-y-5">
       <SectionHeading>Basic information</SectionHeading>
@@ -288,11 +286,11 @@ function Step2({
   data,
   set,
   errors,
-}: {
+}: Readonly<{
   data: FormData;
   set: (k: keyof FormData, v: string) => void;
   errors: ValidationErrors;
-}) {
+}>) {
   return (
     <div className="space-y-5">
       <SectionHeading>Business details</SectionHeading>
@@ -374,12 +372,12 @@ function Step3({
   set,
   toggleService,
   errors,
-}: {
+}: Readonly<{
   data: FormData;
   set: (k: keyof FormData, v: string) => void;
   toggleService: (s: string) => void;
   errors: ValidationErrors;
-}) {
+}>) {
   return (
     <div className="space-y-5">
       <SectionHeading>Partnership qualification</SectionHeading>
@@ -484,11 +482,11 @@ function Step4({
   data,
   set,
   errors,
-}: {
+}: Readonly<{
   data: FormData;
   set: (k: keyof FormData, v: string) => void;
   errors: ValidationErrors;
-}) {
+}>) {
   const apiOptions = [
     "Yes, extensively",
     "Yes, some experience",
@@ -609,7 +607,7 @@ interface PartnerApplyModalProps {
 export function PartnerApplyModal({
   open,
   onOpenChange,
-}: PartnerApplyModalProps) {
+}: Readonly<PartnerApplyModalProps>) {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [data, setData] = useState<FormData>(INITIAL);

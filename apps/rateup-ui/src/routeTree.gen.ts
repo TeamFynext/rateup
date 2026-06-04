@@ -53,8 +53,8 @@ import { Route as marketingTermsOfServiceIndexRouteImport } from './routes/(mark
 import { Route as marketingPrivacyPolicyIndexRouteImport } from './routes/(marketing)/privacy-policy/index'
 import { Route as marketingPricingIndexRouteImport } from './routes/(marketing)/pricing/index'
 import { Route as marketingPartnerPageIndexRouteImport } from './routes/(marketing)/partner-page/index'
+import { Route as marketingLoyaltyLandingPageIndexRouteImport } from './routes/(marketing)/loyalty-landing-page/index'
 import { Route as marketingContactUsIndexRouteImport } from './routes/(marketing)/contact-us/index'
-import { Route as marketingBookdemoIndexRouteImport } from './routes/(marketing)/bookdemo/index'
 import { Route as marketingBlogIndexRouteImport } from './routes/(marketing)/blog/index'
 import { Route as marketingAboutUsIndexRouteImport } from './routes/(marketing)/about-us/index'
 import { Route as authSignupIndexRouteImport } from './routes/(auth)/signup/index'
@@ -389,14 +389,15 @@ const marketingPartnerPageIndexRoute =
     path: '/partner-page/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const marketingLoyaltyLandingPageIndexRoute =
+  marketingLoyaltyLandingPageIndexRouteImport.update({
+    id: '/(marketing)/loyalty-landing-page/',
+    path: '/loyalty-landing-page/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const marketingContactUsIndexRoute = marketingContactUsIndexRouteImport.update({
   id: '/(marketing)/contact-us/',
   path: '/contact-us/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const marketingBookdemoIndexRoute = marketingBookdemoIndexRouteImport.update({
-  id: '/(marketing)/bookdemo/',
-  path: '/bookdemo/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const marketingBlogIndexRoute = marketingBlogIndexRouteImport.update({
@@ -1036,8 +1037,8 @@ export interface FileRoutesByFullPath {
   '/signup/': typeof authSignupIndexRoute
   '/about-us/': typeof marketingAboutUsIndexRoute
   '/blog/': typeof marketingBlogIndexRoute
-  '/bookdemo/': typeof marketingBookdemoIndexRoute
   '/contact-us/': typeof marketingContactUsIndexRoute
+  '/loyalty-landing-page/': typeof marketingLoyaltyLandingPageIndexRoute
   '/partner-page/': typeof marketingPartnerPageIndexRoute
   '/pricing/': typeof marketingPricingIndexRoute
   '/privacy-policy/': typeof marketingPrivacyPolicyIndexRoute
@@ -1186,8 +1187,8 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupIndexRoute
   '/about-us': typeof marketingAboutUsIndexRoute
   '/blog': typeof marketingBlogIndexRoute
-  '/bookdemo': typeof marketingBookdemoIndexRoute
   '/contact-us': typeof marketingContactUsIndexRoute
+  '/loyalty-landing-page': typeof marketingLoyaltyLandingPageIndexRoute
   '/partner-page': typeof marketingPartnerPageIndexRoute
   '/pricing': typeof marketingPricingIndexRoute
   '/privacy-policy': typeof marketingPrivacyPolicyIndexRoute
@@ -1340,8 +1341,8 @@ export interface FileRoutesById {
   '/(auth)/signup/': typeof authSignupIndexRoute
   '/(marketing)/about-us/': typeof marketingAboutUsIndexRoute
   '/(marketing)/blog/': typeof marketingBlogIndexRoute
-  '/(marketing)/bookdemo/': typeof marketingBookdemoIndexRoute
   '/(marketing)/contact-us/': typeof marketingContactUsIndexRoute
+  '/(marketing)/loyalty-landing-page/': typeof marketingLoyaltyLandingPageIndexRoute
   '/(marketing)/partner-page/': typeof marketingPartnerPageIndexRoute
   '/(marketing)/pricing/': typeof marketingPricingIndexRoute
   '/(marketing)/privacy-policy/': typeof marketingPrivacyPolicyIndexRoute
@@ -1495,8 +1496,8 @@ export interface FileRouteTypes {
     | '/signup/'
     | '/about-us/'
     | '/blog/'
-    | '/bookdemo/'
     | '/contact-us/'
+    | '/loyalty-landing-page/'
     | '/partner-page/'
     | '/pricing/'
     | '/privacy-policy/'
@@ -1645,8 +1646,8 @@ export interface FileRouteTypes {
     | '/signup'
     | '/about-us'
     | '/blog'
-    | '/bookdemo'
     | '/contact-us'
+    | '/loyalty-landing-page'
     | '/partner-page'
     | '/pricing'
     | '/privacy-policy'
@@ -1798,8 +1799,8 @@ export interface FileRouteTypes {
     | '/(auth)/signup/'
     | '/(marketing)/about-us/'
     | '/(marketing)/blog/'
-    | '/(marketing)/bookdemo/'
     | '/(marketing)/contact-us/'
+    | '/(marketing)/loyalty-landing-page/'
     | '/(marketing)/partner-page/'
     | '/(marketing)/pricing/'
     | '/(marketing)/privacy-policy/'
@@ -1947,8 +1948,8 @@ export interface RootRouteChildren {
   authLogoutIndexRoute: typeof authLogoutIndexRoute
   authSignupIndexRoute: typeof authSignupIndexRoute
   marketingAboutUsIndexRoute: typeof marketingAboutUsIndexRoute
-  marketingBookdemoIndexRoute: typeof marketingBookdemoIndexRoute
   marketingContactUsIndexRoute: typeof marketingContactUsIndexRoute
+  marketingLoyaltyLandingPageIndexRoute: typeof marketingLoyaltyLandingPageIndexRoute
   marketingPartnerPageIndexRoute: typeof marketingPartnerPageIndexRoute
   marketingPricingIndexRoute: typeof marketingPricingIndexRoute
   marketingPrivacyPolicyIndexRoute: typeof marketingPrivacyPolicyIndexRoute
@@ -2306,18 +2307,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingPartnerPageIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(marketing)/loyalty-landing-page/': {
+      id: '/(marketing)/loyalty-landing-page/'
+      path: '/loyalty-landing-page'
+      fullPath: '/loyalty-landing-page/'
+      preLoaderRoute: typeof marketingLoyaltyLandingPageIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(marketing)/contact-us/': {
       id: '/(marketing)/contact-us/'
       path: '/contact-us'
       fullPath: '/contact-us/'
       preLoaderRoute: typeof marketingContactUsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(marketing)/bookdemo/': {
-      id: '/(marketing)/bookdemo/'
-      path: '/bookdemo'
-      fullPath: '/bookdemo/'
-      preLoaderRoute: typeof marketingBookdemoIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(marketing)/blog/': {
@@ -3305,8 +3306,8 @@ const rootRouteChildren: RootRouteChildren = {
   authLogoutIndexRoute: authLogoutIndexRoute,
   authSignupIndexRoute: authSignupIndexRoute,
   marketingAboutUsIndexRoute: marketingAboutUsIndexRoute,
-  marketingBookdemoIndexRoute: marketingBookdemoIndexRoute,
   marketingContactUsIndexRoute: marketingContactUsIndexRoute,
+  marketingLoyaltyLandingPageIndexRoute: marketingLoyaltyLandingPageIndexRoute,
   marketingPartnerPageIndexRoute: marketingPartnerPageIndexRoute,
   marketingPricingIndexRoute: marketingPricingIndexRoute,
   marketingPrivacyPolicyIndexRoute: marketingPrivacyPolicyIndexRoute,

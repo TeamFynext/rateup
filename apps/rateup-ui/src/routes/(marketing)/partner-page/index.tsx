@@ -20,14 +20,12 @@ import {
 } from "lucide-react";
 
 import { pageMetadata } from "@/lib/metadata.ts";
-import { PartnerApplyModal } from "@/components/(marketing)/partner/partnerData";
+import { PartnerApplyModal } from "@/components/partner/partnerData";
 import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter";
 import Layout from "@/components/RateupHomePage/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-
-("use client");
 
 export const Route = createFileRoute("/(marketing)/partner-page/")({
   component: PartnershipPage,

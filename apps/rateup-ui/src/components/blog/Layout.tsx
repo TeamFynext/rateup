@@ -14,11 +14,11 @@ export default function BlogLayout({ children }: Readonly<LayoutProps>) {
   return (
     <Layout isBlog={true}>
       <div className="mx-auto max-w-7xl px-4 mt-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content - 3 columns */}
-          <div className="lg:col-span-3">{children}</div>
-          {/* Sidebar - 1 column */}
-          <div className="hidden lg:block">
+        <div className="flex flex-col lg:flex-row gap-8 justify-between">
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">{children}</div>
+          {/* Sidebar */}
+          <div className="hidden lg:block w-[268px] shrink-0">
             <div className="sticky top-26 h-fit">
               <StickySidebar />
             </div>

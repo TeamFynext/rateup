@@ -95,7 +95,13 @@ export default function Layout({
           ) : (
             <div className="flex items-center gap-4 justify-center">
               <BookDemoModal>
-                <span className={styles["signin"]}>Book a Demo</span>
+                <span
+                  className={`${styles.signin} ${
+                    navbarClassName ? "text-slate-300" : ""
+                  }`}
+                >
+                  Book a Demo
+                </span>
               </BookDemoModal>
               <button
                 onClick={() => navigate({ to: "/login" })}
