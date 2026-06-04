@@ -14,8 +14,6 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
-import "react-phone-number-input/style.css";
-
 interface DemoModalProps {
   open: boolean;
   onClose: () => void;
