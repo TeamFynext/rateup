@@ -18,7 +18,7 @@ export default function HomePageFooter() {
         <div className={styles["foot-grid"]}>
           <div className={styles["foot-about"]}>
             <a className={styles.brand} href="#top">
-              <RateupStar />
+              <RateupStar className="h-8 w-8" />
               <span className={styles.wm}>
                 Rate
                 <span className={styles.up}>Up</span>

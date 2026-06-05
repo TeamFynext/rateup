@@ -1,0 +1,404 @@
+/* ─────────────────────────────────────────────
+   404.module.css
+   ───────────────────────────────────────────── */
+
+/* ── Font variables ── */
+:root {
+  --font-display: "Nunito Variable", ui-rounded, system-ui, sans-serif;
+  --font-body: "Inter Variable", system-ui, sans-serif;
+}
+
+/* ── Keyframes ── */
+@keyframes particleRise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-65vh) scale(0.4);
+    opacity: 0;
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: translateY(4%) scale(1) rotate(-2deg);
+    filter: drop-shadow(0 0 14px rgba(248, 149, 29, 0.5))
+      drop-shadow(0 0 40px rgba(248, 149, 29, 0.25));
+  }
+  50% {
+    transform: translateY(4%) scale(1.06) rotate(2deg);
+    filter: drop-shadow(0 0 28px rgba(248, 149, 29, 0.85))
+      drop-shadow(0 0 64px rgba(248, 149, 29, 0.45));
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Animation utility classes ── */
+.animFadeIn {
+  animation: fadeIn 0.5s 0.1s ease forwards;
+}
+
+.animFadeUp1 {
+  animation: fadeUp 0.55s 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animFadeUp2 {
+  animation: fadeUp 0.6s 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animFadeUp3 {
+  animation: fadeUp 0.6s 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animFadeUp4 {
+  animation: fadeUp 0.6s 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animFadeUp5 {
+  animation: fadeUp 0.6s 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animFadeInFooter {
+  animation: fadeIn 0.5s 1s ease forwards;
+}
+
+/* ── Page shell ── */
+.page {
+  font-family: var(--font-body);
+  background: #081c3f;
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Background layers ── */
+.bgBase {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 90% 60% at 50% 0%,
+    #0d2e5c 0%,
+    #081c3f 55%,
+    #050f28 100%
+  );
+}
+
+.bgGlowCyan {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 55% 50% at 52% 46%,
+    rgba(47, 163, 255, 0.17) 0%,
+    transparent 70%
+  );
+}
+
+.bgGlowWarm {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 40% 35% at 18% 80%,
+    rgba(248, 149, 29, 0.12) 0%,
+    transparent 65%
+  );
+}
+
+.bgGrid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(47, 163, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(47, 163, 255, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 50%,
+    black 30%,
+    transparent 80%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 50%,
+    black 30%,
+    transparent 80%
+  );
+}
+
+/* ── Particles ── */
+.particlesContainer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: #4fc3ff;
+  animation: particleRise linear infinite;
+}
+
+/* ── Nav ── */
+.nav {
+  position: relative;
+  z-index: 10;
+  padding: 28px 48px;
+  display: flex;
+  align-items: center;
+}
+
+.navLogo {
+  height: 34px;
+  width: auto;
+  display: block;
+  opacity: 0;
+  animation: fadeIn 0.5s 0.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ── Main ── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px 24px 72px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Error chip ── */
+.errorChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #4fc3ff;
+  margin-bottom: 36px;
+  padding: 6px 14px 6px 10px;
+  border: 1px solid rgba(79, 195, 255, 0.25);
+  border-radius: 9999px;
+  background: rgba(47, 163, 255, 0.08);
+  opacity: 0;
+}
+
+.chipDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4fc3ff;
+  box-shadow:
+    0 0 8px #4fc3ff,
+    0 0 16px rgba(79, 195, 255, 0.5);
+  flex-shrink: 0;
+}
+
+/* ── 4 ★ 4 row ── */
+.numRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 36px;
+  opacity: 0;
+}
+
+.num4 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(96px, 14vw, 192px);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  color: #fff;
+  text-shadow:
+    0 0 80px rgba(255, 255, 255, 0.06),
+    0 2px 0 rgba(0, 0, 0, 0.2);
+  user-select: none;
+}
+
+.starWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2px;
+}
+
+.starSvg {
+  width: clamp(76px, 11vw, 152px);
+  height: clamp(76px, 11vw, 152px);
+  display: block;
+  transform: translateY(4%);
+  animation: twinkle 2.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px rgba(248, 149, 29, 0.55))
+    drop-shadow(0 0 48px rgba(248, 149, 29, 0.28));
+}
+
+/* ── Heading ── */
+.heading {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(26px, 3.5vw, 44px);
+  color: #fff;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin-bottom: 14px;
+  opacity: 0;
+}
+
+/* ── Body copy ── */
+.bodyCopy {
+  font-size: clamp(15px, 1.8vw, 17px);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.62);
+  max-width: 420px;
+  margin: 0 auto 40px;
+  opacity: 0;
+}
+
+/* ── CTA row ── */
+.ctaRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  opacity: 0;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 13px 26px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 120ms ease;
+}
+
+.btn:active {
+  transform: scale(0.96) !important;
+}
+
+.btnWarm {
+  background: linear-gradient(135deg, #ffd54c 0%, #f8951d 100%);
+  color: #081c3f;
+  box-shadow: 0 6px 20px rgba(248, 149, 29, 0.35);
+}
+
+.btnWarm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(248, 149, 29, 0.5);
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.btnWarm:hover .arrow {
+  transform: translateX(-3px);
+}
+
+.btnGhost {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btnGhost:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.42);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* ── Footer ── */
+.footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 0 24px 28px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.28);
+  opacity: 0;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0.01ms !important;
+  }
+
+  .starSvg {
+    animation: none;
+    transform: translateY(4%);
+  }
+}
+
+/* ── Mobile ── */
+@media (max-width: 480px) {
+  .nav {
+    padding: 20px 24px;
+  }
+
+  .navLogo {
+    height: 28px;
+  }
+
+  .num4 {
+    letter-spacing: -0.035em;
+  }
+}
