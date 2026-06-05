@@ -11,7 +11,6 @@ import {
   IconDashboard,
   IconFileDescription,
   IconGift,
-  IconLabel,
   IconLinkPlus,
   IconMessageChatbot,
   IconQrcode,
@@ -75,6 +74,13 @@ export function useNavMain({
   user,
 }: any) {
   const { t } = useTranslation();
+
+  const LifecycleIcon = () => (
+    <IconActivity className="h-3 w-3 text-amber-400" />
+  );
+  const LabelIcon = () => <Tag className="h-3 w-3 text-blue-400" />;
+  const UserIcon = () => <User className="h-3 w-3 text-green-400" />;
+  const TeamIcon = () => <Users className="h-3 w-3 text-purple-400" />;
   // null = bypass (OWNER/ADMIN/SUPER_ADMIN), Set = restrict to enabled features (MEMBER)
   const hasTeamFeature = (feature: TeamFeature) =>
     allowedFeatures === null || allowedFeatures.has(feature);
@@ -127,8 +133,15 @@ export function useNavMain({
                     ...(lifecycles.length > 0
                       ? [
                           {
-                            title: "Lifecycle",
-                            icon: IconActivity,
+                            title: "Lifecycle Stages",
+                            isSectionHeader: true,
+                            icon: LifecycleIcon,
+                            showClearButton: !!chatFilterStore.filter.lifecycle,
+                            clearFilter: () =>
+                              chatFilterStore.setFilter({
+                                ...chatFilterStore.filter,
+                                lifecycle: "",
+                              }),
                             items: lifecycles.map((lbl) => ({
                               icon: (props) => (
                                 <div {...props}>{lbl.emoji}</div>
@@ -148,7 +161,15 @@ export function useNavMain({
                       ? [
                           {
                             title: "Labels",
-                            icon: IconLabel,
+                            isSectionHeader: true,
+                            icon: LabelIcon,
+                            showClearButton:
+                              chatFilterStore.filter.labels?.length > 0,
+                            clearFilter: () =>
+                              chatFilterStore.setFilter({
+                                ...chatFilterStore.filter,
+                                labels: [],
+                              }),
                             items: contactLabels.map((lbl) => ({
                               title: lbl.name,
                               url: "#",
@@ -174,11 +195,27 @@ export function useNavMain({
                     ...(staff.length > 0
                       ? [
                           {
-                            title: "Staff",
-                            icon: User,
-                            type: "component",
-                            componentKey: "staffSelector",
-                            hasSepeartorOnTop: true,
+                            title: "Users",
+                            isSectionHeader: true,
+                            icon: UserIcon,
+                            showClearButton:
+                              chatFilterStore.filter.assignedUserIds?.length >
+                              0,
+                            clearFilter: () =>
+                              chatFilterStore.setFilter({
+                                ...chatFilterStore.filter,
+                                assignedUserIds: [],
+                              }),
+                            items: staff.map((member) => ({
+                              title: member.name,
+                              url: "#",
+                              handleClick: () =>
+                                handleFilter("assignedStaff", member.id),
+                              isActive:
+                                chatFilterStore.filter.assignedUserIds?.includes(
+                                  member.id,
+                                ),
+                            })),
                           },
                         ]
                       : []),
@@ -186,9 +223,25 @@ export function useNavMain({
                       ? [
                           {
                             title: "Teams",
-                            icon: Users,
-                            type: "component",
-                            componentKey: "teamSelector",
+                            isSectionHeader: true,
+                            icon: TeamIcon,
+                            showClearButton:
+                              chatFilterStore.filter.assignedTeams?.length > 0,
+                            clearFilter: () =>
+                              chatFilterStore.setFilter({
+                                ...chatFilterStore.filter,
+                                assignedTeams: [],
+                              }),
+                            items: teams.map((team) => ({
+                              title: team.name,
+                              url: "#",
+                              handleClick: () =>
+                                handleFilter("assignedTeams", team.id),
+                              isActive:
+                                chatFilterStore.filter.assignedTeams?.includes(
+                                  team.id,
+                                ),
+                            })),
                           },
                         ]
                       : []),

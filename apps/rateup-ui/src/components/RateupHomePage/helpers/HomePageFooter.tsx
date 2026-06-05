@@ -10,7 +10,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
-import { rateupLogoBlueTextUrl } from "@/components/HomePage/constants.tsx";
+import { imagesPath } from "@/utils/constants";
 
 const HomePageFooter = () => {
   return (
@@ -20,7 +20,7 @@ const HomePageFooter = () => {
         <div className="flex flex-col items-center md:items-start">
           <Link to="/" className="mb-4">
             <Image
-              src={rateupLogoBlueTextUrl}
+              src={`${imagesPath}/rateup-logo-stacked-transparent.png`}
               alt="RateUp Logo"
               width={56}
               height={56}

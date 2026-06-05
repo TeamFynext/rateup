@@ -1,79 +1,127 @@
-"use client";
+import { useRef } from "react";
 
-import { Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { Image } from "@unpic/react";
-import { ArrowLeft, Home } from "lucide-react";
-import { motion } from "motion/react";
+import { useNavigate } from "@tanstack/react-router";
 
-import { rateupLogoUrl } from "../HomePage/constants.tsx";
+import styles from "@/styles/commonCssModules/404.module.css";
+import { imagesPath } from "@/utils/constants";
 
-const NotFoundPage = () => {
-  const pathname = useRouterState({
-    select: (s) => s.location.pathname,
+import { RateupStar } from "../integrations/logos";
+
+// Individual floating particle
+function Particle({ style }) {
+  return <div className={styles.particle} style={style} />;
+}
+
+export default function NotFoundPage() {
+  const particlesRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Generate particle styles once — stable across renders via useMemo if needed
+  const particles = Array.from({ length: 14 }, (_, i) => {
+    const size = 2 + Math.random() * 2.5;
+    return {
+      key: i,
+      style: {
+        left: `${Math.random() * 100}vw`,
+        bottom: `${-5 - Math.random() * 15}vh`,
+        width: `${size}px`,
+        height: `${size}px`,
+        opacity: 0.25 + Math.random() * 0.55,
+        animationDuration: `${7 + Math.random() * 11}s`,
+        animationDelay: `${-Math.random() * 14}s`,
+      },
+    };
   });
-  const lastSegment = pathname.split("/").findLast(Boolean) || "page";
-  const { history } = useRouter();
 
   return (
-    <div className="flex items-center justify-center bg-[#FAFAFA] py-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="bg-[#FAFAFA] max-w-lg w-full p-10 text-center"
-      >
-        <Link to={"/"}>
-          <Image
-            src={rateupLogoUrl}
-            alt="RateUp Logo"
-            width={120}
-            height={60}
-            className="mx-auto mb-6"
+    <div className={styles.page}>
+      {/* ── Background layers ── */}
+      <div className={styles.bgBase} />
+      <div className={styles.bgGlowCyan} />
+      <div className={styles.bgGlowWarm} />
+      <div className={styles.bgGrid} />
+
+      {/* ── Floating particles ── */}
+      <div ref={particlesRef} className={styles.particlesContainer}>
+        {particles.map(({ key, style }) => (
+          <Particle key={key} style={style} />
+        ))}
+      </div>
+
+      {/* ── Nav ── */}
+      <nav className={styles.nav}>
+        <a href="https://rateup.app">
+          <img
+            className={styles.navLogo}
+            src={`${imagesPath}/rateup-logo-horizontal-transparent.png`}
+            alt="RateUp"
           />
-        </Link>
+        </a>
+      </nav>
 
-        <div className="text-6xl md:text-8xl font-bold text-[#004F98]">404</div>
-        <p className="text-gray-700 text-lg md:text-xl font-semibold mt-2">
-          Page Not Found
-        </p>
-
-        <p className="text-gray-500 mt-3 text-base leading-relaxed">
-          The <span className="font-medium">{lastSegment}</span> you&apos;re
-          looking for doesn&apos;t exist or has been moved. Please check the URL
-          or use one of the options below.
-        </p>
-        <div className="flex justify-center gap-4 mt-8 flex-wrap">
-          <motion.div
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <Link
-              to="/"
-              className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#004F98] text-white font-medium shadow-md hover:shadow-lg hover:bg-[#003366] transition"
-            >
-              <Home size={18} />
-              Go Home
-            </Link>
-          </motion.div>
-
-          <motion.div
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <button
-              onClick={() => history.back()}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-[#004F98] text-[#004F98] font-medium hover:bg-[#004F98]/10 transition"
-            >
-              <ArrowLeft size={18} />
-              Go Back
-            </button>
-          </motion.div>
+      {/* ── Main ── */}
+      <main className={styles.main}>
+        {/* Error chip */}
+        <div className={`${styles.errorChip} ${styles.animFadeUp1}`}>
+          <span className={styles.chipDot} />
+          Error &nbsp;·&nbsp; 404
         </div>
-      </motion.div>
+
+        {/* 4 ★ 4 */}
+        <div
+          className={`${styles.numRow} ${styles.animFadeUp2}`}
+          aria-label="404"
+        >
+          <span className={styles.num4} aria-hidden="true">
+            4
+          </span>
+          <div className={styles.starWrap} aria-hidden="true">
+            <RateupStar className={`w-40 h-40 ${styles.starSvg}`} />
+          </div>
+          <span className={styles.num4} aria-hidden="true">
+            4
+          </span>
+        </div>
+
+        {/* Heading */}
+        <h1 className={`${styles.heading} ${styles.animFadeUp3}`}>
+          Page Not Found
+        </h1>
+
+        {/* Body copy */}
+        <p className={`${styles.bodyCopy} ${styles.animFadeUp4}`}>
+          The page you're looking for doesn't exist or has been moved. Let's get
+          you somewhere useful.
+        </p>
+
+        {/* CTAs */}
+        <div className={`${styles.ctaRow} ${styles.animFadeUp5}`}>
+          <button
+            onClick={() => navigate({ to: "/" })}
+            className={`${styles.btn} ${styles.btnWarm}`}
+          >
+            <span className={styles.arrow}>←</span>
+            Back to Homepage
+          </button>
+          <button
+            onClick={() => {
+              const phone = import.meta.env.VITE_SUPPORT_WHATSAPP;
+              const message = encodeURIComponent(
+                "Hi, I need help with support",
+              );
+              window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+            }}
+            className={`${styles.btn} ${styles.btnGhost}`}
+          >
+            Contact Support
+          </button>
+        </div>
+      </main>
+
+      {/* ── Footer ── */}
+      <footer className={`${styles.footer} ${styles.animFadeInFooter}`}>
+        www.rateup.app
+      </footer>
     </div>
   );
-};
-
-export default NotFoundPage;
+}
