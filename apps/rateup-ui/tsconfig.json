@@ -4,8 +4,7 @@
     "**/*.tsx",
     "eslint.config.js",
     "prettier.config.mjs",
-    "vite.config.js",
-    "src/utils/translate-locales.js"
+    "vite.config.js"
   ],
 
   "compilerOptions": {
