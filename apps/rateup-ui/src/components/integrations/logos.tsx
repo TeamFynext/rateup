@@ -75,7 +75,7 @@ export function ZohoLogo({ className }: LogoProps) {
 export function RateupStar({ className }: LogoProps) {
   return (
     <img
-      src="/images/rateup-star.svg"
+      src="/images/rateup-icon.png"
       alt=""
       aria-hidden="true"
       className={cn("object-contain", className)}

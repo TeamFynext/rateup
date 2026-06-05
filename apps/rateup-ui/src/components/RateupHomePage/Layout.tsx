@@ -67,7 +67,7 @@ export default function Layout({
 
   return (
     <div className={`relative w-full ${navbarClassName}`}>
-      <header className={styles.theme}>
+      <header className={`${styles.theme} sticky top-0 z-50`}>
         <Navbar>
           {/* Desktop Navigation */}
           <NavBody className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 ">
@@ -77,7 +77,7 @@ export default function Layout({
              space-x-2 px-2 py-1 text-sm font-normal text-black"
             >
               <span className={styles.brand}>
-                <RateupStar />
+                <RateupStar className="h-8 w-8" />
                 <span className={styles.wm}>
                   Rate
                   <span className={styles.up}>Up</span>
@@ -126,11 +126,10 @@ export default function Layout({
               space-x-2 lg:px-8 px-2 py-1 text-sm font-normal text-black"
               >
                 <Image
-                  src={rateupLogoUrl}
+                  src={`${imagesPath}/rateup-logo-horizontal-transparent.png`}
                   alt="logo"
-                  width={70}
+                  width={100}
                   height={30}
-                  className="w-14 h-10"
                 />
               </Link>
               <MobileNavToggle

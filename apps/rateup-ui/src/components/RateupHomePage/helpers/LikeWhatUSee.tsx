@@ -36,7 +36,7 @@ export default function LikeWhatUSee({
           {/* LOGO */}
           <div className="mb-5 flex justify-center">
             <div className=" flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-b from-[#0D2B57] to-[#081B38] text-2xl shadow-[0_12px_24px_rgba(13,43,87,0.28)]">
-              <RateupStar />
+              <RateupStar className="h-8 w-8" />
             </div>
           </div>
 
