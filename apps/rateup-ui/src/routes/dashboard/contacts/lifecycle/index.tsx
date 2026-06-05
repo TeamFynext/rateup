@@ -69,18 +69,6 @@ const EMOJI_PRESETS = [
   "📂",
 ];
 
-const COLOR_PRESETS = [
-  { class: "bg-sky-400", hex: "#0ea5e9", name: "Sky Blue" },
-  { class: "bg-teal-400", hex: "#14b8a6", name: "Teal" },
-  { class: "bg-emerald-500", hex: "#10b981", name: "Mint Green" },
-  { class: "bg-green-500", hex: "#22c55e", name: "Emerald" },
-  { class: "bg-yellow-400", hex: "#facc15", name: "Sun Yellow" },
-  { class: "bg-amber-500", hex: "#f59e0b", name: "Amber Gold" },
-  { class: "bg-orange-400", hex: "#fb923c", name: "Peach Orange" },
-  { class: "bg-orange-500", hex: "#f97316", name: "Rust Red" },
-  { class: "bg-rose-500", hex: "#f43f5e", name: "Coral Rose" },
-];
-
 interface BackendLifecycleStage {
   id: string;
   name: string;
@@ -207,11 +195,6 @@ const transformToUIStage = (
   description: backendStage.description || "",
 });
 
-const getColorHex = (colorClass: string) => {
-  const preset = COLOR_PRESETS.find((item) => item.class === colorClass);
-  return preset?.hex || "#0ea5e9";
-};
-
 const getStageToneStyle = (color: string): React.CSSProperties => ({
   backgroundColor: color || "#0ea5e9",
 });
@@ -235,7 +218,7 @@ function ContactSettings() {
   const [addName, setAddName] = useState("");
   const [addDesc, setAddDesc] = useState("");
   const [addEmoji, setAddEmoji] = useState("🔹");
-  const [addColor, setAddColor] = useState("bg-sky-400");
+  const [addColor, setAddColor] = useState("bg-white");
 
   const createLifecycle = useCreateLifeCycleMutation();
   const updateLifecycle = useUpdateLifeCycleMutation();
@@ -434,7 +417,7 @@ function ContactSettings() {
         emoji: addEmoji,
         description: addDesc.trim(),
         isWon: isFirstActiveStage,
-        color: getColorHex(addColor),
+        color: "#ffffff",
       },
       {
         onSuccess: () => {
@@ -1354,7 +1337,7 @@ function AddStageForm({
           </Button>
 
           <div className="text-xs font-bold text-muted-foreground">
-            <div>{t("Selected emoji / color combo")}</div>
+            <div>{t("Selected emoji")}</div>
             <Button
               type="button"
               variant="link"
@@ -1367,15 +1350,11 @@ function AddStageForm({
             </Button>
           </div>
         </div>
-
         {showEmojiPicker ? (
-          <EmojiColorPicker
-            addColor={addColor}
-            setAddColor={setAddColor}
+          <EmojiPicker
             addEmoji={addEmoji}
             setAddEmoji={setAddEmoji}
             onDone={() => setShowEmojiPicker(false)}
-            isLost={isLost}
           />
         ) : null}
       </div>
@@ -1408,48 +1387,24 @@ function AddStageForm({
   );
 }
 
-function EmojiColorPicker({
-  addColor,
-  setAddColor,
+function EmojiPicker({
   addEmoji,
   setAddEmoji,
   onDone,
-  isLost,
-}: Readonly<EmojiColorPickerProps>) {
+}: Readonly<{
+  addEmoji: string;
+  setAddEmoji: (emoji: string) => void;
+  onDone: () => void;
+}>) {
   const { t } = useTranslation("contacts.lifecycle");
-  return (
-    <div className="absolute left-0 top-12 z-40 w-full space-y-3.5 rounded-xl border border-border bg-popover p-3.5 text-popover-foreground shadow-xl sm:w-72">
-      <div className="space-y-1.5">
-        <span className="block text-[9px] font-black uppercase tracking-wider text-muted-foreground">
-          {t("Color Tone")}
-        </span>
-        <div className="grid grid-cols-6 gap-1.5">
-          {COLOR_PRESETS.map((colorOption) => (
-            <Button
-              key={colorOption.class}
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => setAddColor(colorOption.class)}
-              className={cn(
-                "size-6 rounded-md transition-all hover:scale-110 active:scale-95",
-                colorOption.class,
-                addColor === colorOption.class
-                  ? isLost
-                    ? "ring-2 ring-destructive ring-offset-2"
-                    : "ring-2 ring-ring ring-offset-2"
-                  : "opacity-85",
-              )}
-              title={colorOption.name}
-            />
-          ))}
-        </div>
-      </div>
 
+  return (
+    <div className="absolute left-0 top-12 z-40 w-full space-y-3 rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-xl sm:w-72">
       <div className="space-y-1.5">
         <span className="block text-[9px] font-black uppercase tracking-wider text-muted-foreground">
           {t("Emoji Symbol")}
         </span>
+
         <div className="grid grid-cols-7 gap-1.5">
           {EMOJI_PRESETS.map((emojiOption) => (
             <Button
@@ -1459,10 +1414,9 @@ function EmojiColorPicker({
               size="icon"
               onClick={() => setAddEmoji(emojiOption)}
               className={cn(
-                "flex size-7 items-center justify-center rounded text-xs transition-transform hover:scale-110 hover:bg-muted active:scale-95",
-                addEmoji === emojiOption
-                  ? "scale-110 bg-muted font-bold ring-1 ring-border"
-                  : "",
+                "flex size-7 items-center justify-center rounded text-xs transition-transform hover:scale-110 hover:bg-muted",
+                addEmoji === emojiOption &&
+                  "bg-muted font-bold ring-1 ring-border",
               )}
             >
               {emojiOption}
@@ -1477,7 +1431,7 @@ function EmojiColorPicker({
         onClick={onDone}
         className="w-full rounded-lg py-1 text-[10px] font-extrabold"
       >
-        {t("Done Styling")}
+        {t("Done")}
       </Button>
     </div>
   );

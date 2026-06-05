@@ -19,6 +19,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import {
   Collapsible,
   CollapsibleContent,
@@ -265,7 +266,32 @@ function NavItemContent({
       {item.icon && <item.icon />}
       <div className="flex min-w-0 flex-1 items-center gap-2 group-data-[collapsible=icon]:hidden">
         <div className="min-w-0 flex-1">
-          <span className="block truncate">{item.title}</span>
+          <div className="flex items-center justify-between">
+            <span
+              className={`block truncate ${
+                item.isSectionHeader
+                  ? "text-[11px] font-bold text-muted-foreground uppercase tracking-wide"
+                  : ""
+              }`}
+            >
+              {item.title}
+            </span>
+            {item.clearFilter && item.showClearButton && (
+              <Button
+                size="xs"
+                className="rounded-xl"
+                variant="destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  item.clearFilter();
+                }}
+              >
+                <span className="text-[10px]">
+                  {item.clearButtonName ?? "Clear"}
+                </span>
+              </Button>
+            )}
+          </div>
           {showDescription && item.description ? (
             <span className="block truncate text-xs text-muted-foreground">
               {item.description}

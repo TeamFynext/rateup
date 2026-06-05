@@ -7,8 +7,8 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconBrandInstagram,
   IconBrandWhatsappFilled,
-  IconCategoryPlus,
   IconChevronDown,
+  IconTags,
   IconWebhook,
 } from "@tabler/icons-react";
 import {
@@ -17,7 +17,7 @@ import {
   BellOff,
   Bot,
   CircleCheckBig,
-  Tag,
+  FolderClosed,
   Ticket,
 } from "lucide-react";
 
@@ -26,6 +26,12 @@ import {
   SubscriptionFeaturePathName,
   WaMessageAssignStatus,
 } from "@/types/enums.ts";
+import { cn } from "@/lib/utils.ts";
+import {
+  useContactGroup,
+  useContactGroupsByContactId,
+  useUpdateContactGroupsForContactMutation,
+} from "@/backend/campaign/contactGroup/contactGroup.query.tsx";
 import {
   useAssignContactLabelsToContactId,
   useContactLabels,
@@ -34,7 +40,6 @@ import {
 import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBlockWhatsAppUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
 import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
 import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import {
@@ -63,6 +68,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { useChatbotStore } from "@/store/chatbot.store";
 import { TicketType } from "@/utils/enums/ticket.ts";
@@ -74,7 +80,6 @@ import {
   generateInternalMessageId,
   getSoucePlatformIconAndColor,
 } from "../../util.tsx";
-import AddtoContactGroup from "./AddtoContactGroup.tsx";
 import AssignUser from "./AssignUser.tsx";
 import WaInboxCountdownTimer from "./countDown/index.tsx";
 
@@ -89,6 +94,7 @@ export default function WaInboxChatDisplayHeader({
   waSettings,
 }: WaInboxChatDisplayHeaderProps) {
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
+  const tags = useLifecycleContext();
   const editContactMutation = useEditContactMutation(null);
   const { data: contactLabels = [], isPending } = useContactLabels();
   const { setSelectedContact } = useContactsStore();
@@ -97,6 +103,14 @@ export default function WaInboxChatDisplayHeader({
 
   const { data: chatbot } = useGetChatbotDetails(selectedChatbotId);
   const { data: subscription } = useSubscription();
+
+  const { data: contactgroups, isLoading: contactGroupsLoading } =
+    useContactGroupsByContactId(contact.id);
+  const { data: groups, isLoading: groupsLoading } = useContactGroup();
+  const updateGroupsMutation = useUpdateContactGroupsForContactMutation(
+    contact.id,
+  );
+  const activeGroupIds = contactgroups?.map((g) => g.id) ?? [];
 
   const hasAIFeature = useMemo(
     () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
@@ -113,6 +127,87 @@ export default function WaInboxChatDisplayHeader({
       },
     );
   }
+
+  const lifecycleGroups = useMemo(
+    () => [
+      {
+        group: "Lifecycle Stages",
+        items:
+          tags
+            ?.filter((label) => label.category !== "lost")
+            .map((label) => ({
+              id: label.id,
+              name: label.name,
+              emoji: label.emoji,
+              category: label.category,
+            })) ?? [],
+      },
+      {
+        group: "Lost Stages",
+        items:
+          tags
+            ?.filter((label) => label.category === "lost")
+            .map((label) => ({
+              id: label.id,
+              name: label.name,
+              emoji: label.emoji,
+              category: label.category,
+            })) ?? [],
+      },
+    ],
+    [tags],
+  );
+
+  const allLifecycles = [
+    ...lifecycleGroups[0].items,
+    ...lifecycleGroups[1].items,
+  ];
+
+  const activeLabels = (contact as any)?.contactLabels || [];
+  const assign = useAssignContactLabelsToContactId();
+  const activeIds = activeLabels.map((l) => l.id);
+  const isActive = (labelId: string) => activeIds.includes(labelId);
+
+  function handleToggleLabel(labelId: string) {
+    if (!contact?.id) return;
+    const nextLabelIds = isActive(labelId)
+      ? activeIds.filter((id) => id !== labelId)
+      : [...activeIds, labelId];
+    const updatedLabels = contactLabels.filter((label) =>
+      nextLabelIds.includes(label.id),
+    );
+
+    assign.mutate(
+      {
+        contactId: contact.id,
+        labelIds: nextLabelIds,
+      },
+      {
+        onSuccess: () => {
+          updateContactById(contact.id, (c) => ({
+            ...c,
+            contactLabels: updatedLabels,
+          }));
+        },
+      },
+    );
+  }
+
+  const handleToggleGroup = (groupId: string) => {
+    const nextIds = activeGroupIds.includes(groupId)
+      ? activeGroupIds.filter((id) => id !== groupId)
+      : [...activeGroupIds, groupId];
+
+    const addGroupIds = nextIds.filter((id) => !activeGroupIds.includes(id));
+
+    const removeGroupIds = activeGroupIds.filter((id) => !nextIds.includes(id));
+
+    updateGroupsMutation.mutate({
+      contactId: contact.id,
+      addGroupIds,
+      removeGroupIds,
+    });
+  };
 
   const platform =
     contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
@@ -154,7 +249,6 @@ export default function WaInboxChatDisplayHeader({
       },
     );
   }
-
   const sourcePlatform = getSoucePlatformIconAndColor(platform);
   if (!contact) return null;
   return (
@@ -231,35 +325,206 @@ export default function WaInboxChatDisplayHeader({
         <div className="flex items-center gap-2 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center justify-center gap-0.5 h-8 w-10 cursor-pointer rounded-md hover:bg-accent transition-colors">
-                <IconCategoryPlus className="h-5 w-5" strokeWidth={1.5} />
+              <Button variant="outline" className="h-8 shadow-sm">
+                <IconTags className="h-5 w-5 text-primary" />
+                <span className="text-primary font-bold text-[11px] tracking-wide uppercase">
+                  Attributes
+                </span>
                 <IconChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="p-1 w-fit min-w-36">
+            <DropdownMenuContent
+              align="end"
+              className="p-1 w-fit min-w-60 max-w-70"
+            >
               <div className="flex flex-col gap-2 p-2">
                 {/* Lifecycle */}
-                <LifecycleSelector
-                  value={contact.lifecycleId}
-                  position="right"
-                  customTrigger={
-                    <span className="text-sm font-medium truncate text-foreground!">
-                      {contact.lifecycleName}
-                    </span>
-                  }
-                  className="border-none h-auto w-full cursor-pointer"
-                  onChange={handleLifecycleChange}
-                  placeholder="Lifecycle"
-                />
+                <div>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                      Lifecycle Stage
+                    </h4>
 
+                    {contact.lifecycleId && (
+                      <Button
+                        size="xs"
+                        className="h-4 rounded-xl py-0.5"
+                        variant="destructive"
+                        onClick={() =>
+                          handleLifecycleChange("", {
+                            id: "",
+                            name: "",
+                            emoji: "",
+                            category: "",
+                          })
+                        }
+                      >
+                        <span className="text-[10px]">Clear</span>
+                      </Button>
+                    )}
+                  </div>
+                  <div className="mt-2 max-h-28 overflow-y-auto pr-1">
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {allLifecycles.map((lifecycle) => (
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          key={lifecycle.id}
+                          onClick={() =>
+                            handleLifecycleChange(lifecycle.id, lifecycle)
+                          }
+                          className={cn(
+                            contact.lifecycleId === lifecycle.id &&
+                              "border-blue-300 bg-blue-100",
+                          )}
+                        >
+                          <span>{lifecycle.emoji}</span>
+                          <span
+                            className={cn(
+                              "text-[11px] font-bold text-muted-foreground tracking-wide",
+                              contact.lifecycleId === lifecycle.id &&
+                                "text-primary",
+                            )}
+                          >
+                            {lifecycle.name}
+                          </span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
                 {/* Labels */}
-                <ContactLabel
-                  contactLabel={contactLabels}
-                  contact={contact}
-                  labelPending={isPending}
-                />
-                <AddtoContactGroup selectedContactIds={[contact.id]} />
+                <div>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                      Labels
+                    </h4>
+
+                    {activeLabels.length > 0 && (
+                      <Button
+                        size="xs"
+                        className="h-4 rounded-xl py-0.5"
+                        variant="destructive"
+                        onClick={() => {
+                          assign.mutate(
+                            {
+                              contactId: contact.id,
+                              labelIds: [],
+                            },
+                            {
+                              onSuccess: () => {
+                                updateContactById(contact.id, (c) => ({
+                                  ...c,
+                                  contactLabels: [],
+                                }));
+                              },
+                            },
+                          );
+                        }}
+                      >
+                        <span className="text-[10px]">Clear All</span>
+                      </Button>
+                    )}
+                  </div>
+                  <div className="mt-2 max-h-28 overflow-y-auto pr-1">
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {contactLabels.map((label) => {
+                        const active = activeIds.includes(label.id);
+
+                        return (
+                          <Button
+                            key={label.id}
+                            size="xs"
+                            variant="outline"
+                            disabled={isPending}
+                            onClick={() => handleToggleLabel(label.id)}
+                            className={cn(
+                              active && "border-purple-300 bg-purple-100",
+                            )}
+                          >
+                            <span
+                              style={{ backgroundColor: label.color }}
+                              className="h-2.5 w-2.5 rounded-full shrink-0"
+                            />
+
+                            <span
+                              className={cn(
+                                "text-[11px] font-bold text-muted-foreground tracking-wide truncate",
+                                active && "text-primary",
+                              )}
+                            >
+                              {label.name}
+                            </span>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                {/* contact group */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                      Contact Groups
+                    </h4>
+
+                    {activeGroupIds.length > 0 && (
+                      <Button
+                        size="xs"
+                        className="h-4 rounded-xl py-0.5"
+                        variant="destructive"
+                        onClick={() =>
+                          updateGroupsMutation.mutate({
+                            contactId: contact.id,
+                            addGroupIds: [],
+                            removeGroupIds: activeGroupIds,
+                          })
+                        }
+                      >
+                        <span className="text-[10px]">Clear All</span>
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="mt-2 max-h-28 overflow-y-auto space-y-1 pr-1">
+                    {groups?.map((group) => {
+                      const active = activeGroupIds.includes(group.id);
+
+                      return (
+                        <Button
+                          key={group.id}
+                          size="sm"
+                          variant="outline"
+                          disabled={groupsLoading || contactGroupsLoading}
+                          onClick={() => handleToggleGroup(group.id)}
+                          className={cn(
+                            "w-full justify-start gap-2",
+                            active && "border-indigo-300 bg-indigo-100",
+                          )}
+                        >
+                          <FolderClosed
+                            className={cn(
+                              "h-4 w-4 shrink-0 text-yellow-500 fill-yellow-400",
+                              active && "text-yellow-600 fill-yellow-500",
+                            )}
+                          />
+
+                          <span
+                            className={cn(
+                              "flex-1 truncate text-left text-[11px] font-bold text-muted-foreground",
+                              active && "text-primary",
+                            )}
+                          >
+                            {group.name}
+                          </span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -567,87 +832,6 @@ export const AssignInboxContent = ({
     </Stack>
   );
 };
-
-function ContactLabel({ contactLabel, labelPending, contact }) {
-  const activeLabels = contact?.contactLabels || [];
-  const { updateContactById } = useContactsStore();
-  const assign = useAssignContactLabelsToContactId();
-
-  const activeIds = activeLabels.map((l) => l.id);
-
-  const isActive = (labelId: string) => activeIds.includes(labelId);
-
-  function handleToggleLabel(labelId: string) {
-    if (!contact?.id) return;
-
-    const nextLabelIds = isActive(labelId)
-      ? activeIds.filter((id) => id !== labelId)
-      : [...activeIds, labelId];
-
-    const updatedLabels = contactLabel.filter((label) =>
-      nextLabelIds.includes(label.id),
-    );
-
-    assign.mutate(
-      {
-        contactId: contact.id,
-        labelIds: nextLabelIds,
-      },
-      {
-        onSuccess: () => {
-          updateContactById(contact.id, (c) => ({
-            ...c,
-            contactLabels: updatedLabels,
-          }));
-        },
-      },
-    );
-  }
-
-  const selectedCount = activeLabels.length;
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="text-foreground border-none flex items-center justify-start h-auto w-full bg-transparent text-sm font-medium cursor-pointer gap-2">
-        <Tag className="h-4 w-4 shrink-0 text-foreground" />
-
-        {selectedCount
-          ? `${selectedCount} Label${selectedCount > 1 ? "s" : ""}`
-          : "Labels"}
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent align="start" side="right" className="w-48">
-        {contactLabel?.length ? (
-          contactLabel.map((label) => {
-            const active = isActive(label.id);
-
-            return (
-              <DropdownMenuItem
-                key={label.id}
-                onClick={() => handleToggleLabel(label.id)}
-                disabled={labelPending}
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                <span
-                  style={{ backgroundColor: label.color }}
-                  className="h-3 w-3 rounded-full"
-                />
-
-                <span className="text-sm flex-1">{label.name}</span>
-
-                {active && <span className="text-xs">✓</span>}
-              </DropdownMenuItem>
-            );
-          })
-        ) : (
-          <div className="px-2 py-2 text-sm text-muted-foreground">
-            No labels found
-          </div>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 function getStatusLabel(status: string): string | null {
   const map: Record<string, string> = {
