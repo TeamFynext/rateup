@@ -12,13 +12,16 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
-
 import {
   useSendResetEmail,
   useSetNewPassword,
 } from "@/utils/auth/resetPassword.tsx";
-import { SAVE_HOTKEY } from "@/utils/constants.ts";
+import {
+  rateupLogoStackedWhiteTransparent,
+  SAVE_HOTKEY,
+} from "@/utils/constants.ts";
 import { ResetSteps } from "@/utils/enums/index.ts";
+
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { Input } from "../ui/input.tsx";
@@ -170,9 +173,9 @@ const ResetPasswordForm = ({ mode }) => {
     <div className="min-h-screen flex flex-col items-center justify-center">
       <div className="text-center">
         <img
-          src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup-logo-blue-text.svg`}
+          src={rateupLogoStackedWhiteTransparent}
           alt="RateUp"
-          className="w-18"
+          className="w-20"
         />
       </div>
       {page !== ResetSteps.STEP_TWO ? (

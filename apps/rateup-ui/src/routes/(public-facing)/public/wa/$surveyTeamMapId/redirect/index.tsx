@@ -3,6 +3,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Redirect } from "@/components/(public-facing)/public/wa/Redirect.tsx";
+import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 export const Route = createFileRoute(
   "/(public-facing)/public/wa/$surveyTeamMapId/redirect/",
@@ -42,7 +43,7 @@ export const Route = createFileRoute(
       },
       {
         property: "og:image",
-        content: "https://djd7kjh9uwow0.cloudfront.net/images/rateup_logo.png",
+        content: rateupLogoStackedWhiteTransparent,
       },
       {
         property: "og:image:type",

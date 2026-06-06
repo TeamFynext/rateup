@@ -7,8 +7,8 @@ import { useTranslation } from "react-i18next";
 import { TakeSurveyLayoutWeb } from "@/components/Layout/TakeSurveyLayout/TakeSurveyLayoutWeb.tsx";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
 import TakeSurvey from "@/components/Survey/TakeSurvey/TakeSurveyComponent/index.tsx";
+import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
-import { imagesPath } from "@/utils/constants.ts";
 import errorPageStyles from "../../../ws/$shortId/ws.module.css";
 
 export const Route = createFileRoute(
@@ -44,7 +44,7 @@ export const Route = createFileRoute(
       },
       {
         property: "og:image",
-        content: "https://djd7kjh9uwow0.cloudfront.net/images/rateup_logo.png",
+        content: rateupLogoStackedWhiteTransparent,
       },
       {
         property: "og:image:width",
@@ -110,8 +110,8 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
     return (
       <div className={errorPageStyles["error-page"]}>
         <Link to="/">
-          <Image w={80} src={`${imagesPath}/rateup-logo-blue-text.svg`} />
-        </Link>
+          <Image w={80} src={rateupLogoStackedWhiteTransparent} />
+        </Link>{" "}
         <p className={errorPageStyles["error-text"]}>
           {translations("Unable to get survey, please try again later")}
         </p>
@@ -144,4 +144,3 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
     </>
   );
 }
-

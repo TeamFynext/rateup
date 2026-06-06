@@ -31,6 +31,7 @@ import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
+import { rateupLogoHorizontalWhiteTransparent } from "@/utils/constants.ts";
 
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Button } from "../ui/button.tsx";
@@ -246,7 +247,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
     <div className="min-h-screen flex flex-col items-center justify-center w-full p-3 sm:p-4 md:p-6 bg-linear-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative dark:bg-linear-to-br dark:from-gray-900/80 dark:via-gray-900/60 dark:to-gray-900/80">
       <div className="text-center mb-2 max-w-xs sm:max-w-sm flex items-center justify-between w-full">
         <img
-          src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/LogoRateup.png`}
+          src={rateupLogoHorizontalWhiteTransparent}
           alt="RateUp Logo"
           className="h-auto w-24"
         />

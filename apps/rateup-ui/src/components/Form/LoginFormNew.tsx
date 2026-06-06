@@ -7,6 +7,8 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
+import { rateupLogoHorizontalWhiteTransparent } from "@/utils/constants.ts";
+
 import { Button } from "../ui/button.tsx";
 import { Card } from "../ui/card.tsx";
 import { Checkbox } from "../ui/checkbox.tsx";
@@ -80,7 +82,7 @@ export default function SignInFlow({
     <div className="min-h-screen flex flex-col items-center justify-center w-full p-3 sm:p-4 md:p-6 bg-linear-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative dark:bg-linear-to-br dark:from-gray-900/80 dark:via-gray-900/60 dark:to-gray-900/80">
       <div className="text-center mb-4 max-w-xs sm:max-w-sm flex items-center justify-between w-full">
         <img
-          src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/LogoRateup.png`}
+          src={rateupLogoHorizontalWhiteTransparent}
           alt="RateUp Logo"
           className="h-auto w-24"
         />

@@ -3,6 +3,8 @@
 import { Anchor, Center, Group, Image, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
+import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
+
 export default function RateupRedirectCard({ className = "" }) {
   const { t: translations } = useTranslation();
   return (
@@ -27,7 +29,7 @@ export default function RateupRedirectCard({ className = "" }) {
             {translations("Powered By")}
           </Text>
           <Image
-            src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup_logo.svg`}
+            src={rateupLogoStackedWhiteTransparent}
             height={30}
             width={30}
             fit="contain"

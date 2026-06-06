@@ -2,8 +2,6 @@ import { Text, Title } from "@mantine/core";
 
 import styles from "../index.module.css";
 
-export const imagePath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images`;
-
 const featuresH1ClassName = styles["illustration-txt-section-heading"];
 const descriptionPClassName = styles["illustration-txt-section-text-para"];
 const descriptionPSpanClassName = styles["bold-span"];
