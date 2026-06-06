@@ -2,7 +2,11 @@ import dayjs from "dayjs";
 import prisma from "../../prisma.js";
 import { formatDateT1 } from "../../date.js";
 import { sendAWSEmail } from "../sendAWSEmail.js";
-import { billingPage, statsPage } from "../../constants/constants.js";
+import {
+  billingPage,
+  rateupLogo,
+  statsPage,
+} from "../../constants/constants.js";
 import { log } from "../../logger.js";
 
 export async function subscriptionExpiryAlert() {
@@ -288,7 +292,7 @@ function beforeExpiryTemplate(subscription, expiryBody, title) {
     
           .rateup-logo {
             width: 134px;
-            height: 76px;
+            height: 128px;
             margin-top: 10px;
           }
           table {
@@ -310,12 +314,10 @@ function beforeExpiryTemplate(subscription, expiryBody, title) {
                   <th>
                     <img
                       class="rateup-logo"
-                        src="${
-                          process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL
-                        }/images/email/rateup_logo.png"
+                        src="${rateupLogo}"
                         alt="Rateup Logo"
                         width="134"
-                        height="76"
+                        height="128"
                       />
                   </th>
                 </tr>

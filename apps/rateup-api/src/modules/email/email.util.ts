@@ -1,4 +1,5 @@
 import { createEmailBodyOTPGeneration } from "./emailTemplates/emailTemplateOTPGeneration.js";
+import { rateupLogo } from "../../utils/constants/constants.js";
 import crypto from "node:crypto";
 
 export function getEmailBodyTemplate(purpose, data) {
@@ -79,7 +80,7 @@ export function createGeneralEmailBodyTemaple(
     }
      .rateup-logo {
         width: 134px;
-        height: 76px;
+        height: 128px;
         margin-top: 10px;
     }
   </style>
@@ -99,12 +100,10 @@ export function createGeneralEmailBodyTemaple(
             <th>
                 <img
                 class="rateup-logo"
-                    src="${
-                      process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL
-                    }/images/email/rateup_logo.png"
+                    src="${rateupLogo}"
                     alt="Rateup Logo"
                     width="134"
-                    height="76"
+                    height="128"
                 />
             </th>
           </tr>

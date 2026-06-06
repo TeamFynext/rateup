@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createBookDemo } from "./bookDemo.service.js";
+import { rateupLogo } from "../../utils/constants/constants.js";
 import {
   CreateBookDemoInput,
   CreatePartnerDataInput,
@@ -89,6 +89,12 @@ Work Email: ${workEmail}
 
       .header img {
         width: 150px;
+      }
+
+      .rateup-logo {
+        width: 134px !important;
+        height: 128px !important;
+        margin-top: 10px;
       }
 
       .title {
@@ -210,8 +216,11 @@ Work Email: ${workEmail}
       <!-- Header -->
       <div class="header">
         <img
-          src=${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png
+          class="rateup-logo"
+          src="${rateupLogo}"
           alt="RateUp Logo"
+          width="134"
+          height="128"
         />
       </div>
 

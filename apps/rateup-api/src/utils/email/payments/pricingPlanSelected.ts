@@ -1,3 +1,5 @@
+import { rateupLogo } from "../../constants/constants.js";
+
 export function createEmailBodyPricingPlanSelected(data) {
   return `<!DOCTYPE html>
 <html>
@@ -56,7 +58,7 @@ export function createEmailBodyPricingPlanSelected(data) {
     }
      .rateup-logo {
         width: 134px;
-        height: 76px;
+        height: 128px;
         margin-top: 10px;
     }
   </style>
@@ -76,12 +78,10 @@ export function createEmailBodyPricingPlanSelected(data) {
             <th>
                 <img
                 class="rateup-logo"
-                    src="${
-                      process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL
-                    }/images/email/rateup_logo.png"
+                    src="${rateupLogo}"
                     alt="Rateup Logo"
                     width="134"
-                    height="76"
+                    height="128"
                 />
             </th>
           </tr>
