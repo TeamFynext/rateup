@@ -17,6 +17,7 @@ import {
   usePublicChatMutation,
 } from "@/backend/chatbot/chatbot.query";
 import ChatbotMessageContainer from "@/components/ChatBot/ChatbotMessageContainer.tsx";
+import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 export const Route = createFileRoute(
   "/(public-facing)/public/chatbot/$chatbotId/",
@@ -48,7 +49,7 @@ export const Route = createFileRoute(
       },
       {
         property: "og:image",
-        content: "https://djd7kjh9uwow0.cloudfront.net/images/rateup_logo.png",
+        content: rateupLogoStackedWhiteTransparent,
       },
       {
         property: "og:image:width",

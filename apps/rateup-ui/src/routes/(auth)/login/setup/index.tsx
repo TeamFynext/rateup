@@ -34,7 +34,6 @@ import {
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { getVerificationStatus } from "@/backend/whatsapp/settings/waSettings.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { imagePath } from "@/components/HomePage/pages/constants.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
@@ -43,6 +42,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible.tsx";
+import { rateupLogoHorizontalWhiteTransparent } from "@/utils/constants";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 export const Route = createFileRoute("/(auth)/login/setup/")({
@@ -264,7 +264,7 @@ function RateUpOnboarding() {
         {/* Left */}
         <div className="flex items-center gap-2">
           <img
-            src={`${imagePath}/LogoRateup.png`}
+            src={`${rateupLogoHorizontalWhiteTransparent}`}
             alt="RateUp Logo"
             className="w-20 sm:w-24 h-auto"
           />

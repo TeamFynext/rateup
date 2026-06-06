@@ -16,7 +16,10 @@ import {
   NavItems,
 } from "@/components/ui/resizable-navbar.tsx";
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
-import { imagesPath } from "@/utils/constants.ts";
+import {
+  imagesPath,
+  rateupLogoHorizontalTransparent,
+} from "@/utils/constants.ts";
 import { fbConsent } from "@/utils/fbpixel.ts";
 import { setGAConsent } from "@/utils/gtag.ts";
 
@@ -126,7 +129,7 @@ export default function Layout({
               space-x-2 lg:px-8 px-2 py-1 text-sm font-normal text-black"
               >
                 <Image
-                  src={`${imagesPath}/rateup-logo-horizontal-transparent.png`}
+                  src={rateupLogoHorizontalTransparent}
                   alt="logo"
                   width={100}
                   height={30}

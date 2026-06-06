@@ -1,14 +1,15 @@
 import { Flex, Menu, NavLink } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 
+import { rateupLogoStackedTransparent } from "@/utils/constants";
+
 import headerStyles from "./components/Header/Header.module.css";
 import navLinkStyles from "./components/Header/MobileNavDrawer/NavLink.module.css";
 import LinkWithSublinksPopover from "./components/LinkWithSublinksPopover/index.tsx";
 
 export const imagesPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images`;
-export const rateupLogoBlueTextUrl = `${imagesPath}/rateup-logo-blue-text.svg`;
-export const rateupLogoWhiteTextUrl = `${imagesPath}/rateup-logo-white-text.svg`;
-export const rateupLogoUrl = rateupLogoBlueTextUrl;
+export { rateupLogoStackedTransparent };
+export const rateupLogoUrl = rateupLogoStackedTransparent;
 
 const headerNavLinks = [
   {
