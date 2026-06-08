@@ -292,7 +292,7 @@ export default function InboxAutomation() {
                 type="button"
                 onClick={handleSaveUnassigned}
                 disabled={isPending || !unassignedActive}
-                className="bg-violet-600 hover:bg-violet-700 text-white font-medium shadow transition-all duration-200 px-4 py-1.5 text-xs h-8"
+                className="px-4 py-1.5 text-xs h-8"
               >
                 <Save className="w-3.5 h-3.5 mr-1.5" />
                 {t("Save New/Unassigned Settings")}
@@ -410,7 +410,7 @@ export default function InboxAutomation() {
                 type="button"
                 onClick={handleSaveAssigned}
                 disabled={isPending || !assignedActive}
-                className="bg-violet-600 hover:bg-violet-700 text-white font-medium shadow transition-all duration-200 px-4 py-1.5 text-xs h-8"
+                className="px-4 py-1.5 text-xs h-8"
               >
                 <Save className="w-3.5 h-3.5 mr-1.5" />
                 {t("Save Assigned Settings")}
