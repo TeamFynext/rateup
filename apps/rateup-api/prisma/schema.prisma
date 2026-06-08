@@ -209,6 +209,7 @@ model Org {
   ruleMessageBodyLocks     RuleMessageBodyLock[]
   waMessageOrgTeamMaps     WaMessageOrgTeamMap[]
   Webhook                  Webhook?
+  inboxAutomations         InboxAutomation[]
 }
 
 model UsageStats {
@@ -2559,3 +2560,28 @@ model Webhook {
   url       String
   events    String[]
 }
+
+enum InboxAutomationAction {
+  CLOSE
+}
+
+enum InboxAutomationCondition {
+  UNASSIGNED
+  NEW
+  ASSIGNED
+}
+
+model InboxAutomation {
+  id          String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime                 @default(now())
+  closeAfterHours Int?
+  active      Boolean                  @default(true)
+  action      InboxAutomationAction?
+  condition   InboxAutomationCondition?
+
+  orgId       String                   @db.Uuid
+  org         Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, condition], name: "orgId_condition_unique")
+}
+

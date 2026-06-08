@@ -19,6 +19,7 @@ import {
   processDripCampaigns,
   sendSchedulesWaMessages,
 } from "../modules/whatsapp/wa_message_scheduler.js";
+import { runInboxAutomationCron } from "../modules/whatsapp/inbox/automation/inboxautomation.service.js";
 import {
   checkBirthdayEventTriggers,
   checkInactivityEventTriggers,
@@ -121,6 +122,15 @@ export async function registerCronJobs(
             "Running Daily at 1:00 AM --> Loyalty Points Expiration",
           );
           await checkPointsExpiration();
+        },
+        start: true,
+      },
+      {
+        name: "inboxAutomation",
+        cronTime: "0 * * * *", // Every hour
+        onTick: async () => {
+          server.log.info("Running Inbox Auto-Close Automation Job");
+          await runInboxAutomationCron();
         },
         start: true,
       },
