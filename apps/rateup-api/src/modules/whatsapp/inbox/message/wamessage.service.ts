@@ -1605,7 +1605,11 @@ export async function createInternalWaMessage({
 
   let triggeredByUserDetails: { id: string; name: string } | null = null;
 
-  if (trigerredByUser && trigerredByUser !== "RateUp") {
+  if (
+    trigerredByUser &&
+    trigerredByUser !== "RateUp" &&
+    trigerredByUser !== "Automation"
+  ) {
     const user = await prisma.user.findUnique({
       where: { id: trigerredByUser },
       select: { id: true, name: true },
@@ -1615,8 +1619,8 @@ export async function createInternalWaMessage({
       triggeredByUserDetails = { id: user.id, name: user.name };
     }
   }
-  if (trigerredByUser === "RateUp") {
-    triggeredByUserDetails = { id: null, name: "RateUp" };
+  if (trigerredByUser === "RateUp" || trigerredByUser === "Automation") {
+    triggeredByUserDetails = { id: null, name: trigerredByUser };
   }
   let addedUsers: { userId: string; teamId: string }[] = [];
   let removedUsers: { userId: string; teamId: string }[] = [];
@@ -1691,7 +1695,11 @@ export async function createInternalWaMessage({
         break;
 
       default:
-        messageText = `marked this chat as ${getStatusLabel(waMessageAssignStatus)}`;
+        messageText =
+          (trigerredByUser === "RateUp" || trigerredByUser === "Automation") &&
+          waMessageAssignStatus === WaMessageAssignStatus.CLOSED
+            ? "marked this chat as closed by automation"
+            : `marked this chat as ${getStatusLabel(waMessageAssignStatus)}`;
         assignStatus = waMessageAssignStatus;
     }
 

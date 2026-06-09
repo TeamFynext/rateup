@@ -179,7 +179,13 @@ export async function updateClosedConversationStatus(
     data: {
       status: status,
       closedAt: new Date(),
-      closedBy: userId,
+      closedBy:
+        userId &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          userId,
+        )
+          ? userId
+          : null,
     },
   });
   return conversation;
