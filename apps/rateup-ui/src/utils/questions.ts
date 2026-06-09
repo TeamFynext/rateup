@@ -101,6 +101,7 @@ export function createPage(
     label,
     required: true,
     type,
+    extraConfig: {},
     ...defaultTitleSubtitleStartBtnTexts,
   };
 }
@@ -131,6 +132,7 @@ export function createBlankQuestion(
     label,
     required: type !== QuestionType.InfoMessage,
     type,
+    extraConfig: {},
   };
 }
 
