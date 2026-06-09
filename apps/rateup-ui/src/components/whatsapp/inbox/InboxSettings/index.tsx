@@ -3,6 +3,8 @@
 import WaQuickReplySettings from "@/components/RichTextEditor/WaQuickReply/WaQuickReplySettings.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 
+import InboxAutomation from "./InboxAutomation.tsx";
+
 // import WaInboxPermissions from "../chatselect/permissions";
 
 const InboxSettings = () => {
@@ -16,6 +18,9 @@ const InboxSettings = () => {
       )} */}
       <div className="rounded-md border bg-card border col-span-2 p-4">
         <WaQuickReplySettings />
+      </div>
+      <div className="rounded-md border bg-card col-span-2 p-4">
+        <InboxAutomation />
       </div>
     </div>
   );
