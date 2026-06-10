@@ -12,7 +12,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 interface DemoModalProps {
   open: boolean;
@@ -103,7 +102,7 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
   };
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl rounded-xl border-0 p-0 overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.42)] max-h-[92vh]">
+      <DialogContent className="z-[100] max-w-xl rounded-xl border-0 p-0 overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.42)] max-h-[92vh]">
         <div className="overflow-y-auto max-h-[92vh] px-7 pb-6 pt-7">
           <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#072554]">
             <RateupStar className="h-8 w-8" />
@@ -200,7 +199,7 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
             <Button
               type="submit"
               disabled={isPending}
-              className={` ${styles["btn"]} ${styles["btn-primary"]} ${styles["btn-sm"]}`}
+              className="inline-flex items-center gap-[9px] px-[18px] py-[10px] rounded-[9px] border border-transparent cursor-pointer text-[14px] font-bold text-white  bg-[linear-gradient(180deg,#3d8bee,#2360c8)]  shadow-[0_10px_30px_rgba(45,111,214,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]  transition-all  hover:-translate-y-[2px]  hover:shadow-[0_14px_38px_rgba(45,111,214,0.6),inset_0_1px_0_rgba(255,255,255,0.3)]  active:scale-[0.97]"
             >
               {isPending ? "Booking..." : "Book My Demo"}
             </Button>

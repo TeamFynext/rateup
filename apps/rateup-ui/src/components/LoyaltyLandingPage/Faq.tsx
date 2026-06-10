@@ -31,7 +31,9 @@ const faqs = [
 
 function FAQItem({ q, a }: Readonly<{ q: string; a: string }>) {
   const [open, setOpen] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const ansRef = useRef<HTMLDivElement>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!ansRef.current) return;
@@ -42,8 +44,31 @@ function FAQItem({ q, a }: Readonly<{ q: string; a: string }>) {
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!itemRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setRevealed(true);
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: 0.14,
+        rootMargin: "0px 0px -8% 0px",
+      },
+    );
+    observer.observe(itemRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className={`faq-item reveal${open ? " open" : ""}`}>
+    <div
+      ref={itemRef}
+      className={`${styles["faq-item"]} ${styles.reveal} ${revealed ? styles.in : ""} ${
+        open ? styles.open : ""
+      }`}
+    >
       <button className={styles["faq-q"]} onClick={() => setOpen(!open)}>
         <span>{q}</span>
         <span className={styles.pm}></span>
