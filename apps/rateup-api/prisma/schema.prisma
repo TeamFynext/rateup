@@ -209,6 +209,7 @@ model Org {
   ruleMessageBodyLocks     RuleMessageBodyLock[]
   waMessageOrgTeamMaps     WaMessageOrgTeamMap[]
   Webhook                  Webhook?
+  inboxAutomations         InboxAutomation[]
 }
 
 model UsageStats {
@@ -2214,6 +2215,8 @@ enum LoyaltyEventType {
   TIER_UPGRADED
   BIRTHDAY
   INACTIVITY_REMINDER
+  POINTS_EXPIRY_ALERT
+  POINTS_EXPIRED
 }
 
 model LoyaltyEventTrigger {
@@ -2559,3 +2562,28 @@ model Webhook {
   url       String
   events    String[]
 }
+
+enum InboxAutomationAction {
+  CLOSE
+}
+
+enum InboxAutomationCondition {
+  UNASSIGNED
+  NEW
+  ASSIGNED
+}
+
+model InboxAutomation {
+  id          String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime                 @default(now())
+  closeAfterHours Int?
+  active      Boolean                  @default(true)
+  action      InboxAutomationAction?
+  condition   InboxAutomationCondition?
+
+  orgId       String                   @db.Uuid
+  org         Org                      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, condition], name: "orgId_condition_unique")
+}
+

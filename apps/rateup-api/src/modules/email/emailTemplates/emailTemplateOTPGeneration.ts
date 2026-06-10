@@ -1,3 +1,5 @@
+import { rateupLogo } from "../../../utils/constants/constants.js";
+
 export function createEmailBodyOTPGeneration(data) {
   return `
   <!DOCTYPE html>
@@ -61,7 +63,7 @@ export function createEmailBodyOTPGeneration(data) {
 
         .rateup-logo {
           width: 134px;
-          height: 76px;
+          height: 128px;
           margin-top: 10px;
         }
         table {
@@ -87,10 +89,10 @@ export function createEmailBodyOTPGeneration(data) {
                 <th>
                   <img
                     class="rateup-logo"
-                      src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png"
+                      src="${rateupLogo}"
                       alt="Rateup Logo"
                       width="134"
-                      height="76"
+                      height="128"
                     />
                 </th>
               </tr>

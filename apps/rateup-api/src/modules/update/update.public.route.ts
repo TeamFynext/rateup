@@ -14,6 +14,7 @@ import {
   backfillWithSQLHandler,
   migrateWaTemplatePhoneIdsHandler,
   syncTeamFeaturesHandler,
+  migrateLoyaltyTierPriorityHandler,
 } from "./update.controller.js";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
@@ -31,4 +32,8 @@ export async function updatePublicRoutes(server: FastifyInstance) {
     migrateWaTemplatePhoneIdsHandler,
   );
   server.put("/sync-team-features", syncTeamFeaturesHandler);
+  server.put(
+    "/migrate-loyalty-tier-priority",
+    migrateLoyaltyTierPriorityHandler,
+  );
 }

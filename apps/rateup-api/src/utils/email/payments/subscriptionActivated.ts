@@ -1,4 +1,4 @@
-import { API_URL } from "../../constants/constants.js";
+import { API_URL, rateupLogo } from "../../constants/constants.js";
 import { formatDateT1 } from "../../date.js";
 
 export function createEmailBodySubscriptionActivated(
@@ -89,7 +89,7 @@ export function createEmailBodySubscriptionActivated(
       
             .rateup-logo {
               width: 134px;
-              height: 76px;
+              height: 128px;
               margin-top: 10px;
             }
             table {
@@ -112,12 +112,10 @@ export function createEmailBodySubscriptionActivated(
                     <th>
                       <img
                         class="rateup-logo"
-                          src="${
-                            process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL
-                          }/images/email/rateup_logo.png"
+                          src="${rateupLogo}"
                           alt="Rateup Logo"
                           width="134"
-                          height="76"
+                          height="128"
                         />
                     </th>
                   </tr>
@@ -204,7 +202,7 @@ export function createEmailBodyTrialSubscriptionActivated(
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <img src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png" alt="{{product_name}} logo" class="logo">
+      <img src="${rateupLogo}" alt="{{product_name}} logo" class="logo">
     </div>
 
     <!-- Hero -->

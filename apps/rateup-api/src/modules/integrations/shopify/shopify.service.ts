@@ -416,7 +416,7 @@ export async function sendShopifySurveyCronAction() {
                     (m) => m.templateParamIndex === i,
                   );
                   const value = mapping
-                    ? _get(sch.body, mapping.shopifyPath)
+                    ? resolveShopifyPathValue(sch.body, mapping.shopifyPath)
                     : "";
                   bodyParameters.push({
                     type: "text",
@@ -569,7 +569,9 @@ export async function processShopifySurveySchedule(jobData: {
           const mapping = sortedMappings.find(
             (m) => m.templateParamIndex === i,
           );
-          const value = mapping ? _get(sch.body, mapping.shopifyPath) : "";
+          const value = mapping
+            ? resolveShopifyPathValue(sch.body, mapping.shopifyPath)
+            : "";
           bodyParameters.push({
             type: "text",
             text: String(value ?? ""),
@@ -2609,4 +2611,55 @@ export async function createShopifyFulfillment(
     );
     throw error;
   }
+}
+
+export function resolveShopifyPathValue(
+  shopifyBody: any,
+  path: string,
+): string {
+  if (!shopifyBody) return "";
+
+  let resolvedValue = "";
+
+  if (path === "items_fulfilled") {
+    const items = (shopifyBody.line_items ?? [])
+      .filter((item: any) => item.fulfillment_status === "fulfilled")
+      .map((item: any) => `${item.title} (x${item.quantity})`);
+    resolvedValue = items.join(", ");
+  } else if (path === "pending_items") {
+    const items = (shopifyBody.line_items ?? [])
+      .filter((item: any) => item.fulfillment_status !== "fulfilled")
+      .map((item: any) => `${item.title} (x${item.quantity})`);
+    resolvedValue = items.join(", ");
+  } else if (path === "tracking_number") {
+    resolvedValue = String(
+      shopifyBody.tracking_number ??
+        shopifyBody.fulfillments?.[0]?.tracking_number ??
+        shopifyBody.fulfillment?.tracking_number ??
+        "",
+    );
+  } else if (path === "tracking_url") {
+    resolvedValue = String(
+      shopifyBody.tracking_url ??
+        shopifyBody.fulfillments?.[0]?.tracking_url ??
+        shopifyBody.fulfillment?.tracking_url ??
+        "",
+    );
+  } else if (path === "abandoned_checkout_url") {
+    resolvedValue = String(
+      shopifyBody.abandoned_checkout_url ??
+        shopifyBody.recovery_url ??
+        shopifyBody.checkout_url ??
+        "",
+    );
+  } else {
+    const val = _get(shopifyBody, path);
+    resolvedValue = String(val ?? "");
+  }
+
+  log.info(
+    `[Shopify Webhook Variable] Resolved path: "${path}" -> value: "${resolvedValue}"`,
+  );
+
+  return resolvedValue;
 }

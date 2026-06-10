@@ -297,6 +297,42 @@ export async function migrateWaTemplatePhoneIdsHandler(
   }
 }
 
+export async function migrateLoyaltyTierPriorityHandler(
+  req: FastifyRequest,
+  res: FastifyReply,
+) {
+  try {
+    const programs = await prisma.loyaltyProgram.findMany({
+      select: { id: true },
+    });
+    let totalUpdated = 0;
+
+    for (const program of programs) {
+      const tiers = await prisma.loyaltyTier.findMany({
+        where: { programId: program.id },
+        orderBy: { threshold: "asc" },
+        select: { id: true },
+      });
+
+      for (let i = 0; i < tiers.length; i++) {
+        await prisma.loyaltyTier.update({
+          where: { id: tiers[i].id },
+          data: { priority: i },
+        });
+        totalUpdated++;
+      }
+    }
+
+    res.code(200).send({
+      message: "Loyalty tier priorities migrated successfully",
+      totalUpdated,
+    });
+  } catch (error) {
+    log.error(error);
+    res.code(500).send("Error migrating loyalty tier priorities");
+  }
+}
+
 export async function syncTeamFeaturesHandler(
   req: FastifyRequest<{ Querystring: { orgId?: string } }>,
   res: FastifyReply,

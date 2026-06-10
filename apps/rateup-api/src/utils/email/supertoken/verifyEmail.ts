@@ -1,4 +1,5 @@
 import { notificationQueue } from "../../redisConnection.js";
+import { rateupLogo } from "../../constants/constants.js";
 
 export async function sendVerifyMail(
   verify_link: string,
@@ -67,6 +68,12 @@ export function createEmailBody(verify_link: string, user_name: string) {
 
       .header img {
         width: 150px;
+      }
+
+      .rateup-logo {
+        width: 134px !important;
+        height: 128px !important;
+        margin-top: 10px;
       }
 
       .title {
@@ -157,8 +164,11 @@ export function createEmailBody(verify_link: string, user_name: string) {
       <!-- Header -->
       <div class="header">
         <img
-          src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png"
+          class="rateup-logo"
+          src="${rateupLogo}"
           alt="RateUp Logo"
+          width="134"
+          height="128"
         />
       </div>
 

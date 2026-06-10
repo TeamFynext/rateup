@@ -1,4 +1,8 @@
-import { billingPage, statsPage } from "../../constants/constants.js";
+import {
+  billingPage,
+  rateupLogo,
+  statsPage,
+} from "../../constants/constants.js";
 import prisma from "../../prisma.js";
 import { sendAWSEmail } from "../sendAWSEmail.js";
 //Send limit reached alert (only 1 mail in a week)
@@ -131,7 +135,7 @@ export function usageLimitMailBody() {
       
             .rateup-logo {
               width: 134px;
-              height: 76px;
+              height: 128px;
               margin-top: 10px;
             }
             table {
@@ -154,12 +158,10 @@ export function usageLimitMailBody() {
                     <th>
                       <img
                         class="rateup-logo"
-                          src="${
-                            process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL
-                          }/images/email/rateup_logo.png"
+                          src="${rateupLogo}"
                           alt="Rateup Logo"
                           width="134"
-                          height="76"
+                          height="128"
                         />
                     </th>
                   </tr>

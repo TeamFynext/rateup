@@ -1,3 +1,5 @@
+import { rateupLogo } from "../constants/constants.js";
+
 export const createInactivityWarningTemplate = ({
   orgName,
   ownerName,
@@ -69,10 +71,10 @@ export const createInactivityWarningTemplate = ({
     <div class="container">
       <div class="header">
         <img
-          src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png"
+          src="${rateupLogo}"
           alt="Rateup Logo"
           width="134"
-          height="76"
+          height="128"
         />
       </div>
 
@@ -190,10 +192,10 @@ export const createOrgDeletionReminderTemplate = ({
     <div class="container">
       <div class="header">
         <img
-          src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png"
+          src="${rateupLogo}"
           alt="Rateup Logo"
           width="134"
-          height="76"
+          height="128"
         />
       </div>
 

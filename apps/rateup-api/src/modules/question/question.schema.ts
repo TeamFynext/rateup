@@ -134,7 +134,7 @@ const questionCore = {
       segColors: z.array(z.string()),
     })
     .optional(),
-  extraConfig: z.any(),
+  extraConfig: z.any().optional(),
   reviewPageOptions: z
     .union([
       z.null(),

@@ -1,4 +1,5 @@
 import { notificationQueue } from "../../redisConnection.js";
+import { rateupLogo } from "../../constants/constants.js";
 
 export async function sendResetPasswordMail(
   reset_link: string,
@@ -104,7 +105,7 @@ export function createEmailBody(reset_link: string) {
 
       .rateup-logo {
         width: 134px;
-        height: 76px;
+        height: 128px;
         margin-top: 10px;
       }
       table {
@@ -127,10 +128,10 @@ export function createEmailBody(reset_link: string) {
               <th>
                 <img
                   class="rateup-logo"
-                    src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png"
+                    src="${rateupLogo}"
                     alt="Rateup Logo"
                     width="134"
-                    height="76"
+                    height="128"
                   />
               </th>
             </tr>

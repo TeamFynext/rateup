@@ -35,6 +35,12 @@ import {
   sendDeliveryListMessage,
 } from "./catalogSettings.service.js";
 
+export async function deleteWaCatalog(catalogId: string) {
+  await prisma.whatsappCatalog.delete({
+    where: { catalogId },
+  });
+}
+
 export async function updateWaCatalog(
   catalogId: string,
   data: UpdateCatalogSchema,
