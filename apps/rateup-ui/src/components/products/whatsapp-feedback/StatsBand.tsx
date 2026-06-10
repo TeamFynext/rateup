@@ -47,7 +47,7 @@ function StatItem({ count, suffix, label, desc, delay }) {
 export default function StatsBand() {
   return (
     <section className="bg-[linear-gradient(135deg,#163A2D_0%,#1E4D3C_100%)] py-[68px]">
-      <div className="max-w-[1200px] mx-auto px-8">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className="grid grid-cols-5 gap-6 text-center max-lg:grid-cols-1 max-lg:gap-10 items-stretch">
           <StatItem
             count={35}

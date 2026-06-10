@@ -83,16 +83,15 @@ export default function SocialProof() {
 
         {/* Stat bar */}
         <div
-          className="reveal d2 grid mt-5 overflow-hidden rounded-[20px]"
+          className="reveal d2 grid grid-cols-1 sm:grid-cols-3 mt-5 overflow-hidden rounded-[20px]"
           style={{
-            gridTemplateColumns: "repeat(3,1fr)",
             background: "linear-gradient(180deg,#08213F,#061730)",
             border: "1px solid rgba(255,255,255,0.09)",
           }}
         >
           <div
-            className="px-5 py-6 text-center"
-            style={{ borderRight: "1px solid rgba(255,255,255,0.09)" }}
+            className="px-5 py-6 text-center border-b sm:border-b-0 sm:border-r"
+            style={{ borderColor: "rgba(255,255,255,0.09)" }}
           >
             <div
               className="font-display font-black leading-none tracking-[-0.02em]"
@@ -105,8 +104,8 @@ export default function SocialProof() {
             </div>
           </div>
           <div
-            className="px-5 py-6 text-center"
-            style={{ borderRight: "1px solid rgba(255,255,255,0.09)" }}
+            className="px-5 py-6 text-center border-b sm:border-b-0 sm:border-r"
+            style={{ borderColor: "rgba(255,255,255,0.09)" }}
           >
             <div
               className="font-display font-black leading-none tracking-[-0.02em]"

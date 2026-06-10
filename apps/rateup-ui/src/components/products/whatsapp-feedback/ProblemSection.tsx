@@ -75,8 +75,8 @@ const cards = [
 
 export default function ProblemSection() {
   return (
-    <section className="bg-white py-[100px]">
-      <div className="max-w-[1200px] mx-auto px-8">
+    <section className="bg-white py-16 md:py-[100px]">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className={`text-center max-w-[760px] mx-auto ${style.reveal}`}>
           <h2 className="font-nunito font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ink-800">
             Are You Losing Customers
@@ -124,7 +124,7 @@ export default function ProblemSection() {
           <div className="inline-block text-[13px] font-bold text-ink-400 uppercase tracking-[0.08em] border border-ink-200 rounded-full py-1.5 px-[18px] mb-8">
             Meanwhile, your customers are on WhatsApp every day
           </div>
-          <div className="flex items-start gap-5 bg-[linear-gradient(135deg,#163A2D_0%,#1E4D3C_100%)] rounded-3xl px-9 py-8 max-w-[680px] mx-auto shadow-[0_24px_56px_rgba(14,36,24,0.30)]">
+          <div className="flex items-start gap-4 md:gap-5 bg-[linear-gradient(135deg,#163A2D_0%,#1E4D3C_100%)] rounded-3xl px-5 md:px-9 py-6 md:py-8 max-w-[680px] mx-auto shadow-[0_24px_56px_rgba(14,36,24,0.30)]">
             <div className="w-[60px] h-[60px] flex-shrink-0 rounded-2xl bg-wa-green flex items-center justify-center">
               <svg className="w-9 h-9 fill-white" viewBox="0 0 24 24">
                 <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm5.8 14.09c-.25.7-1.44 1.33-1.99 1.41-.51.08-1.16.11-1.87-.12-.43-.14-.99-.32-1.7-.63-2.99-1.29-4.94-4.3-5.09-4.5-.15-.2-1.22-1.62-1.22-3.09 0-1.47.77-2.19 1.04-2.49.27-.3.59-.37.79-.37.2 0 .39 0 .56.01.18.01.42-.07.66.5.25.59.84 2.04.91 2.19.07.15.12.32.02.52-.1.2-.15.32-.3.49-.15.17-.31.39-.45.52-.15.15-.3.31-.13.6.17.3.76 1.25 1.63 2.02 1.12.99 2.06 1.3 2.36 1.45.3.15.47.12.64-.07.17-.2.74-.86.94-1.16.2-.3.39-.25.66-.15.27.1 1.71.81 2 .96.3.15.49.22.56.35.07.12.07.72-.18 1.42z" />

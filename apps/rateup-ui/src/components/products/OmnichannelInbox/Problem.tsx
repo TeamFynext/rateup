@@ -27,7 +27,7 @@ export default function Problem() {
           </h2>
         </div>
 
-        <div className="grid" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
+        <div className="grid grid-cols-1 md:grid-cols-3">
           {[
             {
               icon: (
@@ -105,7 +105,7 @@ export default function Problem() {
           ].map(({ icon, iconBg, iconColor, title, body, border }, i) => (
             <div
               key={title}
-              className={`reveal px-7 ${border ? "border-l" : ""}`}
+              className={`reveal px-7 ${border ? "md:border-l border-t md:border-t-0 pt-8 md:pt-0" : ""}`}
               style={{ borderColor: "rgba(255,255,255,0.09)" }}
               data-d={i > 0 ? String(i) : undefined}
             >

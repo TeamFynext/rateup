@@ -190,6 +190,13 @@
 @media (max-width: 880px) {
   .hero-grid {
     grid-template-columns: 1fr !important;
+    gap: 48px;
+  }
+}
+
+@media (max-width: 600px) {
+  .inbox-nav-sidebar {
+    display: none;
   }
 }
 
@@ -197,9 +204,46 @@
   .rp-thread-panel {
     display: none;
   }
+  .inbox-clist {
+    width: 100% !important;
+    flex: 1;
+  }
   .hero-cta-btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* Responsive grids */
+@media (max-width: 767px) {
+  .grid-3col {
+    grid-template-columns: 1fr !important;
+  }
+  .grid-4col {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+  .grid-footer {
+    grid-template-columns: 1fr !important;
+  }
+  .grid-stats {
+    grid-template-columns: 1fr !important;
+  }
+  .stat-cell-border-r {
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  }
+  .problem-border {
+    border-left: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    padding-top: 32px;
+  }
+  .product-intro-card {
+    grid-template-columns: 1fr !important;
+    padding: 32px !important;
+    gap: 32px !important;
   }
 }
 

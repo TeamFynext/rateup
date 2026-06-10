@@ -230,11 +230,8 @@ export default function Hero({ onAccess }: Props) {
             "radial-gradient(ellipse 65% 55% at 75% 35%,rgba(47,163,255,0.20),transparent 62%),radial-gradient(ellipse 45% 40% at 12% 18%,rgba(44,111,214,0.22),transparent 60%),radial-gradient(ellipse 70% 60% at 50% 110%,rgba(16,50,120,0.40),transparent 70%)",
         }}
       />
-      <div className="max-w-[1200px] mx-auto px-7 relative z-10">
-        <div
-          className="hero-grid grid gap-14"
-          style={{ gridTemplateColumns: "1fr 1fr", alignItems: "center" }}
-        >
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-7 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
           {/* LEFT */}
           <div className="reveal in">
             <div
@@ -554,7 +551,7 @@ export default function Hero({ onAccess }: Props) {
                   <div className="flex-1 flex overflow-hidden">
                     {/* Nav sidebar */}
                     <div
-                      className="flex flex-col overflow-hidden flex-shrink-0"
+                      className={`${style["inbox-nav-sidebar"]} flex flex-col overflow-hidden flex-shrink-0`}
                       style={{
                         width: "118px",
                         background: "#F8FAFC",
@@ -643,7 +640,7 @@ export default function Hero({ onAccess }: Props) {
                     {/* Conversation list */}
                     <div
                       ref={clistRef}
-                      className="flex flex-col overflow-hidden flex-shrink-0"
+                      className={`${style["inbox-clist"]} flex flex-col overflow-hidden flex-shrink-0`}
                       style={{
                         width: "183px",
                         background: "#fff",
@@ -733,7 +730,7 @@ export default function Hero({ onAccess }: Props) {
 
                     {/* Thread */}
                     <div
-                      className="flex-1 flex flex-col min-w-0 overflow-hidden"
+                      className={`${style["rp-thread-panel"]} flex-1 flex flex-col min-w-0 overflow-hidden`}
                       style={{ background: "#F3F4F6" }}
                     >
                       <div

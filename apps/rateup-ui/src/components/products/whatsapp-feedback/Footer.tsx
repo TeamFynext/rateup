@@ -129,7 +129,7 @@ export default function Footer() {
     //   </div>
     // </footer>
     <div className="bg-black text-white/55 py-14 pb-9">
-      <div className="max-w-[1200px] mx-auto px-8">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className="flex justify-between gap-10 flex-wrap pb-9 border-b border-white/[0.08]">
           <div className="max-w-[300px]">
             <div className="flex items-center gap-2.5 mb-3.5">

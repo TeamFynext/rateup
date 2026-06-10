@@ -5,11 +5,10 @@ export default function ProductIntro() {
     <section id="product" className="py-20">
       <div className="max-w-[1200px] mx-auto px-7">
         <div
-          className="reveal rounded-[28px] p-16 grid gap-[60px] items-center"
+          className="reveal rounded-[28px] p-8 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-[60px] items-center"
           style={{
             background: "linear-gradient(135deg,#0A2040 0%,#071528 100%)",
             border: "1px solid rgba(255,255,255,0.09)",
-            gridTemplateColumns: "1fr 1fr",
           }}
         >
           <div>

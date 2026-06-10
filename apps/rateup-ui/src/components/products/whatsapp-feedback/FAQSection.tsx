@@ -98,7 +98,7 @@ export default function FAQSection() {
       className="bg-[radial-gradient(120%_120%_at_50%_-10%,#1A4035_0%,#0D2B22_50%,#081813_100%)] py-[100px] pb-[112px] text-white"
       id="faq"
     >
-      <div className="max-w-[1200px] mx-auto px-8">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className={`text-center max-w-[760px] mx-auto ${style.reveal}`}>
           <div className="inline-block text-[12px] font-bold tracking-[0.08em] uppercase text-white/60 bg-white/[0.08] border border-white/10 rounded-full py-1.5 px-4 mb-5">
             FAQ
