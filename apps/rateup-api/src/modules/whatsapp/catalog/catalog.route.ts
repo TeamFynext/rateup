@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { waCatalogProductRoutes } from "./products/product.route.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import {
+  deleteCatalogHandler,
   disconnectCatalogFromWabaHandler,
   getConnectedWaCatalogHandler,
   getWaCatalogByOrgHandler,
@@ -111,4 +112,9 @@ export async function waCatalogRoutes(server: FastifyInstance) {
 
   // Keep /:catalogId last so it doesn't swallow /settings and /create-address-flow
   server.get("/:catalogId", getWaCatalogInfoHandler);
+  server.delete(
+    "/:catalogId",
+    { schema: { params: catalogIdParams } },
+    deleteCatalogHandler,
+  );
 }

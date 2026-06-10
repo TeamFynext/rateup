@@ -8,6 +8,7 @@ import {
   CreateAddressFlowSchema,
 } from "./catalog.schema.js";
 import {
+  deleteWaCatalog,
   disconnectCatalogFromWaba,
   getConnectedWaCatalog,
   getWaCatalog,
@@ -21,6 +22,20 @@ import {
   updateCatalogSettings,
   createAddressFlow,
 } from "./catalogSettings.service.js";
+
+export async function deleteCatalogHandler(
+  request: FastifyRequest<{ Params: CatalogIdParam }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { catalogId } = request.params;
+    await deleteWaCatalog(catalogId);
+    reply.code(200).send();
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
 
 export async function updateCatalogHandler(
   request: FastifyRequest<{

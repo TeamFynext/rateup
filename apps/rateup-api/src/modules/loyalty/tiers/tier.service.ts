@@ -9,11 +9,17 @@ export async function createLoyaltyTier(
   data: LoyaltyTierInput,
   programId: string,
 ) {
+  const maxPriorityTier = await prisma.loyaltyTier.findFirst({
+    where: { programId },
+    orderBy: { priority: "desc" },
+    select: { priority: true },
+  });
+  const nextPriority = maxPriorityTier ? maxPriorityTier.priority + 1 : 0;
   return await prisma.loyaltyTier.create({
     data: {
       programId,
       name: data.name,
-      priority: data.priority,
+      priority: nextPriority,
       threshold: data.threshold,
       pointsMultiplier: data.pointsMultiplier,
       color: data.color,
