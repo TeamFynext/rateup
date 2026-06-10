@@ -11,7 +11,7 @@ export default function LogosBand() {
 
   return (
     <div className="bg-ink-25 py-10 overflow-hidden border-t border-ink-100">
-      <div className="max-w-[1200px] mx-auto px-8">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className="text-center text-[13px] font-semibold text-ink-400 uppercase tracking-[0.08em] mb-6">
           Trusted by 500+ businesses worldwide
         </div>

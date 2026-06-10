@@ -41,7 +41,7 @@ function WhatsappFeedback() {
       },
       { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
     );
-    document
+    globalThis.document
       .querySelectorAll(`.${style.reveal}`)
       .forEach((el) => revObs.observe(el));
     return () => revObs.disconnect();
@@ -49,7 +49,7 @@ function WhatsappFeedback() {
   const [likeWhatOpen, setLikeWhatOpen] = useState(false);
   const [shouldShowLikeWhat, setShouldShowLikeWhat] = useState(false);
   useEffect(() => {
-    const hasSeenPopup = window.localStorage.getItem("likeWhatUSeeShown");
+    const hasSeenPopup = globalThis.localStorage.getItem("likeWhatUSeeShown");
     if (!hasSeenPopup) {
       setShouldShowLikeWhat(true);
     }
@@ -58,28 +58,28 @@ function WhatsappFeedback() {
   useEffect(() => {
     if (!shouldShowLikeWhat) return;
 
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       setLikeWhatOpen(true);
-      window.localStorage.setItem("likeWhatUSeeShown", "true");
+      globalThis.localStorage.setItem("likeWhatUSeeShown", "true");
     }, 20000);
 
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [shouldShowLikeWhat]);
 
   const handleLikeWhatOpenChange = (open: boolean) => {
     if (!open) {
-      window.localStorage.setItem("likeWhatUSeeShown", "true");
+      globalThis.localStorage.setItem("likeWhatUSeeShown", "true");
     }
     setLikeWhatOpen(open);
   };
 
   const handleLikeWhatBookDemo = () => {
-    window.localStorage.setItem("likeWhatUSeeShown", "true");
+    globalThis.localStorage.setItem("likeWhatUSeeShown", "true");
     setLikeWhatOpen(false);
   };
 
   const handleLikeWhatWhatsapp = () => {
-    window.localStorage.setItem("likeWhatUSeeShown", "true");
+    globalThis.localStorage.setItem("likeWhatUSeeShown", "true");
     setLikeWhatOpen(false);
   };
   return (

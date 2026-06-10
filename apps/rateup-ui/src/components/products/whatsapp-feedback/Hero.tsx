@@ -202,15 +202,15 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden text-white py-16 pb-24 bg-[radial-gradient(120%_90%_at_50%_-10%,#163A2D_0%,#0E2620_48%,#081814_100%)]">
+    <section className="relative overflow-hidden text-white py-14 pb-20 md:py-16 md:pb-24 bg-[radial-gradient(120%_90%_at_50%_-10%,#163A2D_0%,#0E2620_48%,#081814_100%)]">
       {/* overlay */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(closest-side_at_74%_42%,rgba(37,211,102,0.11),transparent_70%),radial-gradient(closest-side_at_20%_78%,rgba(248,149,29,0.07),transparent_70%)]" />
       {/* beam */}
       <div className="absolute top-[-60px] left-1/2 -translate-x-1/2 w-[90px] h-[360px] z-[1] bg-gradient-to-b from-[rgba(100,230,160,0.8)] to-transparent blur-[28px] opacity-45 [mask-image:linear-gradient(to_bottom,#000,transparent)]" />
 
-      <div className="grid grid-cols-[1.05fr_0.95fr] gap-10 items-center relative z-[2] max-w-[1320px] mx-auto px-8">
+      <div className="grid grid-cols-1 md:grid-cols-[1.05fr_0.95fr] gap-8 md:gap-10 items-center relative z-[2] max-w-[1320px] mx-auto px-5 md:px-8">
         {/* Hero copy */}
-        <div>
+        <div className="max-md:text-center">
           <span className="inline-flex items-center gap-2.5 bg-white/[0.07] border border-white/[0.13] rounded-full py-[9px] pr-[18px] pl-3.5 text-sm font-bold text-white backdrop-blur-sm">
             <span className={`inline-flex gap-0.5 ${style.warm300}`}>
               {[...Array(5)].map((_, i) => (
@@ -240,14 +240,14 @@ export default function Hero() {
             </span>
           </h1>
 
-          <p className="text-[19px] leading-[1.55] text-white/70 max-w-[520px] mt-6 mb-[34px]">
+          <p className="text-[17px] md:text-[19px] leading-[1.55] text-white/70 max-w-[520px] mt-5 md:mt-6 mb-7 md:mb-[34px] max-md:mx-auto">
             Traditional feedback methods yield only 2% response rates. RateUp
             uses WhatsApp Flows to connect with customers where they already are
             — boosting feedback by up to 35% and turning insights into real
             growth.
           </p>
 
-          <div className="flex gap-3.5 flex-wrap">
+          <div className="flex gap-3.5 flex-wrap max-md:justify-center">
             <button
               onClick={() => navigate({ to: "/signup" })}
               className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-base tracking-[-0.01em] pl-[22px] py-[6px] pr-[6px] text-white bg-[linear-gradient(135deg,#2a6254,#3d7a68)] shadow-[0_10px_26px_rgba(42,98,84,0.40)] hover:shadow-[0_14px_34px_rgba(42,98,84,0.55)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
@@ -297,12 +297,12 @@ export default function Hero() {
 
         {/* Hero visual */}
         <div
-          className="relative min-h-[620px] flex items-center justify-center"
+          className="relative min-h-[520px] md:min-h-[620px] flex items-center justify-center mt-4 md:mt-0"
           id="heroVisual"
         >
           {/* Float widget: rate */}
           <div
-            className={`absolute z-[6] bg-white rounded-[18px] p-[16px_18px] shadow-[0_18px_44px_rgba(0,0,0,0.22)] left-[-18px] top-[26%] min-w-[148px] ${style.floatA}`}
+            className={`absolute z-[6] bg-white rounded-[18px] p-[16px_18px] shadow-[0_18px_44px_rgba(0,0,0,0.22)] left-[-18px] top-[26%] min-w-[148px] hidden sm:block ${style.floatA}`}
           >
             <div
               className={`text-[11px] ${style.ink400} font-semibold mb-1 uppercase tracking-[0.05em]`}
@@ -332,7 +332,7 @@ export default function Hero() {
           </div>
 
           {/* Phone */}
-          <div className="relative z-[3] w-[308px] h-[618px] bg-[#0b0b0d] rounded-[46px] p-[11px] shadow-[0_50px_90px_rgba(0,0,0,0.55),0_0_0_2px_rgba(255,255,255,0.06),0_0_60px_rgba(37,211,102,0.10)] ml-auto">
+          <div className="relative z-[3] w-[260px] h-[522px] sm:w-[308px] sm:h-[618px] bg-[#0b0b0d] rounded-[38px] sm:rounded-[46px] p-[9px] sm:p-[11px] shadow-[0_50px_90px_rgba(0,0,0,0.55),0_0_0_2px_rgba(255,255,255,0.06),0_0_60px_rgba(37,211,102,0.10)] mx-auto sm:ml-auto">
             <div className="absolute top-5 left-1/2 -translate-x-1/2 w-[116px] h-[30px] bg-[#0b0b0d] rounded-[18px] z-[5]" />
             <div className="relative h-full rounded-[38px] overflow-hidden bg-[#E7DCD3] flex flex-col">
               {/* WA head */}
@@ -409,7 +409,7 @@ export default function Hero() {
 
           {/* Float widget: count */}
           <div
-            className={`absolute z-[6] bg-white rounded-[18px] p-[16px_18px] shadow-[0_18px_44px_rgba(0,0,0,0.22)] right-[-22px] bottom-[28%] min-w-[138px] ${style.floatB} [animation-delay:0.6s]`}
+            className={`absolute z-[6] bg-white rounded-[18px] p-[16px_18px] shadow-[0_18px_44px_rgba(0,0,0,0.22)] right-[-22px] bottom-[28%] min-w-[138px] hidden sm:block ${style.floatB} [animation-delay:0.6s]`}
           >
             <div
               className={`text-[11px] ${style.ink400} font-semibold mb-1 uppercase tracking-[0.05em]`}

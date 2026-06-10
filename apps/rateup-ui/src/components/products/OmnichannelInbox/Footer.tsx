@@ -11,10 +11,7 @@ export default function Footer() {
       style={{ background: "#04101F", borderColor: "rgba(255,255,255,0.09)" }}
     >
       <div className="max-w-[1200px] mx-auto px-7">
-        <div
-          className="grid gap-10"
-          style={{ gridTemplateColumns: "1.6fr 1fr 1fr 1fr" }}
-        >
+        <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div>
             <Link
               to="/"

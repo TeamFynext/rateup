@@ -648,10 +648,7 @@ export default function Features() {
           </h2>
         </div>
 
-        <div
-          className="grid gap-5"
-          style={{ gridTemplateColumns: "repeat(2,1fr)" }}
-        >
+        <div className="grid gap-5 grid-cols-1 md:grid-cols-2">
           {features.map(({ viz, iconBg, icon, title, body, tags }, i) => (
             <div
               key={title}

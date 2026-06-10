@@ -32,6 +32,7 @@ export default function Navbar() {
   const hasSession = useCheckSession();
   const navigate = useNavigate();
   const [shrunk, setShrunk] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setShrunk(window.scrollY > 24);
@@ -43,16 +44,15 @@ export default function Navbar() {
   return (
     <nav
       id="navbar"
-      className={` sticky top-0 z-[60] bg-white/80 backdrop-blur-[14px] [backdrop-filter:blur(14px)_saturate(140%)] border-b border-[rgba(236,236,234,0.7)] transition-shadow ${shrunk ? "shadow-[0_6px_20px_rgba(11,31,72,0.06)]" : ""}`}
+      className={`sticky top-0 z-[60] bg-white/80 backdrop-blur-[14px] [backdrop-filter:blur(14px)_saturate(140%)] border-b border-[rgba(236,236,234,0.7)] transition-shadow ${shrunk ? "shadow-[0_6px_20px_rgba(11,31,72,0.06)]" : ""}`}
     >
-      <div className="max-w-[1320px] mx-auto px-8">
+      <div className="max-w-[1320px] mx-auto px-5 md:px-8">
         <div
-          className={`flex items-center gap-9 ${shrunk ? "h-16" : "h-20"} transition-[height] duration-200`}
+          className={`flex items-center gap-4 md:gap-9 ${shrunk ? "h-14 md:h-16" : "h-16 md:h-20"} transition-[height] duration-200`}
         >
           <Link
             to="/"
-            className="relative z-20 mr-4 flex items-center
-                     space-x-2 px-2 py-1 text-sm font-normal text-black"
+            className="relative z-20 mr-2 md:mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
           >
             <span className={style.brand}>
               <RateupStar className="h-8 w-8" />
@@ -63,7 +63,8 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="flex flex-1 items-center justify-center gap-8">
+          {/* Desktop nav */}
+          <div className="hidden md:flex flex-1 items-center justify-center gap-8">
             <DropDownNavItems dropdownStyle="font-extrabold text-slate-800 text-ink-800 hover:text-fb-green transition-colors duration-200 " />
             {navItems.map((item) => (
               <Link
@@ -76,8 +77,9 @@ export default function Navbar() {
             ))}
           </div>
 
+          {/* Desktop auth buttons */}
           {hasSession ? (
-            <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4 ml-auto">
               <Link to={"/dashboard"}>
                 <Button
                   className="bg-transparent font-extrabold text-base text-ink-800 border border-ink-200 py-3 px-[22px] rounded-xl hover:border-fb-green hover:text-fb-green transition-colors cursor-pointer"
@@ -88,15 +90,13 @@ export default function Navbar() {
               </Link>
             </div>
           ) : (
-            <div className="flex items-center gap-4 justify-center">
-              {/* Outline button */}
+            <div className="hidden md:flex items-center gap-4 justify-center ml-auto">
               <button
                 onClick={() => navigate({ to: "/login" })}
                 className="bg-transparent font-extrabold text-base text-ink-800 border border-ink-200 py-3 px-[22px] rounded-xl hover:border-fb-green hover:text-fb-green transition-colors cursor-pointer"
               >
                 Login
               </button>
-
               <button
                 onClick={() => navigate({ to: "/signup" })}
                 className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-sm tracking-[-0.01em] pl-4 py-[5px] pr-[5px] text-white bg-gradient-to-br from-fb-green to-fb-green-2 shadow-[0_10px_26px_rgba(42,98,84,0.40)] hover:shadow-[0_14px_34px_rgba(42,98,84,0.55)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
@@ -139,7 +139,78 @@ export default function Navbar() {
               </BookDemoModal>
             </div>
           )}
+
+          {/* Mobile CTA + hamburger */}
+          <div className="flex md:hidden items-center gap-3 ml-auto">
+            <button
+              onClick={() => navigate({ to: "/signup" })}
+              className="inline-flex items-center border-0 rounded-xl font-extrabold text-xs tracking-[-0.01em] px-3.5 py-2 text-white bg-gradient-to-br from-fb-green to-fb-green-2 cursor-pointer whitespace-nowrap"
+            >
+              Start Free
+            </button>
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              className="w-9 h-9 flex flex-col items-center justify-center gap-[5px] bg-transparent border-0 cursor-pointer rounded-lg hover:bg-ink-50 transition-colors"
+              aria-label="Toggle menu"
+            >
+              <span
+                className={`block w-5 h-[2px] bg-ink-700 rounded-full transition-all duration-200 ${menuOpen ? "rotate-45 translate-y-[7px]" : ""}`}
+              />
+              <span
+                className={`block w-5 h-[2px] bg-ink-700 rounded-full transition-all duration-200 ${menuOpen ? "opacity-0" : ""}`}
+              />
+              <span
+                className={`block w-5 h-[2px] bg-ink-700 rounded-full transition-all duration-200 ${menuOpen ? "-rotate-45 -translate-y-[7px]" : ""}`}
+              />
+            </button>
+          </div>
         </div>
+
+        {/* Mobile dropdown menu */}
+        {menuOpen && (
+          <div className="md:hidden pb-4 border-t border-ink-100 pt-4 flex flex-col gap-1">
+            <DropDownNavItems dropdownStyle="font-extrabold text-slate-800 hover:text-fb-green transition-colors duration-200 py-2.5 px-2 text-[15px]" />
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.link}
+                className="text-[15px] font-semibold text-slate-800 hover:text-fb-green transition-colors py-2.5 px-2"
+                onClick={() => setMenuOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ))}
+            <div className="flex flex-col gap-2.5 mt-3 pt-3 border-t border-ink-100">
+              {hasSession ? (
+                <Link to={"/dashboard"} onClick={() => setMenuOpen(false)}>
+                  <Button
+                    className="w-full bg-transparent font-extrabold text-base text-ink-800 border border-ink-200 py-3 px-[22px] rounded-xl hover:border-fb-green hover:text-fb-green transition-colors cursor-pointer"
+                    size="lg"
+                  >
+                    Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      navigate({ to: "/login" });
+                    }}
+                    className="w-full bg-transparent font-extrabold text-base text-ink-800 border border-ink-200 py-3 px-[22px] rounded-xl hover:border-fb-green hover:text-fb-green transition-colors cursor-pointer"
+                  >
+                    Login
+                  </button>
+                  <BookDemoModal>
+                    <button className="w-full inline-flex items-center justify-center gap-2 border-0 rounded-2xl font-extrabold text-sm py-3 px-5 text-[#0F2820] bg-periwinkle hover:bg-periwinkle-2 transition-all cursor-pointer">
+                      Book A Demo
+                    </button>
+                  </BookDemoModal>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

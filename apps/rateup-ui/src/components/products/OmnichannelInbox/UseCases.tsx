@@ -103,10 +103,7 @@ export default function UseCases() {
           </h2>
         </div>
 
-        <div
-          className="grid gap-5"
-          style={{ gridTemplateColumns: "repeat(3,1fr)" }}
-        >
+        <div className="grid gap-5 grid-cols-1 md:grid-cols-3">
           {personas.map(
             (
               { icon, iconBg, iconColor, title, quote, metricN, metricL },

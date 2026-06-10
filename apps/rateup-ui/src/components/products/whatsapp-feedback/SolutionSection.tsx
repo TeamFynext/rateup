@@ -704,7 +704,7 @@ export default function SolutionSection() {
 
   return (
     <section className="bg-ink-25 py-24 pb-[100px]" id="solution">
-      <div className="max-w-[1200px] mx-auto px-8">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className={`text-center max-w-[760px] mx-auto ${style.reveal}`}>
           <h2 className="font-nunito font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ink-800">
             RateUp + WhatsApp: The Feedback
@@ -718,17 +718,17 @@ export default function SolutionSection() {
           </p>
         </div>
 
-        <div className="mt-[60px] bg-[#050F0A] rounded-[30px] p-10 relative overflow-hidden shadow-[0_40px_90px_rgba(5,14,9,0.40)]">
+        <div className="mt-[60px] bg-[#050F0A] rounded-[30px] p-5 md:p-10 relative overflow-hidden shadow-[0_40px_90px_rgba(5,14,9,0.40)]">
           <div className="absolute top-[-90px] left-1/2 -translate-x-1/2 w-[440px] h-[320px] bg-[radial-gradient(circle,rgba(37,211,102,0.10),transparent_70%)] pointer-events-none" />
 
-          <div className="flex items-center gap-2 justify-center mb-8 flex-wrap">
+          <div className="flex items-center gap-1.5 justify-center mb-6 md:mb-8 flex-wrap">
             {tabs.map((t) => (
               <button
                 key={t.id}
                 className={
                   activeTab === t.id
-                    ? "inline-flex items-center gap-2 bg-fb-green text-white font-bold text-[15px] px-[18px] py-3 rounded-xl cursor-pointer border-0"
-                    : "inline-flex items-center gap-2 text-white/50 font-bold text-[15px] px-[18px] py-3 rounded-xl cursor-pointer hover:text-white hover:bg-white/[0.07] transition-colors border-0 bg-transparent"
+                    ? "inline-flex items-center gap-1.5 bg-fb-green text-white font-bold text-[13px] md:text-[15px] px-3 md:px-[18px] py-2 md:py-3 rounded-xl cursor-pointer border-0"
+                    : "inline-flex items-center gap-1.5 text-white/50 font-bold text-[13px] md:text-[15px] px-3 md:px-[18px] py-2 md:py-3 rounded-xl cursor-pointer hover:text-white hover:bg-white/[0.07] transition-colors border-0 bg-transparent"
                 }
                 onClick={() => setActiveTab(t.id)}
               >

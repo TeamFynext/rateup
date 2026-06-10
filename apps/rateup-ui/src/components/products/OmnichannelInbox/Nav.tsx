@@ -17,6 +17,7 @@ interface Props {
 
 export default function Nav({ onAccess }: Props) {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navItems = [
     {
       name: "Pricing",
@@ -59,9 +60,9 @@ export default function Nav({ onAccess }: Props) {
           : {}
       }
     >
-      <div className="max-w-[1320px] mx-auto px-8">
+      <div className="max-w-[1320px] mx-auto px-4 md:px-8">
         <div
-          className={`flex items-center gap-9 ${shrunk ? "h-16" : "h-20"} transition-[height] duration-200`}
+          className={`flex items-center gap-9 ${shrunk ? "h-16" : "h-16 md:h-20"} transition-[height] duration-200`}
         >
           <Link
             to="/"
@@ -77,7 +78,8 @@ export default function Nav({ onAccess }: Props) {
             </span>
           </Link>
 
-          <div className="flex flex-1 items-center justify-center gap-8">
+          {/* Desktop nav links */}
+          <div className="hidden md:flex flex-1 items-center justify-center gap-8">
             <DropDownNavItems dropdownStyle="text-[14px] font-medium text-white/75 no-underline hover:text-white transition-colors " />
             {navItems.map((item) => (
               <Link
@@ -90,8 +92,9 @@ export default function Nav({ onAccess }: Props) {
             ))}
           </div>
 
+          {/* Desktop CTA buttons */}
           {hasSession ? (
-            <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4">
               <Link to={"/dashboard"}>
                 <Button
                   className={` ${style["btn"]} ${style["btn-ghost"]} ${style["btn-sm"]}`}
@@ -102,15 +105,13 @@ export default function Nav({ onAccess }: Props) {
               </Link>
             </div>
           ) : (
-            <div className="flex items-center gap-4 justify-center">
-              {/* Outline button */}
+            <div className="hidden md:flex items-center gap-4 justify-center">
               <button
                 onClick={() => navigate({ to: "/login" })}
                 className={` ${style["btn"]} ${style["btn-ghost"]} ${style["btn-sm"]}`}
               >
                 Login
               </button>
-
               <button
                 onClick={() => navigate({ to: "/signup" })}
                 className={` ${style["btn"]} ${style["btn-primary"]} ${style["btn-sm"]}`}
@@ -131,12 +132,7 @@ export default function Nav({ onAccess }: Props) {
                 </span>
               </button>
               <BookDemoModal>
-                <button
-                  className="bg-white/10
-text-white
-border border-white/20
-hover:bg-white/15    inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-sm pl-4 py-[5px] pr-[5px] text-[#0F2820] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
-                >
+                <button className="bg-white/10 text-white border border-white/20 hover:bg-white/15 inline-flex items-center gap-3 rounded-2xl font-extrabold text-sm pl-4 py-[5px] pr-[5px] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap">
                   <span style={{ paddingRight: 2 }}>Book A Demo</span>
                   <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[8px] bg-white/65 flex-shrink-0">
                     <svg
@@ -158,7 +154,84 @@ hover:bg-white/15    inline-flex items-center gap-3 border-0 rounded-2xl font-ex
               </BookDemoModal>
             </div>
           )}
+
+          {/* Mobile: Sign Up CTA + Hamburger */}
+          <div className="flex md:hidden items-center gap-3 ml-auto">
+            <button
+              onClick={() => navigate({ to: "/signup" })}
+              className={`${style["btn"]} ${style["btn-primary"]} ${style["btn-sm"]}`}
+            >
+              Start Free
+            </button>
+            <button
+              onClick={() => setMobileOpen((o) => !o)}
+              className="w-9 h-9 flex flex-col items-center justify-center gap-[5px] bg-transparent border-0 cursor-pointer rounded-lg hover:bg-ink-50 transition-colors"
+              aria-label="Toggle menu"
+            >
+              <span
+                className={`block w-5 h-[2px] bg-ink-700 rounded-full transition-all duration-200 ${mobileOpen ? "rotate-45 translate-y-[7px]" : ""}`}
+              />
+              <span
+                className={`block w-5 h-[2px] bg-ink-700 rounded-full transition-all duration-200 ${mobileOpen ? "opacity-0" : ""}`}
+              />
+              <span
+                className={`block w-5 h-[2px] bg-ink-700 rounded-full transition-all duration-200 ${mobileOpen ? "-rotate-45 -translate-y-[7px]" : ""}`}
+              />
+            </button>
+          </div>
         </div>
+
+        {/* Mobile dropdown menu */}
+        {mobileOpen && (
+          <div
+            className="md:hidden pb-5 flex flex-col gap-1"
+            style={{ borderTop: "1px solid rgba(255,255,255,0.09)" }}
+          >
+            <DropDownNavItems dropdownStyle="block text-[15px] font-medium text-white/75 no-underline hover:text-white transition-colors px-2 py-2.5" />
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.link}
+                className="block text-[15px] font-medium text-white/75 no-underline hover:text-white transition-colors px-2 py-2.5"
+                onClick={() => setMobileOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ))}
+            <div
+              className="flex flex-col gap-2.5 mt-3 pt-3"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.09)" }}
+            >
+              {hasSession ? (
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
+                  <Button
+                    className={`w-full ${style["btn"]} ${style["btn-ghost"]} ${style["btn-sm"]}`}
+                    size="lg"
+                  >
+                    Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      navigate({ to: "/login" });
+                      setMobileOpen(false);
+                    }}
+                    className={`w-full ${style["btn"]} ${style["btn-ghost"]} ${style["btn-sm"]}`}
+                  >
+                    Login
+                  </button>
+                  <BookDemoModal>
+                    <button className="w-full bg-white/10 text-white border border-white/20 hover:bg-white/15 inline-flex items-center justify-center gap-2 rounded-xl font-bold text-sm px-4 py-3 transition-all cursor-pointer">
+                      Book A Demo
+                    </button>
+                  </BookDemoModal>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
