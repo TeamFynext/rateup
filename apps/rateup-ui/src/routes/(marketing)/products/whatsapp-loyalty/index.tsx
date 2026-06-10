@@ -206,15 +206,17 @@ function LoyaltyLandingPage() {
   useRevealAnimation();
   return (
     <Layout navbarClassName="heroNav">
-      <span id="top"></span>
-      <Hero />
-      <HowItWorks />
-      <WhyWhatsApp />
-      <CustomerProfiles />
-      <Integrations />
-      <Trusted />
-      <Faq />
-      <HomePageFooter />
+      <div className="loyalty-scope">
+        <span id="top"></span>
+        <Hero />
+        <HowItWorks />
+        <WhyWhatsApp />
+        <CustomerProfiles />
+        <Integrations />
+        <Trusted />
+        <Faq />
+        <HomePageFooter />
+      </div>
     </Layout>
   );
 }

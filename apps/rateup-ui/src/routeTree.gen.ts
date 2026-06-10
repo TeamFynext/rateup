@@ -117,10 +117,12 @@ import { Route as publicFacingLpShortIdIndexRouteImport } from './routes/(public
 import { Route as publicFacingloyaltyCashierIndexRouteImport } from './routes/(public-facing)/(loyalty)/cashier/index'
 import { Route as marketingProductsWhatsappSurveyIndexRouteImport } from './routes/(marketing)/products/whatsapp-survey/index'
 import { Route as marketingProductsWhatsappLoyaltyIndexRouteImport } from './routes/(marketing)/products/whatsapp-loyalty/index'
+import { Route as marketingProductsWhatsappFeedbackIndexRouteImport } from './routes/(marketing)/products/whatsapp-feedback/index'
 import { Route as marketingProductsTicketingIndexRouteImport } from './routes/(marketing)/products/ticketing/index'
 import { Route as marketingProductsTestimonialGatewayIndexRouteImport } from './routes/(marketing)/products/testimonial-gateway/index'
 import { Route as marketingProductsQrIndexRouteImport } from './routes/(marketing)/products/qr/index'
 import { Route as marketingProductsQrStudioIndexRouteImport } from './routes/(marketing)/products/qr-studio/index'
+import { Route as marketingProductsOmnichannelInboxIndexRouteImport } from './routes/(marketing)/products/omnichannel-inbox/index'
 import { Route as marketingProductsInboxIndexRouteImport } from './routes/(marketing)/products/inbox/index'
 import { Route as marketingProductsAiReviewIndexRouteImport } from './routes/(marketing)/products/ai-review/index'
 import { Route as marketingProductsAiAutomationIndexRouteImport } from './routes/(marketing)/products/ai-automation/index'
@@ -763,6 +765,12 @@ const marketingProductsWhatsappLoyaltyIndexRoute =
     path: '/products/whatsapp-loyalty/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const marketingProductsWhatsappFeedbackIndexRoute =
+  marketingProductsWhatsappFeedbackIndexRouteImport.update({
+    id: '/(marketing)/products/whatsapp-feedback/',
+    path: '/products/whatsapp-feedback/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const marketingProductsTicketingIndexRoute =
   marketingProductsTicketingIndexRouteImport.update({
     id: '/(marketing)/products/ticketing/',
@@ -785,6 +793,12 @@ const marketingProductsQrStudioIndexRoute =
   marketingProductsQrStudioIndexRouteImport.update({
     id: '/(marketing)/products/qr-studio/',
     path: '/products/qr-studio/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const marketingProductsOmnichannelInboxIndexRoute =
+  marketingProductsOmnichannelInboxIndexRouteImport.update({
+    id: '/(marketing)/products/omnichannel-inbox/',
+    path: '/products/omnichannel-inbox/',
     getParentRoute: () => rootRouteImport,
   } as any)
 const marketingProductsInboxIndexRoute =
@@ -1092,10 +1106,12 @@ export interface FileRoutesByFullPath {
   '/products/ai-automation/': typeof marketingProductsAiAutomationIndexRoute
   '/products/ai-review/': typeof marketingProductsAiReviewIndexRoute
   '/products/inbox/': typeof marketingProductsInboxIndexRoute
+  '/products/omnichannel-inbox/': typeof marketingProductsOmnichannelInboxIndexRoute
   '/products/qr-studio/': typeof marketingProductsQrStudioIndexRoute
   '/products/qr/': typeof marketingProductsQrIndexRoute
   '/products/testimonial-gateway/': typeof marketingProductsTestimonialGatewayIndexRoute
   '/products/ticketing/': typeof marketingProductsTicketingIndexRoute
+  '/products/whatsapp-feedback/': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
   '/cashier/': typeof publicFacingloyaltyCashierIndexRoute
@@ -1243,10 +1259,12 @@ export interface FileRoutesByTo {
   '/products/ai-automation': typeof marketingProductsAiAutomationIndexRoute
   '/products/ai-review': typeof marketingProductsAiReviewIndexRoute
   '/products/inbox': typeof marketingProductsInboxIndexRoute
+  '/products/omnichannel-inbox': typeof marketingProductsOmnichannelInboxIndexRoute
   '/products/qr-studio': typeof marketingProductsQrStudioIndexRoute
   '/products/qr': typeof marketingProductsQrIndexRoute
   '/products/testimonial-gateway': typeof marketingProductsTestimonialGatewayIndexRoute
   '/products/ticketing': typeof marketingProductsTicketingIndexRoute
+  '/products/whatsapp-feedback': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/products/whatsapp-loyalty': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/products/whatsapp-survey': typeof marketingProductsWhatsappSurveyIndexRoute
   '/cashier': typeof publicFacingloyaltyCashierIndexRoute
@@ -1398,10 +1416,12 @@ export interface FileRoutesById {
   '/(marketing)/products/ai-automation/': typeof marketingProductsAiAutomationIndexRoute
   '/(marketing)/products/ai-review/': typeof marketingProductsAiReviewIndexRoute
   '/(marketing)/products/inbox/': typeof marketingProductsInboxIndexRoute
+  '/(marketing)/products/omnichannel-inbox/': typeof marketingProductsOmnichannelInboxIndexRoute
   '/(marketing)/products/qr-studio/': typeof marketingProductsQrStudioIndexRoute
   '/(marketing)/products/qr/': typeof marketingProductsQrIndexRoute
   '/(marketing)/products/testimonial-gateway/': typeof marketingProductsTestimonialGatewayIndexRoute
   '/(marketing)/products/ticketing/': typeof marketingProductsTicketingIndexRoute
+  '/(marketing)/products/whatsapp-feedback/': typeof marketingProductsWhatsappFeedbackIndexRoute
   '/(marketing)/products/whatsapp-loyalty/': typeof marketingProductsWhatsappLoyaltyIndexRoute
   '/(marketing)/products/whatsapp-survey/': typeof marketingProductsWhatsappSurveyIndexRoute
   '/(public-facing)/(loyalty)/cashier/': typeof publicFacingloyaltyCashierIndexRoute
@@ -1554,10 +1574,12 @@ export interface FileRouteTypes {
     | '/products/ai-automation/'
     | '/products/ai-review/'
     | '/products/inbox/'
+    | '/products/omnichannel-inbox/'
     | '/products/qr-studio/'
     | '/products/qr/'
     | '/products/testimonial-gateway/'
     | '/products/ticketing/'
+    | '/products/whatsapp-feedback/'
     | '/products/whatsapp-loyalty/'
     | '/products/whatsapp-survey/'
     | '/cashier/'
@@ -1705,10 +1727,12 @@ export interface FileRouteTypes {
     | '/products/ai-automation'
     | '/products/ai-review'
     | '/products/inbox'
+    | '/products/omnichannel-inbox'
     | '/products/qr-studio'
     | '/products/qr'
     | '/products/testimonial-gateway'
     | '/products/ticketing'
+    | '/products/whatsapp-feedback'
     | '/products/whatsapp-loyalty'
     | '/products/whatsapp-survey'
     | '/cashier'
@@ -1859,10 +1883,12 @@ export interface FileRouteTypes {
     | '/(marketing)/products/ai-automation/'
     | '/(marketing)/products/ai-review/'
     | '/(marketing)/products/inbox/'
+    | '/(marketing)/products/omnichannel-inbox/'
     | '/(marketing)/products/qr-studio/'
     | '/(marketing)/products/qr/'
     | '/(marketing)/products/testimonial-gateway/'
     | '/(marketing)/products/ticketing/'
+    | '/(marketing)/products/whatsapp-feedback/'
     | '/(marketing)/products/whatsapp-loyalty/'
     | '/(marketing)/products/whatsapp-survey/'
     | '/(public-facing)/(loyalty)/cashier/'
@@ -1978,10 +2004,12 @@ export interface RootRouteChildren {
   marketingProductsAiAutomationIndexRoute: typeof marketingProductsAiAutomationIndexRoute
   marketingProductsAiReviewIndexRoute: typeof marketingProductsAiReviewIndexRoute
   marketingProductsInboxIndexRoute: typeof marketingProductsInboxIndexRoute
+  marketingProductsOmnichannelInboxIndexRoute: typeof marketingProductsOmnichannelInboxIndexRoute
   marketingProductsQrStudioIndexRoute: typeof marketingProductsQrStudioIndexRoute
   marketingProductsQrIndexRoute: typeof marketingProductsQrIndexRoute
   marketingProductsTestimonialGatewayIndexRoute: typeof marketingProductsTestimonialGatewayIndexRoute
   marketingProductsTicketingIndexRoute: typeof marketingProductsTicketingIndexRoute
+  marketingProductsWhatsappFeedbackIndexRoute: typeof marketingProductsWhatsappFeedbackIndexRoute
   marketingProductsWhatsappLoyaltyIndexRoute: typeof marketingProductsWhatsappLoyaltyIndexRoute
   marketingProductsWhatsappSurveyIndexRoute: typeof marketingProductsWhatsappSurveyIndexRoute
   publicFacingloyaltyCashierIndexRoute: typeof publicFacingloyaltyCashierIndexRoute
@@ -2767,6 +2795,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof marketingProductsWhatsappLoyaltyIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(marketing)/products/whatsapp-feedback/': {
+      id: '/(marketing)/products/whatsapp-feedback/'
+      path: '/products/whatsapp-feedback'
+      fullPath: '/products/whatsapp-feedback/'
+      preLoaderRoute: typeof marketingProductsWhatsappFeedbackIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(marketing)/products/ticketing/': {
       id: '/(marketing)/products/ticketing/'
       path: '/products/ticketing'
@@ -2793,6 +2828,13 @@ declare module '@tanstack/react-router' {
       path: '/products/qr-studio'
       fullPath: '/products/qr-studio/'
       preLoaderRoute: typeof marketingProductsQrStudioIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(marketing)/products/omnichannel-inbox/': {
+      id: '/(marketing)/products/omnichannel-inbox/'
+      path: '/products/omnichannel-inbox'
+      fullPath: '/products/omnichannel-inbox/'
+      preLoaderRoute: typeof marketingProductsOmnichannelInboxIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(marketing)/products/inbox/': {
@@ -3348,11 +3390,15 @@ const rootRouteChildren: RootRouteChildren = {
     marketingProductsAiAutomationIndexRoute,
   marketingProductsAiReviewIndexRoute: marketingProductsAiReviewIndexRoute,
   marketingProductsInboxIndexRoute: marketingProductsInboxIndexRoute,
+  marketingProductsOmnichannelInboxIndexRoute:
+    marketingProductsOmnichannelInboxIndexRoute,
   marketingProductsQrStudioIndexRoute: marketingProductsQrStudioIndexRoute,
   marketingProductsQrIndexRoute: marketingProductsQrIndexRoute,
   marketingProductsTestimonialGatewayIndexRoute:
     marketingProductsTestimonialGatewayIndexRoute,
   marketingProductsTicketingIndexRoute: marketingProductsTicketingIndexRoute,
+  marketingProductsWhatsappFeedbackIndexRoute:
+    marketingProductsWhatsappFeedbackIndexRoute,
   marketingProductsWhatsappLoyaltyIndexRoute:
     marketingProductsWhatsappLoyaltyIndexRoute,
   marketingProductsWhatsappSurveyIndexRoute:

@@ -252,6 +252,98 @@
   --color-rateup-blue-5: var(--rateup-blue-5);
   --color-shade-of-blue: var(--shade-of-blue);
   --color-shade-of-blue-14: var(--shade-of-blue-14);
+
+  /* WhatsApp Feedback theme configurations */
+  --color-fb-green: #2a6254;
+  --color-fb-green-2: #3d7a68;
+  --color-wa-green: #25d366;
+  --color-periwinkle: #b8d0ca;
+  --color-periwinkle-2: #a6c2bb;
+  --color-chip-dark: #102820;
+
+  --color-ink-25: #fafaf7;
+  --color-ink-50: #f4f5f2;
+  --color-ink-100: #ececea;
+  --color-ink-200: #d9dad7;
+  --color-ink-400: #8b8e8a;
+  --color-ink-500: #666864;
+  --color-ink-700: #2e302e;
+  --color-ink-800: #1a1b1a;
+
+  --color-warm-300: #ffd54c;
+  --color-warm-600: #d97a0f;
+
+  --animate-float-a: floatA 4s ease-in-out infinite;
+  --animate-float-b: floatB 4.4s ease-in-out infinite;
+  --animate-panel-fade: panelFade 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-blink: blink 1.2s infinite both;
+
+  @keyframes floatA {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+  @keyframes floatB {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes panelFade {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes blink {
+    0%,
+    80%,
+    100% {
+      opacity: 0.3;
+      transform: translateY(0);
+    }
+    40% {
+      opacity: 1;
+      transform: translateY(-3px);
+    }
+  }
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+.reveal.d1 {
+  transition-delay: 0.07s;
+}
+.reveal.d2 {
+  transition-delay: 0.14s;
+}
+.reveal.d3 {
+  transition-delay: 0.21s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @layer base {
