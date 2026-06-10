@@ -1,23 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import {
-  ArrowRight,
-  CheckCircle,
-  CheckCircle2,
-  Clock,
-  GitPullRequest,
-  ListFilter,
-  Loader2,
-  Play,
-  Plus,
-  Save,
-  Settings,
-  Sparkles,
-  Timer,
-  Trash2,
-  UserCheck,
-  UserX,
-} from "lucide-react";
+import { ArrowRight, Clock, Loader2, Pencil, Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -27,16 +10,16 @@ import {
   useInboxAutomation,
   useUpdateInboxAutomationMutation,
 } from "@/backend/whatsapp/inbox/inboxAutomation/inboxautomation.query";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
 export default function InboxAutomation() {
@@ -48,14 +31,23 @@ export default function InboxAutomation() {
 
   // State for Unassigned chats automation
   const [unassignedActive, setUnassignedActive] = useState(false);
-  const [unassignedDelayHours, setUnassignedDelayHours] =
-    useState<string>("24");
+  const [unassignedDelayHours, setUnassignedDelayHours] = useState<number>(24);
 
   // State for Assigned chats automation
   const [assignedActive, setAssignedActive] = useState(false);
-  const [assignedDelayHours, setAssignedDelayHours] = useState<string>("24");
+  const [assignedDelayHours, setAssignedDelayHours] = useState<number>(24);
 
   const [isPending, setIsPending] = useState(false);
+
+  // Edit dialog state
+  const [editingRule, setEditingRule] = useState<
+    "UNASSIGNED" | "ASSIGNED" | null
+  >(null);
+  const [tempHours, setTempHours] = useState<number>(24);
+  const [customMode, setCustomMode] = useState<boolean>(false);
+  const [customVal, setCustomVal] = useState<string>("");
+
+  const STD_HOURS = [1, 2, 4, 6, 8, 12, 24, 48, 72, 168];
 
   // Sync state with server data
   useEffect(() => {
@@ -67,19 +59,33 @@ export default function InboxAutomation() {
 
       setUnassignedActive(!!unassignedAuto);
       if (unassignedAuto && unassignedAuto.closeAfterHours !== null) {
-        setUnassignedDelayHours(String(unassignedAuto.closeAfterHours));
+        setUnassignedDelayHours(unassignedAuto.closeAfterHours);
       } else {
-        setUnassignedDelayHours("24");
+        setUnassignedDelayHours(24);
       }
 
       setAssignedActive(!!assignedAuto);
       if (assignedAuto && assignedAuto.closeAfterHours !== null) {
-        setAssignedDelayHours(String(assignedAuto.closeAfterHours));
+        setAssignedDelayHours(assignedAuto.closeAfterHours);
       } else {
-        setAssignedDelayHours("24");
+        setAssignedDelayHours(24);
       }
     }
   }, [serverData]);
+
+  // Sync edit dialog state when editingRule changes
+  useEffect(() => {
+    if (editingRule) {
+      const currentHours =
+        editingRule === "UNASSIGNED"
+          ? unassignedDelayHours
+          : assignedDelayHours;
+      setTempHours(currentHours);
+      const isStd = STD_HOURS.includes(currentHours);
+      setCustomMode(!isStd);
+      setCustomVal(!isStd ? String(currentHours) : "");
+    }
+  }, [editingRule, unassignedDelayHours, assignedDelayHours]);
 
   // Handle toggle for unassigned (Enable = Create, Disable = Delete)
   const handleToggleUnassigned = async (checked: boolean) => {
@@ -121,304 +127,354 @@ export default function InboxAutomation() {
     }
   };
 
-  // Save Unassigned configuration individually
-  const handleSaveUnassigned = async () => {
+  // Save changes inside dialog
+  const handleSaveChanges = async () => {
+    if (!editingRule) return;
     setIsPending(true);
-    const toastId = toast.loading(t("Saving unassigned settings") + "...");
+    const toastId = toast.loading(t("Saving settings..."));
     try {
       await updateMutation.mutateAsync({
-        condition: "UNASSIGNED",
-        data: { closeAfterHours: Number(unassignedDelayHours) },
+        condition: editingRule,
+        data: { closeAfterHours: tempHours },
       });
-      toast.success(
-        t("Unassigned chat auto-close delay updated successfully"),
-        { id: toastId },
-      );
-    } catch (err) {
-      toast.error(t("Failed to save unassigned settings"), { id: toastId });
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  // Save Assigned configuration individually
-  const handleSaveAssigned = async () => {
-    setIsPending(true);
-    const toastId = toast.loading(t("Saving assigned settings") + "...");
-    try {
-      await updateMutation.mutateAsync({
-        condition: "ASSIGNED",
-        data: { closeAfterHours: Number(assignedDelayHours) },
-      });
-      toast.success(t("Assigned chat auto-close delay updated successfully"), {
+      toast.success(t("Auto-close delay updated successfully"), {
         id: toastId,
       });
+      setEditingRule(null);
     } catch (err) {
-      toast.error(t("Failed to save assigned settings"), { id: toastId });
+      toast.error(t("Failed to save settings"), { id: toastId });
     } finally {
       setIsPending(false);
     }
   };
 
+  const getHourLabel = (h: number) => {
+    if (h < 24) return `${h}h`;
+    if (h === 24) return `24h`;
+    if (h === 48) return `2 days`;
+    if (h === 72) return `3 days`;
+    if (h === 168) return `1 week`;
+    return `${h}h`;
+  };
+
+  const activeCount = (unassignedActive ? 1 : 0) + (assignedActive ? 1 : 0);
+  const previewHoursText =
+    customMode && customVal ? `${customVal}h` : getHourLabel(tempHours);
+
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* Header Info Banner */}
-      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent p-6 shadow-sm">
-        <div className="absolute top-0 right-0 p-4 opacity-10">
-          <Sparkles className="h-24 w-24 text-violet-500" />
-        </div>
-        <div className="space-y-1">
-          <h3 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <GitPullRequest className="h-5 w-5 text-violet-500" />
-            {t("Inbox Auto-Close Automations")}
-          </h3>
-          <p className="text-sm text-muted-foreground">
+    <div className="space-y-6 max-w-4xl">
+      {/* Header Info Block */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-foreground">
+              {t("Auto-Close Rules")}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1.5">
             {t(
-              "Automatically close conversation threads after a defined period of inactivity",
+              "Automatically close conversations that have been idle for a set period",
             )}
-            .
           </p>
         </div>
       </div>
 
-      {/* Grid containing both automation configurations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Card 1: Unassigned Chats */}
-        <Card className="border-2 border-violet-100 dark:border-violet-950/60 shadow-sm transition-all duration-300 hover:shadow-md flex flex-col justify-between">
-          <CardContent className="p-6 space-y-6 flex-1 flex flex-col justify-between">
-            <div className="space-y-6">
-              {/* Header / Active status toggle */}
-              <div className="flex items-center justify-between pb-4 border-b border-violet-100 dark:border-violet-900/30">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
-                    <UserX className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-base">
-                      {t("New/Unassigned Chats")}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {t("Auto-close idle new/unassigned conversations")}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-muted-foreground">
-                    {unassignedActive ? t("Active") : t("Inactive")}
-                  </span>
-                  <Switch
-                    checked={unassignedActive}
-                    onCheckedChange={handleToggleUnassigned}
-                    disabled={isPending || isQueryLoading}
-                  />
-                </div>
-              </div>
+      {/* Rules list container */}
+      <div className="bg-white dark:bg-card border border-border rounded-2xl shadow-sm divide-y divide-border overflow-hidden">
+        {/* Row 1: New / Unassigned Chats */}
+        <div className="group flex items-center gap-4 py-4 px-6 bg-white dark:bg-card hover:bg-gray-50/50 dark:hover:bg-zinc-800/10 transition-colors w-full">
+          {/* Icon Badge */}
+          <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <Zap className="w-4 h-4 fill-primary/10" />
+          </div>
 
-              {/* Condition (If) block */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 uppercase tracking-wide">
-                    {t("If")}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {t("Trigger criteria")}
-                  </span>
-                </div>
-
-                <div className="border border-violet-200/60 dark:border-violet-900/50 rounded-xl p-4 bg-violet-50/10 dark:bg-violet-950/5 space-y-3">
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="p-2 bg-background border border-violet-100 dark:border-violet-900 rounded font-medium text-muted-foreground">
-                      {t("Status")}
-                    </div>
-                    <div className="p-2 bg-background border border-violet-100 dark:border-violet-900 rounded font-medium text-muted-foreground">
-                      {t("Is")}
-                    </div>
-                    <div className="p-2 bg-violet-100/30 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 rounded font-bold">
-                      {t("New/Unassigned")}
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-violet-100 dark:border-violet-900/30 flex items-center justify-between gap-3">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Timer className="w-3.5 h-3.5 text-violet-500" />{" "}
-                      {t("Inactive for:")}
-                    </span>
-                    <Select
-                      value={unassignedDelayHours}
-                      onValueChange={(val) => setUnassignedDelayHours(val)}
-                      disabled={isPending || !unassignedActive}
-                    >
-                      <SelectTrigger className="w-32 bg-background border-violet-300 dark:border-violet-850 focus:ring-violet-500 h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="24">{t("24 Hours")}</SelectItem>
-                        <SelectItem value="48">{t("48 Hours")}</SelectItem>
-                        <SelectItem value="72">{t("72 Hours")}</SelectItem>
-                        <SelectItem value="168">{t("1 Week")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action (Then) block */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
-                    {t("Then")}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {t("Execution action")}
-                  </span>
-                </div>
-                <div className="border border-emerald-200/60 dark:border-emerald-900/50 rounded-xl p-4 bg-emerald-50/10 dark:bg-emerald-950/5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium text-muted-foreground">
-                      {t("Action Type")}
-                    </span>
-                    <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900 gap-1 font-semibold">
-                      <CheckCircle className="w-3.5 h-3.5" />{" "}
-                      {t("Close Conversation")}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
+          {/* Title and subtitle */}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-foreground">
+              {t("New / Unassigned Chats")}
             </div>
-
-            {/* Individual Save Button */}
-            <div className="pt-4 mt-6 border-t border-violet-100 dark:border-violet-900/30 flex justify-end">
-              <Button
-                type="button"
-                onClick={handleSaveUnassigned}
-                disabled={isPending || !unassignedActive}
-                className="px-4 py-1.5 text-xs h-8"
-              >
-                <Save className="w-3.5 h-3.5 mr-1.5" />
-                {t("Save New/Unassigned Settings")}
-              </Button>
+            <div className="text-xs text-muted-foreground mt-1">
+              {t("Inactive for {{time}} → Close Conversation", {
+                time: getHourLabel(unassignedDelayHours),
+              })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Card 2: Assigned Chats */}
-        <Card className="border-2 border-violet-100 dark:border-violet-950/60 shadow-sm transition-all duration-300 hover:shadow-md flex flex-col justify-between">
-          <CardContent className="p-6 space-y-6 flex-1 flex flex-col justify-between">
-            <div className="space-y-6">
-              {/* Header / Active status toggle */}
-              <div className="flex items-center justify-between pb-4 border-b border-violet-100 dark:border-violet-900/30">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
-                    <UserCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-base">
-                      {t("Assigned Chats")}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {t("Auto-close idle assigned conversations")}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-muted-foreground">
-                    {assignedActive ? t("Active") : t("Inactive")}
-                  </span>
-                  <Switch
-                    checked={assignedActive}
-                    onCheckedChange={handleToggleAssigned}
-                    disabled={isPending || isQueryLoading}
-                  />
-                </div>
-              </div>
+          {/* Condition badges */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="bg-primary/10 text-primary text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
+              {t("New / Unassigned")}
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <span className="bg-muted text-muted-foreground text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 select-none">
+              <Clock className="w-3.5 h-3.5" />
+              {getHourLabel(unassignedDelayHours)}
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <span className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
+              {t("Close")}
+            </span>
+          </div>
 
-              {/* Condition (If) block */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 uppercase tracking-wide">
-                    {t("If")}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {t("Trigger criteria")}
-                  </span>
-                </div>
+          {/* Toggle Switch */}
+          <Switch
+            checked={unassignedActive}
+            onCheckedChange={handleToggleUnassigned}
+            disabled={isPending || isQueryLoading}
+            className="shrink-0"
+          />
 
-                <div className="border border-violet-200/60 dark:border-violet-900/50 rounded-xl p-4 bg-violet-50/10 dark:bg-violet-950/5 space-y-3">
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="p-2 bg-background border border-violet-100 dark:border-violet-900 rounded font-medium text-muted-foreground">
-                      {t("Status")}
-                    </div>
-                    <div className="p-2 bg-background border border-violet-100 dark:border-violet-900 rounded font-medium text-muted-foreground">
-                      {t("Is")}
-                    </div>
-                    <div className="p-2 bg-violet-100/30 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 rounded font-bold">
-                      {t("Assigned")}
-                    </div>
-                  </div>
+          {/* Edit Button (reveals on hover) */}
+          <div className="w-8 h-8 flex items-center justify-center shrink-0">
+            <Button
+              variant="ghost"
+              className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200 hover:bg-muted text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+              onClick={() => setEditingRule("UNASSIGNED")}
+              disabled={isPending || !unassignedActive}
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
 
-                  <div className="pt-3 border-t border-violet-100 dark:border-violet-900/30 flex items-center justify-between gap-3">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Timer className="w-3.5 h-3.5 text-violet-500" />{" "}
-                      {t("Inactive for:")}
-                    </span>
-                    <Select
-                      value={assignedDelayHours}
-                      onValueChange={(val) => setAssignedDelayHours(val)}
-                      disabled={isPending || !assignedActive}
-                    >
-                      <SelectTrigger className="w-32 bg-background border-violet-300 dark:border-violet-850 focus:ring-violet-500 h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="24">{t("24 Hours")}</SelectItem>
-                        <SelectItem value="48">{t("48 Hours")}</SelectItem>
-                        <SelectItem value="72">{t("72 Hours")}</SelectItem>
-                        <SelectItem value="168">{t("1 Week")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
+        {/* Row 2: Assigned Chats */}
+        <div className="group flex items-center gap-4 py-4 px-6 bg-white dark:bg-card hover:bg-gray-50/50 dark:hover:bg-zinc-800/10 transition-colors w-full">
+          {/* Icon Badge */}
+          <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <Zap className="w-4 h-4 fill-emerald-50/20" />
+          </div>
 
-              {/* Action (Then) block */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
-                    {t("Then")}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {t("Execution action")}
-                  </span>
-                </div>
-                <div className="border border-emerald-200/60 dark:border-emerald-900/50 rounded-xl p-4 bg-emerald-50/10 dark:bg-emerald-950/5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium text-muted-foreground">
-                      {t("Action Type")}
-                    </span>
-                    <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900 gap-1 font-semibold">
-                      <CheckCircle className="w-3.5 h-3.5" />{" "}
-                      {t("Close Conversation")}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
+          {/* Title and subtitle */}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-foreground">
+              {t("Assigned Chats")}
             </div>
-
-            {/* Individual Save Button */}
-            <div className="pt-4 mt-6 border-t border-violet-100 dark:border-violet-900/30 flex justify-end">
-              <Button
-                type="button"
-                onClick={handleSaveAssigned}
-                disabled={isPending || !assignedActive}
-                className="px-4 py-1.5 text-xs h-8"
-              >
-                <Save className="w-3.5 h-3.5 mr-1.5" />
-                {t("Save Assigned Settings")}
-              </Button>
+            <div className="text-xs text-muted-foreground mt-1">
+              {t("Inactive for {{time}} → Close Conversation", {
+                time: getHourLabel(assignedDelayHours),
+              })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Condition badges */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
+              {t("Assigned")}
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <span className="bg-muted text-muted-foreground text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 select-none">
+              <Clock className="w-3.5 h-3.5" />
+              {getHourLabel(assignedDelayHours)}
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-gray-300 dark:text-zinc-700" />
+            <span className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold px-2.5 py-1 rounded-full select-none">
+              {t("Close")}
+            </span>
+          </div>
+
+          {/* Toggle Switch */}
+          <Switch
+            checked={assignedActive}
+            onCheckedChange={handleToggleAssigned}
+            disabled={isPending || isQueryLoading}
+            className="shrink-0"
+          />
+
+          {/* Edit Button (reveals on hover) */}
+          <div className="w-8 h-8 flex items-center justify-center shrink-0">
+            <Button
+              variant="ghost"
+              className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200 hover:bg-muted text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+              onClick={() => setEditingRule("ASSIGNED")}
+              disabled={isPending || !assignedActive}
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog
+        open={editingRule !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingRule(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("Edit Auto-Close Rule")}</DialogTitle>
+            <DialogDescription>
+              {t(
+                "Automatically close conversations that have been idle for a set period.",
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            {/* Field: Chat Type */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+                {t("Chat Type")}
+              </span>
+              {editingRule === "UNASSIGNED" ? (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-lg">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <span className="text-xs font-semibold text-primary">
+                    {t("New / Unassigned")}
+                  </span>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 rounded-lg">
+                  <div className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-500" />
+                  <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                    {t("Assigned Chats")}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Field: Close After Inactivity */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+                {t("Close After Inactivity")}
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {STD_HOURS.map((h) => (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => {
+                      setTempHours(h);
+                      setCustomMode(false);
+                    }}
+                    className={`px-3 py-1.5 border rounded-lg text-xs font-medium transition-all ${
+                      tempHours === h && !customMode
+                        ? "border-primary bg-primary/10 text-primary font-semibold"
+                        : "border-border bg-white dark:bg-zinc-900 text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {getHourLabel(h)}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomMode(true);
+                    const isStd = STD_HOURS.includes(tempHours);
+                    setCustomVal(!isStd ? String(tempHours) : "");
+                  }}
+                  className={`px-3 py-1.5 border rounded-lg text-xs font-medium transition-all ${
+                    customMode
+                      ? "border-primary bg-primary/10 text-primary font-semibold"
+                      : "border-border bg-white dark:bg-zinc-900 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t("Custom")}
+                </button>
+              </div>
+
+              {customMode && (
+                <div className="flex items-center gap-2 mt-2.5 animate-fadeIn">
+                  <input
+                    type="number"
+                    min="1"
+                    max="720"
+                    value={customVal}
+                    onChange={(e) => {
+                      setCustomVal(e.target.value);
+                      const n = parseInt(e.target.value, 10);
+                      if (!isNaN(n) && n > 0) {
+                        setTempHours(n);
+                      }
+                    }}
+                    placeholder={t("e.g. 36")}
+                    className="w-28 px-3 py-1.5 border border-border rounded-lg bg-zinc-50 dark:bg-zinc-900 text-xs outline-none focus:border-primary transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {t("hours")}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Field: Action */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+                {t("Action")}
+              </span>
+              <div className="flex items-center gap-3 p-3 bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-100 dark:border-emerald-900/40 rounded-xl">
+                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center shrink-0">
+                  <svg
+                    className="w-4 h-4 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    viewBox="0 0 24 24"
+                  >
+                    <polyline points="9 11 12 14 22 4" />
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-emerald-800 dark:text-emerald-400">
+                    {t("Close Conversation")}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5 leading-normal">
+                    {t(
+                      "Thread is marked closed. Agents can reopen at any time.",
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Rule Preview */}
+            <div className="p-3 bg-muted rounded-lg text-xs text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-foreground">
+                {t("Preview:")}{" "}
+              </span>
+              {t("If a")}{" "}
+              <strong className="text-primary">
+                {editingRule === "UNASSIGNED"
+                  ? t("New/Unassigned")
+                  : t("Assigned")}
+              </strong>{" "}
+              {t("chat is inactive for")}{" "}
+              <strong className="text-primary">{previewHoursText}</strong>,{" "}
+              {t("automatically")}{" "}
+              <strong className="text-emerald-600 dark:text-emerald-400">
+                {t("close")}
+              </strong>{" "}
+              {t("it.")}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0 mt-3">
+            <DialogClose asChild>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="text-xs font-semibold px-4"
+              >
+                {t("Cancel")}
+              </Button>
+            </DialogClose>
+            <Button
+              type="submit"
+              size="sm"
+              onClick={handleSaveChanges}
+              disabled={isPending}
+              className="bg-primary text-primary-foreground hover:bg-primary/95 text-xs font-semibold px-4 flex items-center gap-1.5"
+            >
+              {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {t("Save Changes")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
