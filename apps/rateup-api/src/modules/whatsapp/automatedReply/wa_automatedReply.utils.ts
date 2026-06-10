@@ -41,6 +41,7 @@ import {
   updateClosedConversationStatus,
 } from "../../contact/conversation/conversation.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
+import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.service.js";
 import axios from "axios";
 import { integrationTriggerQueue } from "../../../utils/redisConnection.js";
 import {
@@ -1361,11 +1362,7 @@ function resolveVariablePath(
     return "";
   }
   // Shopify / generic dot-path resolution
-  return String(
-    path
-      .split(".")
-      .reduce((obj: any, key: string) => obj?.[key], shopifyBody) ?? "",
-  );
+  return resolveShopifyPathValue(shopifyBody, path);
 }
 
 function buildTemplateParameterData(
