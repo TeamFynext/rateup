@@ -325,9 +325,9 @@ export default function WaInboxChatDisplayHeader({
         <div className="flex items-center gap-2 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-8 shadow-sm">
+              <Button variant="outline" className="h-8">
                 <IconTags className="h-5 w-5 text-primary" />
-                <span className="text-primary font-bold text-[11px] tracking-wide uppercase">
+                <span className="text-primary font-semibold text-xs">
                   Attributes
                 </span>
                 <IconChevronDown className="h-3.5 w-3.5 text-muted-foreground" />

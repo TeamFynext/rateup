@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { Link } from "@tanstack/react-router";
-import { MessageCircle, Monitor } from "lucide-react";
+import { Inbox, MessageCircle, Monitor } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -30,21 +30,42 @@ const components: {
   },
   {
     icon: <Monitor className="size-6 text-rateup-graytext" />,
-    title: "Web Survey",
-    to: "/products/whatsapp-survey",
+    title: "Whatsapp Feedback",
+    to: "/products/whatsapp-feedback",
     description: "Collect and analyze customer insights easily.",
   },
+  {
+    icon: <Inbox className="size-6 text-rateup-graytext" />,
+    title: "Omnichannel Inbox",
+    to: "/products/omnichannel-inbox",
+    description: "All your customer messages flow into one unified workspace.",
+  },
 ];
+interface DropDownNavItemsProps {
+  style?: string;
+  dropdownStyle?: string;
+}
 
 export default function DropDownNavItems({
   style,
-}: Readonly<{ style?: string }>) {
+  dropdownStyle,
+}: Readonly<DropDownNavItemsProps>) {
+  const hasColor =
+    (dropdownStyle && /\btext-\S+/.test(dropdownStyle)) ||
+    (style && /\btext-\S+/.test(style));
+  const defaultColor = hasColor ? "" : "text-white";
+
   return (
     <NavigationMenu viewport={false} className="relative">
       <NavigationMenuList>
         <NavigationMenuItem>
           <NavigationMenuTrigger
-            className={`text-white hover:bg-transparent! text-[16px]! focus:bg-transparent! data-[state=open]:bg-transparent!`}
+            className={cn(
+              defaultColor,
+              "hover:bg-transparent! text-[16px]! focus:bg-transparent! data-[state=open]:bg-transparent!",
+              style,
+              dropdownStyle,
+            )}
           >
             Product
           </NavigationMenuTrigger>

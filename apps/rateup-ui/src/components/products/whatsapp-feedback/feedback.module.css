@@ -1,0 +1,311 @@
+/* Fonts */
+.displayFont {
+  font-family:
+    "Nunito Variable",
+    ui-rounded,
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(40px, 5.2vw, 74px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: #fff;
+  margin: 26px 0 0;
+}
+.bodyFont {
+  font-family:
+    "Inter Variable",
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+/* Text Colors */
+.heroGradient {
+  background-image: linear-gradient(to bottom right, #2a6254, #3d7a68);
+}
+.fbGreen {
+  color: #2a6254;
+}
+
+.fbGreen2 {
+  color: #3d7a68;
+}
+
+.waGreen {
+  color: #25d366;
+}
+
+.periwinkle {
+  color: #b8d0ca;
+}
+
+.periwinkle2 {
+  color: #a6c2bb;
+}
+
+.chipDark {
+  color: #102820;
+}
+
+.ink25 {
+  color: #fafaf7;
+}
+
+.ink50 {
+  color: #f4f5f2;
+}
+
+.ink100 {
+  color: #ececea;
+}
+
+.ink200 {
+  color: #d9dad7;
+}
+
+.ink400 {
+  color: #8b8e8a;
+}
+
+.ink500 {
+  color: #666864;
+}
+
+.ink700 {
+  color: #2e302e;
+}
+
+.ink800 {
+  color: #1a1b1a;
+}
+
+.warm300 {
+  color: #ffd54c;
+}
+
+.warm600 {
+  color: #d97a0f;
+}
+
+.danger {
+  color: #dc2626;
+}
+
+.success {
+  color: #16a34a;
+}
+
+/* Background Colors */
+.bgFbGreen {
+  background-color: #2a6254;
+}
+
+.bgFbGreen2 {
+  background-color: #3d7a68;
+}
+
+.bgWaGreen {
+  background-color: #25d366;
+}
+
+.bgPeriwinkle {
+  background-color: #b8d0ca;
+}
+
+.bgPeriwinkle2 {
+  background-color: #a6c2bb;
+}
+
+.bgChipDark {
+  background-color: #102820;
+}
+
+.bgInk25 {
+  background-color: #fafaf7;
+}
+
+.bgInk50 {
+  background-color: #f4f5f2;
+}
+
+.bgInk100 {
+  background-color: #ececea;
+}
+
+.bgInk200 {
+  background-color: #d9dad7;
+}
+
+.bgInk400 {
+  background-color: #8b8e8a;
+}
+
+.bgInk500 {
+  background-color: #666864;
+}
+
+.bgInk700 {
+  background-color: #2e302e;
+}
+
+.bgInk800 {
+  background-color: #1a1b1a;
+}
+
+.bgWarm300 {
+  background-color: #ffd54c;
+}
+
+.bgWarm600 {
+  background-color: #d97a0f;
+}
+
+.bgDanger {
+  background-color: #dc2626;
+}
+
+.bgSuccess {
+  background-color: #16a34a;
+}
+
+/* Animations */
+.floatA {
+  animation: floatA 4s ease-in-out infinite;
+}
+
+.floatB {
+  animation: floatB 4.4s ease-in-out infinite;
+}
+
+.panelFade {
+  animation: panelFade 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.blink {
+  animation: blink 1.2s infinite both;
+}
+
+.hoverBgPeriwinkle2:hover {
+  background-color: #a6c2bb;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+/* html { scroll-behavior: smooth; } */
+/* body {
+  margin: 0;
+  background: #FAFAF7;
+  color: #2E302E;
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+} */
+/* img { display: block; max-width: 100%; }
+button { font-family: inherit; cursor: pointer; } */
+
+/* Reveal animation — JS adds/removes these */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.in {
+  opacity: 1;
+  transform: none;
+}
+.reveal[data-d="1"] {
+  transition-delay: 0.08s;
+}
+.reveal[data-d="2"] {
+  transition-delay: 0.16s;
+}
+.reveal[data-d="3"] {
+  transition-delay: 0.24s;
+}
+.reveal[data-d="4"] {
+  transition-delay: 0.32s;
+}
+
+/* Keyframes */
+@keyframes blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+@keyframes floatA {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes floatB {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes panelFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand .star {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+.brand .wm {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 22px;
+  color: #334155;
+  letter-spacing: -0.02em;
+}
+.brand .cm {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 22px;
+  color: #cbd1d9;
+  letter-spacing: -0.02em;
+}
+.brand .wm .up {
+  color: #4fc3ff;
+}
+.brand .cm .uc {
+  color: #4fc3ff;
+}

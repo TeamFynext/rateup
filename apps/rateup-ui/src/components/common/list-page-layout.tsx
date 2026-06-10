@@ -64,14 +64,15 @@ type ListSortOption = {
 
 type ListPageLayoutProps = {
   readonly canCreate: boolean;
-  readonly createLabel: string;
-  readonly createDisabledText: string;
+  readonly hideCreate?: boolean;
+  readonly createLabel?: string;
+  readonly createDisabledText?: string;
   readonly docsUrl: string;
   readonly isLoading: boolean;
   readonly queryKeys: string[];
-  readonly search: string;
-  readonly searchPlaceholder: string;
-  readonly tourSteps: {
+  readonly search?: string;
+  readonly searchPlaceholder?: string;
+  readonly tourSteps?: {
     element: string;
     popover: {
       title: string;
@@ -80,8 +81,8 @@ type ListPageLayoutProps = {
       align: string;
     };
   }[];
-  readonly onCreate: () => void;
-  readonly onSearchChange: (value: string) => void;
+  readonly onCreate?: () => void;
+  readonly onSearchChange?: (value: string) => void;
   readonly rightControls?: ReactNode;
   readonly leftControls?: ReactNode;
   readonly sortOptions?: readonly ListSortOption[];
@@ -97,6 +98,7 @@ type ListPageLayoutProps = {
 
 export function ListPageLayout({
   canCreate,
+  hideCreate = false,
   createLabel,
   createDisabledText,
   docsUrl,
@@ -197,9 +199,11 @@ export function ListPageLayout({
               "You have not created anything yet. Get started by creating your first item."}
           </EmptyDescription>
         </EmptyHeader>
-        <EmptyContent>
-          <Button onClick={onCreate}>{createLabel}</Button>
-        </EmptyContent>
+        {!hideCreate && (
+          <EmptyContent>
+            <Button onClick={onCreate}>{createLabel}</Button>
+          </EmptyContent>
+        )}
       </Empty>
     );
   }
@@ -208,35 +212,38 @@ export function ListPageLayout({
     <div className="flex h-full flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-h-12.5 flex-wrap items-center gap-3">
-          {canCreate ? (
-            createButton
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>{createButton}</div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{createDisabledText}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
+          {!hideCreate &&
+            (canCreate ? (
+              createButton
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>{createButton}</div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{createDisabledText}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
 
           <InfoButton docUrl={`${docsPath}/${docsUrl}`} />
-          <WelcomeTour steps={tourSteps} />
+          {tourSteps && <WelcomeTour steps={tourSteps} />}
           <RefreshButton queryKeys={queryKeys} />
           {leftControls}
         </div>
 
         <div className="flex min-h-12.5 flex-wrap items-center gap-2.5">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder={searchPlaceholder}
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-9 h-8"
-            />
-          </div>
+          {onSearchChange !== undefined && (
+            <div className="relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={searchPlaceholder}
+                value={search ?? ""}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="pl-9 h-8"
+              />
+            </div>
+          )}
 
           {hasSortControl ? (
             <DropdownMenu>

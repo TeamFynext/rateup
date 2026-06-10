@@ -9,7 +9,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 
-import { imagePath } from "@/components/HomePage/pages/constants.tsx";
+import { imagesPath } from "@/utils/constants";
 
 const products = [
   { title: "Omnichannel Team Inbox", href: "/dashboard/inbox" },
@@ -178,7 +178,7 @@ export default function HomePageFooter() {
             <div className="bg-[linear-gradient(135deg,#FFF5F5,#F5EBFF,#E0EEFF,#F5FFFB)] flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl">
               <div className="flex items-center justify-center gap-2">
                 <Image
-                  src={`${imagePath}/homepage/meta.svg`}
+                  src={`${imagesPath}/homepage/meta.svg`}
                   alt="meta"
                   width={50}
                   height={50}
@@ -248,7 +248,7 @@ export default function HomePageFooter() {
               >
                 <div>
                   <Image
-                    src={`${imagePath}/homepage/googleplay.svg`}
+                    src={`${imagesPath}/homepage/googleplay.svg`}
                     alt="googleplay"
                     width={40}
                     height={40}
@@ -267,7 +267,7 @@ export default function HomePageFooter() {
               >
                 <div>
                   <Image
-                    src={`${imagePath}/homepage/apple.svg`}
+                    src={`${imagesPath}/homepage/apple.svg`}
                     alt="apple"
                     width={40}
                     height={40}

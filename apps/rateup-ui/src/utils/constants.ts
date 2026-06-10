@@ -374,7 +374,12 @@ export const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
 
 export const DEFAULT_IMAGE_BASE64_START = "data:image/jpeg;base64,";
 
-export const rateupLogoBlue = `${imagesPath}/rateup-logo-blue-text.svg`;
+export const rateupLogoStackedWhiteTransparent = `${imagesPath}/rateup-logo-stacked-white-transparent.png`;
+export const rateupLogoStackedTransparent = `${imagesPath}/rateup-logo-stacked-transparent.png`;
+export const rateupLogoHorizontalTransparent = `${imagesPath}/rateup-logo-horizontal-transparent.png`;
+export const rateupLogoHorizontalWhiteTransparent = `${imagesPath}/rateup-logo-horizontal-white-transparent.png`;
+
+export const rateupLogoBlue = rateupLogoStackedWhiteTransparent;
 
 export const MAX_DESCRIPTION_COUNT = 300;
 export const MAX_METADATA_COUNT = 20;

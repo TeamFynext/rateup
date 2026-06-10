@@ -11,6 +11,7 @@ import Trusted from "@/components/LoyaltyLandingPage/Trusted";
 import WhyWhatsApp from "@/components/LoyaltyLandingPage/WhyWhatsApp";
 import Layout from "@/components/RateupHomePage/Layout";
 import HomePageFooter from "@/components/RateupHomePage/shared/HomePageFooter";
+import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 import { productsMarkdown } from "../../../../markdown/products";
 import { createMarkdownMiddleware } from "../../../../markdown/serveMarkdown";
@@ -142,7 +143,7 @@ const jsonLd = {
         url: "https://rateup.app",
         logo: {
           "@type": "ImageObject",
-          url: "https://djd7kjh9uwow0.cloudfront.net/images/rateup-logo-blue-text.svg",
+          url: rateupLogoStackedWhiteTransparent,
         },
         contactPoint: {
           "@type": "ContactPoint",
@@ -205,15 +206,17 @@ function LoyaltyLandingPage() {
   useRevealAnimation();
   return (
     <Layout navbarClassName="heroNav">
-      <span id="top"></span>
-      <Hero />
-      <HowItWorks />
-      <WhyWhatsApp />
-      <CustomerProfiles />
-      <Integrations />
-      <Trusted />
-      <Faq />
-      <HomePageFooter />
+      <div className="loyalty-scope">
+        <span id="top"></span>
+        <Hero />
+        <HowItWorks />
+        <WhyWhatsApp />
+        <CustomerProfiles />
+        <Integrations />
+        <Trusted />
+        <Faq />
+        <HomePageFooter />
+      </div>
     </Layout>
   );
 }

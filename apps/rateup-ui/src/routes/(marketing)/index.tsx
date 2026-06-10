@@ -17,7 +17,10 @@ import LoyaltySection from "@/components/RateupHomePage/shared/LoyaltySection";
 import Problem from "@/components/RateupHomePage/shared/Problem";
 import TrustedBy from "@/components/RateupHomePage/shared/TrustedBy";
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
-import { rateupUrl } from "@/utils/constants.ts";
+import {
+  rateupLogoStackedWhiteTransparent,
+  rateupUrl,
+} from "@/utils/constants.ts";
 
 import { homepageMarkdown } from "../../markdown/homepage";
 import { createMarkdownMiddleware } from "../../markdown/serveMarkdown";
@@ -37,7 +40,7 @@ const homePageJsonLd = {
   "@type": "Organization",
   name: "RateUp",
   url: "https://rateup.app",
-  logo: "https://djd7kjh9uwow0.cloudfront.net/images/rateup-logo-blue-text.svg",
+  logo: rateupLogoStackedWhiteTransparent,
   description:
     "RateUp is an AI-powered omnichannel customer engagement platform that integrates WhatsApp Business API, feedback, loyalty, chat automation, and a unified inbox to help businesses boost retention and repeat sales.",
   foundingDate: "2023",
@@ -59,7 +62,7 @@ const homePageJsonLd = {
   brand: {
     "@type": "Brand",
     name: "RateUp",
-    logo: "https://djd7kjh9uwow0.cloudfront.net/images/rateup-logo-blue-text.svg",
+    logo: rateupLogoStackedWhiteTransparent,
   },
   aggregateRating: {
     "@type": "AggregateRating",

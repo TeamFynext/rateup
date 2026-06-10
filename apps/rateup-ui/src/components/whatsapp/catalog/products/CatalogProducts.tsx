@@ -2,7 +2,6 @@
 
 import React from "react";
 
-import { Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandMeta, IconPlus, IconRefresh } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -11,7 +10,6 @@ import {
   useSyncCatalogProducts,
   useSyncShopifyWithCatalog,
 } from "@/backend/whatsapp/catalog/products/products.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
@@ -71,16 +69,13 @@ const CatalogProducts = ({ catalogData }) => {
   }
 
   return (
-    <Stack>
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Title order={3}>Products</Title>
-          <RateupButtonPrimary
-            title="Add Product"
-            disabled={!catalogData}
-            onClick={openAdd}
-            leftIcon={<IconPlus size={15} />}
-          />
+          <Button disabled={!catalogData} onClick={openAdd}>
+            <IconPlus size={15} className="mr-1" />
+            Add Product
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -121,7 +116,7 @@ const CatalogProducts = ({ catalogData }) => {
         opened={addOpened}
         close={closeAdd}
       />
-    </Stack>
+    </div>
   );
 };
 

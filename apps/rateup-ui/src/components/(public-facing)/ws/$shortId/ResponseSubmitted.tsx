@@ -4,6 +4,8 @@ import { Anchor, Box, Button, Group, Image, Stack, Text } from "@mantine/core";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 
+import { rateupLogoStackedWhiteTransparent } from "@/utils/constants";
+
 import styles from "./ResponseSubmitted.module.css";
 
 export function ResponseSubmitted({ isSurveyPreview = false }) {
@@ -36,7 +38,7 @@ export function ResponseSubmitted({ isSurveyPreview = false }) {
               styles={{ root: { width: "fit-content" } }}
             >
               <Image
-                src={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup-logo-blue-text.svg`}
+                src={rateupLogoStackedWhiteTransparent}
                 height={60}
                 width={60}
                 fit="contain"

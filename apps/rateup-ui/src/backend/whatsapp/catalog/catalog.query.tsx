@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import {
   createCatalogAddressFlow,
+  deleteWaCatalog,
   disconnectCatalogFromWaba,
   getCatalogSettings,
   getWaCatalogById,
@@ -12,6 +13,20 @@ import {
   updateCatalogSettings,
   updateWaCatalog,
 } from "./catalog.api";
+
+export const useDeleteWaCatalog = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (catalogId: string) => deleteWaCatalog(catalogId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
+      toast.success("Catalog deleted");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to delete catalog");
+    },
+  });
+};
 
 export const useSyncCatalogs = () => {
   const qc = useQueryClient();

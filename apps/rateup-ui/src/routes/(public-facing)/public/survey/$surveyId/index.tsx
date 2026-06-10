@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { getPublicSurvey } from "@/backend/surveys/survey.api";
+import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 import PublicSurvey from "../../../../../components/(public-facing)/public/survey/$surveyId/publicSurveyC.tsx";
 
-const DEFAULT_OG_IMAGE =
-  "https://djd7kjh9uwow0.cloudfront.net/images/rateup_logo.png";
+const DEFAULT_OG_IMAGE = rateupLogoStackedWhiteTransparent;
 
 const MIME_TYPES_FOR_IMAGE: Record<string, string> = {
   png: "image/png",
