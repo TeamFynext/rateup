@@ -24,6 +24,7 @@ import {
   checkBirthdayEventTriggers,
   checkInactivityEventTriggers,
   checkPointsExpiration,
+  checkPointsExpiryAlerts,
 } from "../modules/loyalty/settings/eventTriggerCron.service.js";
 
 export async function registerCronJobs(
@@ -122,6 +123,17 @@ export async function registerCronJobs(
             "Running Daily at 1:00 AM --> Loyalty Points Expiration",
           );
           await checkPointsExpiration();
+        },
+        start: true,
+      },
+      {
+        name: "loyaltyPointsExpiryAlerts",
+        cronTime: "0 3 * * *", // Every day at 3:00 AM
+        onTick: async () => {
+          server.log.info(
+            "Running Daily at 3:00 AM --> Loyalty Points Expiry Alerts (14 days before expiry)",
+          );
+          await checkPointsExpiryAlerts();
         },
         start: true,
       },

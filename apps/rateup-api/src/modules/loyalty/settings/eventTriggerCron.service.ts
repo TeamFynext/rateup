@@ -285,6 +285,22 @@ export async function checkInactivityEventTriggers() {
   }
 }
 
+async function resolveEventTriggerTemplateId(
+  orgId: string,
+  eventType: LoyaltyEventType,
+): Promise<string | null> {
+  const trigger = await prisma.loyaltyEventTrigger.findFirst({
+    where: {
+      program: { orgId },
+      eventType,
+      enabled: true,
+      waTemplateId: { not: null },
+    },
+    select: { waTemplateId: true },
+  });
+  return trigger?.waTemplateId ?? null;
+}
+
 /**
  * Helper function to issue a reward to a customer
  */
@@ -333,6 +349,120 @@ function generateShortCode(): string {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
+}
+
+/**
+ * Cron job to send expiry alert 14 days before points expire
+ * Targets customers whose lastActivityAt is (expirationMonths - 14 days) ago and still have points
+ */
+export async function checkPointsExpiryAlerts() {
+  try {
+    log.info("Points Expiry Alert Cron - Starting");
+
+    const programsWithExpiration = await prisma.loyaltyProgram.findMany({
+      where: {
+        status: "active",
+        enablePointsExpiration: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        orgId: true,
+        pointsExpirationMonths: true,
+      },
+    });
+
+    if (programsWithExpiration.length === 0) {
+      log.info(
+        "Points Expiry Alert Cron - No programs with expiration enabled",
+      );
+      return;
+    }
+
+    for (const program of programsWithExpiration) {
+      try {
+        // Find the enabled POINTS_EXPIRY_ALERT trigger for this program
+        const trigger = await prisma.loyaltyEventTrigger.findFirst({
+          where: {
+            program: { orgId: program.orgId },
+            eventType: LoyaltyEventType.POINTS_EXPIRY_ALERT,
+            enabled: true,
+            waTemplateId: { not: null },
+          },
+        });
+
+        if (!trigger) continue;
+
+        // Customers whose lastActivityAt is exactly (expirationMonths months - 14 days) ago
+        const alertFrom = dayjs()
+          .subtract(program.pointsExpirationMonths, "months")
+          .add(14, "days")
+          .startOf("day")
+          .toDate();
+        const alertTo = dayjs()
+          .subtract(program.pointsExpirationMonths, "months")
+          .add(14, "days")
+          .endOf("day")
+          .toDate();
+
+        const customersNearExpiry =
+          await prisma.customerLoyaltyAccount.findMany({
+            where: {
+              programId: program.id,
+              status: "active",
+              currentPoints: { gt: 0 },
+              lastActivityAt: { gte: alertFrom, lte: alertTo },
+            },
+            include: {
+              contact: {
+                select: { id: true, phone: true, name: true, orgId: true },
+              },
+            },
+          });
+
+        log.info(
+          `Points Expiry Alert - Program ${program.name}: ${customersNearExpiry.length} customers near expiry`,
+        );
+
+        const expiryDate = dayjs().add(14, "days").toDate();
+
+        for (const account of customersNearExpiry) {
+          try {
+            if (!account.contact.phone) continue;
+
+            await handleSendTemplate(
+              trigger.waTemplateId,
+              account.contact.orgId,
+              account.contact.phone,
+              [
+                account.contact.name || "Valued Customer",
+                account.currentPoints.toString(),
+                dayjs(expiryDate).format("DD MMM YYYY"),
+              ],
+            );
+
+            log.info(
+              `Points Expiry Alert - Sent to customer ${account.id} (expires ${dayjs(expiryDate).format("DD MMM YYYY")})`,
+            );
+          } catch (error) {
+            log.error(
+              { err: error },
+              `Points Expiry Alert - Error sending to customer ${account.id}:`,
+            );
+          }
+        }
+      } catch (error) {
+        log.error(
+          { err: error },
+          `Points Expiry Alert - Error processing program ${program.id}:`,
+        );
+      }
+    }
+
+    log.info("Points Expiry Alert Cron - Completed");
+  } catch (error) {
+    log.error({ err: error }, "Points Expiry Alert Cron - Fatal error:");
+  }
 }
 
 /**
@@ -497,6 +627,22 @@ export async function checkPointsExpiration() {
             log.info(
               `Points Expiration - Expired ${pointsToExpire} points for customer ${account.contact.name || account.contact.phone} (account ${account.id})`,
             );
+
+            // Send WA notification for points expiry
+            if (account.contact.phone) {
+              await handleSendTemplate(
+                await resolveEventTriggerTemplateId(
+                  program.orgId,
+                  LoyaltyEventType.POINTS_EXPIRED,
+                ),
+                program.orgId,
+                account.contact.phone,
+                [
+                  account.contact.name || "Valued Customer",
+                  pointsToExpire.toString(),
+                ],
+              );
+            }
           } catch (error) {
             log.error(
               { err: error },
