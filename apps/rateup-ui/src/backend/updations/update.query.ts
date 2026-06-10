@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
+  migrateLoyaltyTierPriority,
   migrateWaTemplateToWhatsappPhoneId,
   syncTeamFeatures,
 } from "./update.api";
@@ -30,6 +31,20 @@ export const useSyncTeamFeatures = () => {
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to sync team features");
+    },
+  });
+};
+
+export const useMigrateLoyaltyTierPriority = () => {
+  return useMutation({
+    mutationFn: migrateLoyaltyTierPriority,
+    onSuccess: () => {
+      toast.success("Loyalty tier priorities migrated successfully");
+    },
+    onError: (error) => {
+      toast.error(
+        error?.message || "Failed to migrate loyalty tier priorities",
+      );
     },
   });
 };

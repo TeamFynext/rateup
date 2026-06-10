@@ -19,3 +19,13 @@ export async function syncTeamFeatures() {
     timeout: 60000,
   });
 }
+
+export async function migrateLoyaltyTierPriority() {
+  return await axiosClient.put(
+    `${baseUrl}/migrate-loyalty-tier-priority`,
+    null,
+    {
+      timeout: 60000,
+    },
+  );
+}

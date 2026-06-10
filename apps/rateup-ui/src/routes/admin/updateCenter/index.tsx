@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import {
+  useMigrateLoyaltyTierPriority,
   useMigrateWaTemplateToWhatsappPhoneId,
   useSyncTeamFeatures,
 } from "@/backend/updations/update.query";
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/admin/updateCenter/")({
 function UpdateAllThemes() {
   const migrateWaTemplate = useMigrateWaTemplateToWhatsappPhoneId();
   const syncTeamFeaturesMutation = useSyncTeamFeatures();
+  const migrateLoyaltyTierPriorityMutation = useMigrateLoyaltyTierPriority();
 
   return (
     <div className="container mx-auto space-y-8">
@@ -136,6 +138,43 @@ function UpdateAllThemes() {
                   <>
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Run Sync
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
+            <CardHeader className="pb-3">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-white/50 p-2 dark:bg-gray-900/20">
+                  <Database className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-lg">
+                    Migrate Loyalty Tier Priority
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    Reassigns tier priorities in ascending order (0, 1, 2…)
+                    based on threshold for all loyalty programs
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <Button
+                onClick={() => migrateLoyaltyTierPriorityMutation.mutate()}
+                disabled={migrateLoyaltyTierPriorityMutation.isPending}
+                className="w-full"
+              >
+                {migrateLoyaltyTierPriorityMutation.isPending ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Migrating...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Run Migration
                   </>
                 )}
               </Button>

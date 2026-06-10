@@ -3,12 +3,18 @@
 import React, { useEffect, useState } from "react";
 
 import { useDisclosure } from "@mantine/hooks";
-import { IconLogin2, IconRefresh } from "@tabler/icons-react";
+import { IconLogin2, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
-import { IntegratedApps, MetaLoginAssets, WaConfigType } from "@/types/enums.ts";
+import {
+  IntegratedApps,
+  MetaLoginAssets,
+  WaConfigType,
+} from "@/types/enums.ts";
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import {
+  useDeleteWaCatalog,
   useDisconnectCatalogFromWa,
   useUpateCatalog,
 } from "@/backend/whatsapp/catalog/catalog.query";
@@ -17,21 +23,32 @@ import {
   useSyncProductSets,
 } from "@/backend/whatsapp/catalog/productSet.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
-import {
-  ContainedSelection,
-  ContainedSwitchInput,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 import { ImportFromShopifyModal } from "@/components/whatsapp/catalog/products/ImportFromShopifyModal.tsx";
 
 const CatalogSettings = ({ catalogData }) => {
+  const navigate = useNavigate();
   const update = useUpateCatalog(catalogData?.catalogId);
   const disconnect = useDisconnectCatalogFromWa(catalogData?.catalogId);
+  const deleteCatalog = useDeleteWaCatalog();
   const [opened, { open, close }] = useDisclosure(false);
   const [openedConnect, { open: openConnect, close: closeConnect }] =
+    useDisclosure(false);
+  const [openedDelete, { open: openDelete, close: closeDelete }] =
     useDisclosure(false);
   const [wabaId, setWabaId] = useState("");
   const { data: waSettings, isLoading } = useWaSettings();
@@ -94,67 +111,87 @@ const CatalogSettings = ({ catalogData }) => {
   }
   if (isLoading) return <RateupLoader />;
   return (
-    <div className="flex flex-col gap-4">
-      <ContainedTextField
-        value={catalogData.catalogId}
-        disabled
-        label={"Catalog ID"}
-      />
-      <ContainedTextField
-        value={catalogData.name}
-        disabled
-        label={"Catalog Name"}
-      />
-      <ContainedTextField
-        value={catalogData.vertical}
-        disabled
-        label={"Catalog vertical"}
-      />
+    <Card className="flex flex-col gap-4 p-2">
+      <Field>
+        <FieldLabel>Catalog ID</FieldLabel>
+        <Input value={catalogData.catalogId} disabled />
+      </Field>
+      <Field>
+        <FieldLabel>Catalog Name</FieldLabel>
+        <Input value={catalogData.name} disabled />
+      </Field>
+      <Field>
+        <FieldLabel>Catalog Vertical</FieldLabel>
+        <Input value={catalogData.vertical} disabled />
+      </Field>
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div className="w-full sm:w-1/2">
-          <ContainedSelection
-            allowDeselect={false}
-            label={"Connected Whatsapp Business Account ID"}
-            placeholder="select"
-            data={wabaIds}
+        <Field className="w-full sm:w-1/2">
+          <FieldLabel>Connected WhatsApp Business Account ID</FieldLabel>
+          <Select
             value={wabaId}
-            onChange={(value) => {
+            onValueChange={(value) => {
               setWabaId(value);
               openConnect();
             }}
-          />
-        </div>
-        <RateupButtonBlue
-          leftIcon={<IconLogin2 />}
-          color="red"
-          w={"fit-content"}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              {wabaIds.map((id) => (
+                <SelectItem key={id} value={id}>
+                  {id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Button
+          variant="destructive"
           onClick={open}
-          title="Disconnect Whatsapp Business Account"
-          loading={disconnect.isPending}
-        />
+          disabled={disconnect.isPending}
+        >
+          <IconLogin2 size={16} />
+          Disconnect WhatsApp Business Account
+        </Button>
       </div>
 
       <p className="font-semibold mt-4">Shopify Checkout Automation</p>
-      <ContainedSwitchInput
-        label="Auto-generate Shopify Checkout Link"
-        description="Automatically send a Shopify checkout link when a customer sends a cart."
-        checked={catalogData.autoCheckoutEnabled}
-        onChange={(event) => {
-          update.mutate({ autoCheckoutEnabled: event.currentTarget.checked });
-        }}
-      />
-      {catalogData.autoCheckoutEnabled && (
-        <ContainedTextField
-          label="Checkout Message"
-          placeholder="Thanks for your order! Complete your purchase here: {{link}}"
-          value={catalogData.checkoutMessage || ""}
-          description="Use {{link}} where you want the Shopify URL to appear."
-          onBlur={(event) => {
-            if (event.target.value !== catalogData.checkoutMessage) {
-              update.mutate({ checkoutMessage: event.target.value });
-            }
+      <div className="flex items-center justify-between rounded-lg border p-4">
+        <div className="flex flex-col gap-0.5">
+          <FieldLabel htmlFor="auto-checkout" className="cursor-pointer">
+            Auto-generate Shopify Checkout Link
+          </FieldLabel>
+          <p className="text-sm text-muted-foreground">
+            Automatically send a Shopify checkout link when a customer sends a
+            cart.
+          </p>
+        </div>
+        <Switch
+          id="auto-checkout"
+          checked={catalogData.autoCheckoutEnabled}
+          onCheckedChange={(checked) => {
+            update.mutate({ autoCheckoutEnabled: checked });
           }}
         />
+      </div>
+      {catalogData.autoCheckoutEnabled && (
+        <Field>
+          <FieldLabel>Checkout Message</FieldLabel>
+          <Input
+            placeholder="Thanks for your order! Complete your purchase here: {{link}}"
+            defaultValue={catalogData.checkoutMessage || ""}
+            onBlur={(e) => {
+              if (e.target.value !== catalogData.checkoutMessage) {
+                update.mutate({ checkoutMessage: e.target.value });
+              }
+            }}
+          />
+          <FieldDescription>
+            Use {"{{link}}"} where you want the Shopify URL to appear.
+          </FieldDescription>
+        </Field>
       )}
 
       <ConfirmationModal
@@ -184,12 +221,53 @@ const CatalogSettings = ({ catalogData }) => {
         closeAfterOnConfirm={false}
       />
 
-      <div className="h-px bg-gray-200 w-full mt-4" />
+      <Separator className="mt-4" />
       <ProductManagementSection catalogData={catalogData} />
 
-      <div className="h-px bg-gray-200 w-full mt-4" />
+      <Separator className="mt-4" />
       <ProductSetsSection catalogId={catalogData?.catalogId} />
-    </div>
+
+      <Separator className="mt-8" />
+      <div className="flex flex-col gap-3 p-4 border border-destructive/30 rounded-lg bg-destructive/5">
+        <div className="flex flex-col gap-1">
+          <p className="font-semibold text-destructive">Danger Zone</p>
+          <p className="text-sm text-destructive/80">
+            Deleting this catalog is permanent and cannot be undone. All
+            associated products, product sets, orders, and settings will be
+            removed. Any automations using this catalog will stop working.
+          </p>
+        </div>
+        <Button
+          variant="destructive"
+          className="w-fit"
+          onClick={openDelete}
+          disabled={deleteCatalog.isPending}
+        >
+          <IconTrash size={16} />
+          Delete Catalog
+        </Button>
+      </div>
+
+      <ConfirmationModal
+        forDeleteFunctionality
+        deleteQuotion="All products, orders, product sets, and automation links tied to this catalog will be permanently deleted."
+        opened={openedDelete}
+        onClose={closeDelete}
+        onConfirm={() =>
+          deleteCatalog.mutate(catalogData?.catalogId, {
+            onSuccess: () => {
+              closeDelete();
+              navigate({ to: "/dashboard/whatsapp/catalog" });
+            },
+          })
+        }
+        confirmLabel="Delete Catalog"
+        headerLabel={`Are you sure you want to permanently delete "${catalogData?.name}"?`}
+        headerTitle="Delete Catalog"
+        loading={deleteCatalog.isPending}
+        closeAfterOnConfirm={false}
+      />
+    </Card>
   );
 };
 
@@ -251,40 +329,44 @@ const ProductSetsSection = ({ catalogId }) => {
       <div className="flex justify-between items-center">
         <div className="flex flex-col gap-0">
           <p className="font-semibold">Product Sets</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Curated collections synced from your Meta Catalog
           </p>
         </div>
-        <RateupButtonBlue
-          leftIcon={<IconRefresh size={16} />}
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => syncProductSetsMut.mutate(catalogId)}
-          loading={syncProductSetsMut.isPending}
-          title="Sync from Meta"
-          w="fit-content"
-        />
+          disabled={syncProductSetsMut.isPending}
+        >
+          <IconRefresh size={16} />
+          Sync from Meta
+        </Button>
       </div>
 
       {isLoading ? (
-        <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-border border-t-primary rounded-full animate-spin" />
       ) : productSets && productSets.length > 0 ? (
         <div className="flex flex-col gap-3 mt-2">
           {productSets.map((set: any) => (
             <div
               key={set.productSetId}
-              className="flex justify-between items-center p-3 border border-gray-300 rounded-lg bg-gray-50"
+              className="flex justify-between items-center p-3 border rounded-lg bg-muted/40"
             >
               <div className="flex flex-col gap-1">
                 <p className="font-medium text-sm">{set.name}</p>
-                <p className="text-xs text-gray-500">ID: {set.productSetId}</p>
+                <p className="text-xs text-muted-foreground">
+                  ID: {set.productSetId}
+                </p>
               </div>
-              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
+              <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
                 {set.productIds?.length || 0} Products
               </span>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-sm text-gray-500 italic">
+        <p className="text-sm text-muted-foreground italic">
           No product sets synced yet.
         </p>
       )}

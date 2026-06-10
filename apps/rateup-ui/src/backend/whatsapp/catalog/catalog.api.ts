@@ -33,6 +33,10 @@ export async function getWaConnectedCatalog(whatsappSettingsPhoneId: string) {
   ).data;
 }
 
+export async function deleteWaCatalog(catalogId: string) {
+  await axiosClient.delete(`${waCatalogUrl}/${catalogId}`);
+}
+
 export async function disconnectCatalogFromWaba(data) {
   return (await axiosClient.delete(`${waCatalogUrl}/disconnect`, { data }))
     .data;

@@ -340,9 +340,9 @@
     "Channels": "चैनल",
     "chat is inactive for": "चैट के लिए निष्क्रिय है",
     "Chat Type": "चैट प्रकार",
+    "Chatbot": "चैटबॉट",
     "Chatbot Name": "चैटबॉट का नाम",
     "Chatbot name is required": "चैटबॉट नाम आवश्यक है",
-    "Chatbots": "चैटबॉट्स",
     "Chats Received": "चैट प्राप्त हुए",
     "Chats Transferred": "चैट स्थानांतरित",
     "Check your email": "अपने ईमेल की जाँच करें",
@@ -2588,6 +2588,9 @@
     "Selected": "चयनित",
     "You have not selected any participant": "आपने किसी भी प्रतिभागी का चयन नहीं किया है"
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "केवल उन चरणों का चयन करें जो चयनित पाइपलाइन और उप पाइपलाइन कॉन्फ़िगरेशन से संबंधित हैं।"
+  },
   "apianalytics": {
     "All": "सभी",
     "Avg Delivery Time": "औसत डिलिवरी समय",
@@ -2613,9 +2616,6 @@
     "Total Messages Sent": "भेजे गए कुल संदेश",
     "WhatsApp Messages Analytics": "व्हाट्सएप संदेश विश्लेषण",
     "WhatsApp Template Analytics": "व्हाट्सएप टेम्पलेट एनालिटिक्स"
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "केवल उन चरणों का चयन करें जो चयनित पाइपलाइन और उप पाइपलाइन कॉन्फ़िगरेशन से संबंधित हैं।"
   },
   "campaign.list": {
     "Active": "सक्रिय",

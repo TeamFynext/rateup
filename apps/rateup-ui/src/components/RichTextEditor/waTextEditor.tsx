@@ -39,9 +39,9 @@ import VoiceRecorder from "../input/VoiceRecorder.tsx";
 import { Button } from "../ui/button.tsx";
 import CustomTooltip from "../ui/custom/CustomTooltip.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover.tsx";
-import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import WaInboxAutomationDisplayModal from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/automationDisplayModal/index.tsx";
 import WaInboxFlowDisplayModal from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/flowDisplayModel/index.tsx";
+import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import WaInboxTemplateDisplayModal from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/templateDisplayModal/index.tsx";
 import { usePhoneIdStore } from "../whatsapp/inbox/chatselect/accountSelectorStore.ts";
 import InboxContactsControl from "./InboxContactMessage/index.tsx";
@@ -481,24 +481,24 @@ function WaTextEditor({
                   editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""
                 }`}
               />
-              <div className="absolute bottom-2 right-2 flex items-center space-x-1">
-                <WaTextCharacterCount editor={editor} max={max} />
-                {inbox && (
-                  <CustomTooltip
-                    trigger={
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={() => setShowQuickReplies((prev) => !prev)}
-                      >
-                        <Zap className="w-4 h-4 text-cyan-600" />
-                      </Button>
-                    }
-                    content={<p>Quick Replies</p>}
-                  />
-                )}
-              </div>
+            </div>
+            <div className="flex items-center justify-end px-2 pt-1 space-x-1">
+              <WaTextCharacterCount editor={editor} max={max} />
+              {inbox && (
+                <CustomTooltip
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => setShowQuickReplies((prev) => !prev)}
+                    >
+                      <Zap className="w-4 h-4 text-cyan-600" />
+                    </Button>
+                  }
+                  content={<p>Quick Replies</p>}
+                />
+              )}
             </div>
             <div className="flex justify-between items-center">
               <div className="flex flex-wrap p-2">

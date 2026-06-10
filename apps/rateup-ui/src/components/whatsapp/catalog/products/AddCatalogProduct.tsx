@@ -1,15 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-import {
-  Group,
-  Radio,
-  RadioGroup,
-  SimpleGrid,
-  Stack,
-  Text,
-} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { toast } from "sonner";
 
@@ -19,24 +11,30 @@ import {
   useCreateShopifyProduct,
   useUpdateCatalogProducts,
 } from "@/backend/whatsapp/catalog/products/products.query";
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "@/components/Button/RateupButtons.tsx";
-import {
-  ContainedFileInput,
-  ContainedNumberInput,
-  ContainedSelection,
-  ContainedTagInput,
-  ContainedTextArea,
-  ContainedTextField,
-} from "@/components/input/ContainedInput/ContainedInput.tsx";
+import { ContainedTagInput } from "@/components/input/ContainedInput/ContainedInput.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 import {
   CATALOG_PRODUCT_AVAILABILITY,
   CATALOG_PRODUCT_CONDITIONS,
@@ -178,10 +176,12 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           initialValues[key] = productData[key];
         });
         form.setInitialValues(initialValues);
-        form.setValues(initialValues as never); // Last resort if narrowing fails
+        // @ts-expect-error form is typed from PRODUCT_ITEM initial values; union shapes are valid at runtime
+        form.setValues(initialValues);
       } else {
         form.setInitialValues(getInitialValues(type));
-        form.setValues(getInitialValues(type) as never);
+        // @ts-expect-error form is typed from PRODUCT_ITEM initial values; union shapes are valid at runtime
+        form.setValues(getInitialValues(type));
       }
     }
   }, [catalogData, productData]);
@@ -319,331 +319,459 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
     onCancel();
   }
   return (
-    <Stack>
-      <Group justify="space-between">
-        <Group>
-          {/* form.getValues().type === CatalogProductType.PRODUCT_ITEM &&
-            !productData && (
-              <Switch
-                label="Add to Shopify"
-                description="Create this product in your Shopify store instead of Meta catalog"
-                checked={addToShopify}
-                onChange={(e) => setAddToShopify(e.currentTarget.checked)}
-                color="green"
-              />
-            ) */}
-        </Group>
-        <Group>
-          <RateupButtonSecondary
-            title="Cancel"
-            variant="light"
-            onClick={cancel}
-          />
-          <RateupButtonPrimary
-            type={"submit"}
-            title={addToShopify ? "Add to Shopify" : "Save"}
-            onClick={handleSave}
-            loading={
-              createBatch.isPending ||
-              updateProducts.isPending ||
-              createShopifyMut.isPending
-            }
-          />
-        </Group>
-      </Group>
-      <ContainedSelection
-        data={Object.values(CatalogProductType)}
-        {...form.getInputProps("type")}
-        label={"Item Type"}
-        disabled
-      />
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end gap-2">
+        <Button variant="outline" onClick={cancel}>
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          onClick={handleSave}
+          disabled={
+            createBatch.isPending ||
+            updateProducts.isPending ||
+            createShopifyMut.isPending
+          }
+        >
+          {addToShopify ? "Add to Shopify" : "Save"}
+        </Button>
+      </div>
+
+      <Field>
+        <FieldLabel>Item Type</FieldLabel>
+        <Select
+          value={form.values.type}
+          onValueChange={(v) =>
+            form.setFieldValue("type", v as CatalogProductType)
+          }
+          disabled
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.values(CatalogProductType).map((t) => (
+              <SelectItem key={t} value={t}>
+                {t}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+
       {form.getValues().type === "PRODUCT_ITEM" && (
-        <SimpleGrid cols={2}>
+        <div className="grid grid-cols-2 gap-4">
           {!addToShopify && (
-            <ContainedTextField
-              {...form.getInputProps("retailer_id")}
-              label={"Product Retailer ID"}
-              required
-              withAsterisk
-              disabled={!!productData}
-            />
-          )}
-          <ContainedTextField
-            {...form.getInputProps("title")}
-            label={"Product Title"}
-            required
-            withAsterisk
-          />
-          <ContainedTextArea
-            {...form.getInputProps("description")}
-            label={"Product Description"}
-            rows={3}
-            minRows={3}
-            maxLength={5000}
-            required
-            withAsterisk
-          />
-          {!addToShopify && (
-            <ContainedTagInput
-              {...form.getInputProps("internal_label")}
-              maxTags={5}
-              label={"Internal Labels"}
-            />
-          )}
-          {!addToShopify && (
-            <ContainedSelection
-              data={CATALOG_PRODUCT_CONDITIONS}
-              {...form.getInputProps("condition")}
-              label={"Product Condition"}
-              required
-              withAsterisk
-            />
-          )}
-          {!addToShopify && (
-            <ContainedSelection
-              data={CATALOG_PRODUCT_AVAILABILITY}
-              {...form.getInputProps("availability")}
-              label={"Availability"}
-              required
-              withAsterisk
-            />
-          )}
-          <ContainedTextField
-            {...form.getInputProps("brand")}
-            label={"Brand"}
-            required
-            withAsterisk
-          />
-          {!addToShopify && (
-            <ContainedTextField
-              {...form.getInputProps("link")}
-              label={"Website Url"}
-            />
-          )}
-          <Group gap={"xs"}>
-            <ContainedNumberInput
-              allowNegative={false}
-              allowLeadingZeros={false}
-              {...form.getInputProps("price")}
-              label={"Price"}
-              w={150}
-              required
-              withAsterisk
-            />
-            {!addToShopify && (
-              <ContainedNumberInput
-                allowNegative={false}
-                allowLeadingZeros={false}
-                {...form.getInputProps("sale_price")}
-                label={"Sale Price"}
-                w={150}
-                required
-                withAsterisk
+            <Field data-invalid={!!form.errors.retailer_id}>
+              <FieldLabel>Product Retailer ID *</FieldLabel>
+              <Input
+                {...form.getInputProps("retailer_id")}
+                disabled={!!productData}
               />
-            )}
-          </Group>
-          <ContainedSelection
-            data={CURRENCY_CODES}
-            {...form.getInputProps("currencyCode")}
-            label={"currency"}
-            required
-            withAsterisk
-          />
-          <Stack gap={2}>
-            <Group>
-              <Text fw={500}>
-                Image{" "}
-                <Text fz={10} c={"red"}>
-                  (Min Size: 500x500)
-                </Text>
-              </Text>
-              <RadioGroup
-                size="xs"
-                value={imageUpload}
-                onChange={(value) => setImageUpload(value)}
+              <FieldError>{form.errors.retailer_id as string}</FieldError>
+            </Field>
+          )}
+          <Field data-invalid={!!form.errors.title}>
+            <FieldLabel>Product Title *</FieldLabel>
+            <Input {...form.getInputProps("title")} />
+            <FieldError>{form.errors.title as string}</FieldError>
+          </Field>
+          <Field data-invalid={!!form.errors.description}>
+            <FieldLabel>Product Description *</FieldLabel>
+            <Textarea
+              {...form.getInputProps("description")}
+              rows={3}
+              maxLength={5000}
+            />
+            <FieldError>{form.errors.description as string}</FieldError>
+          </Field>
+          {!addToShopify && (
+            <Field>
+              <FieldLabel>Internal Labels</FieldLabel>
+              <ContainedTagInput
+                {...form.getInputProps("internal_label")}
+                maxTags={5}
+                label={undefined}
+              />
+            </Field>
+          )}
+          {!addToShopify && (
+            <Field data-invalid={!!form.errors.condition}>
+              <FieldLabel>Product Condition *</FieldLabel>
+              <Select
+                value={form.values.condition}
+                onValueChange={(v) => form.setFieldValue("condition", v)}
               >
-                <Group>
-                  <Radio value="upload" size="xs" label="Upload" />
-                  <Radio value={"url"} size="xs" label="Link" />
-                </Group>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATALOG_PRODUCT_CONDITIONS.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError>{form.errors.condition as string}</FieldError>
+            </Field>
+          )}
+          {!addToShopify && (
+            <Field data-invalid={!!form.errors.availability}>
+              <FieldLabel>Availability *</FieldLabel>
+              <Select
+                value={form.values.availability}
+                onValueChange={(v) => form.setFieldValue("availability", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATALOG_PRODUCT_AVAILABILITY.map((a) => (
+                    <SelectItem key={a} value={a}>
+                      {a}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError>{form.errors.availability as string}</FieldError>
+            </Field>
+          )}
+          <Field data-invalid={!!form.errors.brand}>
+            <FieldLabel>Brand *</FieldLabel>
+            <Input {...form.getInputProps("brand")} />
+            <FieldError>{form.errors.brand as string}</FieldError>
+          </Field>
+          {!addToShopify && (
+            <Field>
+              <FieldLabel>Website URL</FieldLabel>
+              <Input {...form.getInputProps("link")} />
+            </Field>
+          )}
+          <div className="flex items-end gap-2">
+            <Field data-invalid={!!form.errors.price}>
+              <FieldLabel>Price *</FieldLabel>
+              <Input
+                type="number"
+                min={0}
+                className="w-37.5"
+                value={form.values.price}
+                onChange={(e) =>
+                  form.setFieldValue("price", Number(e.target.value))
+                }
+              />
+              <FieldError>{form.errors.price as string}</FieldError>
+            </Field>
+            {!addToShopify && (
+              <Field data-invalid={!!form.errors.sale_price}>
+                <FieldLabel>Sale Price *</FieldLabel>
+                <Input
+                  type="number"
+                  min={0}
+                  className="w-37.5"
+                  value={form.values.sale_price}
+                  onChange={(e) =>
+                    form.setFieldValue("sale_price", Number(e.target.value))
+                  }
+                />
+                <FieldError>{form.errors.sale_price as string}</FieldError>
+              </Field>
+            )}
+          </div>
+          <Field data-invalid={!!form.errors.currencyCode}>
+            <FieldLabel>Currency *</FieldLabel>
+            <Select
+              value={form.values.currencyCode}
+              onValueChange={(v) => form.setFieldValue("currencyCode", v)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCY_CODES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldError>{form.errors.currencyCode as string}</FieldError>
+          </Field>
+          <Field>
+            <div className="flex items-center gap-3">
+              <FieldLabel className="mb-0">
+                Image{" "}
+                <span className="text-[10px] text-destructive">
+                  (Min 500x500)
+                </span>
+              </FieldLabel>
+              <RadioGroup
+                value={imageUpload}
+                onValueChange={setImageUpload}
+                className="flex flex-row gap-3 w-auto"
+              >
+                <div className="flex items-center gap-1.5">
+                  <RadioGroupItem value="upload" id="img-upload" />
+                  <FieldLabel
+                    htmlFor="img-upload"
+                    className="font-normal cursor-pointer mb-0"
+                  >
+                    Upload
+                  </FieldLabel>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <RadioGroupItem value="url" id="img-url" />
+                  <FieldLabel
+                    htmlFor="img-url"
+                    className="font-normal cursor-pointer mb-0"
+                  >
+                    Link
+                  </FieldLabel>
+                </div>
               </RadioGroup>
-            </Group>
+            </div>
             {imageUpload === "upload" ? (
-              <ContainedFileInput
-                placeholder="Choose Image"
-                value={image}
-                onChange={setImage}
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImage(e.target.files?.[0] ?? null)}
               />
             ) : (
-              <ContainedTextField
+              <Input
                 {...form.getInputProps("image.0.url")}
                 placeholder="Enter link"
               />
             )}
-          </Stack>
+          </Field>
           {!addToShopify && (
-            <ContainedTagInput
-              {...form.getInputProps("image.0.tag")}
-              label={"Image Tags"}
-            />
+            <Field>
+              <FieldLabel>Image Tags</FieldLabel>
+              <ContainedTagInput
+                {...form.getInputProps("image.0.tag")}
+                label={undefined}
+              />
+            </Field>
           )}
           {!addToShopify && (
-            <Stack gap={2}>
-              <Group gap={"lg"}>
-                <Text fw={500}>Video</Text>
+            <Field>
+              <div className="flex items-center gap-3">
+                <FieldLabel className="mb-0">Video</FieldLabel>
                 <RadioGroup
-                  size="xs"
                   value={videoUpload}
-                  onChange={(value) => setVideoUpload(value)}
+                  onValueChange={setVideoUpload}
+                  className="flex flex-row gap-3 w-auto"
                 >
-                  <Group>
-                    <Radio size="xs" value="upload" label="Upload" />
-                    <Radio size="xs" value={"url"} label="Link" />
-                  </Group>
+                  <div className="flex items-center gap-1.5">
+                    <RadioGroupItem value="upload" id="vid-upload" />
+                    <FieldLabel
+                      htmlFor="vid-upload"
+                      className="font-normal cursor-pointer mb-0"
+                    >
+                      Upload
+                    </FieldLabel>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <RadioGroupItem value="url" id="vid-url" />
+                    <FieldLabel
+                      htmlFor="vid-url"
+                      className="font-normal cursor-pointer mb-0"
+                    >
+                      Link
+                    </FieldLabel>
+                  </div>
                 </RadioGroup>
-              </Group>
+              </div>
               {videoUpload === "upload" ? (
-                <ContainedFileInput
-                  placeholder="Choose video"
-                  value={video}
-                  onChange={setVideo}
+                <Input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => setVideo(e.target.files?.[0] ?? null)}
                 />
               ) : (
-                <ContainedTextField
+                <Input
                   {...form.getInputProps("video.0.url")}
-                  placeholder={"Enter Link"}
+                  placeholder="Enter link"
                 />
               )}
-            </Stack>
+            </Field>
           )}
           {!addToShopify && (
-            <ContainedTagInput
-              {...form.getInputProps("video.0.tag")}
-              label={"Video Tags"}
-            />
+            <Field>
+              <FieldLabel>Video Tags</FieldLabel>
+              <ContainedTagInput
+                {...form.getInputProps("video.0.tag")}
+                label={undefined}
+              />
+            </Field>
           )}
-        </SimpleGrid>
+        </div>
       )}
+
       {form.getValues().type === "HOTEL" && (
-        <SimpleGrid cols={2}>
-          <ContainedTextField
-            {...form.getInputProps("hotel_id")}
-            label={"Hotel ID"}
-            required
-            withAsterisk
-          />
-          <ContainedTextField
-            {...form.getInputProps("name")}
-            label={"Hotel Name"}
-            required
-            withAsterisk
-          />
-          <ContainedTextArea
-            {...form.getInputProps("description")}
-            label={"Description"}
-            rows={7}
-            minRows={7}
-            maxLength={5000}
-            required
-            withAsterisk
-          />
-          <Stack>
-            <ContainedTagInput
-              {...form.getInputProps("tags")}
-              maxTags={5}
-              label={"Tags"}
+        <div className="grid grid-cols-2 gap-4">
+          <Field data-invalid={!!form.errors.hotel_id}>
+            <FieldLabel>Hotel ID *</FieldLabel>
+            <Input {...form.getInputProps("hotel_id")} />
+            <FieldError>{form.errors.hotel_id as string}</FieldError>
+          </Field>
+          <Field data-invalid={!!form.errors.name}>
+            <FieldLabel>Hotel Name *</FieldLabel>
+            <Input {...form.getInputProps("name")} />
+            <FieldError>{form.errors.name as string}</FieldError>
+          </Field>
+          <Field data-invalid={!!form.errors.description}>
+            <FieldLabel>Description *</FieldLabel>
+            <Textarea
+              {...form.getInputProps("description")}
+              rows={7}
+              maxLength={5000}
             />
-            <ContainedTagInput
-              {...form.getInputProps("numbertags")}
-              maxTags={5}
-              label={"Number Tags"}
-              description="decimal, commas are not allowed. Allowed eg:2024"
+            <FieldError>{form.errors.description as string}</FieldError>
+          </Field>
+          <div className="flex flex-col gap-3">
+            <Field>
+              <FieldLabel>Tags</FieldLabel>
+              <ContainedTagInput
+                {...form.getInputProps("tags")}
+                maxTags={5}
+                label={undefined}
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Number Tags</FieldLabel>
+              <ContainedTagInput
+                {...form.getInputProps("numbertags")}
+                maxTags={5}
+                label={undefined}
+              />
+              <FieldDescription>
+                Decimals only — commas not allowed (e.g. 2024)
+              </FieldDescription>
+            </Field>
+          </div>
+          <Field>
+            <FieldLabel>Address</FieldLabel>
+            <Input {...form.getInputProps("address.address")} />
+          </Field>
+          <Field>
+            <FieldLabel>City</FieldLabel>
+            <Input {...form.getInputProps("address.city")} />
+          </Field>
+          <Field data-invalid={!!form.errors.base_price}>
+            <FieldLabel>Price *</FieldLabel>
+            <Input
+              type="number"
+              min={0}
+              value={form.values.base_price}
+              onChange={(e) =>
+                form.setFieldValue("base_price", Number(e.target.value))
+              }
             />
-          </Stack>
-          <ContainedTextField
-            {...form.getInputProps("address.address")}
-            label={"Address"}
-          />
-          <ContainedTextField
-            {...form.getInputProps("address.city")}
-            label={"City"}
-          />
-          <ContainedNumberInput
-            allowNegative={false}
-            allowLeadingZeros={false}
-            {...form.getInputProps("base_price")}
-            label={"Price"}
-            required
-            withAsterisk
-          />
-          <ContainedSelection
-            data={CURRENCY_CODES}
-            {...form.getInputProps("currencyCode")}
-            label={"currency"}
-            required
-            withAsterisk
-          />
-          <ContainedTextField
-            {...form.getInputProps("image.0.url")}
-            label={"Image link"}
-          />
-          <ContainedTagInput
-            {...form.getInputProps("image.0.tag")}
-            label={"Image tags"}
-          />
-          {/* add location */}
-        </SimpleGrid>
+            <FieldError>{form.errors.base_price as string}</FieldError>
+          </Field>
+          <Field data-invalid={!!form.errors.currencyCode}>
+            <FieldLabel>Currency *</FieldLabel>
+            <Select
+              value={form.values.currencyCode}
+              onValueChange={(v) => form.setFieldValue("currencyCode", v)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCY_CODES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldError>{form.errors.currencyCode as string}</FieldError>
+          </Field>
+          <Field>
+            <FieldLabel>Image Link</FieldLabel>
+            <Input {...form.getInputProps("image.0.url")} />
+          </Field>
+          <Field>
+            <FieldLabel>Image Tags</FieldLabel>
+            <ContainedTagInput
+              {...form.getInputProps("image.0.tag")}
+              label={undefined}
+            />
+          </Field>
+        </div>
       )}
+
       {form.getValues().type === "HOTEL_ROOM" && (
-        <SimpleGrid cols={2}>
-          <ContainedTextField
-            {...form.getInputProps("hotel_retailer_id")}
-            label={"Hotel Retailer ID"}
-            required
-            withAsterisk
-          />
-          <ContainedTextField
-            {...form.getInputProps("hotel_room_id")}
-            label={"Hotel Room ID"}
-            required
-            withAsterisk
-          />
-          <ContainedTextField {...form.getInputProps("name")} label={"Name"} />
-          <ContainedTextArea
-            minRows={3}
-            maxLength={5000}
-            {...form.getInputProps("description")}
-            rows={3}
-            label={"Description"}
-            required
-            withAsterisk
-          />
-          <ContainedNumberInput
-            allowNegative={false}
-            allowLeadingZeros={false}
-            {...form.getInputProps("base_price")}
-            label={"Price"}
-            required
-            withAsterisk
-          />
-          <ContainedSelection
-            data={CURRENCY_CODES}
-            {...form.getInputProps("currencyCode")}
-            label={"currency"}
-            required
-            withAsterisk
-          />
-          <ContainedTextField
-            {...form.getInputProps("image.0.url")}
-            label={"Image link"}
-          />
-          <ContainedTagInput
-            {...form.getInputProps("image.0.tag")}
-            label={"Image tags"}
-          />
-        </SimpleGrid>
+        <div className="grid grid-cols-2 gap-4">
+          <Field data-invalid={!!form.errors.hotel_retailer_id}>
+            <FieldLabel>Hotel Retailer ID *</FieldLabel>
+            <Input {...form.getInputProps("hotel_retailer_id")} />
+            <FieldError>{form.errors.hotel_retailer_id as string}</FieldError>
+          </Field>
+          <Field data-invalid={!!form.errors.hotel_room_id}>
+            <FieldLabel>Hotel Room ID *</FieldLabel>
+            <Input {...form.getInputProps("hotel_room_id")} />
+            <FieldError>{form.errors.hotel_room_id as string}</FieldError>
+          </Field>
+          <Field>
+            <FieldLabel>Name</FieldLabel>
+            <Input {...form.getInputProps("name")} />
+          </Field>
+          <Field data-invalid={!!form.errors.description}>
+            <FieldLabel>Description *</FieldLabel>
+            <Textarea
+              {...form.getInputProps("description")}
+              rows={3}
+              maxLength={5000}
+            />
+            <FieldError>{form.errors.description as string}</FieldError>
+          </Field>
+          <Field data-invalid={!!form.errors.base_price}>
+            <FieldLabel>Price *</FieldLabel>
+            <Input
+              type="number"
+              min={0}
+              value={form.values.base_price}
+              onChange={(e) =>
+                form.setFieldValue("base_price", Number(e.target.value))
+              }
+            />
+            <FieldError>{form.errors.base_price as string}</FieldError>
+          </Field>
+          <Field data-invalid={!!form.errors.currencyCode}>
+            <FieldLabel>Currency *</FieldLabel>
+            <Select
+              value={form.values.currencyCode}
+              onValueChange={(v) => form.setFieldValue("currencyCode", v)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCY_CODES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldError>{form.errors.currencyCode as string}</FieldError>
+          </Field>
+          <Field>
+            <FieldLabel>Image Link</FieldLabel>
+            <Input {...form.getInputProps("image.0.url")} />
+          </Field>
+          <Field>
+            <FieldLabel>Image Tags</FieldLabel>
+            <ContainedTagInput
+              {...form.getInputProps("image.0.tag")}
+              label={undefined}
+            />
+          </Field>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 };
 
@@ -657,7 +785,7 @@ export const AddCatalogProductModal = ({
 }) => {
   return (
     <Dialog open={opened} onOpenChange={(val) => !val && close()}>
-      <DialogContent className="max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-175 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Item</DialogTitle>
         </DialogHeader>

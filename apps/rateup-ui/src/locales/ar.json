@@ -344,9 +344,9 @@
     "Channels": "القنوات",
     "chat is inactive for": "الدردشة غير نشطة ل",
     "Chat Type": "نوع الدردشة",
+    "Chatbot": "روبوت الدردشة",
     "Chatbot Name": "اسم الشات بوت",
     "Chatbot name is required": "مطلوب اسم Chatbot",
-    "Chatbots": "روبوتات الدردشة",
     "Chats Received": "تم استلام الدردشات",
     "Chats Transferred": "الدردشات منقولة",
     "Check your email": "تحقق من بريدك الإلكتروني",
@@ -2608,6 +2608,9 @@
     "Selected": "مختارة",
     "You have not selected any participant": "لم تقم باختيار أي مشارك"
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "حدد فقط المراحل التي تنتمي إلى خط الأنابيب المحدد وتكوين خط الأنابيب الفرعي."
+  },
   "apianalytics": {
     "All": "الجميع",
     "Avg Delivery Time": "متوسط ​​وقت التسليم",
@@ -2633,9 +2636,6 @@
     "Total Messages Sent": "إجمالي الرسائل المرسلة",
     "WhatsApp Messages Analytics": "تحليل رسائل الواتس اب",
     "WhatsApp Template Analytics": "تحليلات قالب الواتساب"
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "حدد فقط المراحل التي تنتمي إلى خط الأنابيب المحدد وتكوين خط الأنابيب الفرعي."
   },
   "campaign.list": {
     "Active": "نشيط",

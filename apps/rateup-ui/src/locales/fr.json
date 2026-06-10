@@ -341,9 +341,9 @@
     "Channels": "Canaux",
     "chat is inactive for": "le chat est inactif pour",
     "Chat Type": "Type de discussion",
+    "Chatbot": "Chatbot",
     "Chatbot Name": "Nom du chatbot",
     "Chatbot name is required": "Le nom du chatbot est requis",
-    "Chatbots": "Chatbots",
     "Chats Received": "Discussions reçues",
     "Chats Transferred": "Discussions transférées",
     "Check your email": "Vérifiez votre courrier électronique",
@@ -2593,6 +2593,9 @@
     "Selected": "Sélectionné",
     "You have not selected any participant": "Vous n'avez sélectionné aucun participant"
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Sélectionnez uniquement les étapes qui appartiennent à la configuration de pipeline et de sous-pipeline sélectionnée."
+  },
   "apianalytics": {
     "All": "Tout",
     "Avg Delivery Time": "Délai de livraison moyen",
@@ -2618,9 +2621,6 @@
     "Total Messages Sent": "Total des messages envoyés",
     "WhatsApp Messages Analytics": "Analyse des messages WhatsApp",
     "WhatsApp Template Analytics": "Analyse des modèles WhatsApp"
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Sélectionnez uniquement les étapes qui appartiennent à la configuration de pipeline et de sous-pipeline sélectionnée."
   },
   "campaign.list": {
     "Active": "Actif",
