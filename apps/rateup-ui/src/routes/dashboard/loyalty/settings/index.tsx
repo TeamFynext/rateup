@@ -38,6 +38,7 @@ import { DEFAULT_JOIN_MESSAGE_TEMPLATE } from "@/components/loyalty/settings/con
 import { DangerZone } from "@/components/loyalty/settings/DangerZone.tsx";
 import { NotificationSettings } from "@/components/loyalty/settings/NotificationSettings.tsx";
 import { PointsExpirationSettings } from "@/components/loyalty/settings/PointsExpirationSettings.tsx";
+import { PointsExpirySettings } from "@/components/loyalty/settings/PointsExpirySettings.tsx";
 import { PointsReminderSettings } from "@/components/loyalty/settings/PointsReminderSettings.tsx";
 import { ReferralMessageSettings } from "@/components/loyalty/settings/ReferralMessageSettings.tsx";
 import {
@@ -61,11 +62,15 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Form } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { docsPath } from "@/utils/constants.ts";
 import { UserRole } from "@/utils/enums/index.ts";
-
 
 export const Route = createFileRoute("/dashboard/loyalty/settings/")({
   component: LoyaltySettingsPage,
@@ -111,6 +116,9 @@ function LoyaltySettingsPage() {
   const [pointsAdjustedModified, setPointsAdjustedModified] = useState(false);
   const [rewardIssuedModified, setRewardIssuedModified] = useState(false);
   const [rewardRedeemedModified, setRewardRedeemedModified] = useState(false);
+  const [pointsExpiryAlertModified, setPointsExpiryAlertModified] =
+    useState(false);
+  const [pointsExpiredModified, setPointsExpiredModified] = useState(false);
 
   // Form
   const eventTriggersForm = useForm<z.infer<typeof EventTriggersFormSchema>>({
@@ -145,6 +153,14 @@ function LoyaltySettingsPage() {
         enabled: false,
         waTemplateId: undefined,
         rewardId: undefined,
+      },
+      [LoyaltyEventType.POINTS_EXPIRY_ALERT]: {
+        enabled: false,
+        waTemplateId: undefined,
+      },
+      [LoyaltyEventType.POINTS_EXPIRED]: {
+        enabled: false,
+        waTemplateId: undefined,
       },
     },
   });
@@ -276,6 +292,19 @@ function LoyaltySettingsPage() {
               trigger.triggerDays.toString(),
             );
           }
+          if (trigger.waTemplateId) {
+            eventTriggersForm.setValue(
+              `${eventType}.waTemplateId` as any,
+              trigger.waTemplateId,
+            );
+          }
+          break;
+        case LoyaltyEventType.POINTS_EXPIRY_ALERT:
+        case LoyaltyEventType.POINTS_EXPIRED:
+          eventTriggersForm.setValue(
+            `${eventType}.enabled` as any,
+            trigger.enabled,
+          );
           if (trigger.waTemplateId) {
             eventTriggersForm.setValue(
               `${eventType}.waTemplateId` as any,
@@ -488,6 +517,16 @@ function LoyaltySettingsPage() {
     setRewardRedeemedModified(false);
   };
 
+  const handleSavePointsExpiryAlert = async () => {
+    await handleSaveEventTrigger(LoyaltyEventType.POINTS_EXPIRY_ALERT);
+    setPointsExpiryAlertModified(false);
+  };
+
+  const handleSavePointsExpired = async () => {
+    await handleSaveEventTrigger(LoyaltyEventType.POINTS_EXPIRED);
+    setPointsExpiredModified(false);
+  };
+
   const onSaveExpiration = (data: z.infer<typeof ExpirationSettingsSchema>) => {
     if (program?.id) {
       updateProgramMutation.mutate({
@@ -651,6 +690,19 @@ function LoyaltySettingsPage() {
                 onSave={handleSaveBirthdayReminder}
                 isModified={birthdayReminderModified}
                 onModify={() => setBirthdayReminderModified(true)}
+                disabled={noProgram}
+              />
+
+              <PointsExpirySettings
+                form={eventTriggersForm}
+                isPending={createTriggerMutation.isPending}
+                onToggle={handleToggleEventTrigger}
+                onSaveAlert={handleSavePointsExpiryAlert}
+                onSaveExpired={handleSavePointsExpired}
+                isAlertModified={pointsExpiryAlertModified}
+                isExpiredModified={pointsExpiredModified}
+                onModifyAlert={() => setPointsExpiryAlertModified(true)}
+                onModifyExpired={() => setPointsExpiredModified(true)}
                 disabled={noProgram}
               />
             </div>
