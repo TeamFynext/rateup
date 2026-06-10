@@ -117,4 +117,6 @@ export const EventTriggersFormSchema = z.object({
   [LoyaltyEventType.TIER_UPGRADED]: EventTriggerSchema,
   [LoyaltyEventType.INACTIVITY_REMINDER]: EventTriggerSchema,
   [LoyaltyEventType.BIRTHDAY]: EventTriggerSchema,
+  [LoyaltyEventType.POINTS_EXPIRY_ALERT]: EventTriggerSchema,
+  [LoyaltyEventType.POINTS_EXPIRED]: EventTriggerSchema,
 });

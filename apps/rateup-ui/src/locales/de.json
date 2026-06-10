@@ -340,9 +340,9 @@
     "Channels": "Kanäle",
     "chat is inactive for": "Chat ist inaktiv für",
     "Chat Type": "Chat-Typ",
+    "Chatbot": "Chatbot",
     "Chatbot Name": "Chatbot-Name",
     "Chatbot name is required": "Chatbot-Name ist erforderlich",
-    "Chatbots": "Chatbots",
     "Chats Received": "Erhaltene Chats",
     "Chats Transferred": "Chats übertragen",
     "Check your email": "Überprüfen Sie Ihre E-Mails",
@@ -750,8 +750,10 @@
     "Enable Email": "E-Mail aktivieren",
     "Enable Email Notification": "Aktivieren Sie die E-Mail-Benachrichtigung",
     "Enable Expiration": "Ablauf aktivieren",
+    "Enable Expiry Alert": "Aktivieren Sie die Ablaufwarnung",
     "Enable Item": "Element aktivieren",
     "Enable Other": "Andere aktivieren",
+    "Enable Points Expired Notification": "Aktivieren Sie die Benachrichtigung über abgelaufene Punkte",
     "Enable Points Reminder": "Aktivieren Sie die Punkteerinnerung",
     "Enable Rating Question": "Bewertungsfrage aktivieren",
     "Enable Ticketing": "Ticketing aktivieren",
@@ -1433,6 +1435,8 @@
     "Notification disabled": "Benachrichtigung deaktiviert",
     "Notification enabled": "Benachrichtigung aktiviert",
     "Notifications": "Benachrichtigungen",
+    "Notify customers 14 days before their points expire": "Benachrichtigen Sie Kunden 14 Tage vor Ablauf ihrer Punkte",
+    "Notify customers when their points have expired": "Benachrichtigen Sie Kunden, wenn ihre Punkte abgelaufen sind",
     "Notify on manual adjustments": "Benachrichtigung bei manuellen Anpassungen",
     "Notify on manual reward grant": "Bei manueller Prämiengewährung benachrichtigen",
     "Notify on purchase points": "Benachrichtigen Sie über Kaufpunkte",
@@ -1585,6 +1589,7 @@
     "Points Earned": "Erreichte Punkte",
     "Points Expiration": "Ablauf der Punkte",
     "Points expire after period": "Punkte verfallen nach Ablauf der Frist",
+    "Points Expiry Notifications": "Benachrichtigungen über den Ablauf von Punkten",
     "Points Issued": "Vergebene Punkte",
     "Points issued successfully": "Punkte erfolgreich vergeben",
     "Points Redeemed": "Punkte eingelöst",
@@ -1962,7 +1967,9 @@
     "Sending": "Senden",
     "Sent": "Gesendet",
     "Sent At": "Gesendet an",
+    "Sent automatically when points expire after 12 months of no purchase activity": "Wird automatisch gesendet, wenn die Punkte nach 12 Monaten ohne Kaufaktivität verfallen",
     "Sent Only if": "Wird nur gesendet, wenn",
+    "Sent when customer's last purchase was 11 months and 11 days ago (14 days before expiry)": "Wird gesendet, wenn der letzte Einkauf des Kunden 11 Monate und 11 Tage zurückliegt (14 Tage vor Ablauf).",
     "Service Type": "Servicetyp",
     "serviceId": "Service-ID",
     "Session Error": "Sitzungsfehler",
@@ -2588,6 +2595,9 @@
     "Selected": "Ausgewählt",
     "You have not selected any participant": "Sie haben keinen Teilnehmer ausgewählt"
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Wählen Sie nur Stufen aus, die zur ausgewählten Pipeline- und Sub-Pipeline-Konfiguration gehören."
+  },
   "apianalytics": {
     "All": "Alle",
     "Avg Delivery Time": "Durchschnittliche Lieferzeit",
@@ -2613,9 +2623,6 @@
     "Total Messages Sent": "Gesamtzahl der gesendeten Nachrichten",
     "WhatsApp Messages Analytics": "WhatsApp-Nachrichtenanalyse",
     "WhatsApp Template Analytics": "WhatsApp-Vorlagenanalyse"
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Wählen Sie nur Stufen aus, die zur ausgewählten Pipeline- und Sub-Pipeline-Konfiguration gehören."
   },
   "campaign.list": {
     "Active": "Aktiv",

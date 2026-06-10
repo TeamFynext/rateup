@@ -340,9 +340,9 @@
     "Channels": "चैनल",
     "chat is inactive for": "चैट के लिए निष्क्रिय है",
     "Chat Type": "चैट प्रकार",
+    "Chatbot": "चैटबॉट",
     "Chatbot Name": "चैटबॉट का नाम",
     "Chatbot name is required": "चैटबॉट नाम आवश्यक है",
-    "Chatbots": "चैटबॉट्स",
     "Chats Received": "चैट प्राप्त हुए",
     "Chats Transferred": "चैट स्थानांतरित",
     "Check your email": "अपने ईमेल की जाँच करें",
@@ -750,8 +750,10 @@
     "Enable Email": "ईमेल सक्षम करें",
     "Enable Email Notification": "ईमेल अधिसूचना सक्षम करें",
     "Enable Expiration": "समाप्ति सक्षम करें",
+    "Enable Expiry Alert": "समाप्ति चेतावनी सक्षम करें",
     "Enable Item": "आइटम सक्षम करें",
     "Enable Other": "अन्य सक्षम करें",
+    "Enable Points Expired Notification": "अंक समाप्त अधिसूचना सक्षम करें",
     "Enable Points Reminder": "पॉइंट अनुस्मारक सक्षम करें",
     "Enable Rating Question": "रेटिंग प्रश्न सक्षम करें",
     "Enable Ticketing": "टिकटिंग सक्षम करें",
@@ -1433,6 +1435,8 @@
     "Notification disabled": "अधिसूचना अक्षम की गई",
     "Notification enabled": "अधिसूचना सक्षम",
     "Notifications": "सूचनाएं",
+    "Notify customers 14 days before their points expire": "ग्राहकों को उनके पॉइंट समाप्त होने से 14 दिन पहले सूचित करें",
+    "Notify customers when their points have expired": "जब उनके अंक समाप्त हो जाएं तो ग्राहकों को सूचित करें",
     "Notify on manual adjustments": "मैन्युअल समायोजन पर सूचित करें",
     "Notify on manual reward grant": "मैन्युअल पुरस्कार अनुदान पर सूचित करें",
     "Notify on purchase points": "खरीद बिंदुओं पर सूचित करें",
@@ -1585,6 +1589,7 @@
     "Points Earned": "अर्जित अंक",
     "Points Expiration": "अंक समाप्ति",
     "Points expire after period": "अवधि के बाद अंक समाप्त हो जाते हैं",
+    "Points Expiry Notifications": "अंक समाप्ति सूचनाएं",
     "Points Issued": "जारी किए गए अंक",
     "Points issued successfully": "अंक सफलतापूर्वक जारी किए गए",
     "Points Redeemed": "अंक भुनाए गए",
@@ -1962,7 +1967,9 @@
     "Sending": "भेजा जा रहा है",
     "Sent": "भेजा",
     "Sent At": "पर भेजा गया",
+    "Sent automatically when points expire after 12 months of no purchase activity": "जब 12 महीने तक कोई खरीदारी गतिविधि नहीं होने के बाद अंक समाप्त हो जाते हैं तो स्वचालित रूप से भेजा जाता है",
     "Sent Only if": "केवल तभी भेजा जाए",
+    "Sent when customer's last purchase was 11 months and 11 days ago (14 days before expiry)": "तब भेजा गया जब ग्राहक की आखिरी खरीदारी 11 महीने और 11 दिन पहले हुई थी (समाप्ति से 14 दिन पहले)",
     "Service Type": "सेवा प्रकार",
     "serviceId": "सेवाआईडी",
     "Session Error": "सत्र त्रुटि",
@@ -2588,6 +2595,9 @@
     "Selected": "चयनित",
     "You have not selected any participant": "आपने किसी भी प्रतिभागी का चयन नहीं किया है"
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "केवल उन चरणों का चयन करें जो चयनित पाइपलाइन और उप पाइपलाइन कॉन्फ़िगरेशन से संबंधित हैं।"
+  },
   "apianalytics": {
     "All": "सभी",
     "Avg Delivery Time": "औसत डिलिवरी समय",
@@ -2613,9 +2623,6 @@
     "Total Messages Sent": "भेजे गए कुल संदेश",
     "WhatsApp Messages Analytics": "व्हाट्सएप संदेश विश्लेषण",
     "WhatsApp Template Analytics": "व्हाट्सएप टेम्पलेट एनालिटिक्स"
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "केवल उन चरणों का चयन करें जो चयनित पाइपलाइन और उप पाइपलाइन कॉन्फ़िगरेशन से संबंधित हैं।"
   },
   "campaign.list": {
     "Active": "सक्रिय",

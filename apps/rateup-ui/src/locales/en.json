@@ -340,9 +340,9 @@
     "Channels": "Channels",
     "chat is inactive for": "chat is inactive for",
     "Chat Type": "Chat Type",
+    "Chatbot": "Chatbot",
     "Chatbot Name": "Chatbot Name",
     "Chatbot name is required": "Chatbot name is required",
-    "Chatbots": "Chatbots",
     "Chats Received": "Chats Received",
     "Chats Transferred": "Chats Transferred",
     "Check your email": "Check your email",
@@ -750,8 +750,10 @@
     "Enable Email": "Enable Email",
     "Enable Email Notification": "Enable Email Notification",
     "Enable Expiration": "Enable Expiration",
+    "Enable Expiry Alert": "Enable Expiry Alert",
     "Enable Item": "Enable Item",
     "Enable Other": "Enable Other",
+    "Enable Points Expired Notification": "Enable Points Expired Notification",
     "Enable Points Reminder": "Enable Points Reminder",
     "Enable Rating Question": "Enable Rating Question",
     "Enable Ticketing": "Enable Ticketing",
@@ -1433,6 +1435,8 @@
     "Notification disabled": "Notification disabled",
     "Notification enabled": "Notification enabled",
     "Notifications": "Notifications",
+    "Notify customers 14 days before their points expire": "Notify customers 14 days before their points expire",
+    "Notify customers when their points have expired": "Notify customers when their points have expired",
     "Notify on manual adjustments": "Notify on manual adjustments",
     "Notify on manual reward grant": "Notify on manual reward grant",
     "Notify on purchase points": "Notify on purchase points",
@@ -1585,6 +1589,7 @@
     "Points Earned": "Points Earned",
     "Points Expiration": "Points Expiration",
     "Points expire after period": "Points expire after period",
+    "Points Expiry Notifications": "Points Expiry Notifications",
     "Points Issued": "Points Issued",
     "Points issued successfully": "Points issued successfully",
     "Points Redeemed": "Points Redeemed",
@@ -1962,7 +1967,9 @@
     "Sending": "Sending",
     "Sent": "Sent",
     "Sent At": "Sent At",
+    "Sent automatically when points expire after 12 months of no purchase activity": "Sent automatically when points expire after 12 months of no purchase activity",
     "Sent Only if": "Sent Only if",
+    "Sent when customer's last purchase was 11 months and 11 days ago (14 days before expiry)": "Sent when customer's last purchase was 11 months and 11 days ago (14 days before expiry)",
     "Service Type": "Service Type",
     "serviceId": "serviceId",
     "Session Error": "Session Error",
@@ -2588,6 +2595,9 @@
     "Selected": "Selected",
     "You have not selected any participant": "You have not selected any participant"
   },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
+  },
   "apianalytics": {
     "All": "All",
     "Avg Delivery Time": "Avg Delivery Time",
@@ -2613,9 +2623,6 @@
     "Total Messages Sent": "Total Messages Sent",
     "WhatsApp Messages Analytics": "WhatsApp Messages Analytics",
     "WhatsApp Template Analytics": "WhatsApp Template Analytics"
-  },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
   },
   "campaign.list": {
     "Active": "Active",

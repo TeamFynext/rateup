@@ -1194,7 +1194,7 @@ const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
         handleInputChange={(e) => handleInputChange("body", e)}
         content={typedData.body || ""}
         placeholder="Enter message text..."
-        label="Body Text (optional)"
+        label="Body Text"
         required
         max={1024}
       />

@@ -369,7 +369,7 @@ export function useNavMain({
                 hasTeamFeature(TeamFeature.Chatbots)
                   ? [
                       {
-                        title: t("Chatbots"),
+                        title: t("Chatbot"),
                         url: "/dashboard/whatsapp/flowbots",
                         icon: IconSitemap,
                       },
