@@ -10,7 +10,7 @@ import Integrations from "@/components/LoyaltyLandingPage/Integrations";
 import Trusted from "@/components/LoyaltyLandingPage/Trusted";
 import WhyWhatsApp from "@/components/LoyaltyLandingPage/WhyWhatsApp";
 import Layout from "@/components/RateupHomePage/Layout";
-import HomePageFooter from "@/components/RateupHomePage/shared/HomePageFooter";
+import styles from "@/styles/commonCssModules/homepagecss.module.css";
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 import { productsMarkdown } from "../../../../markdown/products";
@@ -205,7 +205,7 @@ export const Route = createFileRoute("/(marketing)/products/whatsapp-loyalty/")(
 function LoyaltyLandingPage() {
   useRevealAnimation();
   return (
-    <Layout navbarClassName="heroNav">
+    <Layout contentClassName={styles.themeLoyalty} navbarClassName="heroNav">
       <div className="loyalty-scope">
         <span id="top"></span>
         <Hero />
@@ -215,7 +215,6 @@ function LoyaltyLandingPage() {
         <Integrations />
         <Trusted />
         <Faq />
-        <HomePageFooter />
       </div>
     </Layout>
   );

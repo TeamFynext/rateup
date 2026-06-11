@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import type { ReviewSuggestion } from "@/types/global";
 import {
   getPublicSurvey,
   getPublicSurveyGoogleLink,
@@ -11,27 +12,38 @@ export const Route = createFileRoute(
   "/(public-facing)/public/survey/$surveyId/review-us-on-google/",
 )({
   component: ReviewUsOnGoogle,
+  loader: async ({ params }) => {
+    const { surveyId } = params;
+
+    const propsToPass: {
+      googleLink?: string;
+      reviews?: {
+        reviews: ReviewSuggestion[];
+        reviewLink: string;
+      };
+      orgLogoUrl?: string | null;
+      surveyTeamMapId?: string;
+    } = {};
+    const { orgLogo } = await getPublicSurvey(surveyId);
+
+    const [googleLink, reviews] = await Promise.all([
+      getPublicSurveyGoogleLink(surveyId),
+      getPublicReviewsBySurveyTeamMapId(surveyId),
+    ]);
+
+    const orgLogoUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${orgLogo}`;
+    propsToPass.googleLink = googleLink;
+    propsToPass.reviews = reviews;
+    propsToPass.orgLogoUrl =
+      orgLogo && orgLogo !== "REMOVED_PHOTO" ? orgLogoUrl : null;
+    return propsToPass;
+  },
 });
 
 // TODO REMOVE THIS PAGE AFTER TESTING  --  CURRENTLY MERGED WITHIN PUBLIC SURVEY PAGE
 
-async function ReviewUsOnGoogle(props) {
-  const { surveyId } = await props.params;
-
-  const propsToPass: any = {};
-  const { orgLogo } = await getPublicSurvey(surveyId);
-
-  const [googleLink, reviews] = await Promise.all([
-    getPublicSurveyGoogleLink(surveyId),
-    getPublicReviewsBySurveyTeamMapId(surveyId),
-  ]);
-
-  const orgLogoUrl = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${orgLogo}`;
-  propsToPass.googleLink = googleLink;
-  propsToPass.reviews = reviews;
-  // TODO: add surveyTeamMapId
-  propsToPass.orgLogoUrl =
-    orgLogo && orgLogo !== "REMOVED_PHOTO" ? orgLogoUrl : null;
+function ReviewUsOnGoogle(props) {
+  const propsToPass = Route.useLoaderData();
 
   return (
     <GoogleReview

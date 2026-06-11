@@ -2,30 +2,27 @@ import { Group, Image } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { getPublicLinktreeWithShortId } from "@/backend/linktree/linktree.api";
-
-import LinkTreeC from "../../../../components/(public-facing)/lt/$shortId/linktreeC.tsx";
-import styles from "../../../../components/(public-facing)/lt/$shortId/lt.module.css";
+import LinkTreeC from "@/components/(public-facing)/lt/$shortId/linktreeC.tsx";
+import styles from "@/components/(public-facing)/lt/$shortId/lt.module.css";
 
 export const Route = createFileRoute("/(public-facing)/lt/$shortId/")({
   component: Lt,
+  loader: async ({ params }) => {
+    const { shortId } = params;
+    const linktreeObj = await getPublicLinktreeWithShortId(shortId);
+    if (linktreeObj?.isPublished) {
+      return linktreeObj;
+    } else {
+      return {
+        linktreeObj: null,
+      };
+    }
+  },
 });
 
-const getData = async (shortId) => {
-  const linktreeObj = await getPublicLinktreeWithShortId(shortId);
-  if (linktreeObj?.isPublished) {
-    return linktreeObj;
-  } else {
-    return {
-      linktreeObj: null,
-    };
-  }
-};
-
 // Linktree Public Page
-async function Lt(props) {
-  const params = await props?.params;
-  const { shortId } = params;
-  const linktreeObj = await getData(shortId);
+function Lt() {
+  const { linktreeObj } = Route.useLoaderData();
   if (!linktreeObj) {
     return (
       <Group className={styles["not-available-div"]}>
