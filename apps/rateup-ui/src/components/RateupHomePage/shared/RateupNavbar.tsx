@@ -22,7 +22,6 @@ import {
 import { RateupStar } from "../../integrations/logos.tsx";
 import { BookDemoModal } from "../helper/BookDemoModal.tsx";
 import DropDownMobileNavItems from "../helpers/DropDownMobileNavItems.tsx";
-import DropDownNavItems from "../helpers/DropDownNavItems.tsx";
 
 export default function RateupNavbar() {
   const hasSession = useCheckSession();
@@ -71,12 +70,12 @@ export default function RateupNavbar() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate({ to: "/dashboard" })}
-              className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-sm tracking-[-0.01em] pl-[18px] py-[5px] pr-[5px] text-white bg-[linear-gradient(135deg,var(--btn-primary-start),var(--btn-primary-end))] shadow-[0_10px_26px_var(--btn-primary-shadow)] hover:shadow-[0_14px_34px_var(--btn-primary-hover-shadow)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-sm tracking-[-0.01em] pl-4.5 py-1.25 pr-1.25 text-white bg-[linear-gradient(135deg,var(--btn-primary-start),var(--btn-primary-end))] shadow-[0_10px_26px_var(--btn-primary-shadow)] hover:shadow-[0_14px_34px_var(--btn-primary-hover-shadow)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
             >
               <span style={{ paddingRight: 2 }}>Dashboard</span>
-              <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[8px] bg-[var(--btn-primary-chip-bg)] flex-shrink-0">
+              <span className="inline-flex items-center justify-center w-7.5 h-7.5 rounded-xl bg-(--btn-primary-chip-bg) shrink-0">
                 <svg
-                  className="w-[15px] h-[15px]"
+                  className="w-3.75 h-3.75"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -97,7 +96,7 @@ export default function RateupNavbar() {
                 borderColor: "var(--nav-btn-ghost-border)",
                 color: "var(--nav-btn-ghost-text)",
               }}
-              className="bg-transparent font-extrabold text-[15px] border py-2.5 px-5 rounded-2xl hover:border-[var(--nav-link-hover)] hover:text-[var(--nav-link-hover)] transition-colors cursor-pointer whitespace-nowrap"
+              className="bg-transparent font-extrabold text-[15px] border py-2.5 px-5 rounded-2xl hover:border-(--nav-link-hover) hover:text-(--nav-link-hover) transition-colors cursor-pointer whitespace-nowrap"
             >
               Sign In
             </button>
@@ -108,12 +107,12 @@ export default function RateupNavbar() {
                   border: "1px solid var(--btn-demo-border)",
                   color: "var(--btn-demo-text)",
                 }}
-                className="inline-flex items-center gap-3 rounded-2xl font-extrabold text-sm pl-[18px] py-[5px] pr-[5px] hover:bg-[var(--btn-demo-hover-bg)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-3 rounded-2xl font-extrabold text-sm pl-4.5 py-1.25 pr-1.25 hover:bg-(--btn-demo-hover-bg) hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
               >
                 <span style={{ paddingRight: 2 }}>Book a Demo</span>
-                <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[8px] bg-white/65 flex-shrink-0 text-slate-800">
+                <span className="inline-flex items-center justify-center w-7.5 h-7.5 rounded-xl bg-white/65 shrink-0 text-slate-800">
                   <svg
-                    className="w-[15px] h-[15px]"
+                    className="w-3.75 h-3.75"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -131,12 +130,12 @@ export default function RateupNavbar() {
             </BookDemoModal>
             <button
               onClick={() => navigate({ to: "/signup" })}
-              className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-sm tracking-[-0.01em] pl-[18px] py-[5px] pr-[5px] text-white bg-[linear-gradient(135deg,var(--btn-primary-start),var(--btn-primary-end))] shadow-[0_10px_26px_var(--btn-primary-shadow)] hover:shadow-[0_14px_34px_var(--btn-primary-hover-shadow)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-3 border-0 rounded-2xl font-extrabold text-sm tracking-[-0.01em] pl-4.5 py-1.25 pr-1.25 text-white bg-[linear-gradient(135deg,var(--btn-primary-start),var(--btn-primary-end))] shadow-[0_10px_26px_var(--btn-primary-shadow)] hover:shadow-[0_14px_34px_var(--btn-primary-hover-shadow)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap"
             >
               <span style={{ paddingRight: 2 }}>Sign Up for Free</span>
-              <span className="inline-flex items-center justify-center w-[30px] h-[30px] rounded-[8px] bg-[var(--btn-primary-chip-bg)] flex-shrink-0">
+              <span className="inline-flex items-center justify-center w-7.5 h-7.5 rounded-xl bg-(--btn-primary-chip-bg) shrink-0">
                 <svg
-                  className="w-[15px] h-[15px]"
+                  className="w-3.75 h-3.75"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -206,21 +205,21 @@ export default function RateupNavbar() {
             ))}
 
             <div className="mt-6 flex flex-col gap-3">
-              <a
-                href="https://rateup.app/login"
+              <Link
+                to="/login"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="px-6 py-2 border text-rateup-blue-4 text-center border-rateup-blue-4 rounded hover:bg-rateup-blue-4 hover:text-white transition"
               >
                 Login
-              </a>
+              </Link>
 
-              <a
-                href="https://rateup.app/signup"
+              <Link
+                to="/signup"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="px-6 py-2 bg-rateup-blue-4 text-center text-white rounded hover:opacity-90 transition"
               >
                 SignUp
-              </a>
+              </Link>
             </div>
           </div>
         </MobileNavMenu>
