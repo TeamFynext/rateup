@@ -98,7 +98,7 @@ export default function HomePageFooter() {
           </div>
 
           <div className={styles["foot-col"]}>
-            <h3 className="text-white!">Product</h3>
+            <h3>Product</h3>
 
             <a href="#features">Omnichannel Inbox</a>
             <a href="#features">WhatsApp Loyalty</a>
@@ -108,7 +108,7 @@ export default function HomePageFooter() {
           </div>
 
           <div className={styles["foot-col"]}>
-            <h3 className="text-white!">Company</h3>
+            <h3>Company</h3>
 
             <a href="/about-us">About</a>
             <a href="#">Customers</a>
@@ -118,7 +118,7 @@ export default function HomePageFooter() {
           </div>
 
           <div className={styles["foot-col"]}>
-            <h3 className="text-white!">Resources</h3>
+            <h3>Resources</h3>
 
             <a href="/blog">Blog</a>
             <a href="https://docs.rateup.app">Help Center</a>

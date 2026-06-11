@@ -73,11 +73,12 @@ export const Navbar = ({ children, className }: NavbarProps) => {
   return (
     <motion.nav
       ref={ref}
-      // IMPORTANT: Change this to class of `fixed` if you want the navbar to be fixed
-      className={cn(
-        "sticky inset-x-1 top-0 z-40 w-full bg-[#071a33]",
-        className,
-      )}
+      style={{
+        backgroundColor: "var(--nav-bg)",
+        borderBottom: "1px solid var(--nav-border)",
+        backdropFilter: "blur(14px) saturate(140%)",
+      }}
+      className={cn("sticky inset-x-0 top-0 z-40 w-full", className)}
     >
       {React.Children.map(children, (child) =>
         React.isValidElement(child)
@@ -126,7 +127,11 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
       )}
     >
       {/* Services Dropdown */}
-      <DropDownNavItems style={"text-white hover:text-gray-100"} />
+      <DropDownNavItems
+        style={
+          "text-[var(--nav-link-color)] hover:text-[var(--nav-link-hover)]"
+        }
+      />
       {items.map((item, idx) => (
         <Link
           onMouseEnter={() => setHovered(idx)}
@@ -148,7 +153,9 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
                bg-[#3f5ba91c] dark:bg-neutral-800"
             />
           )}
-          <span className="relative z-20 text-white">{item.name}</span>
+          <span className="relative z-20 text-[var(--nav-link-color)] hover:text-[var(--nav-link-hover)]">
+            {item.name}
+          </span>
         </Link>
       ))}
     </motion.div>
@@ -227,7 +234,7 @@ export const MobileNavToggle = ({
       {isOpen ? (
         <IconX className="text-black" />
       ) : (
-        <IconMenu2 className="text-white" />
+        <IconMenu2 className="text-[var(--nav-link-color)]" />
       )}
     </button>
   );
