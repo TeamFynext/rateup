@@ -401,6 +401,10 @@ export async function sendShopifySurveyCronAction() {
             await verifyTemplateMessageLimit(subscription);
             let parameterData = [];
             if (config.variableMapping && sch.body) {
+              log.info(
+                `[Shopify Webhook Body] Prior to path resolution for schedule ${sch.webhookId || sch.checkoutId || ""}: %s`,
+                JSON.stringify(sch.body, null, 2),
+              );
               const bodyParameters = [];
               const sortedMappings = [...config.variableMapping].sort(
                 (a, b) => a.templateParamIndex - b.templateParamIndex,
@@ -555,6 +559,10 @@ export async function processShopifySurveySchedule(jobData: {
 
     let parameterData = [];
     if (survey.variableMapping && sch.body) {
+      log.info(
+        `[Shopify Webhook Body] Prior to path resolution for survey schedule ${sch.scheduleId || sch.checkoutId || ""}: %s`,
+        JSON.stringify(sch.body, null, 2),
+      );
       const bodyParameters = [];
       const sortedMappings = [...survey.variableMapping].sort(
         (a, b) => a.templateParamIndex - b.templateParamIndex,
