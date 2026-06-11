@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import z from "zod";
 
 import { PageType } from "@/types/enums.ts";
 import {
@@ -6,86 +7,84 @@ import {
   getPublicSurveyGoogleLink,
 } from "@/backend/surveys/survey.api";
 import { getPublicReviewsBySurveyTeamMapId } from "@/backend/team/reviewSuggestion/reviewSuggestion.api";
-import { ReviewPagePlatform } from "@/components/Survey/Question/QuestionReviewPageEditor/index.tsx";
 import ThankYou from "@/components/(public-facing)/public/survey/$surveyId/end";
-
+import { ReviewPagePlatform } from "@/components/Survey/Question/QuestionReviewPageEditor/index.tsx";
 
 export const Route = createFileRoute(
   "/(public-facing)/public/survey/$surveyId/end/",
 )({
   component: End,
+  validateSearch: z.object({
+    language: z.string().optional(),
+    msg: z.string().optional(),
+  }),
+
+  loaderDeps: ({ search: { language, msg } }) => ({ language, msg }),
+
+  loader: async ({ params, deps: { language, msg } }) => {
+    const { surveyId } = params;
+    if (msg == "thanks") {
+      const [googleLink, reviews, survey] = await Promise.all([
+        getPublicSurveyGoogleLink(surveyId),
+        getPublicReviewsBySurveyTeamMapId(surveyId, language),
+        getPublicSurvey(surveyId),
+      ]);
+      const questions = survey.questions;
+      const thankyouPageTypeObj = questions?.find(
+        (questionObj) => questionObj.type === PageType.ThankYou,
+      );
+      const reviewPageLinks = { ...survey.reviewPageLinks };
+      if ("" in reviewPageLinks || googleLink?.length) {
+        reviewPageLinks[ReviewPagePlatform.Google] =
+          reviewPageLinks[""] ?? googleLink;
+        delete reviewPageLinks[""];
+      }
+      return {
+        surveyId,
+        googleLink,
+        reviews,
+        reviewPageLinks,
+        redirect: survey.redirect,
+        kioskMode: survey.kioskMode ? "y" : "n",
+        surveyThemeData: survey?.webSurveyTheme?.theme,
+        pagesThemeData: survey?.webSurveyPagesTheme,
+        titleText:
+          thankyouPageTypeObj.titleText ||
+          `<h3 style="text-align: center">Thank you</h3><p style="text-align: center" >Thank you for taking the survey</p>`,
+        subtitleText: thankyouPageTypeObj?.subtitleText ?? null,
+      };
+    } else {
+      const survey = await getPublicSurvey(surveyId);
+      const questions = survey.questions;
+      const thankyouPageTypeObj = questions?.find(
+        (questionObj) => questionObj.type === PageType.ThankYou,
+      );
+      return {
+        surveyId,
+        redirect: survey.redirect,
+        kioskMode: survey.kioskMode ? "y" : "n",
+        surveyThemeData: survey?.webSurveyTheme?.theme,
+        pagesThemeData: survey?.webSurveyPagesTheme,
+        titleText:
+          thankyouPageTypeObj.titleText ||
+          `<h3 style="text-align: center">Thank you</h3><p style="text-align: center" >Thank you for taking the survey</p>`,
+        subtitleText: thankyouPageTypeObj?.subtitleText ?? null,
+      };
+    }
+  },
 });
 
-async function End(props) {
-  const { surveyId } = await props.params;
-  const { msg, language } = await props.query;
-
-  const propsToPass: any = {
-    enableGoogleReview: false,
-  };
-
-  const defaultTitleSubtitleTexts = {
-    titleText: `<h3 style="text-align: center">Thank you</h3><p style="text-align: center" >Thank you for taking the survey</p>`,
-  };
-
-  if (msg == "thanks") {
-    const [googleLink, reviews, survey] = await Promise.all([
-      getPublicSurveyGoogleLink(surveyId),
-      getPublicReviewsBySurveyTeamMapId(surveyId, language),
-      getPublicSurvey(surveyId),
-    ]);
-    const questions = survey.questions;
-    const thankyouPageTypeObj = questions?.find(
-      (questionObj) => questionObj.type === PageType.ThankYou,
-    );
-    propsToPass.googleLink = googleLink;
-    propsToPass.reviews = reviews;
-    const reviewPageLinks = { ...survey.reviewPageLinks };
-    if ("" in reviewPageLinks || googleLink?.length) {
-      reviewPageLinks[ReviewPagePlatform.Google] =
-        reviewPageLinks[""] ?? googleLink;
-      delete reviewPageLinks[""];
-    }
-    propsToPass.reviewPageLinks = reviewPageLinks;
-    const hasGoogleLink = Object.keys(propsToPass.reviewPageLinks).includes(
-      ReviewPagePlatform.Google,
-    );
-    if (hasGoogleLink) propsToPass.enableGoogleReview = true;
-    if (survey) {
-      propsToPass.redirect = survey.redirect;
-      propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
-      // @ts-ignore
-      propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
-      propsToPass.pagesThemeData = survey?.webSurveyPagesTheme;
-      propsToPass.titleText =
-        thankyouPageTypeObj.titleText || defaultTitleSubtitleTexts.titleText;
-      propsToPass.subtitleText = thankyouPageTypeObj?.subtitleText || null;
-    }
-  } else {
-    const survey = await getPublicSurvey(surveyId);
-    const questions = survey.questions;
-    const thankyouPageTypeObj = questions?.find(
-      (questionObj) => questionObj.type === PageType.ThankYou,
-    );
-    if (survey) {
-      propsToPass.redirect = survey.redirect;
-      propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
-      propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
-      propsToPass.pagesThemeData = survey?.webSurveyPagesTheme;
-      propsToPass.titleText =
-        thankyouPageTypeObj.titleText || defaultTitleSubtitleTexts?.titleText;
-      propsToPass.subtitleText = thankyouPageTypeObj?.subtitleText ?? null;
-    }
-  }
+function End() {
+  const propsToPass = Route.useLoaderData();
   return (
     <ThankYou
       redirect={redirect}
       kioskMode={propsToPass?.kioskMode ? "y" : "n"}
-      surveyIdValue={surveyId}
+      surveyIdValue={propsToPass?.surveyId}
       fromShortUrl={false}
       surveyThemeData={propsToPass?.surveyThemeData}
       pagesThemeData={propsToPass?.pagesThemeData}
-      titleText={propsToPass?.titleText || defaultTitleSubtitleTexts.titleText}
+      titleText={propsToPass?.titleText}
       subtitleText={propsToPass?.subtitleText || null}
       enableGoogleReview={propsToPass?.enableGoogleReview}
       googleLink={propsToPass?.googleLink || ""}
