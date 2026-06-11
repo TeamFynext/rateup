@@ -2619,11 +2619,6 @@ export function resolveShopifyPathValue(
 ): string {
   if (!shopifyBody) return "";
 
-  log.info(
-    `[Shopify Webhook Input] Path requested: "${path}" | Raw Webhook Body: %s`,
-    JSON.stringify(shopifyBody, null, 2),
-  );
-
   let resolvedValue = "";
 
   if (path === "items_fulfilled") {
