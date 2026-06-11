@@ -10,37 +10,13 @@ const items = [
     href: "/products/whatsapp-loyalty",
   },
   {
-    title: "Web Survey",
-    href: "/products/whatsapp-survey",
+    title: "Whatsapp Feedback",
+    href: "/products/whatsapp-feedback",
   },
-  // {
-  //   title: "Ticketing Menu",
-  //   href: "/products/ticketing",
-  // },
-  // {
-  //   title: "Product Packaging QR",
-  //   href: "/products/qr-studio",
-  // },
-  // {
-  //   title: "Testimonial Gateway",
-  //   href: "/products/testimonial-gateway",
-  // },
-  // {
-  //   title: "Ai Review",
-  //   href: "/products/ai-review",
-  // },
-  // {
-  //   title: "Ai Automation",
-  //   href: "/products/ai-automation",
-  // },
-  // {
-  //   title: "Unified Inbox",
-  //   href: "/products/ai-automation",
-  // },
-  // {
-  //   title: "Smart QR",
-  //   href: "/products/qr",
-  // },
+  {
+    title: "Omnichannel Inbox",
+    href: "/products/omnichannel-inbox",
+  },
 ];
 
 export default function DropDownMobileNavItems() {

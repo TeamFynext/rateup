@@ -1,17 +1,12 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
 
-import DemoModal from "@/components/RateupHomePage/helpers/BookDemoComponent";
-import LikeWhatUSee from "@/components/RateupHomePage/helpers/LikeWhatUSee";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
 import Features from "@/components/RateupHomePage/shared/Features";
 import HeroSectionNew from "@/components/RateupHomePage/shared/HeroSectionNew";
-import HomePageFooter from "@/components/RateupHomePage/shared/HomePageFooter";
 import HowItWorks from "@/components/RateupHomePage/shared/HowItWorks";
 import LoyaltySection from "@/components/RateupHomePage/shared/LoyaltySection";
 import Problem from "@/components/RateupHomePage/shared/Problem";
@@ -25,9 +20,6 @@ import {
 import { homepageMarkdown } from "../../markdown/homepage";
 import { createMarkdownMiddleware } from "../../markdown/serveMarkdown";
 
-const SupportWidget = lazy(
-  () => import("@/components/app&services/support-widget.tsx"),
-);
 const setApiCatalogHeader = createServerFn().handler(async () => {
   setResponseHeader(
     "Link",
@@ -97,91 +89,15 @@ export const Route = createFileRoute("/(marketing)/")({
   }),
 });
 
-function useScrollReveal() {
-  useEffect(() => {
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add("in");
-            io.unobserve(e.target);
-          }
-        });
-      },
-      { threshold: 0.15, rootMargin: "0px 0px -6% 0px" },
-    );
-
-    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, []);
-}
-
 function RouteComponent() {
-  const [likeWhatOpen, setLikeWhatOpen] = useState(false);
-  const [bookDemoOpen, setBookDemoOpen] = useState(false);
-  const [shouldShowLikeWhat, setShouldShowLikeWhat] = useState(false);
-
-  useScrollReveal();
-
-  useEffect(() => {
-    const hasSeenPopup = window.localStorage.getItem("likeWhatUSeeShown");
-    if (!hasSeenPopup) {
-      setShouldShowLikeWhat(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!shouldShowLikeWhat) return;
-
-    const timer = window.setTimeout(() => {
-      setLikeWhatOpen(true);
-      window.localStorage.setItem("likeWhatUSeeShown", "true");
-    }, 20000);
-
-    return () => window.clearTimeout(timer);
-  }, [shouldShowLikeWhat]);
-
-  const handleLikeWhatOpenChange = (open: boolean) => {
-    if (!open) {
-      window.localStorage.setItem("likeWhatUSeeShown", "true");
-    }
-    setLikeWhatOpen(open);
-  };
-
-  const handleLikeWhatBookDemo = () => {
-    window.localStorage.setItem("likeWhatUSeeShown", "true");
-    setLikeWhatOpen(false);
-    setBookDemoOpen(true);
-  };
-
-  const handleLikeWhatWhatsapp = () => {
-    window.localStorage.setItem("likeWhatUSeeShown", "true");
-    setLikeWhatOpen(false);
-  };
-
   return (
-    <>
-      <Layout contentClassName={styles.theme} footer={<HomePageFooter />}>
-        <HeroSectionNew />
-        <TrustedBy />
-        <Problem />
-        <HowItWorks />
-        <Features />
-        <LoyaltySection />
-        <Suspense fallback={null}>
-          <SupportWidget
-            orgId={import.meta.env.VITE_ROOT_ORG || ""}
-            token={import.meta.env.VITE_ROOT_TOKEN || ""}
-          />
-        </Suspense>
-      </Layout>
-      <LikeWhatUSee
-        open={likeWhatOpen}
-        onOpenChange={handleLikeWhatOpenChange}
-        onBookDemo={handleLikeWhatBookDemo}
-        onWhatsapp={handleLikeWhatWhatsapp}
-      />
-      <DemoModal open={bookDemoOpen} onClose={() => setBookDemoOpen(false)} />
-    </>
+    <Layout contentClassName={styles.theme}>
+      <HeroSectionNew />
+      <TrustedBy />
+      <Problem />
+      <HowItWorks />
+      <Features />
+      <LoyaltySection />
+    </Layout>
   );
 }
