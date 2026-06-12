@@ -2,6 +2,7 @@
 
 import { lazy, Suspense, useEffect, useState } from "react";
 
+import styles from "@/styles/commonCssModules/homepagecss.module.css";
 import { fbConsent } from "@/utils/fbpixel.ts";
 import { setGAConsent } from "@/utils/gtag.ts";
 
@@ -91,7 +92,9 @@ export default function Layout({
 
   return (
     <div className={`relative w-full ${contentClassName} ${navbarClassName}`}>
-      <header className="sticky top-0 z-50">
+      <header
+        className={`sticky top-0 z-50 ${contentClassName ? "" : styles.themeDefault}`}
+      >
         <RateupNavbar />
       </header>
       <main>{children}</main>

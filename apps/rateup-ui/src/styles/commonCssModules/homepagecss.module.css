@@ -75,6 +75,28 @@
   --footer-heading: #ffffff;
 }
 
+/* Default Light Theme (White frost, blue accent) */
+.themeDefault {
+  --nav-bg: rgba(255, 255, 255, 0.82);
+  --nav-border: rgba(220, 228, 240, 0.7);
+  --nav-link-color: #1e293b;
+  --nav-link-hover: #2c6fd6;
+  --nav-btn-ghost-border: #dce4f0;
+  --nav-btn-ghost-text: #1a1b1a;
+  --nav-btn-ghost-border-hover: #94a3b8;
+  --nav-logo-color: #1e293b;
+
+  --btn-primary-start: #3d8bee;
+  --btn-primary-end: #2360c8;
+  --btn-primary-shadow: rgba(45, 111, 214, 0.45);
+  --btn-primary-hover-shadow: rgba(45, 111, 214, 0.6);
+  --btn-primary-chip-bg: rgba(0, 0, 0, 0.18);
+  --btn-demo-bg: #dce8fb;
+  --btn-demo-border: transparent;
+  --btn-demo-text: #0f2050;
+  --btn-demo-hover-bg: #c8d9f7;
+}
+
 /* Omnichannel Inbox Theme (Blue/Cyan - matching original) */
 .themeOmnichannel {
   composes: theme;
