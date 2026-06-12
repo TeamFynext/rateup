@@ -6,7 +6,6 @@ import { PricingPlanReview } from "@/components/HomePage/pages/Pricing/PricingPl
 import PricingSection from "@/components/HomePage/pages/Pricing/PricingSection.tsx";
 import { ClientLogoSectionNew } from "@/components/products/ReviewWithAiComponents/shared/ReviewTestimonials.tsx";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
-import HomePageFooter from "@/components/RateupHomePage/shared/HomePageFooter";
 
 import { buildPricingMarkdown } from "../../../markdown/pricing";
 import { createMarkdownMiddleware } from "../../../markdown/serveMarkdown";
@@ -88,7 +87,6 @@ function Pricing() {
         <Faq />
         <PricingPlanReview />
       </div>
-      <HomePageFooter />
     </Layout>
   );
 }

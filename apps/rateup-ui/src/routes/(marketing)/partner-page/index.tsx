@@ -21,7 +21,6 @@ import {
 
 import { buildPageHead } from "@/lib/metadata.ts";
 import { PartnerApplyModal } from "@/components/partner/partnerData";
-import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter";
 import Layout from "@/components/RateupHomePage/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -608,9 +607,6 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
             </div>
           </div>
         </section>
-
-        {/* Footer */}
-        <HomePageFooter />
       </div>
       <PartnerApplyModal open={open} onOpenChange={setOpen} />
     </Layout>
