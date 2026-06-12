@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   Star,
   Store,
+  Users,
   Zap,
 } from "lucide-react";
 
@@ -92,6 +93,11 @@ const data = {
       name: "Shopify Stores",
       url: "/admin/shopify",
       icon: Store,
+    },
+    {
+      name: "Referrals",
+      url: "/admin/referrals",
+      icon: Users,
     },
   ],
 };
