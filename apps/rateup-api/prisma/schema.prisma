@@ -2587,3 +2587,13 @@ model InboxAutomation {
   @@unique([orgId, condition], name: "orgId_condition_unique")
 }
 
+model Referral {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referral_code String   @unique
+  name          String
+  visit_count   Int      @default(0)
+  signup_count  Int      @default(0)
+  created_at    DateTime @default(now())
+}
+
+
