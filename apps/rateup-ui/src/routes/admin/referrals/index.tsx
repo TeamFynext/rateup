@@ -213,7 +213,12 @@ function ReferralsPage() {
   const { t: translations } = useTranslation();
   const queryClient = useQueryClient();
 
-  const { data: referrals, isLoading } = useAllReferralsQuery();
+  const {
+    data: referrals,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useAllReferralsQuery();
 
   const createReferralMutation = useCreateReferralMutation({
     onSuccess: (data) => {
@@ -449,13 +454,26 @@ function ReferralsPage() {
 
       {/* Referrals List Table Card */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg text-black dark:text-white">
-            Referrals List
-          </CardTitle>
-          <CardDescription>
-            View and monitor all active referral codes, visits, and signups.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div className="space-y-1">
+            <CardTitle className="text-lg text-black dark:text-white">
+              Referrals List
+            </CardTitle>
+            <CardDescription>
+              View and monitor all active referral codes, visits, and signups.
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching || isLoading}
+          >
+            <RefreshCw
+              className={`mr-2 h-4 w-4 ${isFetching || isLoading ? "animate-spin" : ""}`}
+            />
+            {translations("Refresh")}
+          </Button>
         </CardHeader>
         <CardContent>
           {isLoading ? (

@@ -53,10 +53,7 @@ export default function LikeWhatUSee({
 
           {/* ACTIONS */}
           <div className="mt-4 flex flex-col gap-3">
-            <Button
-              onClick={() => onBookDemo?.()}
-              className={`${styles.btn} ${styles["btn-primary"]} h-10 w-full`}
-            >
+            <Button onClick={() => onBookDemo?.()} className={`h-10 w-full`}>
               <Calendar /> Book a Demo
             </Button>
 
