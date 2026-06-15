@@ -61,21 +61,27 @@ export async function getAllReferralsHandler(
 }
 
 export async function createReferralHandler(
-  request: FastifyRequest<{ Body: { name: string } }>,
+  request: FastifyRequest<{ Body: { name: string; email: string } }>,
   reply: FastifyReply,
 ) {
   try {
-    const { name } = request.body;
+    const { name, email } = request.body;
     if (!name) {
       return reply.code(400).send({ message: "name is required" });
     }
+    if (!email) {
+      return reply.code(400).send({ message: "email is required" });
+    }
 
-    const referral = await createReferral(name);
+    const referral = await createReferral(name, email);
 
     return reply.code(201).send({
       referral_code: referral.referral_code,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === "P2002") {
+      return reply.code(400).send({ message: "Email already exists" });
+    }
     request.log.error(error, "Failed to create referral");
     return reply.code(500).send({ message: "Internal server error" });
   }
