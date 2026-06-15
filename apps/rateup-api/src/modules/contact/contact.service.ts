@@ -21,6 +21,7 @@ import {
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { BATCH_SIZE } from "../../utils/constants/constants.js";
 import { WaMessageAssignStatus } from "../../types/enums.js";
+import { triggerConversionsApiForContact } from "../integrations/meta/conversions.service.js";
 import {
   assignWaMessageToUser,
   createInternalWaMessage,
@@ -876,6 +877,7 @@ export async function updateContactById(
       },
       rateupContactId: updatedContact.id,
     });
+    triggerConversionsApiForContact(updatedContact, updatedContact.lifecycleId);
   }
   if (
     WaMessageClosedStatus.includes(
@@ -1650,6 +1652,10 @@ export async function updateMulitplceContacts(
           },
           rateupContactId: updatedContact.id,
         });
+        triggerConversionsApiForContact(
+          updatedContact,
+          updatedContact.lifecycleId,
+        );
       }
     }
   }
@@ -1799,6 +1805,7 @@ export async function updateLifecycleStageofContacts(lifecycleId, contactIds) {
         },
         rateupContactId: contact.id,
       });
+      triggerConversionsApiForContact(contact, lifecycleId);
     }
   }
 }

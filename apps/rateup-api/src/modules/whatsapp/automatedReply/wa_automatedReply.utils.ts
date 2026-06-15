@@ -44,6 +44,7 @@ import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
 import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.service.js";
 import axios from "axios";
 import { integrationTriggerQueue } from "../../../utils/redisConnection.js";
+import { triggerConversionsApiForContact } from "../../integrations/meta/conversions.service.js";
 import {
   updateZohoLeadQueue,
   ZohoTriggers,
@@ -1226,6 +1227,9 @@ async function executeAssignLifecycleAction(
     },
     rateupContactId: updatedContact.id,
   });
+
+  // Trigger Conversions API if applicable
+  await triggerConversionsApiForContact(updatedContact, lifecycleId);
 
   return true;
 }
