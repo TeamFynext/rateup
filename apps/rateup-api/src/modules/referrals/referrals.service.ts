@@ -1,12 +1,13 @@
 import prisma from "../../utils/prisma.js";
 
-export async function createReferral(name: string) {
+export async function createReferral(name: string, email: string) {
   const referralCode = await generateUniqueReferralCode(name);
 
   return await prisma.referral.create({
     data: {
       referral_code: referralCode,
       name: name,
+      email: email,
       visit_count: 0,
       signup_count: 0,
     },
