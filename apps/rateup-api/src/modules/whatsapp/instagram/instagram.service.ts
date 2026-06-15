@@ -1,4 +1,3 @@
-import prisma from "../../../utils/prisma.js";
 import { callMetaApi } from "../wa_axios.js";
 import {
   getWaSettingsByIbaId,
@@ -11,6 +10,7 @@ import { getInstagramWebhookEvent } from "./instagram.util.js";
 import { InstagramEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import { handleInstagramAutomation } from "./instagram_automation_handler.js";
+import { sendInstagramPrivateReply } from "./instagram_messaging.service.js";
 
 export async function getIgUserDetailsFromMeta(igsId, ibaId) {
   const { pageAccessToken } = await getWaSettingsByIbaId(ibaId);
@@ -38,6 +38,24 @@ export async function handleInstagramWebhook(data: InstagramWebhookBody) {
       );
       continue;
     }
+
+    // Handle comment/live_comment change events
+    if (entry.changes) {
+      for (const change of entry.changes) {
+        if (change.field === "comments" || change.field === "live_comments") {
+          const event =
+            change.field === "live_comments"
+              ? InstagramEvent.LIVE_COMMENT
+              : InstagramEvent.COMMENT;
+          await handleInstagramComment(change.value, event, waSettings);
+        }
+      }
+    }
+
+    if (!entry.messaging) {
+      continue;
+    }
+
     for (const messaging of entry.messaging) {
       const event = getInstagramWebhookEvent(messaging);
       if (!event) {
@@ -45,6 +63,15 @@ export async function handleInstagramWebhook(data: InstagramWebhookBody) {
       }
       switch (event) {
         case InstagramEvent.MESSAGE:
+          await handleInstagramMessages(data, waSettings);
+          break;
+        case InstagramEvent.POSTBACK:
+          await handleInstagramPostback(data, waSettings);
+          break;
+        case InstagramEvent.REFERRAL:
+          await handleInstagramReferral(data, waSettings);
+          break;
+        case InstagramEvent.STORY_MENTION:
           await handleInstagramMessages(data, waSettings);
           break;
         case InstagramEvent.MESSAGE_REACTION:
@@ -57,6 +84,65 @@ export async function handleInstagramWebhook(data: InstagramWebhookBody) {
           log.warn("Unhandled event: %s", event);
       }
     }
+  }
+}
+
+export async function handleInstagramComment(
+  comment: InstagramCommentValue,
+  event: InstagramEvent.COMMENT | InstagramEvent.LIVE_COMMENT,
+  waSettings,
+) {
+  const { orgId, ibaId } = waSettings;
+  const { id: commentId, text, from, created_time } = comment;
+  const igsId = from.id;
+
+  log.info(
+    `[Instagram] Received ${event} from igsId ${igsId} (${from.username}): "${text}" (comment: ${commentId})`,
+  );
+
+  try {
+    // Store the comment as a received message in the inbox
+    const commentBody = {
+      sender: { id: igsId },
+      recipient: { id: ibaId },
+      timestamp: created_time * 1000,
+      message: {
+        mid: `ig_comment_${commentId}`,
+        text,
+        comment_id: commentId,
+        media_id: comment.media?.id,
+      },
+    };
+
+    await handleWaMessages(
+      "receive",
+      commentBody,
+      igsId,
+      orgId,
+      PlatformType.INSTAGRAM,
+      ibaId,
+      undefined,
+      `ig_comment_${commentId}`,
+    );
+  } catch (error) {
+    log.error(`[Instagram] Error storing comment ${commentId}: %o`, error);
+  }
+
+  // Trigger automation with the comment text, passing commentId for private reply
+  try {
+    await handleInstagramAutomation(
+      igsId,
+      text || "",
+      orgId,
+      ibaId,
+      { message: { mid: `ig_comment_${commentId}`, text } },
+      commentId,
+    );
+  } catch (error) {
+    log.error(
+      `[Instagram] Error in automation handler for comment ${commentId}: %o`,
+      error,
+    );
   }
 }
 
@@ -96,6 +182,118 @@ export async function handleInstagramMessages(
       error,
     );
     // Error is caught and logged but doesn't affect message handling
+  }
+}
+
+export async function handleInstagramPostback(
+  data: InstagramWebhookBody,
+  waSettings,
+) {
+  const { orgId, ibaId } = waSettings;
+  const messaging = data.entry[0].messaging[0];
+  const { sender, postback, timestamp } = messaging;
+
+  if (!postback?.payload) {
+    log.warn("No postback payload in Instagram event");
+    return;
+  }
+
+  try {
+    log.info(
+      `[Instagram] Postback received from user ${sender.id}: ${postback.payload}`,
+    );
+
+    const messageBody = {
+      type: "postback",
+      payload: postback.payload,
+      title: postback.title,
+      referral: postback.referral,
+      timestamp,
+      sender,
+    };
+
+    await handleWaMessages(
+      "receive",
+      messageBody,
+      sender.id,
+      orgId,
+      PlatformType.INSTAGRAM,
+      ibaId,
+      undefined,
+      `ig_postback_${timestamp}`,
+    );
+
+    await handleInstagramAutomation(
+      sender.id,
+      postback.payload,
+      orgId,
+      ibaId,
+      messaging,
+    );
+  } catch (error) {
+    log.error(
+      `[Instagram] Error handling postback from user ${sender.id}: %o`,
+      error,
+    );
+  }
+}
+
+export async function handleInstagramReferral(
+  data: InstagramWebhookBody,
+  waSettings,
+) {
+  const { orgId, ibaId } = waSettings;
+  const messaging = data.entry[0].messaging[0];
+  const { sender, timestamp } = messaging;
+  const referral = messaging.message?.referral || messaging.postback?.referral;
+
+  if (!referral) {
+    log.warn("No referral payload in Instagram event");
+    return;
+  }
+
+  let referralText = "";
+  if ("ref" in referral && referral.ref) {
+    referralText = String(referral.ref);
+  } else if ("product" in referral) {
+    referralText = referral.product.id;
+  }
+
+  try {
+    log.info(
+      `[Instagram] Referral received from user ${sender.id}: ${referralText}`,
+    );
+
+    const messageBody = {
+      type: "referral",
+      referral,
+      timestamp,
+      sender,
+    };
+
+    await handleWaMessages(
+      "receive",
+      messageBody,
+      sender.id,
+      orgId,
+      PlatformType.INSTAGRAM,
+      ibaId,
+      undefined,
+      `ig_referral_${timestamp}`,
+    );
+
+    await handleInstagramAutomation(
+      sender.id,
+      referralText,
+      orgId,
+      ibaId,
+      messaging,
+    );
+  } catch (error) {
+    log.error(
+      `[Instagram] Error handling referral from user ${sender.id}: %o`,
+      error,
+    );
   }
 }
 

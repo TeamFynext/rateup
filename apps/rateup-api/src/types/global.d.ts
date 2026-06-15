@@ -503,12 +503,34 @@ declare global {
     caseSensitive: boolean;
   };
   //--- instagram
+  type InstagramCommentValue = {
+    id: string; // comment ID
+    text: string;
+    from: {
+      id: string; // Instagram-scoped ID of the commenter
+      username: string;
+    };
+    media: {
+      id: string;
+      media_product_type?: "POST" | "AD" | "REEL" | "LIVE";
+    };
+    created_time: number;
+    ad_id?: string;
+    ad_title?: string;
+  };
+
   type InstagramWebhookBody = {
     object: "instagram";
     entry: [
       {
         time: number;
         id: string; //ID of your Instagram Professional account
+        changes?: [
+          {
+            field: "comments" | "live_comments";
+            value: InstagramCommentValue;
+          },
+        ];
         messaging: [
           {
             sender: {
@@ -518,24 +540,32 @@ declare global {
               id: string; //  recipient INSTAGRAM PAGE ID
             };
             timestamp: number;
+            postback?: {
+              mid?: string;
+              title?: string;
+              payload?: string;
+              referral?: {
+                ref?: string;
+                source?: string;
+                type?: string;
+              };
+            };
             message?: {
               mid: string;
               text?: string;
-              attachments?: [
+              attachments?: Array<{
                 // Included when a customer sends multiple media attachments or a URL for a story mention or share
-                {
-                  type:
-                    | "image"
-                    | "video"
-                    | "audio"
-                    | "file"
-                    | "reel"
-                    | "ig_reel"
-                    | "share"
-                    | "story_mention";
-                  payload: { url: string };
-                },
-              ];
+                type:
+                  | "image"
+                  | "video"
+                  | "audio"
+                  | "file"
+                  | "reel"
+                  | "ig_reel"
+                  | "share"
+                  | "story_mention";
+                payload: { url: string };
+              }>;
               is_deleted?: boolean; // Included when a customer deletes a message
 
               is_echo?: boolean; // Included when your business sends a message to the customer
@@ -547,37 +577,39 @@ declare global {
                 payload: any; // The payload with the option selected by the customer
               };
 
-              referral?: {
-                // Included when a customer clicks an Instagram Shop product
-                product: {
-                  id: string;
-                };
-              };
+              referral?:
+                | {
+                    // Included when a customer clicks an Instagram Shop product
+                    product: {
+                      id: string;
+                    };
+                  }
+                | {
+                    // Included when a customer clicks an CTD ad or ig.me link
+                    ref: any;
+                    ad_id?: string;
+                    source: "ADS" | "SHORTLINKS";
+                    type: "OPEN_THREAD";
+                    ads_context_data?: {
+                      ad_title: string;
+                      photo_url: string;
+                      video_url: string;
+                    };
+                  };
 
-              referral?: {
-                // Included when a customer clicks an CTD ad
-                ref: any;
-                ad_id: string;
-                source: "ADS";
-                type: "OPEN_THREAD";
-                ads_context_data: {
-                  ad_title: string;
-                  photo_url: string;
-                  video_url: string;
+              postback?: {
+                title?: string;
+                payload?: string;
+                referral?: {
+                  ref?: string;
+                  source?: string;
+                  type?: string;
                 };
               };
 
               reply_to?: {
                 // Included when a customer sends an inline reply
                 mid: string;
-              };
-
-              reply_to?: {
-                // Included when a customer replies to a story
-                story: {
-                  url: string; //CDN-URL
-                  id: string;
-                };
               };
             };
             reaction?: {

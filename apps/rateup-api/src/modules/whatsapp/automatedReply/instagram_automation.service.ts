@@ -19,7 +19,9 @@ import {
   sendInstagramTextMessage,
   sendInstagramImage,
   sendInstagramProductTemplate,
+  sendInstagramPrivateReply,
 } from "../instagram/instagram_messaging.service.js";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 
 // Type definitions for Instagram automation nodes
 export type InstagramNodeType =
@@ -67,6 +69,7 @@ export async function startInstagramAutomationFlow(
   automation: InstagramAutomation,
   orgId: string,
   ibaId: string,
+  commentId?: string,
 ): Promise<void> {
   try {
     log.info(
@@ -130,6 +133,7 @@ export async function startInstagramAutomationFlow(
       orgId,
       automationMessage.id,
       ibaId,
+      commentId,
     );
   } catch (error) {
     log.error(
@@ -150,6 +154,7 @@ export async function processNextInstagramNode(
   orgId: string,
   automationMessageId: string,
   ibaId: string,
+  commentId?: string,
 ): Promise<void> {
   try {
     if (!nodeId || !automation?.matchData?.json?.nodes) {
@@ -192,6 +197,7 @@ export async function processNextInstagramNode(
             orgId,
             automationMessageId,
             ibaId,
+            commentId,
           );
         }
       } else if (node.type === "endNode") {
@@ -211,30 +217,55 @@ export async function processNextInstagramNode(
 
     // Process different Instagram node types
     let messageSent = false;
+    // After using commentId for the first message, clear it so subsequent nodes use igsId
+    let remainingCommentId = commentId;
 
     switch (node.type) {
       case "textNode":
-        await handleInstagramTextNode(node, igsId, orgId, ibaId);
+        await handleInstagramTextNode(
+          node,
+          igsId,
+          orgId,
+          ibaId,
+          remainingCommentId,
+        );
+        remainingCommentId = undefined;
         messageSent = true;
         break;
 
       case "imageNode":
+        // Images cannot be sent as private replies; send a text private reply first if commentId present
+        if (remainingCommentId) {
+          const rawText =
+            node.data?.caption || node.data?.body || node.data?.text || "";
+          const fallbackText =
+            parseToWhatsAppFormat(rawText) || "Thanks for your comment!";
+          await sendInstagramPrivateReply(
+            remainingCommentId,
+            fallbackText,
+            ibaId,
+          );
+          remainingCommentId = undefined;
+        }
         await handleInstagramImageNode(node, igsId, orgId, ibaId);
         messageSent = true;
         break;
 
       case "instagramGenericTemplateNode":
         await handleInstagramGenericTemplateNode(node, igsId, orgId, ibaId);
+        remainingCommentId = undefined;
         messageSent = true;
         break;
 
       case "instagramQuickReplyNode":
         await handleInstagramQuickReplyNode(node, igsId, orgId, ibaId);
+        remainingCommentId = undefined;
         messageSent = true;
         break;
 
       case "instagramProductTemplateNode":
         await handleInstagramProductTemplateNode(node, igsId, orgId, ibaId);
+        remainingCommentId = undefined;
         messageSent = true;
         break;
 
@@ -320,6 +351,7 @@ export async function processNextInstagramNode(
             orgId,
             automationMessageId,
             ibaId,
+            remainingCommentId,
           );
         }
       }
@@ -351,11 +383,16 @@ async function handleInstagramTextNode(
   igsId: string,
   orgId: string,
   ibaId: string,
+  commentId?: string,
 ): Promise<void> {
   try {
     const rawText = node.data?.body || node.data?.text || "Hello!";
     const text = parseToWhatsAppFormat(rawText) || "Hello!";
-    await sendInstagramTextMessage(igsId, text, orgId, ibaId);
+    if (commentId) {
+      await sendInstagramPrivateReply(commentId, text, ibaId);
+    } else {
+      await sendInstagramTextMessage(igsId, text, orgId, ibaId);
+    }
   } catch (error) {
     log.error(
       `[Instagram Automation] Error handling text node ${node.id}: %o`,
@@ -374,7 +411,7 @@ async function handleInstagramImageNode(
   ibaId: string,
 ): Promise<void> {
   try {
-    const imageUrl = node.data?.imageUrl || node.data?.url;
+    const imageUrl = node.data?.link || node.data?.url;
     const caption = parseToWhatsAppFormat(node.data?.caption) || "";
 
     if (!imageUrl) {
@@ -382,7 +419,13 @@ async function handleInstagramImageNode(
       return;
     }
 
-    await sendInstagramImage(igsId, imageUrl, caption, orgId, ibaId);
+    await sendInstagramImage(
+      igsId,
+      getFileUrlFromKey(imageUrl),
+      caption,
+      orgId,
+      ibaId,
+    );
   } catch (error) {
     log.error(
       `[Instagram Automation] Error handling image node ${node.id}: %o`,
