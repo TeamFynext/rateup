@@ -61,6 +61,7 @@ export interface IUpdateOrgDetails {
   showLifecycle: boolean;
   onboardingChecklistCompleted: boolean;
   onboardingChecklist: any;
+  isConversionApiActive: boolean;
 }
 export const updateOrgDetails = (data: Partial<IUpdateOrgDetails>) =>
   axiosClient.put("/org/update-details", data);

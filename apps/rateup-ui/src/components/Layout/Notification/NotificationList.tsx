@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 
 import {
+  IconAlertTriangle,
   IconBrandWhatsappFilled,
   IconSend,
   IconTicket,
@@ -28,6 +29,8 @@ const NotificationList = ({ close, data, isLoading }) => {
         return <IconTicket className="size-4 text-foreground" />;
       case "campaign":
         return <IconSend className="size-4 text-foreground" />;
+      case "system":
+        return <IconAlertTriangle className="size-4 text-destructive" />;
       default:
         return null;
     }
@@ -123,6 +126,21 @@ const NotificationList = ({ close, data, isLoading }) => {
               >
                 Show campaign
               </Link>
+            </p>
+          </div>
+        );
+      case "capi-error":
+        return (
+          <div className="flex flex-col gap-2">
+            <p className="max-w-70 text-sm leading-relaxed text-muted-foreground">
+              Meta CAPI failed for{" "}
+              <span className="font-medium text-foreground">
+                {data?.contactName}
+              </span>
+              . Error:{" "}
+              <span className="font-medium text-destructive">
+                {data?.error}
+              </span>
             </p>
           </div>
         );

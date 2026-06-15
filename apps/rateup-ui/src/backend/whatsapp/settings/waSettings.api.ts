@@ -27,6 +27,8 @@ export type WaSettings = {
   phoneDisplayName: string;
   igDisplayName: string;
   assets: MetaLoginAssets[];
+  conversionsApiDatasetId?: string;
+  conversionData?: { event_name?: string; currency?: string };
   paymentMethod?: string;
   status?: WhatsappSettingsStatus;
 }[];
@@ -170,6 +172,13 @@ export const syncAdsByAdAccount = async (
   );
   return res.data as { id: string; name: string }[];
 };
+export const syncDatasets = async (waSettingsId: string) => {
+  const res = await axiosClient.get(
+    `${SettingsUrl}/sync/datasets/${waSettingsId}`,
+  );
+  return res.data;
+};
+
 export const subscribeFieldtoPage = async (waSettingsId, body: fbPageQuery) => {
   const res = await axiosClient.post(
     `${SettingsUrl}/subscribe/${waSettingsId}`,
