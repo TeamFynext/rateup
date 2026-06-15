@@ -7,6 +7,7 @@ export interface ICreateGoogleUser {
   orgName: string;
   type: string;
   email?: string;
+  referralCode?: string;
 }
 
 export interface IChangePassword {
