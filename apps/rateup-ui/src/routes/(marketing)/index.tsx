@@ -1,9 +1,11 @@
-"use client";
+import { useEffect, useRef } from "react";
 
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
+import { z } from "zod";
 
+import { useTrackVisitMutation } from "@/backend/referrals/referrals.query";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
 import Features from "@/components/RateupHomePage/shared/Features";
 import HeroSectionNew from "@/components/RateupHomePage/shared/HeroSectionNew";
@@ -64,7 +66,12 @@ const homePageJsonLd = {
   },
 };
 
+const marketingSearchSchema = z.object({
+  ref: z.string().optional(),
+});
+
 export const Route = createFileRoute("/(marketing)/")({
+  validateSearch: (search) => marketingSearchSchema.parse(search),
   server: {
     middleware: [createMarkdownMiddleware(homepageMarkdown)],
   },
@@ -90,6 +97,27 @@ export const Route = createFileRoute("/(marketing)/")({
 });
 
 function RouteComponent() {
+  const { ref } = Route.useSearch();
+  const trackVisitMutation = useTrackVisitMutation();
+  const trackedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (ref && trackedRef.current !== ref) {
+      const existingCookie = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("referral_code="));
+      const existingRef = existingCookie?.split("=")[1];
+
+      // If a referral code is already stored in the cookie, ignore any new ones (first-touch attribution)
+      if (!existingRef) {
+        document.cookie = `referral_code=${ref}; path=/; max-age=2592000; SameSite=Lax`;
+        trackVisitMutation.mutate(ref);
+      }
+
+      trackedRef.current = ref;
+    }
+  }, [ref, trackVisitMutation]);
+
   return (
     <Layout contentClassName={styles.theme}>
       <HeroSectionNew />

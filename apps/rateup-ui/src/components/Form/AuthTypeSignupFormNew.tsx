@@ -151,6 +151,11 @@ function AuthTypeSignupForm({
       });
       return;
     }
+    const existingCookie = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("referral_code="));
+    const referralCode = existingCookie?.split("=")[1];
+
     const data = {
       name: values?.name,
       orgName: values?.orgName,
@@ -162,6 +167,7 @@ function AuthTypeSignupForm({
       location: values?.location,
       goals: values?.goals,
       integrationsSelected: values?.integrationsSelected,
+      referralCode: referralCode || undefined,
     };
     const planData = localStorage.getItem("subscriptionRoutAndCart");
     if (planData) {

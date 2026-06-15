@@ -176,9 +176,11 @@ export function useSignUp() {
     teamSize?: string,
   ) {
     try {
-      // if (phoneNumber) {
-      //   await handleCreateCode(phoneNumber, router);
-      // } else {
+      const existingCookie = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("referral_code="));
+      const referralCode = existingCookie?.split("=")[1];
+
       const optionalFormFields = [
         {
           id: "phoneNumber",
@@ -211,6 +213,10 @@ export function useSignUp() {
         {
           id: "teamSize",
           value: teamSize || null,
+        },
+        {
+          id: "referralCode",
+          value: referralCode || null,
         },
       ].filter((field) => field.value !== null);
 

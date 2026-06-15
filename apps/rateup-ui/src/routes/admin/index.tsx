@@ -123,6 +123,18 @@ function Page() {
             }
             gradient="bg-linear-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20"
           />
+
+          <NavigationCard
+            title="Referrals"
+            description="Create influencer referral tracking codes and links"
+            icon={Users}
+            onClick={() =>
+              navigate({
+                to: "/admin/referrals",
+              })
+            }
+            gradient="bg-linear-to-br from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20"
+          />
         </div>
       </div>
       {/* Payment & Billing */}
