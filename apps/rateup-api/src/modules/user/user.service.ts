@@ -17,6 +17,7 @@ import { createFreePlanSubscription } from "../subscription/subscription.service
 import { cloneSurvey } from "../survey/survey.service.js";
 import { cloneMenu } from "../menu/menu.service.js";
 import { defaultTheme } from "../surveyTheme/defaultTheme.js";
+import { updateReferral } from "../referrals/referrals.service.js";
 import {
   deleteSuperTokenUserForId,
   getUserInfo,
@@ -63,6 +64,7 @@ export async function createUserSignup({
   goals,
   integrationsSelected,
   teamSize,
+  referralCode,
 }: CreateUserSignupSchema) {
   log.info("Creating user....");
   try {
@@ -189,6 +191,15 @@ export async function createUserSignup({
       message: "create user transaction committed..........:",
       result,
     });
+
+    if (referralCode) {
+      try {
+        await updateReferral(referralCode, "signup");
+      } catch (err) {
+        log.error("Failed to increment referral signup_count: %o", err);
+      }
+    }
+
     const companyId = await createHubSpotCompany({
       name: orgName,
       joined_date: org.createdAt,
