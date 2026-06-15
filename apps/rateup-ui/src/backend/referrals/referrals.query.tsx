@@ -19,7 +19,8 @@ export function useCreateReferralMutation({
   const { t: translations } = useTranslation();
 
   return useMutation({
-    mutationFn: (name: string) => createReferral(name),
+    mutationFn: ({ name, email }: { name: string; email: string }) =>
+      createReferral(name, email),
     onSuccess: (data) => {
       toast.success(translations("Referral code created successfully!"));
       if (onSuccess) onSuccess(data);

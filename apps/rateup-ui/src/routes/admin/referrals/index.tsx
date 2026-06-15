@@ -206,6 +206,7 @@ export const Route = createFileRoute("/admin/referrals/")({
 
 function ReferralsPage() {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
   const [copiedCode, setCopiedCode] = useState(false);
@@ -240,7 +241,11 @@ function ReferralsPage() {
       toast.error(translations("Name is required"));
       return;
     }
-    createReferralMutation.mutate(name);
+    if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email)) {
+      toast.error(translations("A valid email is required"));
+      return;
+    }
+    createReferralMutation.mutate({ name, email });
   };
 
   const copyCodeToClipboard = () => {
@@ -268,6 +273,16 @@ function ReferralsPage() {
           </div>
         ),
         meta: { title: translations("Partner Name") },
+      },
+      {
+        accessorKey: "email",
+        header: createSortableHeader(translations("Email")),
+        cell: ({ row }) => (
+          <div className="text-black dark:text-white">
+            {row.getValue("email")}
+          </div>
+        ),
+        meta: { title: translations("Email") },
       },
       {
         accessorKey: "referral_code",
@@ -376,9 +391,31 @@ function ReferralsPage() {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label
+                  htmlFor="influencerEmail"
+                  className="text-sm font-medium"
+                >
+                  Email
+                </Label>
+                <Input
+                  id="influencerEmail"
+                  type="email"
+                  placeholder="e.g. john@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full text-black dark:text-white bg-white dark:bg-black"
+                  disabled={createReferralMutation.isPending}
+                />
+              </div>
+
               <Button
                 onClick={handleCreateReferral}
-                disabled={createReferralMutation.isPending || !name.trim()}
+                disabled={
+                  createReferralMutation.isPending ||
+                  !name.trim() ||
+                  !email.trim()
+                }
                 className="w-full bg-purple-600 hover:bg-purple-700"
                 size="lg"
               >
