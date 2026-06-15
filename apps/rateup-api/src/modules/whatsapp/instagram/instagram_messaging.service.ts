@@ -6,7 +6,77 @@
 
 import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../wa_axios.js";
-import { getWaSettingsByIbaId } from "../settings/wa_settings.service.js";
+import {
+  getWaSettingsByIbaId,
+  updateWaSettingsById,
+} from "../settings/wa_settings.service.js";
+
+async function callInstagramMessengerProfileApi(
+  ibaId: string,
+  pageAccessToken: string,
+  method: "GET" | "POST" | "DELETE",
+  data?: Record<string, unknown>,
+  params?: Record<string, unknown>,
+) {
+  const response = await callMetaApi(
+    `/me/messenger_profile?platform=instagram`,
+    method,
+    pageAccessToken,
+    data,
+    {},
+    {},
+    params,
+  );
+
+  return response.data;
+}
+
+/**
+ * Send a private reply to an Instagram comment.
+ * Must be used within 7 days of the comment (or during live broadcast for live comments).
+ * This opens the 24-hour messaging window once the user replies.
+ */
+export async function sendInstagramPrivateReply(
+  commentId: string,
+  text: string,
+  ibaId: string,
+): Promise<any> {
+  try {
+    const waSettings = await getWaSettingsByIbaId(ibaId);
+
+    if (!waSettings) {
+      throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
+    }
+
+    const { pageAccessToken, fbPageId } = waSettings;
+
+    if (!fbPageId) {
+      throw new Error(`No Facebook Page ID configured for ibaId ${ibaId}`);
+    }
+
+    const response = await callMetaApi(
+      `/me/messages`,
+      "POST",
+      pageAccessToken,
+      {
+        recipient: { comment_id: commentId },
+        message: { text },
+      },
+    );
+
+    log.info(
+      `[Instagram Messaging] Sent private reply to comment ${commentId}: "${text.substring(0, 50)}..."`,
+    );
+
+    return response.data;
+  } catch (error) {
+    log.error(
+      `[Instagram Messaging] Error sending private reply to comment ${commentId}: %o`,
+      error,
+    );
+    throw error;
+  }
+}
 
 /**
  * Send a text message via Instagram
@@ -70,7 +140,7 @@ export async function sendInstagramImage(
   ibaId?: string,
 ): Promise<any> {
   try {
-    const waSettings = await getWaSettingsByIbaId(ibaId!);
+    const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
       throw new Error(
@@ -415,12 +485,19 @@ export async function setInstagramIceBreakers(
       })),
     };
 
-    const response = await callMetaApi(
-      `/${ibaId}/messenger_profile`,
-      "POST",
+    const response = await callInstagramMessengerProfileApi(
+      ibaId,
       pageAccessToken,
+      "POST",
       payload,
     );
+
+    const settings = await getWaSettingsByIbaId(ibaId);
+    if (settings) {
+      await updateWaSettingsById(settings.id, {
+        instagramIceBreakers: iceBreakers,
+      } as any);
+    }
 
     log.info(
       `[Instagram Messaging] Set ${iceBreakers.length} ice breakers for ibaId ${ibaId}`,
@@ -434,6 +511,153 @@ export async function setInstagramIceBreakers(
     );
     throw error;
   }
+}
+
+export async function getInstagramIceBreakers(orgId: string, ibaId: string) {
+  const waSettings = await getWaSettingsByIbaId(ibaId);
+
+  if (!waSettings) {
+    throw new Error(`No Instagram settings found for organization ${orgId}`);
+  }
+
+  if (waSettings.instagramIceBreakers) {
+    return {
+      ice_breakers: waSettings.instagramIceBreakers,
+    };
+  }
+
+  const { pageAccessToken } = waSettings;
+  const response = await callInstagramMessengerProfileApi(
+    ibaId,
+    pageAccessToken,
+    "GET",
+    undefined,
+    {
+      fields: "ice_breakers",
+    },
+  );
+
+  const iceBreakers = response?.ice_breakers ?? [];
+  await updateWaSettingsById(waSettings.id, {
+    instagramIceBreakers: iceBreakers,
+  } as any);
+
+  return response;
+}
+
+export async function deleteInstagramIceBreakers(orgId: string, ibaId: string) {
+  const waSettings = await getWaSettingsByIbaId(ibaId);
+
+  if (!waSettings) {
+    throw new Error(`No Instagram settings found for organization ${orgId}`);
+  }
+
+  const { pageAccessToken } = waSettings;
+  const response = await callInstagramMessengerProfileApi(
+    ibaId,
+    pageAccessToken,
+    "DELETE",
+    {
+      fields: ["ice_breakers"],
+    },
+  );
+  await updateWaSettingsById(waSettings.id, {
+    instagramIceBreakers: [],
+  } as any);
+  return response;
+}
+
+export async function setInstagramPersistentMenu(
+  menus: Array<{
+    locale: string;
+    call_to_actions: Array<{
+      type: "postback" | "web_url";
+      title: string;
+      payload?: string;
+      url?: string;
+    }>;
+  }>,
+  orgId: string,
+  ibaId: string,
+): Promise<any> {
+  const waSettings = await getWaSettingsByIbaId(ibaId);
+
+  if (!waSettings) {
+    throw new Error(`No Instagram settings found for organization ${orgId}`);
+  }
+
+  const { pageAccessToken } = waSettings;
+  const response = await callInstagramMessengerProfileApi(
+    ibaId,
+    pageAccessToken,
+    "POST",
+    {
+      persistent_menu: menus,
+    },
+  );
+
+  await updateWaSettingsById(waSettings.id, {
+    instagramPersistentMenu: menus,
+  } as any);
+
+  return response;
+}
+
+export async function getInstagramPersistentMenu(orgId: string, ibaId: string) {
+  const waSettings = await getWaSettingsByIbaId(ibaId);
+
+  if (!waSettings) {
+    throw new Error(`No Instagram settings found for organization ${orgId}`);
+  }
+
+  if (waSettings.instagramPersistentMenu) {
+    return {
+      persistent_menu: waSettings.instagramPersistentMenu,
+    };
+  }
+
+  const { pageAccessToken } = waSettings;
+  const response = await callInstagramMessengerProfileApi(
+    ibaId,
+    pageAccessToken,
+    "GET",
+    undefined,
+    {
+      fields: "persistent_menu",
+    },
+  );
+
+  const persistentMenu = response?.persistent_menu ?? [];
+  await updateWaSettingsById(waSettings.id, {
+    instagramPersistentMenu: persistentMenu,
+  } as any);
+
+  return response;
+}
+
+export async function deleteInstagramPersistentMenu(
+  orgId: string,
+  ibaId: string,
+) {
+  const waSettings = await getWaSettingsByIbaId(ibaId);
+
+  if (!waSettings) {
+    throw new Error(`No Instagram settings found for organization ${orgId}`);
+  }
+
+  const { pageAccessToken } = waSettings;
+  const response = await callInstagramMessengerProfileApi(
+    ibaId,
+    pageAccessToken,
+    "DELETE",
+    {
+      fields: ["persistent_menu"],
+    },
+  );
+  await updateWaSettingsById(waSettings.id, {
+    instagramPersistentMenu: [],
+  } as any);
+  return response;
 }
 
 /**
@@ -538,4 +762,55 @@ export async function sendInstagramFile(
     );
     throw error;
   }
+}
+
+export type InstagramMediaItem = {
+  id: string;
+  caption?: string;
+  media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM" | "REEL";
+  media_url?: string;
+  thumbnail_url?: string;
+  timestamp: string;
+  permalink?: string;
+};
+
+export type InstagramStoryItem = {
+  id: string;
+  media_type: "IMAGE" | "VIDEO";
+  media_url?: string;
+  timestamp: string;
+};
+
+export async function getInstagramMediaPosts(
+  ibaId: string,
+): Promise<InstagramMediaItem[]> {
+  const waSettings = await getWaSettingsByIbaId(ibaId);
+  if (!waSettings?.pageAccessToken) {
+    throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
+  }
+
+  const response = await callMetaApi(
+    `/${ibaId}/media?fields=id,caption,media_type,thumbnail_url,media_url,timestamp,permalink&limit=50`,
+    "GET",
+    waSettings.pageAccessToken,
+  );
+
+  return (response.data?.data as InstagramMediaItem[]) ?? [];
+}
+
+export async function getInstagramStories(
+  ibaId: string,
+): Promise<InstagramStoryItem[]> {
+  const waSettings = await getWaSettingsByIbaId(ibaId);
+  if (!waSettings?.pageAccessToken) {
+    throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
+  }
+
+  const response = await callMetaApi(
+    `/${ibaId}/stories?fields=id,media_type,media_url,timestamp&limit=50`,
+    "GET",
+    waSettings.pageAccessToken,
+  );
+
+  return (response.data?.data as InstagramStoryItem[]) ?? [];
 }

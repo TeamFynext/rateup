@@ -305,6 +305,8 @@ model WhatsappSettings {
   pageAccessToken  String? //Facebook Page access token
   igUserName       String?
   igDisplayName    String?
+  instagramIceBreakers   Json?
+  instagramPersistentMenu Json?
   phoneDisplayName String?
 
   fbUserName       String?
@@ -393,6 +395,8 @@ enum TriggerEvent {
   CONTACT_CREATED
   LIFECYCLE_UPDATED
   SHOPIFY_EVENT
+  INSTAGRAM_COMMENT
+  INSTAGRAM_STORY_MENTION
 }
 
 model RuleAction {

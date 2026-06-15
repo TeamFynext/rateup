@@ -43,6 +43,31 @@ const updateWaSettingsInputSchema = z.object({
   ibaId: z.string().optional().nullable(),
   igUserName: z.string().optional().nullable(),
   igDisplayName: z.string().optional().nullable(),
+  instagramIceBreakers: z
+    .array(
+      z.object({
+        question: z.string(),
+        payload: z.string(),
+      }),
+    )
+    .optional()
+    .nullable(),
+  instagramPersistentMenu: z
+    .array(
+      z.object({
+        locale: z.string(),
+        call_to_actions: z.array(
+          z.object({
+            type: z.enum(["postback", "web_url"]),
+            title: z.string(),
+            payload: z.string().optional(),
+            url: z.string().optional(),
+          }),
+        ),
+      }),
+    )
+    .optional()
+    .nullable(),
   phoneDisplayName: z.string().optional().nullable(),
   fbUserName: z.string().optional().nullable(),
   conversionsApiDatasetId: z.string().optional().nullable(),
@@ -69,6 +94,31 @@ const getWaSettingsResponseSchema = z.array(
     pageAccessToken: z.string().optional().nullable(),
     igUserName: z.string().optional().nullable(),
     igDisplayName: z.string().optional().nullable(),
+    instagramIceBreakers: z
+      .array(
+        z.object({
+          question: z.string(),
+          payload: z.string(),
+        }),
+      )
+      .optional()
+      .nullable(),
+    instagramPersistentMenu: z
+      .array(
+        z.object({
+          locale: z.string(),
+          call_to_actions: z.array(
+            z.object({
+              type: z.enum(["postback", "web_url"]),
+              title: z.string(),
+              payload: z.string().optional(),
+              url: z.string().optional(),
+            }),
+          ),
+        }),
+      )
+      .optional()
+      .nullable(),
     phoneDisplayName: z.string().optional().nullable(),
     fbUserName: z.string().optional().nullable(),
     assets: z.array(z.string()),

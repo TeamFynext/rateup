@@ -99,6 +99,10 @@ export async function syncWaCatalogs(orgId: string) {
         "GET",
       );
 
+      console.log(
+        "🚀 ~ syncWaCatalogs ~ res.data:",
+        JSON.stringify(res?.data, null, 2),
+      );
       const catalogs = res.data.data.map(({ id, ...rest }) => ({
         orgId,
         catalogId: id,

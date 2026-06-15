@@ -113,7 +113,7 @@ async function findInstagramAutomationByCommand(
 
 /**
  * Main handler for Instagram automation triggers
- * This is called when an Instagram message is received
+ * This is called when an Instagram message or comment is received
  */
 export async function handleInstagramAutomation(
   igsId: string,
@@ -121,6 +121,7 @@ export async function handleInstagramAutomation(
   orgId: string,
   ibaId: string,
   messagingObject: any,
+  commentId?: string,
 ): Promise<void> {
   try {
     log.trace(
@@ -176,6 +177,7 @@ export async function handleInstagramAutomation(
         matchedAutomation as any,
         orgId,
         ibaId,
+        commentId,
       );
       return;
     }
