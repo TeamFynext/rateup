@@ -9,7 +9,12 @@ import {
   useRuleById,
   useUpdateRuleMutation,
 } from "@/backend/whatsapp/rule/rule.query";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 
 import RuleBuilderForm from "./RuleBuilderForm.tsx";
 import RuleShare from "./RuleShare.tsx";
@@ -39,6 +44,8 @@ const defaultValues: Partial<CreateRuleInput> = {
       enabled: false,
       businessHoursId: undefined,
     },
+    instagramScope: "ALL",
+    instagramPostIds: [],
   },
 };
 

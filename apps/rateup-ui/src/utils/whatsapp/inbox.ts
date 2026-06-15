@@ -67,7 +67,17 @@ export function parseWaMessage(
     if (messageBody?.exchangeProcess === "receive") {
       const { receive } = messageBody as { receive: IgReceiveMessageBody };
       if (receive.message) {
-        if (receive.message.attachments) {
+        if (
+          receive.message.comment_id ||
+          receive.message.mid?.startsWith("ig_comment_")
+        ) {
+          messageType = "ig_comment";
+          messageContent = {
+            text: receive.message.text,
+            commentId: receive.message.comment_id,
+            mediaId: receive.message.media_id,
+          };
+        } else if (receive.message.attachments) {
           messageContent = {
             attachments: receive.message.attachments.map((r) => ({
               content: r.payload ? r.payload.url : "",
@@ -243,6 +253,8 @@ export function returnMessageContentBasedOnParsedMessage(
     return parsedMessage.messageContent.attachments[
       parsedMessage.messageContent.attachments.length - 1
     ].type;
+  } else if (parsedMessage.messageType === "ig_comment") {
+    return parsedMessage.messageContent.text || "Comment";
   } else {
     return "Unsupported message type";
   }
