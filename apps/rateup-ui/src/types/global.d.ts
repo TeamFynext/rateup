@@ -373,6 +373,7 @@ declare global {
     onboardingCompleted?: boolean;
     presenceMode: UserPresenceMode;
     showLifecycle: boolean;
+    isConversionApiActive: boolean;
     onboardingChecklistCompleted: boolean;
   };
 

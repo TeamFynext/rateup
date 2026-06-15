@@ -13,6 +13,7 @@ import {
   subscribeFieldtoPage,
   syncAdAccounts,
   syncAdsByAdAccount,
+  syncDatasets,
   syncFbPages,
   syncLeadgenFormQuestions,
   syncMetaLeadgenForms,
@@ -233,6 +234,21 @@ export const useSubscribeFieldToPage = (waSettingsId) => {
     },
     onError: (error) => {
       toast.error(error?.message || "error");
+    },
+  });
+};
+
+export const useSyncDatasetsMutation = (waSettingsId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => syncDatasets(waSettingsId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
+      qc.invalidateQueries({ queryKey: ["waSettings"] });
+      toast.success("Successfully synced datasets");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Error syncing datasets");
     },
   });
 };

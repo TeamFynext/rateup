@@ -95,12 +95,16 @@ export function useUpdateOrgDetailsMutation() {
   return useMutation({
     mutationFn: (values: Partial<IUpdateOrgDetails>) =>
       updateOrgDetails(values),
-    onSuccess: () => {
-      toast.success("Org details updated successfully", {
-        id: "load-data",
-      });
+    onSuccess: (_, variables) => {
+      if (
+        Object.keys(variables).length > 1 ||
+        !("isConversionApiActive" in variables)
+      ) {
+        toast.success("Org details updated successfully", {
+          id: "load-data",
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
-      queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
     },
     onError: (error) => {
       console.error("Error in Organization Update:", error.message);

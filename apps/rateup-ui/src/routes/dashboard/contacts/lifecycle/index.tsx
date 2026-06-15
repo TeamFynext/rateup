@@ -31,6 +31,13 @@ import {
   useReorderLifeCycleMutation,
   useUpdateLifeCycleMutation,
 } from "@/backend/lifecycle/lifecycle.query";
+import { useUpdateOrgDetailsMutation } from "@/backend/org/org.query";
+import { useUserInfo } from "@/backend/user/user.query";
+import {
+  useSyncDatasetsMutation,
+  useUpdateWaSettingsMutation,
+  useWaSettings,
+} from "@/backend/whatsapp/settings/waSettings.query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,6 +51,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -100,6 +114,21 @@ interface SetupViewProps {
   readonly backendStages: BackendLifecycleStage[];
   readonly showStagesGlobal: boolean;
   readonly setShowStagesGlobal: (show: boolean) => void;
+  readonly isConversionApiActive: boolean;
+  readonly conversionData: {
+    event_name?: string;
+    currency?: string;
+    conversionsApiDatasetId?: string;
+  };
+  readonly handleUpdateConversionApi: (
+    active: boolean,
+    data: {
+      event_name?: string;
+      currency?: string;
+      conversionsApiDatasetId?: string;
+    },
+  ) => void;
+  readonly hasWhatsAppSettings: boolean;
   readonly showAddActiveForm: boolean;
   readonly setShowAddActiveForm: (show: boolean) => void;
   readonly showAddLostForm: boolean;
@@ -210,7 +239,96 @@ function ContactSettings() {
   const { t } = useTranslation("contacts.lifecycle");
   const { data: lifecycles, isLoading } = useLifecyclesWithContactCount();
   const { confirm, ConfirmDialog } = useConfirmDialog();
+  const { data: userInfo, isLoading: userLoading } = useUserInfo();
+
+  const { data: waSettingsData } = useWaSettings();
+  const updateOrgDetails = useUpdateOrgDetailsMutation();
+  const updateWaSettings = useUpdateWaSettingsMutation(waSettingsData?.[0]?.id);
+  const syncDatasetsMutation = useSyncDatasetsMutation(
+    waSettingsData?.[0]?.id || "",
+  );
+
   const [isSettingUp, setIsSettingUp] = useState(false);
+  const [isConversionApiActive, setIsConversionApiActive] = useState(false);
+  const [conversionData, setConversionData] = useState<{
+    event_name?: string;
+    currency?: string;
+    conversionsApiDatasetId?: string;
+  }>({});
+
+  React.useEffect(() => {
+    if (userInfo && "data" in userInfo) {
+      setShowStagesGlobal(userInfo.data.showLifecycle !== false);
+      setIsConversionApiActive(userInfo.data.isConversionApiActive === true);
+    }
+  }, [userInfo]);
+
+  React.useEffect(() => {
+    if (waSettingsData && waSettingsData.length > 0) {
+      setConversionData({
+        event_name: waSettingsData[0].conversionData?.event_name || "Purchase",
+        currency: waSettingsData[0].conversionData?.currency || "INR",
+        conversionsApiDatasetId:
+          waSettingsData[0].conversionsApiDatasetId || "",
+      });
+    }
+  }, [waSettingsData]);
+
+  const handleUpdateConversionApi = async (
+    active: boolean,
+    data: {
+      event_name?: string;
+      currency?: string;
+      conversionsApiDatasetId?: string;
+    },
+  ) => {
+    try {
+      const finalData = { ...data };
+
+      if (active !== isConversionApiActive) {
+        await updateOrgDetails.mutateAsync({ isConversionApiActive: active });
+        setIsConversionApiActive(active);
+
+        if (
+          active &&
+          waSettingsData?.[0]?.id &&
+          !finalData.conversionsApiDatasetId
+        ) {
+          try {
+            const datasets = await syncDatasetsMutation.mutateAsync();
+            if (datasets && datasets.length > 0) {
+              finalData.conversionsApiDatasetId = datasets[0].id;
+              toast.success(t(`Auto-selected dataset: ${datasets[0].name}`));
+            } else {
+              toast.info(t("No Meta datasets found for this account."));
+            }
+          } catch (e) {
+            toast.error(t("Failed to auto-fetch Meta datasets."));
+          }
+        }
+      }
+
+      if (
+        waSettingsData?.[0]?.id &&
+        (finalData.event_name !== conversionData.event_name ||
+          finalData.currency !== conversionData.currency ||
+          finalData.conversionsApiDatasetId !==
+            conversionData.conversionsApiDatasetId)
+      ) {
+        await updateWaSettings.mutateAsync({
+          conversionData: {
+            event_name: finalData.event_name,
+            currency: finalData.currency,
+          },
+          conversionsApiDatasetId: finalData.conversionsApiDatasetId,
+        });
+        setConversionData(finalData);
+      }
+      toast.success(t("Settings saved successfully"));
+    } catch (error) {
+      toast.error(t("Failed to save settings"));
+    }
+  };
   const [showStagesGlobal, setShowStagesGlobal] = useState(true);
   const [showAddActiveForm, setShowAddActiveForm] = useState(false);
   const [showAddLostForm, setShowAddLostForm] = useState(false);
@@ -224,6 +342,7 @@ function ContactSettings() {
   const updateLifecycle = useUpdateLifeCycleMutation();
   const deleteLifecycle = useDeleteLifeCycleMutation();
   const reorderLifecycle = useReorderLifeCycleMutation();
+  console.log(userInfo);
 
   const activeStages = useMemo(() => {
     if (!lifecycles) return [];
@@ -582,6 +701,14 @@ function ContactSettings() {
               backendStages={lifecycles || []}
               showStagesGlobal={showStagesGlobal}
               setShowStagesGlobal={setShowStagesGlobal}
+              isConversionApiActive={isConversionApiActive}
+              conversionData={conversionData}
+              handleUpdateConversionApi={handleUpdateConversionApi}
+              hasWhatsAppSettings={
+                userInfo && "data" in userInfo
+                  ? userInfo.data.hasWhatsAppSettings
+                  : false
+              }
               showAddActiveForm={showAddActiveForm}
               setShowAddActiveForm={setShowAddActiveForm}
               showAddLostForm={showAddLostForm}
@@ -871,6 +998,10 @@ function SetupView({
   handleDeleteStage,
   handleMoveStage,
   setIsSettingUp,
+  isConversionApiActive,
+  conversionData,
+  handleUpdateConversionApi,
+  hasWhatsAppSettings,
   isCreating,
   isReordering,
 }: Readonly<SetupViewProps>) {
@@ -888,6 +1019,14 @@ function SetupView({
   const [visibleDescriptions, setVisibleDescriptions] = useState<
     Record<string, boolean>
   >({});
+
+  const [pixelIdDraft, setPixelIdDraft] = useState(
+    conversionData?.conversionsApiDatasetId || "",
+  );
+
+  React.useEffect(() => {
+    setPixelIdDraft(conversionData?.conversionsApiDatasetId || "");
+  }, [conversionData?.conversionsApiDatasetId]);
 
   const toggleDescription = (id: string) => {
     setVisibleDescriptions((previous) => ({
@@ -914,6 +1053,132 @@ function SetupView({
           onCheckedChange={setShowStagesGlobal}
         />
       </Card>
+
+      {hasWhatsAppSettings ? (
+        <Card className="flex flex-col gap-4 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold tracking-tight text-foreground">
+                {t("Meta Conversions API (CAPI)")}
+              </h3>
+              <p className="mt-1 max-w-4xl text-xs font-medium leading-relaxed text-muted-foreground">
+                {t(
+                  "Enable tracking of conversions to Meta using Conversions API when a lifecycle stage changes to Won.",
+                )}
+              </p>
+            </div>
+            <Switch
+              checked={isConversionApiActive}
+              onCheckedChange={(checked) =>
+                handleUpdateConversionApi(checked, conversionData)
+              }
+            />
+          </div>
+
+          {isConversionApiActive && (
+            <div
+              className={cn(
+                "grid gap-4 pt-4 border-t border-border",
+                conversionData.event_name === "Purchase"
+                  ? "grid-cols-1 md:grid-cols-3"
+                  : "grid-cols-1 md:grid-cols-2",
+              )}
+            >
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-muted-foreground">
+                  {t("Event Name")}
+                </Label>
+                <Select
+                  value={conversionData.event_name || "Purchase"}
+                  onValueChange={(val) =>
+                    handleUpdateConversionApi(isConversionApiActive, {
+                      ...conversionData,
+                      event_name: val,
+                    })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("Select Event")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Purchase">{t("Purchase")}</SelectItem>
+                    <SelectItem value="Lead">{t("Lead")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {conversionData.event_name === "Purchase" && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-muted-foreground">
+                    {t("Currency")}
+                  </Label>
+                  <Select
+                    value={conversionData.currency || "INR"}
+                    onValueChange={(val) =>
+                      handleUpdateConversionApi(isConversionApiActive, {
+                        ...conversionData,
+                        currency: val,
+                      })
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t("Select Currency")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="INR">{t("INR")}</SelectItem>
+                      <SelectItem value="USD">{t("USD")}</SelectItem>
+                      <SelectItem value="EUR">{t("EUR")}</SelectItem>
+                      <SelectItem value="GBP">{t("GBP")}</SelectItem>
+                      <SelectItem value="AED">{t("AED")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-muted-foreground">
+                  {t("Pixel ID")}
+                </Label>
+                <div className="relative">
+                  <Input
+                    value={pixelIdDraft}
+                    onChange={(e) => setPixelIdDraft(e.target.value)}
+                    placeholder={t("Enter Pixel ID")}
+                    className="w-full border-input bg-background pr-8 text-xs font-semibold text-foreground"
+                  />
+                  {pixelIdDraft !==
+                    (conversionData?.conversionsApiDatasetId || "") && (
+                    <Button
+                      type="button"
+                      size="icon"
+                      onClick={() =>
+                        handleUpdateConversionApi(isConversionApiActive, {
+                          ...conversionData,
+                          conversionsApiDatasetId: pixelIdDraft,
+                        })
+                      }
+                      className="absolute right-1 top-1/2 -translate-y-1/2 size-6"
+                    >
+                      <Check className="size-3.5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </Card>
+      ) : (
+        <Card className="flex flex-col gap-4 p-6 bg-muted/20">
+          <div>
+            <h3 className="text-sm font-bold tracking-tight text-foreground">
+              {t("Meta Conversions API (CAPI)")}
+            </h3>
+            <p className="mt-1 max-w-4xl text-xs font-medium leading-relaxed text-muted-foreground">
+              {t(
+                "Please connect WhatsApp to configure Meta Conversions API for tracking.",
+              )}
+            </p>
+          </div>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between border-b border-border bg-muted/30 px-6 py-4">
