@@ -138,6 +138,7 @@ export async function createGoogleUserHandler(
       website: payload.website,
       goals: payload.goals,
       integrationsSelected: payload.integrationsSelected,
+      referralCode: body.referralCode,
     });
   } catch (e: any) {
     console.error(e);
@@ -214,6 +215,7 @@ export async function createAppleUserHandler(
       website: payload.website,
       goals: payload.goals,
       integrationsSelected: payload.integrationsSelected,
+      referralCode: body.referralCode,
     });
   } catch (e: any) {
     console.error(e);

@@ -33,6 +33,7 @@ const createUserSignupSchema = z.object({
   goals: z.array(z.string()).optional(),
   integrationsSelected: z.array(z.string()).optional(),
   teamSize: z.string().optional(),
+  referralCode: z.string().optional(),
 });
 
 const pauseUserSchema = z.object({
@@ -52,6 +53,7 @@ const createUserGoogleSchema = z.object({
   location: z.string().optional(),
   website: z.string().optional(),
   industry: z.string().optional(),
+  referralCode: z.string().optional(),
 });
 
 const changeUserPasswordSchema = z.object({

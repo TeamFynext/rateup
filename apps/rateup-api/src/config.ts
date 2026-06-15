@@ -73,6 +73,7 @@ export const SuperTokensConfig: TypeInput = {
           { id: "goals", optional: true },
           { id: "integrationsSelected", optional: true },
           { id: "teamSize", optional: true },
+          { id: "referralCode", optional: true },
         ],
       },
       override: {
@@ -138,6 +139,7 @@ export const SuperTokensConfig: TypeInput = {
                 "integrationsSelected",
               );
               const teamSize = getValueByKey(formFields, "teamSize");
+              const referralCode = getValueByKey(formFields, "referralCode");
 
               const { id, emails, loginMethods } = response.user;
               const email = emails[0];
@@ -162,6 +164,7 @@ export const SuperTokensConfig: TypeInput = {
                       : [],
                   phone: phoneNumber,
                   teamSize,
+                  referralCode,
                 });
               }
             }
