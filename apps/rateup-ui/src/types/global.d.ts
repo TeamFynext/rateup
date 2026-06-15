@@ -373,6 +373,7 @@ declare global {
     onboardingCompleted?: boolean;
     presenceMode: UserPresenceMode;
     showLifecycle: boolean;
+    isConversionApiActive: boolean;
     onboardingChecklistCompleted: boolean;
   };
 
@@ -1509,6 +1510,8 @@ export type InstagramWebhookBody = {
           message?: {
             mid: string;
             text?: string;
+            comment_id?: string; // Included when message originates from a comment (private reply flow)
+            media_id?: string; // The post/reel/live media the comment was on
             attachments?: [
               // Included when a customer sends multiple media attachments or a URL for a story mention or share
               {

@@ -1,5 +1,5 @@
 import type { IndicatorProps } from "@mantine/core";
-import { Center, Group, Text } from "@mantine/core";
+import { Center, Group, Stack, Text } from "@mantine/core";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
 import { Clock } from "lucide-react";
@@ -37,6 +37,29 @@ import WaInboxTemplate from "./template/index.tsx";
 import WaInboxText from "./text/index.tsx";
 import WaInboxVideo from "./video/index.tsx";
 
+export const IgCommentBubble = ({
+  messageContent,
+}: {
+  messageContent: { text?: string; commentId?: string; mediaId?: string };
+}) => {
+  return (
+    <Stack gap={4}>
+      <Text
+        size="xs"
+        c="var(--grey-color-7)"
+        p="xs"
+        bg="var(--light-grey-color-5)"
+        style={{ borderRadius: 10 }}
+      >
+        Commented on your post
+      </Text>
+      {messageContent.text ? (
+        <WaInboxText messageContent={messageContent.text} />
+      ) : null}
+    </Stack>
+  );
+};
+
 export const SingleMessage = ({ message }) => {
   const { t: translations } = useTranslation();
   const { messageContent, messageType, template, interactive } =
@@ -45,6 +68,8 @@ export const SingleMessage = ({ message }) => {
     case "text":
     case "quickreply":
       return <WaInboxText messageContent={messageContent} />;
+    case "ig_comment":
+      return <IgCommentBubble messageContent={messageContent} />;
     case "image":
       return <WaInboxImage messageContent={messageContent} />;
     case "button":

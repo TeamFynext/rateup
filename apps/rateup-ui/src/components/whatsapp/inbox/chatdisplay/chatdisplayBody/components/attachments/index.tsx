@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { Group, Stack, Text } from "@mantine/core";
 import { IconPlayerPlayFilled } from "@tabler/icons-react";
@@ -10,6 +10,36 @@ import WaInboxDocument from "../document/index.tsx";
 import WaInboxImage from "../image/index.tsx";
 import WaInboxText from "../text/index.tsx";
 import WaInboxVideo from "../video/index.tsx";
+
+const StoryMentionPreview = ({ url }: { url: string }) => {
+  const [expired, setExpired] = useState(false);
+  if (expired) {
+    return (
+      <Text
+        style={{ borderRadius: "10px" }}
+        c="var(--grey-color-7)"
+        p={"xs"}
+        size="xs"
+        bg="var(--light-grey-color-5)"
+      >
+        Story is no longer available
+      </Text>
+    );
+  }
+  return (
+    <img
+      src={url}
+      alt="Story"
+      style={{
+        maxWidth: 200,
+        maxHeight: 300,
+        borderRadius: 10,
+        display: "block",
+      }}
+      onError={() => setExpired(true)}
+    />
+  );
+};
 
 const WaInboxAttachments = ({
   messageContent,
@@ -40,7 +70,7 @@ const WaInboxAttachments = ({
         return <WaInboxText messageContent={attachment?.content} />;
       case "story_mention":
         return (
-          <>
+          <Stack gap="xs">
             <Text
               style={{ borderRadius: "10px" }}
               c="var(--grey-color-7)"
@@ -50,8 +80,10 @@ const WaInboxAttachments = ({
             >
               Mentioned you in their story
             </Text>
-            <WaInboxText messageContent={attachment?.content} />
-          </>
+            {attachment?.content ? (
+              <StoryMentionPreview url={attachment.content} />
+            ) : null}
+          </Stack>
         );
       case "ephemeral":
         return (

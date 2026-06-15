@@ -85,19 +85,9 @@ const categories = [
         icon: <IconSquare size={16} />,
       },
       {
-        id: "instagramStoryReplyNode",
-        label: "Story Reply",
-        icon: <IconImageInPicture size={16} />,
-      },
-      {
         id: "instagramProductTemplateNode",
         label: "Product Template",
         icon: <IconBuildingStore size={16} />,
-      },
-      {
-        id: "instagramIceBreakerNode",
-        label: "Ice Breaker",
-        icon: <IconInputSpark size={16} />,
       },
     ],
   },
@@ -171,12 +161,6 @@ export default function ComponentSidebar({ platform }: { platform: string }) {
           ...baseData,
           text: "",
           quick_replies: [],
-        };
-      case "instagramStoryReplyNode":
-        return {
-          ...baseData,
-          text: "",
-          story_mention: false,
         };
       case "instagramProductTemplateNode":
         return {

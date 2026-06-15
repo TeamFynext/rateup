@@ -8,6 +8,7 @@ export interface IReferral {
   id: string;
   referral_code: string;
   name: string;
+  email: string;
   visit_count: number;
   signup_count: number;
   created_at: string;
@@ -15,8 +16,9 @@ export interface IReferral {
 
 export async function createReferral(
   name: string,
+  email: string,
 ): Promise<ICreateReferralResponse> {
-  const response = await axiosClient.post("/referrals", { name });
+  const response = await axiosClient.post("/referrals", { name, email });
   return response.data;
 }
 
