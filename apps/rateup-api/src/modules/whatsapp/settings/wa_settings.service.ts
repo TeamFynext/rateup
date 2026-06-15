@@ -356,6 +356,65 @@ export async function getAdAccountsFromWa(whatsappSettingsId) {
   return adAccounts;
 }
 
+export async function getMetaDatasetsFromWa(whatsappSettingsId) {
+  const { accessToken } = await getWaSettingsById(whatsappSettingsId);
+  if (!accessToken) {
+    throw new Error("accesstoken not found");
+  }
+
+  let datasets = [];
+
+  try {
+    const businessesUrl = `/me/businesses?fields=id,name&access_token=${accessToken}`;
+    const businessesRes = await callMetaApi(businessesUrl, "GET");
+    console.log("businessres:", businessesRes.data);
+    const businesses = businessesRes.data?.data || [];
+
+    for (const business of businesses) {
+      try {
+        const pixelsUrl = `/${business.id}/adspixels?fields=id,name&access_token=${accessToken}`;
+        const pixelsRes = await callMetaApi(pixelsUrl, "GET");
+        console.log("pixelREs", pixelsRes);
+        if (pixelsRes.data?.data) {
+          datasets = [...datasets, ...pixelsRes.data.data];
+        }
+      } catch (e) {
+        log.warn("Failed to fetch pixels for business %s", business.id);
+      }
+    }
+  } catch (e) {
+    log.warn("Failed to fetch businesses");
+  }
+
+  try {
+    const adAccountsUrl = `/me/adaccounts?fields=id,name&access_token=${accessToken}`;
+    const adAccountsRes = await callMetaApi(adAccountsUrl, "GET");
+    console.log("adAccountsRes:", adAccountsRes.data);
+    const adAccounts = adAccountsRes.data?.data || [];
+
+    for (const acc of adAccounts) {
+      try {
+        const pixelsUrl = `/${acc.id}/adspixels?fields=id,name&access_token=${accessToken}`;
+        const pixelsRes = await callMetaApi(pixelsUrl, "GET");
+        console.log("adAccount pixelsRes:", pixelsRes.data);
+        if (pixelsRes.data?.data) {
+          datasets = [...datasets, ...pixelsRes.data.data];
+        }
+      } catch (e) {
+        log.warn("Failed to fetch pixels for ad account %s", acc.id);
+      }
+    }
+  } catch (e) {
+    log.warn("Failed to fetch ad accounts");
+  }
+
+  // Deduplicate
+  const uniqueDatasets = Array.from(
+    new Map(datasets.map((item) => [item.id, item])).values(),
+  );
+  return uniqueDatasets;
+}
+
 export async function getLeadgenFormsFromWa(fbPageId, pageAccessToken) {
   const url = `/${fbPageId}/leadgen_forms?fields=id,name,questions&access_token=${pageAccessToken}`;
   const res = await callMetaApi(url, "GET");

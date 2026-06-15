@@ -310,6 +310,7 @@ export async function getLoggedUserInfo(
         },
       },
       showLifecycle: true,
+      isConversionApiActive: true,
       onboardingChecklistCompleted: true,
     },
   });
@@ -339,6 +340,7 @@ export async function getLoggedUserInfo(
     onboarding: orgData?.onboarding,
     presenceMode: profile?.presenceMode,
     showLifecycle: orgData?.showLifecycle,
+    isConversionApiActive: orgData?.isConversionApiActive,
     onboardingChecklistCompleted: orgData?.onboardingChecklistCompleted,
   };
 }

@@ -303,6 +303,7 @@ export async function updateOrgDetails(
     encryptionKeys,
     waAssignedChatPermission,
     showLifecycle,
+    isConversionApiActive,
     onboardingChecklistCompleted,
     onboardingChecklist,
   }: UpdateOrgDetailsInput,
@@ -336,6 +337,7 @@ export async function updateOrgDetails(
         businessmail: businessmail,
       },
       showLifecycle,
+      isConversionApiActive,
       onboardingChecklistCompleted,
       onboardingChecklist: {
         ...existingOnboardingChecklist,

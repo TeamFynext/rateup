@@ -53,6 +53,7 @@ const updateOrgDetailsSchema = z.object({
     .optional(),
   waAssignedChatPermission: z.enum(WaAssignedChatPermission).optional(),
   showLifecycle: z.boolean().optional(),
+  isConversionApiActive: z.boolean().optional(),
   onboardingChecklistCompleted: z.boolean().optional(),
   onboardingChecklist: z
     .object({

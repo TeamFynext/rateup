@@ -3,6 +3,7 @@ import {
   createWaSettingsHandler,
   deleteWaSettingsHandler,
   getMetaAssetsHandler,
+  getMetaDatasetsHandler,
   getWaLogsHandler,
   getWaSettingsForOrgHandler,
   getWaSettingsHandler,
@@ -129,5 +130,14 @@ export async function waSettingsRoutes(server: FastifyInstance) {
   );
 
   server.get("/meta-assets/:whatsappSettingsId", getMetaAssetsHandler);
+  server.get(
+    "/sync/datasets/:whatsappSettingsId",
+    {
+      schema: {
+        params: whatsappSettingsIdParamSchema,
+      },
+    },
+    getMetaDatasetsHandler,
+  );
   server.get("/verification-status", getWaSettingsForOrgHandler);
 }

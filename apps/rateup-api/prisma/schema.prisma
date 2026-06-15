@@ -163,6 +163,7 @@ model Org {
 
   showLifecycle Boolean @default(true)
 
+  isConversionApiActive Boolean @default(false)
   onboardingChecklist          Json?
   onboardingChecklistCompleted Boolean @default(false)
 
@@ -304,6 +305,8 @@ model WhatsappSettings {
   pageAccessToken  String? //Facebook Page access token
   igUserName       String?
   igDisplayName    String?
+  instagramIceBreakers   Json?
+  instagramPersistentMenu Json?
   phoneDisplayName String?
 
   fbUserName       String?
@@ -318,6 +321,8 @@ model WhatsappSettings {
   metaAssets       MetaAssets[]
   catalog          CatalogPhoneIdMap?
   assets           String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
+  conversionsApiDatasetId String?
+  conversionData   Json?
   paymentMethod    String             @default("NATIVE") // NATIVE, SHOPIFY_LINK
 }
 
@@ -390,6 +395,8 @@ enum TriggerEvent {
   CONTACT_CREATED
   LIFECYCLE_UPDATED
   SHOPIFY_EVENT
+  INSTAGRAM_COMMENT
+  INSTAGRAM_STORY_MENTION
 }
 
 model RuleAction {
@@ -2591,9 +2598,8 @@ model Referral {
   id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   referral_code String   @unique
   name          String
+  email         String   @unique
   visit_count   Int      @default(0)
   signup_count  Int      @default(0)
   created_at    DateTime @default(now())
 }
-
-
