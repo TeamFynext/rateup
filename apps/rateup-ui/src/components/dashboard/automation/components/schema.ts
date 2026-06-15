@@ -39,6 +39,13 @@ export const TRIGGER_EVENTS = [
   { label: "Contact Created", value: "CONTACT_CREATED" },
   { label: "Lifecycle Updated", value: "LIFECYCLE_UPDATED" },
   { label: "Shopify Event", value: "SHOPIFY_EVENT" },
+  { label: "Instagram Comment (Private Reply)", value: "INSTAGRAM_COMMENT" },
+  { label: "Instagram Story Mention", value: "INSTAGRAM_STORY_MENTION" },
+] as const;
+
+export const INSTAGRAM_SCOPE_OPTIONS = [
+  { label: "All posts", value: "ALL" },
+  { label: "Specific posts", value: "SPECIFIC" },
 ] as const;
 
 // Single source of truth for action types
@@ -149,6 +156,9 @@ const ruleOptionsSchema = z.object({
     }),
   // Shopify-specific options
   shopifyProductIds: z.array(z.string()).default([]),
+  // Instagram-specific options
+  instagramScope: z.enum(["ALL", "SPECIFIC"]).default("ALL"),
+  instagramPostIds: z.array(z.string()).default([]),
 });
 
 const createRuleBaseSchema = z.object({
@@ -193,6 +203,8 @@ const createRuleBaseSchema = z.object({
       businessHoursId: undefined,
     },
     shopifyProductIds: [],
+    instagramScope: "ALL",
+    instagramPostIds: [],
   }),
 });
 
@@ -217,6 +229,23 @@ export const createRuleSchema = createRuleBaseSchema.superRefine(
         code: "custom",
         path: ["options", "shopifyEvent"],
         message: "Select a Shopify event",
+      });
+    }
+
+    const isInstagramTrigger =
+      data.triggerEvent === "INSTAGRAM_COMMENT" ||
+      data.triggerEvent === "INSTAGRAM_STORY_MENTION";
+
+    if (
+      isInstagramTrigger &&
+      data.options?.instagramScope === "SPECIFIC" &&
+      (!data.options?.instagramPostIds ||
+        data.options.instagramPostIds.length === 0)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["options", "instagramPostIds"],
+        message: "Add at least one post ID",
       });
     }
   },

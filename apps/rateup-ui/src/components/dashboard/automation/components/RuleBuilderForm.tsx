@@ -16,6 +16,10 @@ import { Controller, useFieldArray, useWatch } from "react-hook-form";
 
 import { ShopifyEvents } from "@/types/enums.ts";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
+import {
+  useInstagramMediaPosts,
+  useInstagramStories,
+} from "@/backend/whatsapp/instagram-profile/instagramProfile.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -27,6 +31,7 @@ import {
 } from "@/components/ui/field.tsx";
 import { Form } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import {
   Select,
   SelectContent,
@@ -41,7 +46,7 @@ import ActionList from "./ActionList.tsx";
 import ConditionList from "./ConditionList.tsx";
 import RuleOptions from "./RuleOptions.tsx";
 import type { CreateRuleInput } from "./schema.ts";
-import { TRIGGER_EVENTS } from "./schema.ts";
+import { INSTAGRAM_SCOPE_OPTIONS, TRIGGER_EVENTS } from "./schema.ts";
 
 interface RuleBuilderFormProps {
   form: UseFormReturn<CreateRuleInput>;
@@ -73,6 +78,10 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   });
   const isMessageReceivedTrigger = triggerEvent === "MESSAGE_RECEIVED";
   const isShopifyTrigger = triggerEvent === "SHOPIFY_EVENT";
+  const isInstagramCommentTrigger = triggerEvent === "INSTAGRAM_COMMENT";
+  const isInstagramStoryTrigger = triggerEvent === "INSTAGRAM_STORY_MENTION";
+  const isInstagramTrigger =
+    isInstagramCommentTrigger || isInstagramStoryTrigger;
   const shopifyEvent = useWatch({
     control: form.control,
     name: "options.shopifyEvent",
@@ -82,6 +91,35 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
       control: form.control,
       name: "options.shopifyProductIds",
     }) ?? [];
+
+  const instagramScope =
+    useWatch({ control: form.control, name: "options.instagramScope" }) ??
+    "ALL";
+  const instagramPostIds =
+    useWatch({ control: form.control, name: "options.instagramPostIds" }) ?? [];
+
+  const selectedPhoneIds =
+    useWatch({ control: form.control, name: "whatsappSettingsPhoneIds" }) ?? [];
+  // Use the first selected account as the ibaId source for media fetching
+  const activeIbaId =
+    isInstagramTrigger && instagramScope === "SPECIFIC"
+      ? selectedPhoneIds[0]
+      : undefined;
+  const { data: mediaPosts, isLoading: mediaLoading } = useInstagramMediaPosts(
+    isInstagramCommentTrigger ? activeIbaId : undefined,
+  );
+  const { data: stories, isLoading: storiesLoading } = useInstagramStories(
+    isInstagramStoryTrigger ? activeIbaId : undefined,
+  );
+
+  const mediaOptions = (
+    isInstagramCommentTrigger ? (mediaPosts ?? []) : (stories ?? [])
+  ).map((item: any) => ({
+    value: item.id,
+    label: item.caption
+      ? `${item.caption.slice(0, 60)}${item.caption.length > 60 ? "…" : ""}`
+      : `${item.media_type} · ${new Date(item.timestamp).toLocaleDateString()}`,
+  }));
 
   const [productData, setProductData] = useState<
     { label: string; value: string }[]
@@ -182,6 +220,13 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                       if (value !== "SHOPIFY_EVENT") {
                         form.setValue("options.shopifyEvent", undefined);
                         form.setValue("options.shopifyProductIds", []);
+                      }
+                      if (
+                        value !== "INSTAGRAM_COMMENT" &&
+                        value !== "INSTAGRAM_STORY_MENTION"
+                      ) {
+                        form.setValue("options.instagramScope", "ALL");
+                        form.setValue("options.instagramPostIds", []);
                       }
                       if (value !== "MESSAGE_RECEIVED") {
                         form.setValue("groups", []);
@@ -284,7 +329,90 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
             </div>
 
             <div className="space-y-4">
-              {isShopifyTrigger ? (
+              {isInstagramTrigger ? (
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-dashed border-pink-300 dark:border-pink-700 p-4 text-sm text-muted-foreground">
+                    {isInstagramCommentTrigger
+                      ? "Sends a private reply when someone comments on your post, reel, or ad."
+                      : "Triggers when someone mentions your account in their Instagram Story."}
+                  </div>
+
+                  {/* Scope selector */}
+                  <div className="border-2 border-pink-200 dark:border-pink-800 rounded-lg p-4 bg-pink-50/50 dark:bg-pink-950/20 space-y-3">
+                    <span className="text-sm font-semibold text-pink-800 dark:text-pink-300 block">
+                      Apply to
+                    </span>
+
+                    <Controller
+                      control={form.control}
+                      name="options.instagramScope"
+                      render={({ field }) => (
+                        <div className="flex gap-3">
+                          {INSTAGRAM_SCOPE_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => {
+                                field.onChange(opt.value);
+                                if (opt.value === "ALL") {
+                                  form.setValue("options.instagramPostIds", []);
+                                }
+                              }}
+                              className={`flex-1 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-colors ${
+                                field.value === opt.value
+                                  ? "border-pink-500 bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200"
+                                  : "border-muted bg-background text-muted-foreground hover:border-pink-300"
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    />
+
+                    {instagramScope === "SPECIFIC" && (
+                      <div className="space-y-2 pt-1">
+                        {!activeIbaId ? (
+                          <p className="text-xs text-amber-600 dark:text-amber-400">
+                            Select an Instagram account above to load available{" "}
+                            {isInstagramCommentTrigger ? "posts" : "stories"}.
+                          </p>
+                        ) : (
+                          <Controller
+                            control={form.control}
+                            name="options.instagramPostIds"
+                            render={({ field, fieldState }) => (
+                              <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>
+                                  Select{" "}
+                                  {isInstagramCommentTrigger
+                                    ? "posts / reels"
+                                    : "stories"}
+                                </FieldLabel>
+                                <MultiSelect
+                                  options={mediaOptions}
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value ?? []}
+                                  placeholder={
+                                    mediaLoading || storiesLoading
+                                      ? "Loading…"
+                                      : `Select ${isInstagramCommentTrigger ? "posts" : "stories"}…`
+                                  }
+                                  disabled={mediaLoading || storiesLoading}
+                                />
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </Field>
+                            )}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : isShopifyTrigger ? (
                 <div className="space-y-4">
                   <div className="rounded-lg border border-dashed border-purple-300 dark:border-purple-700 p-4 text-sm text-muted-foreground">
                     Shopify rules use the selected Shopify event as the trigger
@@ -436,7 +564,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                 ))
               )}
 
-              {!isShopifyTrigger && (
+              {!isShopifyTrigger && !isInstagramTrigger && (
                 <Button
                   type="button"
                   variant="outline"

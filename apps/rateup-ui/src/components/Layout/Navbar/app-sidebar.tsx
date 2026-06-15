@@ -731,7 +731,7 @@ export default function AppSidebar({
       />
       {/* Icon rail */}
       <Sidebar
-        className="w-(--sidebar-width-icon) border-r h-screen"
+        className="w-(--sidebar-width-icon) border-r h-screen z-50"
         collapsible="none"
       >
         <SidebarHeader>
