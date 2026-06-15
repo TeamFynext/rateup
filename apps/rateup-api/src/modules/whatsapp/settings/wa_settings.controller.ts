@@ -23,6 +23,7 @@ import {
   getLeadgenFormQuestionsFromWa,
   getLeadgenFormsFromWa,
   getMetaAssets,
+  getMetaDatasetsFromWa,
   getWaLogs,
   getWaSettings,
   getWaSettingsById,
@@ -451,6 +452,20 @@ export async function getWaSettingsForOrgHandler(
     });
   } catch (error) {
     log.error("Error while getting meta assets %o", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function getMetaDatasetsHandler(
+  request: FastifyRequest<{ Params: whatsappSettingsIdParamSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { whatsappSettingsId } = request.params;
+    const data = await getMetaDatasetsFromWa(whatsappSettingsId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error while getting meta datasets %o", error);
     reply.code(500).send({ message: "Something went wrong" });
   }
 }

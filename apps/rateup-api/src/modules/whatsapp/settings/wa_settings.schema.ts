@@ -7,6 +7,8 @@ const createWaSettingsInput = {
   phoneId: z.string(),
   appId: z.string(),
   webhookPassword: z.string(),
+  conversionsApiDatasetId: z.string().optional().nullable(),
+  conversionData: z.any().optional().nullable(),
 };
 enum sortOrder {
   asc = "asc",
@@ -43,6 +45,8 @@ const updateWaSettingsInputSchema = z.object({
   igDisplayName: z.string().optional().nullable(),
   phoneDisplayName: z.string().optional().nullable(),
   fbUserName: z.string().optional().nullable(),
+  conversionsApiDatasetId: z.string().optional().nullable(),
+  conversionData: z.any().optional().nullable(),
   paymentMethod: z.string().optional(),
 });
 
@@ -68,6 +72,8 @@ const getWaSettingsResponseSchema = z.array(
     phoneDisplayName: z.string().optional().nullable(),
     fbUserName: z.string().optional().nullable(),
     assets: z.array(z.string()),
+    conversionsApiDatasetId: z.string().optional().nullable(),
+    conversionData: z.any().optional().nullable(),
     paymentMethod: z.string().optional(),
   }),
 );

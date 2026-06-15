@@ -163,6 +163,7 @@ model Org {
 
   showLifecycle Boolean @default(true)
 
+  isConversionApiActive Boolean @default(false)
   onboardingChecklist          Json?
   onboardingChecklistCompleted Boolean @default(false)
 
@@ -318,6 +319,8 @@ model WhatsappSettings {
   metaAssets       MetaAssets[]
   catalog          CatalogPhoneIdMap?
   assets           String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
+  conversionsApiDatasetId String?
+  conversionData   Json?
   paymentMethod    String             @default("NATIVE") // NATIVE, SHOPIFY_LINK
 }
 
