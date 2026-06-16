@@ -37,7 +37,7 @@ const updateWaSettingsInputSchema = z.object({
   wabaId: z.string().optional(),
   phoneId: z.string().optional(),
   appId: z.string().optional(),
-  webhookPassword: z.string().optional(),
+  webhookPassword: z.string().optional().nullable(),
   fbPageId: z.string().optional().nullable(),
   pageAccessToken: z.string().optional().nullable(),
   ibaId: z.string().optional().nullable(),
