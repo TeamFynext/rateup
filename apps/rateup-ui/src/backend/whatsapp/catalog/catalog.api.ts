@@ -21,6 +21,12 @@ export async function syncWaCatalog() {
   await axiosClient.post(`${waCatalogUrl}/sync`);
 }
 
+export async function syncConnectedWaCatalog(): Promise<
+  { wabaId: string; synced: boolean; catalogIds?: string[]; warning?: string }[]
+> {
+  return (await axiosClient.post(`${waCatalogUrl}/sync-connected`)).data;
+}
+
 export async function getWaCatalogById(catalogId) {
   return (await axiosClient.get(`${waCatalogUrl}/${catalogId}`)).data;
 }

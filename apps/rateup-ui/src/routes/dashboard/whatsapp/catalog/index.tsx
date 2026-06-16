@@ -6,6 +6,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   useAllWaCatalogs,
   useSyncCatalogs,
+  useSyncConnectedCatalog,
 } from "@/backend/whatsapp/catalog/catalog.query";
 import {
   GenericActionCard,
@@ -22,18 +23,30 @@ export const Route = createFileRoute("/dashboard/whatsapp/catalog/")({
 function Catalog() {
   const { data: catalogs, isPending, isError, refetch } = useAllWaCatalogs();
   const sync = useSyncCatalogs();
+  const syncConnected = useSyncConnectedCatalog();
   const navigate = useNavigate();
 
   const syncButton = (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => sync.mutate()}
-      disabled={sync.isPending || isPending}
-    >
-      <IconRefresh size={16} className="mr-2" />
-      Sync Catalogs
-    </Button>
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => syncConnected.mutate()}
+        disabled={syncConnected.isPending || isPending}
+      >
+        <IconRefresh size={16} className="mr-2" />
+        Sync Connected
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => sync.mutate()}
+        disabled={sync.isPending || isPending}
+      >
+        <IconRefresh size={16} className="mr-2" />
+        Sync Catalogs
+      </Button>
+    </div>
   );
 
   return (

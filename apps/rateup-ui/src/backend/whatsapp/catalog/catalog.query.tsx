@@ -9,6 +9,7 @@ import {
   getWaCatalogById,
   getWaCatalogs,
   getWaConnectedCatalog,
+  syncConnectedWaCatalog,
   syncWaCatalog,
   updateCatalogSettings,
   updateWaCatalog,
@@ -38,6 +39,25 @@ export const useSyncCatalogs = () => {
     },
     onError: (error) => {
       toast.error(error?.message || "Connection failed");
+    },
+  });
+};
+
+export const useSyncConnectedCatalog = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: syncConnectedWaCatalog,
+    onSuccess: (results) => {
+      qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
+      const warnings = results.filter((r) => !r.synced).map((r) => r.warning);
+      if (warnings.length > 0) {
+        warnings.forEach((w) => toast.warning(w));
+      } else {
+        toast.success("Connected catalog synced successfully");
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to sync connected catalog");
     },
   });
 };
