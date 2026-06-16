@@ -8,6 +8,7 @@ import {
   getWaCatalogByOrgHandler,
   getWaCatalogInfoHandler,
   syncCatalogsHandler,
+  syncConnectedCatalogHandler,
   updateCatalogHandler,
   getCatalogSettingsHandler,
   updateCatalogSettingsHandler,
@@ -45,6 +46,7 @@ export async function waCatalogRoutes(server: FastifyInstance) {
   );
 
   server.post("/sync", syncCatalogsHandler);
+  server.post("/sync-connected", syncConnectedCatalogHandler);
 
   server.get("/", getWaCatalogByOrgHandler);
   server.get(
