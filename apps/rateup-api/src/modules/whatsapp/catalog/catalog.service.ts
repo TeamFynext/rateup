@@ -99,10 +99,6 @@ export async function syncWaCatalogs(orgId: string) {
         "GET",
       );
 
-      console.log(
-        "🚀 ~ syncWaCatalogs ~ res.data:",
-        JSON.stringify(res?.data, null, 2),
-      );
       const catalogs = res.data.data.map(({ id, ...rest }) => ({
         orgId,
         catalogId: id,
@@ -229,6 +225,94 @@ export async function syncWaCatalogs(orgId: string) {
       log.error(e);
     }
   }
+}
+
+export async function syncConnectedCatalog(orgId: string) {
+  const waSettings = await getAllWaSettings(orgId);
+  const seenWabaIds = new Set<string>();
+  const results: {
+    wabaId: string;
+    synced: boolean;
+    catalogIds?: string[];
+    warning?: string;
+  }[] = [];
+
+  for (const setting of waSettings) {
+    const { accessToken, wabaId, phoneId } = setting;
+    if (seenWabaIds.has(wabaId)) continue;
+    seenWabaIds.add(wabaId);
+
+    try {
+      const res = await callMetaApi(
+        `/${wabaId}/product_catalogs`,
+        "GET",
+        accessToken,
+      );
+      const connectedCatalogs: { id: string; name: string }[] =
+        res.data?.data ?? [];
+
+      if (connectedCatalogs.length === 0) {
+        results.push({
+          wabaId,
+          synced: false,
+          warning: "No catalog is connected to this WhatsApp account on Meta.",
+        });
+        continue;
+      }
+
+      const catalogIds = connectedCatalogs.map((c) => c.id);
+      const existingInDb = await prisma.whatsappCatalog.findMany({
+        where: { catalogId: { in: catalogIds }, orgId },
+        select: { catalogId: true },
+      });
+      const foundIds = new Set(existingInDb.map((c) => c.catalogId));
+      const missingIds = catalogIds.filter((id) => !foundIds.has(id));
+
+      if (missingIds.length > 0) {
+        results.push({
+          wabaId,
+          synced: false,
+          warning: `Connected catalog(s) not found locally. Please run a full catalog sync first.`,
+          catalogIds: missingIds,
+        });
+        continue;
+      }
+
+      // Update CatalogPhoneIdMap for all phone IDs under this wabaId
+      const phoneIds = waSettings
+        .filter((s) => s.wabaId === wabaId)
+        .map((s) => s.phoneId);
+
+      await prisma.catalogPhoneIdMap.deleteMany({
+        where: { whatsappSettingsPhoneId: { in: phoneIds } },
+      });
+
+      const mappings = connectedCatalogs.flatMap((catalog) =>
+        phoneIds.map((pid) => ({
+          catalogId: catalog.id,
+          whatsappSettingsPhoneId: pid,
+        })),
+      );
+
+      if (mappings.length) {
+        await prisma.catalogPhoneIdMap.createMany({
+          data: mappings,
+          skipDuplicates: true,
+        });
+      }
+
+      results.push({ wabaId, synced: true, catalogIds });
+    } catch (e) {
+      log.error(e);
+      results.push({
+        wabaId,
+        synced: false,
+        warning: "Failed to fetch connected catalog from Meta.",
+      });
+    }
+  }
+
+  return results;
 }
 
 export async function getWaCatalogsByOrg(orgId) {

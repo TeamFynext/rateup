@@ -13,6 +13,7 @@ import {
   getConnectedWaCatalog,
   getWaCatalog,
   getWaCatalogsByOrg,
+  syncConnectedCatalog,
   syncWaCatalogs,
   updateConnectWaCatalog,
   updateWaCatalog,
@@ -83,6 +84,21 @@ export async function syncCatalogsHandler(
     const { orgId } = request.user;
     const catalogs = await syncWaCatalogs(orgId);
     reply.code(200).send(catalogs);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function syncConnectedCatalogHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const results = await syncConnectedCatalog(orgId);
+    const allSynced = results.every((r) => r.synced);
+    reply.code(allSynced ? 200 : 207).send(results);
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
