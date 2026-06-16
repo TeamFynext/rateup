@@ -629,7 +629,7 @@ export default function Features() {
             />
             Everything your team needs
           </span>
-          <h2
+          <h6
             className="reveal d1 font-display font-black text-white leading-[1.06] tracking-[-0.025em] mt-5 mb-4"
             style={{ fontSize: "clamp(32px,4.2vw,54px)" }}
           >
@@ -645,7 +645,7 @@ export default function Features() {
             >
               actually work
             </span>
-          </h2>
+          </h6>
         </div>
 
         <div className="grid gap-5 grid-cols-1 md:grid-cols-2">
@@ -678,9 +678,9 @@ export default function Features() {
                   >
                     {icon}
                   </span>
-                  <h3 className="font-display font-black text-white text-[20px] m-0 tracking-[-0.01em]">
+                  <h6 className="font-display font-black text-white text-[20px] m-0 tracking-[-0.01em]">
                     {title}
-                  </h3>
+                  </h6>
                 </div>
                 <p className="text-[14px] leading-[1.6] text-white/50 m-0">
                   {body}

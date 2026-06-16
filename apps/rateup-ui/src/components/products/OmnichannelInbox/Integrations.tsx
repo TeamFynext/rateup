@@ -163,7 +163,7 @@ export default function Integrations() {
             />
             Integrations
           </span>
-          <h2
+          <h6
             className="reveal d1 font-display font-black text-white leading-[1.06] tracking-[-0.025em] mt-5 mb-4"
             style={{ fontSize: "clamp(32px,4.2vw,54px)" }}
           >
@@ -178,7 +178,7 @@ export default function Integrations() {
             >
               you already use.
             </span>
-          </h2>
+          </h6>
           <p className="reveal d2 text-[17px] leading-[1.65] text-white/50 m-0 max-w-[560px] mx-auto">
             RateUp Inbox plugs into your existing stack in minutes — no custom
             code, no API headaches.

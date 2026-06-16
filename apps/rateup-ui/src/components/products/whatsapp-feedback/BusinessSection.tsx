@@ -99,11 +99,11 @@ export default function BusinessSection() {
     <section className="bg-white py-16 md:py-[100px]" id="business">
       <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className={`text-center max-w-[760px] mx-auto ${style.reveal}`}>
-          <h2 className="font-nunito font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ink-800">
+          <h6 className="font-nunito font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ink-800">
             Built for Businesses That Thrive
             <br />
             on Customer Happiness
-          </h2>
+          </h6>
           <p className="mt-4 text-[17px] leading-[1.55] text-ink-500">
             RateUp is perfect for any business that values customer feedback and
             wants a modern, effective way to collect it.
@@ -122,9 +122,9 @@ export default function BusinessSection() {
                   {c.icon}
                 </span>
               </div>
-              <h4 className="font-nunito font-extrabold text-[20px] text-ink-800 mb-2.5">
+              <h6 className="font-nunito font-extrabold text-[20px] text-ink-800 mb-2.5">
                 {c.title}
-              </h4>
+              </h6>
               <p className="text-sm text-ink-500 leading-[1.55] mb-5">
                 {c.desc}
               </p>

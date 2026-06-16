@@ -16,14 +16,64 @@ export default function PostGrid({
 }>) {
   return (
     <section className="py-10">
+      {(activeTag || activeAuthor) && (
+        <div className="mb-6">
+          <Link
+            to="/blog"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#1C518E",
+              background: "#EEF4FB",
+              border: "1px solid #A9C3E3",
+              padding: "6px 14px",
+              borderRadius: 9999,
+              textDecoration: "none",
+              transition: "background 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#D6E4F3";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#EEF4FB";
+            }}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            All Articles
+          </Link>
+        </div>
+      )}
       <h2
         className="mb-8 text-2xl font-bold text-slate-900 pb-2"
         style={{
           fontWeight: 800,
         }}
       >
-        {activeAuthor && `Posts by ${activeAuthor}`}
-        {activeTag && `Posts tagged with ${activeTag}`}
+        {activeAuthor &&
+          `Posts by ${activeAuthor
+            .split("-")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ")}`}
+        {activeTag &&
+          `Posts tagged with ${activeTag
+            .split("-")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ")}`}
         {!activeTag && !activeAuthor && "Latest Articles"}
       </h2>
       {(activeTag || activeAuthor) && (
@@ -42,10 +92,7 @@ export default function PostGrid({
               key={post.id}
               className="group flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow"
             >
-              <Link
-                to={`/blog/${post.slug}`}
-                className="block overflow-hidden"
-              >
+              <Link to={`/blog/${post.slug}`} className="block overflow-hidden">
                 <div className="aspect-video overflow-hidden bg-slate-100">
                   {post.feature_image ? (
                     <Image

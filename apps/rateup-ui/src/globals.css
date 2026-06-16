@@ -518,3 +518,13 @@ img[data-align="right"] {
   pointer-events: all;
   transform-origin: center;
 }
+
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}

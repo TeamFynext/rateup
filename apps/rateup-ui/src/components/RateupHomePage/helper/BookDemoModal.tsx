@@ -31,10 +31,7 @@ export function BookDemoModal({ children }: BookDemoModalProps) {
 
   return (
     <>
-      <span
-        onClick={() => setOpen(true)}
-        className="inline-block cursor-pointer"
-      >
+      <span onClick={() => setOpen(true)} className="block cursor-pointer">
         {children}
       </span>
       <DemoModal open={open} onClose={() => setOpen(false)} />
