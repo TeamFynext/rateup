@@ -696,7 +696,12 @@ export async function handleWaOrderNativePayment(
   }
 }
 
-export async function updateConnectWaCatalog(wabaId, orgId, catalogId) {
+export async function updateConnectWaCatalog(
+  wabaId,
+  orgId,
+  catalogId,
+  syncWithMeta = true,
+) {
   const waSettings = await prisma.whatsappSettings.findMany({
     where: {
       wabaId: wabaId,
@@ -720,8 +725,25 @@ export async function updateConnectWaCatalog(wabaId, orgId, catalogId) {
   if (!waSettings.length) {
     throw Error("No whatsapp settings found");
   }
+
+  const phoneIds = waSettings?.map((s) => s.phoneId)?.filter(Boolean);
+
+  if (!syncWithMeta) {
+    await prisma.catalogPhoneIdMap.deleteMany({
+      where: { whatsappSettingsPhoneId: { in: phoneIds } },
+    });
+    await prisma.catalogPhoneIdMap.createMany({
+      data: phoneIds.map((pId) => ({
+        catalogId,
+        whatsappSettingsPhoneId: pId,
+      })),
+      skipDuplicates: true,
+    });
+    return;
+  }
+
   const { accessToken } = getWaSettingsWithAccessTokenDecrypted(waSettings[0]);
-  let url = `/${wabaId}/product_catalogs`;
+  const url = `/${wabaId}/product_catalogs`;
 
   try {
     const res = await callMetaApi(url, "POST", accessToken, {
@@ -729,7 +751,6 @@ export async function updateConnectWaCatalog(wabaId, orgId, catalogId) {
     });
 
     if (res?.data?.success) {
-      const phoneIds = waSettings.map((s) => s.phoneId).filter(Boolean);
       await prisma.catalogPhoneIdMap.deleteMany({
         where: {
           whatsappSettingsPhoneId: { in: phoneIds },
@@ -752,7 +773,6 @@ export async function updateConnectWaCatalog(wabaId, orgId, catalogId) {
           catalogId,
           wabaId,
         );
-        const phoneIds = waSettings.map((s) => s.phoneId).filter(Boolean);
         await prisma.catalogPhoneIdMap.deleteMany({
           where: {
             whatsappSettingsPhoneId: { in: phoneIds },
