@@ -147,6 +147,7 @@ const logsQuerySchema = z.object({
   team: z.string().optional(),
   pageIndex: z.string().optional(),
   pageSize: z.string().optional(),
+  searchQuery: z.string().optional(),
 });
 
 export type NewWaMessageBody = z.infer<typeof NewWaMessageBody>;

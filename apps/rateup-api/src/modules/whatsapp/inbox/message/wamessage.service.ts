@@ -1843,6 +1843,7 @@ export async function getWaMessageLogs(
   team?: string,
   limit: number = 25,
   offset: number = 0,
+  searchQuery?: string,
 ) {
   let rangeStart: Date | null = null;
   let rangeEnd: Date | null = null;
@@ -1878,6 +1879,14 @@ export async function getWaMessageLogs(
       ? Prisma.sql`AND LOWER(ws.status) = LOWER(${status})`
       : Prisma.sql``;
 
+  const searchFilter =
+    searchQuery && searchQuery.trim() !== ""
+      ? Prisma.sql`AND (
+          c.phone ILIKE ${`%${searchQuery}%`} OR
+          wm."messageBody"::text ILIKE ${`%${searchQuery}%`}
+        )`
+      : Prisma.sql``;
+
   const baseWhere = Prisma.sql`
     WHERE c."orgId" = ${orgId}
       AND wm."sourceMessage" IN ('TEMPLATE','CAMPAIGN')
@@ -1886,6 +1895,7 @@ export async function getWaMessageLogs(
       ${teamFilter}
       ${dateFilter}
       ${statusFilter}
+      ${searchFilter}
   `;
 
   /*
