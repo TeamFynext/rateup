@@ -51,6 +51,9 @@ const CatalogSettings = ({ catalogData }) => {
   const [openedDelete, { open: openDelete, close: closeDelete }] =
     useDisclosure(false);
   const [wabaId, setWabaId] = useState("");
+  const [connectMode, setConnectMode] = useState<"manual" | "automatic">(
+    "automatic",
+  );
   const { data: waSettings, isLoading } = useWaSettings();
   const wabaIds = waSettings
     ? Array.from(
@@ -101,7 +104,7 @@ const CatalogSettings = ({ catalogData }) => {
   }
   function handleConnect() {
     update.mutate(
-      { wabaId },
+      { wabaId, syncWithMeta: connectMode === "automatic" },
       {
         onSuccess: () => {
           closeConnect();
@@ -128,6 +131,34 @@ const CatalogSettings = ({ catalogData }) => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <Field className="w-full sm:w-1/2">
           <FieldLabel>Connected WhatsApp Business Account ID</FieldLabel>
+          <div className="flex gap-4 mb-2">
+            <label className="flex items-center gap-1.5 cursor-pointer text-sm">
+              <input
+                type="radio"
+                name="connectMode"
+                value="automatic"
+                checked={connectMode === "automatic"}
+                onChange={() => setConnectMode("automatic")}
+                className="accent-primary"
+              />
+              <span>Automatic</span>
+              <span className="text-xs text-muted-foreground">
+                (sync with Meta)
+              </span>
+            </label>
+            <label className="flex items-center gap-1.5 cursor-pointer text-sm">
+              <input
+                type="radio"
+                name="connectMode"
+                value="manual"
+                checked={connectMode === "manual"}
+                onChange={() => setConnectMode("manual")}
+                className="accent-primary"
+              />
+              <span>Manual</span>
+              <span className="text-xs text-muted-foreground">(DB only)</span>
+            </label>
+          </div>
           <Select
             value={wabaId}
             onValueChange={(value) => {
@@ -215,7 +246,7 @@ const CatalogSettings = ({ catalogData }) => {
         onClose={closeConnect}
         onConfirm={handleConnect}
         confirmLabel={"Connect"}
-        headerLabel={`Are you sure you want to connect this catalog to Whatsapp Business Account ( WABA ID: ${wabaId})`}
+        headerLabel={`Are you sure you want to connect this catalog to WhatsApp Business Account (WABA ID: ${wabaId})? Mode: ${connectMode === "automatic" ? "Automatic — will also update in Meta" : "Manual — DB only, no Meta update"}`}
         headerTitle={"Connect Whatsapp Business Account"}
         loading={update.isPending}
         closeAfterOnConfirm={false}
