@@ -48,9 +48,14 @@ export async function updateCatalogHandler(
   try {
     const { orgId } = request.user;
     const { catalogId } = request.params;
-    const { wabaId, ...rest } = request.body;
+    const { wabaId, syncWithMeta, ...rest } = request.body;
     if (wabaId) {
-      await updateConnectWaCatalog(wabaId, orgId, catalogId);
+      await updateConnectWaCatalog(
+        wabaId,
+        orgId,
+        catalogId,
+        syncWithMeta !== false,
+      );
     }
     if (rest) {
       const catalog = await updateWaCatalog(catalogId, rest);

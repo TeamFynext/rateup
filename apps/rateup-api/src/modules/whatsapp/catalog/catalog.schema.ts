@@ -18,6 +18,7 @@ const updateCatalogSchema = z.object({
   name: z.string().optional(),
   autoCheckoutEnabled: z.boolean().optional(),
   checkoutMessage: z.string().optional(),
+  syncWithMeta: z.boolean().optional(),
 });
 
 const productSetIdParamSchema = z.object({
