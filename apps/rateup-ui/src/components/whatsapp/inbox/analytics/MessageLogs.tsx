@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { ColumnDef, PaginationState } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Clock,
   Download,
+  Loader2,
   Megaphone,
   MessageCircle,
   Search,
@@ -18,7 +19,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { useWaMessageLogs } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useExportWaMessageLogs,
+  useWaMessageLogs,
+} from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -45,7 +49,16 @@ function MessageLogs({ dateRange }) {
     pageIndex: 0,
     pageSize: 10,
   });
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const params = useMemo(
     () => ({
@@ -54,11 +67,21 @@ function MessageLogs({ dateRange }) {
       status: selectedStatus,
       source: selectedSource,
       team: selectedTeamId,
+      searchQuery: debouncedSearch,
       pagination,
     }),
-    [dateRange, selectedStatus, selectedSource, selectedTeamId, pagination],
+    [
+      dateRange,
+      selectedStatus,
+      selectedSource,
+      selectedTeamId,
+      debouncedSearch,
+      pagination,
+    ],
   );
   const { data: messageLogsData, isLoading } = useWaMessageLogs(params);
+  const { mutate: exportLogs, isPending: isExporting } =
+    useExportWaMessageLogs();
 
   const handlePaginationChange = useCallback((updater: any) => {
     setPagination((prev) => {
@@ -68,21 +91,7 @@ function MessageLogs({ dateRange }) {
     });
   }, []);
 
-  // Client-side search on the current page data
-  const filteredData = useMemo(() => {
-    if (!messageLogsData?.data) return [];
-
-    if (!search.trim()) return messageLogsData.data;
-
-    const term = search.toLowerCase();
-
-    return messageLogsData.data.filter((item) => {
-      return (
-        item.phone?.toLowerCase().includes(term) ||
-        item.messagePreview?.toLowerCase().includes(term)
-      );
-    });
-  }, [messageLogsData?.data, search]);
+  const filteredData = messageLogsData?.data || [];
 
   function formatLabel(value?: string) {
     if (!value) return t("Export");
@@ -162,66 +171,9 @@ function MessageLogs({ dateRange }) {
     };
   }
 
-  function exportToCSV(data: any[], filename = "message_logs.csv") {
-    try {
-      if (!data || data.length === 0) {
-        toast.warning("No data available to export");
-        return;
-      }
-
-      const headers = [
-        "Timestamp",
-        "Phone",
-        "Status",
-        "Source",
-        "Type",
-        "Message",
-        "Logs",
-      ];
-
-      const rows = data.map((row) => {
-        const logs =
-          typeof row.logs === "object"
-            ? safeStringify(row.logs)
-            : row.logs || "";
-
-        return [
-          dayjs(row.createdAt).format("DD/MM/YYYY hh:mm A"),
-          row.phone || "",
-          row.status || "",
-          formatLabel(row.sourceMessage),
-          row.messageType || "",
-          row.messagePreview || "",
-          logs.replace(/\n/g, " ").replace(/"/g, '""'),
-        ];
-      });
-
-      const csvContent = [headers, ...rows]
-        .map((e) =>
-          e.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","),
-        )
-        .join("\n");
-
-      const blob = new Blob([csvContent], {
-        type: "text/csv;charset=utf-8;",
-      });
-
-      const url = URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast.dismiss();
-      toast.success("CSV exported successfully");
-    } catch (error) {
-      console.error(error);
-      toast.dismiss();
-      toast.error("Failed to export CSV");
-    }
+  function exportToCSV() {
+    toast.loading("Exporting message logs...", { id: "export-logs" });
+    exportLogs(params);
   }
 
   const columns = useMemo<ColumnDef<any>[]>(
@@ -454,10 +406,15 @@ function MessageLogs({ dateRange }) {
             variant="outline"
             size="sm"
             className="h-8"
-            onClick={() => exportToCSV(filteredData || [])}
+            onClick={() => exportToCSV()}
+            disabled={isExporting}
           >
-            <Download className="w-4 h-4 mr-2" />
-            {t("Export")}
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            {isExporting ? t("Exporting...") : t("Export")}
           </Button>
         </div>
       </div>
@@ -475,11 +432,3 @@ function MessageLogs({ dateRange }) {
 }
 
 export default MessageLogs;
-
-function safeStringify(obj: any) {
-  try {
-    return JSON.stringify(obj, null, 2);
-  } catch (e) {
-    return "[Unserializable Logs]";
-  }
-}
