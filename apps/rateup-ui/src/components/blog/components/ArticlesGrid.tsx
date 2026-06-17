@@ -6,39 +6,16 @@ export function ArticlesGrid({ posts }: { posts: Post[] }) {
   if (!posts || posts.length === 0) return null;
 
   return (
-    <section style={{ marginTop: 30 }}>
+    <section className="mt-[30px]">
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          marginBottom: 18,
-        }}
-      >
-        <h3
-          style={{
-            fontFamily: "Nunito, sans-serif",
-            fontWeight: 800,
-            fontSize: 18,
-            color: "#0E1E3A",
-            letterSpacing: "-0.01em",
-            margin: 0,
-          }}
-        >
+      <div className="flex items-baseline justify-between mb-[18px]">
+        <h3 className="font-nunito font-extrabold text-[18px] text-[#0E1E3A] tracking-[-0.01em] m-0">
           Latest Articles
         </h3>
       </div>
 
       {/* 3-column grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 16,
-        }}
-        className="articles-grid"
-      >
+      <div className="grid grid-cols-3 max-[820px]:grid-cols-2 max-[540px]:grid-cols-1 gap-4">
         {posts.map((post, i) => (
           <ArticleCard
             key={post.id}
@@ -48,15 +25,6 @@ export function ArticlesGrid({ posts }: { posts: Post[] }) {
           />
         ))}
       </div>
-
-      <style>{`
-        @media (max-width: 820px) {
-          .articles-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
-        @media (max-width: 540px) {
-          .articles-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </section>
   );
 }

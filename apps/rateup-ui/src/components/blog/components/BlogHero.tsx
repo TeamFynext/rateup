@@ -5,113 +5,35 @@ interface BlogHeroProps {
 
 export function BlogHero({ searchQuery, onSearchChange }: BlogHeroProps) {
   return (
-    <header
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        paddingTop: 44,
-        background: "#fff",
-        borderBottom: "1px solid #ECECEA",
-      }}
-    >
+    <header className="relative overflow-hidden pt-11 bg-white border-b border-[#ECECEA]">
       {/* Subtle gradient background */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none",
-          background:
-            "radial-gradient(ellipse 60% 70% at 50% 0%, rgba(28,81,142,0.05), transparent 70%)",
-        }}
-      />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_60%_70%_at_50%_0%,_rgba(28,81,142,0.05),_transparent_70%)]" />
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 28px" }}>
-        <div
-          style={{
-            position: "relative",
-            zIndex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-            paddingBottom: 30,
-            gap: 12,
-          }}
-          className="reveal in"
-        >
+      <div className="max-w-[1200px] mx-auto px-[28px]">
+        <div className="reveal in relative z-[1] flex flex-col items-center text-center pb-[30px] gap-3">
           {/* Eyebrow */}
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 7,
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              color: "#1C518E",
-              padding: "5px 14px",
-              borderRadius: 9999,
-              background: "rgba(28,81,142,0.07)",
-              border: "1px solid rgba(28,81,142,0.18)",
-            }}
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "#1C518E",
-                flexShrink: 0,
-              }}
-            />
+          <div className="inline-flex items-center gap-[7px] text-[11px] font-bold tracking-[0.16em] uppercase py-[5px] px-[14px] rounded-full text-[#1C518E] bg-[#1C518E]/[0.07] border border-[#1C518E]/[0.18]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#1C518E] shrink-0" />
             Knowledge Hub
           </div>
 
           {/* Title */}
-          <h1
-            style={{
-              fontFamily: "Nunito, ui-rounded, sans-serif",
-              fontWeight: 900,
-              fontSize: "clamp(34px, 4.5vw, 54px)",
-              color: "#0E1E3A",
-              lineHeight: 1.05,
-              letterSpacing: "-0.025em",
-              margin: 0,
-            }}
-          >
+          <h1 className="font-nunito font-black text-[clamp(34px,4.5vw,54px)] text-[#0E1E3A] leading-[1.05] tracking-[-0.025em] m-0">
             WhatsApp Marketing &amp;
             <br />
-            <span
-              style={{
-                background:
-                  "linear-gradient(100deg, #6BD0FF 0%, #2FA3FF 55%, #2C6FD6 100%)",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                color: "transparent",
-              }}
-            >
+            <span className="bg-[linear-gradient(100deg,#6BD0FF_0%,#2FA3FF_55%,#2C6FD6_100%)] bg-clip-text text-transparent">
               Loyalty Insights
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p
-            style={{
-              fontSize: 15.5,
-              color: "#64666A",
-              margin: 0,
-              maxWidth: 420,
-              lineHeight: 1.55,
-            }}
-          >
+          <p className="text-[15.5px] text-[#64666A] m-0 max-w-[420px] leading-[1.55]">
             Actionable guides, case studies and strategies to grow your business
             on WhatsApp.
           </p>
 
           {/* Search */}
-          <div style={{ position: "relative", width: "100%", maxWidth: 400 }}>
+          <div className="relative w-full max-w-[400px]">
             <input
               type="search"
               placeholder="Search articles…"
@@ -120,38 +42,10 @@ export function BlogHero({ searchQuery, onSearchChange }: BlogHeroProps) {
               onInput={(e) =>
                 onSearchChange((e.target as HTMLInputElement).value)
               }
-              style={{
-                width: "100%",
-                padding: "11px 44px 11px 18px",
-                background: "#F4F5F2",
-                border: "1px solid #DCDEDD",
-                borderRadius: 9999,
-                color: "#0E1E3A",
-                fontFamily: "inherit",
-                fontSize: 14,
-                outline: "none",
-                transition: "border-color 0.2s, background 0.2s",
-              }}
-              onFocus={(e) => {
-                e.target.style.background = "#fff";
-                e.target.style.borderColor = "#1C518E";
-                e.target.style.boxShadow = "0 0 0 3px rgba(28,81,142,0.12)";
-              }}
-              onBlur={(e) => {
-                e.target.style.background = "#F4F5F2";
-                e.target.style.borderColor = "#DCDEDD";
-                e.target.style.boxShadow = "none";
-              }}
+              className="w-full py-[11px] pr-[44px] pl-[18px] bg-[#F4F5F2] border border-[#DCDEDD] rounded-full text-[#0E1E3A] text-[14px] outline-none transition-all duration-200 focus:bg-white focus:border-[#1C518E] focus:shadow-[0_0_0_3px_rgba(28,81,142,0.12)]"
             />
             <svg
-              style={{
-                position: "absolute",
-                right: 15,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "#9B9D9A",
-                pointerEvents: "none",
-              }}
+              className="absolute right-[15px] top-1/2 -translate-y-1/2 text-[#9B9D9A] pointer-events-none"
               width="16"
               height="16"
               viewBox="0 0 24 24"

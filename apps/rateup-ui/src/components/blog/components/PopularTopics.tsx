@@ -114,82 +114,31 @@ export function PopularTopics({ tags }: { tags: Tag[] }) {
   const topicsToDisplay = tags.slice(0, 5);
 
   return (
-    <div
-      style={{
-        borderRadius: 28,
-        background: "#fff",
-        border: "1px solid #ECECEA",
-        boxShadow: "0 1px 2px rgba(11,31,72,0.05)",
-        padding: "18px 20px 20px",
-      }}
-    >
-      <h3
-        style={{
-          fontFamily: "Nunito, sans-serif",
-          fontWeight: 800,
-          fontSize: 15,
-          color: "#0E1E3A",
-          letterSpacing: "-0.01em",
-          margin: "0 0 13px",
-        }}
-      >
+    <div className="rounded-[28px] bg-white border border-[#ECECEA] shadow-[0_1px_2px_rgba(11,31,72,0.05)] pt-[18px] px-5 pb-5">
+      <h3 className="font-nunito font-extrabold text-[15px] text-[#0E1E3A] tracking-[-0.01em] mb-[13px] mt-0 mx-0">
         Popular Topics
       </h3>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+      <div className="flex flex-col gap-1.25">
         {topicsToDisplay.map((tag, i) => {
           const style = topicStyles[i % topicStyles.length];
           return (
             <Link
               key={tag.id}
               to={`/blog/tag/${encodeURIComponent(tag.slug)}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 9,
-                padding: "8px 11px",
-                borderRadius: 10,
-                background: "#F4F5F2",
-                border: "1px solid #E8EAE6",
-                textDecoration: "none",
-                transition: "background 0.15s, border-color 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.background = "#EDF0EC";
-                el.style.borderColor = "#D5D8D5";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.background = "#F4F5F2";
-                el.style.borderColor = "#E8EAE6";
-              }}
+              className="flex items-center gap-2.25 py-2 px-2.75 rounded-[10px] bg-[#F4F5F2] hover:bg-[#EDF0EC] border border-[#E8EAE6] hover:border-[#D5D8D5] no-underline transition-all duration-150"
             >
               <div
+                className="w-7 h-7 rounded-[7px] shrink-0 flex items-center justify-center"
                 style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 7,
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
                   background: style.iconBg,
-                  border: `1px solid ${style.iconBorder}`,
+                  borderColor: style.iconBorder,
                   color: style.iconColor,
                 }}
               >
                 {style.icon}
               </div>
-              <span
-                style={{
-                  flex: 1,
-                  fontSize: 12.5,
-                  fontWeight: 600,
-                  color: "#2E302E",
-                  lineHeight: 1.25,
-                }}
-              >
+              <span className="flex-1 text-[12.5px] font-semibold text-[#2E302E] leading-[1.25]">
                 {tag.name}
               </span>
             </Link>

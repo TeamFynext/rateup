@@ -20,26 +20,7 @@ export default function PostGrid({
         <div className="mb-6">
           <Link
             to="/blog"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#1C518E",
-              background: "#EEF4FB",
-              border: "1px solid #A9C3E3",
-              padding: "6px 14px",
-              borderRadius: 9999,
-              textDecoration: "none",
-              transition: "background 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#D6E4F3";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#EEF4FB";
-            }}
+            className="inline-flex items-center gap-1.5 text-[13px] font-bold text-[#1C518E] bg-[#EEF4FB] border border-[#A9C3E3] py-1.5 px-3.5 rounded-full no-underline transition-colors duration-200 hover:bg-[#D6E4F3]"
           >
             <svg
               width="14"

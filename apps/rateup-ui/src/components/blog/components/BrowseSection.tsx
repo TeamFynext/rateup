@@ -10,57 +10,17 @@ export function BrowseSection({
   authors: Author[];
 }) {
   return (
-    <section style={{ marginTop: 28 }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 16,
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "Nunito, sans-serif",
-            fontWeight: 800,
-            fontSize: 18,
-            color: "#0E1E3A",
-            letterSpacing: "-0.01em",
-          }}
-        >
+    <section className="mt-7">
+      <div className="flex items-center justify-between mb-4">
+        <div className="font-nunito font-extrabold text-[18px] text-[#0E1E3A] tracking-[-0.01em]">
           Browse Posts
         </div>
         <a
           href="/blog/rss.xml"
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 9,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#F4F5F2",
-            border: "1px solid #DCDEDD",
-            color: "#8B8E8A",
-            cursor: "pointer",
-            transition: "color 0.17s, background 0.17s, border-color 0.17s",
-            textDecoration: "none",
-          }}
+          className="w-8 h-8 rounded-[9px] flex items-center justify-center bg-[#F4F5F2] hover:bg-[#F8951D]/[0.06] border border-[#DCDEDD] hover:border-[#F8951D]/[0.22] text-[#8B8E8A] hover:text-[#FFB638] cursor-pointer transition-all duration-200 no-underline"
           title="RSS Feed"
-          onMouseEnter={(e) => {
-            const el = e.currentTarget as HTMLElement;
-            el.style.color = "#FFB638";
-            el.style.background = "rgba(248,149,29,0.06)";
-            el.style.borderColor = "rgba(248,149,29,0.22)";
-          }}
-          onMouseLeave={(e) => {
-            const el = e.currentTarget as HTMLElement;
-            el.style.color = "#8B8E8A";
-            el.style.background = "#F4F5F2";
-            el.style.borderColor = "#DCDEDD";
-          }}
         >
           <svg
             width="14"
@@ -81,41 +41,14 @@ export function BrowseSection({
 
       {/* Tag row */}
       {tags && tags.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: "wrap",
-            marginBottom: 9,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "#9B9D9A",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
+        <div className="flex items-center gap-[10px] flex-wrap mb-[9px]">
+          <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#9B9D9A] whitespace-nowrap shrink-0">
             Filter by tag:
           </span>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <div className="flex flex-wrap gap-1.5">
             <Link
               to="/blog"
-              style={{
-                padding: "5px 13px",
-                borderRadius: 9999,
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#1C518E",
-                background: "#EEF4FB",
-                border: "1px solid #A9C3E3",
-                textDecoration: "none",
-              }}
+              className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-[#1C518E] bg-[#EEF4FB] border border-[#A9C3E3] no-underline"
             >
               All
             </Link>
@@ -123,25 +56,7 @@ export function BrowseSection({
               <Link
                 key={tag.id}
                 to={`/blog/tag/${encodeURIComponent(tag.slug)}`}
-                style={{
-                  padding: "5px 13px",
-                  borderRadius: 9999,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#4A4C49",
-                  background: "#fff",
-                  border: "1px solid #DCDEDD",
-                  textDecoration: "none",
-                  transition: "background 0.15s, border-color 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.background = "#F4F5F2";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.background = "#fff";
-                }}
+                className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-[#4A4C49] bg-white hover:bg-[#F4F5F2] border border-[#DCDEDD] no-underline transition-all duration-150"
               >
                 {tag.name}
               </Link>
@@ -152,41 +67,14 @@ export function BrowseSection({
 
       {/* Author row */}
       {authors && authors.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: "wrap",
-            marginTop: 4,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "#9B9D9A",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
+        <div className="flex items-center gap-[10px] flex-wrap mt-1">
+          <span className="text-[11px] font-bold tracking-[0.1em] uppercase text-[#9B9D9A] whitespace-nowrap shrink-0">
             Filter by author:
           </span>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <div className="flex flex-wrap gap-1.5">
             <Link
               to="/blog"
-              style={{
-                padding: "5px 13px",
-                borderRadius: 9999,
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#1C518E",
-                background: "#EEF4FB",
-                border: "1px solid #A9C3E3",
-                textDecoration: "none",
-              }}
+              className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-[#1C518E] bg-[#EEF4FB] border border-[#A9C3E3] no-underline"
             >
               All
             </Link>
@@ -194,25 +82,7 @@ export function BrowseSection({
               <Link
                 key={author.id}
                 to={`/blog/author/${encodeURIComponent(author.slug)}`}
-                style={{
-                  padding: "5px 13px",
-                  borderRadius: 9999,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#4A4C49",
-                  background: "#fff",
-                  border: "1px solid #DCDEDD",
-                  textDecoration: "none",
-                  transition: "background 0.15s, border-color 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.background = "#F4F5F2";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.background = "#fff";
-                }}
+                className="py-[5px] px-[13px] rounded-full text-[13px] font-semibold text-[#4A4C49] bg-white hover:bg-[#F4F5F2] border border-[#DCDEDD] no-underline transition-all duration-150"
               >
                 {author.name}
               </Link>

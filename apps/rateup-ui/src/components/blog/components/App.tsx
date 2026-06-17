@@ -38,51 +38,19 @@ export default function App({ posts, authors, tags }: AppProps) {
     <>
       <BlogHero searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 28px" }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 268px",
-            gap: 28,
-            alignItems: "start",
-            padding: "36px 0 80px",
-          }}
-          className="blog-layout"
-        >
+      <div className="max-w-[1300px] mx-auto px-[28px]">
+        <div className="grid grid-cols-[1fr_268px] gap-[28px] items-start pt-9 pb-20 blog-layout">
           {/* Main content */}
-          <main style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+          <main className="flex flex-col gap-[28px]">
             {isSearching ? (
               <>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontFamily: "Nunito, sans-serif",
-                      fontWeight: 800,
-                      fontSize: 18,
-                      color: "#0E1E3A",
-                      letterSpacing: "-0.01em",
-                      margin: 0,
-                    }}
-                  >
+                <div className="flex items-baseline justify-between">
+                  <h3 className="font-nunito font-extrabold text-[18px] text-[#0E1E3A] tracking-[-0.01em] m-0">
                     Search Results ({filteredPosts.length})
                   </h3>
                   <button
                     onClick={() => setSearchQuery("")}
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#1C518E",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                    }}
+                    className="text-[13px] font-semibold text-[#1C518E] bg-none border-none cursor-pointer p-0"
                   >
                     Clear search
                   </button>
@@ -91,44 +59,13 @@ export default function App({ posts, authors, tags }: AppProps) {
                 {filteredPosts.length > 0 ? (
                   <ArticlesGrid posts={filteredPosts} />
                 ) : (
-                  <div
-                    style={{
-                      padding: "60px 20px",
-                      textAlign: "center",
-                      background: "#fff",
-                      borderRadius: 20,
-                      border: "1px solid #ECECEA",
-                      color: "#64666A",
-                    }}
-                  >
-                    <p
-                      style={{
-                        fontSize: 15.5,
-                        fontWeight: 600,
-                        margin: "0 0 12px 0",
-                      }}
-                    >
+                  <div className="py-[60px] px-5 text-center bg-white rounded-[20px] border border-[#ECECEA] text-[#64666A]">
+                    <p className="text-[15.5px] font-semibold m-0 mb-3">
                       No articles found matching "{searchQuery}"
                     </p>
                     <button
                       onClick={() => setSearchQuery("")}
-                      style={{
-                        background: "#EEF4FB",
-                        border: "1px solid #A9C3E3",
-                        color: "#1C518E",
-                        padding: "8px 18px",
-                        borderRadius: 9,
-                        cursor: "pointer",
-                        fontWeight: 700,
-                        fontSize: 13,
-                        transition: "background 0.2s",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "#D6E4F3";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "#EEF4FB";
-                      }}
+                      className="bg-[#EEF4FB] border border-[#A9C3E3] text-[#1C518E] py-2 px-[18px] rounded-[9px] cursor-pointer font-bold text-[13px] transition-colors duration-200 hover:bg-[#D6E4F3]"
                     >
                       Clear search
                     </button>
@@ -147,16 +84,7 @@ export default function App({ posts, authors, tags }: AppProps) {
           </main>
 
           {/* Sidebar */}
-          <aside
-            style={{
-              position: "sticky",
-              top: 88,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-            }}
-            className="blog-sidebar"
-          >
+          <aside className="sticky top-[88px] flex flex-col gap-4 blog-sidebar">
             {/* <div className="hidden lg:block w-[268px] shrink-0"> */}
             <div className="sticky top-26 h-fit">
               <StickySidebar />

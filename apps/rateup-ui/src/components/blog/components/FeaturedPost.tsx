@@ -22,220 +22,60 @@ export function FeaturedPost({ post }: { post?: Post }) {
   );
 
   return (
-    <article
-      style={{
-        borderRadius: 28,
-        overflow: "hidden",
-        background: "#fff",
-        border: "1px solid #ECECEA",
-        boxShadow:
-          "0 1px 3px rgba(11,31,72,0.06), 0 8px 24px rgba(11,31,72,0.06)",
-        display: "grid",
-        gridTemplateColumns: "1.2fr 1fr",
-        transition: "border-color 0.22s, box-shadow 0.22s",
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.borderColor = "#C5D5EC";
-        el.style.boxShadow = "0 16px 48px rgba(11,31,72,0.1)";
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.borderColor = "#ECECEA";
-        el.style.boxShadow =
-          "0 1px 3px rgba(11,31,72,0.06), 0 8px 24px rgba(11,31,72,0.06)";
-      }}
-    >
+    <article className="group/featured rounded-[28px] overflow-hidden bg-white border border-[#ECECEA] shadow-[0_1px_3px_rgba(11,31,72,0.06),0_8px_24px_rgba(11,31,72,0.06)] grid grid-cols-[1.2fr_1fr] transition-all duration-[220ms] hover:border-[#C5D5EC] hover:shadow-[0_16px_48px_rgba(11,31,72,0.1)]">
       {/* Thumbnail */}
-      <div
-        style={{
-          position: "relative",
-          minHeight: 340,
-          overflow: "hidden",
-          background: "#06182F",
-          borderRight: "1px solid #ECECEA",
-        }}
-      >
+      <div className="relative min-h-[340px] overflow-hidden bg-[#06182F] border-r border-[#ECECEA]">
         {post.feature_image ? (
           <img
             src={post.feature_image}
             alt={post.title}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
+            className="w-full h-full object-cover"
           />
         ) : (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(145deg, #082040 0%, #0C2B54 45%, #071A33 100%)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              justifyContent: "flex-end",
-              padding: 22,
-            }}
-          >
+          <div className="absolute inset-0 bg-[linear-gradient(145deg,#082040_0%,#0C2B54_45%,#071A33_100%)] flex flex-col items-start justify-end p-[22px]">
             {/* Glow */}
-            <div
-              style={{
-                position: "absolute",
-                top: -20,
-                right: -20,
-                width: 180,
-                height: 180,
-                background:
-                  "radial-gradient(circle, rgba(47,163,255,0.3), transparent 70%)",
-                pointerEvents: "none",
-              }}
-            />
+            <div className="absolute -top-5 -right-5 w-[180px] h-[180px] bg-[radial-gradient(circle,rgba(47,163,255,0.3),transparent_70%)] pointer-events-none" />
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div
-        style={{
-          padding: "32px 30px 30px",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          gap: 12,
-        }}
-      >
+      <div className="pt-[32px] px-[30px] pb-[30px] flex flex-col justify-center gap-3">
         {post.primary_tag?.name && (
-          <span
-            style={{
-              display: "inline-block",
-              alignSelf: "flex-start",
-              fontSize: 10.5,
-              fontWeight: 700,
-              letterSpacing: "0.09em",
-              textTransform: "uppercase",
-              padding: "4px 11px",
-              borderRadius: 9999,
-              color: "#1C518E",
-              background: "rgba(28,81,142,0.1)",
-              border: "1px solid rgba(28,81,142,0.22)",
-            }}
-          >
+          <span className="inline-block self-start text-[10.5px] font-bold tracking-[0.09em] uppercase py-1 px-[11px] rounded-full text-[#1C518E] bg-[#1C518E]/10 border border-[#1C518E]/22">
             {post.primary_tag.name}
           </span>
         )}
 
-        <h2
-          style={{
-            fontFamily: "Nunito, sans-serif",
-            fontWeight: 900,
-            color: "#0E1E3A",
-            fontSize: "clamp(21px, 2.2vw, 28px)",
-            lineHeight: 1.15,
-            letterSpacing: "-0.02em",
-            margin: 0,
-          }}
-        >
+        <h2 className="font-nunito font-black text-[#0E1E3A] text-[clamp(21px,2.2vw,28px)] leading-[1.15] tracking-[-0.02em] m-0">
           {post.title}
         </h2>
 
-        <p
-          style={{
-            fontSize: 14,
-            lineHeight: 1.62,
-            color: "#4A4C49",
-            margin: 0,
-            display: "-webkit-box",
-            WebkitLineClamp: 5,
-            WebkitBoxOrient: "vertical" as const,
-            overflow: "hidden",
-          }}
-        >
+        <p className="text-[14px] leading-[1.62] text-[#4A4C49] m-0 line-clamp-5">
           {post.custom_excerpt || post.excerpt}
         </p>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginTop: "auto",
-            paddingTop: 16,
-            borderTop: "1px solid #ECECEA",
-          }}
-        >
+        <div className="flex items-center gap-[10px] mt-auto pt-4 border-t border-[#ECECEA]">
           {post.primary_author?.profile_image ? (
             <img
               src={post.primary_author.profile_image}
               alt={post.primary_author.name}
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: "50%",
-                objectFit: "cover",
-              }}
+              className="w-[34px] h-[34px] rounded-full object-cover"
             />
           ) : (
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: "50%",
-                flexShrink: 0,
-                background: "linear-gradient(135deg, #3D8BEE, #2360C8)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: "Nunito, sans-serif",
-                fontWeight: 800,
-                fontSize: 13,
-                color: "#fff",
-              }}
-            >
+            <div className="w-[34px] h-[34px] rounded-full shrink-0 bg-[linear-gradient(135deg,#3D8BEE,#2360C8)] flex items-center justify-center font-nunito font-extrabold text-[13px] text-white">
               {initials}
             </div>
           )}
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 12.5, color: "#0E1E3A" }}>
+          <div className="flex-1">
+            <div className="font-bold text-[12.5px] text-[#0E1E3A]">
               {post.primary_author?.name || "RateUp Team"}
             </div>
-            <div style={{ fontSize: 11.5, color: "#8B8E8A" }}>
-              {formattedDate}
-            </div>
+            <div className="text-[11.5px] text-[#8B8E8A]">{formattedDate}</div>
           </div>
           <Link
             to={`/blog/${post.slug}`}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 7,
-              fontSize: 13.5,
-              fontWeight: 700,
-              color: "#1C518E",
-              padding: "9px 18px",
-              borderRadius: 9,
-              background: "#EEF4FB",
-              border: "1px solid #A9C3E3",
-              textDecoration: "none",
-              transition:
-                "background 0.17s, border-color 0.17s, transform 0.17s",
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "#D6E4F3";
-              el.style.borderColor = "#7BA1D1";
-              el.style.color = "#0E2B52";
-              el.style.transform = "translateX(2px)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.background = "#EEF4FB";
-              el.style.borderColor = "#A9C3E3";
-              el.style.color = "#1C518E";
-              el.style.transform = "none";
-            }}
+            className="inline-flex items-center gap-[7px] text-[13.5px] font-bold text-[#1C518E] py-[9px] px-[18px] rounded-[9px] bg-[#EEF4FB] border border-[#A9C3E3] no-underline transition-all duration-200 hover:bg-[#D6E4F3] hover:border-[#7BA1D1] hover:text-[#0E2B52] hover:translate-x-0.5"
           >
             Read more
             <svg
