@@ -23,9 +23,12 @@ import { createRuleSchema } from "./schema.ts";
 
 interface WhatsappAutomationRuleBuilderProps {
   ruleId?: string;
+  initialPlatform?: string;
+  initialTriggerEvent?: string;
 }
 
 const defaultValues: Partial<CreateRuleInput> = {
+  platform: "WHATSAPP",
   whatsappSettingsPhoneIds: [],
   name: "",
   triggerEvent: "MESSAGE_RECEIVED",
@@ -51,7 +54,7 @@ const defaultValues: Partial<CreateRuleInput> = {
 
 const WhatsappAutomationRuleBuilder: React.FC<
   WhatsappAutomationRuleBuilderProps
-> = ({ ruleId }) => {
+> = ({ ruleId, initialPlatform, initialTriggerEvent }) => {
   const isEditMode = ruleId && ruleId !== "new";
   const { data: ruleData, isLoading: isRuleLoading } = useRuleById(
     isEditMode ? ruleId : "",
@@ -63,7 +66,11 @@ const WhatsappAutomationRuleBuilder: React.FC<
 
   const form = useForm<CreateRuleInput>({
     resolver: zodResolver(createRuleSchema),
-    defaultValues,
+    defaultValues: {
+      ...defaultValues,
+      ...(initialPlatform && { platform: initialPlatform }),
+      ...(initialTriggerEvent && { triggerEvent: initialTriggerEvent }),
+    },
   });
 
   // Use saved data for Share functionality
@@ -75,6 +82,7 @@ const WhatsappAutomationRuleBuilder: React.FC<
     g.conditions.some((c) => c.field === "MESSAGE_BODY" && c.value),
   );
 
+  const savedPlatform = ruleData?.platform || "WHATSAPP";
   const showShareTab = savedTriggerEvent === "MESSAGE_RECEIVED" && hasKeywords;
 
   useEffect(() => {
@@ -147,7 +155,11 @@ const WhatsappAutomationRuleBuilder: React.FC<
       </TabsContent>
 
       <TabsContent value="share">
-        <RuleShare groups={savedGroups || []} channels={savedChannels || []} />
+        <RuleShare
+          groups={savedGroups || []}
+          channels={savedChannels || []}
+          platform={savedPlatform}
+        />
       </TabsContent>
     </Tabs>
   );

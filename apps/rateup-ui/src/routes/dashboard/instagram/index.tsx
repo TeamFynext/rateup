@@ -2,9 +2,9 @@
 
 import {
   IconArrowRight,
+  IconAt,
   IconBrandInstagram,
   IconMessageDots,
-  IconMessageReply,
   IconSettings,
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -24,14 +24,6 @@ export const Route = createFileRoute("/dashboard/instagram/")({
 
 function InstagramDashboardHub() {
   const features = [
-    {
-      title: "Channel Connections",
-      description:
-        "Connect or change the Instagram account linked to each WhatsApp Business channel.",
-      icon: IconSettings,
-      to: "/dashboard/settings/channels/instagram",
-      action: "Open settings",
-    },
     {
       title: "Ice Breakers",
       description:
@@ -57,14 +49,30 @@ function InstagramDashboardHub() {
       action: "Edit menu",
     },
     {
-      title: "Automated Replies",
+      title: "chatbots",
       description:
         "Create and manage Instagram chatbots, triggers, and handoff flows.",
       icon: IconMessageDots,
       to: "/dashboard/instagram/flowbots",
-      action: "Manage automations",
+      action: "Manage chatbots",
     },
-  ] as const;
+    {
+      title: "Story Mentions",
+      description:
+        "Get notified and respond when users mention your professional account in their stories.",
+      icon: IconAt,
+      to: "/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_STORY_MENTION",
+      action: "Set up in automations",
+    },
+    // {
+    //   title: "Private Replies",
+    //   description:
+    //     "Reply privately to users who comment on your posts, reels, or live stories.",
+    //   icon: IconMessageReply,
+    //   to: "/dashboard/automation/new?platform=INSTAGRAM&triggerEvent=INSTAGRAM_COMMENT",
+    //   action: "Set up in automations",
+    // },
+  ];
 
   return (
     <div className="space-y-8">
@@ -122,7 +130,7 @@ function InstagramDashboardHub() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pt-4">
+              <CardContent>
                 <Button
                   asChild
                   variant="ghost"
