@@ -39,7 +39,7 @@ export default function App({ posts, authors, tags }: AppProps) {
       <BlogHero searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
       <div className="max-w-[1300px] mx-auto px-[28px]">
-        <div className="grid grid-cols-[1fr_268px] gap-[28px] items-start pt-9 pb-20 blog-layout">
+        <div className="grid grid-cols-[1fr_268px] gap-[28px] max-[1040px]:gap-[22px] max-[820px]:grid-cols-1 items-start pt-9 pb-20">
           {/* Main content */}
           <main className="flex flex-col gap-[28px]">
             {isSearching ? (
@@ -50,7 +50,7 @@ export default function App({ posts, authors, tags }: AppProps) {
                   </h3>
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="text-[13px] font-semibold text-[#1C518E] bg-none border-none cursor-pointer p-0"
+                    className="text-[13px] font-semibold text-[#1C518E] bg-transparent border-none cursor-pointer p-0"
                   >
                     Clear search
                   </button>
@@ -84,7 +84,7 @@ export default function App({ posts, authors, tags }: AppProps) {
           </main>
 
           {/* Sidebar */}
-          <aside className="sticky top-[88px] flex flex-col gap-4 blog-sidebar">
+          <aside className="sticky top-[88px] max-[820px]:static flex flex-col gap-4">
             {/* <div className="hidden lg:block w-[268px] shrink-0"> */}
             <div className="sticky top-26 h-fit">
               <StickySidebar />
@@ -93,16 +93,6 @@ export default function App({ posts, authors, tags }: AppProps) {
           </aside>
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 1040px) {
-          .blog-layout { grid-template-columns: 1fr 268px !important; gap: 22px !important; }
-        }
-        @media (max-width: 820px) {
-          .blog-layout { grid-template-columns: 1fr !important; }
-          .blog-sidebar { position: static !important; }
-        }
-      `}</style>
     </>
   );
 }
