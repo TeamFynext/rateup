@@ -92,7 +92,6 @@ export const ImageCropModal = ({
           const file = new File([blob], imageName, {
             type: mimeTypesForImage[fileExtension],
           });
-          console.log("file", file);
           if (handleCropImageSave) {
             handleCropImageSave(file);
             setTimeout(() => URL.revokeObjectURL(image), 100);
