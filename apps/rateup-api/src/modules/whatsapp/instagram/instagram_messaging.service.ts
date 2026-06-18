@@ -326,21 +326,13 @@ export async function sendInstagramQuickReply(
 }
 
 /**
- * Send a product template via Instagram
+ * Send a product template via Instagram.
+ * Product details (image, title, price) are automatically pulled from the catalog.
+ * Supports single product or carousel (up to 10 products).
  */
 export async function sendInstagramProductTemplate(
   igsId: string,
-  product: {
-    id: string;
-    title?: string;
-    subtitle?: string;
-    image_url?: string;
-    buttons?: Array<{
-      type: "web_url";
-      title: string;
-      url: string;
-    }>;
-  },
+  productIds: string[],
   orgId: string,
   ibaId: string,
 ): Promise<any> {
@@ -362,20 +354,7 @@ export async function sendInstagramProductTemplate(
           type: "template",
           payload: {
             template_type: "product",
-            elements: [
-              {
-                id: product.id,
-                title: product.title || "",
-                subtitle: product.subtitle || "",
-                image_url: product.image_url || "",
-                buttons:
-                  product.buttons?.map((button) => ({
-                    type: button.type,
-                    title: button.title,
-                    url: button.url,
-                  })) || [],
-              },
-            ],
+            elements: productIds.map((id) => ({ id })),
           },
         },
       },
@@ -389,7 +368,7 @@ export async function sendInstagramProductTemplate(
     );
 
     log.info(
-      `[Instagram Messaging] Sent product template to igsId ${igsId} for product ${product.id}`,
+      `[Instagram Messaging] Sent product template to igsId ${igsId} for products ${productIds.join(", ")}`,
     );
 
     return response.data;
