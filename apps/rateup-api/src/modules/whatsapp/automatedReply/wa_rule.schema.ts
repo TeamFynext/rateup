@@ -5,6 +5,7 @@ import {
   ConditionField,
   ConditionOperator,
   RuleOperator,
+  RulePlatform,
   TriggerEvent,
 } from "../../../../generated/prisma/enums.js";
 
@@ -45,9 +46,13 @@ export const ruleOptionsSchema = z.object({
     .optional(),
   // Shopify-specific options
   shopifyProductIds: z.array(z.string()).optional(),
+  // Instagram-specific options
+  instagramScope: z.enum(["ALL", "SPECIFIC"]).optional(),
+  instagramPostIds: z.array(z.string()).optional(),
 });
 
 const createRuleBaseSchema = z.object({
+  platform: z.enum(RulePlatform).default("WHATSAPP"),
   whatsappSettingsPhoneIds: z.array(z.string()).min(1),
   name: z.string().min(1, "Rule name must be at least 1 characters long"),
   operator: z.enum(RuleOperator).default("AND"),

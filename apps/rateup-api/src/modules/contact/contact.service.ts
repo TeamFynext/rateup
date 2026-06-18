@@ -123,6 +123,7 @@ export async function createContact(
   checkAndExecuteRuleByTriggerEvent("CONTACT_CREATED", {
     orgId: user?.orgId,
     phone: contact?.phone,
+    platform: "ALL",
   });
   await addZapierTriggerToQueue(
     ZapierTriggers.CONTACT_CREATE,
@@ -575,9 +576,10 @@ export async function getContactsByOrgId(
     include: includeCondition,
     skip: pageNo * Number(limit),
     take: Number(limit),
-    orderBy: {
-      [sort]: desc,
-    },
+    orderBy: [
+      { [sort]: "desc" },
+      ...(sort === "name" ? [] : [{ name: "asc" as const }]),
+    ],
   });
 
   // Return the result
@@ -725,16 +727,19 @@ export async function updateContactById(
     checkAndExecuteRuleByTriggerEvent("CHAT_CLOSED", {
       orgId: updatedContact?.orgId,
       phone: updatedContact.phone,
+      platform: "ALL",
     });
   } else if (contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED) {
     checkAndExecuteRuleByTriggerEvent("CHAT_ASSIGNED", {
       orgId: updatedContact?.orgId,
       phone: updatedContact.phone,
+      platform: "ALL",
     });
   } else if (contact.lifecycleId) {
     checkAndExecuteRuleByTriggerEvent("LIFECYCLE_UPDATED", {
       orgId: updatedContact?.orgId,
       phone: updatedContact.phone,
+      platform: "ALL",
     });
   }
   if (contact.contactGroupIds) {
@@ -1857,11 +1862,13 @@ export async function bulkUpdateWaMessageAssignStatus(
         checkAndExecuteRuleByTriggerEvent("CHAT_CLOSED", {
           orgId: contact.orgId,
           phone: contact.phone,
+          platform: "ALL",
         });
       } else if (waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED) {
         checkAndExecuteRuleByTriggerEvent("CHAT_ASSIGNED", {
           orgId: contact.orgId,
           phone: contact.phone,
+          platform: "ALL",
         });
       }
 
