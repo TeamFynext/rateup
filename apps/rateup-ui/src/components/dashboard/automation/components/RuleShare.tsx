@@ -22,9 +22,14 @@ import {
 interface RuleShareProps {
   groups: RuleGroup[];
   channels: string[];
+  platform?: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK";
 }
 
-const RuleShare: React.FC<RuleShareProps> = ({ groups, channels }) => {
+const RuleShare: React.FC<RuleShareProps> = ({
+  groups,
+  channels,
+  platform = "WHATSAPP",
+}) => {
   const [shareAccountId, setShareAccountId] = useState<string>("");
   const [shareKeyword, setShareKeyword] = useState<string>("");
   const { data: waSettings } = useWaSettings();
@@ -44,13 +49,21 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels }) => {
       ? shareAccountId
       : channels?.[0] || "";
 
-  const selectedAccount = waSettings?.find((s) => s.phoneId === validAccountId);
-  const shareUrl =
-    selectedAccount && validKeyword
-      ? `https://wa.me/${selectedAccount.phone.replaceAll(/\D/g, "")}?text=${encodeURIComponent(
-          validKeyword,
-        )}`
-      : "";
+  const selectedAccount =
+    platform === "WHATSAPP"
+      ? waSettings?.find((s) => s.phoneId === validAccountId)
+      : waSettings?.find((s) => s.ibaId === validAccountId);
+
+  const shareUrl = (() => {
+    if (!selectedAccount || !validKeyword) return "";
+    if (platform === "INSTAGRAM" && selectedAccount.igUserName) {
+      return `https://ig.me/m/${selectedAccount.igUserName}?text=${encodeURIComponent(validKeyword)}`;
+    }
+    if (platform === "FACEBOOK" && selectedAccount.fbPageId) {
+      return `https://m.me/${selectedAccount.fbPageId}?text=${encodeURIComponent(validKeyword)}`;
+    }
+    return `https://wa.me/${selectedAccount.phone.replaceAll(/\D/g, "")}?text=${encodeURIComponent(validKeyword)}`;
+  })();
 
   return (
     <Card>
@@ -63,6 +76,7 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels }) => {
                 value={validAccountId}
                 onChange={setShareAccountId}
                 filterIds={channels.length > 0 ? channels : undefined}
+                platform={platform as any}
               />
             </div>
           </div>
@@ -106,7 +120,13 @@ const RuleShare: React.FC<RuleShareProps> = ({ groups, channels }) => {
             </div>
             <ShareQR
               url={shareUrl}
-              title="Share WhatsApp Link"
+              title={
+                platform === "INSTAGRAM"
+                  ? "Share Instagram Link"
+                  : platform === "FACEBOOK"
+                    ? "Share Facebook Link"
+                    : "Share WhatsApp Link"
+              }
               isPublished={true}
             />
           </div>

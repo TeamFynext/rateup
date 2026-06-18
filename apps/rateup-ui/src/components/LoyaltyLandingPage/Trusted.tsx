@@ -175,7 +175,7 @@ export default function Trusted() {
     >
       <div className={styles.wrap}>
         <div className={`${styles["sec-head"]} ${styles.reveal}`}>
-          <h2>Trusted by Growing Businesses</h2>
+          <h4>Trusted by Growing Businesses</h4>
           <p>
             See how businesses like yours are driving customer loyalty with
             WhatsApp

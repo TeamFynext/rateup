@@ -32,9 +32,9 @@ function CopyBlock({ eyebrow, h3, p, pills }) {
       <p className="text-[12px] font-bold tracking-[0.08em] uppercase text-wa-green mb-3.5">
         {eyebrow}
       </p>
-      <h3 className="font-nunito font-extrabold text-[clamp(28px,3.6vw,48px)] leading-[1.06] tracking-[-0.025em] text-white">
+      <h6 className="font-nunito font-extrabold text-[clamp(28px,3.6vw,48px)] leading-[1.06] tracking-[-0.025em] text-white">
         {h3}
-      </h3>
+      </h6>
       <p className="text-white/70 text-[16px] leading-[1.6] mt-5 mb-[22px] max-w-[460px]">
         {p}
       </p>

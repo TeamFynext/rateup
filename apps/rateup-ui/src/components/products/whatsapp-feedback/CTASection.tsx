@@ -9,11 +9,11 @@ export default function CTASection() {
   return (
     <section className="bg-[linear-gradient(180deg,#E8F5F0_0%,#F4FBF8_100%)] py-[100px] text-center">
       <div className="max-w-[1200px] mx-auto px-5 md:px-8">
-        <h2 className="font-display font-black text-[clamp(30px,4.2vw,52px)] tracking-[-0.025em] text-ink-800 max-w-[680px] mx-auto mb-4 leading-[1.08]">
+        <h3 className="font-display font-black text-[clamp(30px,4.2vw,52px)] tracking-[-0.025em] text-ink-800 max-w-[680px] mx-auto mb-4 leading-[1.08]">
           Ready to Hear What Your
           <br />
           Customers Really Think?
-        </h2>
+        </h3>
         <p className="text-[17px] text-ink-500 max-w-[580px] mx-auto mb-9 leading-[1.55]">
           Stop missing out on valuable feedback. Start turning customer insights
           into measurable growth with RateUp's WhatsApp Surveys. Book your free,

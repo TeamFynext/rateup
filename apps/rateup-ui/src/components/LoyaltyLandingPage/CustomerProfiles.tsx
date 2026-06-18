@@ -80,9 +80,9 @@ export default function CustomerProfiles() {
     >
       <div className={styles.wrap}>
         <div className={styles.reveal}>
-          <h2>
+          <h3>
             How <span className={styles.b}>RateUp</span> Powers WhatsApp Loyalty
-          </h2>
+          </h3>
           <p className={styles.sub}>
             Turn every customer conversation into repeat purchases with
             automated rewards, loyalty points, tier upgrades, and personalized

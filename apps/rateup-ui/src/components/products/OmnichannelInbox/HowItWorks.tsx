@@ -143,13 +143,13 @@ export default function HowItWorks() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#4FC3FF] shadow-[0_0_10px_#4FC3FF]" />
             Simple to set up. Powerful from day one.
           </span>
-          <h2 className="reveal d1 font-display font-black text-white leading-[1.06] tracking-[-0.025em] mt-5 mb-4 text-[clamp(32px,4.2vw,54px)]">
+          <h6 className="reveal d1 font-display font-black text-white leading-[1.06] tracking-[-0.025em] mt-5 mb-4 text-[clamp(32px,4.2vw,54px)]">
             From scattered to streamlined
             <br />
             <span className="bg-gradient-to-r from-[#6BD0FF] via-[#2FA3FF] to-[#2C6FD6] bg-clip-text text-transparent">
               in minutes.
             </span>
-          </h2>
+          </h6>
         </div>
 
         <div className={`${style.flow} reveal d1`}>
@@ -177,7 +177,7 @@ export default function HowItWorks() {
                     <span className={style.num}>{i + 1}</span>
                     {s.icon}
                   </div>
-                  <h3>{s.title}</h3>
+                  <h6>{s.title}</h6>
                   <p>{s.body}</p>
                 </div>
               );

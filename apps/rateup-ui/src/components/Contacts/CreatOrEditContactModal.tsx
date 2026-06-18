@@ -131,10 +131,6 @@ const CreateOrEditContactModal = ({
           onSuccess: () => {
             setOpened(false);
             form.reset();
-            toast.success("contact updated successfully");
-          },
-          onError: (error) => {
-            toast.error(error?.message || "Error in updating contact");
           },
         },
       );

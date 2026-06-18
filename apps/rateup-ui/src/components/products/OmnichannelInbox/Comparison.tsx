@@ -115,12 +115,12 @@ export default function Comparison() {
             />
             Why RateUp Inbox
           </span>
-          <h2
+          <h6
             className="reveal d1 font-display font-black text-white leading-[1.06] tracking-[-0.025em] mt-5 mb-4"
             style={{ fontSize: "clamp(32px,4.2vw,54px)" }}
           >
             Not just another helpdesk.
-          </h2>
+          </h6>
           <p className="reveal d2 text-[17px] leading-[1.65] text-white/50 m-0 max-w-[560px] mx-auto">
             Most helpdesk tools are built for email. RateUp Inbox is built
             around the channels your customers actually use — with the loyalty

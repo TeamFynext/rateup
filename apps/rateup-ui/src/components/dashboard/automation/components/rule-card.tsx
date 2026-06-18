@@ -76,9 +76,18 @@ export function RuleCard({
       actions={menu}
       content={
         <div className="flex items-center justify-between">
-          <p className="mt-2 text-sm font-semibold text-muted-foreground">
-            {conditionCount} conditions, {actionCount} actions
-          </p>
+          <Badge
+            variant="secondary"
+            className={
+              item.platform === "WHATSAPP"
+                ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200"
+                : item.platform === "INSTAGRAM"
+                  ? "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-200"
+                  : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200"
+            }
+          >
+            {item.platform}
+          </Badge>
           <Switch
             checked={item.isActive}
             onClick={(event: MouseEvent<HTMLButtonElement>) => {

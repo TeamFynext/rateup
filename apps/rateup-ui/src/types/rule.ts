@@ -28,6 +28,7 @@ export type Rule = {
       businessHoursId: string | undefined;
     };
   };
+  platform?: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK";
 };
 
 export type RuleGroup = {

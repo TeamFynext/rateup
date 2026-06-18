@@ -78,11 +78,11 @@ export default function ProblemSection() {
     <section className="bg-white py-16 md:py-[100px]">
       <div className="max-w-[1200px] mx-auto px-5 md:px-8">
         <div className={`text-center max-w-[760px] mx-auto ${style.reveal}`}>
-          <h2 className="font-nunito font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ink-800">
+          <h6 className="font-nunito font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-ink-800">
             Are You Losing Customers
             <br />
             Because You Can't Hear Them?
-          </h2>
+          </h6>
           <p className="mt-4 text-[17px] leading-[1.55] text-ink-500">
             Email surveys get lost in spam. SMS goes unread. Phone calls annoy.
             Relying on these outdated methods means you're missing critical
@@ -106,9 +106,9 @@ export default function ProblemSection() {
                 </div>
                 <div className="absolute left-[-5px] top-[50%] w-[calc(100%+10px)] h-[2.5px] bg-[#DC2626] rounded-[2px] -rotate-[35deg] -translate-y-1/2 opacity-75 pointer-events-none" />
               </div>
-              <h4 className="font-nunito font-extrabold text-[20px] text-ink-800 mb-2.5">
+              <h6 className="font-nunito font-extrabold text-[20px] text-ink-800 mb-2.5">
                 {c.title}
-              </h4>
+              </h6>
               <p className="text-sm text-ink-500 leading-[1.55] mb-5">
                 {c.desc}
               </p>
@@ -131,9 +131,9 @@ export default function ProblemSection() {
               </svg>
             </div>
             <div>
-              <h4 className="font-nunito font-extrabold text-[22px] text-white mb-1.5">
+              <h6 className="font-nunito font-extrabold text-[22px] text-white mb-1.5">
                 No apps. No forms. Just feedback.
-              </h4>
+              </h6>
               <p className="text-[15px] text-white/70 mb-3.5 leading-[1.5]">
                 2 billion people use WhatsApp daily. RateUp sends feedback
                 requests directly into the app they already check 23 times a day

@@ -16,6 +16,7 @@ import {
   bulkAssignInboxToUser,
   createPrivateMessage,
   exportWaChats,
+  exportWaMessageLogs,
   generateInboxResponse,
   getAssignedUserForContact,
   getChatFilterData,
@@ -295,6 +296,7 @@ export function useWaMessageLogs(filter) {
       filter.status,
       filter.source,
       filter.team,
+      filter.searchQuery,
       filter.pagination?.pageIndex,
       filter.pagination?.pageSize,
     ],
@@ -302,3 +304,29 @@ export function useWaMessageLogs(filter) {
     placeholderData: keepPreviousData, // don't have empty rows flash while changing pages
   });
 }
+
+export const useExportWaMessageLogs = () => {
+  return useMutation({
+    mutationFn: exportWaMessageLogs,
+    onSettled: (data) => {
+      const blob = new Blob([data]);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `message_logs.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Message logs exported successfully", {
+        id: "export-logs",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Error exporting logs", error);
+      toast.error(error?.message || "Error exporting logs", {
+        id: "export-logs",
+      });
+    },
+  });
+};

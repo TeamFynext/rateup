@@ -236,6 +236,7 @@ export async function getWaMessageLogs(filter) {
     status: filter.status,
     source: filter.source,
     team: filter.team,
+    searchQuery: filter.searchQuery,
     ...(filter.pagination && {
       pageIndex: filter.pagination.pageIndex,
       pageSize: filter.pagination.pageSize,
@@ -257,6 +258,34 @@ export async function getWaMessageLogs(filter) {
     await axiosClient.get(`${WA_CONTACT_BASE_PATH}/message-logs`, {
       params: filteredParams,
       timeout: 60000,
+    })
+  ).data;
+}
+
+export async function exportWaMessageLogs(filter) {
+  let dateRange = filter.dateRange;
+  if (Array.isArray(dateRange) && dateRange.length === 2) {
+    dateRange = `${dateRange[0]},${dateRange[1]}`;
+  }
+
+  const params = {
+    dateKey: filter.dateKey,
+    dateRange,
+    status: filter.status,
+    source: filter.source,
+    team: filter.team,
+    searchQuery: filter.searchQuery,
+  };
+
+  const filteredParams = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v != null),
+  );
+
+  return (
+    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/export-message-logs`, {
+      params: filteredParams,
+      responseType: "arraybuffer",
+      timeout: 120000,
     })
   ).data;
 }
