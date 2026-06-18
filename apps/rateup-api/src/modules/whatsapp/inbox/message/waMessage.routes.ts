@@ -17,6 +17,7 @@ import {
   markMessagesAsReadHandler,
   sendNewWaMessageHandler,
   unblockWhatsappUserHandler,
+  exportWaMessageLogsHandler,
 } from "./wamessage.controller.js";
 import { byContactIdSchema } from "../../../contact/contact.schema.js";
 import { TeamFeature } from "../../../../utils/permissions.js";
@@ -163,5 +164,14 @@ export async function waMessageRoutes(server: FastifyInstance) {
       },
     },
     getWaMessageLogsHandler,
+  );
+  server.get(
+    "/export-message-logs",
+    {
+      config: {
+        feature: TeamFeature.analytics,
+      },
+    },
+    exportWaMessageLogsHandler,
   );
 }

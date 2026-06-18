@@ -26,20 +26,16 @@ import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
-import {
-  assignWaMessageToUser,
-  createInternalWaMessage,
-} from "../inbox/message/wamessage.service.js";
+import { assignWaMessageToUser } from "../inbox/message/wamessage.service.js";
 import { getUserIdsByTeamId } from "../../user/user.service.js";
 import { sendTextMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller.js";
 import { sendFlow } from "../flows/flow.service.js";
 import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
 import { TriggerEvent } from "../../../../generated/prisma/enums.js";
-import {
-  getLastCreatedConversationForContact,
-  updateClosedConversationStatus,
-} from "../../contact/conversation/conversation.service.js";
+import { sendInstagramTextMessage } from "../instagram/instagram_messaging.service.js";
+import { startInstagramAutomationFlow } from "./instagram_automation.service.js";
+import { getInstagramAutomatedReplyById } from "./instagram_automatedReply.service.js";
 import { ShopifyBody } from "../../integrations/shopify/shopify.types.js";
 import { resolveShopifyPathValue } from "../../integrations/shopify/shopify.service.js";
 import axios from "axios";
@@ -470,6 +466,7 @@ export function selectAutomationByBusinessHours<
 export type RuleWithConditions = {
   id: string;
   name: string;
+  platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK";
   operator: "AND" | "OR";
   isActive: boolean;
   triggerEvent: string;
@@ -482,6 +479,8 @@ export type RuleWithConditions = {
     };
     shopifyEvent?: ShopifyEvents;
     shopifyProductIds?: string[];
+    instagramScope?: "ALL" | "SPECIFIC";
+    instagramPostIds?: string[];
   } | null;
   groups: Array<{
     id: string;
@@ -717,6 +716,7 @@ export async function checkAndExecuteRuleByTriggerEvent(
   triggerEvent: TriggerEvent,
   context: {
     orgId: string;
+    platform: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "ALL";
     phoneNumberId?: string;
     message?: string;
     phone?: string;
@@ -726,6 +726,7 @@ export async function checkAndExecuteRuleByTriggerEvent(
     shopifyEvent?: ShopifyEvents;
     shopifyProductIds?: string[];
     shopifyBody?: ShopifyBody;
+    instagramMediaId?: string;
   },
 ): Promise<
   | {
@@ -748,6 +749,7 @@ export async function checkAndExecuteRuleByTriggerEvent(
       orgId,
       isActive: true,
       triggerEvent,
+      ...(context.platform !== "ALL" && { platform: context.platform }),
       ...(phoneNumberId && {
         whatsappSettingsPhoneIds: {
           has: phoneNumberId,
@@ -836,13 +838,38 @@ export async function checkAndExecuteRuleByTriggerEvent(
         }
       }
 
-      const isMatch = await validateRuleConditions(
-        rule,
-        messageText,
-        orgId,
-        phoneText,
-      );
-      if (!isMatch) continue;
+      // Instagram comment: filter by post scope, then check comment text against conditions
+      if (triggerEvent === TriggerEvent.INSTAGRAM_COMMENT) {
+        const scope = rule.options?.instagramScope ?? "ALL";
+        if (scope === "SPECIFIC") {
+          const configuredPostIds = rule.options?.instagramPostIds ?? [];
+          if (!configuredPostIds.length) continue;
+          if (
+            !context.instagramMediaId ||
+            !configuredPostIds.includes(context.instagramMediaId)
+          ) {
+            continue;
+          }
+        }
+        // Check comment text against rule conditions (message body, etc.)
+        const isMatch = await validateRuleConditions(
+          rule,
+          messageText,
+          orgId,
+          phoneText,
+        );
+        if (!isMatch) continue;
+      } else if (triggerEvent === TriggerEvent.INSTAGRAM_STORY_MENTION) {
+        // Story mentions always match — no post filtering or message checks
+      } else {
+        const isMatch = await validateRuleConditions(
+          rule,
+          messageText,
+          orgId,
+          phoneText,
+        );
+        if (!isMatch) continue;
+      }
 
       log.trace(
         `${isBusinessHour ? "Business hour" : "Non-business hour"} ${isWildcardBatch ? "wildcard " : ""}rule matched! Executing actions for rule: %s`,
@@ -919,6 +946,8 @@ async function executeRuleActions(
   },
 ): Promise<Array<{ actionId: string; success: boolean; error?: string }>> {
   const results = [];
+  const platform = rule.platform ?? "WHATSAPP";
+  const actionContext = { ...context, platform };
 
   for (const action of rule.actions) {
     try {
@@ -926,76 +955,76 @@ async function executeRuleActions(
 
       switch (action.type) {
         case "CLOSE_TICKET":
-          success = await executeCloseTicketAction(action.value, context);
+          success = await executeCloseTicketAction(action.value, actionContext);
           break;
 
         case "ATTACH_LABEL":
           success = await executeAttachLabelAction(
             action.value as string,
-            context,
+            actionContext,
           );
           break;
 
         case "ASSIGN_USER":
           success = await executeAssignUserAction(
             action.value as string,
-            context,
+            actionContext,
           );
           break;
 
         case "ASSIGN_TEAM":
           success = await executeAssignTeamAction(
             action.value as string,
-            context,
+            actionContext,
           );
           break;
 
         case "ASSIGN_LIFECYCLE":
           success = await executeAssignLifecycleAction(
             action.value as string,
-            context,
+            actionContext,
           );
           break;
 
         case "SEND_MESSAGE":
           success = await executeSendMessageAction(
             action.value as string,
-            context,
+            actionContext,
           );
           break;
 
         case "SEND_WEB_SURVEY":
           success = await executeSendWebSurveyAction(
             action.value as string,
-            context,
+            actionContext,
           );
           break;
 
         case "SEND_TEMPLATE":
           success = await executeSendTemplateAction(
             action.value as string,
-            context,
+            actionContext,
           );
           break;
 
         case "SEND_FLOW":
           success = await executeSendFlowAction(
             action.value as string,
-            context,
+            actionContext,
           );
           break;
 
         case "TRIGGER_CHATBOT":
           success = await executeTriggerChatbotAction(
             action.value as string,
-            context,
+            actionContext,
           );
           break;
 
         case "CALL_EXTERNAL_API":
           success = await executeExternalApiAction(
             action.value as string,
-            context,
+            actionContext,
           );
           break;
 
@@ -1240,11 +1269,21 @@ async function executeSendMessageAction(
 ): Promise<boolean> {
   if (!context.phone || !messageText || !context.orgId) return false;
 
-  await sendTextMessage(
-    { phone: context.phone, orgId: context.orgId },
-    null,
-    messageText,
-  );
+  if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
+    if (!context.phoneNumberId) return false;
+    await sendInstagramTextMessage(
+      context.phone,
+      messageText,
+      context.orgId,
+      context.phoneNumberId,
+    );
+  } else {
+    await sendTextMessage(
+      { phone: context.phone, orgId: context.orgId },
+      null,
+      messageText,
+    );
+  }
 
   return true;
 }
@@ -1254,6 +1293,8 @@ async function executeSendWebSurveyAction(
   context: {
     orgId: string;
     phone?: string;
+    phoneNumberId?: string;
+    platform?: string;
   },
 ): Promise<boolean> {
   if (!context.phone || !context.orgId || !surveyTeamMapId) return false;
@@ -1287,11 +1328,21 @@ async function executeSendWebSurveyAction(
   const surveyLink = `${frontendUrl.replace(/\/$/, "")}/ws/${surveyTeamMap?.shortUrlId}`;
   const messageText = `Hi there,\n\nPlease share your feedback using the link below:\n${surveyLink}\n\nThanks for your time.`;
 
-  await sendTextMessage(
-    { phone: context.phone, orgId: context.orgId },
-    null,
-    messageText,
-  );
+  if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
+    if (!context.phoneNumberId) return false;
+    await sendInstagramTextMessage(
+      context.phone,
+      messageText,
+      context.orgId,
+      context.phoneNumberId,
+    );
+  } else {
+    await sendTextMessage(
+      { phone: context.phone, orgId: context.orgId },
+      null,
+      messageText,
+    );
+  }
 
   return true;
 }
@@ -1472,7 +1523,20 @@ async function executeTriggerChatbotAction(
 ): Promise<boolean> {
   if (!context.phone || !chatbotId || !context.orgId) return false;
 
-  // Check if the chatbot action should trigger an automation flow instead
+  if (context.platform === "INSTAGRAM" || context.platform === "FACEBOOK") {
+    const automation = await getInstagramAutomatedReplyById(chatbotId);
+    if (automation) {
+      await startInstagramAutomationFlow(
+        context.phone,
+        automation as any,
+        context.orgId,
+        context.phoneNumberId,
+      );
+      return true;
+    }
+    return true;
+  }
+
   const automation = await prisma.waAutomatedReply.findFirst({
     where: {
       orgId: context.orgId,

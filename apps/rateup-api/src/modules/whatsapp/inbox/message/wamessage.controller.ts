@@ -823,6 +823,7 @@ export async function getWaMessageLogsHandler(
   const status = request.query?.status ?? "all";
   const sourceMessage = request.query?.source ?? "all";
   const team = request.query?.team ?? "all";
+  const searchQuery = request.query?.searchQuery;
 
   // Pagination parameters
   const pageIndex = parseInt(request.query?.pageIndex ?? "0", 10);
@@ -838,12 +839,90 @@ export async function getWaMessageLogsHandler(
       team,
       pageSize,
       offset,
+      searchQuery,
     );
     reply.send(res);
   } catch (e) {
     log.error("Error fetching message logs :%o", e);
     reply.status(500).send({
       error: "An error occurred while fetching the message logs.",
+    });
+  }
+}
+
+export async function exportWaMessageLogsHandler(
+  request: FastifyRequest<{
+    Querystring: LogsQuery;
+  }>,
+  reply: FastifyReply,
+) {
+  const { orgId } = request.user;
+  const dateRange = request.query.dateRange?.split(",") || [];
+  const status = request.query?.status ?? "all";
+  const sourceMessage = request.query?.source ?? "all";
+  const team = request.query?.team ?? "all";
+  const searchQuery = request.query?.searchQuery;
+
+  const limit = 50000;
+  const offset = 0;
+
+  try {
+    const res = await getWaMessageLogs(
+      orgId,
+      dateRange,
+      status,
+      sourceMessage,
+      team,
+      limit,
+      offset,
+      searchQuery,
+    );
+
+    const _excelData = res.data.map((row) => {
+      let logsStr = "";
+      try {
+        logsStr = row.logs ? JSON.stringify(row.logs) : "";
+      } catch (e) {}
+
+      let sourceLabel = row.sourceMessage || "Export";
+      if (row.sourceMessage) {
+        sourceLabel =
+          row.sourceMessage.charAt(0).toUpperCase() +
+          row.sourceMessage.slice(1).toLowerCase();
+      }
+
+      return [
+        row.createdAt ? new Date(row.createdAt).toLocaleString() : "",
+        row.phone || "",
+        row.status || "",
+        sourceLabel,
+        row.messageType || "",
+        row.messagePreview || "",
+        logsStr.replace(/\n/g, " ").substring(0, 32000),
+      ];
+    });
+
+    const excelData = [
+      ["Timestamp", "Phone", "Status", "Source", "Type", "Message", "Logs"],
+      ..._excelData,
+    ];
+
+    const buffer = xlsx.build([
+      { name: "Message_Logs", data: excelData, options: {} },
+    ]);
+    reply.header(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    reply.header(
+      "Content-Disposition",
+      "attachment; filename=message_logs.xlsx",
+    );
+    reply.send(buffer);
+  } catch (e) {
+    log.error("Error exporting message logs :%o", e);
+    reply.status(500).send({
+      error: "An error occurred while exporting the message logs.",
     });
   }
 }

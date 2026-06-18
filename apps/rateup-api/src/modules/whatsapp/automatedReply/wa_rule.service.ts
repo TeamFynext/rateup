@@ -7,15 +7,18 @@ const MESSAGE_BODY_FIELD = "MESSAGE_BODY";
 type MessageBodyCandidate = {
   value: string;
   businessHourId: string | null;
+  platform: string;
 };
 
 function extractMessageBodyCandidates(
   groups?: CreateRuleInput["groups"],
   options?: CreateRuleInput["options"],
+  platform?: string,
 ) {
   if (!groups?.length) return [];
 
   const candidates: MessageBodyCandidate[] = [];
+  const resolvedPlatform = platform ?? "WHATSAPP";
 
   // Extract businessHourId from options instead of conditions
   const businessHourId =
@@ -32,7 +35,11 @@ function extractMessageBodyCandidates(
       ) {
         const value = rawValue.trim();
         if (value.length > 0) {
-          candidates.push({ value, businessHourId });
+          candidates.push({
+            value,
+            businessHourId,
+            platform: resolvedPlatform,
+          });
         }
       }
     }
@@ -50,7 +57,7 @@ function ensureNoDuplicateMessageBodyCandidates(
   const duplicates = new Set<string>();
 
   for (const candidate of candidates) {
-    const key = `${candidate.value}::$${candidate.businessHourId ?? ""}`;
+    const key = `${candidate.platform}::${candidate.value}::$${candidate.businessHourId ?? ""}`;
     if (seen.has(key)) {
       duplicates.add(key);
     }
@@ -80,11 +87,12 @@ async function ensureMessageBodyUniqueness(
   if (!candidates.length) return;
 
   await Promise.all(
-    candidates.map(async ({ value, businessHourId }) => {
+    candidates.map(async ({ value, businessHourId, platform }) => {
       const existing = await prisma.ruleMessageBodyLock.findFirst({
         where: {
           orgId,
           messageBody: value,
+          platform: platform as any,
           businessHourId: businessHourId ?? null,
         },
         select: {
@@ -159,6 +167,7 @@ async function reserveMessageBodyCommands(
   const rule = await tx.rule.findUnique({
     where: { id: ruleId },
     select: {
+      platform: true,
       options: true,
       groups: {
         select: {
@@ -216,6 +225,7 @@ async function reserveMessageBodyCommands(
     data: data.map((entry) => ({
       orgId: entry.orgId,
       messageBody: entry.command,
+      platform: rule.platform,
       ruleConditionId: entry.ruleConditionId,
       businessHourId: entry.businessHourId ?? null,
     })),
@@ -226,13 +236,20 @@ async function reserveMessageBodyCommands(
 export async function createRule(data: CreateRuleInput & { orgId: string }) {
   const { groups, actions, options, orgId } = data;
 
-  const messageBodyCandidates = extractMessageBodyCandidates(groups, options);
+  const skipMessageBodyLock =
+    data.triggerEvent === "INSTAGRAM_COMMENT" ||
+    data.triggerEvent === "INSTAGRAM_STORY_MENTION";
+
+  const messageBodyCandidates = skipMessageBodyLock
+    ? []
+    : extractMessageBodyCandidates(groups, options, data.platform);
   ensureNoDuplicateMessageBodyCandidates(messageBodyCandidates);
   await ensureMessageBodyUniqueness(orgId, messageBodyCandidates);
 
   return prisma.$transaction(async (tx) => {
     const ruleCreateData: Prisma.RuleCreateInput = {
       name: data.name,
+      platform: data.platform ?? "WHATSAPP",
       triggerEvent: data.triggerEvent,
       whatsappSettingsPhoneIds: data.whatsappSettingsPhoneIds,
       isActive: data.isActive ?? true,
@@ -277,7 +294,9 @@ export async function createRule(data: CreateRuleInput & { orgId: string }) {
       },
     });
 
-    await reserveMessageBodyCommands(tx, rule.id, orgId);
+    if (!skipMessageBodyLock) {
+      await reserveMessageBodyCommands(tx, rule.id, orgId);
+    }
 
     return rule;
   });
@@ -315,6 +334,8 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
     where: { id },
     select: {
       orgId: true,
+      platform: true,
+      triggerEvent: true,
       isActive: true,
       groups: {
         select: {
@@ -338,11 +359,21 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
   // When enabling a previously inactive rule, check existing conditions for conflicts
   const isEnabling = data.isActive === true && !existingRule.isActive;
 
+  const triggerEvent = data.triggerEvent ?? existingRule.triggerEvent;
+  const skipMessageBodyLock =
+    triggerEvent === "INSTAGRAM_COMMENT" ||
+    triggerEvent === "INSTAGRAM_STORY_MENTION";
+
   let messageBodyCandidates: MessageBodyCandidate[] = [];
 
-  if (!isDisabling) {
+  if (!isDisabling && !skipMessageBodyLock) {
+    const platform = data.platform ?? existingRule.platform;
     if (groups) {
-      messageBodyCandidates = extractMessageBodyCandidates(groups, options);
+      messageBodyCandidates = extractMessageBodyCandidates(
+        groups,
+        options,
+        platform,
+      );
       ensureNoDuplicateMessageBodyCandidates(messageBodyCandidates);
       await ensureMessageBodyUniqueness(
         existingRule.orgId,
@@ -350,13 +381,13 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
         id,
       );
     } else if (isEnabling) {
-      // No new groups provided but the rule is being enabled — check existing conditions
       const existingOptions = existingRule.options as
         | CreateRuleInput["options"]
         | null;
       const existingCandidates = extractMessageBodyCandidates(
         existingRule.groups as CreateRuleInput["groups"],
         existingOptions ?? undefined,
+        platform,
       );
       await ensureMessageBodyUniqueness(
         existingRule.orgId,
@@ -367,7 +398,7 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
   }
 
   return prisma.$transaction(async (tx) => {
-    if (groups) {
+    if (groups && !skipMessageBodyLock) {
       await clearMessageBodyReservations(tx, id);
     }
 
