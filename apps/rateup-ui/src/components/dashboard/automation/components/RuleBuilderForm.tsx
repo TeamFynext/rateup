@@ -45,8 +45,12 @@ import { shopifyEventData } from "@/utils/constants.ts";
 import ActionList from "./ActionList.tsx";
 import ConditionList from "./ConditionList.tsx";
 import RuleOptions from "./RuleOptions.tsx";
-import type { CreateRuleInput } from "./schema.ts";
-import { INSTAGRAM_SCOPE_OPTIONS, TRIGGER_EVENTS } from "./schema.ts";
+import type { CreateRuleInput, Platform } from "./schema.ts";
+import {
+  getTriggerEventsForPlatform,
+  INSTAGRAM_SCOPE_OPTIONS,
+  PLATFORMS,
+} from "./schema.ts";
 
 interface RuleBuilderFormProps {
   form: UseFormReturn<CreateRuleInput>;
@@ -72,6 +76,17 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
     name: "groups",
   });
 
+  const platform = (useWatch({ control: form.control, name: "platform" }) ??
+    "WHATSAPP") as Platform;
+  const filteredTriggerEvents = getTriggerEventsForPlatform(platform);
+
+  const platformCardClassMap: Record<Platform, string> = {
+    WHATSAPP: "ring-green-500/50 dark:ring-green-500/30",
+    INSTAGRAM: "ring-pink-500/50 dark:ring-pink-500/30",
+    FACEBOOK: "ring-blue-500/50 dark:ring-blue-500/30",
+  };
+  const platformCardClass = platformCardClassMap[platform];
+
   const triggerEvent = useWatch({
     control: form.control,
     name: "triggerEvent",
@@ -95,8 +110,6 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
   const instagramScope =
     useWatch({ control: form.control, name: "options.instagramScope" }) ??
     "ALL";
-  const instagramPostIds =
-    useWatch({ control: form.control, name: "options.instagramPostIds" }) ?? [];
 
   const selectedPhoneIds =
     useWatch({ control: form.control, name: "whatsappSettingsPhoneIds" }) ?? [];
@@ -112,14 +125,16 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
     isInstagramStoryTrigger ? activeIbaId : undefined,
   );
 
-  const mediaOptions = (
-    isInstagramCommentTrigger ? (mediaPosts ?? []) : (stories ?? [])
-  ).map((item: any) => ({
-    value: item.id,
-    label: item.caption
+  const mediaItems = isInstagramCommentTrigger
+    ? (mediaPosts ?? [])
+    : (stories ?? []);
+
+  const mediaOptions = mediaItems.map((item: any) => {
+    const label = item.caption
       ? `${item.caption.slice(0, 60)}${item.caption.length > 60 ? "…" : ""}`
-      : `${item.media_type} · ${new Date(item.timestamp).toLocaleDateString()}`,
-  }));
+      : `${item.media_type} · ${new Date(item.timestamp).toLocaleDateString()}`;
+    return { value: item.id, label };
+  });
 
   const [productData, setProductData] = useState<
     { label: string; value: string }[]
@@ -147,22 +162,86 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Information Card */}
-        <Card>
+        <Card className={platformCardClass}>
           <CardContent>
             <h2 className="text-lg font-semibold mb-4">Basic Information</h2>
 
             <FieldGroup>
               <Controller
                 control={form.control}
+                name="platform"
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel>Platform</FieldLabel>
+                    <div className="flex gap-2">
+                      {PLATFORMS.map((p) => (
+                        <button
+                          key={p.value}
+                          type="button"
+                          onClick={() => {
+                            if (field.value === p.value) return;
+                            field.onChange(p.value);
+                            form.setValue("whatsappSettingsPhoneIds", []);
+                            const firstEvent = getTriggerEventsForPlatform(
+                              p.value,
+                            )[0];
+                            form.setValue(
+                              "triggerEvent",
+                              firstEvent?.value ?? "MESSAGE_RECEIVED",
+                            );
+                            form.setValue("groups", [
+                              {
+                                operator: "AND",
+                                conditions: [
+                                  {
+                                    field: "MESSAGE_BODY",
+                                    operator: "CONTAINS",
+                                    value: "",
+                                  },
+                                ],
+                              },
+                            ]);
+                            form.setValue("options.shopifyEvent", undefined);
+                            form.setValue("options.shopifyProductIds", []);
+                            form.setValue("options.instagramScope", "ALL");
+                            form.setValue("options.instagramPostIds", []);
+                          }}
+                          className={(() => {
+                            const base =
+                              "flex-1 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-colors";
+                            if (field.value !== p.value) {
+                              return `${base} border-muted bg-background text-muted-foreground hover:border-muted-foreground/40`;
+                            }
+                            const activeClassMap: Record<string, string> = {
+                              WHATSAPP:
+                                "border-green-500 bg-green-500/10 text-green-600 dark:text-green-400",
+                              INSTAGRAM:
+                                "border-pink-500 bg-pink-500/10 text-pink-600 dark:text-pink-400",
+                              FACEBOOK:
+                                "border-blue-600 bg-blue-600/10 text-blue-600 dark:text-blue-400",
+                            };
+                            return `${base} ${activeClassMap[p.value] ?? ""}`;
+                          })()}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+                )}
+              />
+
+              <Controller
+                control={form.control}
                 name="whatsappSettingsPhoneIds"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>Channels (WhatsApp & Instagram)</FieldLabel>
+                    <FieldLabel>Channels</FieldLabel>
                     <AccountSelector
                       multiple
                       value={field.value}
                       onChange={field.onChange}
-                      platform="all"
+                      platform={platform as any}
                     />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -193,7 +272,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
         </Card>
 
         {/* WHEN Card */}
-        <Card>
+        <Card className={platformCardClass}>
           <CardContent>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center">
@@ -254,7 +333,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                       <SelectValue placeholder="Select event" />
                     </SelectTrigger>
                     <SelectContent>
-                      {TRIGGER_EVENTS.map((opt) => (
+                      {filteredTriggerEvents.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
                           {opt.label}
                         </SelectItem>
@@ -301,7 +380,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
         </Card>
 
         {/* IF Card - Condition Groups */}
-        <Card>
+        <Card className={platformCardClass}>
           <CardContent>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 flex items-center justify-center">
@@ -329,90 +408,98 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
             </div>
 
             <div className="space-y-4">
-              {isInstagramTrigger ? (
+              {isInstagramTrigger && (
                 <div className="space-y-4">
                   <div className="rounded-lg border border-dashed border-pink-300 dark:border-pink-700 p-4 text-sm text-muted-foreground">
                     {isInstagramCommentTrigger
                       ? "Sends a private reply when someone comments on your post, reel, or ad."
-                      : "Triggers when someone mentions your account in their Instagram Story."}
+                      : "Triggers when someone mentions your account in their Instagram Story. Applies to all story mentions."}
                   </div>
 
-                  {/* Scope selector */}
-                  <div className="border-2 border-pink-200 dark:border-pink-800 rounded-lg p-4 bg-pink-50/50 dark:bg-pink-950/20 space-y-3">
-                    <span className="text-sm font-semibold text-pink-800 dark:text-pink-300 block">
-                      Apply to
-                    </span>
+                  {/* Scope selector - only for comments, story mentions always apply to all */}
+                  {isInstagramCommentTrigger && (
+                    <div className="border-2 border-pink-200 dark:border-pink-800 rounded-lg p-4 bg-pink-50/50 dark:bg-pink-950/20 space-y-3">
+                      <span className="text-sm font-semibold text-pink-800 dark:text-pink-300 block">
+                        Apply to
+                      </span>
 
-                    <Controller
-                      control={form.control}
-                      name="options.instagramScope"
-                      render={({ field }) => (
-                        <div className="flex gap-3">
-                          {INSTAGRAM_SCOPE_OPTIONS.map((opt) => (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              onClick={() => {
-                                field.onChange(opt.value);
-                                if (opt.value === "ALL") {
-                                  form.setValue("options.instagramPostIds", []);
-                                }
-                              }}
-                              className={`flex-1 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-colors ${
-                                field.value === opt.value
-                                  ? "border-pink-500 bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200"
-                                  : "border-muted bg-background text-muted-foreground hover:border-pink-300"
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
+                      <Controller
+                        control={form.control}
+                        name="options.instagramScope"
+                        render={({ field }) => (
+                          <div className="flex gap-3">
+                            {INSTAGRAM_SCOPE_OPTIONS.map((opt) => (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => {
+                                  field.onChange(opt.value);
+                                  if (opt.value === "ALL") {
+                                    form.setValue(
+                                      "options.instagramPostIds",
+                                      [],
+                                    );
+                                  }
+                                }}
+                                className={`flex-1 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-colors ${
+                                  field.value === opt.value
+                                    ? "border-pink-500 bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200"
+                                    : "border-muted bg-background text-muted-foreground hover:border-pink-300"
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      />
+
+                      {instagramScope === "SPECIFIC" && (
+                        <div className="space-y-2 pt-1">
+                          {!activeIbaId ? (
+                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                              Select an Instagram account above to load
+                              available{" "}
+                              {isInstagramCommentTrigger ? "posts" : "stories"}.
+                            </p>
+                          ) : (
+                            <Controller
+                              control={form.control}
+                              name="options.instagramPostIds"
+                              render={({ field, fieldState }) => (
+                                <Field data-invalid={fieldState.invalid}>
+                                  <FieldLabel>
+                                    Select{" "}
+                                    {isInstagramCommentTrigger
+                                      ? "posts / reels"
+                                      : "stories"}
+                                  </FieldLabel>
+                                  <MultiSelect
+                                    options={mediaOptions}
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value ?? []}
+                                    placeholder={
+                                      mediaLoading || storiesLoading
+                                        ? "Loading…"
+                                        : `Select ${isInstagramCommentTrigger ? "posts" : "stories"}…`
+                                    }
+                                    disabled={mediaLoading || storiesLoading}
+                                  />
+                                  {fieldState.invalid && (
+                                    <FieldError errors={[fieldState.error]} />
+                                  )}
+                                </Field>
+                              )}
+                            />
+                          )}
                         </div>
                       )}
-                    />
-
-                    {instagramScope === "SPECIFIC" && (
-                      <div className="space-y-2 pt-1">
-                        {!activeIbaId ? (
-                          <p className="text-xs text-amber-600 dark:text-amber-400">
-                            Select an Instagram account above to load available{" "}
-                            {isInstagramCommentTrigger ? "posts" : "stories"}.
-                          </p>
-                        ) : (
-                          <Controller
-                            control={form.control}
-                            name="options.instagramPostIds"
-                            render={({ field, fieldState }) => (
-                              <Field data-invalid={fieldState.invalid}>
-                                <FieldLabel>
-                                  Select{" "}
-                                  {isInstagramCommentTrigger
-                                    ? "posts / reels"
-                                    : "stories"}
-                                </FieldLabel>
-                                <MultiSelect
-                                  options={mediaOptions}
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value ?? []}
-                                  placeholder={
-                                    mediaLoading || storiesLoading
-                                      ? "Loading…"
-                                      : `Select ${isInstagramCommentTrigger ? "posts" : "stories"}…`
-                                  }
-                                  disabled={mediaLoading || storiesLoading}
-                                />
-                                {fieldState.invalid && (
-                                  <FieldError errors={[fieldState.error]} />
-                                )}
-                              </Field>
-                            )}
-                          />
-                        )}
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
-              ) : isShopifyTrigger ? (
+              )}
+
+              {isShopifyTrigger && (
                 <div className="space-y-4">
                   <div className="rounded-lg border border-dashed border-purple-300 dark:border-purple-700 p-4 text-sm text-muted-foreground">
                     Shopify rules use the selected Shopify event as the trigger
@@ -521,7 +608,10 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                     </div>
                   )}
                 </div>
-              ) : (
+              )}
+
+              {!isInstagramStoryTrigger &&
+                !isShopifyTrigger &&
                 groupFields.map((group, groupIndex) => (
                   <React.Fragment key={group.id}>
                     {/* Condition Block */}
@@ -558,21 +648,26 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
                             operator,
                           )
                         }
+                        allowedFields={
+                          isInstagramCommentTrigger
+                            ? ["MESSAGE_BODY"]
+                            : undefined
+                        }
                       />
                     </div>
                   </React.Fragment>
-                ))
-              )}
+                ))}
 
-              {!isShopifyTrigger && !isInstagramTrigger && (
+              {!isShopifyTrigger && !isInstagramStoryTrigger && (
                 <Button
                   type="button"
                   variant="outline"
                   className="w-full border-2 border-dashed border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20 hover:bg-purple-100 dark:hover:bg-purple-900/30"
                   onClick={() => {
-                    const defaultField = isMessageReceivedTrigger
-                      ? "MESSAGE_BODY"
-                      : "CONTACT_EMAIL";
+                    const defaultField =
+                      isMessageReceivedTrigger || isInstagramCommentTrigger
+                        ? "MESSAGE_BODY"
+                        : "CONTACT_EMAIL";
                     appendGroup({
                       operator: "AND",
                       conditions: [
@@ -594,7 +689,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
         </Card>
 
         {/* THEN Card - Actions */}
-        <Card>
+        <Card className={platformCardClass}>
           <CardContent>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 flex items-center justify-center">
@@ -624,7 +719,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
         </Card>
 
         {/* Options Card */}
-        <Card>
+        <Card className={platformCardClass}>
           <CardContent>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -642,7 +737,7 @@ const RuleBuilderForm: React.FC<RuleBuilderFormProps> = ({
           </CardContent>
         </Card>
         {/* Footer Card */}
-        <Card>
+        <Card className={platformCardClass}>
           <CardContent>
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">

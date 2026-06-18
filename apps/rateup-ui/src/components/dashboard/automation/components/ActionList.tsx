@@ -30,8 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 
-import type { ActionType, CreateRuleInput } from "./schema.ts";
-import { ACTION_TYPES } from "./schema.ts";
+import type { ActionType, CreateRuleInput, Platform } from "./schema.ts";
+import { ACTION_TYPES, getActionTypesForPlatform } from "./schema.ts";
 
 // ActionValueInput now always uses shadcn Field and FieldError, and expects valueField and fieldState from Controller
 const ActionValueInput = ({
@@ -53,13 +53,20 @@ const ActionValueInput = ({
   const { data: templatesData, isLoading: isTemplatesLoading } =
     useWaTemplates();
 
-  // Combine both WhatsApp and Instagram automations
-  const allAutomations = useMemo(() => {
-    return [...(waData || []), ...(igData || [])].sort(
+  const platform = useWatch({ control, name: "platform" }) as Platform;
+
+  const filteredAutomations = useMemo(() => {
+    if (platform === "INSTAGRAM" || platform === "FACEBOOK") {
+      return [...(igData || [])].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    }
+    return [...(waData || [])].sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-  }, [waData, igData]);
+  }, [waData, igData, platform]);
 
   const webSurveyOptions = useMemo(() => {
     if (!surveysSummary?.surveys?.length) return [];
@@ -194,7 +201,7 @@ const ActionValueInput = ({
           <SelectValue placeholder="Select automation" />
         </SelectTrigger>
         <SelectContent>
-          {allAutomations?.map((t) => (
+          {filteredAutomations?.map((t) => (
             <SelectItem key={t.id} value={t.id}>
               {t.name}
             </SelectItem>
@@ -370,6 +377,8 @@ const ActionList: React.FC = () => {
     control,
     name: "actions",
   });
+  const platform = useWatch({ control, name: "platform" }) as Platform;
+  const filteredActionTypes = getActionTypesForPlatform(platform ?? "WHATSAPP");
 
   return (
     <div className="space-y-3">
@@ -411,7 +420,7 @@ const ActionList: React.FC = () => {
                     <SelectValue placeholder="Action Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ACTION_TYPES.map((opt) => (
+                    {filteredActionTypes.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
                       </SelectItem>

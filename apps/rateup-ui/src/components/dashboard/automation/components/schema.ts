@@ -31,17 +31,63 @@ export const CONDITION_OPERATORS = [
   // { label: "Less Than", value: "LESS_THAN" },
 ] as const;
 
+export const PLATFORMS = [
+  { label: "WhatsApp", value: "WHATSAPP" },
+  { label: "Instagram", value: "INSTAGRAM" },
+  { label: "Facebook", value: "FACEBOOK" },
+] as const;
+
+export type Platform = (typeof PLATFORMS)[number]["value"];
+
 // Single source of truth for trigger events
 export const TRIGGER_EVENTS = [
-  { label: "Message Received", value: "MESSAGE_RECEIVED" },
-  { label: "Chat Closed", value: "CHAT_CLOSED" },
-  { label: "Chat Assigned", value: "CHAT_ASSIGNED" },
-  { label: "Contact Created", value: "CONTACT_CREATED" },
-  { label: "Lifecycle Updated", value: "LIFECYCLE_UPDATED" },
-  { label: "Shopify Event", value: "SHOPIFY_EVENT" },
-  { label: "Instagram Comment (Private Reply)", value: "INSTAGRAM_COMMENT" },
-  { label: "Instagram Story Mention", value: "INSTAGRAM_STORY_MENTION" },
+  {
+    label: "Message Received",
+    value: "MESSAGE_RECEIVED",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Chat Closed",
+    value: "CHAT_CLOSED",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Chat Assigned",
+    value: "CHAT_ASSIGNED",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Contact Created",
+    value: "CONTACT_CREATED",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Lifecycle Updated",
+    value: "LIFECYCLE_UPDATED",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Shopify Event",
+    value: "SHOPIFY_EVENT",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Instagram Comment (Private Reply)",
+    value: "INSTAGRAM_COMMENT",
+    platforms: ["INSTAGRAM"],
+  },
+  {
+    label: "Instagram Story Mention",
+    value: "INSTAGRAM_STORY_MENTION",
+    platforms: ["INSTAGRAM"],
+  },
 ] as const;
+
+export function getTriggerEventsForPlatform(platform: Platform) {
+  return TRIGGER_EVENTS.filter((e) =>
+    (e.platforms as readonly string[]).includes(platform),
+  );
+}
 
 export const INSTAGRAM_SCOPE_OPTIONS = [
   { label: "All posts", value: "ALL" },
@@ -50,18 +96,60 @@ export const INSTAGRAM_SCOPE_OPTIONS = [
 
 // Single source of truth for action types
 export const ACTION_TYPES = [
-  { label: "Close Chat", value: "CLOSE_TICKET" },
-  { label: "Trigger Chatbot", value: "TRIGGER_CHATBOT" },
-  { label: "Call External API", value: "CALL_EXTERNAL_API" },
-  { label: "Send Web Survey", value: "SEND_WEB_SURVEY" },
-  { label: "Send Template", value: "SEND_TEMPLATE" },
-  { label: "Send Message", value: "SEND_MESSAGE" },
-  { label: "Send Flow", value: "SEND_FLOW" },
-  { label: "Assign Team", value: "ASSIGN_TEAM" },
-  { label: "Assign User", value: "ASSIGN_USER" },
-  { label: "Attach Label", value: "ATTACH_LABEL" },
-  { label: "Assign Lifecycle", value: "ASSIGN_LIFECYCLE" },
+  {
+    label: "Close Chat",
+    value: "CLOSE_TICKET",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Trigger Chatbot",
+    value: "TRIGGER_CHATBOT",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Call External API",
+    value: "CALL_EXTERNAL_API",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Send Web Survey",
+    value: "SEND_WEB_SURVEY",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  { label: "Send Template", value: "SEND_TEMPLATE", platforms: ["WHATSAPP"] },
+  {
+    label: "Send Message",
+    value: "SEND_MESSAGE",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  { label: "Send Flow", value: "SEND_FLOW", platforms: ["WHATSAPP"] },
+  {
+    label: "Assign Team",
+    value: "ASSIGN_TEAM",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Assign User",
+    value: "ASSIGN_USER",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Attach Label",
+    value: "ATTACH_LABEL",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
+  {
+    label: "Assign Lifecycle",
+    value: "ASSIGN_LIFECYCLE",
+    platforms: ["WHATSAPP", "INSTAGRAM", "FACEBOOK"],
+  },
 ] as const;
+
+export function getActionTypesForPlatform(platform: Platform) {
+  return ACTION_TYPES.filter((a) =>
+    (a.platforms as readonly string[]).includes(platform),
+  );
+}
 
 // Single source of truth for group operators
 export const GROUP_OPERATORS = [
@@ -162,6 +250,9 @@ const ruleOptionsSchema = z.object({
 });
 
 const createRuleBaseSchema = z.object({
+  platform: z
+    .enum(PLATFORMS.map((p) => p.value) as [string, ...string[]])
+    .default("WHATSAPP"),
   whatsappSettingsPhoneIds: z
     .array(z.string())
     .min(1, "Select at least one account"),

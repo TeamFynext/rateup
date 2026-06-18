@@ -31,6 +31,7 @@ interface ConditionListProps {
   name: string;
   groupOperator: "AND" | "OR";
   onOperatorChange: (operator: "AND" | "OR") => void;
+  allowedFields?: string[];
 }
 
 const ConditionValueInput = ({
@@ -181,10 +182,12 @@ const ConditionRow = ({
   index,
   remove,
   namePrefix,
+  allowedFields,
 }: {
   index: number;
   remove: (index: number) => void;
   namePrefix: string;
+  allowedFields?: string[];
 }) => {
   const { control, setValue } = useFormContext<CreateRuleInput>();
 
@@ -234,7 +237,12 @@ const ConditionRow = ({
                 <SelectValue placeholder="Field" />
               </SelectTrigger>
               <SelectContent>
-                {CONDITION_FIELDS.map((opt) => (
+                {(allowedFields
+                  ? CONDITION_FIELDS.filter((opt) =>
+                      allowedFields.includes(opt.value),
+                    )
+                  : CONDITION_FIELDS
+                ).map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -314,6 +322,7 @@ const ConditionList: React.FC<ConditionListProps> = ({
   name,
   groupOperator,
   onOperatorChange,
+  allowedFields,
 }) => {
   const {
     control,
@@ -361,6 +370,7 @@ const ConditionList: React.FC<ConditionListProps> = ({
           index={index}
           remove={remove}
           namePrefix={name}
+          allowedFields={allowedFields}
         />
       ))}
 
