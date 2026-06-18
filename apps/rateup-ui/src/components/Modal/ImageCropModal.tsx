@@ -1,5 +1,7 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
+
 import {
   Box,
   Button,
@@ -8,16 +10,11 @@ import {
   Modal,
   NumberInput,
 } from "@mantine/core";
-
-import "cropperjs/dist/cropper.css";
-
-import { useCallback, useRef, useState } from "react";
-
-import type { ReactCropperElement } from "react-cropper";
-import Cropper from "react-cropper";
 import { useTranslation } from "react-i18next";
 
+import { useCropperJS } from "@/hooks/useCropperJS.ts";
 import { mimeTypesForImage } from "@/utils/constants.ts";
+
 import styles from "./ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
 
 interface ImageCropModalProps {
@@ -39,17 +36,36 @@ export const ImageCropModal = ({
   aspect = 4 / 3,
   freeMode = false,
 }: ImageCropModalProps) => {
-  const cropperRef = useRef<ReactCropperElement>(undefined);
   const [scale, setScale] = useState(0.4);
-  const [isCropperReady, setIsCropperReady] = useState(false);
   const { t: translations } = useTranslation();
   const fileExtension = imageName?.split(".")?.pop()?.toLowerCase() ?? "jpg";
   const isUnsplashImage = !image?.startsWith("blob:");
 
+  const {
+    canvasRef,
+    imageRef,
+    selectionRef,
+    isReady,
+    getBounds,
+    getImageDimensions,
+    getCroppedCanvas,
+    scaleImage,
+  } = useCropperJS();
+
+  useEffect(() => {
+    if (isReady) {
+      scaleImage(scale);
+    }
+  }, [scale, isReady, scaleImage]);
+
   const generateCroppedLinkForUnsplash = () => {
-    const { x, y, width, height } = cropperRef.current?.cropper.getData();
-    const { naturalWidth, naturalHeight } =
-      cropperRef.current?.cropper.getImageData();
+    const bounds = getBounds();
+    const dimensions = getImageDimensions();
+
+    if (!bounds || !dimensions) return image;
+
+    const { x, y, width, height } = bounds;
+    const { naturalWidth, naturalHeight } = dimensions;
     const focalPointX = (x + width / 2) / naturalWidth;
     const focalPointY = (y + height / 2) / naturalHeight;
 
@@ -63,7 +79,6 @@ export const ImageCropModal = ({
     queryParams.set("fp-x", `${focalPointX}`);
     queryParams.set("fp-y", `${focalPointY}`);
     queryParams.set("fp-z", "1");
-    // queryParams.set("fp-debug", "true");
 
     const newImageUrl = `${urlStringWithoutQueryParams}?${queryParams.toString()}`;
     return encodeURI(newImageUrl);
@@ -79,20 +94,29 @@ export const ImageCropModal = ({
       handleCropImageSave(generatedUrl);
       onclose();
     } else {
-      const croppedCanvas = cropperRef.current?.cropper.getCroppedCanvas();
-      croppedCanvas?.toBlob((blob) => {
-        if (!blob) return;
-        const file = new File([blob], imageName, {
-          type: mimeTypesForImage[fileExtension],
-        });
-        if (handleCropImageSave) {
-          handleCropImageSave(file);
-          setTimeout(() => URL.revokeObjectURL(image), 100);
-          onclose();
-        }
-      }, mimeTypesForImage[fileExtension]);
+      getCroppedCanvas().then((croppedCanvas) => {
+        croppedCanvas?.toBlob((blob) => {
+          if (!blob) return;
+          const file = new File([blob], imageName, {
+            type: mimeTypesForImage[fileExtension],
+          });
+          console.log("file", file);
+          if (handleCropImageSave) {
+            handleCropImageSave(file);
+            setTimeout(() => URL.revokeObjectURL(image), 100);
+            onclose();
+          }
+        }, mimeTypesForImage[fileExtension]);
+      });
     }
-  }, [isUnsplashImage, fileExtension, image, imageName, handleCropImageSave]);
+  }, [
+    isUnsplashImage,
+    fileExtension,
+    image,
+    imageName,
+    handleCropImageSave,
+    getCroppedCanvas,
+  ]);
 
   return (
     <Modal
@@ -124,32 +148,51 @@ export const ImageCropModal = ({
       />
       <Box className={styles["cropper-container"]}>
         <LoadingOverlay
-          visible={!isCropperReady}
+          visible={!isReady}
           zIndex={1000}
           overlayProps={{ radius: "sm", blur: 2 }}
           loaderProps={{ type: "bars" }}
         />
 
-        <Cropper
-          ref={cropperRef}
+        <cropper-canvas
+          ref={canvasRef}
           style={{ height: "100%", width: "100%" }}
-          initialAspectRatio={aspect}
-          {...(!freeMode && { aspectRatio: aspect })}
-          preview=".img-preview"
-          src={image}
-          viewMode={0}
-          zoomable
-          zoomTo={scale}
-          minCropBoxHeight={100}
-          minCropBoxWidth={100}
-          background={false}
-          responsive={true}
-          autoCropArea={1}
-          checkOrientation={false}
-          guides={true}
-          highlight
-          ready={(e) => setIsCropperReady(true)}
-        />
+          background
+        >
+          <cropper-image
+            ref={imageRef}
+            src={image}
+            alt="crop"
+            rotatable
+            scalable
+            translatable
+          />
+          <cropper-selection
+            ref={selectionRef}
+            initial-aspect-ratio={aspect}
+            initial-coverage={0.8}
+            {...(!freeMode && { "aspect-ratio": aspect })}
+            movable
+            resizable
+            zoomable
+            keyboard
+          >
+            <cropper-grid role="grid" covered />
+            <cropper-crosshair centered />
+            <cropper-handle
+              action="move"
+              theme-color="rgba(255, 255, 255, 0.35)"
+            />
+            <cropper-handle action="n-resize" />
+            <cropper-handle action="e-resize" />
+            <cropper-handle action="s-resize" />
+            <cropper-handle action="w-resize" />
+            <cropper-handle action="ne-resize" />
+            <cropper-handle action="nw-resize" />
+            <cropper-handle action="se-resize" />
+            <cropper-handle action="sw-resize" />
+          </cropper-selection>
+        </cropper-canvas>
       </Box>
       <Group className={styles["cancel-save-btn-container"]} justify="right">
         <Button className={styles["cancel-btn"]} onClick={handleCancelBtnClick}>
