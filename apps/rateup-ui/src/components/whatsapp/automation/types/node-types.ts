@@ -1,7 +1,8 @@
 import type { Node } from "@xyflow/react";
 
-import { CatalogMessages } from "../components/node-editor.tsx";
 import { hasRealContent, safeStrOrNull } from "@/utils/index.ts";
+
+import { CatalogMessages } from "../components/node-editor.tsx";
 
 // Base node data interface with common properties
 export interface BaseNodeData {
@@ -305,8 +306,8 @@ export interface InstagramStoryReplyNodeData extends BaseNodeData {
 export interface InstagramProductTemplateNodeData extends BaseNodeData {
   elements: Array<{
     id: string;
-    retailer_id?: string;
   }>;
+  whatsappSettingsPhoneId?: string;
 }
 
 export interface InstagramIceBreakerNodeData extends BaseNodeData {

@@ -3182,6 +3182,30 @@ const InstagramProductTemplateNodeEditor: React.FC<
   NodeComponentProps<"instagramProductTemplateNode">
 > = ({ nodeData, handleInputChange }) => {
   const typedData = nodeData;
+  const params = useParams({ strict: false });
+  const flowbotId = params.flowbotId as string;
+  const { data: automation, isPending } = useWaAutomatedReplyById(flowbotId);
+  const { data: catalogData, isLoading } = useConnectedWaCatalog(
+    typedData.whatsappSettingsPhoneId || automation?.whatsappSettingsPhoneId,
+  );
+
+  const products = useMemo(
+    () =>
+      catalogData
+        ? catalogData.products.map((p) => ({
+            value: p.retailer_id,
+            label: p?.productProps?.title || p.retailer_id,
+          }))
+        : [],
+    [catalogData],
+  );
+
+  const selectedIds = useMemo(
+    () => (typedData.elements || []).map((el) => el.id),
+    [typedData.elements],
+  );
+
+  if (isPending || isLoading) return <RateupLoader />;
 
   return (
     <Stack gap={"xs"}>
@@ -3189,65 +3213,22 @@ const InstagramProductTemplateNodeEditor: React.FC<
         Products
       </Text>
       <Text size="xs" c="dimmed">
-        Add products from your Instagram catalog
+        Select up to 10 products from your catalog. A single product sends a
+        product message; multiple products send a carousel.
       </Text>
 
-      {(typedData.elements || []).map((element, index: number) => (
-        <Group key={index} gap="xs">
-          <ContainedTextField
-            flex={1}
-            label="Product ID"
-            placeholder="Enter product ID"
-            value={element.id || ""}
-            onChange={(e) => {
-              const newElements = [...(typedData.elements || [])];
-              newElements[index] = {
-                ...newElements[index],
-                id: e.target.value,
-              };
-              handleInputChange("elements", newElements);
-            }}
-          />
-          <ContainedTextField
-            flex={1}
-            label="Retailer ID (optional)"
-            placeholder="Retailer ID"
-            value={element.retailer_id || ""}
-            onChange={(e) => {
-              const newElements = [...(typedData.elements || [])];
-              newElements[index] = {
-                ...newElements[index],
-                retailer_id: e.target.value,
-              };
-              handleInputChange("elements", newElements);
-            }}
-          />
-          <ActionIcon
-            style={{ marginTop: "20px" }}
-            variant="subtle"
-            onClick={() => {
-              const newElements = [...(typedData.elements || [])];
-              newElements.splice(index, 1);
-              handleInputChange("elements", newElements);
-            }}
-          >
-            <IconX size={16} />
-          </ActionIcon>
-        </Group>
-      ))}
-
-      <Button
-        variant="outline"
-        onClick={() => {
-          const newElements = [
-            ...(typedData.elements || []),
-            { id: "", retailer_id: "" },
-          ];
+      <ContainedMultiSelect
+        label="Products"
+        placeholder="Select products"
+        data={products}
+        value={selectedIds}
+        onChange={(values) => {
+          const newElements = values.map((id) => ({ id }));
           handleInputChange("elements", newElements);
         }}
-      >
-        + Add Product
-      </Button>
+        searchable
+        maxValues={10}
+      />
     </Stack>
   );
 };

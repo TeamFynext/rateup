@@ -12,7 +12,6 @@ interface InstagramProductTemplateNodeData {
   label: string;
   elements?: Array<{
     id: string;
-    retailer_id?: string;
   }>;
 }
 
