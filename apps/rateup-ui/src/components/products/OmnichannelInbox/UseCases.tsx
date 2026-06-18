@@ -95,12 +95,12 @@ export default function UseCases() {
             />
             Built for growing teams
           </span>
-          <h2
+          <h6
             className="reveal d1 font-display font-black text-white leading-[1.06] tracking-[-0.025em] mt-5"
             style={{ fontSize: "clamp(32px,4.2vw,54px)" }}
           >
             Whether you're a team of 3 or 30
-          </h2>
+          </h6>
         </div>
 
         <div className="grid gap-5 grid-cols-1 md:grid-cols-3">
@@ -124,9 +124,9 @@ export default function UseCases() {
                 >
                   {icon}
                 </div>
-                <h3 className="font-display font-black text-white text-[16px] mb-3.5 tracking-[-0.01em]">
+                <h6 className="font-display font-black text-white text-[16px] mb-3.5 tracking-[-0.01em]">
                   {title}
-                </h3>
+                </h6>
                 <blockquote className="text-[14px] leading-[1.62] text-white/75 m-0 italic flex-1">
                   {quote}
                 </blockquote>

@@ -249,9 +249,9 @@ export default function Integrations() {
         </div>
 
         <div className={`${styles["intg-title"]} ${styles.reveal}`}>
-          <h2>
+          <h3>
             <span className={styles.b}>Seamless</span> Platform Integrations
-          </h2>
+          </h3>
           <p>
             Connect RateUp with your ecommerce store, CRM, payment gateway, and
             communication platforms to automate loyalty, rewards, and customer

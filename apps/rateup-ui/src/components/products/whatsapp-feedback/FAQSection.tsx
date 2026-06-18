@@ -103,9 +103,9 @@ export default function FAQSection() {
           <div className="inline-block text-[12px] font-bold tracking-[0.08em] uppercase text-white/60 bg-white/[0.08] border border-white/10 rounded-full py-1.5 px-4 mb-5">
             FAQ
           </div>
-          <h2 className="font-display font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-white">
+          <h6 className="font-display font-extrabold text-[clamp(30px,4vw,50px)] tracking-[-0.025em] leading-[1.08] text-white">
             Have Questions? We've Got Answers.
-          </h2>
+          </h6>
           <p className="mt-4 text-[17px] leading-[1.55] text-white/60">
             Find answers to common questions about RateUp and WhatsApp Surveys.
           </p>

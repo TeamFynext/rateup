@@ -104,12 +104,25 @@ export const pageMetadata: Record<string, PageMetadata> = {
       canonical: "/login/reset-password",
     },
   },
+  "/": {
+    title: "RateUp #1 AI Powered WhatsApp Marketing Platform",
+    description:
+      "RateUp is the #1 WhatsApp marketing platform for business - Unified tool for WhatsApp loyalty & WhatsApp Business API. Built with Meta's Official API. Start free.",
+    openGraph: {
+      title: "RateUp #1 AI Powered WhatsApp Marketing Platform",
+      description:
+        "RateUp is the #1 WhatsApp marketing platform for business - Unified tool for WhatsApp loyalty & WhatsApp Business API. Built with Meta's Official API. Start free.",
+    },
+    alternates: {
+      canonical: "",
+    },
+  },
   "/contact-us": {
-    title: "Contact RateUp Omnichannel Customer Engagement Platform",
+    title: "Contact RateUp AI Powered WhatsApp Marketing Platform",
     description:
       "Contact RateUp for support, WhatsApp Business API demos, pricing & omnichannel customer engagement solutions. Our team helps you scale communication faster.",
     openGraph: {
-      title: "Contact RateUp Omnichannel Customer Engagement Platform",
+      title: "Contact RateUp AI Powered WhatsApp Marketing Platform",
       description:
         "Contact RateUp for support, WhatsApp Business API demos, pricing & omnichannel customer engagement solutions. Our team helps you scale communication faster.",
     },
@@ -118,13 +131,11 @@ export const pageMetadata: Record<string, PageMetadata> = {
     },
   },
   "/about-us": {
-    title:
-      "About RateUp #1 AI Powered Omnichannel Customer Engagement Platform",
+    title: "About RateUp WhatsApp Loyalty & WhatsApp Business API Platform",
     description:
       "Learn about RateUp, the #1 AI-powered WhatsApp Business API & omnichannel customer engagement platform helping businesses turn chats into conversions.",
     openGraph: {
-      title:
-        "About RateUp #1 AI Powered Omnichannel Customer Engagement Platform",
+      title: "About RateUp WhatsApp Loyalty & WhatsApp Business API Platform",
       description:
         "Learn about RateUp, the #1 AI-powered WhatsApp Business API & omnichannel customer engagement platform helping businesses turn chats into conversions.",
     },
@@ -133,16 +144,44 @@ export const pageMetadata: Record<string, PageMetadata> = {
     },
   },
   "/products/whatsapp-loyalty": {
-    title: "Best Whatsapp Customer Loyalty Program Software by RateUp",
+    title: "Best Whatsapp Loyalty Program Software by RateUp",
     description:
-      "Boost customer retention with RateUp WhatsApp Customer Loyalty Program Software. Automate rewards, engage buyers, and grow repeat sales through AI-powered engagement flows.",
+      "RateUp's WhatsApp Loyalty Program rewards customers with points, tiers & referrals - no app required. Start free and increase your customer retention.",
     openGraph: {
-      title: "Best Whatsapp Customer Loyalty Program Software by RateUp",
+      title: "Best Whatsapp Loyalty Program Software by RateUp",
       description:
-        "Boost customer retention with RateUp WhatsApp Customer Loyalty Program Software. Automate rewards, engage buyers, and grow repeat sales through AI-powered engagement flows.",
+        "RateUp's WhatsApp Loyalty Program rewards customers with points, tiers & referrals - no app required. Start free and increase your customer retention.",
     },
     alternates: {
       canonical: "/products/whatsapp-loyalty",
+    },
+  },
+  "/products/omnichannel-inbox": {
+    title:
+      "Omnichannel Marketing Platform for WhatsApp Instagram, Messenger - RateUp",
+    description:
+      "WhatsApp, Instagram & Messenger chats in one unified inbox. RateUp Omnichannel inbox helps your team stop juggling tabs and reply faster. Start free.",
+    openGraph: {
+      title:
+        "Omnichannel Marketing Platform for WhatsApp Instagram, Messenger - RateUp",
+      description:
+        "WhatsApp, Instagram & Messenger chats in one unified inbox. RateUp Omnichannel inbox helps your team stop juggling tabs and reply faster. Start free.",
+    },
+    alternates: {
+      canonical: "/products/omnichannel-inbox",
+    },
+  },
+  "/products/whatsapp-feedback": {
+    title: "WhatsApp Customer Feedback & Survey Automation Tool - RateUp",
+    description:
+      "Collect customer feedback on WhatsApp - RateUp's WhatsApp Flows meet customers where they already are - boosting feedback by up to 35%. Start free.",
+    openGraph: {
+      title: "WhatsApp Customer Feedback & Survey Automation Tool - RateUp",
+      description:
+        "Collect customer feedback on WhatsApp - RateUp's WhatsApp Flows meet customers where they already are - boosting feedback by up to 35%. Start free.",
+    },
+    alternates: {
+      canonical: "/products/whatsapp-feedback",
     },
   },
   "/products/whatsapp-survey": {

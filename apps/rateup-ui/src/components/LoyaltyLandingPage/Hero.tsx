@@ -213,11 +213,9 @@ export default function Hero() {
               Trusted By 500+ Businesses
             </span>
             <h1>
-              Build Loyalty That
+              Loyalty + Referrals,
               <br />
-              Actually Works
-              <br />
-              <span className={styles.accent}>On WhatsApp.</span>
+              <span className={styles.accent}>fully automated on WhatsApp</span>
             </h1>
             <p className={styles.sub}>
               Reward customers, boost retention, and drive repeat purchases

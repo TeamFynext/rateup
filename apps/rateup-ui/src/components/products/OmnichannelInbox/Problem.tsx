@@ -17,14 +17,14 @@ export default function Problem() {
             />
             Sound familiar?
           </span>
-          <h2
+          <h6
             className="reveal d1 font-display font-black text-white leading-[1.06] tracking-[-0.025em] mt-5 mb-4"
             style={{ fontSize: "clamp(32px,4.2vw,54px)" }}
           >
             Your team is everywhere.
             <br />
             Your customers feel it.
-          </h2>
+          </h6>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3">
@@ -115,9 +115,9 @@ export default function Problem() {
               >
                 {icon}
               </div>
-              <h3 className="font-display font-black text-white text-[18px] leading-[1.25] mb-2.5 tracking-[-0.01em]">
+              <h6 className="font-display font-black text-white text-[18px] leading-[1.25] mb-2.5 tracking-[-0.01em]">
                 {title}
-              </h3>
+              </h6>
               <p className="text-[14px] leading-[1.58] text-white/50 m-0">
                 {body}
               </p>

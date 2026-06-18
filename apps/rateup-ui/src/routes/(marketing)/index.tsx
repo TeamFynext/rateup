@@ -5,6 +5,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
+import { buildPageHead } from "@/lib/metadata";
 import { useTrackVisitMutation } from "@/backend/referrals/referrals.query";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
 import Features from "@/components/RateupHomePage/shared/Features";
@@ -81,12 +82,7 @@ export const Route = createFileRoute("/(marketing)/")({
     return null;
   },
   head: () => ({
-    links: [
-      {
-        rel: "canonical",
-        href: rateupUrl,
-      },
-    ],
+    ...buildPageHead("/"),
     scripts: [
       {
         type: "application/ld+json",

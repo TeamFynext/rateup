@@ -49,12 +49,12 @@ export default function CTABand({ onAccess }: Props) {
             Now live — join 500+ brands
           </span>
 
-          <h2
+          <h3
             className="relative font-display font-black text-white leading-none tracking-[-0.025em] mb-3.5"
             style={{ fontSize: "clamp(28px,3.6vw,48px)" }}
           >
             Unify your customer conversations today.
-          </h2>
+          </h3>
           <p
             className="relative text-white/75 text-[17px] mx-auto mb-7"
             style={{ maxWidth: "480px" }}
@@ -77,10 +77,9 @@ export default function CTABand({ onAccess }: Props) {
               Sign Up for Free <ArrowRight />
             </button>
             <a
-              // href="https://wa.me/?text=Hi%20RateUp%2C%20I%27d%20like%20to%20learn%20about%20RateUp%20Inbox"
-
+              href="https://wa.me/9947005768?text=Hi%20RateUp%2C%20I%27d%20like%20to%20learn%20about%20RateUp%20Inbox"
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 font-bold text-[15px] text-white px-6 py-3.5 rounded-[11px] transition-all duration-200 hover:-translate-y-0.5 no-underline"
               style={{
                 background: "linear-gradient(180deg,#2BD367,#1FB855)",
