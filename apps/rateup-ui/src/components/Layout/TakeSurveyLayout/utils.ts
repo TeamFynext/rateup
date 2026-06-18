@@ -1,5 +1,9 @@
 function getBgImgAndBgColor(surveyThemeData, surveyThemeObjKey, isMobile) {
-  if (!surveyThemeData?.length || !surveyThemeObjKey) {
+  if (
+    !surveyThemeData ||
+    Object.keys(surveyThemeData).length === 0 ||
+    !surveyThemeObjKey
+  ) {
     return {
       backgroundColor: "#f7f7f7",
       backgroundImageSrc: "",
