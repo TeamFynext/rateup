@@ -521,16 +521,18 @@ async function handleInstagramProductTemplateNode(
   ibaId: string,
 ): Promise<void> {
   try {
-    const product = node.data?.product || {};
+    const productIds: string[] =
+      node.data?.productIds ||
+      (node.data?.product?.id ? [node.data.product.id] : []);
 
-    if (!product.id) {
+    if (productIds.length === 0) {
       log.warn(
-        `[Instagram Automation] Product template node ${node.id} has no product ID`,
+        `[Instagram Automation] Product template node ${node.id} has no product IDs`,
       );
       return;
     }
 
-    await sendInstagramProductTemplate(igsId, product, orgId, ibaId);
+    await sendInstagramProductTemplate(igsId, productIds, orgId, ibaId);
   } catch (error) {
     log.error(
       `[Instagram Automation] Error handling product template node ${node.id}: %o`,
