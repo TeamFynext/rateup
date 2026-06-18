@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   Box,
@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import { useCropperJS } from "@/hooks/useCropperJS.ts";
+import { Cropper, type CropperRef } from "@/components/Cropper/Cropper.tsx";
 import { mimeTypesForImage } from "@/utils/constants.ts";
 
 import styles from "./ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
@@ -41,26 +41,18 @@ export const ImageCropModal = ({
   const fileExtension = imageName?.split(".")?.pop()?.toLowerCase() ?? "jpg";
   const isUnsplashImage = !image?.startsWith("blob:");
 
-  const {
-    canvasRef,
-    imageRef,
-    selectionRef,
-    isReady,
-    getBounds,
-    getImageDimensions,
-    getCroppedCanvas,
-    scaleImage,
-  } = useCropperJS();
+  const cropperRef = useRef<CropperRef>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     if (isReady) {
-      scaleImage(scale);
+      cropperRef.current?.scaleImage(scale);
     }
-  }, [scale, isReady, scaleImage]);
+  }, [scale, isReady]);
 
   const generateCroppedLinkForUnsplash = () => {
-    const bounds = getBounds();
-    const dimensions = getImageDimensions();
+    const bounds = cropperRef.current?.getBounds();
+    const dimensions = cropperRef.current?.getImageDimensions();
 
     if (!bounds || !dimensions) return image;
 
@@ -94,7 +86,7 @@ export const ImageCropModal = ({
       handleCropImageSave(generatedUrl);
       onclose();
     } else {
-      getCroppedCanvas().then((croppedCanvas) => {
+      cropperRef.current?.getCroppedCanvas().then((croppedCanvas) => {
         croppedCanvas?.toBlob((blob) => {
           if (!blob) return;
           const file = new File([blob], imageName, {
@@ -109,14 +101,7 @@ export const ImageCropModal = ({
         }, mimeTypesForImage[fileExtension]);
       });
     }
-  }, [
-    isUnsplashImage,
-    fileExtension,
-    image,
-    imageName,
-    handleCropImageSave,
-    getCroppedCanvas,
-  ]);
+  }, [isUnsplashImage, fileExtension, image, imageName, handleCropImageSave]);
 
   return (
     <Modal
@@ -154,45 +139,13 @@ export const ImageCropModal = ({
           loaderProps={{ type: "bars" }}
         />
 
-        <cropper-canvas
-          ref={canvasRef}
-          style={{ height: "100%", width: "100%" }}
-          background
-        >
-          <cropper-image
-            ref={imageRef}
-            src={image}
-            alt="crop"
-            rotatable
-            scalable
-            translatable
-          />
-          <cropper-selection
-            ref={selectionRef}
-            initial-aspect-ratio={aspect}
-            initial-coverage={0.8}
-            {...(!freeMode && { "aspect-ratio": aspect })}
-            movable
-            resizable
-            zoomable
-            keyboard
-          >
-            <cropper-grid role="grid" covered />
-            <cropper-crosshair centered />
-            <cropper-handle
-              action="move"
-              theme-color="rgba(255, 255, 255, 0.35)"
-            />
-            <cropper-handle action="n-resize" />
-            <cropper-handle action="e-resize" />
-            <cropper-handle action="s-resize" />
-            <cropper-handle action="w-resize" />
-            <cropper-handle action="ne-resize" />
-            <cropper-handle action="nw-resize" />
-            <cropper-handle action="se-resize" />
-            <cropper-handle action="sw-resize" />
-          </cropper-selection>
-        </cropper-canvas>
+        <Cropper
+          ref={cropperRef}
+          src={image}
+          aspectRatio={aspect}
+          freeMode={freeMode}
+          onReady={() => setIsReady(true)}
+        />
       </Box>
       <Group className={styles["cancel-save-btn-container"]} justify="right">
         <Button className={styles["cancel-btn"]} onClick={handleCancelBtnClick}>
