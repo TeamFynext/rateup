@@ -9,8 +9,8 @@ import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { getInstagramWebhookEvent } from "./instagram.util.js";
 import { InstagramEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
-import { handleInstagramAutomation } from "./instagram_automation_handler.js";
 import { sendInstagramPrivateReply } from "./instagram_messaging.service.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
 
 export async function getIgUserDetailsFromMeta(igsId, ibaId) {
   const { pageAccessToken } = await getWaSettingsByIbaId(ibaId);
@@ -72,7 +72,7 @@ export async function handleInstagramWebhook(data: InstagramWebhookBody) {
           await handleInstagramReferral(data, waSettings);
           break;
         case InstagramEvent.STORY_MENTION:
-          await handleInstagramMessages(data, waSettings);
+          await handleInstagramStoryMentionRule(messaging, waSettings);
           break;
         case InstagramEvent.MESSAGE_REACTION:
           await handleInstagramMessageReaction(data, waSettings);
@@ -128,19 +128,58 @@ export async function handleInstagramComment(
     log.error(`[Instagram] Error storing comment ${commentId}: %o`, error);
   }
 
-  // Trigger automation with the comment text, passing commentId for private reply
   try {
-    await handleInstagramAutomation(
-      igsId,
-      text || "",
+    await checkAndExecuteRuleByTriggerEvent("INSTAGRAM_COMMENT", {
       orgId,
-      ibaId,
-      { message: { mid: `ig_comment_${commentId}`, text } },
-      commentId,
-    );
+      phoneNumberId: ibaId,
+      message: text || "",
+      phone: igsId,
+      instagramMediaId: comment.media?.id,
+      platform: "INSTAGRAM",
+    });
   } catch (error) {
     log.error(
-      `[Instagram] Error in automation handler for comment ${commentId}: %o`,
+      `[Instagram] Error in rule execution for comment ${commentId}: %o`,
+      error,
+    );
+  }
+}
+
+async function handleInstagramStoryMentionRule(
+  messaging: InstagramWebhookBody["entry"][0]["messaging"][0],
+  waSettings: { orgId: string; ibaId: string },
+) {
+  const { orgId, ibaId } = waSettings;
+  const { sender, message } = messaging;
+  const { mid } = message;
+  if (message.is_echo) return;
+
+  // Handle message storage
+  await handleWaMessages(
+    "receive",
+    messaging,
+    sender.id,
+    orgId,
+    PlatformType.INSTAGRAM,
+    ibaId,
+    undefined,
+    mid,
+  );
+  try {
+    const storyAttachment = messaging.message?.attachments?.find(
+      (a) => a.type === "story_mention",
+    );
+    await checkAndExecuteRuleByTriggerEvent("INSTAGRAM_STORY_MENTION", {
+      orgId: waSettings.orgId,
+      phoneNumberId: waSettings.ibaId,
+      message: messaging.message?.text || "",
+      phone: messaging.sender.id,
+      instagramMediaId: storyAttachment?.payload?.url,
+      platform: "INSTAGRAM",
+    });
+  } catch (error) {
+    log.error(
+      "[Instagram] Error in rule execution for story mention: %o",
       error,
     );
   }
@@ -167,21 +206,16 @@ export async function handleInstagramMessages(
     mid,
   );
 
-  // Handle Instagram automation - wrapped in try-catch to isolate errors
   try {
-    await handleInstagramAutomation(
-      sender.id,
-      message.text || "",
+    await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
       orgId,
-      ibaId,
-      data.entry[0].messaging[0],
-    );
+      phoneNumberId: ibaId,
+      message: message.text || "",
+      phone: sender.id,
+      platform: "INSTAGRAM",
+    });
   } catch (error) {
-    log.error(
-      `[Instagram] Error in automation handler (isolated - not affecting message processing): %o`,
-      error,
-    );
-    // Error is caught and logged but doesn't affect message handling
+    log.error(`[Instagram] Error in rule execution for message: %o`, error);
   }
 }
 
@@ -223,13 +257,13 @@ export async function handleInstagramPostback(
       `ig_postback_${timestamp}`,
     );
 
-    await handleInstagramAutomation(
-      sender.id,
-      postback.payload,
+    await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
       orgId,
-      ibaId,
-      messaging,
-    );
+      phoneNumberId: ibaId,
+      message: postback.payload,
+      phone: sender.id,
+      platform: "INSTAGRAM",
+    });
   } catch (error) {
     log.error(
       `[Instagram] Error handling postback from user ${sender.id}: %o`,
@@ -282,13 +316,13 @@ export async function handleInstagramReferral(
       `ig_referral_${timestamp}`,
     );
 
-    await handleInstagramAutomation(
-      sender.id,
-      referralText,
+    await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
       orgId,
-      ibaId,
-      messaging,
-    );
+      phoneNumberId: ibaId,
+      message: referralText,
+      phone: sender.id,
+      platform: "INSTAGRAM",
+    });
   } catch (error) {
     log.error(
       `[Instagram] Error handling referral from user ${sender.id}: %o`,

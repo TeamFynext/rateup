@@ -1016,6 +1016,7 @@ export async function handleAutomatedReply(
           phone,
           waMessage,
           buttonPayload: parsedMessage?.buttonPayload,
+          platform: "WHATSAPP",
         },
       );
 

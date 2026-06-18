@@ -1210,6 +1210,7 @@ export async function handleShopifyOrderEvents(webhook) {
     shopifyEvent: topic,
     shopifyProductIds: productIds,
     shopifyBody: body,
+    platform: "WHATSAPP",
   });
 
   // Loyalty integration: handle points only on payment, cancellation, or edit

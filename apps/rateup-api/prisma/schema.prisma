@@ -332,6 +332,7 @@ model Rule {
   orgId String @db.Uuid
 
   name                     String
+  platform                 RulePlatform @default(WHATSAPP)
   operator                 RuleOperator @default(AND) // AND / OR
   isActive                 Boolean      @default(true)
   triggerEvent             TriggerEvent
@@ -345,6 +346,12 @@ model Rule {
   updatedAt DateTime @updatedAt
 
   @@unique([name, orgId], name: "rule_name_org_id_unique")
+}
+
+enum RulePlatform {
+  WHATSAPP
+  INSTAGRAM
+  FACEBOOK
 }
 
 enum RuleOperator {
@@ -1617,6 +1624,7 @@ model RuleMessageBodyLock {
   id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt       DateTime      @default(now())
   messageBody     String
+  platform        RulePlatform  @default(WHATSAPP)
   businessHourId  String?       @db.Uuid
   businessHour    BusinessHour? @relation(fields: [businessHourId], references: [id], onDelete: Cascade)
   orgId           String        @db.Uuid
@@ -1624,7 +1632,7 @@ model RuleMessageBodyLock {
   ruleConditionId String        @unique @db.Uuid
   ruleCondition   RuleCondition @relation(fields: [ruleConditionId], references: [id], onDelete: Cascade)
 
-  @@unique([orgId, messageBody, businessHourId], name: "rule_message_body_org_businessHour_unique")
+  @@unique([orgId, messageBody, platform, businessHourId], name: "rule_message_body_org_platform_businessHour_unique")
 }
 
 enum WaAutomationProgressStatus {
