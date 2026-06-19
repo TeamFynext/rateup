@@ -1879,12 +1879,16 @@ export async function getWaMessageLogs(
       ? Prisma.sql`AND LOWER(ws.status) = LOWER(${status})`
       : Prisma.sql``;
 
+  const isNumericSearch = searchQuery && /^\d+$/.test(searchQuery.trim());
+
   const searchFilter =
     searchQuery && searchQuery.trim() !== ""
-      ? Prisma.sql`AND (
-          c.phone ILIKE ${`%${searchQuery}%`} OR
-          wm."messageBody"::text ILIKE ${`%${searchQuery}%`}
-        )`
+      ? isNumericSearch
+        ? Prisma.sql`AND c.phone ILIKE ${`%${searchQuery}%`}`
+        : Prisma.sql`AND (
+            c.phone ILIKE ${`%${searchQuery}%`} OR
+            wm."messageBody"::text ILIKE ${`%${searchQuery}%`}
+          )`
       : Prisma.sql``;
 
   const baseWhere = Prisma.sql`
@@ -1898,17 +1902,9 @@ export async function getWaMessageLogs(
       ${searchFilter}
   `;
 
-  /*
-  ---------------------------------------------------
-  1️⃣ COUNT QUERY (LIGHTWEIGHT)
-  ---------------------------------------------------
-  */
-
-  const countResult = await prisma.$queryRaw<[{ count: bigint }]>`
-    SELECT COUNT(*) AS count
-    FROM "WaMessage" wm
-    JOIN "Contact" c ON c.id = wm."contactId"
-    JOIN "WaMessageOrgTeamMap" motm ON motm."messageId" = wm.id
+  const statusJoin =
+    status && status !== "all"
+      ? Prisma.sql`
     LEFT JOIN LATERAL (
       SELECT
         CASE
@@ -1931,6 +1927,15 @@ export async function getWaMessageLogs(
           ) AS greatest_ts
       ) t
     ) ws ON true
+  `
+      : Prisma.sql``;
+
+  const countResult = await prisma.$queryRaw<[{ count: bigint }]>`
+    SELECT COUNT(*) AS count
+    FROM "WaMessage" wm
+    JOIN "Contact" c ON c.id = wm."contactId"
+    JOIN "WaMessageOrgTeamMap" motm ON motm."messageId" = wm.id
+    ${statusJoin}
     ${baseWhere}
   `;
 
@@ -1947,28 +1952,7 @@ export async function getWaMessageLogs(
     FROM "WaMessage" wm
     JOIN "Contact" c ON c.id = wm."contactId"
     JOIN "WaMessageOrgTeamMap" motm ON motm."messageId" = wm.id
-    LEFT JOIN LATERAL (
-      SELECT
-        CASE
-          WHEN failed_ts = greatest_ts THEN 'failed'
-          WHEN read_ts = greatest_ts THEN 'read'
-          WHEN delivered_ts = greatest_ts THEN 'delivered'
-          WHEN sent_ts = greatest_ts THEN 'sent'
-        END AS status
-      FROM (
-        SELECT
-          NULLIF(wm.stats->>'sent','')::timestamp      AS sent_ts,
-          NULLIF(wm.stats->>'delivered','')::timestamp AS delivered_ts,
-          NULLIF(wm.stats->>'read','')::timestamp      AS read_ts,
-          NULLIF(wm.stats->>'failed','')::timestamp    AS failed_ts,
-          GREATEST(
-            NULLIF(wm.stats->>'sent','')::timestamp,
-            NULLIF(wm.stats->>'delivered','')::timestamp,
-            NULLIF(wm.stats->>'read','')::timestamp,
-            NULLIF(wm.stats->>'failed','')::timestamp
-          ) AS greatest_ts
-      ) t
-    ) ws ON true
+    ${statusJoin}
     ${baseWhere}
     ORDER BY wm."createdAt" DESC
     LIMIT ${limit}
