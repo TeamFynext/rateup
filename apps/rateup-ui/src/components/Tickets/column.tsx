@@ -2,19 +2,7 @@
 
 import { memo, useContext, useEffect, useRef, useState } from "react";
 
-import {
-  ActionIcon,
-  Button,
-  Group,
-  Menu,
-  Modal,
-  Paper,
-  Stack,
-  Textarea,
-  Title,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconFilter, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconDots, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
@@ -25,16 +13,30 @@ import {
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
+import { useTranslation } from "react-i18next";
 import invariant from "tiny-invariant";
 
 import { useBoard } from "@/backend/tickets/tickets.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 import { TicketType } from "@/utils/enums/ticket.ts";
 
 import { Card, CardShadow } from "./card.tsx";
 import { blockBoardPanningAttr } from "./data-attributes.ts";
-import { isSafari } from "./is-safari.ts";
 import { isShallowEqual } from "./is-shallow-equal.ts";
 import { SettingsContext } from "./settings-context.tsx";
 import type { BoardInfo, CardData, Column as ColumnType } from "./types.ts";
@@ -72,11 +74,6 @@ const stateStyles = {
 
 const idle = { type: "idle" } satisfies TColumnState;
 
-/**
- * A memoized component for rendering out the card.
- *
- * Created so that state changes to the column don't require all cards to be rendered
- */
 const CardList = memo(function CardList({
   column,
   onCardDelete,
@@ -122,17 +119,20 @@ export function Column({
   const headerRef = useRef<HTMLDivElement | null>(null);
   const innerRef = useRef<HTMLDivElement | null>(null);
   const { settings } = useContext(SettingsContext);
+  const { t } = useTranslation();
   const [state, setState] = useState<TColumnState>(idle);
-  const [isEditModalOpen, { open: openEditModal, close: closeEditModal }] =
-    useDisclosure(false);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const openEditModal = () => setIsEditModalOpen(true);
+  const closeEditModal = () => setIsEditModalOpen(false);
+
   const [editTitle, setEditTitle] = useState(column.title);
   const [selectedBoardId, setSelectedBoardId] = useState(currentBoardId || "");
 
-  // Add Card State
-  const [
-    isAddCardModalOpen,
-    { open: openAddCardModal, close: closeAddCardModal },
-  ] = useDisclosure(false);
+  const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
+  const openAddCardModal = () => setIsAddCardModalOpen(true);
+  const closeAddCardModal = () => setIsAddCardModalOpen(false);
+
   const [newCard, setNewCard] = useState<{
     title: string;
     description: string;
@@ -141,10 +141,8 @@ export function Column({
     description: "",
   });
 
-  // Get API mutation functions
   const { createCard, updateCard, deleteCard } = useBoard(currentBoardId || "");
 
-  // Update timestamp when modal opens
   const handleOpenAddCardModal = () => {
     openAddCardModal();
   };
@@ -253,20 +251,14 @@ export function Column({
               input: location.current.input,
             }),
             render({ container }) {
-              // Simple drag preview generation: just cloning the current element.
-              // Not using react for this.
-              const rect = inner.getBoundingClientRect();
-              const preview = inner.cloneNode(true);
-              invariant(preview instanceof HTMLElement);
-              preview.style.width = `${rect.width}px`;
-              preview.style.height = `${rect.height}px`;
-
-              // rotation of native drag previews does not work in safari
-              if (!isSafari()) {
-                preview.style.transform = "rotate(4deg)";
-              }
-
-              container.appendChild(preview);
+              setState({ type: "is-dragging" });
+              const el = document.createElement("div");
+              el.textContent = data.ticketColumn.title;
+              el.style.padding = "8px 16px";
+              el.style.backgroundColor = "white";
+              el.style.borderRadius = "4px";
+              el.style.boxShadow = "0 4px 6px -1px rgb(0 0 0 / 0.1)";
+              container.appendChild(el);
             },
           });
         },
@@ -365,22 +357,16 @@ export function Column({
 
   return (
     <div
-      style={{
-        display: "flex",
-        width: "18rem",
-        flexShrink: 0,
-        userSelect: "none",
-        flexDirection: "column",
-      }}
+      className="flex w-[85vw] max-w-[320px] md:w-72 shrink-0 select-none flex-col"
       ref={outerFullHeightRef}
     >
-      <Paper
+      <div
+        className="border-2 border-dashed border-border/40 rounded-xl"
         style={{
           display: "flex",
           maxHeight: "100%",
           flexDirection: "column",
-          borderRadius: "12px",
-          backgroundColor: "var(--board-bg)",
+          backgroundColor: "transparent",
           color: "var(--board-text)",
           ...stateStyles[state.type],
         }}
@@ -396,48 +382,57 @@ export function Column({
             visibility: state.type === "is-column-over" ? "hidden" : "visible",
           }}
         >
-          <Group
-            justify={"space-between"}
-            align={"center"}
-            bg={"white"}
-            p={"sm"}
-            pb={"xs"}
+          <div
+            className="flex items-center justify-between p-3 pb-2 group/column-header"
             ref={headerRef}
-            bd={"1px solid var(--light-blue-5)"}
-            style={{
-              borderTopLeftRadius: 12,
-              borderTopRightRadius: 12,
-              borderBottomColor: "white",
-            }}
           >
-            <Title order={5} c={"blue.9"}>
-              {column.title}
-            </Title>
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+              <h6 className="font-bold text-base text-foreground m-0">
+                {column.title}
+              </h6>
+            </div>
 
-            <Menu shadow="md" width={200} position="bottom-end">
-              <Menu.Target>
-                <ActionIcon variant="transparent" aria-label="More actions">
-                  <IconFilter color="black" size={20} />
-                </ActionIcon>
-              </Menu.Target>
+            <div className="flex items-center gap-1 transition-opacity">
+              <span className="flex h-5 items-center justify-center rounded-full bg-muted px-2 text-[11px] font-medium text-muted-foreground">
+                {column.ticketCards.length}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                onClick={handleOpenAddCardModal}
+              >
+                <IconPlus size={16} className="text-muted-foreground" />
+              </Button>
 
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconEdit size={14} />}
-                  onClick={openEditModal}
-                >
-                  Edit
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconTrash size={14} />}
-                  color="red"
-                  onClick={handleDelete}
-                >
-                  Delete
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Group>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0"
+                    aria-label="More actions"
+                  >
+                    <IconDots size={16} className="text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[150px]">
+                  <DropdownMenuItem onSelect={openEditModal}>
+                    <IconEdit size={14} className="mr-2" />
+                    {t("Edit")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                    onSelect={handleDelete}
+                  >
+                    <IconTrash size={14} className="mr-2" />
+                    {t("Delete")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
 
           <div
             style={{
@@ -445,10 +440,10 @@ export function Column({
               flexDirection: "column",
               overflowY: "auto",
               overflowAnchor: "none",
-              scrollbarColor: "var(--board-scrollbar) var(--board-bg) ",
+              scrollbarColor: "rgba(150, 150, 150, 0.2) transparent",
               scrollbarWidth: "thin",
-              transition: "height 0.3s ease-in-out", // Add smooth transition for height
-              minHeight: "50px", // Ensure column always has some height
+              transition: "height 0.3s ease-in-out",
+              minHeight: "50px",
             }}
             ref={scrollableRef}
             className="column-cards-container"
@@ -467,85 +462,96 @@ export function Column({
               </div>
             ) : null}
           </div>
-          <Group p={"sm"} px={28}>
+          <div className="p-2 pt-0 mt-2">
             <Button
-              radius={15}
-              leftSection={<IconPlus size={16} />}
-              variant="light"
+              variant="outline"
+              className="w-full bg-transparent text-muted-foreground border-dashed hover:bg-muted"
               onClick={handleOpenAddCardModal}
-              fullWidth
             >
-              Add a card
+              <IconPlus size={14} className="mr-2" />
+              {t("Add ticket")}
             </Button>
-          </Group>
+          </div>
         </div>
-      </Paper>
+      </div>
 
-      {/* Edit Column Modal */}
-      <Modal
-        opened={isEditModalOpen}
-        onClose={closeEditModal}
-        title="Edit Column"
-        size="sm"
+      <Dialog
+        open={isEditModalOpen}
+        onOpenChange={(open) => !open && closeEditModal()}
       >
-        <Stack gap="md">
-          <ContainedTextField
-            label="Title"
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            placeholder="Column title"
-            autoFocus
-          />
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("Edit Column")}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label>{t("Title")}</Label>
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder={t("Column title")}
+                autoFocus
+              />
+            </div>
 
-          <Group justify="right" mt="md">
-            <RateupButtonPrimary
-              variant="outline"
-              onClick={closeEditModal}
-              title="Cancel"
-            />
-            <RateupButtonPrimary onClick={handleSaveEdit} title="Save" />
-          </Group>
-        </Stack>
-      </Modal>
+            <div className="flex justify-end gap-2 mt-2">
+              <Button variant="outline" onClick={closeEditModal}>
+                {t("Cancel")}
+              </Button>
+              <Button onClick={handleSaveEdit}>{t("Save")}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      {/* Add Card Modal */}
-      <Modal
-        opened={isAddCardModalOpen}
-        onClose={closeAddCardModal}
-        title="Add Card"
-        size="md"
+      <Dialog
+        open={isAddCardModalOpen}
+        onOpenChange={(open) => !open && closeAddCardModal()}
       >
-        <Stack gap="md">
-          <ContainedTextField
-            label="Title"
-            value={newCard.title}
-            onChange={(e) =>
-              setNewCard((prev) => ({ ...prev, title: e.target.value }))
-            }
-            placeholder="Card title"
-            autoFocus
-            required
-          />
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("Add Card")}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label>
+                {t("Title")} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={newCard.title}
+                onChange={(e) =>
+                  setNewCard((prev) => ({ ...prev, title: e.target.value }))
+                }
+                placeholder={t("Card title")}
+                autoFocus
+                required
+              />
+            </div>
 
-          <Textarea
-            label="Description"
-            value={newCard.description}
-            onChange={(e) =>
-              setNewCard((prev) => ({ ...prev, description: e.target.value }))
-            }
-            placeholder="Enter card description..."
-            minRows={3}
-          />
-          <Group justify="right" mt="md">
-            <RateupButtonPrimary
-              variant="outline"
-              onClick={closeAddCardModal}
-              title="Cancel"
-            />
-            <RateupButtonPrimary onClick={handleAddCard} title="Save" />
-          </Group>
-        </Stack>
-      </Modal>
+            <div className="flex flex-col gap-2">
+              <Label>{t("Description")}</Label>
+              <Textarea
+                value={newCard.description}
+                onChange={(e) =>
+                  setNewCard((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                placeholder={t("Enter card description...")}
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 mt-2">
+              <Button variant="outline" onClick={closeAddCardModal}>
+                {t("Cancel")}
+              </Button>
+              <Button onClick={handleAddCard}>{t("Save")}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

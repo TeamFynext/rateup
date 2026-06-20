@@ -787,6 +787,7 @@ const ChatHeaderMenu = ({ contact }) => {
         opened={openedCreateTicket}
         type={TicketType.CUSTOM}
         hasTicketFeature={hasTicketFeature}
+        contactId={contact?.id}
       />
     </DropdownMenu>
   );

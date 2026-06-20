@@ -7,7 +7,9 @@ import {
   useSearch,
 } from "@tanstack/react-router";
 
+import { useContactById } from "@/backend/campaign/contacts/contacts.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import {
   ResizableHandle,
@@ -19,7 +21,9 @@ import WaInboxChatDisplay from "@/components/whatsapp/inbox/chatdisplay/index.ts
 import WaInboxChatSelect from "@/components/whatsapp/inbox/chatselect/index.tsx";
 import InboxSettings from "@/components/whatsapp/inbox/InboxSettings/index.tsx";
 
-import ChatDisplayContext, { useIsChatDisplayOpen } from "../../../components/dashboard/inbox/ChatDisplayContext.tsx";
+import ChatDisplayContext, {
+  useIsChatDisplayOpen,
+} from "../../../components/dashboard/inbox/ChatDisplayContext.tsx";
 import styles from "../../../components/dashboard/inbox/WhatsappInbox.module.css";
 
 export const Route = createFileRoute("/dashboard/inbox/")({
@@ -27,9 +31,47 @@ export const Route = createFileRoute("/dashboard/inbox/")({
 });
 
 function WhatsAppInbox() {
-  const searchParams: { tab?: string } = useSearch({ from: Route.id });
+  const searchParams: { tab?: string; contactId?: string } = useSearch({
+    from: Route.id,
+  });
   const tab = searchParams.tab;
+  const contactId = searchParams.contactId;
   const navigate = useNavigate();
+
+  const { selectedContact, setSelectedContact, contactsById } =
+    useContactsStore();
+  const { data: fetchedContact } = useContactById(
+    contactId && !contactsById.has(contactId) ? contactId : "",
+  );
+
+  useEffect(() => {
+    if (contactId && selectedContact?.id !== contactId) {
+      const contactFromStore = contactsById.get(contactId);
+      let consumed = false;
+      if (contactFromStore) {
+        setSelectedContact(contactFromStore);
+        consumed = true;
+      } else if (fetchedContact) {
+        setSelectedContact(fetchedContact);
+        consumed = true;
+      }
+      if (consumed) {
+        navigate({
+          to: "/dashboard/inbox",
+          search: { tab } as never,
+          replace: true,
+        });
+      }
+    }
+  }, [
+    contactId,
+    fetchedContact,
+    contactsById,
+    selectedContact?.id,
+    setSelectedContact,
+    navigate,
+    tab,
+  ]);
 
   useEffect(() => {
     if (!tab) {
