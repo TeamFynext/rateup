@@ -77,7 +77,7 @@ export default function MainSidebar({
           )}
 
           <div
-            className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-[#f9fafc] dark:bg-[#121212] relative`}
+            className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-ink-25 dark:bg-[#121212] relative`}
           >
             <LifecycleContext value={lifecycles || []}>
               <CustomFieldsProvider initialFields={customFieldData || []}>

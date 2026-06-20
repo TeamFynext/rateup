@@ -28,7 +28,7 @@ export function ModeToggle() {
 
   return (
     <Button
-      variant="outline"
+      variant="secondary"
       size="icon-sm"
       className="rounded-full h-8 w-8 mx-auto"
       onClick={handleToggleTheme}

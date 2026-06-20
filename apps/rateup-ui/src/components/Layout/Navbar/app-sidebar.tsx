@@ -270,7 +270,7 @@ function NavItemContent({
             <span
               className={`block truncate ${
                 item.isSectionHeader
-                  ? "text-[11px] font-bold text-muted-foreground uppercase tracking-wide"
+                  ? "text-[12px] font-bold text-muted-foreground tracking-wide"
                   : ""
               }`}
             >
@@ -731,7 +731,7 @@ export default function AppSidebar({
       />
       {/* Icon rail */}
       <Sidebar
-        className="w-(--sidebar-width-icon) border-r h-screen z-50"
+        className="w-(--sidebar-width-icon) border-r h-screen z-50 text-white!"
         collapsible="none"
       >
         <SidebarHeader>
@@ -823,7 +823,7 @@ export default function AppSidebar({
             <div className="flex w-full items-center justify-between group-data-[collapsible=icon]:justify-center">
               <h2 className="flex text-foreground text-lg gap-1 font-bold group-data-[collapsible=icon]:hidden">
                 {activeItem.icon && (
-                  <div className="rounded-md flex items-center justify-center shrink-0 size-7 text-primary">
+                  <div className="rounded-md flex items-center justify-center shrink-0 size-7">
                     <activeItem.icon className="ml-1 size-5 m-auto" />
                   </div>
                 )}
