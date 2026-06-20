@@ -133,7 +133,7 @@ export function useNavMain({
                     ...(lifecycles.length > 0
                       ? [
                           {
-                            title: "Lifecycle Stages",
+                            title: "Lifecycle",
                             isSectionHeader: true,
                             icon: LifecycleIcon,
                             showClearButton: !!chatFilterStore.filter.lifecycle,

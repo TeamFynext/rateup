@@ -115,49 +115,20 @@ const CatalogSettings = ({ catalogData }) => {
   if (isLoading) return <RateupLoader />;
   return (
     <Card className="flex flex-col gap-4 p-2">
-      <Field>
-        <FieldLabel>Catalog ID</FieldLabel>
-        <Input value={catalogData.catalogId} disabled />
-      </Field>
-      <Field>
-        <FieldLabel>Catalog Name</FieldLabel>
-        <Input value={catalogData.name} disabled />
-      </Field>
-      <Field>
-        <FieldLabel>Catalog Vertical</FieldLabel>
-        <Input value={catalogData.vertical} disabled />
-      </Field>
-
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <Field className="w-full sm:w-1/2">
           <FieldLabel>Connected WhatsApp Business Account ID</FieldLabel>
-          <div className="flex gap-4 mb-2">
-            <label className="flex items-center gap-1.5 cursor-pointer text-sm">
-              <input
-                type="radio"
-                name="connectMode"
-                value="automatic"
-                checked={connectMode === "automatic"}
-                onChange={() => setConnectMode("automatic")}
-                className="accent-primary"
-              />
-              <span>Automatic</span>
-              <span className="text-xs text-muted-foreground">
-                (sync with Meta)
-              </span>
-            </label>
-            <label className="flex items-center gap-1.5 cursor-pointer text-sm">
-              <input
-                type="radio"
-                name="connectMode"
-                value="manual"
-                checked={connectMode === "manual"}
-                onChange={() => setConnectMode("manual")}
-                className="accent-primary"
-              />
-              <span>Manual</span>
-              <span className="text-xs text-muted-foreground">(DB only)</span>
-            </label>
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-sm font-medium">Normal Account</span>
+            <Switch
+              checked={connectMode === "manual"}
+              onCheckedChange={(checked) =>
+                setConnectMode(checked ? "manual" : "automatic")
+              }
+            />
+            <span className="text-sm font-medium">
+              SMB (Coexistence Account)
+            </span>
           </div>
           <Select
             value={wabaId}
@@ -246,7 +217,7 @@ const CatalogSettings = ({ catalogData }) => {
         onClose={closeConnect}
         onConfirm={handleConnect}
         confirmLabel={"Connect"}
-        headerLabel={`Are you sure you want to connect this catalog to WhatsApp Business Account (WABA ID: ${wabaId})? Mode: ${connectMode === "automatic" ? "Automatic — will also update in Meta" : "Manual — DB only, no Meta update"}`}
+        headerLabel={`Are you sure you want to connect this catalog to WhatsApp Business Account (WABA ID: ${wabaId})? Mode: ${connectMode === "automatic" ? "Normal Account — will also update in Meta" : "SMB (Coexistence Account) — DB only, no Meta update"}`}
         headerTitle={"Connect Whatsapp Business Account"}
         loading={update.isPending}
         closeAfterOnConfirm={false}
