@@ -20,12 +20,14 @@ export async function createCardHandler(
       description?: string;
       ticketColumnId: string;
       type: TicketType;
+      contactId?: string;
     };
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { title, description, ticketColumnId, type } = request.body;
+    const { title, description, ticketColumnId, type, contactId } =
+      request.body;
     const userId = request.userId;
     const card = await createCard({
       title,
@@ -33,6 +35,7 @@ export async function createCardHandler(
       ticketColumnId,
       userId,
       type,
+      contactId,
       orgId: request.user.orgId,
     });
     return reply.code(201).send(card);

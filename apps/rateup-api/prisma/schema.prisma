@@ -726,6 +726,7 @@ model Contact {
   notes                       String?
   Conversations               Conversation[]
   loyaltyAccounts             CustomerLoyaltyAccount[]
+  ticketCards                 TicketCard[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -1437,6 +1438,7 @@ model TicketComment {
 model TicketBoard {
   id                     String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title                  String
+  description            String?
   ticketColumns          TicketColumn[]
   teams                  TicketBoardTeam[]
   ticketCreatedEmail     Boolean                   @default(false)
@@ -1444,6 +1446,7 @@ model TicketBoard {
   ticketAssignedEmail    Boolean                   @default(false)
   ticketAssignedWhatsapp Boolean                   @default(false)
   notificationRecipients TicketBoardNotification[]
+  createdAt              DateTime                  @default(now())
 }
 
 model TicketBoardNotification {
@@ -1493,6 +1496,8 @@ model TicketCard {
   surveyResponse            SurveyResponse?          @relation(fields: [surveyResponseId], references: [id])
   waAutomatedReplyMessageId String?                  @db.Uuid
   waAutomatedReplyMessage   WaAutomatedReplyMessage? @relation(fields: [waAutomatedReplyMessageId], references: [id])
+  contactId                 String?                  @db.Uuid
+  contact                   Contact?                 @relation(fields: [contactId], references: [id])
   ticketActivities          TicketActivity[]
   ticketComments            TicketComment[]
   assignees                 TicketCardAssignee[]
