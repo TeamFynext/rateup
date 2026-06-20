@@ -27,6 +27,8 @@ export interface Board {
     userId: string;
     boardId?: string;
   }>;
+  description?: string;
+  createdAt?: string | Date;
 }
 
 export interface BoardInfo {
@@ -41,6 +43,9 @@ export interface Column {
   teamId: string;
   ticketBoardId?: string;
   ticketCards: Card[];
+  _count?: {
+    ticketCards: number;
+  };
 }
 
 export interface Card {
@@ -64,6 +69,14 @@ export interface Card {
   }>;
   waAutomatedReplyMessageId?: string;
   waAutomatedReplyMessage?: WaAutomatedReplyMessage;
+  contactId?: string | null;
+  contact?: {
+    id: string;
+    name: string;
+    phone: string;
+    lastReceivedMessageTimeStamp?: string;
+    consent?: boolean;
+  } | null;
 }
 
 export interface surveyResponse {

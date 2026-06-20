@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import {
@@ -26,6 +20,8 @@ import {
   Plus,
   Trash,
   User,
+  UserPlus,
+  X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -303,7 +299,7 @@ function AssignContact({ ticketId }: { ticketId: string }) {
             variant="outline"
             className="w-full text-xs border-dashed flex gap-2 justify-start font-normal text-muted-foreground h-10"
           >
-            <Plus className="h-4 w-4" /> {t("Add Contact")}
+            <UserPlus className="h-4 w-4" /> {t("Add Contact")}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-72 p-0" align="start">
@@ -501,7 +497,20 @@ function RightSidebar({
             <div className="text-[11px] font-bold text-muted-foreground tracking-[0.07em] uppercase mb-2">
               {t("Customer")}
             </div>
-            <div className="border rounded-xl p-4 bg-card shadow-sm flex flex-col gap-4">
+            <div className="border rounded-xl p-4 bg-card shadow-sm flex flex-col gap-4 relative group">
+              {ticket.contactId && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mutate({ id: ticketId, contactId: null });
+                  }}
+                  className="absolute top-3 right-3 text-muted-foreground hover:text-red-500 transition-colors z-10 bg-background rounded-full p-1 border shadow-sm"
+                  title={t("Remove contact")}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
               <div className="flex items-center gap-3 relative">
                 <Avatar className="h-12 w-12 border bg-muted flex items-center justify-center">
                   <span className="font-semibold text-muted-foreground">

@@ -45,17 +45,26 @@ function WhatsAppInbox() {
   );
 
   useEffect(() => {
-    if (contactId && selectedContact?.id !== contactId) {
-      const contactFromStore = contactsById.get(contactId);
-      let consumed = false;
-      if (contactFromStore) {
-        setSelectedContact(contactFromStore);
-        consumed = true;
-      } else if (fetchedContact) {
-        setSelectedContact(fetchedContact);
-        consumed = true;
-      }
-      if (consumed) {
+    if (contactId) {
+      if (selectedContact?.id !== contactId) {
+        const contactFromStore = contactsById.get(contactId);
+        let consumed = false;
+        if (contactFromStore) {
+          setSelectedContact(contactFromStore);
+          consumed = true;
+        } else if (fetchedContact) {
+          setSelectedContact(fetchedContact);
+          consumed = true;
+        }
+        if (consumed) {
+          navigate({
+            to: "/dashboard/inbox",
+            search: { tab } as never,
+            replace: true,
+          });
+        }
+      } else {
+        // The chat is already selected, just consume the parameter to clear it from the URL
         navigate({
           to: "/dashboard/inbox",
           search: { tab } as never,

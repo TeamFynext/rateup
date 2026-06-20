@@ -69,7 +69,7 @@ type BoardListEntry = {
   readonly id: string;
   readonly title: string;
   readonly description?: string | null;
-  readonly createdAt?: string;
+  readonly createdAt?: string | Date;
   readonly totalTickets: number;
   readonly columnStats: Array<{ title: string; count: number }>;
   readonly teamIds: string[];
