@@ -263,6 +263,8 @@ export const useUpdateCardMutation = () => {
         id: "update-ticket-success",
       });
       queryClient.invalidateQueries({ queryKey: ["card"] });
+      queryClient.invalidateQueries({ queryKey: ["board"] });
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   });
 };

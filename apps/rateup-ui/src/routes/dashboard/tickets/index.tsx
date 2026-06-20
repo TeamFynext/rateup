@@ -6,17 +6,15 @@ import {
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
-import { Users } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { Calendar, LayoutPanelTop, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useBoardQueries } from "@/backend/tickets/tickets.query";
 import { useUserInfo } from "@/backend/user/user.query";
-import {
-  GenericActionCard,
-  GenericCardGrid,
-} from "@/components/common/generic-card.tsx";
+import { GenericCardGrid } from "@/components/common/generic-card.tsx";
 import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
@@ -47,14 +45,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover.tsx";
 import {
   Select,
   SelectContent,
@@ -64,7 +61,6 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 
-
 export const Route = createFileRoute("/dashboard/tickets/")({
   component: Page,
 });
@@ -72,6 +68,10 @@ export const Route = createFileRoute("/dashboard/tickets/")({
 type BoardListEntry = {
   readonly id: string;
   readonly title: string;
+  readonly description?: string | null;
+  readonly createdAt?: string | Date;
+  readonly totalTickets: number;
+  readonly columnStats: Array<{ title: string; count: number }>;
   readonly teamIds: string[];
   readonly teamNames: string[];
 };
@@ -79,6 +79,7 @@ type BoardListEntry = {
 type BoardFormState = {
   readonly id?: string;
   readonly title: string;
+  readonly description: string;
   readonly teamIds: string[];
 };
 
@@ -89,6 +90,7 @@ type TeamOption = {
 
 const EMPTY_BOARD_FORM: BoardFormState = {
   title: "",
+  description: "",
   teamIds: [],
 };
 
@@ -141,9 +143,25 @@ function Page() {
     return boards.map((board) => {
       const teamIds = board.teams.map((team) => team.teamId);
 
+      let totalTickets = 0;
+      const columnStats: Array<{ title: string; count: number }> = [];
+      if (board.ticketColumns) {
+        for (const col of board.ticketColumns) {
+          const count = col._count?.ticketCards || 0;
+          totalTickets += count;
+          if (count > 0) {
+            columnStats.push({ title: col.title, count });
+          }
+        }
+      }
+
       return {
         id: board.id,
         title: board.title,
+        description: board.description,
+        createdAt: board.createdAt,
+        totalTickets,
+        columnStats: columnStats.slice(0, 2),
         teamIds,
         teamNames: teamIds.map((teamId) => teamLookup.get(teamId) ?? teamId),
       } satisfies BoardListEntry;
@@ -172,6 +190,7 @@ function Page() {
 
     createBoard({
       title: newBoardData.title.trim(),
+      description: newBoardData.description.trim(),
       teamIds: newBoardData.teamIds,
     });
 
@@ -188,6 +207,7 @@ function Page() {
     setEditBoardData({
       id: board.id,
       title: board.title,
+      description: board.description || "",
       teamIds: board.teamIds,
     });
     setIsEditDialogOpen(true);
@@ -205,6 +225,7 @@ function Page() {
     updateBoard({
       id: editBoardData.id,
       title: editBoardData.title.trim(),
+      description: editBoardData.description.trim(),
       teamIds: editBoardData.teamIds,
     });
 
@@ -218,7 +239,9 @@ function Page() {
 
   const confirmDeleteBoard = () => {
     if (!isAdmin) {
-      toast.warning("Only admin or super admin can delete a board.");
+      toast.warning(
+        translations("Only admin or super admin can delete a board."),
+      );
       return;
     }
 
@@ -376,6 +399,8 @@ function BoardTeamFilter({
   value,
   onChange,
 }: Readonly<BoardTeamFilterProps>) {
+  const { t } = useTranslation();
+
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="min-w-42">
@@ -383,12 +408,12 @@ function BoardTeamFilter({
           <div className="flex size-7 items-center justify-center rounded-md bg-muted">
             <Users className="size-4 text-muted-foreground" />
           </div>
-          <SelectValue placeholder="Team" />
+          <SelectValue placeholder={t("Team")} />
         </div>
       </SelectTrigger>
       <SelectContent align="end">
         <SelectGroup>
-          <SelectItem value="all">All Teams</SelectItem>
+          <SelectItem value="all">{t("All Teams")}</SelectItem>
           {teamOptions.map((team) => (
             <SelectItem key={team.value} value={team.value}>
               {team.label}
@@ -442,72 +467,118 @@ function BoardListCard({
   onEdit,
   onDelete,
 }: Readonly<BoardListCardProps>) {
-  const visibleTeamNames = board.teamNames.slice(0, 3);
-  const extraTeams = Math.max(
-    board.teamNames.length - visibleTeamNames.length,
-    0,
-  );
-
-  const menu = (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <IconDots size={20} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <DropdownMenuItem onClick={() => onEdit(board.id)}>
-          <IconEdit size={16} className="mr-2" />
-          Edit board
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          variant="destructive"
-          onClick={() => onDelete(board.id)}
-        >
-          <IconTrash size={16} className="mr-2" />
-          Delete board
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-
-  const content = (
-    <div className="flex flex-wrap gap-2">
-      {visibleTeamNames.map((teamName) => (
-        <Badge key={teamName} variant="secondary" className="text-xs">
-          {teamName}
-        </Badge>
-      ))}
-      {extraTeams ? (
-        <Badge variant="outline" className="text-xs">
-          +{extraTeams} more
-        </Badge>
-      ) : null}
-    </div>
-  );
+  const [hovered, setHovered] = useState(false);
+  const { t } = useTranslation();
 
   return (
-    <GenericActionCard
-      title={board.title}
-      titleTooltip={board.title}
-      subtitle={
-        board.teamNames.length === 1
-          ? "1 team assigned"
-          : `${board.teamNames.length} teams assigned`
-      }
-      actions={menu}
-      content={content}
-      footerLeft={<Badge variant="default">Board</Badge>}
+    <div
       onClick={() => onSelect(board.id)}
-    />
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="bg-card rounded-xl p-5 cursor-pointer border transition-all duration-150 flex flex-col h-full hover:shadow-md hover:-translate-y-0.5"
+    >
+      <div className="flex items-start gap-2.5">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <div className="font-bold text-lg tracking-[-0.01em] leading-tight truncate">
+              {board.title}
+            </div>
+            {board.teamNames.length > 0 && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <span className="text-[10px] text-muted-foreground font-normal cursor-pointer hover:text-foreground shrink-0 mt-1">
+                    ({board.teamNames.slice(0, 2).join(", ")}
+                    {board.teamNames.length > 2 ? ", ..." : ""})
+                  </span>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-auto p-3">
+                  <div className="text-xs font-bold mb-2">
+                    {t("Assigned Teams")}
+                  </div>
+                  <ul className="text-sm space-y-1">
+                    {board.teamNames.map((name, i) => (
+                      <li key={i}>{name}</li>
+                    ))}
+                  </ul>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
+          <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+            {board.description || t("No description")}
+          </div>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 -mt-1 rounded-md shrink-0"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <IconDots size={18} stroke={2} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <DropdownMenuItem onClick={() => onEdit(board.id)}>
+              <IconEdit size={16} className="mr-2" />
+              {t("Edit")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => onDelete(board.id)}
+            >
+              <IconTrash size={16} className="mr-2" />
+              {t("Delete")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div className="flex items-center gap-2 mt-4 flex-wrap">
+        <span className="font-semibold text-sm">
+          {board.totalTickets}{" "}
+          {board.totalTickets !== 1 ? t("tickets") : t("ticket")}
+        </span>
+        {board.columnStats.map((stat, i) => {
+          const colors =
+            i % 2 === 0
+              ? "bg-red-50 text-red-600 border-red-100"
+              : "bg-orange-50 text-orange-600 border-orange-100";
+          return (
+            <span
+              key={i}
+              className={`text-[10px] h-[22px] px-2 flex items-center font-medium rounded-full border ${colors}`}
+            >
+              {stat.count} {stat.title.toLowerCase()}
+            </span>
+          );
+        })}
+      </div>
+
+      <div className="flex-1" />
+
+      <div className="h-px bg-border my-4" />
+
+      <div className="flex items-center justify-between mt-auto">
+        <Badge variant="secondary" className="text-xs">
+          {t("Active")}
+        </Badge>
+        {board.createdAt && (
+          <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+            <Calendar className="w-3.5 h-3.5" />
+            {t("Created")}{" "}
+            {formatDistanceToNow(new Date(board.createdAt), {
+              addSuffix: true,
+            })}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -525,8 +596,8 @@ type BoardFormDialogProps = {
 
 function BoardFormDialog({
   open,
-  title,
-  description,
+  title: modalTitle,
+  description: modalDescription,
   submitLabel,
   teamOptions,
   value,
@@ -535,21 +606,38 @@ function BoardFormDialog({
   onSubmit,
 }: Readonly<BoardFormDialogProps>) {
   const isSubmitDisabled = !value.title.trim() || value.teamIds.length === 0;
+  const { t } = useTranslation();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+      <DialogContent className="sm:max-w-[480px]">
+        {/* We use visually hidden elements for accessibility if we don't want the default DialogTitle/DialogDescription to break our layout. 
+            However, DialogTitle is required for screen readers, so we include it visually hidden if needed, or wrap our visual title. */}
+        <DialogHeader className="hidden">
+          <DialogTitle>{modalTitle}</DialogTitle>
+          <DialogDescription>{modalDescription}</DialogDescription>
         </DialogHeader>
 
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor="board-title">Board title</FieldLabel>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <LayoutPanelTop className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <div className="font-bold text-xl">{modalTitle}</div>
+            <div className="text-sm text-muted-foreground">
+              {modalDescription}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          <div>
+            <div className="text-xs font-bold text-muted-foreground tracking-wider uppercase mb-1.5">
+              {t("Board Name")} *
+            </div>
             <Input
               id="board-title"
-              placeholder="Enter board title"
+              placeholder={t("e.g. Customer Support, Bug Tracker…")}
               value={value.title}
               onChange={(event) =>
                 onChange({
@@ -557,13 +645,33 @@ function BoardFormDialog({
                   title: event.currentTarget.value,
                 })
               }
+              className="text-sm shadow-none focus-visible:ring-0 focus-visible:border-primary transition-colors"
             />
-          </Field>
+          </div>
 
-          <Field>
-            <FieldLabel>Teams</FieldLabel>
+          <div>
+            <div className="text-xs font-bold text-muted-foreground tracking-wider uppercase mb-1.5">
+              {t("Description")}
+            </div>
+            <Input
+              placeholder={t("What kind of work lives here?")}
+              value={value.description || ""}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  description: event.currentTarget.value,
+                })
+              }
+              className="text-sm shadow-none focus-visible:ring-0 focus-visible:border-primary transition-colors"
+            />
+          </div>
+
+          <div>
+            <div className="text-xs font-bold text-muted-foreground tracking-wider uppercase mb-1.5">
+              {t("Teams")}
+            </div>
             <MultiSelect
-              placeholder="Select teams"
+              placeholder={t("Select teams")}
               options={teamOptions}
               value={value.teamIds}
               onValueChange={(teamIds) =>
@@ -573,22 +681,28 @@ function BoardFormDialog({
                 })
               }
               searchable
-              className="w-full"
+              className="w-full text-sm shadow-none"
               emptyIndicator={
-                <p className="text-center text-sm">No teams found</p>
+                <p className="text-center text-sm">{t("No teams found")}</p>
               }
             />
-            <FieldDescription>
-              Choose the teams that can work inside this board.
-            </FieldDescription>
-          </Field>
-        </FieldGroup>
+            <div className="text-xs text-muted-foreground mt-2">
+              {t("Choose the teams that can work inside this board.")}
+            </div>
+          </div>
+        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+        <DialogFooter className="mt-6 flex gap-2 justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+            className="text-muted-foreground"
+          >
+            {t("Cancel")}
           </Button>
-          <Button onClick={onSubmit} disabled={isSubmitDisabled}>
+          <Button size="sm" onClick={onSubmit} disabled={isSubmitDisabled}>
+            <LayoutPanelTop className="w-4 h-4 mr-2" />
             {submitLabel}
           </Button>
         </DialogFooter>

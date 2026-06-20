@@ -19,6 +19,7 @@ import {
   IconSitemap,
   IconTemplate,
   IconTerminal2,
+  IconTicket,
   IconUser,
   IconUsers,
   IconWaveSine,
@@ -545,17 +546,17 @@ export function useNavMain({
             },
           ]
         : []),
-      // ...(hasFeature(subscription, sfpn.Ticket) &&
-      // hasTeamFeature(TeamFeature.Tickets)
-      //   ? [
-      //       {
-      //         title: t("Tickets"),
-      //         url: "/dashboard/tickets",
-      //         icon: IconTicket,
-      //         items: [],
-      //       },
-      //     ]
-      //   : []),
+      ...(hasFeature(subscription, sfpn.Ticket) &&
+      hasTeamFeature(TeamFeature.Tickets)
+        ? [
+            {
+              title: t("Tickets"),
+              url: "/dashboard/tickets",
+              icon: IconTicket,
+              items: [],
+            },
+          ]
+        : []),
       ...(hasTeamFeature(TeamFeature.QrStudio)
         ? [
             {
