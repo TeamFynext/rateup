@@ -26,6 +26,7 @@ export interface CardInput {
   reviewId?: string;
   waAutomatedReplyMessageId?: string;
   surveyResponseId?: string;
+  contactId?: string;
 }
 
 //used in zapier also
@@ -47,6 +48,7 @@ export async function createCard(data: CardInput) {
       title,
       order,
       ticketId: getShortUrlId(),
+      priority: "MEDIUM",
     },
     include: {
       ticketColumn: {
@@ -156,6 +158,15 @@ export async function getCardById(id: string) {
           assigneeId: true,
         },
       },
+      contact: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          lastReceivedMessageTimeStamp: true,
+          consent: true,
+        },
+      },
       ticketActivities: {
         include: {
           user: {
@@ -188,6 +199,7 @@ export async function getCardById(id: string) {
               name: true,
               phone: true,
               lastReceivedMessageTimeStamp: true,
+              consent: true,
             },
           },
           surveyTeamMap: {
@@ -228,6 +240,7 @@ export async function getCardById(id: string) {
         name: true,
         phone: true,
         lastReceivedMessageTimeStamp: true,
+        consent: true,
       },
     });
     (ticketCard.waAutomatedReplyMessage as any).contact = contact;
@@ -267,17 +280,23 @@ export async function updateCard(
   const card = await prisma.ticketCard.update({
     where: { id },
     data: {
-      title: data.title,
-      description: data.description,
-      priority: data.priority || null,
-      deadline: data.deadline || null,
-      assignees: {
-        deleteMany: {},
-        createMany: {
-          skipDuplicates: true,
-          data: data.assignedToIds?.map((id) => ({ assigneeId: id })) || [],
-        },
-      },
+      title: data.title !== undefined ? data.title : undefined,
+      description:
+        data.description !== undefined ? data.description : undefined,
+      priority: data.priority !== undefined ? data.priority : undefined,
+      deadline: data.deadline !== undefined ? data.deadline : undefined,
+      contactId: data.contactId !== undefined ? data.contactId : undefined,
+      ...(data.assignedToIds !== undefined
+        ? {
+            assignees: {
+              deleteMany: {},
+              createMany: {
+                skipDuplicates: true,
+                data: data.assignedToIds.map((id) => ({ assigneeId: id })),
+              },
+            },
+          }
+        : {}),
     },
     include: {
       //for zapier
@@ -301,7 +320,7 @@ export async function updateCard(
       },
     },
   });
-  if (!newAssignees.length) return;
+  if (!newAssignees || !newAssignees.length) return card;
 
   const users = await prisma.user.findMany({
     where: {

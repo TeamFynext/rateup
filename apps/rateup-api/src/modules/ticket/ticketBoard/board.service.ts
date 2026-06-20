@@ -10,6 +10,7 @@ export async function createBoard(
   return prisma.ticketBoard.create({
     data: {
       title: data.title,
+      description: data.description,
       teams: {
         createMany: {
           skipDuplicates: true,
@@ -45,7 +46,13 @@ export async function getBoards(userId: string) {
       },
     },
     include: {
-      ticketColumns: true,
+      ticketColumns: {
+        include: {
+          _count: {
+            select: { ticketCards: true },
+          },
+        },
+      },
       teams: true,
     },
     orderBy: {
@@ -63,6 +70,10 @@ export async function getBoardById(id: string) {
           ticketCards: {
             orderBy: {
               createdAt: "desc",
+            },
+            include: {
+              assignees: true,
+              ticketComments: true,
             },
           },
         },
@@ -86,28 +97,33 @@ export async function updateBoard(id: string, data: UpdateBoardRequestSchema) {
     where: { id },
     data: {
       title: data.title,
-      teams: {
-        deleteMany: {},
-        createMany: {
-          skipDuplicates: true,
-          data: data.teamIds?.map((teamId) => ({
-            teamId,
-          })),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.teamIds !== undefined && {
+        teams: {
+          deleteMany: {},
+          createMany: {
+            skipDuplicates: true,
+            data: data.teamIds.map((teamId) => ({
+              teamId,
+            })),
+          },
         },
-      },
+      }),
       ticketCreatedEmail: data.ticketCreatedEmail,
       ticketCreatedWhatsapp: data.ticketCreatedWhatsapp,
       ticketAssignedEmail: data.ticketAssignedEmail,
       ticketAssignedWhatsapp: data.ticketAssignedWhatsapp,
-      notificationRecipients: {
-        deleteMany: {},
-        createMany: {
-          skipDuplicates: true,
-          data: data.assignedToIds?.map((userId) => ({
-            userId,
-          })),
+      ...(data.assignedToIds !== undefined && {
+        notificationRecipients: {
+          deleteMany: {},
+          createMany: {
+            skipDuplicates: true,
+            data: data.assignedToIds.map((userId) => ({
+              userId,
+            })),
+          },
         },
-      },
+      }),
     },
   });
 }

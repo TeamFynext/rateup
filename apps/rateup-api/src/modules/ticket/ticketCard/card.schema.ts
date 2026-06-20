@@ -12,6 +12,7 @@ const cardCore = {
   ticketColumnId: z.uuid(),
   order: z.number().optional(),
   type: z.enum(TicketType).optional(),
+  contactId: z.string().uuid().optional(),
 };
 
 // Schema for creating a card
@@ -29,18 +30,12 @@ const createCardResponseSchema = z.object({
 // Schema for updating a card
 const updateCardRequestSchema = z.object({
   id: z.string(),
-  title: z.string().min(1, "Title is required"),
+  title: z.string().min(1, "Title is required").optional(),
   assignedToIds: z.array(z.uuid()).optional(),
   priority: z.enum(TicketPriority).optional().nullable(),
-  deadline: z
-    .date({
-      error: (issue) =>
-        issue.input === undefined
-          ? "Deadline is required"
-          : "Invalid date format",
-    })
-    .nullable(),
+  deadline: z.coerce.date().optional().nullable(),
   description: z.string().optional(),
+  contactId: z.string().uuid().optional().nullable(),
 });
 
 // Schema for moving a card to another column

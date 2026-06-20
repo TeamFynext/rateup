@@ -20,9 +20,9 @@ export async function createBoardHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { title, teamIds } = request.body;
+    const { title, description, teamIds } = request.body;
     const userId = request.userId;
-    const board = await createBoard({ title, teamIds, userId });
+    const board = await createBoard({ title, description, teamIds, userId });
     await createColumn({
       title: "To Do",
       ticketBoardId: board.id,
