@@ -2,7 +2,13 @@
 
 import { memo, useContext, useEffect, useRef, useState } from "react";
 
-import { IconDots, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconDots,
+  IconEdit,
+  IconPlus,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
@@ -13,6 +19,7 @@ import {
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
+import { Ticket } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import invariant from "tiny-invariant";
 
@@ -30,12 +37,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { TicketType } from "@/utils/enums/ticket.ts";
 
-import { Card, CardShadow } from "./card.tsx";
+import { Input } from "../ui/input.tsx";
+import { Card, CardShadow, PRIORITY_CONFIG } from "./card.tsx";
 import { blockBoardPanningAttr } from "./data-attributes.ts";
 import { isShallowEqual } from "./is-shallow-equal.ts";
 import { SettingsContext } from "./settings-context.tsx";
@@ -123,6 +130,11 @@ export function Column({
   const [state, setState] = useState<TColumnState>(idle);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [newCard, setNewCard] = useState({
+    title: "",
+    description: "",
+    priority: "MEDIUM",
+  });
   const openEditModal = () => setIsEditModalOpen(true);
   const closeEditModal = () => setIsEditModalOpen(false);
 
@@ -132,14 +144,6 @@ export function Column({
   const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
   const openAddCardModal = () => setIsAddCardModalOpen(true);
   const closeAddCardModal = () => setIsAddCardModalOpen(false);
-
-  const [newCard, setNewCard] = useState<{
-    title: string;
-    description: string;
-  }>({
-    title: "",
-    description: "",
-  });
 
   const { createCard, updateCard, deleteCard } = useBoard(currentBoardId || "");
 
@@ -187,10 +191,11 @@ export function Column({
       description: newCard.description || "",
       ticketColumnId: column.id,
       type: TicketType.CUSTOM,
+      priority: newCard.priority as any,
     });
 
     // Reset and close modal
-    setNewCard({ title: "", description: "" });
+    setNewCard({ title: "", description: "", priority: "MEDIUM" });
     closeAddCardModal();
   };
 
@@ -357,23 +362,26 @@ export function Column({
 
   return (
     <div
-      className="flex w-[85vw] max-w-[320px] md:w-72 shrink-0 select-none flex-col"
+      className="w-[282px] shrink-0 flex flex-col max-h-full"
       ref={outerFullHeightRef}
     >
       <div
-        className="border-2 border-dashed border-border/40 rounded-xl"
+        className="transition-all duration-150"
         style={{
           display: "flex",
           maxHeight: "100%",
           flexDirection: "column",
-          backgroundColor: "transparent",
+          backgroundColor:
+            state.type === "is-column-over"
+              ? "var(--is-column-over, rgba(0,0,0,0.05))"
+              : "transparent",
           color: "var(--board-text)",
-          ...stateStyles[state.type],
+          opacity: state.type === "is-dragging" ? 0.4 : 1,
+          cursor: state.type === "idle" ? "grab" : "default",
         }}
         ref={innerRef}
         {...{ [blockBoardPanningAttr]: true }}
       >
-        {/* Extra wrapping element to make it easy to toggle visibility of content when a column is dragging over */}
         <div
           style={{
             display: "flex",
@@ -383,55 +391,54 @@ export function Column({
           }}
         >
           <div
-            className="flex items-center justify-between p-3 pb-2 group/column-header"
+            className="flex items-center gap-[7px] px-3 py-2.5 mb-2 group/column-header"
             ref={headerRef}
           >
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-              <h6 className="font-bold text-base text-foreground m-0">
-                {column.title}
-              </h6>
-            </div>
+            <span className="w-[9px] h-[9px] rounded-full shrink-0 bg-slate-400" />
+            <span className="font-display font-extrabold text-[13.5px] text-foreground flex-1 tracking-tight truncate">
+              {column.title}
+            </span>
+            <span
+              className="font-body text-[11px] font-bold rounded-full"
+              style={{
+                color: "#1e293b",
+                background: "#f1f5f9",
+                padding: "2px 8px",
+              }}
+            >
+              {column.ticketCards.length}
+            </span>
 
-            <div className="flex items-center gap-1 transition-opacity">
-              <span className="flex h-5 items-center justify-center rounded-full bg-muted px-2 text-[11px] font-medium text-muted-foreground">
-                {column.ticketCards.length}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 shrink-0"
-                onClick={handleOpenAddCardModal}
-              >
-                <IconPlus size={16} className="text-muted-foreground" />
-              </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="w-[22px] h-[22px] rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted opacity-0 group-hover/column-header:opacity-100"
+                  aria-label="More actions"
+                >
+                  <IconDots size={16} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[150px]">
+                <DropdownMenuItem onSelect={openEditModal}>
+                  <IconEdit size={14} className="mr-2" />
+                  {t("Edit")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                  onSelect={handleDelete}
+                >
+                  <IconTrash size={14} className="mr-2" />
+                  {t("Delete")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 shrink-0"
-                    aria-label="More actions"
-                  >
-                    <IconDots size={16} className="text-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[150px]">
-                  <DropdownMenuItem onSelect={openEditModal}>
-                    <IconEdit size={14} className="mr-2" />
-                    {t("Edit")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                    onSelect={handleDelete}
-                  >
-                    <IconTrash size={14} className="mr-2" />
-                    {t("Delete")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <button
+              onClick={handleOpenAddCardModal}
+              className="w-[22px] h-[22px] rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted hover:text-primary"
+            >
+              <IconPlus size={13} strokeWidth={2.5} />
+            </button>
           </div>
 
           <div
@@ -442,36 +449,48 @@ export function Column({
               overflowAnchor: "none",
               scrollbarColor: "rgba(150, 150, 150, 0.2) transparent",
               scrollbarWidth: "thin",
-              transition: "height 0.3s ease-in-out",
-              minHeight: "50px",
+              transition: "all 0.15s",
+              minHeight: "80px",
+              padding: "4px",
+              gap: "7px",
+              borderRadius: "12px",
+              background:
+                state.type === "is-card-over"
+                  ? "rgba(30, 64, 175, 0.04)"
+                  : "transparent",
+              border:
+                state.type === "is-card-over"
+                  ? "2px dashed rgba(30, 64, 175, 0.3)"
+                  : "2px dashed transparent",
             }}
             ref={scrollableRef}
-            className="column-cards-container"
+            className="column-cards-container flex-1"
           >
             <CardList column={column} onCardDelete={handleCardDelete} />
             {state.type === "is-card-over" && !state.isOverChildCard ? (
               <div
                 style={{
                   flexShrink: 0,
-                  padding: "0.75rem",
-                  paddingTop: "0.25rem",
-                  paddingBottom: "0.25rem",
                 }}
               >
                 <CardShadow dragging={state.dragging} />
               </div>
             ) : null}
+            {column.ticketCards.length === 0 &&
+              state.type !== "is-card-over" && (
+                <div className="h-14 flex items-center justify-center text-muted-foreground font-body text-xs border-2 border-dashed border-border rounded-lg">
+                  {t("No tickets")}
+                </div>
+              )}
           </div>
-          <div className="p-2 pt-0 mt-2">
-            <Button
-              variant="outline"
-              className="w-full bg-transparent text-muted-foreground border-dashed hover:bg-muted"
+          {isAddCardModalOpen ? null : (
+            <button
               onClick={handleOpenAddCardModal}
+              className="mx-1 mt-2 p-2 rounded-lg bg-transparent border-2 border-dashed border-border text-muted-foreground font-body text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 px-3 transition-all duration-150 hover:bg-muted/60 hover:text-foreground shrink-0"
             >
-              <IconPlus size={14} className="mr-2" />
-              {t("Add ticket")}
-            </Button>
-          </div>
+              <IconPlus size={16} strokeWidth={2.5} /> {t("Add ticket")}
+            </button>
+          )}
         </div>
       </div>
 
@@ -510,11 +529,11 @@ export function Column({
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("Add Card")}</DialogTitle>
+            <DialogTitle>{t("Add Ticket")}</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5 py-2">
             <div className="flex flex-col gap-2">
-              <Label>
+              <Label className="text-sm font-semibold">
                 {t("Title")} <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -522,14 +541,17 @@ export function Column({
                 onChange={(e) =>
                   setNewCard((prev) => ({ ...prev, title: e.target.value }))
                 }
-                placeholder={t("Card title")}
+                placeholder={t("e.g., Fix the navigation bug")}
+                className="h-10"
                 autoFocus
                 required
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>{t("Description")}</Label>
+              <Label className="text-sm font-semibold">
+                {t("Description")}
+              </Label>
               <Textarea
                 value={newCard.description}
                 onChange={(e) =>
@@ -538,17 +560,64 @@ export function Column({
                     description: e.target.value,
                   }))
                 }
-                placeholder={t("Enter card description...")}
-                rows={3}
+                placeholder={t("Add a more detailed description...")}
+                className="resize-none"
+                rows={4}
               />
             </div>
 
-            <div className="flex justify-end gap-2 mt-2">
-              <Button variant="outline" onClick={closeAddCardModal}>
-                {t("Cancel")}
-              </Button>
-              <Button onClick={handleAddCard}>{t("Save")}</Button>
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-semibold">{t("Priority")}</Label>
+              <div className="flex gap-2 flex-wrap">
+                {Object.entries(PRIORITY_CONFIG)
+                  .filter(([k]) => k !== "na")
+                  .map(([k, v]) => {
+                    const priorityKey = newCard.priority.toLowerCase();
+                    const isSelected = priorityKey === k;
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() =>
+                          setNewCard((prev) => ({
+                            ...prev,
+                            priority: k.toUpperCase(),
+                          }))
+                        }
+                        className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
+                        style={{
+                          padding: "4px 10px",
+                          border: isSelected
+                            ? `2px solid ${v.dot}`
+                            : `2px solid ${v.bg}`,
+                          background: v.bg,
+                          color: v.color,
+                          boxShadow: isSelected
+                            ? `0 0 0 2px ${v.dot}22`
+                            : "none",
+                        }}
+                      >
+                        {t(v.label)}
+                      </button>
+                    );
+                  })}
+              </div>
             </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={closeAddCardModal}
+              className="h-10 px-5"
+            >
+              {t("Cancel")}
+            </Button>
+            <Button
+              onClick={handleAddCard}
+              className="h-10 px-5 font-semibold shadow-sm"
+            >
+              <Ticket size={16} className="mr-2" /> {t("Add Ticket")}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

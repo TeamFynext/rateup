@@ -8,15 +8,14 @@ import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
+import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import invariant from "tiny-invariant";
 
 import { useBoard } from "@/backend/tickets/tickets.query";
 import { useUserInfo } from "@/backend/user/user.query";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
 
 import { Column } from "./column.tsx";
 import type { TColumn } from "./data.ts";
@@ -330,7 +330,7 @@ export function Board({
       <div className="flex flex-1 min-w-0 w-full overflow-hidden">
         <div
           ref={scrollableRef}
-          className="flex gap-3 pb-4 overflow-x-auto w-full max-h-[calc(100vh-121px)]"
+          className="flex gap-3 pb-4 px-6 overflow-x-auto w-full max-h-[calc(100vh-121px)]"
           style={{
             ...(settings.isBoardMoreObvious
               ? {
@@ -383,33 +383,44 @@ export function Board({
 
           {/* Column add form */}
           {isAddingColumn ? (
-            <div className="flex flex-col w-[280px]">
-              <PaperLayout radius={"md"}>
-                <ContainedTextField
-                  autoFocus
-                  value={newColumnTitle}
-                  onChange={(e) => setNewColumnTitle(e.target.value)}
-                  placeholder={t("Enter column title...")}
-                />
-                <div className="flex gap-2 mt-2">
-                  <Button onClick={handleAddColumn} size="sm">
-                    {t("Save")}
-                  </Button>
-                  <Button onClick={close} size="sm" variant="ghost">
-                    {t("Cancel")}
-                  </Button>
-                </div>
-              </PaperLayout>
+            <div className="flex flex-col w-[280px] shrink-0 bg-muted/30 p-3 rounded-[12px] border border-border/50 shadow-sm self-start mt-0">
+              <Input
+                autoFocus
+                value={newColumnTitle}
+                onChange={(e) => setNewColumnTitle(e.target.value)}
+                placeholder={t("Enter list title...")}
+                className="h-9 bg-background text-sm mb-3 shadow-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddColumn();
+                  if (e.key === "Escape") close();
+                }}
+              />
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleAddColumn}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 font-semibold"
+                >
+                  {t("Add list")}
+                </Button>
+                <Button
+                  onClick={close}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 px-3 text-muted-foreground hover:text-foreground"
+                >
+                  {t("Cancel")}
+                </Button>
+              </div>
             </div>
           ) : (
-            <Button
-              variant="outline"
+            <button
               onClick={open}
-              className="min-w-[200px] border-dashed border-2 bg-transparent hover:bg-muted"
+              className="w-[280px] shrink-0 h-[46px] rounded-[12px] self-start mt-0 border-2 border-dashed border-border/60 bg-transparent text-muted-foreground font-body text-sm font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-150 hover:border-primary/50 hover:text-primary hover:bg-muted/30"
             >
-              <IconPlus size={16} className="mr-2" />
-              {t("Add another list")}
-            </Button>
+              <IconPlus size={16} strokeWidth={2.5} /> {t("Add another list")}
+            </button>
           )}
 
           <AlertDialog

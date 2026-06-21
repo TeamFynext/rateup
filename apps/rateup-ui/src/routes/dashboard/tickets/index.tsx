@@ -1,13 +1,19 @@
 import { useMemo, useState } from "react";
 
-import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import {
   createFileRoute,
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
-import { Calendar, LayoutPanelTop, Users } from "lucide-react";
+import {
+  Calendar,
+  LayoutPanelTop,
+  MoreHorizontal,
+  Plus,
+  Users,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -29,7 +35,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Dialog,
@@ -48,11 +53,6 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
-import {
   Select,
   SelectContent,
   SelectGroup,
@@ -60,6 +60,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
 
 export const Route = createFileRoute("/dashboard/tickets/")({
   component: Page,
@@ -312,14 +313,15 @@ function Page() {
           "Try changing the team filter or create a new board.",
         )}
       >
+        <Separator className="-mt-1 mb-2" />
         <BoardCardList
           boards={filteredBoards}
           onDelete={handleDeleteBoard}
           onEdit={handleOpenEditBoard}
           onSelect={handleBoardSelect}
+          onNewBoard={() => setIsCreateDialogOpen(true)}
         />
       </ListPageLayout>
-
       <BoardFormDialog
         open={isCreateDialogOpen}
         title={translations("Create New Board")}
@@ -430,6 +432,7 @@ type BoardCardListProps = {
   readonly onSelect: (boardId: string) => void;
   readonly onEdit: (boardId: string) => void;
   readonly onDelete: (boardId: string) => void;
+  readonly onNewBoard: () => void;
 };
 
 function BoardCardList({
@@ -437,20 +440,56 @@ function BoardCardList({
   onSelect,
   onEdit,
   onDelete,
+  onNewBoard,
 }: Readonly<BoardCardListProps>) {
+  const { t } = useTranslation();
+
   return (
-    <GenericCardGrid
-      items={boards}
-      getKey={(board) => board.id}
-      renderItem={(board) => (
-        <BoardListCard
-          board={board}
-          onDelete={onDelete}
-          onEdit={onEdit}
-          onSelect={onSelect}
-        />
-      )}
-    />
+    <div
+      className="flex-1 overflow-y-auto"
+      style={{ padding: "0px 32px 40px" }}
+    >
+      <div className="mb-7">
+        <div className="font-display font-black text-[28px] text-ink-900 tracking-tight">
+          {t("Ticket Boards")}
+        </div>
+        <div className="font-body text-sm text-ink-400 mt-1">
+          {t("Manage support workflows across your team")}
+        </div>
+      </div>
+
+      <div
+        className="grid gap-[18px]"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" }}
+      >
+        {boards.map((b) => (
+          <BoardListCard
+            key={b.id}
+            board={b}
+            onSelect={onSelect}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        ))}
+
+        <div
+          onClick={onNewBoard}
+          className="bg-transparent border-2 border-dashed border-ink-200 rounded-xl min-h-[150px] cursor-pointer flex flex-col items-center justify-center gap-3 transition-all duration-150 hover:border-primary hover:bg-primary/5"
+        >
+          <div className="w-12 h-12 rounded-[14px] border-2 border-dashed border-ink-200 flex items-center justify-center">
+            <Plus size={22} className="text-ink-400" strokeWidth={2} />
+          </div>
+          <div>
+            <div className="font-display font-extrabold text-base text-ink-500 text-center">
+              {t("New Board")}
+            </div>
+            <div className="font-body text-xs text-ink-400 text-center mt-[3px]">
+              {t("Create a new workflow")}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -475,50 +514,33 @@ function BoardListCard({
       onClick={() => onSelect(board.id)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="bg-card rounded-xl p-5 cursor-pointer border transition-all duration-150 flex flex-col h-full hover:shadow-md hover:-translate-y-0.5"
+      className="bg-white rounded-xl cursor-pointer border border-ink-100 transition-all duration-200 flex flex-col h-full"
+      style={{
+        padding: "18px 20px",
+        boxShadow: hovered
+          ? "0 8px 28px rgba(11,31,72,.10)"
+          : "0 1px 3px rgba(11,31,72,.05)",
+        transform: hovered ? "translateY(-2px)" : "none",
+      }}
     >
       <div className="flex items-start gap-2.5">
         <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2">
-            <div className="font-bold text-lg tracking-[-0.01em] leading-tight truncate">
-              {board.title}
-            </div>
-            {board.teamNames.length > 0 && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <span className="text-[10px] text-muted-foreground font-normal cursor-pointer hover:text-foreground shrink-0 mt-1">
-                    ({board.teamNames.slice(0, 2).join(", ")}
-                    {board.teamNames.length > 2 ? ", ..." : ""})
-                  </span>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-auto p-3">
-                  <div className="text-xs font-bold mb-2">
-                    {t("Assigned Teams")}
-                  </div>
-                  <ul className="text-sm space-y-1">
-                    {board.teamNames.map((name, i) => (
-                      <li key={i}>{name}</li>
-                    ))}
-                  </ul>
-                </PopoverContent>
-              </Popover>
-            )}
+          <div className="font-display font-extrabold text-[17px] text-ink-900 tracking-tight leading-[1.25] truncate">
+            {board.title}
           </div>
-          <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+          <div className="font-body text-[13px] text-[#8589A0] mt-[3px] line-clamp-2">
             {board.description || t("No description")}
           </div>
         </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 -mt-1 rounded-md shrink-0"
-              onClick={(event) => event.stopPropagation()}
+            <button
+              onClick={(e) => e.stopPropagation()}
+              className="shrink-0 w-[26px] h-[26px] -mt-0.5 rounded-md border-none bg-transparent text-ink-300 cursor-pointer flex items-center justify-center transition-colors duration-150 hover:bg-ink-50"
             >
-              <IconDots size={18} stroke={2} />
-            </Button>
+              <MoreHorizontal size={18} strokeWidth={2} />
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
@@ -539,43 +561,48 @@ function BoardListCard({
         </DropdownMenu>
       </div>
 
-      <div className="flex items-center gap-2 mt-4 flex-wrap">
-        <span className="font-semibold text-sm">
-          {board.totalTickets}{" "}
-          {board.totalTickets !== 1 ? t("tickets") : t("ticket")}
-        </span>
-        {board.columnStats.map((stat, i) => {
-          const colors =
-            i % 2 === 0
-              ? "bg-red-50 text-red-600 border-red-100"
-              : "bg-orange-50 text-orange-600 border-orange-100";
-          return (
-            <span
-              key={i}
-              className={`text-[10px] h-[22px] px-2 flex items-center font-medium rounded-full border ${colors}`}
-            >
-              {stat.count} {stat.title.toLowerCase()}
-            </span>
-          );
-        })}
+      <div className="font-body font-semibold text-sm text-ink-900 mt-4">
+        {board.totalTickets}{" "}
+        {board.totalTickets !== 1 ? t("tickets") : t("ticket")}
+        {board.columnStats.length > 0 && (
+          <span className="inline-flex gap-1.5 ml-2.5">
+            {board.columnStats.map((stat, i) => {
+              const isFirst = i === 0;
+              const colorClass = isFirst
+                ? "text-red-600 bg-[#FEF2F2]"
+                : "text-[#d97a0f] bg-[#fff8eb]";
+              return (
+                <span
+                  key={i}
+                  className={`font-body text-[11px] font-bold px-2 py-[2px] rounded-full ${colorClass}`}
+                >
+                  {stat.count} {stat.title.toLowerCase()}
+                </span>
+              );
+            })}
+          </span>
+        )}
       </div>
 
       <div className="flex-1" />
 
-      <div className="h-px bg-border my-4" />
+      <div className="h-px bg-[#F0F0EE] my-3.5" />
 
       <div className="flex items-center justify-between mt-auto">
-        <Badge variant="secondary" className="text-xs">
+        <span
+          className="font-body text-xs font-semibold text-green-700 bg-[#E7F7EC] rounded-full"
+          style={{ padding: "3px 11px" }}
+        >
           {t("Active")}
-        </Badge>
+        </span>
         {board.createdAt && (
-          <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-            <Calendar className="w-3.5 h-3.5" />
+          <span className="inline-flex items-center gap-[5px] font-body text-[12.5px] text-[#8589A0]">
+            <Calendar size={13} className="text-ink-300" strokeWidth={2} />
             {t("Created")}{" "}
             {formatDistanceToNow(new Date(board.createdAt), {
               addSuffix: true,
             })}
-          </div>
+          </span>
         )}
       </div>
     </div>
