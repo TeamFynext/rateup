@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import parse from "html-react-parser";
 import {
+  AlertCircle,
   Check,
   ExternalLink,
   FileText,
@@ -16,7 +17,6 @@ import {
   ListPlus,
   MessageCircle,
   MessageSquare,
-  Pencil,
   Plus,
   Trash,
   User,
@@ -28,6 +28,7 @@ import { useTranslation } from "react-i18next";
 import { QuestionType2 } from "@/types/enums.ts";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import {
+  useBoardsQueries,
   useCardById,
   useCardTeamMembersById,
   useCreateCommentMutation,
@@ -37,13 +38,12 @@ import {
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import TicketTextEditor from "@/components/RichTextEditor/TicketTextEditor.tsx";
 import { getCellData } from "@/components/Survey/Response/WaResponses.tsx";
+import { PRIORITY_CONFIG } from "@/components/Tickets/card.tsx";
 import SurveyResponsesView from "@/components/Tickets/SingleTicket/SurveyResponsesView.tsx";
-import { TicketChat } from "@/components/Tickets/TicketChat.tsx";
 import type {
   Activity,
   Card,
   TicketComment,
-  WaAutomatedReplyMessage,
 } from "@/components/Tickets/types.ts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -79,7 +79,6 @@ export const Route = createFileRoute("/dashboard/tickets/$ticketId/")({
   component: CardDetailPage,
 });
 
-// Custom debounce hook to avoid @mantine/hooks
 function useDebounce<T>(value: T, delay: number): [T] {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -91,35 +90,54 @@ function useDebounce<T>(value: T, delay: number): [T] {
   return [debouncedValue];
 }
 
-const PRIORITY_MAP: Record<
-  string,
-  { label: string; bg: string; text: string; border: string }
-> = {
-  LOW: {
-    label: "Low",
-    bg: "bg-gray-100",
-    text: "text-gray-600",
-    border: "border-transparent",
-  },
-  MEDIUM: {
-    label: "Medium",
-    bg: "bg-amber-100",
-    text: "text-amber-800",
-    border: "border-transparent",
-  },
-  HIGH: {
-    label: "High",
-    bg: "bg-orange-100",
-    text: "text-orange-800",
-    border: "border-transparent",
-  },
-  CRITICAL: {
-    label: "Critical",
-    bg: "bg-red-100",
-    text: "text-red-800",
-    border: "border-transparent",
-  },
-};
+function MetaLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="font-body text-[11px] font-bold text-muted-foreground tracking-[0.07em] uppercase mb-[7px]">
+      {children}
+    </div>
+  );
+}
+
+function DateRow({
+  label,
+  value,
+  warn,
+}: {
+  label: string;
+  value: string | Date | null | undefined;
+  warn?: boolean;
+}) {
+  const fmt = value
+    ? new Date(value).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+
+  return (
+    <div className="flex justify-between items-center">
+      <span className="font-body text-xs text-muted-foreground">{label}</span>
+      {fmt ? (
+        <span
+          className="font-body text-xs font-semibold flex items-center gap-[3px]"
+          style={{ color: warn ? "#DC2626" : "currentColor" }}
+        >
+          {warn && (
+            <AlertCircle
+              size={11}
+              className="text-destructive"
+              strokeWidth={2}
+            />
+          )}
+          {fmt}
+        </span>
+      ) : (
+        <span className="font-body text-xs text-muted-foreground">—</span>
+      )}
+    </div>
+  );
+}
 
 function CardDetailPage() {
   const { t } = useTranslation();
@@ -172,14 +190,24 @@ function CardDetailPage() {
         if (!open) history.back();
       }}
     >
-      <DialogContent className="max-w-[95vw] w-full md:min-w-2xl lg:min-w-4xl xl:min-w-6xl h-[95vh] p-0 overflow-hidden flex flex-col bg-muted/20 gap-0">
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-[95vw] w-full md:min-w-2xl lg:min-w-4xl xl:min-w-6xl h-[95vh] p-0 overflow-hidden flex flex-col bg-background gap-0 border-none shadow-[0_32px_80px_rgba(11,31,72,.26)] rounded-[20px]"
+      >
         <DialogTitle className="sr-only">{t("Ticket Details")}</DialogTitle>
         <DialogDescription className="sr-only">
           {t("View and edit ticket details.")}
         </DialogDescription>
-        <div className="flex flex-col md:flex-row h-full overflow-hidden">
+
+        <TicketTopHeader
+          ticket={card}
+          ticketId={ticketId}
+          onClose={() => history.back()}
+        />
+
+        <div className="flex flex-1 overflow-hidden min-h-0 bg-background">
           {/* Main Left Content */}
-          <div className="flex-1 flex flex-col bg-background p-4 md:p-6 min-h-0 border-r">
+          <div className="flex-1 flex flex-col p-4 md:p-[22px_24px] overflow-y-auto gap-6 border-r border-border">
             <EditTicket ticket={card} ticketId={ticketId} />
 
             <div className="mt-6 pt-4 border-t flex-1 flex flex-col min-h-0">
@@ -202,13 +230,6 @@ function CardDetailPage() {
                   {card.waAutomatedReplyMessageId && (
                     <TabsTrigger value="automation" className="gap-2">
                       <MessageSquare className="w-4 h-4" /> {t("Automation")}
-                    </TabsTrigger>
-                  )}
-                  {(card.type === TicketType.AUTOMATION ||
-                    card.type === TicketType.FLOW_RESPONSE ||
-                    !!card.contactId) && (
-                    <TabsTrigger value="chat" className="gap-2">
-                      <MessageSquare className="w-4 h-4" /> {t("Chat")}
                     </TabsTrigger>
                   )}
                 </TabsList>
@@ -242,29 +263,15 @@ function CardDetailPage() {
                       />
                     </TabsContent>
                   )}
-
-                  {(card.type === TicketType.AUTOMATION ||
-                    card.type === TicketType.FLOW_RESPONSE ||
-                    !!card.contactId) && (
-                    <TabsContent value="chat" className="mt-0 h-[600px]">
-                      <TicketChat
-                        contact={
-                          card.contactId
-                            ? card.contact
-                            : card.surveyResponseId
-                              ? card?.surveyResponse?.Contact
-                              : card?.waAutomatedReplyMessage?.contact
-                        }
-                      />
-                    </TabsContent>
-                  )}
                 </div>
               </Tabs>
             </div>
           </div>
-
           {/* Right Sidebar */}
-          <div className="w-full md:w-72 shrink-0 bg-background/50 p-4 md:p-6 overflow-y-auto">
+          <div
+            className="w-full md:w-64 shrink-0 bg-[#F4F5F2]/50 overflow-y-auto"
+            style={{ padding: "22px 18px" }}
+          >
             <RightSidebar ticket={card} ticketId={ticketId} />
           </div>
         </div>
@@ -290,9 +297,7 @@ function AssignContact({ ticketId }: { ticketId: string }) {
 
   return (
     <div>
-      <div className="text-[11px] font-bold text-muted-foreground tracking-[0.07em] uppercase mb-2">
-        {t("Customer")}
-      </div>
+      <MetaLabel>{t("Customer")}</MetaLabel>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -302,7 +307,7 @@ function AssignContact({ ticketId }: { ticketId: string }) {
             <UserPlus className="h-4 w-4" /> {t("Add Contact")}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-72 p-0" align="start">
+        <PopoverContent className="w-72 p-1" align="start">
           <div className="p-2 border-b">
             <Input
               placeholder={t("Search contact...")}
@@ -311,7 +316,11 @@ function AssignContact({ ticketId }: { ticketId: string }) {
               className="h-8 text-xs focus-visible:ring-1 focus-visible:ring-offset-0"
             />
           </div>
-          <ScrollArea className="h-64">
+          <div
+            className="max-h-64 overflow-y-auto"
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+          >
             {isLoading ? (
               <div className="p-4 text-xs text-center text-muted-foreground">
                 {t("Loading...")}
@@ -346,7 +355,7 @@ function AssignContact({ ticketId }: { ticketId: string }) {
                 ))}
               </div>
             )}
-          </ScrollArea>
+          </div>
         </PopoverContent>
       </Popover>
     </div>
@@ -385,42 +394,41 @@ function RightSidebar({
   };
 
   const assignedMembers = ticket.assignees?.map((a) => a.assigneeId) || [];
-  const p = PRIORITY_MAP[ticket.priority || "MEDIUM"] || PRIORITY_MAP.MEDIUM;
-
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-6">
         <div>
-          <div className="text-[11px] font-bold text-muted-foreground tracking-[0.07em] uppercase mb-2">
-            {t("Priority")}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {Object.keys(PRIORITY_MAP).map((key) => {
-              const info = PRIORITY_MAP[key];
-              const isActive =
-                ticket.priority === key ||
-                (!ticket.priority && key === "MEDIUM");
-              return (
-                <button
-                  key={key}
-                  onClick={() => handlePriorityChange(key)}
-                  className={`px-3 py-1 text-xs font-medium rounded-full transition-all border-2 ${
-                    isActive
-                      ? `${info.border} ring-2 ring-offset-1 ring-${info.bg.split("-")[1]}-400`
-                      : "border-transparent hover:bg-muted"
-                  } ${info.bg} ${info.text}`}
-                >
-                  {info.label}
-                </button>
-              );
-            })}
+          <MetaLabel>{t("Priority")}</MetaLabel>
+          <div className="flex gap-[5px] flex-wrap">
+            {Object.entries(PRIORITY_CONFIG)
+              .filter(([k]) => k !== "na")
+              .map(([k, v]) => {
+                const priorityKey = ticket.priority?.toLowerCase() || "medium";
+                const isSelected = priorityKey === k;
+                return (
+                  <button
+                    key={k}
+                    onClick={() => handlePriorityChange(k.toUpperCase())}
+                    className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
+                    style={{
+                      padding: "4px 10px",
+                      border: isSelected
+                        ? `2px solid ${v.dot}`
+                        : `2px solid ${v.bg}`,
+                      background: v.bg,
+                      color: v.color,
+                      boxShadow: isSelected ? `0 0 0 2px ${v.dot}22` : "none",
+                    }}
+                  >
+                    {t(v.label)}
+                  </button>
+                );
+              })}
           </div>
         </div>
 
         <div>
-          <div className="text-[11px] font-bold text-muted-foreground tracking-[0.07em] uppercase mb-2">
-            {t("Assignee")}
-          </div>
+          <MetaLabel>{t("Assignee")}</MetaLabel>
           <div className="flex flex-wrap gap-2 items-center">
             {assignedMembers.map((memberId) => {
               const user = members.find((m) => m.id === memberId);
@@ -450,7 +458,11 @@ function RightSidebar({
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-56 p-1" align="start">
-                <ScrollArea className="h-64">
+                <div
+                  className="max-h-64 overflow-y-auto"
+                  onWheel={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
+                >
                   {members.length === 0 ? (
                     <div className="p-4 text-center text-sm text-muted-foreground">
                       {t("No members found")}
@@ -482,7 +494,7 @@ function RightSidebar({
                       );
                     })
                   )}
-                </ScrollArea>
+                </div>
               </PopoverContent>
             </Popover>
           </div>
@@ -494,9 +506,7 @@ function RightSidebar({
         </div>
         {linkedContact ? (
           <div>
-            <div className="text-[11px] font-bold text-muted-foreground tracking-[0.07em] uppercase mb-2">
-              {t("Customer")}
-            </div>
+            <MetaLabel>{t("Customer")}</MetaLabel>
             <div className="border rounded-xl p-4 bg-card shadow-sm flex flex-col gap-4 relative group">
               {ticket.contactId && (
                 <button
@@ -531,13 +541,9 @@ function RightSidebar({
                 to={`/dashboard/inbox?tab=mine&contactId=${linkedContact.id}`}
                 className="w-full"
               >
-                <Button
-                  variant="default"
-                  className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center gap-2 h-10 rounded-lg font-semibold"
-                >
+                <Button className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center gap-2 h-10 rounded-lg font-semibold">
                   <IconBrandWhatsapp className="h-4 w-4" />
-                  {t("Open Chat in Inbox")}{" "}
-                  <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                  {t("Open Chat")} <ExternalLink className="h-3.5 w-3.5 ml-1" />
                 </Button>
               </Link>
             </div>
@@ -545,27 +551,167 @@ function RightSidebar({
         ) : (
           <AssignContact ticketId={ticketId} />
         )}
+
+        <div>
+          <MetaLabel>{t("Dates")}</MetaLabel>
+          <div className="flex flex-col gap-2">
+            <DateRow label={t("Created")} value={ticket.createdAt} />
+          </div>
+        </div>
       </div>
     </TooltipProvider>
   );
 }
 
-function EditTicket({ ticket, ticketId }: { ticket: Card; ticketId: string }) {
+function TicketTopHeader({
+  ticket,
+  ticketId,
+  onClose,
+}: {
+  ticket: Card;
+  ticketId: string;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   const { mutate } = useUpdateCardMutation();
   const [title, setTitle] = useState(ticket.title || "");
-  const [description, setDescription] = useState(ticket.description || "");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
   const [debouncedTitle] = useDebounce(title, 800);
-  const [debouncedDescription] = useDebounce(description, 1000);
+
+  const { data: boards } = useBoardsQueries();
+  const currentCol = useMemo(() => {
+    if (!boards || !ticket.columnId) return null;
+    for (const b of boards) {
+      const col = b.ticketColumns?.find((c: any) => c.id === ticket.columnId);
+      if (col) return col;
+    }
+    return null;
+  }, [boards, ticket.columnId]);
+
+  const isOverdue = !!(
+    ticket.deadline && new Date(ticket.deadline) < new Date()
+  );
+  const priorityKey = ticket.priority?.toLowerCase() || "na";
+  const priorityInfo = PRIORITY_CONFIG[priorityKey] || PRIORITY_CONFIG.na;
 
   useEffect(() => {
     if (debouncedTitle !== ticket.title) {
       mutate({ id: ticketId, title: debouncedTitle });
     }
   }, [debouncedTitle, ticketId, mutate, ticket.title]);
+
+  const commitTitle = () => {
+    setIsEditingTitle(false);
+    if (title !== ticket.title) {
+      mutate({ id: ticketId, title });
+    }
+  };
+
+  return (
+    <div
+      className="border-b border-border flex items-start gap-3 bg-background"
+      style={{ padding: "18px 24px 16px" }}
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <span className="font-body text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
+            #{ticket.ticketId || ticketId.substring(0, 8)}
+          </span>
+          {currentCol && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full font-body text-[11px] font-bold border border-border"
+              style={{
+                padding: "2px 9px",
+                background: "var(--muted)",
+                color: "var(--foreground)",
+              }}
+            >
+              <span className="w-[5px] h-[5px] rounded-full bg-primary" />
+              {currentCol.title}
+            </span>
+          )}
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold uppercase tracking-wider"
+            style={{
+              padding: "2px 9px",
+              background: priorityInfo.bg,
+              color: priorityInfo.color,
+              border: `1px solid ${priorityInfo.border}`,
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: priorityInfo.dot }}
+            />
+            {t(priorityInfo.label)}
+          </span>
+          {isOverdue && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-[#FEF2F2] text-[#B91C1C] font-body text-[11px] font-bold border border-[#FECACA]"
+              style={{ padding: "2px 9px" }}
+            >
+              <AlertCircle
+                size={11}
+                className="text-[#B91C1C]"
+                strokeWidth={2}
+              />{" "}
+              {t("Overdue")}
+            </span>
+          )}
+        </div>
+
+        {isEditingTitle ? (
+          <input
+            ref={titleRef}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={commitTitle}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitTitle();
+              if (e.key === "Escape") {
+                setIsEditingTitle(false);
+                setTitle(ticket.title || "");
+              }
+            }}
+            className="font-display font-extrabold text-[21px] text-foreground tracking-tight border-none outline-none w-full bg-transparent"
+            style={{
+              borderBottom: "2px solid var(--primary)",
+              padding: "0 0 2px",
+            }}
+          />
+        ) : (
+          <div
+            onClick={() => {
+              setIsEditingTitle(true);
+              setTimeout(() => titleRef.current?.focus(), 20);
+            }}
+            className="font-display font-extrabold text-[21px] text-foreground leading-[1.2] cursor-text tracking-tight hover:opacity-80 transition-opacity"
+          >
+            {title || t("Untitled Ticket")}
+          </div>
+        )}
+      </div>
+
+      <div className="flex gap-0.5 shrink-0">
+        <button
+          onClick={onClose}
+          className="w-[30px] h-[30px] rounded-[7px] border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-colors hover:bg-muted/50"
+        >
+          <X size={16} strokeWidth={1.75} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EditTicket({ ticket, ticketId }: { ticket: Card; ticketId: string }) {
+  const { t } = useTranslation();
+  const { mutate } = useUpdateCardMutation();
+  const [description, setDescription] = useState(ticket.description || "");
+
+  const [debouncedDescription] = useDebounce(description, 1000);
 
   useEffect(() => {
     if (
@@ -578,40 +724,11 @@ function EditTicket({ ticket, ticketId }: { ticket: Card; ticketId: string }) {
 
   return (
     <div className="flex flex-col gap-4 shrink-0">
-      {/* Title */}
-      <div>
-        {isEditingTitle ? (
-          <input
-            ref={titleRef}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={() => setIsEditingTitle(false)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") setIsEditingTitle(false);
-            }}
-            className="text-2xl font-bold tracking-tight text-foreground border-b-2 border-primary outline-none w-full bg-transparent pb-1"
-          />
-        ) : (
-          <div
-            onClick={() => {
-              setIsEditingTitle(true);
-              setTimeout(() => titleRef.current?.focus(), 20);
-            }}
-            className="group flex items-center gap-2 cursor-text rounded-md hover:bg-muted/50 p-1 -ml-1 transition-colors"
-          >
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              {title || t("Untitled Ticket")}
-            </h1>
-            <Pencil className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-        )}
-      </div>
-
       {/* Description Editor */}
       <div>
         <div className="flex items-center gap-2 mb-2">
           <FileText className="h-4 w-4 text-muted-foreground" />
-          <span className="text-[11px] font-bold text-muted-foreground tracking-[0.07em] uppercase">
+          <span className="font-body text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
             {t("Description")}
           </span>
         </div>

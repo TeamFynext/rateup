@@ -35,6 +35,7 @@ import {
 
 import { Board } from "./board.tsx";
 import TicketSettings from "./boardSettings.tsx";
+import { PRIORITY_CONFIG } from "./card.tsx";
 import { TicketListView } from "./TicketListView.tsx";
 
 export function BoardContent({
@@ -53,6 +54,9 @@ export function BoardContent({
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [viewPref, setViewPref] = useState(() => {
+    return localStorage.getItem("rateup_ticket_view") || "board";
+  });
 
   const navigate = useNavigate();
 
@@ -123,6 +127,22 @@ export function BoardContent({
     );
   }
 
+  const avatarColors = [
+    "#ef4444",
+    "#f97316",
+    "#f59e0b",
+    "#10b981",
+    "#3b82f6",
+    "#6366f1",
+    "#8b5cf6",
+    "#ec4899",
+  ];
+  const getUserColor = (id: string) => {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) hash += id.charCodeAt(i);
+    return avatarColors[hash % avatarColors.length];
+  };
+
   const priorities = [
     { value: "CRITICAL", label: t("Critical") },
     { value: "HIGH", label: t("High") },
@@ -130,12 +150,21 @@ export function BoardContent({
     { value: "LOW", label: t("Low") },
   ];
 
+  const handleViewChange = (v: string) => {
+    setViewPref(v);
+    localStorage.setItem("rateup_ticket_view", v);
+  };
+
   return (
     <div className="h-full flex flex-col min-h-0">
-      <Tabs defaultValue="board" className="flex flex-col h-full min-h-0">
-        <div className="flex flex-col gap-2 px-1 shrink-0">
+      <Tabs
+        value={viewPref}
+        onValueChange={handleViewChange}
+        className="flex flex-col h-full min-h-0"
+      >
+        <div className="flex flex-col shrink-0 border-b border-border bg-background">
           {/* Top Row: Navigation & Stats */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-4 md:px-6 pt-4 pb-2">
             <div className="flex items-center gap-4 flex-wrap">
               <button
                 onClick={() => navigate({ to: "/dashboard/tickets" })}
@@ -158,27 +187,23 @@ export function BoardContent({
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2 md:mr-2 flex-wrap">
-                <Badge
-                  variant="secondary"
-                  className="bg-blue-50 text-primary hover:bg-blue-100 font-bold border-none px-2.5 py-0.5"
-                >
-                  <span className="mr-1.5">{stats.openCount}</span> {t("Open")}
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="bg-red-50 text-red-600 hover:bg-red-100 font-bold border-none px-2.5 py-0.5"
-                >
-                  <span className="font-semibold">{stats.criticalCount}</span>{" "}
-                  {t("Critical")}
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="bg-orange-50 text-orange-600 hover:bg-orange-100 font-bold border-none px-2.5 py-0.5"
-                >
-                  <span className="mr-1.5">{stats.overdueCount}</span>{" "}
-                  {t("Overdue")}
-                </Badge>
+              <div className="flex gap-[7px] items-center md:mr-2 flex-wrap">
+                <StatPill
+                  label={t("Open")}
+                  value={stats.openCount}
+                  color="#1C518E"
+                />
+                {stats.criticalCount > 0 && (
+                  <StatPill
+                    label={t("Critical")}
+                    value={stats.criticalCount}
+                    color="#DC2626"
+                  />
+                )}
+                {/* 0 > 0 is false, so it won't render as requested */}
+                {0 > 0 && (
+                  <StatPill label={t("Overdue")} value={0} color="#F8951D" />
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -214,92 +239,116 @@ export function BoardContent({
           <Separator />
 
           {/* Bottom Row: Filters */}
-          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 py-1">
-            {/* Search */}
-            <div className="relative w-full md:w-64 shrink-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder={t("Search tickets...")}
-                className="pl-9 h-9 text-sm bg-muted/20 border-border/60 focus-visible:ring-primary/40 rounded-full w-full"
+          <div className="h-[46px] flex items-center px-4 md:px-6 gap-2.5 shrink-0">
+            <div className="relative">
+              <span className="absolute left-[9px] top-1/2 -translate-y-1/2 pointer-events-none">
+                <Search size={13} className="text-muted-foreground" />
+              </span>
+              <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t("Search tickets...")}
+                className="font-body text-[13px] py-[5px] pl-7 pr-2.5 border-[1.5px] border-border rounded-lg outline-none w-full md:w-[200px] bg-muted/50 transition-colors focus:border-primary"
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Priority */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-muted-foreground tracking-widest text-[10px] uppercase">
-                  {t("Priority")}
-                </span>
-                <button
-                  onClick={() => setPriorityFilter(null)}
-                  className={`text-xs font-bold px-3 py-1 rounded-full transition-all ${
+            <div className="w-px h-5 bg-border hidden md:block" />
+
+            <div className="hidden md:flex gap-1 items-center">
+              <span className="font-body text-[11px] font-semibold text-muted-foreground tracking-wider uppercase mr-1">
+                {t("Priority")}
+              </span>
+              <button
+                onClick={() => setPriorityFilter(null)}
+                className="rounded-full font-body text-[11px] font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center leading-none"
+                style={{
+                  padding: "2px 8px",
+                  border:
                     priorityFilter === null
-                      ? "text-[#1e40af] border border-blue-200 bg-white shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t("All")}
-                </button>
-                {priorities.map((p) => (
+                      ? "1.5px solid currentColor"
+                      : "1.5px solid transparent",
+                  background:
+                    priorityFilter === null ? "#EEF4FB" : "transparent",
+                  color: priorityFilter === null ? "#1C518E" : "#8B8E8A",
+                }}
+              >
+                {t("All")}
+              </button>
+              {priorities.map((p) => {
+                const on = priorityFilter === p.value;
+                const pConf = PRIORITY_CONFIG[p.value.toLowerCase()];
+                return (
                   <button
                     key={p.value}
                     onClick={() => setPriorityFilter(p.value)}
-                    className={`text-xs font-bold px-3 py-1 rounded-full transition-all ${
-                      priorityFilter === p.value
-                        ? "text-[#1e40af] border border-blue-200 bg-white shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    className="rounded-full font-body text-[11px] font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center leading-none"
+                    style={{
+                      padding: "2px 8px",
+                      border: on
+                        ? "1.5px solid currentColor"
+                        : "1.5px solid transparent",
+                      background: on ? pConf?.bg : "transparent",
+                      color: on ? pConf?.color : "#8B8E8A",
+                    }}
                   >
                     {p.label}
                   </button>
-                ))}
-              </div>
-
-              <Separator
-                orientation="vertical"
-                className="h-6 mx-1 hidden md:block"
-              />
-
-              {/* Assignee */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-muted-foreground tracking-widest text-[10px] uppercase">
-                  {t("Assignee")}
-                </span>
-                <button
-                  onClick={() => setAssigneeFilter(null)}
-                  className={`text-xs font-bold px-3 py-1 rounded-full transition-all ${
-                    assigneeFilter === null
-                      ? "text-[#1e40af] border border-blue-200 bg-white shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t("All")}
-                </button>
-                <div className="flex items-center -space-x-1.5 ml-1">
-                  {assignees.map((user) => (
-                    <button
-                      key={user.id}
-                      onClick={() => setAssigneeFilter(user.id)}
-                      title={user.name}
-                      className={`rounded-full transition-all border-2 ${assigneeFilter === user.id ? "border-[#1e40af] z-10 scale-110 relative" : "border-background hover:scale-110 hover:z-10 relative"}`}
-                    >
-                      <Avatar className="h-7 w-7">
-                        <AvatarImage src={user.profilePhoto} />
-                        <AvatarFallback className="bg-primary/20 text-[10px] font-bold text-primary">
-                          {user.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </button>
-                  ))}
-                </div>
-              </div>
+                );
+              })}
             </div>
+
+            <div className="w-px h-5 bg-border hidden md:block" />
+
+            <div className="hidden md:flex gap-[5px] items-center">
+              <span className="font-body text-[11px] font-semibold text-muted-foreground tracking-wider uppercase mr-1">
+                {t("Assignee")}
+              </span>
+              <button
+                onClick={() => setAssigneeFilter(null)}
+                className="rounded-full font-body text-[11px] font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center leading-none"
+                style={{
+                  padding: "2px 8px",
+                  border: !assigneeFilter
+                    ? "1.5px solid #1C518E"
+                    : "1.5px solid transparent",
+                  background: !assigneeFilter ? "#EEF4FB" : "transparent",
+                  color: !assigneeFilter ? "#1C518E" : "#8B8E8A",
+                }}
+              >
+                {t("All")}
+              </button>
+              {assignees.map((user) => {
+                const on = assigneeFilter === user.id;
+                const userColor = getUserColor(user.id);
+                return (
+                  <button
+                    key={user.id}
+                    title={user.name}
+                    onClick={() => setAssigneeFilter(on ? null : user.id)}
+                    className="bg-none border-none cursor-pointer p-0 rounded-full transition-all duration-150 outline-none hover:opacity-80"
+                    style={{
+                      outline: on
+                        ? `3px solid ${userColor}`
+                        : "3px solid transparent",
+                      outlineOffset: 2,
+                    }}
+                  >
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={user.profilePhoto} />
+                      <AvatarFallback
+                        className="text-[10px] font-bold text-white"
+                        style={{ backgroundColor: userColor }}
+                      >
+                        {user.name.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex-1" />
           </div>
         </div>
-
-        <Separator className="mb-4" />
 
         <TabsContent value="board" className="flex-1 mt-0 h-full min-h-0">
           <Board
@@ -322,6 +371,38 @@ export function BoardContent({
           />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+interface StatPillProps {
+  label: string;
+  value: number;
+  color: string;
+}
+
+export function StatPill({ label, value, color }: StatPillProps) {
+  return (
+    <div
+      className="flex items-center gap-[5px] rounded-full"
+      style={{
+        padding: "4px 11px",
+        background: color + "12",
+        border: `1px solid ${color}24`,
+      }}
+    >
+      <span
+        className="font-display font-black text-sm leading-none"
+        style={{ color }}
+      >
+        {value}
+      </span>
+      <span
+        className="font-body text-[11px] font-semibold tracking-wide"
+        style={{ color: color + "BB" }}
+      >
+        {label}
+      </span>
     </div>
   );
 }

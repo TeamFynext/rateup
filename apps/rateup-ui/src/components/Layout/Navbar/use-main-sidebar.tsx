@@ -40,9 +40,11 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   } = useUserInfo();
 
   const navigate = useNavigate();
-  const pathname = useRouterState({
-    select: (s) => s.location.pathname,
+  const location = useRouterState({
+    select: (s) => s.location,
   });
+  const pathname = location.pathname;
+  const search = location.search as Record<string, unknown>;
 
   const [storedUserInfo, setStoredUserInfo] =
     useLocalStorage<IUserInfoApiResponse | null>("userInfo", null);
@@ -90,9 +92,12 @@ export function useMainSidebar({ welcomeMessage }: UseMainSidebarArgs) {
   const { setTotalCount } = useChatContactCountStore();
   const { filter } = useChatFilterStore();
   const isInbox = pathname?.includes("/dashboard/inbox");
-  const paddingExclusion = isInbox
-    ? true
-    : pathname?.includes("/dashboard/whatsapp/flows/v2/");
+  const isTicketsBoard =
+    pathname?.includes("/dashboard/tickets") && Boolean(search?.b);
+  const paddingExclusion =
+    isInbox || isTicketsBoard
+      ? true
+      : pathname?.includes("/dashboard/whatsapp/flows/v2/");
   const { data: inboxCount } = useGetInboxUserCount(Boolean(isInbox));
 
   useEffect(() => {

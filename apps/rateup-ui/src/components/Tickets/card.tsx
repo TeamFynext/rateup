@@ -17,7 +17,13 @@ import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/elemen
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Calendar, MessageSquare, MoreHorizontal, Trash2 } from "lucide-react";
+import {
+  Calendar,
+  MessageCircle,
+  MoreHorizontal,
+  Trash2,
+  User,
+} from "lucide-react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -79,46 +85,45 @@ export function CardShadow({ dragging }: { dragging: DOMRect }) {
   );
 }
 
-const PRIORITY_STYLES: Record<
+export const PRIORITY_CONFIG: Record<
   string,
-  { outline: string; text: string; dot: string; bg: string }
+  { label: string; color: string; bg: string; border: string; dot: string }
 > = {
-  high: {
-    outline: "border-yellow-200",
-    text: "text-yellow-700",
-    dot: "bg-yellow-500",
-    bg: "bg-yellow-50/50",
+  low: {
+    label: "Low",
+    color: "#666864",
+    bg: "#F4F5F2",
+    border: "#D9DAD7",
+    dot: "#B7B9B5",
   },
   medium: {
-    outline: "border-blue-200",
-    text: "text-blue-700",
-    dot: "bg-blue-500",
-    bg: "bg-blue-50/50",
+    label: "Medium",
+    color: "#174678",
+    bg: "#EEF4FB",
+    border: "#A9C3E3",
+    dot: "#4C7FBC",
   },
-  urgent: {
-    outline: "border-red-200",
-    text: "text-red-700",
-    dot: "bg-red-500",
-    bg: "bg-red-50/50",
+  high: {
+    label: "High",
+    color: "#A85C07",
+    bg: "#FFF8E1",
+    border: "#FFDC6D",
+    dot: "#F8951D",
   },
   critical: {
-    outline: "border-red-200",
-    text: "text-red-700",
-    dot: "bg-red-500",
-    bg: "bg-red-50/50",
-  },
-  low: {
-    outline: "border-gray-200",
-    text: "text-gray-700",
-    dot: "bg-gray-400",
-    bg: "bg-gray-50/50",
+    label: "Critical",
+    color: "#B91C1C",
+    bg: "#FEF2F2",
+    border: "#FECACA",
+    dot: "#DC2626",
   },
   na: {
-    outline: "border-gray-200",
-    text: "text-gray-500",
-    dot: "bg-gray-300",
-    bg: "bg-gray-50/50",
-  },
+    label: "Medium",
+    color: "#174678",
+    bg: "#EEF4FB",
+    border: "#A9C3E3",
+    dot: "#4C7FBC",
+  }, // fallback
 };
 
 const TAG_COLORS = [
@@ -162,7 +167,7 @@ export function CardDisplay({
   };
 
   const priorityKey = card.priority?.toLowerCase() || "na";
-  const priorityStyle = PRIORITY_STYLES[priorityKey] || PRIORITY_STYLES.na;
+  const priorityStyle = PRIORITY_CONFIG[priorityKey] || PRIORITY_CONFIG.na;
 
   const getAnimationClass = () => {
     if (state.type === "is-dragging") return "opacity-40";
@@ -196,113 +201,135 @@ export function CardDisplay({
       <div
         ref={innerRef}
         onClick={state.type === "idle" ? onClick : undefined}
-        className={`bg-card rounded-xl p-4 border shadow-sm relative group transition-all duration-150 ${state.type === "idle" ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5" : ""} ${state.type === "preview" ? "rotate-2" : ""}`}
-        style={
-          state.type === "preview"
+        className={`bg-card border border-border rounded-xl cursor-pointer select-none transition-all duration-150 group/card ${state.type === "idle" ? "hover:shadow-[0_4px_20px_rgba(0,0,0,.10)] hover:-translate-y-[1px]" : ""} ${state.type === "preview" ? "rotate-2" : ""}`}
+        style={{
+          padding: "15px 16px",
+          opacity: state.type === "is-dragging" ? 0.4 : 1,
+          boxShadow:
+            state.type !== "preview" ? "0 1px 3px rgba(11,31,72,.04)" : "none",
+          ...(state.type === "preview"
             ? { width: state.dragging.width, height: state.dragging.height }
-            : {}
-        }
+            : {}),
+        }}
       >
-        {state.type === "idle" && (
-          <div
-            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={handleMenuClick}
-          >
+        {/* Header */}
+        <div className="flex items-start gap-2">
+          <div className="flex-1 font-body font-bold text-sm text-foreground leading-[1.4] line-clamp-2">
+            {card.title || t("Untitled Ticket")}
+          </div>
+          {state.type === "idle" && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="h-6 w-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors">
-                  <MoreHorizontal className="h-4 w-4" />
+                <button
+                  onClick={handleMenuClick}
+                  className="shrink-0 w-[22px] h-[22px] -mt-0.5 rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted opacity-0 group-hover/card:opacity-100"
+                >
+                  <MoreHorizontal size={16} strokeWidth={2} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive cursor-pointer"
-                  onClick={onDelete}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onDelete) onDelete();
+                  }}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   {t("Delete")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        )}
-
-        <div className="pr-6">
-          <h3 className="font-bold text-[13px] leading-tight text-foreground line-clamp-2">
-            {card.title || t("Untitled Ticket")}
-          </h3>
+          )}
         </div>
 
-        <div className="flex items-center gap-1.5 mt-2.5">
-          <div
-            className={`w-1.5 h-1.5 rounded-full ${assignee ? "bg-green-500" : "bg-gray-300"}`}
+        {/* Subtitle */}
+        <div className="flex items-center gap-1.5 mt-1">
+          <span
+            className="w-[7px] h-[7px] rounded-full shrink-0"
+            style={{ background: assignee ? "#25D366" : "#C9CAC7" }}
           />
-          <span className="text-xs text-muted-foreground font-medium">
+          <span className="font-body text-[12.5px] text-[#8589A0] font-medium truncate">
             {assignee ? assignee.name : t("Unassigned")}
           </span>
         </div>
-
-        <div className="flex items-center justify-between mt-3 gap-2 flex-wrap">
-          <div className="flex flex-wrap gap-1.5 flex-1">
-            {tags.map((tag, idx) => {
-              const colorClass = TAG_COLORS[idx % TAG_COLORS.length];
-              return (
-                <span
-                  key={idx}
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide capitalize ${colorClass}`}
-                >
-                  {tag}
-                </span>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center gap-2.5 text-muted-foreground shrink-0">
-            <div className="flex items-center gap-1">
-              <MessageSquare className="h-3.5 w-3.5" />
-              <span className="text-[10px]">
-                {card.ticketComments?.length || 0}
+        {/* Meta */}
+        <div className="flex items-center gap-1.5 flex-wrap mt-[11px]">
+          {tags.slice(0, 2).map((tag, idx) => {
+            const colorClass = TAG_COLORS[idx % TAG_COLORS.length];
+            return (
+              <span
+                key={idx}
+                className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold tracking-wide capitalize ${colorClass}`}
+              >
+                {tag}
               </span>
-            </div>
-          </div>
+            );
+          })}
+          <span className="inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium text-[#8589A0]">
+            <MessageCircle
+              size={12}
+              className="text-muted-foreground"
+              strokeWidth={2}
+            />
+            {card.ticketComments?.length || 0}
+          </span>
         </div>
 
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-3">
-            <div
-              className={`px-2 py-0.5 rounded-full border ${priorityStyle.outline} ${priorityStyle.bg} flex items-center gap-1.5`}
-            >
-              <div
-                className={`w-1.5 h-1.5 rounded-full ${priorityStyle.dot}`}
-              />
+        {/* Divider */}
+        <div className="h-px bg-[#F0F0EE] my-3" />
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Priority Badge */}
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider"
+            style={{
+              padding: "2px 9px",
+              background: priorityStyle.bg,
+              color: priorityStyle.color,
+              border: `1px solid ${priorityStyle.border}`,
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: priorityStyle.dot }}
+            />
+            {t(priorityStyle.label)}
+          </span>
+
+          <div className="flex items-center gap-[9px]">
+            {dateFormatted && (
               <span
-                className={`text-[10px] font-bold capitalize ${priorityStyle.text}`}
+                className="inline-flex items-center gap-1 font-body text-[11.5px] font-medium"
+                style={{ color: isOverdue ? "#DC2626" : "#8589A0" }}
               >
-                {t(card.priority || "Medium")}
+                <Calendar
+                  size={12}
+                  strokeWidth={2}
+                  style={{ color: isOverdue ? "#DC2626" : "#B7B9B5" }}
+                />
+                {dateFormatted}
               </span>
-            </div>
-
-            <div
-              className={`flex items-center gap-1 text-[11px] font-semibold ${isOverdue ? "text-red-500" : "text-muted-foreground"}`}
-            >
-              <Calendar className="h-3 w-3" />
-              {dateFormatted}
-            </div>
+            )}
+            {assignee ? (
+              <Avatar className="h-[22px] w-[22px]">
+                <AvatarImage src={getFileUrlFromKey(assignee.profilePhoto)} />
+                <AvatarFallback className="text-[9px] bg-primary/20 text-primary font-bold">
+                  {assignee.name
+                    ?.split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .substring(0, 2)
+                    .toUpperCase() || "UN"}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <div className="w-[22px] h-[22px] rounded-full border-[1.5px] border-dashed border-border flex items-center justify-center">
+                <User size={11} className="text-muted-foreground" />
+              </div>
+            )}
           </div>
-
-          {assignee && (
-            <Avatar className="h-5 w-5 border">
-              <AvatarImage src={getFileUrlFromKey(assignee.profilePhoto)} />
-              <AvatarFallback className="text-[8px] bg-primary text-primary-foreground font-bold">
-                {assignee.name
-                  ?.split(" ")
-                  .map((n: string) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase() || "UN"}
-              </AvatarFallback>
-            </Avatar>
-          )}
         </div>
       </div>
 
