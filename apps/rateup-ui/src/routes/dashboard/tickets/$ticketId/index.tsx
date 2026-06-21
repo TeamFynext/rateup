@@ -102,11 +102,11 @@ function DateRow({
   label,
   value,
   warn,
-}: {
+}: Readonly<{
   label: string;
   value: string | Date | null | undefined;
   warn?: boolean;
-}) {
+}>) {
   const fmt = value
     ? new Date(value).toLocaleDateString("en-IN", {
         day: "numeric",
@@ -120,7 +120,7 @@ function DateRow({
       <span className="font-body text-xs text-muted-foreground">{label}</span>
       {fmt ? (
         <span
-          className="font-body text-xs font-semibold flex items-center gap-[3px]"
+          className="font-body text-xs font-semibold flex items-center gap-0.75"
           style={{ color: warn ? "#DC2626" : "currentColor" }}
         >
           {warn && (
@@ -144,6 +144,7 @@ function CardDetailPage() {
   const params = useParams({ strict: false });
   const ticketId = params?.ticketId as string;
 
+  const { history } = useRouter();
   const { data: card, isPending, error } = useCardById(ticketId);
 
   const questions = useMemo(() => {
@@ -181,8 +182,6 @@ function CardDetailPage() {
     );
   if (!card) return <div className="p-4">{t("Ticket not found")}</div>;
 
-  const { history } = useRouter();
-
   return (
     <Dialog
       open={true}
@@ -192,7 +191,7 @@ function CardDetailPage() {
     >
       <DialogContent
         showCloseButton={false}
-        className="max-w-[95vw] w-full md:min-w-2xl lg:min-w-4xl xl:min-w-6xl h-[95vh] p-0 overflow-hidden flex flex-col bg-background gap-0 border-none shadow-[0_32px_80px_rgba(11,31,72,.26)] rounded-[20px]"
+        className="max-w-[100vw] md:max-w-[75vw] w-full md:min-w-2xl lg:min-w-4xl xl:min-w-6xl h-screen md:h-[95vh] p-0 overflow-hidden flex flex-col bg-background gap-0 border-none shadow-[0_32px_80px_rgba(11,31,72,.26)] rounded-none md:rounded-[20px]"
       >
         <DialogTitle className="sr-only">{t("Ticket Details")}</DialogTitle>
         <DialogDescription className="sr-only">
@@ -205,36 +204,59 @@ function CardDetailPage() {
           onClose={() => history.back()}
         />
 
-        <div className="flex flex-1 overflow-hidden min-h-0 bg-background">
+        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden min-h-0 bg-background">
+          {/* Right Sidebar - shown at top on mobile */}
+          <div
+            className="w-full md:w-72 shrink-0 bg-[#F4F5F2]/50 md:overflow-y-auto md:order-2 border-b md:border-b-0"
+            style={{ padding: "22px 18px" }}
+          >
+            <RightSidebar ticket={card} ticketId={ticketId} />
+          </div>
           {/* Main Left Content */}
-          <div className="flex-1 flex flex-col p-4 md:p-[22px_24px] overflow-y-auto gap-6 border-r border-border">
+          <div className="flex-1 flex flex-col p-4 md:p-[22px_24px] md:overflow-y-auto gap-6 md:border-r border-border md:order-1">
             <EditTicket ticket={card} ticketId={ticketId} />
 
-            <div className="mt-6 pt-4 border-t flex-1 flex flex-col min-h-0">
+            <div className="mt-4 md:mt-6 pt-4 border-t flex-1 flex flex-col min-h-0">
               <Tabs
                 defaultValue="activity"
                 className="flex flex-col h-full w-full"
               >
                 <TabsList className="mb-2 shrink-0 justify-start h-auto flex-wrap">
-                  <TabsTrigger value="activity" className="gap-2">
-                    <History className="w-4 h-4" /> {t("Activity")}
+                  <TabsTrigger
+                    value="activity"
+                    className="gap-1.5 md:gap-2 text-xs md:text-sm"
+                  >
+                    <History className="w-3.5 h-3.5 md:w-4 md:h-4" />{" "}
+                    {t("Activity")}
                   </TabsTrigger>
-                  <TabsTrigger value="comments" className="gap-2">
-                    <MessageCircle className="w-4 h-4" /> {t("Comments")}
+                  <TabsTrigger
+                    value="comments"
+                    className="gap-1.5 md:gap-2 text-xs md:text-sm"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />{" "}
+                    {t("Comments")}
                   </TabsTrigger>
                   {card.surveyResponseId && (
-                    <TabsTrigger value="response" className="gap-2">
-                      <FileText className="w-4 h-4" /> {t("Response Details")}
+                    <TabsTrigger
+                      value="response"
+                      className="gap-1.5 md:gap-2 text-xs md:text-sm"
+                    >
+                      <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />{" "}
+                      {t("Response Details")}
                     </TabsTrigger>
                   )}
                   {card.waAutomatedReplyMessageId && (
-                    <TabsTrigger value="automation" className="gap-2">
-                      <MessageSquare className="w-4 h-4" /> {t("Automation")}
+                    <TabsTrigger
+                      value="automation"
+                      className="gap-1.5 md:gap-2 text-xs md:text-sm"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />{" "}
+                      {t("Automation")}
                     </TabsTrigger>
                   )}
                 </TabsList>
 
-                <div className="flex-1 overflow-y-auto pr-2">
+                <div className="flex-1 overflow-y-auto pr-1 md:pr-2">
                   <TabsContent value="activity" className="mt-0">
                     <TicketActivity activities={card?.ticketActivities || []} />
                   </TabsContent>
@@ -267,20 +289,13 @@ function CardDetailPage() {
               </Tabs>
             </div>
           </div>
-          {/* Right Sidebar */}
-          <div
-            className="w-full md:w-64 shrink-0 bg-[#F4F5F2]/50 overflow-y-auto"
-            style={{ padding: "22px 18px" }}
-          >
-            <RightSidebar ticket={card} ticketId={ticketId} />
-          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function AssignContact({ ticketId }: { ticketId: string }) {
+function AssignContact({ ticketId }: Readonly<{ ticketId: string }>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -365,10 +380,10 @@ function AssignContact({ ticketId }: { ticketId: string }) {
 function RightSidebar({
   ticket,
   ticketId,
-}: {
+}: Readonly<{
   ticket: Card;
   ticketId: string;
-}) {
+}>) {
   const { t } = useTranslation();
   const { mutate } = useUpdateCardMutation();
   const { data: members = [] } = useCardTeamMembersById(ticketId);
@@ -543,7 +558,8 @@ function RightSidebar({
               >
                 <Button className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center gap-2 h-10 rounded-lg font-semibold">
                   <IconBrandWhatsapp className="h-4 w-4" />
-                  {t("Open Chat")} <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                  {t("Open Chat In Inbox")}
+                  <ExternalLink className="h-3.5 w-3.5 ml-1" />
                 </Button>
               </Link>
             </div>
@@ -567,11 +583,11 @@ function TicketTopHeader({
   ticket,
   ticketId,
   onClose,
-}: {
+}: Readonly<{
   ticket: Card;
   ticketId: string;
   onClose: () => void;
-}) {
+}>) {
   const { t } = useTranslation();
   const { mutate } = useUpdateCardMutation();
   const [title, setTitle] = useState(ticket.title || "");
@@ -610,10 +626,7 @@ function TicketTopHeader({
   };
 
   return (
-    <div
-      className="border-b border-border flex items-start gap-3 bg-background"
-      style={{ padding: "18px 24px 16px" }}
-    >
+    <div className="border-b border-border flex items-start gap-3 bg-background px-4 py-3 md:px-6 md:pt-4.5 md:pb-4">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           <span className="font-body text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
@@ -628,7 +641,7 @@ function TicketTopHeader({
                 color: "var(--foreground)",
               }}
             >
-              <span className="w-[5px] h-[5px] rounded-full bg-primary" />
+              <span className="w-1.25 h-1.25 rounded-full bg-primary" />
               {currentCol.title}
             </span>
           )}
@@ -675,7 +688,7 @@ function TicketTopHeader({
                 setTitle(ticket.title || "");
               }
             }}
-            className="font-display font-extrabold text-[21px] text-foreground tracking-tight border-none outline-none w-full bg-transparent"
+            className="font-display font-extrabold text-base md:text-[21px] text-foreground tracking-tight border-none outline-none w-full bg-transparent"
             style={{
               borderBottom: "2px solid var(--primary)",
               padding: "0 0 2px",
@@ -687,7 +700,7 @@ function TicketTopHeader({
               setIsEditingTitle(true);
               setTimeout(() => titleRef.current?.focus(), 20);
             }}
-            className="font-display font-extrabold text-[21px] text-foreground leading-[1.2] cursor-text tracking-tight hover:opacity-80 transition-opacity"
+            className="font-display font-extrabold text-base md:text-[21px] text-foreground leading-[1.2] cursor-text tracking-tight hover:opacity-80 transition-opacity"
           >
             {title || t("Untitled Ticket")}
           </div>
@@ -697,7 +710,7 @@ function TicketTopHeader({
       <div className="flex gap-0.5 shrink-0">
         <button
           onClick={onClose}
-          className="w-[30px] h-[30px] rounded-[7px] border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-colors hover:bg-muted/50"
+          className="w-7.5 h-7.5 rounded-[7px] border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-colors hover:bg-muted/50"
         >
           <X size={16} strokeWidth={1.75} />
         </button>
@@ -706,7 +719,10 @@ function TicketTopHeader({
   );
 }
 
-function EditTicket({ ticket, ticketId }: { ticket: Card; ticketId: string }) {
+function EditTicket({
+  ticket,
+  ticketId,
+}: Readonly<{ ticket: Card; ticketId: string }>) {
   const { t } = useTranslation();
   const { mutate } = useUpdateCardMutation();
   const [description, setDescription] = useState(ticket.description || "");
@@ -736,7 +752,7 @@ function EditTicket({ ticket, ticketId }: { ticket: Card; ticketId: string }) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder={t("Add a description...")}
-          className="min-h-[80px] bg-muted/30 resize-y"
+          className="min-h-20 bg-muted/30 resize-y"
         />
       </div>
     </div>
@@ -746,10 +762,10 @@ function EditTicket({ ticket, ticketId }: { ticket: Card; ticketId: string }) {
 function TicketComments({
   data,
   ticketCardId,
-}: {
+}: Readonly<{
   data: Array<TicketComment>;
   ticketCardId: string;
-}) {
+}>) {
   const { t } = useTranslation();
   const { mutate } = useCreateCommentMutation(ticketCardId);
   const handleAddComment = (comment: string) => {
@@ -819,7 +835,9 @@ function Comment(data: TicketComment & { cardId: string }) {
   );
 }
 
-function TicketActivity({ activities }: { activities: Array<Activity> }) {
+function TicketActivity({
+  activities,
+}: Readonly<{ activities: Array<Activity> }>) {
   const { t } = useTranslation();
   if (!activities || activities.length === 0)
     return (
@@ -829,7 +847,7 @@ function TicketActivity({ activities }: { activities: Array<Activity> }) {
     );
 
   return (
-    <div className="flex flex-col gap-4 mt-4 relative before:absolute before:inset-y-0 before:left-[15px] before:w-[2px] before:bg-border">
+    <div className="flex flex-col gap-4 mt-4 relative before:absolute before:inset-y-0 before:left-3.75 before:w-0.5 before:bg-border">
       {activities.map((activity) => {
         let title = "";
         let IconCmp = ListPlus;
