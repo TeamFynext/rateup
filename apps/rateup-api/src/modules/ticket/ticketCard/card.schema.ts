@@ -13,6 +13,7 @@ const cardCore = {
   order: z.number().optional(),
   type: z.enum(TicketType).optional(),
   contactId: z.string().uuid().optional(),
+  priority: z.enum(TicketPriority).optional(),
 };
 
 // Schema for creating a card

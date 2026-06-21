@@ -1,4 +1,7 @@
-import { TicketType } from "../../../../generated/prisma/client.js";
+import {
+  TicketPriority,
+  TicketType,
+} from "../../../../generated/prisma/client.js";
 import { getShortUrlId } from "../../../utils/commonUtils.js";
 import prisma from "../../../utils/prisma.js";
 import { UpdateCardRequest } from "./card.schema.js";
@@ -27,6 +30,7 @@ export interface CardInput {
   waAutomatedReplyMessageId?: string;
   surveyResponseId?: string;
   contactId?: string;
+  priority?: TicketPriority;
 }
 
 //used in zapier also
@@ -48,7 +52,7 @@ export async function createCard(data: CardInput) {
       title,
       order,
       ticketId: getShortUrlId(),
-      priority: "MEDIUM",
+      priority: data.priority || "MEDIUM",
     },
     include: {
       ticketColumn: {
@@ -145,7 +149,7 @@ export async function createCard(data: CardInput) {
 export async function getCards(ticketColumnId: string) {
   return prisma.ticketCard.findMany({
     where: { ticketColumnId },
-    orderBy: { createdAt: "asc" },
+    orderBy: { order: "asc" },
   });
 }
 
