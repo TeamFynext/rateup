@@ -31,11 +31,22 @@ export interface CardInput {
   surveyResponseId?: string;
   contactId?: string;
   priority?: TicketPriority;
+  deadline?: string | Date | null;
 }
 
 //used in zapier also
 export async function createCard(data: CardInput) {
   const { title, userId, orgId, ...otherData } = data;
+
+  const column = await prisma.ticketColumn.findUnique({
+    where: { id: data.ticketColumnId },
+    select: { ticketBoardId: true, title: true },
+  });
+
+  if (!column) {
+    throw new Error(`TicketColumn with id ${data.ticketColumnId} not found`);
+  }
+
   // Get the highest order in the column to place new card at the end
   const highestOrderCard = await prisma.ticketCard.findFirst({
     where: { ticketColumnId: data.ticketColumnId },
@@ -76,11 +87,6 @@ export async function createCard(data: CardInput) {
       },
     },
   });
-  const column = await prisma.ticketColumn.findUnique({
-    where: { id: data.ticketColumnId },
-    select: { ticketBoardId: true, title: true },
-  });
-  if (!column) return;
 
   const board = await prisma.ticketBoard.findFirst({
     where: {
@@ -290,6 +296,9 @@ export async function updateCard(
       priority: data.priority !== undefined ? data.priority : undefined,
       deadline: data.deadline !== undefined ? data.deadline : undefined,
       contactId: data.contactId !== undefined ? data.contactId : undefined,
+      checklists: data.checklists !== undefined ? data.checklists : undefined,
+      attachments:
+        data.attachments !== undefined ? data.attachments : undefined,
       ...(data.assignedToIds !== undefined
         ? {
             assignees: {
@@ -584,11 +593,16 @@ export async function reorderCards(cards: { id: string; order: number }[]) {
 }
 
 export async function autoGenerateTicket(data: CardInput) {
-  let createdNewTicket = await createCard({
-    ...data,
-    title: data?.surveyResponseId
-      ? "Response Ticket (Auto Generated)"
-      : "WhatsApp Automation Ticket",
-  });
-  return createdNewTicket;
+  try {
+    let createdNewTicket = await createCard({
+      ...data,
+      title: data?.surveyResponseId
+        ? "Response Ticket (Auto Generated)"
+        : "WhatsApp Automation Ticket",
+    });
+    return createdNewTicket;
+  } catch (error) {
+    console.error({ err: error, message: "Failed to auto-generate ticket" });
+    return null;
+  }
 }
