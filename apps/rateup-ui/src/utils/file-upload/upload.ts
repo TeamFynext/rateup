@@ -30,6 +30,7 @@ export const uploadFile = async (
     });
     return response?.data?.data?.key as string;
   } catch (error) {
+    toast.dismiss("upload-file");
     throw error?.message;
   }
 };

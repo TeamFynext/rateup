@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 
 import { IconPlus } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { List, NotebookTabs, Sparkles, Ticket, Type } from "lucide-react";
+import {
+  Calendar,
+  List,
+  NotebookTabs,
+  Sparkles,
+  Ticket,
+  Type,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -288,6 +295,9 @@ const CreateTicketModal = ({
                 setFormData({ ...formData, deadline: e.target.value })
               }
               min={new Date().toISOString().split("T")[0]}
+              onClick={(e) =>
+                "showPicker" in e.target && (e.target as any).showPicker()
+              }
             />
           </div>
         </div>
@@ -326,6 +336,7 @@ export const CreateTicketCard = ({
     ticketColumnId: "",
     title: "",
     description: "",
+    deadline: "",
     type,
   });
 
@@ -344,15 +355,18 @@ export const CreateTicketCard = ({
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-    createCard(
-      { ...formData, contactId },
-      {
-        onSuccess: () => {
-          setSubmitting(false);
-          cancel();
-        },
+
+    const payload: any = { ...formData, contactId };
+    if (!payload.deadline) {
+      delete payload.deadline;
+    }
+
+    createCard(payload, {
+      onSuccess: () => {
+        setSubmitting(false);
+        cancel();
       },
-    );
+    });
   }
 
   function cancel() {
@@ -360,6 +374,7 @@ export const CreateTicketCard = ({
       ticketColumnId: "",
       title: "",
       description: "",
+      deadline: "",
       type,
     });
     setErrors({});
@@ -501,6 +516,28 @@ export const CreateTicketCard = ({
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
+                }
+              />
+            </div>
+
+            {/* Due Date */}
+            <div className="space-y-1">
+              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <div className="bg-red-100 text-red-600 p-1 rounded-sm">
+                  <Calendar size={14} />
+                </div>
+                <div>{t("Due Date")}</div>
+              </Label>
+
+              <Input
+                type="date"
+                value={formData.deadline}
+                onChange={(e) =>
+                  setFormData({ ...formData, deadline: e.target.value })
+                }
+                min={new Date().toISOString().split("T")[0]}
+                onClick={(e) =>
+                  "showPicker" in e.target && (e.target as any).showPicker()
                 }
               />
             </div>

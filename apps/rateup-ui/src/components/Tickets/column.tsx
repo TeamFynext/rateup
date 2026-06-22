@@ -134,6 +134,7 @@ export function Column({
     title: "",
     description: "",
     priority: "MEDIUM",
+    deadline: "",
   });
   const openEditModal = () => setIsEditModalOpen(true);
   const closeEditModal = () => setIsEditModalOpen(false);
@@ -186,16 +187,27 @@ export function Column({
   const handleAddCard = () => {
     if (!newCard.title.trim()) return;
 
-    createCard({
+    const payload: any = {
       title: newCard.title,
       description: newCard.description || "",
       ticketColumnId: column.id,
       type: TicketType.CUSTOM,
       priority: newCard.priority as any,
-    });
+    };
+
+    if (newCard.deadline) {
+      payload.deadline = newCard.deadline;
+    }
+
+    createCard(payload);
 
     // Reset and close modal
-    setNewCard({ title: "", description: "", priority: "MEDIUM" });
+    setNewCard({
+      title: "",
+      description: "",
+      priority: "MEDIUM",
+      deadline: "",
+    });
     closeAddCardModal();
   };
 
@@ -362,7 +374,7 @@ export function Column({
 
   return (
     <div
-      className="w-[282px] shrink-0 flex flex-col max-h-full"
+      className="w-xs shrink-0 flex flex-col max-h-full"
       ref={outerFullHeightRef}
     >
       <div
@@ -399,10 +411,8 @@ export function Column({
               {column.title}
             </span>
             <span
-              className="font-body text-[11px] font-bold rounded-full"
+              className="font-body text-[11px] font-bold rounded-full text-slate-800 bg-slate-100"
               style={{
-                color: "#1e293b",
-                background: "#f1f5f9",
                 padding: "2px 8px",
               }}
             >
@@ -602,6 +612,22 @@ export function Column({
                     );
                   })}
               </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-semibold">{t("Due Date")}</Label>
+              <Input
+                type="date"
+                value={newCard.deadline}
+                onChange={(e) =>
+                  setNewCard((prev) => ({ ...prev, deadline: e.target.value }))
+                }
+                min={new Date().toISOString().split("T")[0]}
+                className="h-10"
+                onClick={(e) =>
+                  "showPicker" in e.target && (e.target as any).showPicker()
+                }
+              />
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-4">

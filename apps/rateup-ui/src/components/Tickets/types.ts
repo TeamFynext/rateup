@@ -77,6 +77,8 @@ export interface Card {
     lastReceivedMessageTimeStamp?: string;
     consent?: boolean;
   } | null;
+  checklists?: any;
+  attachments?: any[];
 }
 
 export interface surveyResponse {

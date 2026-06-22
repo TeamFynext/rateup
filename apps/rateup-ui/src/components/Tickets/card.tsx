@@ -19,6 +19,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import {
   Calendar,
+  CalendarClock,
+  CheckSquare,
   MessageCircle,
   MoreHorizontal,
   Trash2,
@@ -155,12 +157,29 @@ export function CardDisplay({
   const assignedMemberId = card.assignees?.[0]?.assigneeId;
   const assignee = members.find((m: any) => m.id === assignedMemberId);
 
-  const dateFormatted = card.createdAt
-    ? format(new Date(card.createdAt), "dd MMM")
-    : "";
-  const isOverdue = card.deadline
-    ? new Date(card.deadline).getTime() < Date.now()
-    : false;
+  const allItems = (card.checklists || []).flatMap((cl: any) => cl.items || []);
+  const doneCount = allItems.filter((i: any) => i.done).length;
+  const totalCount = allItems.length;
+
+  const hasDueDate = !!card.deadline;
+  const targetDate = card.deadline
+    ? new Date(card.deadline)
+    : card.createdAt
+      ? new Date(card.createdAt)
+      : null;
+
+  const dateFormatted = targetDate ? format(targetDate, "dd MMM") : "";
+
+  let isCloseToDueDate = false;
+  let isOverdue = false;
+
+  if (hasDueDate && card.deadline) {
+    const dueDateObj = new Date(card.deadline);
+    const now = Date.now();
+    isOverdue = dueDateObj.getTime() < now;
+    const twoDaysFromNow = now + 2 * 24 * 60 * 60 * 1000;
+    isCloseToDueDate = !isOverdue && dueDateObj.getTime() <= twoDaysFromNow;
+  }
 
   const handleMenuClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -246,10 +265,9 @@ export function CardDisplay({
         {/* Subtitle */}
         <div className="flex items-center gap-1.5 mt-1">
           <span
-            className="w-[7px] h-[7px] rounded-full shrink-0"
-            style={{ background: assignee ? "#25D366" : "#C9CAC7" }}
+            className={`w-[7px] h-[7px] rounded-full shrink-0 ${assignee ? "bg-green-500" : "bg-gray-300"}`}
           />
-          <span className="font-body text-[12.5px] text-[#8589A0] font-medium truncate">
+          <span className="font-body text-[12.5px] text-muted-foreground font-medium truncate">
             {assignee ? assignee.name : t("Unassigned")}
           </span>
         </div>
@@ -266,7 +284,21 @@ export function CardDisplay({
               </span>
             );
           })}
-          <span className="inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium text-[#8589A0]">
+          {totalCount > 0 && (
+            <span
+              className={`inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium ${doneCount === totalCount ? "text-green-600" : "text-muted-foreground"}`}
+            >
+              <CheckSquare
+                size={12}
+                strokeWidth={2}
+                className={
+                  doneCount === totalCount ? "text-green-600" : "text-gray-400"
+                }
+              />
+              {doneCount}/{totalCount}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium text-muted-foreground">
             <MessageCircle
               size={12}
               className="text-muted-foreground"
@@ -277,7 +309,7 @@ export function CardDisplay({
         </div>
 
         {/* Divider */}
-        <div className="h-px bg-[#F0F0EE] my-3" />
+        <div className="h-px bg-border my-3" />
 
         {/* Footer */}
         <div className="flex items-center justify-between gap-2">
@@ -301,14 +333,27 @@ export function CardDisplay({
           <div className="flex items-center gap-[9px]">
             {dateFormatted && (
               <span
-                className="inline-flex items-center gap-1 font-body text-[11.5px] font-medium"
-                style={{ color: isOverdue ? "#DC2626" : "#8589A0" }}
+                className={`inline-flex items-center gap-1 font-body text-[11.5px] font-medium ${isOverdue ? "text-red-600" : isCloseToDueDate ? "text-amber-600" : "text-muted-foreground"}`}
               >
-                <Calendar
-                  size={12}
-                  strokeWidth={2}
-                  style={{ color: isOverdue ? "#DC2626" : "#B7B9B5" }}
-                />
+                {hasDueDate ? (
+                  <CalendarClock
+                    size={12}
+                    strokeWidth={2}
+                    className={
+                      isOverdue
+                        ? "text-red-600"
+                        : isCloseToDueDate
+                          ? "text-amber-600"
+                          : "text-gray-400"
+                    }
+                  />
+                ) : (
+                  <Calendar
+                    size={12}
+                    strokeWidth={2}
+                    className="text-gray-400"
+                  />
+                )}
                 {dateFormatted}
               </span>
             )}
