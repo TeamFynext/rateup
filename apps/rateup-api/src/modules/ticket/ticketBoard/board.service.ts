@@ -66,14 +66,34 @@ export async function getBoardById(id: string) {
     where: { id },
     include: {
       ticketColumns: {
+        orderBy: {
+          order: "asc",
+        },
         include: {
           ticketCards: {
             orderBy: {
-              createdAt: "desc",
+              order: "asc",
             },
             include: {
               assignees: true,
               ticketComments: true,
+              contact: {
+                select: { id: true, name: true, phone: true },
+              },
+              surveyResponse: {
+                include: {
+                  Contact: {
+                    select: { id: true, name: true, phone: true },
+                  },
+                },
+              },
+              waAutomatedReplyMessage: {
+                include: {
+                  waAutomatedReply: {
+                    select: { name: true },
+                  },
+                },
+              },
             },
           },
         },
