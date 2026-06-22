@@ -43,6 +43,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem.tsx";
+import SurveyContext from "@/context/SurveyContext.ts";
+import { useUser } from "@/context/UserContext.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
@@ -53,8 +55,6 @@ import {
   YNResponseMap,
 } from "@/utils/whatsapp/enumMap.ts";
 
-import SurveyContext from "@/context/SurveyContext.ts";
-import { useUser } from "@/context/UserContext.tsx";
 import FormModalLayout from "../../Modal/FormModalLayout.tsx";
 import { DataTable } from "../../Table/data-table.tsx";
 import CreateTicketModal from "../../Tickets/CreateTicketModal.tsx";
@@ -405,6 +405,8 @@ const WaResponses = ({
       const row = {
         id: item.id,
         contactId: item.contactId,
+        teamId: item.teamId || item.surveyTeamMap?.teamId,
+        Ticket: item.Ticket,
         language: item.language,
         createdAt: item.createdAt,
         mobile: item?.phone || "N/A",

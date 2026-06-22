@@ -11,19 +11,24 @@ import parse from "html-react-parser";
 import {
   AlertCircle,
   Check,
+  CheckSquare,
   ExternalLink,
   FileText,
   History,
   ListPlus,
-  MessageCircle,
+  Loader2,
   MessageSquare,
+  Paperclip,
   Plus,
   Trash,
+  Trash2,
   User,
   UserPlus,
   X,
+  ZoomIn,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 import { QuestionType2 } from "@/types/enums.ts";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
@@ -73,7 +78,11 @@ import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensLi
 import { useUser } from "@/context/UserContext.tsx";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
-import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
+import {
+  deleteUploadedFiles,
+  getFileUrlFromKey,
+  uploadFile,
+} from "@/utils/file-upload/upload.ts";
 
 export const Route = createFileRoute("/dashboard/tickets/$ticketId/")({
   component: CardDetailPage,
@@ -102,10 +111,12 @@ function DateRow({
   label,
   value,
   warn,
+  color,
 }: Readonly<{
   label: string;
   value: string | Date | null | undefined;
   warn?: boolean;
+  color?: string;
 }>) {
   const fmt = value
     ? new Date(value).toLocaleDateString("en-IN", {
@@ -120,13 +131,14 @@ function DateRow({
       <span className="font-body text-xs text-muted-foreground">{label}</span>
       {fmt ? (
         <span
-          className="font-body text-xs font-semibold flex items-center gap-0.75"
-          style={{ color: warn ? "#DC2626" : "currentColor" }}
+          className={`font-body text-xs font-semibold flex items-center gap-1 ${!color && warn ? "text-red-600" : ""}`}
+          style={{ color: color || undefined }}
         >
           {warn && (
             <AlertCircle
               size={11}
-              className="text-destructive"
+              className={!color ? "text-red-600" : undefined}
+              style={{ color: color || undefined }}
               strokeWidth={2}
             />
           )}
@@ -205,58 +217,68 @@ function CardDetailPage() {
         />
 
         <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden min-h-0 bg-background">
-          {/* Right Sidebar - shown at top on mobile */}
-          <div
-            className="w-full md:w-72 shrink-0 bg-[#F4F5F2]/50 md:overflow-y-auto md:order-2 border-b md:border-b-0"
-            style={{ padding: "22px 18px" }}
-          >
-            <RightSidebar ticket={card} ticketId={ticketId} />
+          <div className="w-full md:w-72 shrink-0 bg-slate-50/50 md:overflow-y-auto md:order-2 border-b md:border-b-0 md:border-l border-border">
+            <div className="p-4 md:p-5">
+              <RightSidebar ticket={card} ticketId={ticketId} />
+            </div>
           </div>
           {/* Main Left Content */}
-          <div className="flex-1 flex flex-col p-4 md:p-[22px_24px] md:overflow-y-auto gap-6 md:border-r border-border md:order-1">
-            <EditTicket ticket={card} ticketId={ticketId} />
+          <div className="flex-1 flex flex-col overflow-y-auto md:overflow-y-auto md:border-r border-border md:order-1 min-h-0">
+            {/* Top area - description, checklists, etc. */}
+            <div className="p-4 md:p-[22px_24px] md:pb-0 shrink-0">
+              <EditTicket ticket={card} ticketId={ticketId} />
+            </div>
 
-            <div className="mt-4 md:mt-6 pt-4 border-t flex-1 flex flex-col min-h-0">
-              <Tabs
-                defaultValue="activity"
-                className="flex flex-col h-full w-full"
-              >
-                <TabsList className="mb-2 shrink-0 justify-start h-auto flex-wrap">
-                  <TabsTrigger
-                    value="activity"
-                    className="gap-1.5 md:gap-2 text-xs md:text-sm"
-                  >
-                    <History className="w-3.5 h-3.5 md:w-4 md:h-4" />{" "}
-                    {t("Activity")}
-                  </TabsTrigger>
+            {/* Divider */}
+            <div className="border-t border-border mx-4 md:mx-6 mt-3" />
+
+            {/* Bottom - Tabs */}
+            <div className="flex-1 p-4 md:p-[22px_24px] md:pt-4">
+              <Tabs defaultValue="comments" className="w-full">
+                <TabsList className="mb-4 shrink-0 justify-start h-auto flex-wrap bg-transparent p-0 rounded-none space-x-6">
                   <TabsTrigger
                     value="comments"
-                    className="gap-1.5 md:gap-2 text-xs md:text-sm"
+                    className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-1 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
                   >
-                    <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />{" "}
-                    {t("Comments")}
+                    <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    <div className="flex items-center">
+                      <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground group-data-[state=active]:bg-blue-50 group-data-[state=active]:text-blue-800">
+                        {card.ticketComments?.length || 0}
+                      </span>
+                    </div>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="activity"
+                    className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-1 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
+                  >
+                    <History className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    <div className="flex items-center">
+                      <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground group-data-[state=active]:bg-blue-50 group-data-[state=active]:text-blue-800">
+                        {card.ticketActivities?.length || 0}
+                      </span>
+                    </div>
                   </TabsTrigger>
                   {card.surveyResponseId && (
                     <TabsTrigger
                       value="response"
-                      className="gap-1.5 md:gap-2 text-xs md:text-sm"
+                      className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-1 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
                     >
-                      <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />{" "}
+                      <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       {t("Response Details")}
                     </TabsTrigger>
                   )}
                   {card.waAutomatedReplyMessageId && (
                     <TabsTrigger
                       value="automation"
-                      className="gap-1.5 md:gap-2 text-xs md:text-sm"
+                      className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-1 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
                     >
-                      <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />{" "}
+                      <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       {t("Automation")}
                     </TabsTrigger>
                   )}
                 </TabsList>
 
-                <div className="flex-1 overflow-y-auto pr-1 md:pr-2">
+                <div className="pr-1 md:pr-2">
                   <TabsContent value="activity" className="mt-0">
                     <TicketActivity activities={card?.ticketActivities || []} />
                   </TabsContent>
@@ -387,13 +409,138 @@ function RightSidebar({
   const { t } = useTranslation();
   const { mutate } = useUpdateCardMutation();
   const { data: members = [] } = useCardTeamMembersById(ticketId);
-  console.log(ticket);
+  const { user } = useUser();
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [attachmentToDelete, setAttachmentToDelete] = useState<any>(null);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
+  const isImage = (att: any) =>
+    att.name && /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(att.name);
+
+  const ALLOWED_MIME_TYPES = new Set([
+    // Images
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/svg+xml",
+    "image/bmp",
+    // Documents
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain",
+    "text/csv",
+  ]);
+
+  const isAllowedFile = (file: File) => ALLOWED_MIME_TYPES.has(file.type);
+
+  const handleSelectFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files || []);
+    if (!selected.length) return;
+
+    const currentCount = (ticket.attachments || []).length;
+    const MAX_ATTACHMENTS = 4;
+
+    if (currentCount >= MAX_ATTACHMENTS) {
+      toast.error(`Maximum ${MAX_ATTACHMENTS} attachments allowed per ticket.`);
+      e.target.value = "";
+      return;
+    }
+
+    const invalidFiles = selected.filter((f) => !isAllowedFile(f));
+    let validFiles = selected.filter((f) => isAllowedFile(f));
+
+    if (invalidFiles.length > 0) {
+      toast.dismiss("upload-file");
+      toast.error(
+        `${invalidFiles.map((f) => f.name).join(", ")} — only images and documents are allowed. Videos and audio files are not supported.`,
+        { id: "upload-file" },
+      );
+    }
+
+    const slotsLeft = MAX_ATTACHMENTS - currentCount;
+    if (validFiles.length > slotsLeft) {
+      toast.error(
+        `Only ${slotsLeft} more attachment${slotsLeft === 1 ? "" : "s"} can be added (max ${MAX_ATTACHMENTS}).`,
+      );
+      validFiles = validFiles.slice(0, slotsLeft);
+    }
+
+    if (!validFiles.length) {
+      e.target.value = "";
+      return;
+    }
+
+    setIsUploadingFile(true);
+    try {
+      const newAttachments = [];
+      for (const file of validFiles) {
+        const fileKey = await uploadFile(file);
+
+        newAttachments.push({
+          id: crypto.randomUUID(),
+          name: file.name,
+          key: fileKey,
+          uploadedBy: user
+            ? {
+                id: user.userId,
+                name: user.userName,
+              }
+            : null,
+        });
+      }
+
+      const updatedAttachments = [
+        ...(ticket.attachments || []),
+        ...newAttachments,
+      ];
+      mutate({ id: ticketId, attachments: updatedAttachments });
+    } catch {
+      toast.error("Failed to upload file. Please try again.");
+    } finally {
+      setIsUploadingFile(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeAttachment = async (att: any) => {
+    if (att?.key) {
+      await deleteUploadedFiles({ fileKeyArray: [{ Key: att.key }] });
+    }
+    const updatedAttachments = (ticket.attachments || []).filter(
+      (a: any) => a.id !== att.id,
+    );
+    mutate({ id: ticketId, attachments: updatedAttachments });
+    setAttachmentToDelete(null);
+  };
 
   const linkedContact = ticket.contactId
     ? ticket.contact
     : ticket.surveyResponseId
       ? ticket?.surveyResponse?.Contact
       : ticket?.waAutomatedReplyMessage?.contact;
+
+  let isCloseToDueDate = false;
+  let isOverdue = false;
+
+  if (ticket.deadline) {
+    const dueDateObj = new Date(ticket.deadline);
+    const now = Date.now();
+    isOverdue = dueDateObj.getTime() < now;
+    const twoDaysFromNow = now + 2 * 24 * 60 * 60 * 1000;
+    isCloseToDueDate = !isOverdue && dueDateObj.getTime() <= twoDaysFromNow;
+  }
+
+  const dueDateColor = isOverdue
+    ? "#DC2626"
+    : isCloseToDueDate
+      ? "#D97706"
+      : undefined;
 
   const handlePriorityChange = (priority: string) => {
     mutate({ id: ticketId, priority });
@@ -410,172 +557,337 @@ function RightSidebar({
 
   const assignedMembers = ticket.assignees?.map((a) => a.assigneeId) || [];
   return (
-    <TooltipProvider>
-      <div className="flex flex-col gap-6">
-        <div>
-          <MetaLabel>{t("Priority")}</MetaLabel>
-          <div className="flex gap-[5px] flex-wrap">
-            {Object.entries(PRIORITY_CONFIG)
-              .filter(([k]) => k !== "na")
-              .map(([k, v]) => {
-                const priorityKey = ticket.priority?.toLowerCase() || "medium";
-                const isSelected = priorityKey === k;
+    <>
+      <TooltipProvider>
+        <div className="flex flex-col gap-6">
+          <div>
+            <MetaLabel>{t("Priority")}</MetaLabel>
+            <div className="flex gap-[5px] flex-wrap">
+              {Object.entries(PRIORITY_CONFIG)
+                .filter(([k]) => k !== "na")
+                .map(([k, v]) => {
+                  const priorityKey =
+                    ticket.priority?.toLowerCase() || "medium";
+                  const isSelected = priorityKey === k;
+                  return (
+                    <button
+                      key={k}
+                      onClick={() => handlePriorityChange(k.toUpperCase())}
+                      className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
+                      style={{
+                        padding: "4px 10px",
+                        border: isSelected
+                          ? `2px solid ${v.dot}`
+                          : `2px solid ${v.bg}`,
+                        background: v.bg,
+                        color: v.color,
+                        boxShadow: isSelected ? `0 0 0 2px ${v.dot}22` : "none",
+                      }}
+                    >
+                      {t(v.label)}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+
+          <div>
+            <MetaLabel>{t("Assignee")}</MetaLabel>
+            <div className="flex flex-wrap gap-2 items-center">
+              {assignedMembers.map((memberId) => {
+                const user = members.find((m) => m.id === memberId);
+                if (!user) return null;
                 return (
-                  <button
-                    key={k}
-                    onClick={() => handlePriorityChange(k.toUpperCase())}
-                    className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
-                    style={{
-                      padding: "4px 10px",
-                      border: isSelected
-                        ? `2px solid ${v.dot}`
-                        : `2px solid ${v.bg}`,
-                      background: v.bg,
-                      color: v.color,
-                      boxShadow: isSelected ? `0 0 0 2px ${v.dot}22` : "none",
-                    }}
-                  >
-                    {t(v.label)}
-                  </button>
+                  <Tooltip key={user.id}>
+                    <TooltipTrigger asChild>
+                      <Avatar
+                        className="h-8 w-8 border hover:opacity-80 transition cursor-pointer"
+                        onClick={() => handleToggleMember(user.id)}
+                      >
+                        <AvatarImage
+                          src={getFileUrlFromKey(user.profilePhoto)}
+                        />
+                        <AvatarFallback>
+                          {user.name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent>{user.name}</TooltipContent>
+                  </Tooltip>
                 );
               })}
-          </div>
-        </div>
 
-        <div>
-          <MetaLabel>{t("Assignee")}</MetaLabel>
-          <div className="flex flex-wrap gap-2 items-center">
-            {assignedMembers.map((memberId) => {
-              const user = members.find((m) => m.id === memberId);
-              if (!user) return null;
-              return (
-                <Tooltip key={user.id}>
-                  <TooltipTrigger asChild>
-                    <Avatar
-                      className="h-8 w-8 border hover:opacity-80 transition cursor-pointer"
-                      onClick={() => handleToggleMember(user.id)}
-                    >
-                      <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} />
-                      <AvatarFallback>
-                        {user.name?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </TooltipTrigger>
-                  <TooltipContent>{user.name}</TooltipContent>
-                </Tooltip>
-              );
-            })}
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="h-8 w-8 rounded-full border-2 border-dashed flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors">
-                  <Plus className="h-4 w-4" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-1" align="start">
-                <div
-                  className="max-h-64 overflow-y-auto"
-                  onWheel={(e) => e.stopPropagation()}
-                  onTouchMove={(e) => e.stopPropagation()}
-                >
-                  {members.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">
-                      {t("No members found")}
-                    </div>
-                  ) : (
-                    members.map((user) => {
-                      const isSelected = assignedMembers.includes(user.id);
-                      return (
-                        <button
-                          key={user.id}
-                          onClick={() => handleToggleMember(user.id)}
-                          className="w-full flex items-center justify-between p-2 hover:bg-muted rounded-md text-sm transition"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage
-                                src={getFileUrlFromKey(user.profilePhoto)}
-                              />
-                              <AvatarFallback>
-                                {user.name?.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span>{user.name}</span>
-                          </div>
-                          {isSelected && (
-                            <Check className="h-4 w-4 text-primary" />
-                          )}
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-          {assignedMembers.length === 0 && (
-            <div className="text-sm text-muted-foreground mt-2">
-              {t("Unassigned")}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="h-8 w-8 rounded-full border-2 border-dashed flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-1" align="start">
+                  <div
+                    className="max-h-64 overflow-y-auto"
+                    onWheel={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
+                  >
+                    {members.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        {t("No members found")}
+                      </div>
+                    ) : (
+                      members.map((user) => {
+                        const isSelected = assignedMembers.includes(user.id);
+                        return (
+                          <button
+                            key={user.id}
+                            onClick={() => handleToggleMember(user.id)}
+                            className="w-full flex items-center justify-between p-2 hover:bg-muted rounded-md text-sm transition"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage
+                                  src={getFileUrlFromKey(user.profilePhoto)}
+                                />
+                                <AvatarFallback>
+                                  {user.name?.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span>{user.name}</span>
+                            </div>
+                            {isSelected && (
+                              <Check className="h-4 w-4 text-primary" />
+                            )}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
-          )}
-        </div>
-        {linkedContact ? (
-          <div>
-            <MetaLabel>{t("Customer")}</MetaLabel>
-            <div className="border rounded-xl p-4 bg-card shadow-sm flex flex-col gap-4 relative group">
-              {ticket.contactId && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    mutate({ id: ticketId, contactId: null });
-                  }}
-                  className="absolute top-3 right-3 text-muted-foreground hover:text-red-500 transition-colors z-10 bg-background rounded-full p-1 border shadow-sm"
-                  title={t("Remove contact")}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-              <div className="flex items-center gap-3 relative">
-                <Avatar className="h-12 w-12 border bg-muted flex items-center justify-center">
-                  <span className="font-semibold text-muted-foreground">
-                    {linkedContact.name?.substring(0, 2).toUpperCase() || "CN"}
-                  </span>
-                </Avatar>
-                <div className="absolute left-8 bottom-0 h-3.5 w-3.5 bg-green-500 border-2 border-white rounded-full"></div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-sm text-foreground">
-                    {linkedContact.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    +{linkedContact.phone}
-                  </span>
-                </div>
+            {assignedMembers.length === 0 && (
+              <div className="text-sm text-muted-foreground mt-2">
+                {t("Unassigned")}
               </div>
-              <Link
-                to={`/dashboard/inbox?tab=mine&contactId=${linkedContact.id}`}
-                className="w-full"
-              >
-                <Button className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center gap-2 h-10 rounded-lg font-semibold">
-                  <IconBrandWhatsapp className="h-4 w-4" />
-                  {t("Open Chat In Inbox")}
-                  <ExternalLink className="h-3.5 w-3.5 ml-1" />
-                </Button>
-              </Link>
+            )}
+          </div>
+          {linkedContact ? (
+            <div>
+              <MetaLabel>{t("Customer")}</MetaLabel>
+              <div className="border rounded-xl p-4 bg-card shadow-sm flex flex-col gap-4 relative group">
+                {ticket.contactId && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      mutate({ id: ticketId, contactId: null });
+                    }}
+                    className="absolute top-3 right-3 text-muted-foreground hover:text-red-500 transition-colors z-10 bg-background rounded-full p-1 border shadow-sm"
+                    title={t("Remove contact")}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                <div className="flex items-center gap-3 relative">
+                  <Avatar className="h-12 w-12 border bg-muted flex items-center justify-center">
+                    <span className="font-semibold text-muted-foreground">
+                      {linkedContact.name?.substring(0, 2).toUpperCase() ||
+                        "CN"}
+                    </span>
+                  </Avatar>
+                  <div className="absolute left-8 bottom-0 h-3.5 w-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm text-foreground">
+                      {linkedContact.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      +{linkedContact.phone}
+                    </span>
+                  </div>
+                </div>
+                <Link
+                  to={`/dashboard/inbox?tab=mine&contactId=${linkedContact.id}`}
+                  className="w-full"
+                >
+                  <Button className="w-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-2 h-10 rounded-lg font-semibold">
+                    <IconBrandWhatsapp className="h-4 w-4" />
+                    {t("Open Chat In Inbox")}
+                    <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <AssignContact ticketId={ticketId} />
+          )}
+
+          <div>
+            <MetaLabel>{t("Dates")}</MetaLabel>
+            <div className="flex flex-col gap-2">
+              <DateRow label={t("Created")} value={ticket.createdAt} />
+              {ticket.deadline && (
+                <DateRow
+                  label={t("Due Date")}
+                  value={ticket.deadline}
+                  warn={isOverdue || isCloseToDueDate}
+                  color={dueDateColor}
+                />
+              )}
             </div>
           </div>
-        ) : (
-          <AssignContact ticketId={ticketId} />
-        )}
 
-        <div>
-          <MetaLabel>{t("Dates")}</MetaLabel>
-          <div className="flex flex-col gap-2">
-            <DateRow label={t("Created")} value={ticket.createdAt} />
+          <div>
+            <MetaLabel>{t("Attachments")}</MetaLabel>
+            <div className="flex gap-[7px] flex-wrap mt-1">
+              {(ticket.attachments || []).map((att: any) => {
+                const fileIsImage = isImage(att);
+                const fileUrl = getFileUrlFromKey(att.key);
+                return (
+                  <div
+                    key={att.id}
+                    title={
+                      att.name +
+                      (att.uploadedBy
+                        ? ` (uploaded by ${att.uploadedBy.name})`
+                        : "")
+                    }
+                    className="w-14 h-14 relative group rounded-[9px] bg-muted border border-border flex flex-col items-center justify-center text-muted-foreground cursor-pointer overflow-hidden transition-colors hover:border-primary"
+                    onClick={() => {
+                      if (fileIsImage) {
+                        setLightboxImage(fileUrl);
+                      } else {
+                        window.open(fileUrl, "_blank", "noopener,noreferrer");
+                      }
+                    }}
+                  >
+                    {fileIsImage ? (
+                      <>
+                        <img
+                          src={fileUrl}
+                          alt={att.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display =
+                              "none";
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                          <ZoomIn
+                            size={18}
+                            className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Paperclip size={18} />
+                        <span className="text-[9px] truncate w-full text-center px-1 mt-1 opacity-60">
+                          {att.name.split(".").pop()?.toUpperCase()}
+                        </span>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                          <ExternalLink
+                            size={14}
+                            className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          />
+                        </div>
+                      </>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAttachmentToDelete(att);
+                      }}
+                      className="absolute top-0 right-0 bg-red-500 text-white p-0.5 rounded-bl-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      title="Remove attachment"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                );
+              })}
+
+              {(ticket.attachments || []).length < 4 && (
+                <label className="w-14 h-14 rounded-[9px] border-[1.5px] border-dashed border-border flex items-center justify-center text-muted-foreground cursor-pointer hover:border-primary hover:text-primary transition-colors bg-background">
+                  {isUploadingFile ? (
+                    <Loader2 size={15} className="animate-spin text-primary" />
+                  ) : (
+                    <Plus size={15} />
+                  )}
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                    onChange={handleSelectFiles}
+                    disabled={isUploadingFile}
+                  />
+                </label>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </TooltipProvider>
+      </TooltipProvider>
+
+      {/* Lightbox */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-6"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-1.5 hover:bg-black/80 transition-colors"
+            onClick={() => setLightboxImage(null)}
+          >
+            <X size={20} />
+          </button>
+          <img
+            src={lightboxImage}
+            alt="Attachment preview"
+            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {attachmentToDelete && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-6"
+          onClick={() => setAttachmentToDelete(null)}
+        >
+          <div
+            className="bg-background rounded-xl p-6 shadow-2xl max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-semibold text-base mb-1">
+              {t("Delete Attachment")}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-5">
+              Are you sure you want to delete{" "}
+              <span className="font-medium text-foreground">
+                {attachmentToDelete.name}
+              </span>
+              ? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAttachmentToDelete(null)}
+              >
+                {t("Cancel")}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => removeAttachment(attachmentToDelete)}
+              >
+                {t("Delete")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -662,14 +974,10 @@ function TicketTopHeader({
           </span>
           {isOverdue && (
             <span
-              className="inline-flex items-center gap-1 rounded-full bg-[#FEF2F2] text-[#B91C1C] font-body text-[11px] font-bold border border-[#FECACA]"
+              className="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-700 font-body text-[11px] font-bold border border-red-200"
               style={{ padding: "2px 9px" }}
             >
-              <AlertCircle
-                size={11}
-                className="text-[#B91C1C]"
-                strokeWidth={2}
-              />{" "}
+              <AlertCircle size={11} className="text-red-700" strokeWidth={2} />{" "}
               {t("Overdue")}
             </span>
           )}
@@ -719,6 +1027,92 @@ function TicketTopHeader({
   );
 }
 
+export type ChecklistItem = { id: string; text: string; done: boolean };
+export type Checklist = { id: string; name: string; items: ChecklistItem[] };
+
+function SectionLabel({
+  label,
+  icon: Icon,
+}: {
+  label: string;
+  icon?: React.ElementType;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 mb-3.5">
+      {Icon && (
+        <Icon size={14} className="text-muted-foreground" strokeWidth={2} />
+      )}
+      <span className="font-body text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function AddItemRow({ onAdd }: { onAdd: (text: string) => void }) {
+  const { t } = useTranslation();
+  const [active, setActive] = useState(false);
+  const [text, setText] = useState("");
+
+  const commit = () => {
+    if (!text.trim()) return;
+    onAdd(text.trim());
+    setText("");
+  };
+
+  if (!active && !text) {
+    return (
+      <button
+        onClick={() => setActive(true)}
+        className="font-body text-xs text-muted-foreground bg-transparent border-none cursor-pointer flex items-center gap-1 rounded-md transition-all duration-150 hover:bg-muted hover:text-primary mt-2"
+        style={{ padding: "5px 8px" }}
+      >
+        <Plus size={11} strokeWidth={2.5} /> {t("Add an item")}
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className="flex gap-2 items-center mt-2"
+      style={{ padding: "4px 8px" }}
+    >
+      <div className="w-[17px] h-[17px] rounded-[5px] border-2 border-muted-foreground/30 shrink-0" />
+      <input
+        autoFocus={active}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") {
+            setActive(false);
+            setText("");
+          }
+        }}
+        onBlur={() => {
+          commit();
+          setActive(false);
+        }}
+        placeholder={t("Add an item...")}
+        className="flex-1 font-body text-[13px] border-none border-b-[1.5px] border-b-primary outline-none bg-transparent"
+        style={{ padding: "2px 0" }}
+      />
+      {text && (
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            commit();
+          }}
+          className="font-body text-[11px] font-bold text-primary bg-primary/10 border-none rounded-md cursor-pointer"
+          style={{ padding: "3px 8px" }}
+        >
+          {t("Add")}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function EditTicket({
   ticket,
   ticketId,
@@ -738,8 +1132,80 @@ function EditTicket({
     }
   }, [debouncedDescription, ticketId, mutate, ticket.description]);
 
+  const [localChecklists, setLocalChecklists] = useState<Checklist[]>(
+    ticket.checklists || [],
+  );
+  const [addingChecklist, setAddingChecklist] = useState(false);
+  const [newClName, setNewClName] = useState("");
+
+  useEffect(() => {
+    if (ticket.checklists) {
+      setLocalChecklists(ticket.checklists);
+    }
+  }, [ticket.checklists]);
+
+  const updateChecklists = (newChecklists: Checklist[]) => {
+    setLocalChecklists(newChecklists);
+    mutate({ id: ticketId, checklists: newChecklists });
+  };
+
+  const addChecklist = () => {
+    if (!newClName.trim()) return;
+    updateChecklists([
+      ...localChecklists,
+      { id: crypto.randomUUID(), name: newClName.trim(), items: [] },
+    ]);
+    setNewClName("");
+    setAddingChecklist(false);
+  };
+
+  const deleteChecklist = (clId: string) => {
+    updateChecklists(localChecklists.filter((cl) => cl.id !== clId));
+  };
+
+  const addItem = (clId: string, text: string) => {
+    updateChecklists(
+      localChecklists.map((cl) =>
+        cl.id !== clId
+          ? cl
+          : {
+              ...cl,
+              items: [
+                ...cl.items,
+                { id: crypto.randomUUID(), text, done: false },
+              ],
+            },
+      ),
+    );
+  };
+
+  const toggleItem = (clId: string, itemId: string) => {
+    updateChecklists(
+      localChecklists.map((cl) =>
+        cl.id !== clId
+          ? cl
+          : {
+              ...cl,
+              items: cl.items.map((i) =>
+                i.id === itemId ? { ...i, done: !i.done } : i,
+              ),
+            },
+      ),
+    );
+  };
+
+  const deleteItem = (clId: string, itemId: string) => {
+    updateChecklists(
+      localChecklists.map((cl) =>
+        cl.id !== clId
+          ? cl
+          : { ...cl, items: cl.items.filter((i) => i.id !== itemId) },
+      ),
+    );
+  };
+
   return (
-    <div className="flex flex-col gap-4 shrink-0">
+    <div className="flex flex-col gap-8 shrink-0">
       {/* Description Editor */}
       <div>
         <div className="flex items-center gap-2 mb-2">
@@ -754,6 +1220,162 @@ function EditTicket({
           placeholder={t("Add a description...")}
           className="min-h-20 bg-muted/30 resize-y"
         />
+      </div>
+
+      {/* Checklists */}
+      <div>
+        <div className="flex items-center justify-between mb-3.5">
+          <SectionLabel label={t("Checklists")} icon={CheckSquare} />
+          <button
+            onClick={() => setAddingChecklist(true)}
+            className="font-body text-xs font-semibold text-primary bg-primary/10 border-none rounded-md cursor-pointer flex items-center gap-1 transition-colors hover:bg-primary/20"
+            style={{ padding: "4px 10px" }}
+          >
+            <Plus size={12} strokeWidth={2.5} /> {t("Add checklist")}
+          </button>
+        </div>
+
+        {localChecklists.length === 0 && !addingChecklist && (
+          <div className="p-3.5 bg-muted/30 rounded-lg border-[1.5px] border-dashed border-border font-body text-[13px] text-muted-foreground text-center">
+            {t("No checklists yet — add one above")}
+          </div>
+        )}
+
+        {localChecklists.map((cl, clIdx) => {
+          const clDone = cl.items.filter((i) => i.done).length;
+          const clTotal = cl.items.length;
+          const pct = clTotal > 0 ? Math.round((clDone / clTotal) * 100) : 0;
+
+          return (
+            <div
+              key={cl.id}
+              className="bg-muted/10 rounded-[10px] border border-border p-3.5"
+              style={{
+                marginBottom: clIdx < localChecklists.length - 1 ? 20 : 8,
+              }}
+            >
+              <div
+                className="flex items-center gap-2"
+                style={{ marginBottom: clTotal > 0 ? 8 : 10 }}
+              >
+                <CheckSquare
+                  size={14}
+                  className="text-muted-foreground"
+                  strokeWidth={2}
+                />
+                <span className="font-body font-bold text-[13px] text-foreground flex-1">
+                  {cl.name}
+                </span>
+                {clTotal > 0 && (
+                  <span
+                    className={`font-body text-[11px] font-semibold ${clDone === clTotal ? "text-green-600" : "text-muted-foreground"}`}
+                  >
+                    {pct}%
+                  </span>
+                )}
+                <button
+                  onClick={() => deleteChecklist(cl.id)}
+                  className="w-[22px] h-[22px] rounded-[5px] border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 size={12} strokeWidth={2} />
+                </button>
+              </div>
+
+              {clTotal > 0 && (
+                <div className="h-1 bg-border rounded-full overflow-hidden mb-2.5">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${clDone === clTotal ? "bg-green-600" : "bg-primary"}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              )}
+
+              <div className="flex flex-col gap-px">
+                {cl.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="group flex items-center gap-2 rounded-[7px] transition-colors duration-150 hover:bg-muted/50 relative"
+                    style={{ padding: "5px 8px" }}
+                  >
+                    <div
+                      onClick={() => toggleItem(cl.id, item.id)}
+                      className={`w-[17px] h-[17px] rounded-[5px] shrink-0 flex items-center justify-center cursor-pointer transition-all duration-150 ${item.done ? "bg-green-600 border-none" : "bg-transparent border-2 border-border"}`}
+                    >
+                      {item.done && (
+                        <Check
+                          size={10}
+                          className="text-white"
+                          strokeWidth={3}
+                        />
+                      )}
+                    </div>
+                    <span
+                      onClick={() => toggleItem(cl.id, item.id)}
+                      className="font-body text-[13px] flex-1 cursor-pointer transition-all duration-150"
+                      style={{
+                        color: item.done
+                          ? "var(--muted-foreground)"
+                          : "var(--foreground)",
+                        textDecoration: item.done ? "line-through" : "none",
+                      }}
+                    >
+                      {item.text}
+                    </span>
+                    <button
+                      onClick={() => deleteItem(cl.id, item.id)}
+                      className="w-[18px] h-[18px] rounded border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity absolute right-1.5 hover:text-destructive"
+                    >
+                      <X size={11} strokeWidth={2.5} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <AddItemRow onAdd={(text) => addItem(cl.id, text)} />
+            </div>
+          );
+        })}
+
+        {addingChecklist && (
+          <div
+            className="flex gap-2 items-center bg-primary/5 rounded-[10px] border-[1.5px] border-primary/20 mt-2"
+            style={{ padding: "10px 14px" }}
+          >
+            <CheckSquare size={14} className="text-primary" strokeWidth={2} />
+            <input
+              autoFocus
+              value={newClName}
+              onChange={(e) => setNewClName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addChecklist();
+                if (e.key === "Escape") {
+                  setAddingChecklist(false);
+                  setNewClName("");
+                }
+              }}
+              placeholder={t("Checklist name...")}
+              className="flex-1 font-body text-[13px] font-semibold border-none outline-none bg-transparent text-foreground"
+            />
+            <button
+              onClick={addChecklist}
+              disabled={!newClName.trim()}
+              className="font-body text-[13px] font-semibold text-primary-foreground bg-primary border-none rounded-[7px] cursor-pointer disabled:opacity-45"
+              style={{ padding: "7px 13px" }}
+            >
+              {t("Add")}
+            </button>
+            <button
+              onClick={() => {
+                setAddingChecklist(false);
+                setNewClName("");
+              }}
+              className="font-body text-[13px] font-semibold text-muted-foreground bg-transparent border-none cursor-pointer hover:text-foreground"
+              style={{ padding: "7px 13px" }}
+            >
+              {t("Cancel")}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

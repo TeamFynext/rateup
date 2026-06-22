@@ -131,8 +131,7 @@ export function TicketListView({
       style={{ width, cursor: sortable ? "pointer" : "default" }}
     >
       <span
-        className="inline-flex items-center gap-1 font-body text-[11px] font-bold tracking-wider uppercase"
-        style={{ color: sortBy === id ? "#1C518E" : "#8B8E8A" }}
+        className={`inline-flex items-center gap-1 font-body text-[11px] font-bold tracking-wider uppercase ${sortBy === id ? "text-primary" : "text-gray-500"}`}
       >
         {label}
         {sortable && (
@@ -145,7 +144,7 @@ export function TicketListView({
           >
             <ChevronDown
               size={11}
-              style={{ color: sortBy === id ? "#1C518E" : "#D9DAD7" }}
+              className={sortBy === id ? "text-primary" : "text-gray-300"}
             />
           </span>
         )}
@@ -174,7 +173,7 @@ export function TicketListView({
               width={165}
               sortable={false}
             />
-            {/* <Th id="due" label={t("Due")} width={108} /> */}
+            <Th id="due" label={t("Due")} width={108} />
           </tr>
         </thead>
         <tbody>
@@ -270,7 +269,7 @@ function ListRow({
     return avatarColors[hash % avatarColors.length];
   };
 
-  const channelColor = channel === "whatsapp" ? "#25D366" : "#DD2A7B";
+  const channelColor = channel === "whatsapp" ? "bg-green-500" : "bg-pink-600";
 
   // Create a reliable distinct color for column using its id
   const colColor = getUserColor(col.id || "default");
@@ -375,10 +374,9 @@ function ListRow({
                 </AvatarFallback>
               </Avatar>
               <span
-                className="absolute -bottom-px -right-px w-2 h-2 rounded-full"
+                className={`absolute -bottom-px -right-px w-2 h-2 rounded-full ${channelColor}`}
                 style={{
                   border: "1.5px solid var(--background)",
-                  background: channelColor,
                 }}
               />
             </div>
@@ -390,21 +388,18 @@ function ListRow({
           <span className="font-body text-xs text-muted-foreground">—</span>
         )}
       </td>
-      {/* 
       <td className="py-[11px] px-3.5 whitespace-nowrap">
         {card.deadline ? (
           <span
-            className="inline-flex items-center gap-1 font-body text-xs font-medium rounded-full"
+            className={`inline-flex items-center gap-1 font-body text-xs font-medium rounded-full ${isOverdue ? "text-red-600 bg-red-50" : "text-muted-foreground bg-transparent"}`}
             style={{
-              color: isOverdue ? "#DC2626" : "var(--muted-foreground)",
-              background: isOverdue ? "#FEF2F2" : "transparent",
               padding: isOverdue ? "2px 8px" : "0",
             }}
           >
             <Calendar
               size={12}
               strokeWidth={2}
-              style={{ color: isOverdue ? "#DC2626" : "var(--muted-foreground)" }}
+              className={isOverdue ? "text-red-600" : "text-muted-foreground"}
             />
             {format(new Date(card.deadline), "d MMM")}
           </span>
@@ -412,7 +407,6 @@ function ListRow({
           <span className="text-muted-foreground font-body text-[13px]">—</span>
         )}
       </td>
-      */}
     </tr>
   );
 }

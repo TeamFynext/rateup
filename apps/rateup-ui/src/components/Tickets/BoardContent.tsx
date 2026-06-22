@@ -81,11 +81,8 @@ export function BoardContent({
         if (card.priority === "CRITICAL") {
           criticalCount++;
         }
-        if (
-          card.deadline &&
-          new Date(card.deadline) < new Date() &&
-          !isResolvedColumn
-        ) {
+        const targetDate = card.deadline ? new Date(card.deadline) : null;
+        if (targetDate && targetDate < new Date() && !isResolvedColumn) {
           overdueCount++;
         }
       });
@@ -200,9 +197,12 @@ export function BoardContent({
                     color="#DC2626"
                   />
                 )}
-                {/* 0 > 0 is false, so it won't render as requested */}
-                {0 > 0 && (
-                  <StatPill label={t("Overdue")} value={0} color="#F8951D" />
+                {stats.overdueCount > 0 && (
+                  <StatPill
+                    label={t("Overdue")}
+                    value={stats.overdueCount}
+                    color="#F8951D"
+                  />
                 )}
               </div>
 
