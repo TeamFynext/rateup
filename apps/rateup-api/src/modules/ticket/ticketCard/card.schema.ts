@@ -14,7 +14,6 @@ const cardCore = {
   type: z.enum(TicketType).optional(),
   contactId: z.string().uuid().optional(),
   priority: z.enum(TicketPriority).optional(),
-  deadline: z.coerce.date().optional().nullable(),
 };
 
 // Schema for creating a card
@@ -38,8 +37,6 @@ const updateCardRequestSchema = z.object({
   deadline: z.coerce.date().optional().nullable(),
   description: z.string().optional(),
   contactId: z.string().uuid().optional().nullable(),
-  checklists: z.any().optional().nullable(),
-  attachments: z.any().optional().nullable(),
 });
 
 // Schema for moving a card to another column
