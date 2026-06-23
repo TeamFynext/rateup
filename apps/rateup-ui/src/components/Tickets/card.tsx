@@ -23,6 +23,7 @@ import {
   CheckSquare,
   MessageCircle,
   MoreHorizontal,
+  Paperclip,
   Trash2,
   User,
 } from "lucide-react";
@@ -284,6 +285,16 @@ export function CardDisplay({
               </span>
             );
           })}
+          {card.attachments && card.attachments.length > 0 && (
+            <span className="inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium text-muted-foreground">
+              <Paperclip
+                size={12}
+                className="text-muted-foreground"
+                strokeWidth={2}
+              />
+              {card.attachments.length}
+            </span>
+          )}
           {totalCount > 0 && (
             <span
               className={`inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium ${doneCount === totalCount ? "text-green-600" : "text-muted-foreground"}`}
