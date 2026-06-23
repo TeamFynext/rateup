@@ -3,7 +3,7 @@
 import { Star } from "lucide-react";
 import { motion } from "motion/react";
 
-export const testimonials = [
+const testimonials = [
   {
     id: 1,
     rating: 5,

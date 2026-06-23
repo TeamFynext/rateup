@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { Box } from "@mantine/core";
 import { IconGripVertical } from "@tabler/icons-react";
 import { Draggable } from "@hello-pangea/dnd";
@@ -11,14 +13,16 @@ function ReorderItem({ children, id, index, className = "" }) {
       {(provided, snapshot) => {
         return (
           <Box
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+            style={provided.draggableProps.style as CSSProperties}
             className={cx(
               classes.item,
               { [classes.itemDragging]: snapshot.isDragging },
               className,
             )}
             ref={provided.innerRef}
-            {...provided.draggableProps}
-            {...provided.dragHandleProps}
           >
             <div {...provided.dragHandleProps} className={classes.dragHandle}>
               <IconGripVertical size={18} stroke={1.5} />

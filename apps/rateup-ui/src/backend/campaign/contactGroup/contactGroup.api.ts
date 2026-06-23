@@ -8,7 +8,7 @@ export interface ICreateContactGroup {
   teamId: string;
 }
 
-export interface ICreateNewContact {
+interface ICreateNewContact {
   name: string;
   phone?: string;
   email?: string;
@@ -56,7 +56,7 @@ export const getContactGroupById = async (
   return groupDataById?.data as ContactGroupwithContacts;
 };
 
-export const getContactsByGroupId = async (
+const getContactsByGroupId = async (
   groupId: string,
   paginationParams: string,
 ) => {

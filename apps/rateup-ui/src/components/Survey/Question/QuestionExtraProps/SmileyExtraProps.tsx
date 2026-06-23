@@ -25,7 +25,6 @@ import { getSmileyIcon } from "../../TakeSurvey/TakeSurveyComponent/SmileyRating
 
 export enum SmileyVariantStyle {
   Default = "Default",
-  Outline = "Outline",
   Filled = "Filled",
   FilledOnHover = "FilledOnHover",
   Emojis = "Emojis",

@@ -7,7 +7,7 @@ const WEBSOCKET_URL = API_URL.replace(/(http)s?/, WEBSOCKET_PROTOCOL);
 
 export const WA_INBOX_WEBSOCKET_CONNECTION_STRING = `${WEBSOCKET_URL}/api${ORG_WS_BASE_PATH}`;
 
-export async function orgWsAuthCheck() {
+async function orgWsAuthCheck() {
   return (await axiosClient.get(`${ORG_WS_BASE_PATH}/auth`)).data as {
     afterAuthId: string;
   };

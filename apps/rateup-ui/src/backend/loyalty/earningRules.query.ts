@@ -25,7 +25,7 @@ export const useLoyaltyEarningRules = () =>
 /**
  * Hook to fetch a single loyalty earning rule by ID
  */
-export const useLoyaltyEarningRuleById = (ruleId: string) =>
+const useLoyaltyEarningRuleById = (ruleId: string) =>
   useQuery({
     enabled: !!ruleId,
     queryKey: ["loyalty-earning-rule", ruleId],

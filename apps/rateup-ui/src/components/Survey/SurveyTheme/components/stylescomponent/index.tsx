@@ -16,7 +16,7 @@ import {
   Stack,
 } from "@mantine/core";
 import { produce } from "immer";
-import _ from "lodash";
+import { difference } from "lodash";
 
 import { useSurveyUpdateMutation } from "@/backend/surveys/surveys.query";
 
@@ -147,7 +147,7 @@ function StylesComponent({
             ) {
               const editorsObjArr = supportedPageEditors[selectedPageTab];
               const allValues = editorsObjArr?.map(({ value }) => value);
-              const diff = _.difference(allValues, valuesArr);
+              const diff = difference(allValues, valuesArr);
               setOpenEditors(diff);
               return;
             }

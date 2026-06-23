@@ -15,7 +15,7 @@ export async function getUserID() {
   return { userId };
 }
 
-export async function getUserEmail() {
+async function getUserEmail() {
   let email: string;
   if (await Session.doesSessionExist()) {
     const accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
@@ -24,7 +24,7 @@ export async function getUserEmail() {
   return { email };
 }
 
-export async function fetchUserData(): Promise<{
+async function fetchUserData(): Promise<{
   email: string;
   role: string;
   userId: string;

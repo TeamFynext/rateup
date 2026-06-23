@@ -33,7 +33,7 @@ const faqs = [
   },
 ];
 
-export const InboxFaq = () => {
+const InboxFaq = () => {
   return (
     <section
       id="faq"

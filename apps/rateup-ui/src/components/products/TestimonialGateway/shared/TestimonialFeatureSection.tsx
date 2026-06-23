@@ -120,7 +120,7 @@ const TestimonialTemplate: React.FC<{
   );
 };
 
-export const TestimonialFeatureSection = () => {
+const TestimonialFeatureSection = () => {
   return (
     <section
       className="py-14 bg-gradient-to-b from-secondary/50 via-primary/5 to-background"

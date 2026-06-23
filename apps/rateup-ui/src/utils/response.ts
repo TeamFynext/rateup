@@ -150,7 +150,7 @@ function formatDefaultResponse(q, response) {
   return response;
 }
 
-export function filterResponses(
+function filterResponses(
   responses: SurveyResponse[],
   filters: Array<{ question_id: string; responses: Array<string> }>,
 ) {
@@ -398,7 +398,7 @@ export function getResponseArrayByQuestionTypeV2(
     }
   }
 }
-export function getfilteredResponseUsingLanguage(
+function getfilteredResponseUsingLanguage(
   responses: SurveyResponse[],
   language: string,
 ) {
@@ -413,7 +413,7 @@ export function getfilteredResponseUsingLanguage(
   return { filteredResponsesByLanguage, noofResponses };
 }
 
-export function getFilteredResponseUsingTags(
+function getFilteredResponseUsingTags(
   responses: SurveyResponse[],
   selectedTags: string[],
 ) {
@@ -460,7 +460,7 @@ export async function decryptResultResponse(
   return { decryptedResponses };
 }
 
-export function getFormattedResponseForAreaGraph(responses, timePeriod) {
+function getFormattedResponseForAreaGraph(responses, timePeriod) {
   const dateResponseCount = {};
   const dayResponseCount = {};
   const weekResponseCount = {};

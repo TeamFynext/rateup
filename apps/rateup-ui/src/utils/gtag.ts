@@ -1,9 +1,9 @@
 import { isProduction } from "./constants.ts";
 import { fbEvent } from "./fbpixel.ts";
 
-export const GA_TRACKING_ID = import.meta.env.VITE_GOOGLE_ANALYTICS_ID;
+const GA_TRACKING_ID = import.meta.env.VITE_GOOGLE_ANALYTICS_ID;
 
-export const analyseEvent = ({
+const analyseEvent = ({
   action,
   category,
   label,

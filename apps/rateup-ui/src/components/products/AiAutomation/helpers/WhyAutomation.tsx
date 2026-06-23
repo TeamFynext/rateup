@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, BrainCog, Globe, Layers, Wand2 } from "lucide-react";
 
-export const features = [
+const features = [
   {
     icon: Wand2,
     title: "Unmatched Simplicity",

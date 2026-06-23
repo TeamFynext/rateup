@@ -8,7 +8,6 @@ import navLinkStyles from "./components/Header/MobileNavDrawer/NavLink.module.cs
 import LinkWithSublinksPopover from "./components/LinkWithSublinksPopover/index.tsx";
 
 export const imagesPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images`;
-export { rateupLogoStackedTransparent };
 export const rateupLogoUrl = rateupLogoStackedTransparent;
 
 const headerNavLinks = [
@@ -98,7 +97,7 @@ const blogLink = ourCompanySectionLinks.splice(2, 1, {
   linkText: "Contact Us",
 });
 
-export const footerNavLinks = {
+const footerNavLinks = {
   "our-company": {
     heading: "Our Company",
     linksArray: [...ourCompanySectionLinks, ...blogLink],
@@ -135,10 +134,7 @@ export const footerNavLinks = {
   },
 };
 
-export const getNavLinksArray = (
-  className: string,
-  currentRoutePath: string,
-) => {
+const getNavLinksArray = (className: string, currentRoutePath: string) => {
   const navLinks = headerNavLinks;
   return navLinks.map(({ href, linkText, hasSublinks, sublinks }) => {
     const isLinkActive =
@@ -164,7 +160,7 @@ export const getNavLinksArray = (
   });
 };
 
-export const getMobileNavLinkMenuItems = (
+const getMobileNavLinkMenuItems = (
   className: string = "",
   currentRoutePath: string,
 ) =>

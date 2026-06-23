@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select.tsx";
 
 // types
-export interface Currency {
+interface Currency {
   code: string;
   decimals: number;
   name: string;

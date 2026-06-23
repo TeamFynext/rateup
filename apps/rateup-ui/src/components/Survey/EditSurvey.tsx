@@ -19,7 +19,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconLanguage } from "@tabler/icons-react";
-import _ from "lodash";
+import { isEqual } from "lodash";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { v4 as uuidv4 } from "uuid";
@@ -28,7 +28,6 @@ import { PageType, QuestionType, SurveyType } from "@/types/enums.ts";
 import { useQuestionCreateMutation } from "@/backend/surveys/questions/questions.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
-
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import {
@@ -41,6 +40,7 @@ import {
   createPage,
   validateAllLanguagesArePopulated,
 } from "@/utils/questions.ts";
+
 import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
 import styles from "./EditSurvey.module.css";
 import PageTypeSelection from "./Page/PageTypeSelection.tsx";
@@ -53,14 +53,9 @@ import SurveyVariableEditor from "./Question/SurveyVariableEditor.tsx";
 import TicketIssueEditor from "./Question/TicketIssueEditor.tsx";
 import ValidationRulesEditor from "./Question/ValidationRulesEditor.tsx";
 import { QuestionsSideBar } from "./QuestionsSideBar.tsx";
-
-const isQuestionType = (
-  type: QuestionType | PageType | undefined,
-): type is QuestionType =>
-  Object.values(QuestionType).includes(type as QuestionType);
 import SurveyPreviewModal from "./SurveyPreviewModal.tsx";
-import SurveyTheme from "./SurveyTheme/index.tsx";
 import StylesComponent from "./SurveyTheme/components/stylescomponent/index.tsx";
+import SurveyTheme from "./SurveyTheme/index.tsx";
 import {
   getSurveyThemeKeyFromPageType,
   getSurveyThemeTabValueFromPageType,
@@ -68,6 +63,11 @@ import {
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 import { SurveyThemeContextProvider } from "./SurveyTheme/SurveyThemeContext.tsx";
 import UiTextTranslationsModal from "./UiTextTranslationsModal/index.tsx";
+
+const isQuestionType = (
+  type: QuestionType | PageType | undefined,
+): type is QuestionType =>
+  Object.values(QuestionType).includes(type as QuestionType);
 
 export enum QuestionTabsEnum {
   Edit = "Edit",
@@ -160,7 +160,7 @@ export function EditSurvey({
     if (!selectedQ && activeTab === QuestionTabsEnum.SurveyPreview) {
       if (
         themeSelectorState !== survey?.webSurveyThemeId ||
-        !_.isEqual(
+        !isEqual(
           surveyThemeContextProviderValueRef.current,
           survey?.webSurveyTheme?.theme,
         )
@@ -172,7 +172,7 @@ export function EditSurvey({
     } else if (uniquePages.includes(selectedQ?.type as PageType)) {
       const themeObjKey = getSurveyThemeKeyFromPageType(selectedQ?.type);
       if (
-        !_.isEqual(
+        !isEqual(
           survey?.webSurveyPagesTheme[themeObjKey],
           surveyThemeContextProviderValueRef.current[themeObjKey],
         )
@@ -276,10 +276,7 @@ export function EditSurvey({
       return () => {
         const haveUnsavedChanges = checkForUnsavedChanges();
         let feedbackElement = "modal";
-        if (
-          haveUnsavedChanges &&
-          isQuestionType(selectedQ?.type)
-        ) {
+        if (haveUnsavedChanges && isQuestionType(selectedQ?.type)) {
           feedbackElement = "toast";
         }
         if (haveUnsavedChanges) {

@@ -66,7 +66,6 @@ import {
 } from "@/components/ui/tooltip.tsx";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
-
 export const Route = createFileRoute("/admin/orgs/$orgId/")({
   component: OrgById,
 });
@@ -555,7 +554,7 @@ interface DeleteOrgModalProps {
   deletionMailSent: string | null;
 }
 
-export function DeleteOrgModal({
+function DeleteOrgModal({
   open,
   onClose,
   orgId,

@@ -59,5 +59,3 @@ export const WaQuickReply = ({
     </div>
   );
 };
-
-export default WaQuickReply;

@@ -5,7 +5,7 @@ import {
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 
-export const InboxFooter = () => {
+const InboxFooter = () => {
   const currentYear = new Date().getFullYear();
 
   return (

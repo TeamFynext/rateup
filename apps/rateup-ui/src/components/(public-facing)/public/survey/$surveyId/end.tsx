@@ -23,9 +23,7 @@ import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/comp
 
 import BodyComp from "./BodyComp.tsx";
 
-export const Route = createFileRoute(
-  "/(public-facing)/public/survey/$surveyId/end/",
-)({
+const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/end/")({
   component: ThankYou,
 });
 

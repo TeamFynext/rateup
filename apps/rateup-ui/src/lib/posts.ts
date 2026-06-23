@@ -120,7 +120,7 @@ export async function getSinglePost(postSlug: string) {
   }
 }
 
-export async function getPages() {
+async function getPages() {
   return await api.pages
     .browse({
       limit: 15, // default is 15, max is 100

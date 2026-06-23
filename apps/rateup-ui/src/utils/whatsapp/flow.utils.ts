@@ -29,7 +29,11 @@ import {
 } from "@/components/whatsapp/whatsappConfig.tsx";
 
 import { getNestedProperty } from "../misc/obj.utils";
-import { OpinionResponses, ratingEmoji, RatingResponses } from "../questions.ts";
+import {
+  OpinionResponses,
+  ratingEmoji,
+  RatingResponses,
+} from "../questions.ts";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -148,7 +152,7 @@ export function validateOptions({ form, path }: validateOptionsProps) {
  * @param onlyInteractive set to false to include all form elements, including
  * those that are not interactive (e.g. TextBody, TextHeading, etc..)
  */
-export function* waFlowFormElementIterator(
+function* waFlowFormElementIterator(
   flowJson: WaFlowJson,
   onlyInteractive = true,
 ) {
@@ -649,7 +653,7 @@ export function getFlowElementJsonFromQuestion(question: Question) {
   };
 }
 
-export const flow_supported_questions = [
+const flow_supported_questions = [
   qt.Text,
   qt.Email,
   qt.Phone,
@@ -705,7 +709,7 @@ export function questionTypeToFlowFormElementType(
  * FlowFormElement has a 'data-source' property containing data for the 'options' or 'choices'.
  * @returns DataSource[] | undefined
  */
-export function generateDataSourceFromQuestion(q: Question) {
+function generateDataSourceFromQuestion(q: Question) {
   let choices: string[] = [];
   if (q.type === qt.Rating) {
     choices = Object.values(RatingResponses)
@@ -759,7 +763,7 @@ export function generateDataSourceFromQuestion(q: Question) {
   }
 }
 
-export function getWaFlowElementIdFromQuestionId(qId: string, map: WaFlowMap) {
+function getWaFlowElementIdFromQuestionId(qId: string, map: WaFlowMap) {
   try {
     for (const [elementId, { questionId }] of Object.entries(map)) {
       if (questionId === qId) return elementId;
@@ -776,11 +780,7 @@ export function getWaFlowElementIdFromQuestionId(qId: string, map: WaFlowMap) {
  * @param position index of where the screen is to be inserted.
  * @param draft UseImmer draft object to save the updated flowJson
  * */
-export function moveFlowScreen(
-  screenId: string,
-  position: number,
-  draft: WaFlowJson,
-) {
+function moveFlowScreen(screenId: string, position: number, draft: WaFlowJson) {
   const currentIndex = draft.screens.findIndex((s) => s.id === screenId);
   const currentScreen = draft.screens[currentIndex];
 

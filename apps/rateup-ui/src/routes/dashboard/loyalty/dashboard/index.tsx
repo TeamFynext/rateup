@@ -1,7 +1,7 @@
 "use client";
 
 import { createFileRoute } from "@tanstack/react-router";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import {
   Award,
   Gift,
@@ -32,7 +32,12 @@ import {
 import { useLoyaltyDashboardData } from "@/backend/loyalty/dashboard/dashboard.api";
 import InfoButton from "@/components/Button/InfoButton.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
@@ -378,7 +383,7 @@ function LoyaltyPrograms() {
                       <span className="font-medium">{activity.item}</span>
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(activity.createdAt), "dd MMM, p")}
+                      {dayjs(activity.createdAt).format("DD MMM, h:mm A")}
                     </p>
                   </div>
                 </div>

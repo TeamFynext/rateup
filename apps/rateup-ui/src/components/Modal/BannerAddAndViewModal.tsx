@@ -49,7 +49,7 @@ type BannerAddAndViewModalProps = {
   currency: string;
 };
 
-export const BannerAddAndViewModal = ({
+const BannerAddAndViewModal = ({
   opened,
   onCloseAction,
   menuId,

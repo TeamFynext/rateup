@@ -14,7 +14,6 @@ import {
 } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import {
-  Icon123,
   IconAddressBook,
   IconAdjustmentsQuestion,
   IconAlignBoxLeftMiddleFilled,
@@ -34,6 +33,7 @@ import {
   IconMailFilled,
   IconMessageChatbot,
   IconMoodSmileFilled,
+  IconNumber123,
   IconPhoneFilled,
   IconPhoto,
   IconScaleOutline,
@@ -146,7 +146,7 @@ export function QuestionTypeSelection({
 const questionIcons = {
   [QuestionType.Text]: IconTextSize,
   [QuestionType.TextArea]: IconAlignBoxLeftMiddleFilled,
-  [QuestionType.Number]: Icon123,
+  [QuestionType.Number]: IconNumber123,
   [QuestionType.Email]: IconMailFilled,
   [QuestionType.Phone]: IconPhoneFilled,
   [QuestionType.Photo]: IconCameraFilled,

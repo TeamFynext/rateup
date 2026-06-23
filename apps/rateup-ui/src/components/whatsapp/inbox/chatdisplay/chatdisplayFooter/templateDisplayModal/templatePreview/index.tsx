@@ -13,9 +13,9 @@ import { useImmer } from "use-immer";
 import type { WaTemplateFetchBody } from "@/types/global";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
-
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { validateInboxTemplateSending } from "@/utils/whatsapp/inbox.ts";
+
 import { RateupButtonPrimary } from "../../../../../../Button/RateupButtons.tsx";
 import WaInboxTemplate from "../../../chatdisplayBody/components/template/index.tsx";
 import WaInboxSingleMessageLayout from "../../../chatdisplayBody/layout/singleMessageLayout/index.tsx";
@@ -41,7 +41,7 @@ interface Props {
   teamId: string;
   whatsappSettingsPhoneId: string;
 }
-export default function WaInboxTemplatePreview(props: Props) {
+function WaInboxTemplatePreview(props: Props) {
   const [parameterData, setParameterData] = useImmer<any>([]);
   const [loading, setLoading] = useState(false);
 
@@ -258,4 +258,3 @@ export function WaInboxTemplatePreviewNew(props: Props) {
     </div>
   );
 }
-

@@ -19,12 +19,12 @@ import {
   useSendOTPEmail,
   useValidateOtp,
 } from "@/backend/surveys/surveys.query";
-import { emailPattern } from "@/utils/constants.ts";
-
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+import { emailPattern } from "@/utils/constants.ts";
+
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util.tsx";
@@ -218,7 +218,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
   );
 };
 
-export const CountDownTimer = ({ initialTime, onComplete }) => {
+const CountDownTimer = ({ initialTime, onComplete }) => {
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -241,4 +241,3 @@ export const CountDownTimer = ({ initialTime, onComplete }) => {
 };
 
 export default EmailOTPForm;
-

@@ -1,4 +1,4 @@
-export function generateRandomAlphaId(length: number): string {
+function generateRandomAlphaId(length: number): string {
   let result = "";
   for (let i = 0; i < length; i++) {
     let ascii = Math.floor(Math.random() * 52);

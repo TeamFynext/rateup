@@ -35,7 +35,7 @@ interface ImageCheckboxProps {
   dataValue: string;
 }
 
-export function ImageCheckbox({
+function ImageCheckbox({
   checked,
   defaultChecked,
   onChange,

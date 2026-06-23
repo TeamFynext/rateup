@@ -89,7 +89,6 @@ export async function createComment(data) {
 }
 
 // Export types for convenience
-export type { Activity, TicketComment } from "@/components/Tickets/types.ts";
 export type { Board, Column, Card };
 
 // API functions

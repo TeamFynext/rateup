@@ -7,7 +7,7 @@ export const createMenuCategory = async (menuCategory: CreateMenuCategory) =>
   await axiosClient.post(MENUCATEGORY_URL, menuCategory);
 export const getMenuCategoriesByMenuId = async (menuId: string) =>
   (await axiosClient.get(`${MENUCATEGORY_URL}/all/${menuId}`)).data;
-export const getMenuCategoryById = async (id: string) =>
+const getMenuCategoryById = async (id: string) =>
   (await axiosClient.get(`${MENUCATEGORY_URL}/${id}`)).data;
 export const updateMenuCategory = async ({ categoryId, menuCategory }) =>
   await axiosClient.put(`${MENUCATEGORY_URL}/${categoryId}`, menuCategory);

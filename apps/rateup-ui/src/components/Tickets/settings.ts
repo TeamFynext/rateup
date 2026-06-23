@@ -56,7 +56,7 @@ export const fields = {
   },
 } as const satisfies Record<string, TBooleanField | TSelectField>;
 
-export type TupleToUnion<T extends any[]> = T[number];
+type TupleToUnion<T extends any[]> = T[number];
 
 type GetFieldValues<
   TRecord extends Record<string, TBooleanField | TSelectField>,

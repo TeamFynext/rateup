@@ -5,21 +5,20 @@ import { useContext, useState } from "react";
 import type { SelectProps } from "@mantine/core";
 import { Flex, Paper, Stack, Switch, Textarea, Tooltip } from "@mantine/core";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
-import getUnicodeFlagIcon from "country-flag-icons/unicode";
 import { useTranslation } from "react-i18next";
 import { getCountries, getCountryCallingCode } from "react-phone-number-input";
 import en from "react-phone-number-input/locale/en";
 
 import { QuestionType } from "@/types/enums.ts";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput.tsx";
-
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+
 import classes from "./Style.module.css";
 
 const CountrySelect = ({ ...props }: SelectProps) => {
   const data = getCountries().map((country) => ({
     value: country,
-    label: `${getUnicodeFlagIcon(country)}  ${en[country]} (+${getCountryCallingCode(country)})`,
+    label: `${String.fromCodePoint(...[...country].map((c) => c.codePointAt(0) - 0x41 + 0x1f1e6))}  ${en[country]} (+${getCountryCallingCode(country)})`,
   }));
   return <ContainedSelection data={data} {...props} />;
 };
@@ -209,4 +208,3 @@ const ContactExtraProps = ({ form }) => {
 };
 
 export default ContactExtraProps;
-

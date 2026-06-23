@@ -433,7 +433,7 @@ interface StatPillProps {
   color: string;
 }
 
-export function StatPill({ label, value, color }: StatPillProps) {
+function StatPill({ label, value, color }: StatPillProps) {
   return (
     <div
       className="flex items-center gap-[5px] rounded-full"

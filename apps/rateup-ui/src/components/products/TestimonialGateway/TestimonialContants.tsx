@@ -96,7 +96,7 @@ export const features = [
   },
 ];
 
-export const tiers = [
+const tiers = [
   {
     name: "Starter",
     price: "Free",

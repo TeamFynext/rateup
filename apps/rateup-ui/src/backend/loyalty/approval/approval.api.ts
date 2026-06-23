@@ -19,7 +19,7 @@ export type ApprovalStatus =
   | "EXPIRED"
   | "CANCELLED";
 
-export type RequestedByType = "CUSTOMER" | "STAFF" | "SYSTEM";
+type RequestedByType = "CUSTOMER" | "STAFF" | "SYSTEM";
 
 export interface CreateApprovalRequestInput {
   requestType: ApprovalRequestType;

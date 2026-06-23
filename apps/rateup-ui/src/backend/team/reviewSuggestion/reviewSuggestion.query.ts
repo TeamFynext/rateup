@@ -10,13 +10,13 @@ import {
   updateReviewSuggestion,
 } from "./reviewSuggestion.api";
 
-export const useReviewSuggestions = (enabled: boolean, teamId: string) =>
+const useReviewSuggestions = (enabled: boolean, teamId: string) =>
   useQuery({
     enabled: enabled,
     queryKey: ["reviewSuggestion", teamId],
     queryFn: () => getReviewsByTeamId(teamId),
   });
-export const usePublicReviewSuggestions = (
+const usePublicReviewSuggestions = (
   enabled: boolean,
   surveyTeamMapId: string,
   language: string,
@@ -26,13 +26,13 @@ export const usePublicReviewSuggestions = (
     queryKey: ["reviewSuggestion", surveyTeamMapId],
     queryFn: () => getPublicReviewsBySurveyTeamMapId(surveyTeamMapId, language),
   });
-export const useReviewSuggestionsCount = (enabled: boolean, teamId: string) =>
+const useReviewSuggestionsCount = (enabled: boolean, teamId: string) =>
   useQuery({
     enabled: enabled,
     queryKey: ["reviewSuggestion", teamId, "count"],
     queryFn: () => getReviewsCountByTeamId(teamId),
   });
-export const useCreateReviewSuggestionsMutation = (teamId: string) => {
+const useCreateReviewSuggestionsMutation = (teamId: string) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createReviewSuggestions,
@@ -49,7 +49,7 @@ export const useCreateReviewSuggestionsMutation = (teamId: string) => {
   return createMutation;
 };
 
-export const useUpdateReviewSuggestionMutation = (
+const useUpdateReviewSuggestionMutation = (
   teamId: string,
   onSuccess = () => {},
   onError = () => {},

@@ -1344,5 +1344,3 @@ function getTriggerDescription(triggerKey: ZohoTriggers) {
       return "Not Supported";
   }
 }
-
-export default Zoho;

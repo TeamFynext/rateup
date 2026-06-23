@@ -123,6 +123,5 @@ export {
   useUpdateLandingPageMutation,
   useGetLandingPageWithShortId,
   useDeleteLandingPageMutation,
-  useLinkTypeOptions,
   usePageVisitsUpdateMutation,
 };

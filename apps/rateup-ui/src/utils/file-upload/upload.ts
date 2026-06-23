@@ -112,7 +112,7 @@ export const getImageValue = (
   }
 };
 
-export const getFileNameFromFile = (data: File | string, label: string) => {
+const getFileNameFromFile = (data: File | string, label: string) => {
   if (data instanceof File) return data.name;
   else if (data?.length > 0) return data;
   else return label;

@@ -1,13 +1,13 @@
 import { QuestionType } from "@/types/enums.ts";
 
-export function validateLength(input, min, max) {
+function validateLength(input, min, max) {
   if (input.toString().length < min || input.toString().length > max) {
     return false;
   }
   return true;
 }
 
-export function passwordValidation(value) {
+function passwordValidation(value) {
   if (!value) {
     return "Password is required";
   }
@@ -20,7 +20,7 @@ export function passwordValidation(value) {
   return null; // Validation passed
 }
 
-export function validateWordCount(input, min, max) {
+function validateWordCount(input, min, max) {
   const words = input.split(" ");
   if (words.length < min || words.length > max) {
     return false;
@@ -28,7 +28,7 @@ export function validateWordCount(input, min, max) {
   return true;
 }
 
-export function validateTextType(input, type) {
+function validateTextType(input, type) {
   if (type === "Letters") {
     const regex = /^[a-zA-Z\s]+$/;
     return regex.test(input);

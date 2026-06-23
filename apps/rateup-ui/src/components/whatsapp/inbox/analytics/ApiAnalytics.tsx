@@ -4,7 +4,6 @@ import dayjs from "dayjs";
 import isToday from "dayjs/plugin/isToday";
 import { CheckCircle2, Download, Send, XCircle, Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import generatePDF from "react-to-pdf";
 
 import {
   useGetApiAnlayticsOverview,
@@ -105,7 +104,8 @@ function ApiAnalytics({ dateRange }) {
           <Button
             variant="outline"
             className="w-full max-w-32"
-            onClick={() =>
+            onClick={async () => {
+              const generatePDF = (await import("react-to-pdf")).default;
               generatePDF(targetRef, {
                 filename: "analytics.pdf",
                 page: {
@@ -114,8 +114,8 @@ function ApiAnalytics({ dateRange }) {
                   orientation: "portrait",
                 },
                 resolution: 2,
-              })
-            }
+              });
+            }}
           >
             <Download />
             {t("Export")}

@@ -1,11 +1,10 @@
-import { useNavigate } from '@tanstack/react-router';
-
 import {
   keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import type {
@@ -69,7 +68,7 @@ export function useCreateUserMutation(setIsLoading) {
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       navigate({
-        to: "/dashboard"
+        to: "/dashboard",
       });
     },
     onError: (error) => {
@@ -96,7 +95,7 @@ export function useCreateAppleUserMutation(setIsLoading) {
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       navigate({
-        to: "/dashboard"
+        to: "/dashboard",
       });
     },
     onError: (error) => {
@@ -159,7 +158,7 @@ export function useUpdateMemberProfileMutation() {
   });
 }
 
-export function useUpdateUserLanguageMutation(setIsLoading) {
+function useUpdateUserLanguageMutation(setIsLoading) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: IUpdateUserLanguage) => updateUserLanguage(values),

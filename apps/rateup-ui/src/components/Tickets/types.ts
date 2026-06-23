@@ -3,7 +3,7 @@
 import type { TicketType } from "@/utils/enums/ticket.ts";
 
 // Base ticket types
-export interface User {
+interface User {
   id: string;
   name: string;
   email?: string;
@@ -82,7 +82,7 @@ export interface Card {
   attachments?: string[]; // array of file keys; full metadata stored in TicketActivity
 }
 
-export interface surveyResponse {
+interface surveyResponse {
   id: string;
   createdAt: string | Date;
   surveyTeamMapId: string;
@@ -116,7 +116,7 @@ export interface MemberData {
   name: string;
   profilePhoto?: string;
 }
-export type WaAutomatedReplyMessage = {
+type WaAutomatedReplyMessage = {
   id: string;
   createdAt: string;
   response: {

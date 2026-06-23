@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 import { useParams } from "@tanstack/react-router";
-import _ from "lodash";
+import { isEqual } from "lodash";
 
 import {
   useUpdateFlowMutation,
@@ -94,10 +94,10 @@ function EditFlowV3({
   useEffect(() => {
     if (!isPending && dbFlow && screens.length > 0) {
       // Deep comparison to avoid unnecessary saves
-      const screensChanged = !_.isEqual(dbFlow.json.screens, getScreens());
-      const logicJumpsChanged = !_.isEqual(dbFlow.logicJumps, logicJumps);
+      const screensChanged = !isEqual(dbFlow.json.screens, getScreens());
+      const logicJumpsChanged = !isEqual(dbFlow.logicJumps, logicJumps);
       const ticketsChanged =
-        ticketIssued && !_.isEqual(dbFlow.ticketIssued, ticketIssued);
+        ticketIssued && !isEqual(dbFlow.ticketIssued, ticketIssued);
 
       if (screensChanged || logicJumpsChanged || ticketsChanged) {
         const timeoutId = setTimeout(() => {

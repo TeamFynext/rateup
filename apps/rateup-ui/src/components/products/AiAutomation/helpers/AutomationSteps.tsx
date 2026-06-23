@@ -1,6 +1,6 @@
 import { Bot, Rocket, Workflow } from "lucide-react";
 
-export const Surveysteps = [
+const Surveysteps = [
   {
     number: 1,
     title: "Design Your Flow",

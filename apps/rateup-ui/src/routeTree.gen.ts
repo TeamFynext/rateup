@@ -69,6 +69,7 @@ import { Route as DashboardWhatsappPaymentsIndexRouteImport } from './routes/das
 import { Route as DashboardWhatsappOrdersIndexRouteImport } from './routes/dashboard/whatsapp/orders/index'
 import { Route as DashboardWhatsappFlowsIndexRouteImport } from './routes/dashboard/whatsapp/flows/index'
 import { Route as DashboardWhatsappFlowbotsIndexRouteImport } from './routes/dashboard/whatsapp/flowbots/index'
+import { Route as DashboardWhatsappConversationalComponentsIndexRouteImport } from './routes/dashboard/whatsapp/conversational-components/index'
 import { Route as DashboardWhatsappCatalogIndexRouteImport } from './routes/dashboard/whatsapp/catalog/index'
 import { Route as DashboardTicketsTicketIdIndexRouteImport } from './routes/dashboard/tickets/$ticketId/index'
 import { Route as DashboardTestimonialCollectionIdIndexRouteImport } from './routes/dashboard/testimonial/$collectionId/index'
@@ -481,6 +482,12 @@ const DashboardWhatsappFlowbotsIndexRoute =
   DashboardWhatsappFlowbotsIndexRouteImport.update({
     id: '/whatsapp/flowbots/',
     path: '/whatsapp/flowbots/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardWhatsappConversationalComponentsIndexRoute =
+  DashboardWhatsappConversationalComponentsIndexRouteImport.update({
+    id: '/whatsapp/conversational-components/',
+    path: '/whatsapp/conversational-components/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardWhatsappCatalogIndexRoute =
@@ -1200,6 +1207,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/testimonial/$collectionId/': typeof DashboardTestimonialCollectionIdIndexRoute
   '/dashboard/tickets/$ticketId/': typeof DashboardTicketsTicketIdIndexRoute
   '/dashboard/whatsapp/catalog/': typeof DashboardWhatsappCatalogIndexRoute
+  '/dashboard/whatsapp/conversational-components/': typeof DashboardWhatsappConversationalComponentsIndexRoute
   '/dashboard/whatsapp/flowbots/': typeof DashboardWhatsappFlowbotsIndexRoute
   '/dashboard/whatsapp/flows/': typeof DashboardWhatsappFlowsIndexRoute
   '/dashboard/whatsapp/orders/': typeof DashboardWhatsappOrdersIndexRoute
@@ -1358,6 +1366,7 @@ export interface FileRoutesByTo {
   '/dashboard/testimonial/$collectionId': typeof DashboardTestimonialCollectionIdIndexRoute
   '/dashboard/tickets/$ticketId': typeof DashboardTicketsTicketIdIndexRoute
   '/dashboard/whatsapp/catalog': typeof DashboardWhatsappCatalogIndexRoute
+  '/dashboard/whatsapp/conversational-components': typeof DashboardWhatsappConversationalComponentsIndexRoute
   '/dashboard/whatsapp/flowbots': typeof DashboardWhatsappFlowbotsIndexRoute
   '/dashboard/whatsapp/flows': typeof DashboardWhatsappFlowsIndexRoute
   '/dashboard/whatsapp/orders': typeof DashboardWhatsappOrdersIndexRoute
@@ -1520,6 +1529,7 @@ export interface FileRoutesById {
   '/dashboard/testimonial/$collectionId/': typeof DashboardTestimonialCollectionIdIndexRoute
   '/dashboard/tickets/$ticketId/': typeof DashboardTicketsTicketIdIndexRoute
   '/dashboard/whatsapp/catalog/': typeof DashboardWhatsappCatalogIndexRoute
+  '/dashboard/whatsapp/conversational-components/': typeof DashboardWhatsappConversationalComponentsIndexRoute
   '/dashboard/whatsapp/flowbots/': typeof DashboardWhatsappFlowbotsIndexRoute
   '/dashboard/whatsapp/flows/': typeof DashboardWhatsappFlowsIndexRoute
   '/dashboard/whatsapp/orders/': typeof DashboardWhatsappOrdersIndexRoute
@@ -1683,6 +1693,7 @@ export interface FileRouteTypes {
     | '/dashboard/testimonial/$collectionId/'
     | '/dashboard/tickets/$ticketId/'
     | '/dashboard/whatsapp/catalog/'
+    | '/dashboard/whatsapp/conversational-components/'
     | '/dashboard/whatsapp/flowbots/'
     | '/dashboard/whatsapp/flows/'
     | '/dashboard/whatsapp/orders/'
@@ -1841,6 +1852,7 @@ export interface FileRouteTypes {
     | '/dashboard/testimonial/$collectionId'
     | '/dashboard/tickets/$ticketId'
     | '/dashboard/whatsapp/catalog'
+    | '/dashboard/whatsapp/conversational-components'
     | '/dashboard/whatsapp/flowbots'
     | '/dashboard/whatsapp/flows'
     | '/dashboard/whatsapp/orders'
@@ -2002,6 +2014,7 @@ export interface FileRouteTypes {
     | '/dashboard/testimonial/$collectionId/'
     | '/dashboard/tickets/$ticketId/'
     | '/dashboard/whatsapp/catalog/'
+    | '/dashboard/whatsapp/conversational-components/'
     | '/dashboard/whatsapp/flowbots/'
     | '/dashboard/whatsapp/flows/'
     | '/dashboard/whatsapp/orders/'
@@ -2520,6 +2533,13 @@ declare module '@tanstack/react-router' {
       path: '/whatsapp/flowbots'
       fullPath: '/dashboard/whatsapp/flowbots/'
       preLoaderRoute: typeof DashboardWhatsappFlowbotsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/whatsapp/conversational-components/': {
+      id: '/dashboard/whatsapp/conversational-components/'
+      path: '/whatsapp/conversational-components'
+      fullPath: '/dashboard/whatsapp/conversational-components/'
+      preLoaderRoute: typeof DashboardWhatsappConversationalComponentsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/whatsapp/catalog/': {
@@ -3316,6 +3336,7 @@ interface DashboardRouteRouteChildren {
   DashboardTestimonialCollectionIdIndexRoute: typeof DashboardTestimonialCollectionIdIndexRoute
   DashboardTicketsTicketIdIndexRoute: typeof DashboardTicketsTicketIdIndexRoute
   DashboardWhatsappCatalogIndexRoute: typeof DashboardWhatsappCatalogIndexRoute
+  DashboardWhatsappConversationalComponentsIndexRoute: typeof DashboardWhatsappConversationalComponentsIndexRoute
   DashboardWhatsappFlowbotsIndexRoute: typeof DashboardWhatsappFlowbotsIndexRoute
   DashboardWhatsappFlowsIndexRoute: typeof DashboardWhatsappFlowsIndexRoute
   DashboardWhatsappOrdersIndexRoute: typeof DashboardWhatsappOrdersIndexRoute
@@ -3408,6 +3429,8 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
     DashboardTestimonialCollectionIdIndexRoute,
   DashboardTicketsTicketIdIndexRoute: DashboardTicketsTicketIdIndexRoute,
   DashboardWhatsappCatalogIndexRoute: DashboardWhatsappCatalogIndexRoute,
+  DashboardWhatsappConversationalComponentsIndexRoute:
+    DashboardWhatsappConversationalComponentsIndexRoute,
   DashboardWhatsappFlowbotsIndexRoute: DashboardWhatsappFlowbotsIndexRoute,
   DashboardWhatsappFlowsIndexRoute: DashboardWhatsappFlowsIndexRoute,
   DashboardWhatsappOrdersIndexRoute: DashboardWhatsappOrdersIndexRoute,

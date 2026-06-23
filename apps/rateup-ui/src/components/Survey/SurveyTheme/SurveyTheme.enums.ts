@@ -14,7 +14,7 @@ export enum SelectedItemEnum {
   LOGO = "Logo",
 }
 
-export enum defaultThemeName {
+enum defaultThemeName {
   RATEUP_BLUE = "rateup-blue",
 }
 
@@ -23,7 +23,7 @@ export enum PreviewTypeEnum {
   DESKTOP = "desktop",
 }
 
-export enum BgTab {
+enum BgTab {
   BGCOLOR = "bgcolor",
   BGIMAGE = "bgimage",
 }

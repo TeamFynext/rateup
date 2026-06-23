@@ -32,6 +32,4 @@ export const partnerApplicationSchema = z.object({
   canOnboard: z.string().min(1, "Please choose an option"),
 });
 
-export type PartnerApplicationFormData = z.infer<
-  typeof partnerApplicationSchema
->;
+type PartnerApplicationFormData = z.infer<typeof partnerApplicationSchema>;

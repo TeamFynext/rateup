@@ -29,9 +29,12 @@ import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 
 import { Column } from "./column.tsx";
-import type { TColumn } from "./data.ts";
 import { SettingsContext } from "./settings-context.tsx";
-import type { BoardInfo, Board as BoardType } from "./types.ts";
+import type {
+  BoardInfo,
+  Board as BoardType,
+  Column as TColumn,
+} from "./types.ts";
 import {
   isCardData,
   isCardDropTargetData,

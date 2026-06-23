@@ -38,7 +38,7 @@ import { markdownToPlainText } from "../../flow-v2/FlowScreensList/ScreenListIte
 import { getTextStyle } from "../FlowPage/EditFlow/FlowTextDetailedView.tsx";
 import styles from "./preview.module.css";
 
-export function FlowTextPreview({
+function FlowTextPreview({
   text,
   type,
   fontWeight,
@@ -62,7 +62,7 @@ export function FlowTextPreview({
   );
 }
 
-export function FlowTextInputPreview({ label = "Label" }: { label?: string }) {
+function FlowTextInputPreview({ label = "Label" }: { label?: string }) {
   return (
     <TextInput
       variant="unstyled"
@@ -74,7 +74,7 @@ export function FlowTextInputPreview({ label = "Label" }: { label?: string }) {
   );
 }
 
-export function FlowTextAreaPreview({ label = "Label" }: { label?: string }) {
+function FlowTextAreaPreview({ label = "Label" }: { label?: string }) {
   return (
     <Textarea
       variant="unstyled"
@@ -87,7 +87,7 @@ export function FlowTextAreaPreview({ label = "Label" }: { label?: string }) {
   );
 }
 
-export function FlowDateInputPreview({ label = "Label" }: { label?: string }) {
+function FlowDateInputPreview({ label = "Label" }: { label?: string }) {
   return (
     <DatePickerInput
       label={label}
@@ -101,7 +101,7 @@ export function FlowDateInputPreview({ label = "Label" }: { label?: string }) {
   );
 }
 
-export function FlowFileInputPreview({
+function FlowFileInputPreview({
   label = "Label",
   type = "photo",
 }: {
@@ -123,7 +123,7 @@ export function FlowFileInputPreview({
     </Box>
   );
 }
-export function FlowRadioPreview({
+function FlowRadioPreview({
   label = "Label",
   options,
 }: {
@@ -158,7 +158,7 @@ export function FlowRadioPreview({
   );
 }
 
-export function FlowCheckBoxPreview({
+function FlowCheckBoxPreview({
   label = "Label",
   options,
 }: {
@@ -191,7 +191,7 @@ export function FlowCheckBoxPreview({
   );
 }
 
-export function FlowChipsSelectorPreview({
+function FlowChipsSelectorPreview({
   label = "Label",
   options,
 }: {
@@ -212,7 +212,7 @@ export function FlowChipsSelectorPreview({
   );
 }
 
-export function DropDownPreview({
+function DropDownPreview({
   label = "Label",
   options,
 }: {
@@ -243,7 +243,7 @@ export function DropDownPreview({
     />
   );
 }
-export function FlowOptInPreview({ label = "Label" }: { label?: string }) {
+function FlowOptInPreview({ label = "Label" }: { label?: string }) {
   return (
     <Checkbox
       label={label}
@@ -258,11 +258,7 @@ interface FlowImagePreviewProps {
   width?: number;
   height?: number;
 }
-export function FlowImagePreview({
-  src,
-  width,
-  height,
-}: FlowImagePreviewProps) {
+function FlowImagePreview({ src, width, height }: FlowImagePreviewProps) {
   return (
     <Image
       style={{
@@ -277,7 +273,7 @@ export function FlowImagePreview({
   );
 }
 
-export function FlowImageCarouselPreview({
+function FlowImageCarouselPreview({
   label = "Label",
   fe,
 }: {

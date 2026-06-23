@@ -11,5 +11,3 @@ export const checkExpiry = (expiresAt: Date) => {
 const ExpiryComponent = ({ expiryDate, children }) => {
   return <>{checkExpiry(expiryDate) && <>{children}</>}</>;
 };
-
-export default ExpiryComponent;

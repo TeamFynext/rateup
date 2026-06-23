@@ -224,7 +224,7 @@ const PlanCard = ({
 
 export default PlanCard;
 
-export const generateListItems = (listData: string[] = []) => (
+const generateListItems = (listData: string[] = []) => (
   <List
     spacing="xs"
     size="md"

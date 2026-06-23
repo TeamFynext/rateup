@@ -12,7 +12,7 @@ import {
 
 import { faqs } from "../TestimonialContants.tsx";
 
-export const TestimonialFAQSection = () => {
+const TestimonialFAQSection = () => {
   return (
     <section
       id="faq-testimonials"

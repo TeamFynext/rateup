@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import { Loader2, Package } from "lucide-react";
 
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
@@ -141,11 +141,9 @@ export default function OrdersTable({
                     className="hover:bg-muted/20 transition-colors"
                   >
                     <TableCell className="text-sm">
-                      <div>
-                        {format(new Date(order.createdAt), "MMM d, yyyy")}
-                      </div>
+                      <div>{dayjs(order.createdAt).format("MMM D, YYYY")}</div>
                       <div className="text-xs text-muted-foreground">
-                        {format(new Date(order.createdAt), "p")}
+                        {dayjs(order.createdAt).format("h:mm A")}
                       </div>
                     </TableCell>
                     <TableCell>

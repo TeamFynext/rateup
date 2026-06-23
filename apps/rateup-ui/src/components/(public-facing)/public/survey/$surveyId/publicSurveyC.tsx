@@ -11,9 +11,7 @@ import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
 import errorPageStyles from "../../../ws/$shortId/ws.module.css";
 
-export const Route = createFileRoute(
-  "/(public-facing)/public/survey/$surveyId/",
-)({
+const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/")({
   component: Page,
   head: ({ params }) => ({
     meta: [

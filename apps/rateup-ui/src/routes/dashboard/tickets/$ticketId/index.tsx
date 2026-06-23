@@ -1209,8 +1209,8 @@ function TicketTopHeader({
   );
 }
 
-export type ChecklistItem = { id: string; text: string; done: boolean };
-export type Checklist = { id: string; name: string; items: ChecklistItem[] };
+type ChecklistItem = { id: string; text: string; done: boolean };
+type Checklist = { id: string; name: string; items: ChecklistItem[] };
 
 function SectionLabel({
   label,

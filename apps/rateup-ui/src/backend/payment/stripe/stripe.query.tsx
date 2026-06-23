@@ -1,6 +1,5 @@
-import { useNavigate } from '@tanstack/react-router';
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import {
@@ -14,7 +13,7 @@ import {
   updateStripeProduct,
 } from "./stripe.api";
 
-export function useCreateStripeCheckoutSession(setIsLoading) {
+function useCreateStripeCheckoutSession(setIsLoading) {
   const navigate = useNavigate();
   return useMutation({
     mutationFn: (values: any) => createStripeCheckoutSession(values),

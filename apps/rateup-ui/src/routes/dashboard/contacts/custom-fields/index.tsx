@@ -18,7 +18,7 @@ function CustomFields() {
   return <CustomFieldsSettings />;
 }
 
-export function CustomFieldsSettings() {
+function CustomFieldsSettings() {
   const { customFields } = useCustomFieldsContext();
   return (
     <DataTable

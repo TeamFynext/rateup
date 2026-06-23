@@ -15,7 +15,7 @@ import {
   updateWaAutomatedReply,
 } from "./automatedReply.api";
 
-export const useWaAutomatedReplies = (teamId: string) =>
+const useWaAutomatedReplies = (teamId: string) =>
   useQuery({
     queryKey: ["waAutomatedReplies", { teamId }],
     queryFn: () => getWaAutomatedRepliesByTeamId(teamId),

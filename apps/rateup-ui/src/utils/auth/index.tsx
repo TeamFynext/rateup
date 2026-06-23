@@ -100,7 +100,7 @@ export function useSignIn() {
   };
 }
 
-export async function sendOTP(phoneNumber: string) {
+async function sendOTP(phoneNumber: string) {
   const navigate = useNavigate();
 
   try {

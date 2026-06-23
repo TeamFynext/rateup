@@ -29,7 +29,7 @@ export interface IUpdateProfilePhoto {
   profilePhoto: string;
 }
 
-export interface IUserData {
+interface IUserData {
   orgId: string;
   role: string;
   userId: string;
@@ -169,7 +169,7 @@ export async function updateUserAvailabilityStatus(data: {
   return await axiosClient.put(`user/status`, data);
 }
 
-export interface IPagination {
+interface IPagination {
   page: number;
   limit: number;
   total: number;

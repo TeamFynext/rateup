@@ -1,11 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type { fbPageQuery, UpdateWaSettingsInput } from "./waSettings.api";
+import type {
+  ConversationalAutomation,
+  fbPageQuery,
+  UpdateWaSettingsInput,
+} from "./waSettings.api";
 import {
   createWaSettings,
   deleteWaSettings,
   deRegisterBusinessClient,
+  getConversationalAutomation,
   getMetaAssets,
   getWaLogs,
   getWaSettings,
@@ -13,10 +18,12 @@ import {
   subscribeFieldtoPage,
   syncAdAccounts,
   syncAdsByAdAccount,
+  syncConversationalAutomation,
   syncDatasets,
   syncFbPages,
   syncLeadgenFormQuestions,
   syncMetaLeadgenForms,
+  updateConversationalAutomation,
   updateUserAccessToken,
   updateWaSettingsById,
   upsertWaSettings,
@@ -31,7 +38,7 @@ export const useWaSettings = (enabled = true) =>
     gcTime: 1000 * 60 * 60 * 24,
   });
 
-export const useCreateWaSettingsMutation = () => {
+const useCreateWaSettingsMutation = () => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createWaSettings,
@@ -140,7 +147,7 @@ export const useDeregisterBusinessClientMutation = () => {
   });
 };
 
-export const useWaLogs = (pagination, search, sort, columnFilters) =>
+const useWaLogs = (pagination, search, sort, columnFilters) =>
   useQuery({
     queryKey: ["waLogs", pagination, search, sort, columnFilters],
     queryFn: () => getWaLogs(pagination, search, sort, columnFilters),
@@ -234,6 +241,48 @@ export const useSubscribeFieldToPage = (waSettingsId) => {
     },
     onError: (error) => {
       toast.error(error?.message || "error");
+    },
+  });
+};
+
+export const useConversationalAutomation = (phoneId: string) =>
+  useQuery({
+    queryKey: ["conversationalAutomation", phoneId],
+    queryFn: () => getConversationalAutomation(phoneId),
+    enabled: !!phoneId,
+  });
+
+export const useUpdateConversationalAutomation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (params: {
+      phoneId: string;
+      data: Partial<ConversationalAutomation>;
+    }) => updateConversationalAutomation(params),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({
+        queryKey: ["conversationalAutomation", variables.phoneId],
+      });
+      toast.success("Conversational components updated");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Error updating conversational components");
+    },
+  });
+};
+
+export const useSyncConversationalAutomation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (phoneId: string) => syncConversationalAutomation(phoneId),
+    onSuccess: (_data, phoneId) => {
+      qc.invalidateQueries({
+        queryKey: ["conversationalAutomation", phoneId],
+      });
+      toast.success("Synced from Meta successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Error syncing from Meta");
     },
   });
 };

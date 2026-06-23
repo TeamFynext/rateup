@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 
 import { Image } from "@unpic/react";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import {
   ExternalLink,
   Loader2,
@@ -182,7 +182,7 @@ export default function OrderDetailsDialog({
             </p>
             <p className="text-sm">
               {order.createdAt
-                ? format(new Date(order.createdAt), "PPP p")
+                ? dayjs(order.createdAt).format("MMMM D, YYYY h:mm A")
                 : "—"}
             </p>
             <Badge variant="outline" className="mt-1.5">

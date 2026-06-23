@@ -52,7 +52,7 @@ interface ComponentLogicEditorProps {
   setBlocks: (updater: any) => void;
 }
 
-export const ComponentLogicEditor = ({
+const ComponentLogicEditor = ({
   blocks,
   setBlocks,
 }: ComponentLogicEditorProps) => {

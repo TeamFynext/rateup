@@ -63,7 +63,7 @@ interface RouteParamsProviderProps {
   children: ReactNode;
 }
 
-export const RouteParamsProvider: React.FC<RouteParamsProviderProps> = ({
+const RouteParamsProvider: React.FC<RouteParamsProviderProps> = ({
   children,
 }) => {
   const [state, dispatch] = useReducer(reducer, initialState);

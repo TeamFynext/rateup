@@ -25,7 +25,7 @@ interface ImageCheckboxProps {
   selectedValue: any;
 }
 
-export function ImageCheckbox({
+function ImageCheckbox({
   checked,
   defaultChecked,
   onChange,

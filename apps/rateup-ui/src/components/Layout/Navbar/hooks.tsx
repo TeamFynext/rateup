@@ -401,6 +401,11 @@ export function useNavMain({
                   url: "/dashboard/whatsapp/payments",
                   icon: CreditCard,
                 },
+                {
+                  title: t("Conversational"),
+                  url: "/dashboard/whatsapp/conversational-components",
+                  icon: MessageSquare,
+                },
               ],
             },
             ...(hasFeature(subscription, sfpn.WhatsAppAutomation) &&

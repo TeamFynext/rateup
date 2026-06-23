@@ -20,7 +20,7 @@ import { IconEdit, IconPlayerPlay, IconPlus } from "@tabler/icons-react";
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import _ from "lodash";
+import { cloneDeep } from "lodash";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -97,7 +97,7 @@ export function QuestionsSideBar({
   const openQuestion = (question) => {
     setSelectedQ(question);
     if (uniquePages.includes(question.type as PageType)) {
-      const webSurveyPagesThemeCopy = _.cloneDeep(survey?.webSurveyPagesTheme);
+      const webSurveyPagesThemeCopy = cloneDeep(survey?.webSurveyPagesTheme);
       const surveyThemeTabValue = getSurveyThemeTabValueFromPageType(
         question.type,
       );

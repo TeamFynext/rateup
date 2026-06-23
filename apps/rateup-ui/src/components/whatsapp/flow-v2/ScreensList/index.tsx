@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 
 import { IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
@@ -131,6 +131,7 @@ function ScreenCard({
             type="button"
             ref={provided.innerRef}
             {...provided.draggableProps}
+            style={provided.draggableProps.style as CSSProperties}
             className={cn(
               "w-full text-left py-3.5 px-3 rounded-lg border border-border bg-card cursor-pointer transition-all duration-200 hover:border-primary/60 hover:shadow-sm",
               isSelected &&

@@ -11,7 +11,7 @@ export type GetLabelsRes = {
   createdAt: string;
   updatedAt: string;
 };
-export interface LifecycleStage {
+interface LifecycleStage {
   id?: string;
   name: string;
   ordering: number;

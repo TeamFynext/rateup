@@ -49,19 +49,19 @@ export interface UseImageAlignConfig {
   onAligned?: () => void;
 }
 
-export const IMAGE_ALIGN_SHORTCUT_KEYS: Record<ImageAlign, string> = {
+const IMAGE_ALIGN_SHORTCUT_KEYS: Record<ImageAlign, string> = {
   left: "alt+shift+l",
   center: "alt+shift+e",
   right: "alt+shift+r",
 };
 
-export const imageAlignIcons = {
+const imageAlignIcons = {
   left: AlignStartVerticalIcon,
   center: AlignCenterVerticalIcon,
   right: AlignEndVerticalIcon,
 };
 
-export const imageAlignLabels: Record<ImageAlign, string> = {
+const imageAlignLabels: Record<ImageAlign, string> = {
   left: "Image align left",
   center: "Image align center",
   right: "Image align right",
@@ -70,7 +70,7 @@ export const imageAlignLabels: Record<ImageAlign, string> = {
 /**
  * Checks if image alignment can be performed in the current editor state
  */
-export function canSetImageAlign(
+function canSetImageAlign(
   editor: Editor | null,
   align: ImageAlign,
   extensionName: string = "image",
@@ -87,7 +87,7 @@ export function canSetImageAlign(
 /**
  * Checks if the image alignment is currently active
  */
-export function isImageAlignActive(
+function isImageAlignActive(
   editor: Editor | null,
   align: ImageAlign,
   extensionName: string = "image",
@@ -104,7 +104,7 @@ export function isImageAlignActive(
 /**
  * Sets image alignment in the editor
  */
-export function setImageAlign(
+function setImageAlign(
   editor: Editor | null,
   align: ImageAlign,
   extensionName: string = "image",
@@ -161,7 +161,7 @@ export function setImageAlign(
 /**
  * Determines if the image align button should be shown
  */
-export function shouldShowButton(props: {
+function shouldShowButton(props: {
   editor: Editor | null;
   hideWhenUnavailable: boolean;
   align: ImageAlign;
@@ -304,7 +304,7 @@ export function useImageAlign(config: UseImageAlignConfig) {
     Icon: imageAlignIcons[align],
   };
 }
-export function isExtensionAvailable(
+function isExtensionAvailable(
   editor: Editor | null,
   extensionNames: string | string[],
 ): boolean {
@@ -328,10 +328,7 @@ export function isExtensionAvailable(
 }
 type BreakpointMode = "min" | "max";
 
-export function useIsBreakpoint(
-  mode: BreakpointMode = "max",
-  breakpoint = 768,
-) {
+function useIsBreakpoint(mode: BreakpointMode = "max", breakpoint = 768) {
   const [matches, setMatches] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
@@ -354,7 +351,7 @@ export function useIsBreakpoint(
   return !!matches;
 }
 
-export function useCustomHotkeys({
+function useCustomHotkeys({
   keys,
   callback,
   enabled = true,

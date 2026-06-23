@@ -40,7 +40,7 @@ export const useGetLoyaltyCustomerById = (customerId) => {
   });
 };
 
-export const useGetLoyaltyCustomerByContactId = (contactId: string) => {
+const useGetLoyaltyCustomerByContactId = (contactId: string) => {
   return useQuery({
     queryFn: () => getLoyaltyCustomerByContactId(contactId),
     queryKey: ["loyaltyCustomerByContact", contactId],
@@ -63,7 +63,7 @@ export const useLoyaltyCustomers = (
   });
 };
 
-export const useDeleteLoyaltyCustomerMutation = () => {
+const useDeleteLoyaltyCustomerMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: deleteLoyaltyCustomer,
@@ -79,7 +79,7 @@ export const useDeleteLoyaltyCustomerMutation = () => {
   });
 };
 
-export const useLCAction = () => {
+const useLCAction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createLCAction,
@@ -94,7 +94,7 @@ export const useLCAction = () => {
   });
 };
 
-export const useImportCSVCustomerMutation = () => {
+const useImportCSVCustomerMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: importCustomers,
@@ -137,7 +137,7 @@ export const useExportCustomersMutation = () => {
   });
 };
 
-export const useUpdateLoyaltyCustomerMutation = () => {
+const useUpdateLoyaltyCustomerMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({

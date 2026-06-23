@@ -34,14 +34,14 @@ export function getSoucePlatformIconAndColor(sourcePlatform) {
   }
 }
 
-export function getInboxNavContactCount(tab) {
+function getInboxNavContactCount(tab) {
   const totalCount = useChatContactCountStore.getState().totalCount;
   let count = 0;
   if (tab === "mine") count = totalCount?.assignedToMe;
   return count;
 }
 
-export const InstagramIcon = ({ size = "xs" }: { size?: string | number }) => {
+const InstagramIcon = ({ size = "xs" }: { size?: string | number }) => {
   return (
     <ThemeIcon
       variant="gradient"
@@ -64,7 +64,9 @@ function getRandomHex(size: number): string {
     }
   }
 
-  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join(
+    "",
+  );
 }
 
 export function generateInternalMessageId() {

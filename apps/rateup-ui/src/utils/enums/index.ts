@@ -16,7 +16,7 @@ export const AuthMode = {
   VERIFY_PHONE_NO: "VERIFY_PHONE_NO",
 };
 
-export const UserMode = {
+const UserMode = {
   GUEST: "GUEST",
 };
 
@@ -147,7 +147,7 @@ export function getQuestionTypeLabel(
   }
 }
 
-export function getSentimentTypeLabel(sentiment: SentimentClass) {
+function getSentimentTypeLabel(sentiment: SentimentClass) {
   switch (sentiment) {
     case SentimentClass.POSITIVE:
       return "Positive";
@@ -219,7 +219,7 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
   }
 }
 
-export function getLoyaltyCampaignTypeLabel(type: LoyaltyCampaignType): string {
+function getLoyaltyCampaignTypeLabel(type: LoyaltyCampaignType): string {
   switch (type) {
     case LoyaltyCampaignType.ReferralTransaction:
       return "Referral Transaction";
@@ -253,9 +253,7 @@ export function getWaFlowFormElementTypeLabel(type: WaFlowFormElementType) {
   }
 }
 
-export function getCampaignParticipantStatusLabel(
-  status: CampaignParticipantStatus,
-) {
+function getCampaignParticipantStatusLabel(status: CampaignParticipantStatus) {
   switch (status) {
     case CampaignParticipantStatus.PENDING:
       return "Pending";

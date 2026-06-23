@@ -31,7 +31,7 @@ export const cardData = [
   },
 ];
 
-export const plans = [
+const plans = [
   {
     title: "Free Forever",
     price: "$0",

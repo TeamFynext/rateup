@@ -28,9 +28,9 @@ import {
 } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import { FilterSelect } from "@/routes/dashboard/contacts/index.tsx";
-
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { contactAddType } from "@/utils/enums/index.ts";
+
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -40,7 +40,7 @@ import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
 import ContactPagination from "./ContactPagination.tsx";
 import CreateContactModal from "./CreateContactModal.tsx";
 
-export interface IAddCustomer {
+interface IAddCustomer {
   name: string;
   email?: string;
   phone?: string;

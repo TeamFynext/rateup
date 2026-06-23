@@ -16,7 +16,7 @@ import {
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
 import { useNavigate } from "@tanstack/react-router";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import {
   Calendar,
   CalendarClock,
@@ -57,7 +57,6 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
-import type { TCard } from "./data.ts";
 import {
   getCardData,
   getCardDropTargetData,
@@ -65,6 +64,7 @@ import {
   isDraggingACard,
 } from "./data.ts";
 import { isShallowEqual } from "./is-shallow-equal.ts";
+import type { Card as TCard } from "./types.ts";
 
 type TCardState =
   | { type: "idle" }
@@ -136,7 +136,7 @@ const TAG_COLORS = [
   "bg-green-50 text-green-600",
 ];
 
-export function CardDisplay({
+function CardDisplay({
   card,
   state,
   outerRef,
@@ -168,7 +168,7 @@ export function CardDisplay({
       ? new Date(card.createdAt)
       : null;
 
-  const dateFormatted = targetDate ? format(targetDate, "dd MMM") : "";
+  const dateFormatted = targetDate ? dayjs(targetDate).format("DD MMM") : "";
 
   let isCloseToDueDate = false;
   let isOverdue = false;
