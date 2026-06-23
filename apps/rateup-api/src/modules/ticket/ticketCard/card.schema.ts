@@ -39,7 +39,7 @@ const updateCardRequestSchema = z.object({
   description: z.string().optional(),
   contactId: z.string().uuid().optional().nullable(),
   checklists: z.any().optional().nullable(),
-  attachments: z.any().optional().nullable(),
+  attachments: z.array(z.string()).optional(),
 });
 
 // Schema for moving a card to another column

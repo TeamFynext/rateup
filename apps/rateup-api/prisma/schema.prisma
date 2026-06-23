@@ -1491,7 +1491,7 @@ model TicketCard {
   ticketColumnId            String                   @db.Uuid
   ticketColumn              TicketColumn             @relation(fields: [ticketColumnId], references: [id], onDelete: Cascade)
   checklists                Json?
-  attachments               Json?
+  attachments               String[]  @default([])
   reviewId                  String?                  @db.Uuid
   surveyResponseId          String?                  @db.Uuid
   review                    Review?                  @relation(fields: [reviewId], references: [id])
@@ -1517,7 +1517,7 @@ model TicketCardAssignee {
 
 model TicketActivity {
   id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type         String // ADDED_CARD, MOVED_CARD, EDITED_CARD, etc.
+  type         String // ADDED_CARD, MOVED_CARD, EDITED_CARD, ADDED_ATTACHMENT, etc.
   timestamp    DateTime   @default(now())
   userId       String?    @db.Uuid
   user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)

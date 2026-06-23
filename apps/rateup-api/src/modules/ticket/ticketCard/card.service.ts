@@ -278,7 +278,16 @@ export async function updateCard(
 ) {
   const previousCard = await prisma.ticketCard.findUnique({
     where: { id },
-    select: { assignees: { select: { assigneeId: true } } },
+    select: {
+      assignees: { select: { assigneeId: true } },
+      attachments: true,
+      contactId: true,
+      title: true,
+      description: true,
+      priority: true,
+      deadline: true,
+      checklists: true,
+    },
   });
   const newAssignees = data.assignedToIds?.filter(
     (assigneeId) =>
@@ -286,6 +295,15 @@ export async function updateCard(
         (assignee) => assignee.assigneeId === assigneeId,
       ),
   );
+
+  const removedAssignees =
+    data.assignedToIds !== undefined
+      ? previousCard?.assignees
+          ?.filter(
+            (assignee) => !data.assignedToIds!.includes(assignee.assigneeId),
+          )
+          .map((a) => a.assigneeId)
+      : undefined;
 
   const card = await prisma.ticketCard.update({
     where: { id },
@@ -297,8 +315,10 @@ export async function updateCard(
       deadline: data.deadline !== undefined ? data.deadline : undefined,
       contactId: data.contactId !== undefined ? data.contactId : undefined,
       checklists: data.checklists !== undefined ? data.checklists : undefined,
-      attachments:
-        data.attachments !== undefined ? data.attachments : undefined,
+      // attachments is now String[] — replace the whole array
+      ...(data.attachments !== undefined
+        ? { attachments: { set: data.attachments } }
+        : {}),
       ...(data.assignedToIds !== undefined
         ? {
             assignees: {
@@ -321,89 +341,368 @@ export async function updateCard(
     },
   });
 
-  // Log activity for card update
-  await prisma.ticketActivity.create({
-    data: {
-      type: "EDITED_CARD",
-      userId: userId,
-      ticketCardId: id,
-      details: {
-        title: data.title,
-        description: data.description,
-      },
-    },
-  });
-  if (!newAssignees || !newAssignees.length) return card;
-
-  const users = await prisma.user.findMany({
-    where: {
-      id: { in: newAssignees },
-    },
-    select: {
-      id: true,
-      email: true,
-      phone: true,
-      name: true,
-    },
-  });
-  await addZapierTriggerToQueue(
-    ZapierTriggers.TICKET_ASSIGNEE_UPDATED,
-    {
-      [ZapierTriggers.TICKET_ASSIGNEE_UPDATED]: {
-        assignees: users,
-        card: card,
-      },
-    },
-    orgId,
+  // Only log EDITED_CARD when real metadata fields actually changed
+  const editableFields = ["title", "description", "deadline"] as const;
+  const changedFields = editableFields.filter(
+    (f) => data[f] !== undefined && data[f] !== previousCard?.[f],
   );
-  const column = await prisma.ticketColumn.findUnique({
-    where: { id: card.ticketColumnId },
-    select: { ticketBoardId: true, title: true },
-  });
-  if (!column) return;
 
-  const board = await prisma.ticketBoard.findFirst({
-    where: {
-      id: column.ticketBoardId,
-    },
-  });
+  if (changedFields.length > 0) {
+    await prisma.ticketActivity.create({
+      data: {
+        type: "EDITED_CARD",
+        userId,
+        ticketCardId: id,
+        details: changedFields.reduce(
+          (acc, f) => {
+            if (data[f] !== undefined) {
+              acc[f] = data[f];
+            }
+            return acc;
+          },
+          {} as Record<string, any>,
+        ),
+      },
+    });
+  }
 
-  for await (const user of users) {
-    const notificationSetting = await getNotificationSettings(user.id, orgId);
-    if (notificationSetting && notificationSetting.ticketAssignNotification) {
-      await notificationQueue.add("notification", {
-        systemNotificationData: {
-          userId: user.id,
-          orgId: orgId,
-          source: "ticket",
-          subSource: "ticket-assigned",
+  // Log CHANGED_PRIORITY
+  if (data.priority !== undefined && data.priority !== previousCard?.priority) {
+    await prisma.ticketActivity.create({
+      data: {
+        type: "CHANGED_PRIORITY",
+        userId,
+        ticketCardId: id,
+        details: {
+          fromPriority: previousCard?.priority,
+          toPriority: data.priority,
+        },
+      },
+    });
+  }
+
+  // Log ADDED_ATTACHMENT for each newly added file key (with uploader info)
+  if (data.attachments !== undefined) {
+    const previousKeys: string[] =
+      (previousCard?.attachments as string[]) ?? [];
+    const newKeys = data.attachments.filter((k) => !previousKeys.includes(k));
+    if (newKeys.length > 0) {
+      const uploader = userId
+        ? await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, name: true },
+          })
+        : null;
+      for (const key of newKeys) {
+        await prisma.ticketActivity.create({
           data: {
-            board_name: board.title,
-            column_name: column.title,
-            cardId: card.id,
-            ticketId: card.ticketId,
+            type: "ADDED_ATTACHMENT",
+            userId,
+            ticketCardId: id,
+            details: {
+              key,
+              uploadedById: uploader?.id ?? userId,
+              uploadedByName: uploader?.name ?? null,
+            },
+          },
+        });
+      }
+    }
+
+    const removedKeys = previousKeys.filter(
+      (k) => !data.attachments!.includes(k),
+    );
+    if (removedKeys.length > 0) {
+      const remover = userId
+        ? await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, name: true },
+          })
+        : null;
+      for (const key of removedKeys) {
+        await prisma.ticketActivity.create({
+          data: {
+            type: "REMOVED_ATTACHMENT",
+            userId,
+            ticketCardId: id,
+            details: {
+              key,
+              removedById: remover?.id ?? userId,
+              removedByName: remover?.name ?? null,
+            },
+          },
+        });
+      }
+    }
+  }
+
+  // Check contact changes
+  const oldContactId = previousCard?.contactId;
+  const newContactId = data.contactId;
+  const contactChanged =
+    newContactId !== undefined && oldContactId !== newContactId;
+
+  if (contactChanged) {
+    if (newContactId) {
+      // Added or Changed contact
+      const contact = await prisma.contact.findUnique({
+        where: { id: newContactId },
+        select: { id: true, name: true },
+      });
+      await prisma.ticketActivity.create({
+        data: {
+          type: "ADDED_CONTACT",
+          userId,
+          ticketCardId: id,
+          details: {
+            contactId: newContactId,
+            contactName: contact?.name || newContactId,
+          },
+        },
+      });
+    } else if (newContactId === null && oldContactId) {
+      // Removed contact
+      const contact = await prisma.contact.findUnique({
+        where: { id: oldContactId },
+        select: { id: true, name: true },
+      });
+      await prisma.ticketActivity.create({
+        data: {
+          type: "REMOVED_CONTACT",
+          userId,
+          ticketCardId: id,
+          details: {
+            contactId: oldContactId,
+            contactName: contact?.name || oldContactId,
           },
         },
       });
     }
-    if (board.ticketAssignedEmail)
-      await sendTicketAssignedEmail({
-        board_name: board.title,
-        column_name: column.title,
-        id: card.id,
-        ticketId: card.ticketId,
-        email: user.email,
-        orgId,
+  }
+
+  // Log REMOVED_MEMBER for each removed member
+  if (removedAssignees?.length) {
+    const removedUsers = await prisma.user.findMany({
+      where: {
+        id: { in: removedAssignees },
+      },
+      select: { id: true, name: true },
+    });
+
+    for (const assigneeId of removedAssignees) {
+      const removedUser = removedUsers.find((u) => u.id === assigneeId);
+      await prisma.ticketActivity.create({
+        data: {
+          type: "REMOVED_MEMBER",
+          userId,
+          ticketCardId: id,
+          details: {
+            memberId: assigneeId,
+            memberName: removedUser?.name || assigneeId,
+          },
+        },
       });
-    if (board.ticketAssignedWhatsapp)
-      await sendTicketAssignedWaMessage({
-        board_name: board.title,
-        column_name: column.title,
-        id: card.id,
-        ticketId: card.ticketId,
-        phone: user.phone,
-        orgId,
+    }
+  }
+
+  // Check checklist changes
+  if (data.checklists !== undefined) {
+    const prevChecklists = (previousCard?.checklists as any[]) || [];
+    const newChecklists = (data.checklists as any[]) || [];
+
+    // Removed checklists
+    for (const prevList of prevChecklists) {
+      if (!newChecklists.find((nl) => nl.id === prevList.id)) {
+        await prisma.ticketActivity.create({
+          data: {
+            type: "REMOVED_CHECKLIST",
+            userId,
+            ticketCardId: id,
+            details: { checklistName: prevList.name },
+          },
+        });
+      }
+    }
+
+    // Added checklists and item changes
+    for (const newList of newChecklists) {
+      const prevList = prevChecklists.find((pl) => pl.id === newList.id);
+
+      if (!prevList) {
+        await prisma.ticketActivity.create({
+          data: {
+            type: "ADDED_CHECKLIST",
+            userId,
+            ticketCardId: id,
+            details: { checklistName: newList.name },
+          },
+        });
+      } else {
+        const prevItems = prevList.items || [];
+        const newItems = newList.items || [];
+
+        // Removed items
+        for (const prevItem of prevItems) {
+          if (!newItems.find((ni: any) => ni.id === prevItem.id)) {
+            await prisma.ticketActivity.create({
+              data: {
+                type: "REMOVED_CHECKLIST_ITEM",
+                userId,
+                ticketCardId: id,
+                details: {
+                  checklistName: newList.name,
+                  itemName: prevItem.text,
+                },
+              },
+            });
+          }
+        }
+
+        // Added and changed items
+        for (const newItem of newItems) {
+          const prevItem = prevItems.find((pi: any) => pi.id === newItem.id);
+          if (!prevItem) {
+            await prisma.ticketActivity.create({
+              data: {
+                type: "ADDED_CHECKLIST_ITEM",
+                userId,
+                ticketCardId: id,
+                details: {
+                  checklistName: newList.name,
+                  itemName: newItem.text,
+                },
+              },
+            });
+          } else {
+            if (newItem.isCompleted && !prevItem.isCompleted) {
+              await prisma.ticketActivity.create({
+                data: {
+                  type: "CHECKED_CHECKLIST_ITEM",
+                  userId,
+                  ticketCardId: id,
+                  details: {
+                    checklistName: newList.name,
+                    itemName: newItem.text,
+                  },
+                },
+              });
+            } else if (!newItem.isCompleted && prevItem.isCompleted) {
+              await prisma.ticketActivity.create({
+                data: {
+                  type: "UNCHECKED_CHECKLIST_ITEM",
+                  userId,
+                  ticketCardId: id,
+                  details: {
+                    checklistName: newList.name,
+                    itemName: newItem.text,
+                  },
+                },
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Handle Zapier and notifications for newly assigned members (with user details/name)
+  if (newAssignees?.length) {
+    const users = await prisma.user.findMany({
+      where: {
+        id: { in: newAssignees },
+      },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        name: true,
+      },
+    });
+
+    for (const assigneeId of newAssignees) {
+      const assignedUser = users.find((u) => u.id === assigneeId);
+      await prisma.ticketActivity.create({
+        data: {
+          type: "ADDED_MEMBER",
+          userId,
+          ticketCardId: id,
+          details: {
+            memberId: assigneeId,
+            memberName: assignedUser?.name || assigneeId,
+          },
+        },
       });
+    }
+
+    await addZapierTriggerToQueue(
+      ZapierTriggers.TICKET_ASSIGNEE_UPDATED,
+      {
+        [ZapierTriggers.TICKET_ASSIGNEE_UPDATED]: {
+          assignees: users,
+          card: card,
+        },
+      },
+      orgId,
+    );
+
+    const column = await prisma.ticketColumn.findUnique({
+      where: { id: card.ticketColumnId },
+      select: { ticketBoardId: true, title: true },
+    });
+
+    if (column) {
+      const board = await prisma.ticketBoard.findFirst({
+        where: {
+          id: column.ticketBoardId,
+        },
+      });
+
+      if (board) {
+        for await (const user of users) {
+          const notificationSetting = await getNotificationSettings(
+            user.id,
+            orgId,
+          );
+          if (
+            notificationSetting &&
+            notificationSetting.ticketAssignNotification
+          ) {
+            await notificationQueue.add("notification", {
+              systemNotificationData: {
+                userId: user.id,
+                orgId: orgId,
+                source: "ticket",
+                subSource: "ticket-assigned",
+                data: {
+                  board_name: board.title,
+                  column_name: column.title,
+                  cardId: card.id,
+                  ticketId: card.ticketId,
+                },
+              },
+            });
+          }
+          if (board.ticketAssignedEmail)
+            await sendTicketAssignedEmail({
+              board_name: board.title,
+              column_name: column.title,
+              id: card.id,
+              ticketId: card.ticketId,
+              email: user.email,
+              orgId,
+            });
+          if (board.ticketAssignedWhatsapp)
+            await sendTicketAssignedWaMessage({
+              board_name: board.title,
+              column_name: column.title,
+              id: card.id,
+              ticketId: card.ticketId,
+              phone: user.phone,
+              orgId,
+            });
+        }
+      }
+    }
   }
 
   return card;
@@ -419,7 +718,12 @@ export async function moveCard(
   // Get the current card to record the source column
   const currentCard = await prisma.ticketCard.findUnique({
     where: { id },
-    select: { ticketColumnId: true, order: true, title: true },
+    select: {
+      ticketColumnId: true,
+      order: true,
+      title: true,
+      ticketColumn: { select: { title: true } },
+    },
   });
 
   if (!currentCard) return null;
@@ -513,9 +817,9 @@ export async function moveCard(
       ticketCardId: id,
       details: {
         fromColumnId: currentCard.ticketColumnId,
-        fromColumnName: currentCard.title,
+        fromColumnName: currentCard.ticketColumn?.title,
         toColumnId: ticketColumnId,
-        toColumnName: card.title,
+        toColumnName: card.ticketColumn?.title,
         fromOrder: currentCard.order,
         toOrder: order,
       },
