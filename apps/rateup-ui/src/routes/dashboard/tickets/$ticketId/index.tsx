@@ -247,7 +247,7 @@ function CardDetailPage() {
             {/* Bottom - Tabs */}
             <div className="flex-1 p-4 md:p-[22px_24px] md:pt-4">
               <Tabs defaultValue="comments" className="w-full">
-                <TabsList className="mb-4 shrink-0 justify-start h-auto flex-wrap bg-transparent p-0 rounded-none gap-0">
+                <TabsList className="shrink-0 justify-start h-auto flex-wrap bg-transparent p-0 rounded-none gap-0">
                   <TabsTrigger
                     value="comments"
                     className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-3 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
@@ -595,8 +595,11 @@ function RightSidebar({
 
   const assignedMembers = ticket.assignees?.map((a) => a.assigneeId) || [];
 
-  // Flatten all columns from all boards for the column selector
-  const allColumns = (boards || []).flatMap((b) => b.ticketColumns || []);
+  // Get columns only from the current board
+  const currentBoard = (boards || []).find((b) =>
+    b.ticketColumns?.some((c: any) => c.id === ticket.ticketColumnId),
+  );
+  const boardColumns = currentBoard?.ticketColumns || [];
 
   // Get creator from first ADDED_CARD activity
   const creatorActivity = (ticket.ticketActivities || [])
@@ -622,7 +625,7 @@ function RightSidebar({
       <TooltipProvider>
         <div className="flex flex-col gap-6">
           {/* Column selector */}
-          {allColumns.length > 0 && (
+          {boardColumns.length > 0 && (
             <div>
               <MetaLabel>{t("Column")}</MetaLabel>
               <Select
@@ -634,7 +637,7 @@ function RightSidebar({
                   <SelectValue placeholder={t("Select column")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {allColumns.map((col) => (
+                  {boardColumns.map((col: any) => (
                     <SelectItem
                       key={col.id}
                       value={col.id}
@@ -1091,6 +1094,12 @@ function TicketTopHeader({
     }
   };
 
+  const allItems = (ticket.checklists || []).flatMap(
+    (cl: any) => cl.items || [],
+  );
+  const doneItems = allItems.filter((i: any) => i.done).length;
+  const totalItems = allItems.length;
+
   return (
     <div className="border-b border-border flex items-start gap-3 bg-background px-4 py-3 md:px-6 md:pt-4.5 md:pb-4">
       <div className="flex-1 min-w-0">
@@ -1133,6 +1142,25 @@ function TicketTopHeader({
             >
               <AlertCircle size={11} className="text-red-700" strokeWidth={2} />{" "}
               {t("Overdue")}
+            </span>
+          )}
+          {totalItems > 0 && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full font-body text-[11px] font-semibold"
+              style={{
+                padding: "2px 9px",
+                background: doneItems === totalItems ? "#F0FDF4" : "#F4F5F2",
+                color: doneItems === totalItems ? "#15803D" : "#666864",
+              }}
+            >
+              <CheckSquare
+                size={11}
+                strokeWidth={2}
+                style={{
+                  color: doneItems === totalItems ? "#16A34A" : "#8B8E8A",
+                }}
+              />
+              {doneItems}/{totalItems}
             </span>
           )}
         </div>
@@ -1548,7 +1576,7 @@ function TicketComments({
     mutate({ msg: comment, ticketCardId });
   };
   return (
-    <div className="flex flex-col gap-6 mt-4">
+    <div className="flex flex-col gap-6 mt-1">
       <div className="flex gap-4 items-start">
         <Avatar className="h-8 w-8 mt-1">
           <AvatarFallback>
@@ -1623,7 +1651,7 @@ function TicketActivity({
     );
 
   return (
-    <div className="flex flex-col gap-4 mt-4 relative before:absolute before:inset-y-0 before:left-3.75 before:w-0.5 before:bg-border">
+    <div className="flex flex-col gap-4 mt-1 relative before:absolute before:inset-y-0 before:left-3.75 before:w-0.5 before:bg-border">
       {activities.map((activity) => {
         let title = "";
         let IconCmp = ListPlus;

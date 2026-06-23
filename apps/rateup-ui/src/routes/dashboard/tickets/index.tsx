@@ -514,7 +514,7 @@ function BoardListCard({
       onClick={() => onSelect(board.id)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="bg-white rounded-xl cursor-pointer border border-ink-100 transition-all duration-200 flex flex-col h-full"
+      className="bg-white dark:bg-transparent rounded-xl cursor-pointer border border-ink-100 transition-all duration-200 flex flex-col h-full"
       style={{
         padding: "18px 20px",
         boxShadow: hovered
