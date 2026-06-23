@@ -37,6 +37,15 @@ import {
 } from "@/components/ui/alert-dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -510,85 +519,82 @@ function BoardListCard({
   const { t } = useTranslation();
 
   return (
-    <div
+    <Card
       onClick={() => onSelect(board.id)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="bg-white dark:bg-transparent rounded-xl cursor-pointer border border-ink-100 transition-all duration-200 flex flex-col h-full"
+      className="cursor-pointer transition-all duration-200 flex flex-col h-full gap-0 py-0"
       style={{
-        padding: "18px 20px",
         boxShadow: hovered
           ? "0 8px 28px rgba(11,31,72,.10)"
           : "0 1px 3px rgba(11,31,72,.05)",
         transform: hovered ? "translateY(-2px)" : "none",
       }}
     >
-      <div className="flex items-start gap-2.5">
-        <div className="flex-1 min-w-0">
-          <div className="font-display font-extrabold text-[17px] text-ink-900 tracking-tight leading-[1.25] truncate">
-            {board.title}
-          </div>
-          <div className="font-body text-[13px] text-[#8589A0] mt-[3px] line-clamp-2">
-            {board.description || t("No description")}
-          </div>
+      <CardHeader className="p-[18px] pb-0 px-[20px]">
+        <CardTitle className="font-display font-extrabold text-[17px] text-ink-900 tracking-tight leading-[1.25] truncate">
+          {board.title}
+        </CardTitle>
+        <CardDescription className="font-body text-[13px] text-[#8589A0] mt-[3px] line-clamp-2">
+          {board.description || t("No description")}
+        </CardDescription>
+
+        <CardAction>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="shrink-0 w-[26px] h-[26px] -mt-0.5 rounded-md border-none bg-transparent text-ink-300 cursor-pointer flex items-center justify-center transition-colors duration-150 hover:bg-ink-50"
+              >
+                <MoreHorizontal size={18} strokeWidth={2} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <DropdownMenuItem onClick={() => onEdit(board.id)}>
+                <IconEdit size={16} className="mr-2" />
+                {t("Edit")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => onDelete(board.id)}
+              >
+                <IconTrash size={16} className="mr-2" />
+                {t("Delete")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </CardAction>
+      </CardHeader>
+
+      <CardContent className="px-[20px] pb-[18px] pt-4 flex-1">
+        <div className="font-body font-semibold text-sm text-ink-900">
+          {board.totalTickets}{" "}
+          {board.totalTickets !== 1 ? t("tickets") : t("ticket")}
+          {board.columnStats.length > 0 && (
+            <span className="inline-flex gap-1.5 ml-2.5">
+              {board.columnStats.map((stat, i) => {
+                const isFirst = i === 0;
+                const colorClass = isFirst
+                  ? "text-red-600 bg-[#FEF2F2]"
+                  : "text-[#d97a0f] bg-[#fff8eb]";
+                return (
+                  <span
+                    key={i}
+                    className={`font-body text-[11px] font-bold px-2 py-[2px] rounded-full ${colorClass}`}
+                  >
+                    {stat.count} {stat.title.toLowerCase()}
+                  </span>
+                );
+              })}
+            </span>
+          )}
         </div>
+      </CardContent>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              onClick={(e) => e.stopPropagation()}
-              className="shrink-0 w-[26px] h-[26px] -mt-0.5 rounded-md border-none bg-transparent text-ink-300 cursor-pointer flex items-center justify-center transition-colors duration-150 hover:bg-ink-50"
-            >
-              <MoreHorizontal size={18} strokeWidth={2} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <DropdownMenuItem onClick={() => onEdit(board.id)}>
-              <IconEdit size={16} className="mr-2" />
-              {t("Edit")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => onDelete(board.id)}
-            >
-              <IconTrash size={16} className="mr-2" />
-              {t("Delete")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      <div className="font-body font-semibold text-sm text-ink-900 mt-4">
-        {board.totalTickets}{" "}
-        {board.totalTickets !== 1 ? t("tickets") : t("ticket")}
-        {board.columnStats.length > 0 && (
-          <span className="inline-flex gap-1.5 ml-2.5">
-            {board.columnStats.map((stat, i) => {
-              const isFirst = i === 0;
-              const colorClass = isFirst
-                ? "text-red-600 bg-[#FEF2F2]"
-                : "text-[#d97a0f] bg-[#fff8eb]";
-              return (
-                <span
-                  key={i}
-                  className={`font-body text-[11px] font-bold px-2 py-[2px] rounded-full ${colorClass}`}
-                >
-                  {stat.count} {stat.title.toLowerCase()}
-                </span>
-              );
-            })}
-          </span>
-        )}
-      </div>
-
-      <div className="flex-1" />
-
-      <div className="h-px bg-[#F0F0EE] my-3.5" />
-
-      <div className="flex items-center justify-between mt-auto">
+      <CardFooter className="px-[20px] pb-[18px] pt-3.5 border-t border-[#F0F0EE] flex items-center justify-between mt-auto">
         <span
           className="font-body text-xs font-semibold text-green-700 bg-[#E7F7EC] rounded-full"
           style={{ padding: "3px 11px" }}
@@ -604,8 +610,8 @@ function BoardListCard({
             })}
           </span>
         )}
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 }
 
