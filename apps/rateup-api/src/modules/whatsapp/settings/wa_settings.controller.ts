@@ -5,6 +5,7 @@ import {
   ByLeadGenFormIdParamsSchema,
   ByWaSettingsIdParamsSchema,
   ContactTagSchema,
+  ConversationalAutomationInput,
   createWaSettingsInput,
   PaginationQuery,
   updateWaSettingsInput,
@@ -19,6 +20,8 @@ import {
   getAdsFromWa,
   getAllWaSettings,
   getContactTag,
+  getConversationalAutomation,
+  syncConversationalAutomation,
   getFbPagesFromWa,
   getLeadgenFormQuestionsFromWa,
   getLeadgenFormsFromWa,
@@ -30,6 +33,7 @@ import {
   subscribeFieldtoPage,
   syncMetaAssetstoDb,
   updateContactTag,
+  updateConversationalAutomation,
   updateWaSettings,
   updateWaSettingsById,
   upsertWaSettings,
@@ -452,6 +456,58 @@ export async function getWaSettingsForOrgHandler(
     });
   } catch (error) {
     log.error("Error while getting meta assets %o", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function getConversationalAutomationHandler(
+  request: FastifyRequest<{ Params: ByWaSettingsIdParamsSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { phoneId } = request.params;
+    const data = await getConversationalAutomation(orgId, phoneId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error({ err: error }, "Error while getting conversational automation");
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function updateConversationalAutomationHandler(
+  request: FastifyRequest<{
+    Params: ByWaSettingsIdParamsSchema;
+    Body: ConversationalAutomationInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { phoneId } = request.params;
+    const data = await updateConversationalAutomation(
+      orgId,
+      phoneId,
+      request.body,
+    );
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error({ err: error }, "Error while updating conversational automation");
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function syncConversationalAutomationHandler(
+  request: FastifyRequest<{ Params: ByWaSettingsIdParamsSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { phoneId } = request.params;
+    const data = await syncConversationalAutomation(orgId, phoneId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error({ err: error }, "Error while syncing conversational automation");
     reply.code(500).send({ message: "Something went wrong" });
   }
 }

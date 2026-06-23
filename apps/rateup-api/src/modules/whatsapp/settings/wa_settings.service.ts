@@ -9,6 +9,7 @@ import { WaConfigType, WhatsappSettingsStatus } from "../../../types/enums.js";
 import { log } from "../../../utils/logger.js";
 import {
   ContactTagSchema,
+  ConversationalAutomationInput,
   PaginationQuery,
   updateWaSettingsInput,
 } from "./wa_settings.schema.js";
@@ -496,6 +497,87 @@ export async function getMetaAssets(whatsappSettingsId: string) {
       whatsappSettingsId,
     },
   })) as unknown as MetaAsset;
+}
+
+export async function getConversationalAutomation(
+  orgId: string,
+  phoneId: string,
+) {
+  const settings = await prisma.whatsappSettings.findFirst({
+    where: { orgId, phoneId },
+    select: { conversationalAutomation: true },
+  });
+  if (!settings) throw new Error("WhatsApp settings not found");
+
+  return (
+    (settings.conversationalAutomation as ConversationalAutomationInput) ?? {
+      commands: [],
+      prompts: [],
+    }
+  );
+}
+
+export async function syncConversationalAutomation(
+  orgId: string,
+  phoneId: string,
+) {
+  const settings = await getWaSettings(orgId, phoneId);
+  if (!settings) throw new Error("WhatsApp settings not found");
+
+  const res = await callMetaApi(
+    `/${phoneId}`,
+    "GET",
+    settings.accessToken,
+    undefined,
+    {},
+    {},
+    { fields: "conversational_automation" },
+  );
+  const automation = res.data?.conversational_automation ?? {
+    commands: [],
+    prompts: [],
+  };
+
+  await prisma.whatsappSettings.update({
+    where: { phoneId },
+    data: { conversationalAutomation: automation },
+  });
+
+  return automation;
+}
+
+export async function updateConversationalAutomation(
+  orgId: string,
+  phoneId: string,
+  data: ConversationalAutomationInput,
+) {
+  const settings = await getWaSettings(orgId, phoneId);
+  if (!settings) throw new Error("WhatsApp settings not found");
+
+  const params: Record<string, string> = {};
+  if (data.commands) {
+    params.commands = JSON.stringify(data.commands);
+  }
+  if (data.prompts) {
+    params.prompts = JSON.stringify(data.prompts);
+  }
+
+  const res = await callMetaApi(
+    `/${phoneId}/conversational_automation`,
+    "POST",
+    settings.accessToken,
+    undefined,
+    {},
+    {},
+    params,
+  );
+
+  await prisma.whatsappSettings.update({
+    where: { phoneId },
+    data: { conversationalAutomation: data },
+  });
+
+  return res.data;
 }
 
 export async function getWaSettingsByPhone(phone: string) {

@@ -2646,6 +2646,8 @@ export function resolveShopifyPathValue(
         shopifyBody.fulfillment?.tracking_url ??
         "",
     );
+  } else if (path === "order_number") {
+    resolvedValue = String(shopifyBody.order_number ?? "");
   } else if (path === "abandoned_checkout_url") {
     resolvedValue = String(
       shopifyBody.abandoned_checkout_url ??
