@@ -307,6 +307,7 @@ model WhatsappSettings {
   igDisplayName    String?
   instagramIceBreakers   Json?
   instagramPersistentMenu Json?
+  conversationalAutomation Json?
   phoneDisplayName String?
 
   fbUserName       String?
