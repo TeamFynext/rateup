@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createFileRoute,
   Link,
@@ -23,6 +24,7 @@ import {
   Trash,
   Trash2,
   User,
+  UserMinus,
   UserPlus,
   X,
   ZoomIn,
@@ -32,6 +34,7 @@ import { toast } from "sonner";
 
 import { QuestionType2 } from "@/types/enums.ts";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
+import { deleteCard, moveCard } from "@/backend/tickets/tickets.api";
 import {
   useBoardsQueries,
   useCardById,
@@ -66,6 +69,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -158,6 +168,7 @@ function CardDetailPage() {
 
   const { history } = useRouter();
   const { data: card, isPending, error } = useCardById(ticketId);
+  console.log(card);
 
   const questions = useMemo(() => {
     return card?.surveyResponse?.surveyTeamMap?.survey?.WaFlow?.json?.screens?.flatMap(
@@ -217,9 +228,13 @@ function CardDetailPage() {
         />
 
         <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden min-h-0 bg-background">
-          <div className="w-full md:w-72 shrink-0 bg-slate-50/50 md:overflow-y-auto md:order-2 border-b md:border-b-0 md:border-l border-border">
-            <div className="p-4 md:p-5">
-              <RightSidebar ticket={card} ticketId={ticketId} />
+          <div className="w-full md:w-72 shrink-0 bg-slate-50 dark:bg-muted/20 md:overflow-y-auto md:order-2 border-b md:border-b-0 md:border-l border-border">
+            <div className="p-4 md:p-5 bg-ink-25 dark:bg-muted/20 ">
+              <RightSidebar
+                ticket={card}
+                ticketId={ticketId}
+                onClose={() => history.back()}
+              />
             </div>
           </div>
           {/* Main Left Content */}
@@ -229,34 +244,33 @@ function CardDetailPage() {
               <EditTicket ticket={card} ticketId={ticketId} />
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-border mx-4 md:mx-6 mt-3" />
-
             {/* Bottom - Tabs */}
             <div className="flex-1 p-4 md:p-[22px_24px] md:pt-4">
               <Tabs defaultValue="comments" className="w-full">
-                <TabsList className="mb-4 shrink-0 justify-start h-auto flex-wrap bg-transparent p-0 rounded-none space-x-6">
+                <TabsList className="mb-4 shrink-0 justify-start h-auto flex-wrap bg-transparent p-0 rounded-none gap-0">
                   <TabsTrigger
                     value="comments"
-                    className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-1 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
+                    className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-3 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
                   >
                     <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                    <div className="flex items-center">
-                      <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground group-data-[state=active]:bg-blue-50 group-data-[state=active]:text-blue-800">
-                        {card.ticketComments?.length || 0}
+                    {t("Comments")}
+                    {(card.ticketComments?.length || 0) > 0 && (
+                      <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground group-data-[state=active]:bg-primary/10 group-data-[state=active]:text-primary">
+                        {card.ticketComments?.length}
                       </span>
-                    </div>
+                    )}
                   </TabsTrigger>
                   <TabsTrigger
                     value="activity"
-                    className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-1 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
+                    className="group gap-1.5 md:gap-2 text-xs md:text-[13px] font-semibold text-muted-foreground data-[state=active]:text-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none! shadow-none rounded-none px-3 pb-2.5 pt-2 border-b-2 border-transparent data-[state=active]:border-b-primary transition-all"
                   >
                     <History className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                    <div className="flex items-center">
-                      <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground group-data-[state=active]:bg-blue-50 group-data-[state=active]:text-blue-800">
-                        {card.ticketActivities?.length || 0}
+                    {t("Activity")}
+                    {(card.ticketActivities?.length || 0) > 0 && (
+                      <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-muted text-muted-foreground group-data-[state=active]:bg-primary/10 group-data-[state=active]:text-primary">
+                        {card.ticketActivities?.length}
                       </span>
-                    </div>
+                    )}
                   </TabsTrigger>
                   {card.surveyResponseId && (
                     <TabsTrigger
@@ -399,23 +413,64 @@ function AssignContact({ ticketId }: Readonly<{ ticketId: string }>) {
   );
 }
 
+function useDeleteCardMutation(onSuccess?: () => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteCard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: ["board"] });
+      onSuccess?.();
+    },
+  });
+}
+
+function useMoveCardColumnMutation(ticketId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: {
+      cardId: string;
+      sourceColumnId: string;
+      targetColumnId: string;
+    }) => moveCard(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["card", ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: ["board"] });
+      toast.success("Column updated!", { id: "move-col-success" });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to move card.", {
+        id: "move-col-error",
+      });
+    },
+  });
+}
+
 function RightSidebar({
   ticket,
   ticketId,
+  onClose,
 }: Readonly<{
   ticket: Card;
   ticketId: string;
+  onClose: () => void;
 }>) {
   const { t } = useTranslation();
   const { mutate } = useUpdateCardMutation();
   const { data: members = [] } = useCardTeamMembersById(ticketId);
   const { user } = useUser();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteCardMutation = useDeleteCardMutation(onClose);
+  const moveColMutation = useMoveCardColumnMutation(ticketId);
+  const { data: boards } = useBoardsQueries();
   const [isUploadingFile, setIsUploadingFile] = useState(false);
-  const [attachmentToDelete, setAttachmentToDelete] = useState<any>(null);
+  const [attachmentToDelete, setAttachmentToDelete] = useState<string | null>(
+    null,
+  );
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
-  const isImage = (att: any) =>
-    att.name && /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(att.name);
+  const isImage = (key: string) => /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(key);
 
   const ALLOWED_MIME_TYPES = new Set([
     // Images
@@ -478,28 +533,14 @@ function RightSidebar({
 
     setIsUploadingFile(true);
     try {
-      const newAttachments = [];
+      const newKeys: string[] = [];
       for (const file of validFiles) {
         const fileKey = await uploadFile(file);
-
-        newAttachments.push({
-          id: crypto.randomUUID(),
-          name: file.name,
-          key: fileKey,
-          uploadedBy: user
-            ? {
-                id: user.userId,
-                name: user.userName,
-              }
-            : null,
-        });
+        newKeys.push(fileKey);
       }
-
-      const updatedAttachments = [
-        ...(ticket.attachments || []),
-        ...newAttachments,
-      ];
-      mutate({ id: ticketId, attachments: updatedAttachments });
+      const currentKeys: string[] = (ticket.attachments as string[]) || [];
+      const updatedKeys = [...currentKeys, ...newKeys];
+      mutate({ id: ticketId, attachments: updatedKeys });
     } catch {
       toast.error("Failed to upload file. Please try again.");
     } finally {
@@ -508,14 +549,11 @@ function RightSidebar({
     }
   };
 
-  const removeAttachment = async (att: any) => {
-    if (att?.key) {
-      await deleteUploadedFiles({ fileKeyArray: [{ Key: att.key }] });
-    }
-    const updatedAttachments = (ticket.attachments || []).filter(
-      (a: any) => a.id !== att.id,
-    );
-    mutate({ id: ticketId, attachments: updatedAttachments });
+  const removeAttachment = async (key: string) => {
+    await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
+    const currentKeys: string[] = (ticket.attachments as string[]) || [];
+    const updatedKeys = currentKeys.filter((k) => k !== key);
+    mutate({ id: ticketId, attachments: updatedKeys });
     setAttachmentToDelete(null);
   };
 
@@ -556,10 +594,60 @@ function RightSidebar({
   };
 
   const assignedMembers = ticket.assignees?.map((a) => a.assigneeId) || [];
+
+  // Flatten all columns from all boards for the column selector
+  const allColumns = (boards || []).flatMap((b) => b.ticketColumns || []);
+
+  // Get creator from first ADDED_CARD activity
+  const creatorActivity = (ticket.ticketActivities || [])
+    .filter((a) => a.type === "ADDED_CARD")
+    .sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    )[0];
+  const creator = creatorActivity?.user;
+
+  const handleColumnChange = (targetColumnId: string) => {
+    if (!ticket.ticketColumnId || targetColumnId === ticket.ticketColumnId)
+      return;
+    moveColMutation.mutate({
+      cardId: ticketId,
+      sourceColumnId: ticket.ticketColumnId,
+      targetColumnId,
+    });
+  };
+
   return (
     <>
       <TooltipProvider>
         <div className="flex flex-col gap-6">
+          {/* Column selector */}
+          {allColumns.length > 0 && (
+            <div>
+              <MetaLabel>{t("Column")}</MetaLabel>
+              <Select
+                value={ticket.ticketColumnId || ""}
+                onValueChange={handleColumnChange}
+                disabled={moveColMutation.isPending}
+              >
+                <SelectTrigger className="w-full h-9 text-[13px] font-body">
+                  <SelectValue placeholder={t("Select column")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {allColumns.map((col) => (
+                    <SelectItem
+                      key={col.id}
+                      value={col.id}
+                      className="text-[13px] font-body"
+                    >
+                      {col.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div>
             <MetaLabel>{t("Priority")}</MetaLabel>
             <div className="flex gap-[5px] flex-wrap">
@@ -735,21 +823,35 @@ function RightSidebar({
             </div>
           </div>
 
+          {/* Created by */}
+          {creator && (
+            <div>
+              <MetaLabel>{t("Created by")}</MetaLabel>
+              <div className="flex items-center gap-2">
+                <Avatar className="h-7 w-7">
+                  <AvatarImage src={creator.profilePhoto ?? undefined} />
+                  <AvatarFallback className="text-xs font-semibold">
+                    {creator.name?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-body text-[13px] text-foreground font-medium">
+                  {creator.name}
+                </span>
+              </div>
+            </div>
+          )}
+
           <div>
             <MetaLabel>{t("Attachments")}</MetaLabel>
             <div className="flex gap-[7px] flex-wrap mt-1">
-              {(ticket.attachments || []).map((att: any) => {
-                const fileIsImage = isImage(att);
-                const fileUrl = getFileUrlFromKey(att.key);
+              {((ticket.attachments as string[]) || []).map((key: string) => {
+                const fileIsImage = isImage(key);
+                const fileUrl = getFileUrlFromKey(key);
+                const ext = key.split(".").pop()?.toUpperCase() ?? "FILE";
                 return (
                   <div
-                    key={att.id}
-                    title={
-                      att.name +
-                      (att.uploadedBy
-                        ? ` (uploaded by ${att.uploadedBy.name})`
-                        : "")
-                    }
+                    key={key}
+                    title={key}
                     className="w-14 h-14 relative group rounded-[9px] bg-muted border border-border flex flex-col items-center justify-center text-muted-foreground cursor-pointer overflow-hidden transition-colors hover:border-primary"
                     onClick={() => {
                       if (fileIsImage) {
@@ -763,7 +865,7 @@ function RightSidebar({
                       <>
                         <img
                           src={fileUrl}
-                          alt={att.name}
+                          alt={key}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display =
@@ -781,7 +883,7 @@ function RightSidebar({
                       <>
                         <Paperclip size={18} />
                         <span className="text-[9px] truncate w-full text-center px-1 mt-1 opacity-60">
-                          {att.name.split(".").pop()?.toUpperCase()}
+                          {ext}
                         </span>
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                           <ExternalLink
@@ -794,7 +896,7 @@ function RightSidebar({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setAttachmentToDelete(att);
+                        setAttachmentToDelete(key);
                       }}
                       className="absolute top-0 right-0 bg-red-500 text-white p-0.5 rounded-bl-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
                       title="Remove attachment"
@@ -805,7 +907,7 @@ function RightSidebar({
                 );
               })}
 
-              {(ticket.attachments || []).length < 4 && (
+              {((ticket.attachments as string[]) || []).length < 4 && (
                 <label className="w-14 h-14 rounded-[9px] border-[1.5px] border-dashed border-border flex items-center justify-center text-muted-foreground cursor-pointer hover:border-primary hover:text-primary transition-colors bg-background">
                   {isUploadingFile ? (
                     <Loader2 size={15} className="animate-spin text-primary" />
@@ -824,8 +926,58 @@ function RightSidebar({
               )}
             </div>
           </div>
+
+          {/* Delete card */}
+          <div className="pt-3 border-t border-border mt-auto">
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="w-full py-2 rounded-lg border-none bg-transparent text-destructive font-body text-[12.5px] font-medium cursor-pointer flex items-center justify-center gap-1.5 transition-colors hover:bg-destructive/10"
+            >
+              <Trash2 size={13} strokeWidth={2} />
+              {t("Delete ticket")}
+            </button>
+          </div>
         </div>
       </TooltipProvider>
+
+      {/* Delete confirmation dialog */}
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-6"
+          onClick={() => setConfirmDelete(false)}
+        >
+          <div
+            className="bg-background rounded-xl p-6 shadow-2xl max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-semibold text-base mb-1">
+              {t("Delete Ticket")}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-5">
+              {t(
+                "Are you sure you want to delete this ticket? This action cannot be undone.",
+              )}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmDelete(false)}
+              >
+                {t("Cancel")}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={deleteCardMutation.isPending}
+                onClick={() => deleteCardMutation.mutate(ticketId)}
+              >
+                {deleteCardMutation.isPending ? t("Deleting...") : t("Delete")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Lightbox */}
       {lightboxImage && (
@@ -864,7 +1016,7 @@ function RightSidebar({
             <p className="text-sm text-muted-foreground mb-5">
               Are you sure you want to delete{" "}
               <span className="font-medium text-foreground">
-                {attachmentToDelete.name}
+                {attachmentToDelete.split("/").pop()}
               </span>
               ? This action cannot be undone.
             </p>
@@ -910,13 +1062,15 @@ function TicketTopHeader({
 
   const { data: boards } = useBoardsQueries();
   const currentCol = useMemo(() => {
-    if (!boards || !ticket.columnId) return null;
+    if (!boards || !ticket.ticketColumnId) return null;
     for (const b of boards) {
-      const col = b.ticketColumns?.find((c: any) => c.id === ticket.columnId);
+      const col = b.ticketColumns?.find(
+        (c: any) => c.id === ticket.ticketColumnId,
+      );
       if (col) return col;
     }
     return null;
-  }, [boards, ticket.columnId]);
+  }, [boards, ticket.ticketColumnId]);
 
   const isOverdue = !!(
     ticket.deadline && new Date(ticket.deadline) < new Date()
@@ -1249,7 +1403,7 @@ function EditTicket({
           return (
             <div
               key={cl.id}
-              className="bg-muted/10 rounded-[10px] border border-border p-3.5"
+              className="bg-ink-25 dark:bg-muted/20 rounded-[10px] border border-border p-3.5"
               style={{
                 marginBottom: clIdx < localChecklists.length - 1 ? 20 : 8,
               }}
@@ -1482,6 +1636,54 @@ function TicketActivity({
           case "ADDED_MEMBER":
             title = `${activity.user?.name} added ${activity.details?.memberName || "someone"} to this card`;
             IconCmp = User;
+            break;
+          case "REMOVED_MEMBER":
+            title = `${activity.user?.name} removed ${activity.details?.memberName || "someone"} from this card`;
+            IconCmp = UserMinus;
+            break;
+          case "ADDED_CONTACT":
+            title = `${activity.user?.name} added contact ${activity.details?.contactName || "someone"} to this card`;
+            IconCmp = UserPlus;
+            break;
+          case "REMOVED_CONTACT":
+            title = `${activity.user?.name} removed contact ${activity.details?.contactName || "someone"} from this card`;
+            IconCmp = UserMinus;
+            break;
+          case "ADDED_ATTACHMENT":
+            title = `${activity.user?.name} added attachment ${activity.details?.key?.split("/").pop() || "file"}`;
+            IconCmp = Paperclip;
+            break;
+          case "REMOVED_ATTACHMENT":
+            title = `${activity.user?.name} removed attachment ${activity.details?.key?.split("/").pop() || "file"}`;
+            IconCmp = Trash2;
+            break;
+          case "CHANGED_PRIORITY":
+            title = `${activity.user?.name} changed priority from ${activity.details?.fromPriority || "None"} to ${activity.details?.toPriority}`;
+            IconCmp = AlertCircle;
+            break;
+          case "ADDED_CHECKLIST":
+            title = `${activity.user?.name} added checklist ${activity.details?.checklistName}`;
+            IconCmp = CheckSquare;
+            break;
+          case "REMOVED_CHECKLIST":
+            title = `${activity.user?.name} removed checklist ${activity.details?.checklistName}`;
+            IconCmp = Trash2;
+            break;
+          case "ADDED_CHECKLIST_ITEM":
+            title = `${activity.user?.name} added item ${activity.details?.itemName} to checklist ${activity.details?.checklistName}`;
+            IconCmp = Plus;
+            break;
+          case "REMOVED_CHECKLIST_ITEM":
+            title = `${activity.user?.name} removed item ${activity.details?.itemName} from checklist ${activity.details?.checklistName}`;
+            IconCmp = Trash;
+            break;
+          case "CHECKED_CHECKLIST_ITEM":
+            title = `${activity.user?.name} completed ${activity.details?.itemName} in checklist ${activity.details?.checklistName}`;
+            IconCmp = Check;
+            break;
+          case "UNCHECKED_CHECKLIST_ITEM":
+            title = `${activity.user?.name} unchecked ${activity.details?.itemName} in checklist ${activity.details?.checklistName}`;
+            IconCmp = X;
             break;
           case "EDITED_CARD":
             title = `${activity.user?.name} edited this card`;

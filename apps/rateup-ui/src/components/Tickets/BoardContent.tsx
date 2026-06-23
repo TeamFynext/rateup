@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   ChevronLeft,
+  Columns3,
   LayoutPanelTop,
   List,
   Search,
@@ -21,9 +22,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import {
@@ -36,6 +35,7 @@ import {
 import { Board } from "./board.tsx";
 import TicketSettings from "./boardSettings.tsx";
 import { PRIORITY_CONFIG } from "./card.tsx";
+import { ManageColumnsDialog } from "./ManageColumnsDialog.tsx";
 import { TicketListView } from "./TicketListView.tsx";
 
 export function BoardContent({
@@ -45,15 +45,21 @@ export function BoardContent({
   selectedBoardId: string;
   teamOptions: { value: string; label: string }[];
 }>) {
-  const { board: selectedBoard, isLoading: isBoardDataLoading } = useBoard(
-    selectedBoardId || "",
-  );
+  const {
+    board: selectedBoard,
+    isLoading: isBoardDataLoading,
+    createColumn,
+    updateColumn,
+    deleteColumn,
+    reorderColumns,
+  } = useBoard(selectedBoardId || "");
   const { t } = useTranslation();
 
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
   const [viewPref, setViewPref] = useState(() => {
     return localStorage.getItem("rateup_ticket_view") || "board";
   });
@@ -152,6 +158,28 @@ export function BoardContent({
     localStorage.setItem("rateup_ticket_view", v);
   };
 
+  const handleSaveColumns = async (newColumns: any[], deletedIds: string[]) => {
+    // Handle deletes
+    for (const id of deletedIds) {
+      deleteColumn(id);
+    }
+    // Handle updates and adds
+    for (const col of newColumns) {
+      if (col.isNew) {
+        createColumn({ title: col.title, ticketBoardId: selectedBoardId });
+      } else {
+        updateColumn({ id: col.id, title: col.title });
+      }
+    }
+    // Handle reorder
+    const orderData = newColumns
+      .filter((c) => !c.isNew)
+      .map((c, index) => ({ id: c.id, order: index }));
+    if (orderData.length > 0) {
+      reorderColumns({ boardId: selectedBoardId, columns: orderData });
+    }
+  };
+
   return (
     <div className="h-full flex flex-col min-h-0">
       <Tabs
@@ -222,6 +250,18 @@ export function BoardContent({
                     <List className="w-3.5 h-3.5 mr-1.5" /> {t("List")}
                   </TabsTrigger>
                 </TabsList>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 shrink-0"
+                  onClick={() => setIsManageColumnsOpen(true)}
+                >
+                  <Columns3 className="w-4 h-4 sm:mr-2 text-primary" />
+                  <span className="hidden sm:inline text-primary">
+                    {t("Manage Columns")}
+                  </span>
+                </Button>
 
                 <Button
                   variant="outline"
@@ -371,6 +411,15 @@ export function BoardContent({
           />
         </TabsContent>
       </Tabs>
+
+      {isManageColumnsOpen && (
+        <ManageColumnsDialog
+          boardId={selectedBoardId}
+          columns={selectedBoard?.ticketColumns || []}
+          onClose={() => setIsManageColumnsOpen(false)}
+          onSave={handleSaveColumns}
+        />
+      )}
     </div>
   );
 }

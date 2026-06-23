@@ -60,6 +60,7 @@ export interface Card {
   type?: TicketType;
   createdAt?: string | Date;
   columnId?: string;
+  ticketColumnId?: string;
   ticketActivities?: Activity[];
   ticketComments?: Array<TicketComment>;
   surveyResponseId?: string;
@@ -78,7 +79,7 @@ export interface Card {
     consent?: boolean;
   } | null;
   checklists?: any;
-  attachments?: any[];
+  attachments?: string[]; // array of file keys; full metadata stored in TicketActivity
 }
 
 export interface surveyResponse {
@@ -139,7 +140,23 @@ export type WaAutomatedReplyMessage = {
 
 export interface Activity {
   id: string;
-  type: "ADDED_MEMBER" | "ADDED_CARD" | "MOVED_CARD" | "EDITED_CARD";
+  type:
+    | "ADDED_MEMBER"
+    | "REMOVED_MEMBER"
+    | "ADDED_CARD"
+    | "MOVED_CARD"
+    | "EDITED_CARD"
+    | "ADDED_ATTACHMENT"
+    | "REMOVED_ATTACHMENT"
+    | "ADDED_CONTACT"
+    | "REMOVED_CONTACT"
+    | "CHANGED_PRIORITY"
+    | "ADDED_CHECKLIST"
+    | "REMOVED_CHECKLIST"
+    | "ADDED_CHECKLIST_ITEM"
+    | "REMOVED_CHECKLIST_ITEM"
+    | "CHECKED_CHECKLIST_ITEM"
+    | "UNCHECKED_CHECKLIST_ITEM";
   user?: User;
   userId?: string;
   timestamp: string;
@@ -149,6 +166,12 @@ export interface Activity {
     fromColumnName?: string;
     toColumnName?: string;
     memberName?: string;
+    contactName?: string;
+    key?: string;
+    fromPriority?: string;
+    toPriority?: string;
+    checklistName?: string;
+    itemName?: string;
   };
 }
 
