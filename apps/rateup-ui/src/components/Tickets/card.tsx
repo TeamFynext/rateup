@@ -207,7 +207,6 @@ export function CardDisplay({
         flexShrink: 0,
         flexDirection: "column",
         gap: "8px",
-        padding: "0.5rem",
         ...(state.type === "is-dragging-and-left-self"
           ? { display: "none" }
           : {}),

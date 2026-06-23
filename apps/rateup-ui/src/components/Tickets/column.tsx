@@ -2,13 +2,7 @@
 
 import { memo, useContext, useEffect, useRef, useState } from "react";
 
-import {
-  IconDots,
-  IconEdit,
-  IconPlus,
-  IconTrash,
-  IconX,
-} from "@tabler/icons-react";
+import { IconDots, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
@@ -109,7 +103,7 @@ export function Column({
   onMoveToBoard,
   availableBoards,
   currentBoardId,
-}: {
+}: Readonly<{
   column: ColumnType;
   onDelete?: (columnId: string) => void;
   onUpdate?: (columnId: string, updates: Partial<ColumnType>) => void;
@@ -120,7 +114,7 @@ export function Column({
   ) => void;
   availableBoards?: BoardInfo[];
   currentBoardId?: string;
-}) {
+}>) {
   const scrollableRef = useRef<HTMLDivElement | null>(null);
   const outerFullHeightRef = useRef<HTMLDivElement | null>(null);
   const headerRef = useRef<HTMLDivElement | null>(null);
@@ -143,8 +137,12 @@ export function Column({
   const [selectedBoardId, setSelectedBoardId] = useState(currentBoardId || "");
 
   const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
+  const [titleError, setTitleError] = useState(false);
   const openAddCardModal = () => setIsAddCardModalOpen(true);
-  const closeAddCardModal = () => setIsAddCardModalOpen(false);
+  const closeAddCardModal = () => {
+    setIsAddCardModalOpen(false);
+    setTitleError(false);
+  };
 
   const { createCard, updateCard, deleteCard } = useBoard(currentBoardId || "");
 
@@ -185,7 +183,10 @@ export function Column({
   };
 
   const handleAddCard = () => {
-    if (!newCard.title.trim()) return;
+    if (!newCard.title.trim()) {
+      setTitleError(true);
+      return;
+    }
 
     const payload: any = {
       title: newCard.title,
@@ -381,7 +382,7 @@ export function Column({
         className={`transition-all duration-150 border rounded-xl p-1.5 ${
           state.type === "is-column-over"
             ? "border-2 border-dashed border-blue-500/50 bg-blue-500/5"
-            : "border border-dashed border-slate-300 dark:border-slate-700 bg-transparent"
+            : "border border-dashed border-slate-300 dark:border-slate-700"
         }`}
         style={{
           display: "flex",
@@ -395,15 +396,14 @@ export function Column({
         {...{ [blockBoardPanningAttr]: true }}
       >
         <div
+          className="flex flex-col gap-[14px] pb-2"
           style={{
-            display: "flex",
             maxHeight: "100%",
-            flexDirection: "column",
             visibility: state.type === "is-column-over" ? "hidden" : "visible",
           }}
         >
           <div
-            className="flex items-center gap-[7px] px-3 py-2.5 mb-2 group/column-header"
+            className="flex items-center gap-[7px] px-3 pt-2 group/column-header"
             ref={headerRef}
           >
             <span className="w-[9px] h-[9px] rounded-full shrink-0 bg-slate-400" />
@@ -422,7 +422,7 @@ export function Column({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="w-[22px] h-[22px] rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted opacity-0 group-hover/column-header:opacity-100"
+                  className="w-[22px] h-[22px] rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted"
                   aria-label="More actions"
                 >
                   <IconDots size={16} />
@@ -458,7 +458,7 @@ export function Column({
               scrollbarWidth: "thin",
             }}
             ref={scrollableRef}
-            className={`column-cards-container flex-1 flex flex-col overflow-y-auto transition-all duration-150 min-h-[80px] p-[1px] rounded-xl border-2 border-dashed ${
+            className={`column-cards-container flex-1 flex flex-col gap-[14px] px-2 overflow-y-auto transition-all duration-150 min-h-[80px] p-[1px] rounded-xl border-2 border-dashed ${
               state.type === "is-card-over"
                 ? "bg-blue-800/5 border-blue-800/30"
                 : "bg-transparent border-transparent"
@@ -484,7 +484,7 @@ export function Column({
           {isAddCardModalOpen ? null : (
             <button
               onClick={handleOpenAddCardModal}
-              className="mx-1 mt-2 p-2 rounded-lg bg-transparent border-2 border-dashed border-border text-muted-foreground font-body text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 px-3 transition-all duration-150 hover:bg-muted/60 hover:text-foreground shrink-0"
+              className="mx-2 p-2 rounded-lg bg-transparent border-2 border-dashed border-border text-muted-foreground font-body text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 px-3 transition-all duration-150 hover:bg-muted/60 hover:text-foreground shrink-0"
             >
               <IconPlus size={16} strokeWidth={2.5} /> {t("Add ticket")}
             </button>
@@ -536,14 +536,20 @@ export function Column({
               </Label>
               <Input
                 value={newCard.title}
-                onChange={(e) =>
-                  setNewCard((prev) => ({ ...prev, title: e.target.value }))
-                }
+                onChange={(e) => {
+                  setNewCard((prev) => ({ ...prev, title: e.target.value }));
+                  if (titleError) setTitleError(false);
+                }}
                 placeholder={t("e.g., Fix the navigation bug")}
-                className="h-10"
+                className={`h-10 ${titleError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                 autoFocus
                 required
               />
+              {titleError && (
+                <span className="text-red-500 text-[13px] font-medium mt-0.5">
+                  {t("Please enter a title for the ticket")}
+                </span>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">
