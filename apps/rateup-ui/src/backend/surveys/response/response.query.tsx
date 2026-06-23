@@ -3,10 +3,10 @@ import { useContext } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { decryptResultResponse } from "@/utils/response.ts";
-
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import { decryptResultResponse } from "@/utils/response.ts";
+
 import { useSurvey } from "../surveys.query";
 import type { downloadExcelResponseType } from "./response.api";
 import {
@@ -249,7 +249,7 @@ export const useResponseForComparison = (surveyId) => {
   });
 };
 
-export function useSurveyHappyResponseAnalytics(
+function useSurveyHappyResponseAnalytics(
   surveyId: string,
   timeFilter?: string,
   enabled = true,

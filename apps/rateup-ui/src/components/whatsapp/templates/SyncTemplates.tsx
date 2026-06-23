@@ -37,7 +37,7 @@ import whatsappStyles from "../whatsapp.module.css";
 import classes from "./template.module.css";
 import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
 
-export function SyncTemplatesModal({ opened, onClose, unregisteredTemplates }) {
+function SyncTemplatesModal({ opened, onClose, unregisteredTemplates }) {
   const [selectedTemplates, handlers] = useListState([]);
   const [currentTemplateIndex, setCurrentTemplateIndex] = useState(-1);
   const [formattedTemplates, ftHandlers] = useListState<{
@@ -321,7 +321,7 @@ function DisplayTemplates({
   );
 }
 
-export function ImportTemplatesButton() {
+function ImportTemplatesButton() {
   const [openModal, { open, close }] = useDisclosure(false);
   const { t: translations } = useTranslation();
   const {

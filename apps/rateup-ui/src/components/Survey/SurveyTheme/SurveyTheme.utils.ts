@@ -6,7 +6,7 @@ import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { SelectedItemEnum } from "./SurveyTheme.enums";
 import type { SurveyTheme } from "./surveyTheme.types";
 
-export function getImageUrl(
+function getImageUrl(
   imageObject: string | Blob,
   unsplashImage: boolean = false,
 ) {
@@ -25,11 +25,11 @@ export function getImageUrl(
   return "";
 }
 
-export function compareTwoObjects(obj1: any, obj2: any) {
+function compareTwoObjects(obj1: any, obj2: any) {
   return JSON.stringify(obj1) === JSON.stringify(obj2);
 }
 
-export function getDividerLabel(tabState: SelectedItemEnum) {
+function getDividerLabel(tabState: SelectedItemEnum) {
   switch (tabState) {
     case SelectedItemEnum.LOGO:
       return "Logo";
@@ -91,8 +91,7 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
     images.map((image: string | File | Blob) =>
       image instanceof File || image instanceof Blob
         ? uploadFile(image).then(
-            (fileKey) =>
-              `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`,
+            (fileKey) => `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${fileKey}`,
           )
         : Promise.resolve(image),
     ),
@@ -157,7 +156,7 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
   return newSurveyTheme as unknown as SurveyTheme;
 }
 
-export function getFeaturesBasedOnQuestionType(
+function getFeaturesBasedOnQuestionType(
   selectedLanguage: string,
   questionType: QuestionType,
 ) {

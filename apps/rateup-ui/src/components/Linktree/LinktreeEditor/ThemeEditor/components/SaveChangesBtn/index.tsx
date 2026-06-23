@@ -5,13 +5,16 @@ import { useCallback, useState } from "react";
 import { Button, Group } from "@mantine/core";
 import { useParams } from "@tanstack/react-router";
 import { produce } from "immer";
-import loadash from "lodash";
+import { isEqual } from "lodash";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
 
 import { useLinktreeObj } from "../../../LinktreeContext/LinktreeContext.tsx";
 import { initialState as defaultThemeobj } from "../../ThemeContext/constants.ts";
-import { useThemeDispatch, useThemeObj } from "../../ThemeContext/ThemeContext.tsx";
+import {
+  useThemeDispatch,
+  useThemeObj,
+} from "../../ThemeContext/ThemeContext.tsx";
 import styles from "./SaveChangesBtn.module.css";
 import { uploadFile } from "./uploadFile.tsx";
 
@@ -33,9 +36,9 @@ function SaveChangesBtn() {
 
   let haveUnsavedChanges = false;
   if (theme) {
-    haveUnsavedChanges = !loadash.isEqual(theme, currentThemeObj);
+    haveUnsavedChanges = !isEqual(theme, currentThemeObj);
   } else {
-    haveUnsavedChanges = !loadash.isEqual(defaultThemeobj, currentThemeObj);
+    haveUnsavedChanges = !isEqual(defaultThemeobj, currentThemeObj);
   }
 
   const handleSavingLinktreeChanges = useCallback(async () => {

@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import {
   Center,
   Checkbox,
@@ -87,6 +89,7 @@ const TestimonialEdit = ({
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
+                          style={provided.draggableProps.style as CSSProperties}
                         >
                           <div className={classes.root} key={testimonial?.id}>
                             {isDelete && (

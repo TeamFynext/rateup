@@ -9,7 +9,7 @@ dayjs.extend(advancedFormat);
 dayjs.extend(isBetween);
 dayjs.extend(relativeTime);
 
-export function findPreviousMonday(date: Date): Date {
+function findPreviousMonday(date: Date): Date {
   const day = date.getDay();
   const difference = day === 0 ? 6 : day - 1; // if Sunday, go back 6 days to last Monday, else go back to last Monday
   const previousMonday = new Date(date);
@@ -47,7 +47,7 @@ export const formatToCustomTime = (timestamp) => {
   return dayjs(timestamp).format("hh:mm a");
 };
 
-export const formatUnixTimeStamp = (timestamp: number) => {
+const formatUnixTimeStamp = (timestamp: number) => {
   return dayjs.unix(timestamp).format("HH:mm");
 };
 
@@ -119,15 +119,15 @@ export function roundOffMinutesAndSeconds(dateString) {
 }
 
 // 11-12-2024 11:20 PM
-export function formatDateWithTime(date: string | Date) {
+function formatDateWithTime(date: string | Date) {
   return dayjs(date).format("DD-MM-YYYY hh:mm A");
 }
 
 // Jan 2024
-export function formateDate2(date) {
+function formateDate2(date) {
   return dayjs(date).format("MMM, YYYY");
 }
-export function getTimeRemaining(targetDate) {
+function getTimeRemaining(targetDate) {
   const now = dayjs().startOf("day");
   const target = dayjs(targetDate).endOf("day");
 

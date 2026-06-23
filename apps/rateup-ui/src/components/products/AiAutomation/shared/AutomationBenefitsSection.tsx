@@ -9,7 +9,7 @@ const Image2 = `${imagesPath}/ai-automation/AI Lead Qualification & Nurturing.pn
 const Image3 = `${imagesPath}/ai-automation/SENTIMENT ANALYSIS.png`;
 const Image4 = `${imagesPath}/ai-automation/LOYALTY PROGRAM (1).png`;
 
-export const articles = [
+const articles = [
   {
     category: "Customer Support Flows",
     date: "SEPTEMBER 1, 2022",

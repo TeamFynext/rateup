@@ -7,7 +7,6 @@ import { IconTableExport } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
-import generatePDF, { Margin } from "react-to-pdf";
 
 import { QuestionType, WaQuestions } from "@/types/enums.ts";
 import { useSubscription } from "@/backend/subscription/subscription.query";
@@ -20,9 +19,9 @@ import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
-
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
+
 import HappyIndex from "./HappyIndex.tsx";
 import LargeTextResponseSummary from "./LargeTextResponseSummary.tsx";
 import SurveyQuestion from "./SurveyQuestion.tsx";
@@ -43,8 +42,9 @@ const ResultsOverviewWebForm = ({
   const { t: translations } = useTranslation();
   const targetRef = useRef<HTMLDivElement>(null);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!targetRef.current) return;
+    const { default: generatePDF, Margin } = await import("react-to-pdf");
     generatePDF(targetRef, {
       filename: `survey-analytics-${surveyId}.pdf`,
       page: {

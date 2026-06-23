@@ -1,6 +1,6 @@
 import { UserRole } from "../enums/index.ts";
 
-export function retrieveRole(
+function retrieveRole(
   role: typeof UserRole.ADM | typeof UserRole.SUPADM,
 ): string | "Super Admin" | "Admin" {
   if (role === UserRole.SUPADM)
@@ -18,7 +18,7 @@ export function retrieveRole(
     );
 }
 
-export function mergeNames(first: string, last: string) {
+function mergeNames(first: string, last: string) {
   return `${first.trim()} ${last.trim()}`;
 }
 

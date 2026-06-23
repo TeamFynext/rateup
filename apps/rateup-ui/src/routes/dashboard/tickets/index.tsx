@@ -6,7 +6,8 @@ import {
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
-import { formatDistanceToNow } from "date-fns";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import {
   Calendar,
   LayoutPanelTop,
@@ -70,6 +71,8 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+
+dayjs.extend(relativeTime);
 
 export const Route = createFileRoute("/dashboard/tickets/")({
   component: Page,
@@ -604,10 +607,7 @@ function BoardListCard({
         {board.createdAt && (
           <span className="inline-flex items-center gap-[5px] font-body text-[12.5px] text-[#8589A0]">
             <Calendar size={13} className="text-ink-300" strokeWidth={2} />
-            {t("Created")}{" "}
-            {formatDistanceToNow(new Date(board.createdAt), {
-              addSuffix: true,
-            })}
+            {t("Created")} {dayjs(board.createdAt).fromNow()}
           </span>
         )}
       </CardFooter>

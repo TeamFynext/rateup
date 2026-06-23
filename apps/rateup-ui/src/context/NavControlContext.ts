@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react";
 
-export const NavControlContext = createContext({
+const NavControlContext = createContext({
   navOpened: true,
   setNavOpened: (navOpened: boolean) => {},
 });

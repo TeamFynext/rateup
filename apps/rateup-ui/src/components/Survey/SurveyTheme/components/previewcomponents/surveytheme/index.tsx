@@ -3,12 +3,13 @@
 import { useState } from "react";
 
 import { Box } from "@mantine/core";
-import _ from "lodash";
+import { cloneDeep } from "lodash";
 
 import { PageType } from "@/types/enums.ts";
+import ThankYou from "@/components/(public-facing)/public/survey/$surveyId/end.tsx";
+import { ResponseSubmitted } from "@/components/(public-facing)/ws/$shortId/ResponseSubmitted.tsx";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { ResponseSubmitted } from "@/components/(public-facing)/ws/$shortId/ResponseSubmitted.tsx";
 import { surveyUploadsPath } from "@/utils/constants.ts";
 
 import { TakeSurveyLayoutWeb } from "../../../../../Layout/TakeSurveyLayout/TakeSurveyLayoutWeb.tsx";
@@ -21,7 +22,6 @@ import {
 import IsSurveyThemePreviewContextProvider from "./isSurveyThemePreviewContext.tsx";
 import styles from "./SurveyThemePreview.module.css";
 import { getSurveyEditViewQuestions } from "./utils.ts";
-import ThankYou from "@/components/(public-facing)/public/survey/$surveyId/end.tsx";
 
 function SurveyThemeView({
   survey,
@@ -33,7 +33,7 @@ function SurveyThemeView({
   const isSurveyPageTabSelected = selectedPageTab === ThemeTabEnum.SURVEY;
 
   const surveyTheme = useSurveyThemeContextValue();
-  const surveyCopy = _.cloneDeep(survey);
+  const surveyCopy = cloneDeep(survey);
 
   const userInfo = useUser();
   const userObj = userInfo?.user;

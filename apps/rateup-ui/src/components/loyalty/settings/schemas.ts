@@ -102,7 +102,7 @@ export const ExpirationSettingsSchema = z.object({
   months: z.number().min(1, "Expiration Period is required"),
 });
 
-export const EventTriggerSchema = z.object({
+const EventTriggerSchema = z.object({
   enabled: z.boolean(),
   waTemplateId: z.string().optional(),
   triggerDays: z.string().optional(),

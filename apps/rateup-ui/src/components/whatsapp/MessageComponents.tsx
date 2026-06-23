@@ -25,6 +25,7 @@ import {
 } from "@tabler/icons-react";
 
 import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
+
 import classes from "./Message.module.css";
 
 export interface ResponseMessageContainerProps {
@@ -134,7 +135,7 @@ interface WaListButonProps {
   style?: MantineStyleProp;
   onClick?: any;
 }
-export function WaListButton({
+function WaListButton({
   text = "View Options",
   style = {},
   ...props
@@ -201,13 +202,13 @@ export function SendMessageMock() {
   );
 }
 
-export function WaMessageHeader(props) {
+function WaMessageHeader(props) {
   return <Text fw={"bold"} {...props} />;
 }
-export function WaMessageBody(props) {
+function WaMessageBody(props) {
   return <Text {...props} />;
 }
-export function WaMessageFooter(props) {
+function WaMessageFooter(props) {
   return <Text fz={"sm"} c="dimmed" {...props} />;
 }
 
@@ -264,7 +265,7 @@ interface WaListMessageProps {
   footer?: string;
   openList: any;
 }
-export function WaListMessage({
+function WaListMessage({
   body,
   header = "",
   footer = "",
@@ -299,7 +300,7 @@ export function WaListMessage({
 interface WaSendMessageProps {
   body: string;
 }
-export function WaSentMessage({ body }: WaSendMessageProps) {
+function WaSentMessage({ body }: WaSendMessageProps) {
   return (
     <SentMessageContainer>
       <WaMessageBody p="2px" pl="8px">

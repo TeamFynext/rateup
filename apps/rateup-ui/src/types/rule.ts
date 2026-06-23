@@ -38,7 +38,7 @@ export type RuleGroup = {
   ruleId: string;
 };
 
-export type RuleCondition = {
+type RuleCondition = {
   id: string;
   field: ConditionField;
   operator: ConditionOperator;
@@ -46,7 +46,7 @@ export type RuleCondition = {
   ruleGroupId: string;
 };
 
-export type RuleAction = {
+type RuleAction = {
   id: string;
   type: ActionType;
   value: string | null | undefined;

@@ -202,7 +202,7 @@ export enum WaFlowStatus {
   THROTTLED = "THROTTLED",
 }
 
-export enum SurveyTypeFilters {
+enum SurveyTypeFilters {
   All = "All",
   Web = "Web",
   WhatsApp = "WhatsApp",
@@ -256,11 +256,11 @@ export enum SentimentClass {
   NEGATIVE = "negative",
   NEUTRAL = "neutral",
 }
-export enum ReviewPlatform {
+enum ReviewPlatform {
   GOOGLE = "gb",
   FACEBOOK = "fp",
 }
-export enum SortType {
+enum SortType {
   ASC = "asc",
   DESC = "desc",
 }
@@ -384,11 +384,11 @@ export enum LoyaltyCampaignType {
   ReferralTransaction = "ReferralTransaction",
   Transaction = "Transaction",
 }
-export enum CampaignRewardType {
+enum CampaignRewardType {
   Fixed = "Fixed",
   Percentage = "Percentage",
 }
-export enum LoyaltyCustomerRewardType {
+enum LoyaltyCustomerRewardType {
   Referrer = "Referrer", // the one who referred
   Customer = "Customer", // the one who was referred or made the transaction
 }
@@ -470,7 +470,7 @@ export enum ShopifyEvents {
   // FULFILLMENT_ORDERS_CANCELLATION_REQUEST_SUBMITTED
 }
 
-export enum ShopifySendAfter {
+enum ShopifySendAfter {
   OneHour = "1 Hour",
   TwoHour = "2 Hour",
   FiveHour = "5 Hour",
@@ -579,7 +579,7 @@ export enum WaMessageAssignStatusTab {
   SPAM = "Spam",
 }
 
-export enum LoyaltyApiFeature {
+enum LoyaltyApiFeature {
   action = "action",
   reward = "reward",
 }
@@ -640,7 +640,7 @@ export enum WhatsappSettingsStatus {
   ACTIVE = "ACTIVE",
   DISCONNECTED = "DISCONNECTED",
 }
-export enum LoyaltyRewardType {
+enum LoyaltyRewardType {
   POINT = "point",
   COUPON = "coupon",
   ASSIGNED = "assigned",

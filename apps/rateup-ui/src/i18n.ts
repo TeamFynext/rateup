@@ -9,7 +9,6 @@ import en from "./locales/en.json";
 import fr from "./locales/fr.json";
 import hi from "./locales/hi.json";
 
-export const i18CookieName = "i18next";
 i18n
   .use(ICU)
   .use(languageDetector) // Detects user language and caches it in a cookie

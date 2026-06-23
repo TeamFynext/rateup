@@ -130,7 +130,7 @@ export const steps: Step[] = [
   },
 ];
 
-export const tickets = [
+const tickets = [
   {
     id: "#23",
     title: "Product Dissatisfaction",
@@ -185,7 +185,7 @@ export const tickets = [
   },
 ];
 
-export const ticketCategories = [
+const ticketCategories = [
   {
     name: "OPEN",
     count: 7,

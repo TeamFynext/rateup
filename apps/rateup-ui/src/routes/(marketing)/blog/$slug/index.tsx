@@ -319,4 +319,4 @@ function Page() {
   );
 }
 
-export const dynamic = "force-static";
+const dynamic = "force-static";

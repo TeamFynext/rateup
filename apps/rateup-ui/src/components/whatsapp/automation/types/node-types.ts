@@ -5,7 +5,7 @@ import { hasRealContent, safeStrOrNull } from "@/utils/index.ts";
 import { CatalogMessages } from "../components/node-editor.tsx";
 
 // Base node data interface with common properties
-export interface BaseNodeData {
+interface BaseNodeData {
   label: string;
 }
 
@@ -16,7 +16,7 @@ export interface TextNodeData extends BaseNodeData {
 }
 
 // Quick Reply Node
-export interface QuickReplyNodeData extends BaseNodeData {
+interface QuickReplyNodeData extends BaseNodeData {
   question: string;
   options: string[];
 }
@@ -28,7 +28,7 @@ export interface ImageNodeData extends BaseNodeData {
 }
 
 // Conditional Node
-export interface ConditionalNodeData extends BaseNodeData {
+interface ConditionalNodeData extends BaseNodeData {
   condition: string;
 }
 
@@ -66,7 +66,7 @@ export interface EndNodeData extends BaseNodeData {
 }
 
 // Button Node
-export interface ButtonOption {
+interface ButtonOption {
   id: string;
   title: string;
 }
@@ -83,7 +83,7 @@ export interface ButtonNodeData extends BaseNodeData {
 }
 
 // List Node
-export interface ListItem {
+interface ListItem {
   id: string;
   title: string;
   description?: string;
@@ -105,7 +105,7 @@ export interface ListNodeData extends BaseNodeData {
 }
 
 // Sticker Node
-export interface StickerNodeData extends BaseNodeData {
+interface StickerNodeData extends BaseNodeData {
   stickerId: string;
 }
 
@@ -133,7 +133,7 @@ export interface TemplateNodeData extends BaseNodeData {
 }
 
 // Reaction Node
-export interface ReactionNodeData extends BaseNodeData {
+interface ReactionNodeData extends BaseNodeData {
   emoji: string;
   messageId: string;
 }
@@ -147,12 +147,12 @@ export interface LocationNodeData extends BaseNodeData {
 }
 
 // Location Request Node
-export interface LocationRequestNodeData extends BaseNodeData {
+interface LocationRequestNodeData extends BaseNodeData {
   message: string;
 }
 
 // Address Node
-export interface AddressNodeData extends BaseNodeData {
+interface AddressNodeData extends BaseNodeData {
   name: string;
   street: string;
   city: string;
@@ -298,19 +298,19 @@ export interface InstagramQuickReplyNodeData extends BaseNodeData {
   }>;
 }
 
-export interface InstagramStoryReplyNodeData extends BaseNodeData {
+interface InstagramStoryReplyNodeData extends BaseNodeData {
   text: string;
   story_mention?: boolean;
 }
 
-export interface InstagramProductTemplateNodeData extends BaseNodeData {
+interface InstagramProductTemplateNodeData extends BaseNodeData {
   elements: Array<{
     id: string;
   }>;
   whatsappSettingsPhoneId?: string;
 }
 
-export interface InstagramIceBreakerNodeData extends BaseNodeData {
+interface InstagramIceBreakerNodeData extends BaseNodeData {
   iceBreakers: Array<{
     question: string;
     payload?: string;
@@ -416,7 +416,7 @@ export type TypedNode<T extends NodeType = NodeType> = Omit<
 };
 
 // Helper function to check node type and cast data
-export function assertNodeType<T extends NodeType>(
+function assertNodeType<T extends NodeType>(
   node: TypedNode,
   nodeType: T,
 ): asserts node is TypedNode<T> {
@@ -426,7 +426,7 @@ export function assertNodeType<T extends NodeType>(
 }
 
 // Simplified helper to safely get typed data from a node
-export function getTypedNodeData<T extends NodeType>(
+function getTypedNodeData<T extends NodeType>(
   node: TypedNode,
   nodeType: T,
 ): NodeTypeMap[T] | null {
@@ -434,7 +434,7 @@ export function getTypedNodeData<T extends NodeType>(
 }
 
 // Helper function for creating default node data by type
-export function getDefaultNodeData(nodeType: string): NodeData {
+function getDefaultNodeData(nodeType: string): NodeData {
   const baseData = { label: `New ${nodeType}` };
 
   switch (nodeType) {

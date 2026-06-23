@@ -30,7 +30,7 @@ export const SettingsContext = createContext<TSettingsContext>({
   reset: () => {},
 });
 
-export function SettingsContextProvider({ children }: { children: ReactNode }) {
+function SettingsContextProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<TSettings>(defaultSettings);
 
   const value = useMemo(() => {

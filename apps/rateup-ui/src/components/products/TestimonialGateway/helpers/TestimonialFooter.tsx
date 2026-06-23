@@ -5,7 +5,7 @@ import {
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 
-export const TestimonialFooter = () => {
+const TestimonialFooter = () => {
   const currentYear = new Date().getFullYear();
 
   return (

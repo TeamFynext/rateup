@@ -37,7 +37,7 @@ import WaInboxTemplate from "./template/index.tsx";
 import WaInboxText from "./text/index.tsx";
 import WaInboxVideo from "./video/index.tsx";
 
-export const IgCommentBubble = ({
+const IgCommentBubble = ({
   messageContent,
 }: {
   messageContent: { text?: string; commentId?: string; mediaId?: string };
@@ -241,7 +241,7 @@ export const EndofConversationComponent = () => {
   );
 };
 
-export const SeparatorWithText = ({ text }: { text: string }) => {
+const SeparatorWithText = ({ text }: { text: string }) => {
   return (
     <div className="flex items-center my-4 w-full">
       <Separator className="flex-1" />

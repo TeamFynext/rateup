@@ -146,7 +146,7 @@ const LoyaltySettings = () => {
 
 export default LoyaltySettings;
 
-export enum LoyaltyTemplateTypes {
+enum LoyaltyTemplateTypes {
   CustomerRegistration = "CustomerRegistration",
   PointInformation = "PointInformation",
   Referral = "Referral",
@@ -154,7 +154,7 @@ export enum LoyaltyTemplateTypes {
   RewardsIssued = "RewardsIssued",
 }
 
-export const LoyaltyWaTemplateConfig = ({
+const LoyaltyWaTemplateConfig = ({
   config,
   opened,
   close,

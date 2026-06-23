@@ -14,7 +14,7 @@ type PageMetadata = {
   };
 };
 
-export const pageMetadata: Record<string, PageMetadata> = {
+const pageMetadata: Record<string, PageMetadata> = {
   "/terms-of-service": {
     title:
       "Terms of Service of RateUp Omnichannel Customer Engagement Platform",

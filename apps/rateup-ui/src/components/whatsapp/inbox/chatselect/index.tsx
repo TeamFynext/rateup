@@ -648,7 +648,7 @@ const WaInboxChatSelect = () => {
   );
 };
 
-export const AssignedInboxIcon = (props) => {
+const AssignedInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.assigned) return <IconUserCheck {...props} />;
   return (
@@ -660,7 +660,7 @@ export const AssignedInboxIcon = (props) => {
   );
 };
 
-export const AssignedToMeInboxIcon = (props) => {
+const AssignedToMeInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.assignedToMe) return <IconUserCircle {...props} />;
   return (
@@ -672,7 +672,7 @@ export const AssignedToMeInboxIcon = (props) => {
   );
 };
 
-export const ClosedInboxIcon = (props) => {
+const ClosedInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.closed) return <IconMessageCheck {...props} />;
   return (
@@ -684,7 +684,7 @@ export const ClosedInboxIcon = (props) => {
   );
 };
 
-export const BlockedInboxIcon = (props) => {
+const BlockedInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.blocked) return <IconForbid2 {...props} />;
   return (

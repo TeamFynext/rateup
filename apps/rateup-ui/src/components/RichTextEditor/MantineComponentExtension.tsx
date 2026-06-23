@@ -52,5 +52,3 @@ export const VariableComponentExtension = MantineComponentExtension({
   MantineComponent: VariableComponent,
   componentName: "variable-component",
 });
-
-export default MantineComponentExtension;

@@ -793,7 +793,7 @@ const ChatHeaderMenu = ({ contact }) => {
   );
 };
 
-export const AssignInboxContent = ({
+const AssignInboxContent = ({
   form,
   memberChoice,
   setMemberChoice,

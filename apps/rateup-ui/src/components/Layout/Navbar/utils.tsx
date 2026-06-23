@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog.tsx";
 
-export const handleWebSocketMessage = ({
+const handleWebSocketMessage = ({
   newMessagePayload,
   queryClient,
   userId,

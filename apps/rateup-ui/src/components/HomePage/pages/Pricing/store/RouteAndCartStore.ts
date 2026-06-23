@@ -76,13 +76,13 @@ type VisibleColumnActions = {
 const initalVisibleColumnData = {
   visibleColumn: [],
 };
-export const useVisibleColumnStore = create<
-  VisibleColumnStore & VisibleColumnActions
->((set) => ({
-  ...initalVisibleColumnData,
-  updateVisibleColumnArray: (VisibleColumn) =>
-    set((state) => ({
-      visibleColumn: VisibleColumn,
-    })),
-  resetVisibleColumn: () => set(initalVisibleColumnData),
-}));
+const useVisibleColumnStore = create<VisibleColumnStore & VisibleColumnActions>(
+  (set) => ({
+    ...initalVisibleColumnData,
+    updateVisibleColumnArray: (VisibleColumn) =>
+      set((state) => ({
+        visibleColumn: VisibleColumn,
+      })),
+    resetVisibleColumn: () => set(initalVisibleColumnData),
+  }),
+);

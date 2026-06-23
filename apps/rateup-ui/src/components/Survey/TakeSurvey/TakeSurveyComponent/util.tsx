@@ -13,9 +13,9 @@ import {
 } from "@/types/enums.ts";
 import { createResponsePublic } from "@/backend/surveys/response/response.api";
 import { useGetSurveyVariables } from "@/backend/surveys/surveys.query";
+import { emailPattern } from "@/utils/constants.ts";
 import { getContent } from "@/utils/index.ts";
 
-import { emailPattern } from "@/utils/constants.ts";
 import ContactForm from "./QuestionForms/ContactForm.tsx";
 import { CustomNPSForm } from "./QuestionForms/CustomNPSForm.tsx";
 import { DateForm } from "./QuestionForms/DateForm.tsx";
@@ -463,7 +463,7 @@ const pageTypeStrsWithoutCustomPageStr = Object.values(PageType).filter(
   (str) => str !== PageType.Custom,
 );
 
-export function getQuestionsArrWithoutPageTypeQuestions(survey) {
+function getQuestionsArrWithoutPageTypeQuestions(survey) {
   return survey?.questions?.filter((questionObj) => {
     return !pageTypeStrsWithoutCustomPageStr.includes(questionObj?.type);
   });
@@ -508,4 +508,3 @@ export function getSelectedQPos(survey, selectedQ) {
     return 1;
   }
 }
-

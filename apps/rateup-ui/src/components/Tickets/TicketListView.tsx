@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { useNavigate } from "@tanstack/react-router";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import { Calendar, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -401,7 +401,7 @@ function ListRow({
               strokeWidth={2}
               className={isOverdue ? "text-red-600" : "text-muted-foreground"}
             />
-            {format(new Date(card.deadline), "d MMM")}
+            {dayjs(card.deadline).format("D MMM")}
           </span>
         ) : (
           <span className="text-muted-foreground font-body text-[13px]">—</span>

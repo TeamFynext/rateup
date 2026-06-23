@@ -49,7 +49,7 @@ import {
 import { Skeleton } from "../ui/skeleton.tsx";
 import ContactForm from "./ContactForm.tsx";
 
-export interface ImportContact {
+interface ImportContact {
   name: string;
   phone?: string;
   email?: string;

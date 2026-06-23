@@ -53,7 +53,7 @@ export const useDeleteLoyaltyTemplate = () => {
   });
 };
 
-export const useGetLoyaltyTemplate = (commandId) => {
+const useGetLoyaltyTemplate = (commandId) => {
   return useQuery({
     queryFn: () => getLoyaltyTemplate(commandId),
     queryKey: ["LoyaltyTemplate"],

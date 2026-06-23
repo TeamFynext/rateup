@@ -21,7 +21,7 @@ export const getFilteredTestimonials = (
   }
 };
 
-export function filterByDate(testimonials: Array<Testimonial>, order: string) {
+function filterByDate(testimonials: Array<Testimonial>, order: string) {
   return order
     ? testimonials?.sort((t1, t2) =>
         order === "new"
@@ -33,10 +33,7 @@ export function filterByDate(testimonials: Array<Testimonial>, order: string) {
     : testimonials;
 }
 
-export function filterByLength(
-  testimonials: Array<Testimonial>,
-  length: string,
-) {
+function filterByLength(testimonials: Array<Testimonial>, length: string) {
   return length
     ? testimonials?.sort((t1, t2) =>
         length == "longest"
@@ -48,17 +45,13 @@ export function filterByLength(
     : testimonials;
 }
 
-export function filterByTeams(testimonials: Array<Testimonial>, teams) {
+function filterByTeams(testimonials: Array<Testimonial>, teams) {
   return testimonials?.filter((t) =>
     teams.length ? teams.includes(t.teamId) : true,
   );
 }
 
-export function filterBySurveys(
-  testimonials: Array<Testimonial>,
-  surveys,
-  teams,
-) {
+function filterBySurveys(testimonials: Array<Testimonial>, surveys, teams) {
   return testimonials?.filter((t) =>
     teams?.length
       ? teams?.includes(t.teamId)
@@ -68,7 +61,7 @@ export function filterBySurveys(
   );
 }
 
-export function filterByRating(testimonials: Array<Testimonial>, rating) {
+function filterByRating(testimonials: Array<Testimonial>, rating) {
   return testimonials?.filter((t) =>
     rating ? t?.testimonial?.rating === rating : t,
   );

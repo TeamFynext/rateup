@@ -18,8 +18,8 @@ export const Route = createFileRoute("/(marketing)/blog/")({
   component: BlogIndex,
 });
 
-export const revalidate = 60;
-export const metadata = {
+const revalidate = 60;
+const metadata = {
   alternates: {
     types: {
       "application/rss+xml": "/blog/rss.xml",

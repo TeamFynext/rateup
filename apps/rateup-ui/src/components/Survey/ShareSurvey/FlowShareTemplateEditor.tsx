@@ -52,7 +52,7 @@ function isEqual(ob1: object, ob2: object): boolean {
   });
 }
 
-export function FlowShareTemplateEditor({
+function FlowShareTemplateEditor({
   form,
   dbFlowId,
   updateMutation,
@@ -183,7 +183,7 @@ interface FlowStartMessageEditorProps {
   updateMutation: any;
   initialValues: WaFlowStartMessageConfig;
 }
-export function FlowStartMessageEditor({
+function FlowStartMessageEditor({
   form,
   dbFlowId,
   updateMutation,
@@ -377,9 +377,7 @@ type TextInputWithLengthTrackerProps = TextInputProps &
     value?: string;
   };
 
-export function TextInputWithLengthTracker(
-  props: TextInputWithLengthTrackerProps,
-) {
+function TextInputWithLengthTracker(props: TextInputWithLengthTrackerProps) {
   const { maxValue, styles, ...restOfProps } = props;
   const length = props.value?.length || 0;
   const { input, ...restOfStyles } = styles || ({} as any);
@@ -440,7 +438,7 @@ export function TextareaWithLengthTracker(
 interface SaveStatusProps {
   readonly status: SaveStatus;
 }
-export function SaveStatusIndicator({ status }: SaveStatusProps) {
+function SaveStatusIndicator({ status }: SaveStatusProps) {
   return (
     <Group
       style={{

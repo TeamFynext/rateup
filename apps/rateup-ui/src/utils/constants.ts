@@ -10,15 +10,15 @@ import MMImageCropModalStyles from "@/components/Modal/ModalManagerModals/ImageC
 
 export const docsPath = "https://docs.rateup.app";
 export const imagesPath = `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/images`;
-export const localImagesPath = `${import.meta.env.VITE_FRONTEND_URL}/images`;
+const localImagesPath = `${import.meta.env.VITE_FRONTEND_URL}/images`;
 export const surveyUploadsPath = `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}`;
 export const isProduction =
   import.meta.env.VITE_FRONTEND_URL === "https://rateup.app";
 export const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-export const ContactQuestions = [QuestionType.Contact];
+const ContactQuestions = [QuestionType.Contact];
 
-export const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
+const WaContactQuestions = [QuestionType.Email, QuestionType.Phone];
 
 export const NPSQuestions = [
   QuestionType.Rating,
@@ -44,21 +44,21 @@ export const WaNPSQuestions2 = [
   QuestionType2.YN,
   QuestionType2.Opinion,
 ];
-export const FlowNpsQ = [
+const FlowNpsQ = [
   QuestionType.Rating,
   QuestionType.Smiley,
   QuestionType.LD,
   QuestionType.YN,
   QuestionType.Opinion,
 ];
-export const FlowNpsQ2 = [
+const FlowNpsQ2 = [
   QuestionType2.Rating,
   QuestionType2.Smiley,
   QuestionType2.LD,
   QuestionType2.YN,
   QuestionType2.Opinion,
 ];
-export const ChoiceQuestions = [
+const ChoiceQuestions = [
   QuestionType.MCQ,
   QuestionType.MSQ,
   QuestionType.DDSS,
@@ -67,7 +67,7 @@ export const ChoiceQuestions = [
   QuestionType.MCQGrid,
 ];
 
-export const InputQuestions = [
+const InputQuestions = [
   QuestionType.Text,
   QuestionType.TextArea,
   QuestionType.Number,
@@ -77,7 +77,7 @@ export const InputQuestions = [
   QuestionType.File,
 ];
 
-export const OtherQuestions = [
+const OtherQuestions = [
   QuestionType.Testimonial,
   QuestionType.TnC,
   QuestionType.InfoMessage,
@@ -85,7 +85,7 @@ export const OtherQuestions = [
   QuestionType.WOP,
 ];
 
-export const WaOtherQuestions = [
+const WaOtherQuestions = [
   QuestionType.Text,
   QuestionType.Number,
   QuestionType.MCQ,
@@ -100,7 +100,7 @@ export const FlowChoiceQuestions = [
   QuestionType.DDSS,
 ];
 
-export const FlowChoiceQuestions2 = [
+const FlowChoiceQuestions2 = [
   QuestionType2.RadioButtonsGroup,
   QuestionType2.CheckboxGroup,
   QuestionType2.Dropdown,
@@ -137,7 +137,7 @@ export const uniquePages = [
   PageType.ThankYou,
 ];
 
-export const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
+const WaExclusive = [QuestionType.WaList, QuestionType.WaButtons];
 
 export const QuestionTypesGroup = [
   { title: "Contact Questions", questionTypes: ContactQuestions },
@@ -159,7 +159,7 @@ const flowNonInputElements = [
   // not currectly working
   // wft.embeddedLink,
 ];
-export const flowNonInputElements2 = [
+const flowNonInputElements2 = [
   QuestionType2.TextHeading,
   QuestionType2.TextSubheading,
   QuestionType2.TextBody,
@@ -207,7 +207,7 @@ export const mimeTypesForImage: { [key: string]: string } = {
 
 export const MAX_FILE_SIZE_IN_MB = 10;
 export const MAX_FILE_SIZE_IN_BYTE = MAX_FILE_SIZE_IN_MB * 1024 * 1024;
-export const THUMBNAIL_URL = "thumb300x200-";
+const THUMBNAIL_URL = "thumb300x200-";
 
 export const PAGE_SIZE = ["50", "100", "200", "500"];
 
@@ -215,7 +215,7 @@ export const SAVE_HOTKEY = "mod+s";
 
 export const COORDINATESX = ["LEFT", "CENTER", "RIGHT"];
 export const COORDINATESY = ["TOP", "MIDDLE", "BOTTOM", "DEFAULT"];
-export const whatsappOptions = [];
+const whatsappOptions = [];
 export const WHATSAPP_TEMPLATE_CATEGORY = [
   "MARKETING",
   "UTILITY",
@@ -245,11 +245,11 @@ export enum WHATSAPP_BUTTON_TYPE {
   OTP = "OTP",
 }
 
-export const MIN_AMOUNT_ERROR = "Purchase amount ineligible for gift.";
-export const INTERNAL_ERROR = "Something Went Wrong! Try again.";
-export const INTERNAL_ERROR2 = "There was an error, please try again later";
-export const AXIOS_TIMEOUT = "Request timed out";
-export const DISCOUNT_ERROR = "Invoice with discount is ineligible";
+const MIN_AMOUNT_ERROR = "Purchase amount ineligible for gift.";
+const INTERNAL_ERROR = "Something Went Wrong! Try again.";
+const INTERNAL_ERROR2 = "There was an error, please try again later";
+const AXIOS_TIMEOUT = "Request timed out";
+const DISCOUNT_ERROR = "Invoice with discount is ineligible";
 
 export const WHATSAPP_TEMPLATE_LANGUAGE = [
   { label: "Afrikaans", value: "af" },
@@ -384,7 +384,7 @@ export const rateupLogoBlue = rateupLogoStackedWhiteTransparent;
 export const MAX_DESCRIPTION_COUNT = 300;
 export const MAX_METADATA_COUNT = 20;
 
-export const CATALOG_PRODUCT_TYPES = ["PRODUCT_ITEM", "HOTEL", "HOTEL_ROOM"];
+const CATALOG_PRODUCT_TYPES = ["PRODUCT_ITEM", "HOTEL", "HOTEL_ROOM"];
 export const CATALOG_PRODUCT_CONDITIONS = ["new", "refurbished", "used"];
 export const CATALOG_PRODUCT_AVAILABILITY = [
   "in stock",

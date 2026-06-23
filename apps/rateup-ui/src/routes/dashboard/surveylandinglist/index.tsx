@@ -51,10 +51,8 @@ import {
   RateupButtonSecondary,
 } from "@/components/Button/RateupButtons.tsx";
 import { CreateSurveyModal } from "@/components/Survey/CreateSurveyModal.tsx";
-
 import { useUser } from "@/context/UserContext.tsx";
 import { getTimeSince } from "@/utils/index.ts";
-
 
 export const Route = createFileRoute("/dashboard/surveylandinglist/")({
   component: SurveyLandingList,
@@ -229,7 +227,7 @@ function SurveyLandingList() {
 interface SurveyCardProps {
   survey: Survey;
 }
-export function SurveyCard({
+function SurveyCard({
   survey,
   teamsData,
 }: SurveyCardProps & { teamsData: TeamData[] }): JSX.Element {

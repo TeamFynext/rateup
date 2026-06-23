@@ -52,6 +52,7 @@ const DraggableTable = ({
           className={classes.item}
           ref={provided.innerRef}
           {...provided.draggableProps}
+          style={provided.draggableProps.style as React.CSSProperties}
         >
           <Table.Td w={50}>
             <div className={classes.dragHandle} {...provided.dragHandleProps}>

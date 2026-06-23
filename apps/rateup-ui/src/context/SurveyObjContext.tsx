@@ -12,4 +12,4 @@ function useSurveyContext() {
   return useContext(SurveyContext);
 }
 
-export { SurveyContextProvider, SurveyContext, useSurveyContext };
+export { SurveyContextProvider, useSurveyContext };

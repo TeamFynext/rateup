@@ -69,7 +69,7 @@ export const useSurveysBylandingId = (landingId: string) =>
 // ------------whatsapp survey --------------
 // ----@author:harshad-----------
 
-export const useWhatsappSurveys = (enabled) => {
+const useWhatsappSurveys = (enabled) => {
   return useQuery({
     enabled: enabled,
     queryKey: ["whatsappsurveys"],
@@ -77,7 +77,7 @@ export const useWhatsappSurveys = (enabled) => {
   });
 };
 
-export const usePublicSurvey = (surveyId: string) => {
+const usePublicSurvey = (surveyId: string) => {
   return useQuery({
     enabled: !!surveyId,
     queryKey: ["public-survey", surveyId],
@@ -85,14 +85,14 @@ export const usePublicSurvey = (surveyId: string) => {
   });
 };
 
-export const usePhoneFromSurveyTeamMapId = (surveyTeamMapId: string) =>
+const usePhoneFromSurveyTeamMapId = (surveyTeamMapId: string) =>
   useQuery({
     enabled: !!surveyTeamMapId,
     queryKey: ["waSettings"],
     queryFn: () => getPhoneNumberFromSurveyTeamMapId(surveyTeamMapId),
   });
 
-export const usePublicSurveyGoogleLink = (surveyTeamMapId: string) =>
+const usePublicSurveyGoogleLink = (surveyTeamMapId: string) =>
   useQuery({
     enabled: !!surveyTeamMapId,
     queryKey: ["public-survey-google-link", surveyTeamMapId],
@@ -106,7 +106,7 @@ export const usePublicSurveyGoogleLink = (surveyTeamMapId: string) =>
 //     queryFn: getSurveys,
 //   });
 // --------------survey landing pages----------
-export const useSurveysLanding = (teamIsSelected) =>
+const useSurveysLanding = (teamIsSelected) =>
   useQuery({
     enabled: true,
     queryKey: ["surveysLanding"],
@@ -137,7 +137,7 @@ export const useSurveys = (enabled: boolean = true) => {
   });
 };
 
-export const useSurveysWithQuestions = (specificTeamIsSelected: boolean) => {
+const useSurveysWithQuestions = (specificTeamIsSelected: boolean) => {
   return useQuery({
     enabled: !specificTeamIsSelected,
     queryKey: ["surveyswithquestions"],
@@ -145,7 +145,7 @@ export const useSurveysWithQuestions = (specificTeamIsSelected: boolean) => {
   });
 };
 
-export const useSurveysSummary = () => {
+const useSurveysSummary = () => {
   return useQuery({
     queryKey: ["surveysSummary"],
     queryFn: getActiveSurveysSummary,
@@ -197,7 +197,7 @@ type LandingProps = {
   setIsCreating: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export const useCreateSurveyLandingPageMutation = ({
+const useCreateSurveyLandingPageMutation = ({
   close,
   resetForm,
   setIsCreating,
@@ -232,7 +232,7 @@ type UpdateLandingProps = {
   resetForm: () => void;
   setIsCreating: React.Dispatch<React.SetStateAction<boolean>>;
 };
-export const useUpdateSurveyLandingPageMutation = ({
+const useUpdateSurveyLandingPageMutation = ({
   close,
   resetForm,
   setIsCreating,
@@ -357,7 +357,7 @@ export function useEditSurveyMutation(id) {
   });
 }
 
-export const useUpdateSurveyGoogleLinkMutation = (
+const useUpdateSurveyGoogleLinkMutation = (
   surveyTeamMapId: string,
   setLinkUpdateStatus: (value: boolean) => void,
 ) => {
@@ -429,7 +429,7 @@ export const useDeleteSurveyMutation = () => {
   });
 };
 
-export function useUpdateSurveyMutation() {
+function useUpdateSurveyMutation() {
   const queryClient = useQueryClient();
   const surveyUpdateMutation = useMutation({
     mutationFn: ({ surveyId, data }: { surveyId: string; data: any }) =>
@@ -514,7 +514,7 @@ export const useDeleteSurveyVariableMutation = (surveyId) => {
   });
 };
 
-export const useSendEmail = () => {
+const useSendEmail = () => {
   return useMutation({
     mutationFn: sendEmail,
   });
@@ -556,7 +556,7 @@ export const useSurveyUpdateMutation = (surveyId) => {
   });
 };
 
-export const useAllResponseForGraph = (
+const useAllResponseForGraph = (
   timePeriod,
   userTimeZone,
   surveyId = "",

@@ -39,7 +39,7 @@ const cover6 = `${imagesPath}/qr-landing/Measure Campaign Success.png`;
 const cover8 = `${imagesPath}/qr-landing/Real-Time-Feedback-Collection.jpg`;
 const Sustainable = `${imagesPath}/qr-landing/Sustainable.jpg`;
 
-export const Qrfeatures = [
+const Qrfeatures = [
   {
     icon: <Package size={52} />,
     title: "Smart Packaging",
@@ -78,7 +78,7 @@ export const Qrfeatures = [
   },
 ];
 
-export const useCases = [
+const useCases = [
   {
     icon: <Trophy size={24} />,
     title: "Run Contests & Giveaways",
@@ -117,7 +117,7 @@ export const useCases = [
   },
 ];
 
-export const industries = [
+const industries = [
   {
     icon: <ShoppingBag size={32} />,
     name: "Retail",

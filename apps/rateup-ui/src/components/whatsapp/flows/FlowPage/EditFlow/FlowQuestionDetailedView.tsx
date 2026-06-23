@@ -24,7 +24,7 @@ import { schemaResolver, useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import _ from "lodash";
+import { isEqual } from "lodash";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -66,7 +66,10 @@ import {
 } from "@/components/whatsapp/whatsappConfig.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SAVE_HOTKEY, WaNPSQuestions } from "@/utils/constants.ts";
-import { googleReviewSupportedTypes, logicSupportedTypes } from "@/utils/data.ts";
+import {
+  googleReviewSupportedTypes,
+  logicSupportedTypes,
+} from "@/utils/data.ts";
 import {
   getInitialQuestionValues,
   validateAllLanguagesArePopulated,
@@ -497,7 +500,7 @@ function ElementEditor({
                   {...form.getInputProps(`title.${selectedLanguage}`)}
                   onBlur={() => {
                     if (
-                      !_.isEqual(form.values, formInitialValues) &&
+                      !isEqual(form.values, formInitialValues) &&
                       form.isValid()
                     )
                       handleSave();
@@ -520,7 +523,7 @@ function ElementEditor({
                   maxValue={getFlowTextLimit(WaFlowFormElementType.textBody)}
                   onBlur={() => {
                     if (
-                      !_.isEqual(form.values, formInitialValues) &&
+                      !isEqual(form.values, formInitialValues) &&
                       form.isValid()
                     )
                       handleSave();
@@ -536,10 +539,7 @@ function ElementEditor({
               error={labelInputProps.error}
               maxLength={labelMaxLength}
               onBlur={() => {
-                if (
-                  !_.isEqual(form.values, formInitialValues) &&
-                  form.isValid()
-                )
+                if (!isEqual(form.values, formInitialValues) && form.isValid())
                   handleSave();
               }}
             />

@@ -44,7 +44,7 @@ export const editTeam = (
   });
 };
 
-export const getTeamsByOrg = (orgId: string) =>
+const getTeamsByOrg = (orgId: string) =>
   axiosClient({
     url: `/team/${orgId}`,
     method: "GET",
@@ -86,7 +86,7 @@ export const deleteInviteById = (id: string) =>
     method: "DELETE",
   });
 
-export const getTeamMembers = (teamId: string) =>
+const getTeamMembers = (teamId: string) =>
   axiosClient({
     url: `/team/members/${teamId}`,
     method: "GET",
@@ -129,7 +129,7 @@ export async function getTeamById(teamId) {
 
 // ─── Team Features ────────────────────────────────────────────────────────────
 
-export interface TeamFeatureItem {
+interface TeamFeatureItem {
   id: string;
   feature: string;
   createdAt: string;

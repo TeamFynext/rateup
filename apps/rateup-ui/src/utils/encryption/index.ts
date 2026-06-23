@@ -132,7 +132,7 @@ function stringifyUint8Array(array: Uint8Array) {
   });
 }
 
-export function parsetoUint8Array(string: string) {
+function parsetoUint8Array(string: string) {
   return JSON.parse(string, (k, v) => {
     if (Array.isArray(v)) {
       return new Uint8Array(v);

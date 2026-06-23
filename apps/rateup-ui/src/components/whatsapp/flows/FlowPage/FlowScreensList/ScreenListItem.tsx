@@ -1,6 +1,12 @@
 "use client";
 
-import { useContext, useEffect, useRef, useState } from "react";
+import {
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 
 import {
   ActionIcon,
@@ -511,7 +517,11 @@ function DraggableFormElementCard(
   return (
     <Draggable key={props.fe.id} index={props.index} draggableId={props.fe.id}>
       {(provided, snapshot) => (
-        <Box {...provided.draggableProps} ref={provided.innerRef}>
+        <Box
+          {...provided.draggableProps}
+          ref={provided.innerRef}
+          style={provided.draggableProps.style as CSSProperties}
+        >
           <FormElementCard
             {...props}
             dragHandleProps={provided.dragHandleProps}

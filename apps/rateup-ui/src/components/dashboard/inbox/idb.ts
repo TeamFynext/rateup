@@ -1,5 +1,5 @@
 import { openDB } from "idb";
-import lodash from "lodash";
+import { isEqual } from "lodash";
 
 import type { ContactWithUpdatedAt } from "./store.ts";
 
@@ -8,7 +8,7 @@ const STORE_GLOBAL = "contacts_global";
 const STORE_FILTERS = "contacts_by_filter";
 const STORE_MESSAGES = "messages";
 
-export async function getDB() {
+async function getDB() {
   return openDB(DB_NAME, 4, {
     upgrade(db) {
       if (!db.objectStoreNames.contains(STORE_GLOBAL)) {
@@ -42,7 +42,7 @@ export async function saveContactsToDB(contacts: ContactWithUpdatedAt[]) {
   await tx.done;
 }
 
-export async function loadContactFromDB(
+async function loadContactFromDB(
   id: string,
 ): Promise<ContactWithUpdatedAt | undefined> {
   const db = await getDB();
@@ -100,7 +100,7 @@ export async function saveMessagesToIDB(key: string, messages: any[]) {
   const toUpdate: any[] = [];
   for (const m of messages) {
     const existing = existingMap.get(m.id);
-    if (!existing || !lodash.isEqual(existing, m)) {
+    if (!existing || !isEqual(existing, m)) {
       toUpdate.push({ id: `${key}_${m.id}`, key, message: m });
     }
   }
@@ -132,7 +132,7 @@ export async function clearAllMessagesFromIDB() {
   await db.clear(STORE_MESSAGES);
 }
 
-export async function removeMessagesFromIDB(key: string) {
+async function removeMessagesFromIDB(key: string) {
   const db = await getDB();
   const tx = db.transaction(STORE_MESSAGES, "readwrite");
   const store = tx.objectStore(STORE_MESSAGES);
@@ -147,7 +147,7 @@ export async function removeMessagesFromIDB(key: string) {
   await tx.done;
 }
 
-export async function removeContactFromDB(id: string) {
+async function removeContactFromDB(id: string) {
   const db = await getDB();
   await db.delete(STORE_GLOBAL, id);
 }

@@ -75,9 +75,4 @@ const razorpayClient = axios.create({
   },
 });
 
-export {
-  axiosClient,
-  axiosClientIP,
-  razorpayClient,
-  shouldSkipLocalErrorToast,
-};
+export { axiosClient, axiosClientIP, shouldSkipLocalErrorToast };

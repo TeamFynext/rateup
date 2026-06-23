@@ -38,12 +38,6 @@ const cx = classNames.bind(styles);
 
 export enum ReviewPagePlatform {
   Google = "Google",
-  Facebook = "Facebook",
-  Instagram = "Instagram",
-  Yelp = "Yelp",
-  Tripadvisor = "Tripadvisor",
-  Amazon = "Amazon",
-  MakeMyTrip = "MakeMyTrip",
   Custom = "Custom",
 }
 

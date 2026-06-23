@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import {
   AlertCircle,
   CalendarIcon,
@@ -188,7 +188,7 @@ export const ResendCampaignModal = ({
                       <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm font-medium">
                         {scheduleDate
-                          ? format(new Date(scheduleDate), "PPP")
+                          ? dayjs(scheduleDate).format("MMMM D, YYYY")
                           : t("Date")}
                       </span>
                       <ChevronDownIcon className="w-4 h-4" />

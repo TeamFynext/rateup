@@ -2,7 +2,7 @@ import { axiosClient } from "../apiClient";
 
 const LOYALTY_BASE = "/loyalty";
 
-export interface LoyaltyTier {
+interface LoyaltyTier {
   id: string;
   programId: string;
   name: string;
@@ -26,7 +26,7 @@ export interface LoyaltyTierInput {
   benefits?: string[];
 }
 
-export interface LoyaltyTierDetails extends LoyaltyTier {
+interface LoyaltyTierDetails extends LoyaltyTier {
   customers?: Array<{ id: string }>;
 }
 

@@ -12,7 +12,10 @@ import { ImageUploadMethodModal } from "@/components/Modal/ImageUploadMethodModa
 import { UnsplashModal } from "@/components/Modal/UnsplashModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "@/utils/constants.ts";
+import {
+  MAX_FILE_SIZE_IN_BYTE,
+  MAX_FILE_SIZE_IN_MB,
+} from "@/utils/constants.ts";
 
 type ImageFieldName = "backgroundImage" | "mobileBackgroundImage" | "logo";
 
@@ -267,7 +270,7 @@ const ImageUploadSettings = ({
 
 export default ImageUploadSettings;
 
-export function getFileNameFromUrl(url: any, isNewFile: boolean) {
+function getFileNameFromUrl(url: any, isNewFile: boolean) {
   if (isNewFile) return url;
   const pattern = /^[^-]+-/;
   const name = url?.replace(pattern, "");

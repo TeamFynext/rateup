@@ -1,14 +1,14 @@
-import { useNavigate } from '@tanstack/react-router';
-
 import {
   useMutation,
   useQueries,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 import { getOrgIdRole, getUserID } from "@/utils/userInfo.ts";
+
 import type { IEditTeam } from "./team.api";
 import {
   addUsertoTeams,
@@ -173,7 +173,7 @@ export function useDeleteInviteMutation(teamId) {
   });
 }
 
-export function useSurveyLanguagesFromTeam(teamId: string) {
+function useSurveyLanguagesFromTeam(teamId: string) {
   return useQuery({
     queryKey: ["surveyLanguages", teamId],
     queryFn: () => getSurveyLanguagesFromTeam(teamId),

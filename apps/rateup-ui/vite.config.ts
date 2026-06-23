@@ -1,3 +1,4 @@
+import transformImports from "@rolldown/plugin-transform-imports";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -12,6 +13,9 @@ const config = defineConfig({
       html2canvas: "html2canvas-pro",
     },
   },
+  css: {
+    transformer: "lightningcss",
+  },
   build: {
     rolldownOptions: {
       output: {
@@ -23,7 +27,21 @@ const config = defineConfig({
       },
     },
   },
+  // TODO: enable when fully works with tanstack start
+  // experimental: {
+  //   bundledDev: true,
+  // },
   plugins: [
+    transformImports({
+      // TODO: enable when reload in each page problem fixes
+      // "@tabler/icons-react": {
+      //   transform: "@tabler/icons-react/dist/esm/icons/{{member}}.mjs",
+      //   preventFullImport: true,
+      // },
+      lodash: {
+        transform: "lodash/{{member}}",
+      },
+    }),
     devtools(),
     nitro({
       scanDirs: ["./server/"],

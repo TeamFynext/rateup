@@ -3,7 +3,7 @@ import { Image } from "@unpic/react";
 
 import { rateupLogoBlue } from "@/utils/constants.ts";
 
-export const QrNewFooter = () => {
+const QrNewFooter = () => {
   return (
     <footer className="bg-white border-t border-gray-200 px-4 py-16">
       <div className="max-w-7xl mx-auto px-4">

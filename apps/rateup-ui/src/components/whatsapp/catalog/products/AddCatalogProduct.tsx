@@ -775,8 +775,6 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
   );
 };
 
-export default AddCatalogProduct;
-
 export const AddCatalogProductModal = ({
   catalogData,
   opened,

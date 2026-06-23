@@ -5,7 +5,7 @@ export enum AutomationPlatform {
 }
 
 // Component compatibility mapping
-export const PLATFORM_COMPONENT_SUPPORT = {
+const PLATFORM_COMPONENT_SUPPORT = {
   // Supported on both platforms
   textNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],
   imageNode: [AutomationPlatform.WHATSAPP, AutomationPlatform.INSTAGRAM],

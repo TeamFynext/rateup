@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 
 import { Button, Group } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
-import _ from "lodash";
+import { isEqual } from "lodash";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -34,7 +34,7 @@ function SaveButton({
     themeObjFromApi = themeObjBeingEdited.theme;
   }
 
-  const hasUnsavedChanges = !_.isEqual(themeObjFromApi, themeObjState);
+  const hasUnsavedChanges = !isEqual(themeObjFromApi, themeObjState);
   let saveStatusText = "All changes saved";
   if (hasUnsavedChanges) {
     saveStatusText = "Unsaved changes";

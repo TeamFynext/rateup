@@ -186,7 +186,7 @@ export const useGetInboxUserCount = (enabled: boolean) => {
   });
 };
 
-export const useMarkWaMessagesAsRead = (contactId: string, filterData) => {
+const useMarkWaMessagesAsRead = (contactId: string, filterData) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => markWaMessagesAsRead(contactId),
@@ -243,7 +243,7 @@ interface InboxAnalytics {
   assignedUserCounts: AssignedUserCount[];
 }
 
-export const useGetInboxAnalytics = () => {
+const useGetInboxAnalytics = () => {
   return useQuery<InboxAnalytics>({
     queryKey: ["inboxAnalytics"],
     queryFn: getInboxAnalytics,

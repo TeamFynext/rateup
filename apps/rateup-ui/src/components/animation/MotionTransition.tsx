@@ -49,7 +49,7 @@ export const MotionTransition = ({
     </motion.div>
   );
 };
-export const getAnimationProps = (type: string) => {
+const getAnimationProps = (type: string) => {
   switch (type) {
     case "fade":
       return {

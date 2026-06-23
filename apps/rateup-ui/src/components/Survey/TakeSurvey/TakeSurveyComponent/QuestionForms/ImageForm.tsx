@@ -17,13 +17,13 @@ import {
 import { IconX } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
-import { uploadFile } from "@/utils/file-upload/upload.ts";
-
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
+import { uploadFile } from "@/utils/file-upload/upload.ts";
+
 import styles from "./ImageForm.module.css";
 
-export function getFileName(url: string | File, isNewFile: boolean): ReactNode {
+function getFileName(url: string | File, isNewFile: boolean): ReactNode {
   if (isNewFile || typeof url === "string") return <>{url}</>;
   const pattern = /^[^-]+-/;
   return url.name.replace(pattern, "");
@@ -164,4 +164,3 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
     </Stack>
   );
 }
-

@@ -316,7 +316,7 @@ export function validateInboxTemplateSending(
   });
 }
 
-export function getMessageSourceName(sourceIdentifier, waSettings, platform) {
+function getMessageSourceName(sourceIdentifier, waSettings, platform) {
   if (!waSettings) return sourceIdentifier;
   const settings = waSettings?.find(
     (setting) =>

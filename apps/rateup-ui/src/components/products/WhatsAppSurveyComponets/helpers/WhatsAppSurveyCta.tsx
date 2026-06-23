@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
-export const WhatsAppSurveyCta = () => {
+const WhatsAppSurveyCta = () => {
   return (
     <section className="py-24 px-4 md:px-6 bg-linear-to-br from-[#e0f2ffca] via-[#e0f2ffa5] to-[#cce4ff9c]">
       <div className="max-w-6xl mx-auto relative">
