@@ -31,6 +31,7 @@ export interface CardInput {
   surveyResponseId?: string;
   contactId?: string;
   priority?: TicketPriority;
+  deadline?: string | Date | null;
 }
 
 //used in zapier also

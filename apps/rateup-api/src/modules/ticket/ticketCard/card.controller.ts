@@ -25,13 +25,21 @@ export async function createCardHandler(
       type: TicketType;
       contactId?: string;
       priority?: TicketPriority;
+      deadline?: string | Date | null;
     };
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { title, description, ticketColumnId, type, contactId, priority } =
-      request.body;
+    const {
+      title,
+      description,
+      ticketColumnId,
+      type,
+      contactId,
+      priority,
+      deadline,
+    } = request.body;
     const userId = request.userId;
     const card = await createCard({
       title,
@@ -41,6 +49,7 @@ export async function createCardHandler(
       type,
       contactId,
       priority,
+      deadline,
       orgId: request.user.orgId,
     });
     return reply.code(201).send(card);

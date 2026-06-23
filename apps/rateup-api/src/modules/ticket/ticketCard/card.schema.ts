@@ -14,6 +14,7 @@ const cardCore = {
   type: z.enum(TicketType).optional(),
   contactId: z.string().uuid().optional(),
   priority: z.enum(TicketPriority).optional(),
+  deadline: z.coerce.date().optional().nullable(),
 };
 
 // Schema for creating a card
