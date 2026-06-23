@@ -378,15 +378,15 @@ export function Column({
       ref={outerFullHeightRef}
     >
       <div
-        className="transition-all duration-150"
+        className={`transition-all duration-150 border rounded-xl p-1.5 ${
+          state.type === "is-column-over"
+            ? "border-2 border-dashed border-blue-500/50 bg-blue-500/5"
+            : "border border-dashed border-slate-300 dark:border-slate-700 bg-transparent"
+        }`}
         style={{
           display: "flex",
           maxHeight: "100%",
           flexDirection: "column",
-          backgroundColor:
-            state.type === "is-column-over"
-              ? "var(--is-column-over, rgba(0,0,0,0.05))"
-              : "transparent",
           color: "var(--board-text)",
           opacity: state.type === "is-dragging" ? 0.4 : 1,
           cursor: state.type === "idle" ? "grab" : "default",
@@ -453,28 +453,16 @@ export function Column({
 
           <div
             style={{
-              display: "flex",
-              flexDirection: "column",
-              overflowY: "auto",
               overflowAnchor: "none",
               scrollbarColor: "rgba(150, 150, 150, 0.2) transparent",
               scrollbarWidth: "thin",
-              transition: "all 0.15s",
-              minHeight: "80px",
-              padding: "4px",
-              gap: "7px",
-              borderRadius: "12px",
-              background:
-                state.type === "is-card-over"
-                  ? "rgba(30, 64, 175, 0.04)"
-                  : "transparent",
-              border:
-                state.type === "is-card-over"
-                  ? "2px dashed rgba(30, 64, 175, 0.3)"
-                  : "2px dashed transparent",
             }}
             ref={scrollableRef}
-            className="column-cards-container flex-1"
+            className={`column-cards-container flex-1 flex flex-col overflow-y-auto transition-all duration-150 min-h-[80px] p-[1px] rounded-xl border-2 border-dashed ${
+              state.type === "is-card-over"
+                ? "bg-blue-800/5 border-blue-800/30"
+                : "bg-transparent border-transparent"
+            }`}
           >
             <CardList column={column} onCardDelete={handleCardDelete} />
             {state.type === "is-card-over" && !state.isOverChildCard ? (

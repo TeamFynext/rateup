@@ -78,10 +78,9 @@ const idle: TCardState = { type: "idle" };
 export function CardShadow({ dragging }: { dragging: DOMRect }) {
   return (
     <div
+      className="border-2 border-dashed border-slate-300 dark:border-slate-700 bg-transparent rounded-xl"
       style={{
         flexShrink: 0,
-        borderRadius: "0.75rem",
-        backgroundColor: "var(--board-card-shadow)",
         height: dragging.height,
       }}
     />
