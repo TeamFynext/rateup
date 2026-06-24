@@ -19,8 +19,8 @@
 
     /* Linting */
     "skipLibCheck": true,
+    // renable strict mode and strictNullChecks when you can fix all errors
     "strict": false,
-    // renable these when we have time to fix the issues
     "strictNullChecks": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
