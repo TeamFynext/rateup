@@ -171,37 +171,6 @@ export const RateupButtonSecondary = ({
   );
 };
 
-export const RateupButtonOutline = ({
-  title,
-  disabled,
-  onClick,
-  leftIcon = null,
-  rightIcon = null,
-  variant,
-  size,
-  ...other
-}: Props) => {
-  return (
-    <Button
-      radius="lg"
-      px="xl"
-      style={{
-        color: "black",
-      }}
-      disabled={disabled}
-      color="yellow"
-      leftSection={leftIcon}
-      rightSection={rightIcon}
-      onClick={onClick}
-      variant="outline"
-      size={size}
-      {...other}
-    >
-      {title}
-    </Button>
-  );
-};
-
 export const RateupButtonBlackOutline = ({
   radius,
   title,

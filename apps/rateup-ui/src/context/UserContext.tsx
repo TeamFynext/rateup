@@ -63,4 +63,4 @@ const useWsData = () => {
   return { wsData: context.wsData, setWsData: context.setWsData };
 };
 
-export { UserProvider, useUser, useWsData };
+export { UserProvider, useUser };

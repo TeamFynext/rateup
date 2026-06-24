@@ -32,7 +32,7 @@ import { Separator } from "@/components/ui/separator.tsx";
 /**
  * Animation types and configurations
  */
-export interface AnimationConfig {
+interface AnimationConfig {
   /** Badge animation type */
   badgeAnimation?: "bounce" | "pulse" | "wiggle" | "fade" | "slide" | "none";
   /** Popover animation type */

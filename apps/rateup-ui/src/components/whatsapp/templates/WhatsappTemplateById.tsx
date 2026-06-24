@@ -25,10 +25,7 @@ import {
   IconImageInPicture,
   IconInfoCircle,
 } from "@tabler/icons-react";
-import {
-  useNavigate,
-  useParams,
-} from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { z } from "zod/v4";
@@ -50,6 +47,7 @@ import {
   useWaTemplateById,
 } from "@/backend/whatsapp/whatsapp.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
+import styles from "@/components/dashboard/whatsapp/templates/templateId.module.css";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import {
   ContainedNumberInput,
@@ -65,8 +63,8 @@ import {
   ResponseMessageContainer,
 } from "@/components/whatsapp/MessageComponents.tsx";
 import { BroadCastTypeValue } from "@/components/whatsapp/templates/Details/BroadCastTypeValue.tsx";
-import ButtonInput from "@/components/whatsapp/templates/Details/ButtonInput.tsx";
 import buttonInputStyles from "@/components/whatsapp/templates/Details/ButtonInput.module.css";
+import ButtonInput from "@/components/whatsapp/templates/Details/ButtonInput.tsx";
 import { ButtonSelection } from "@/components/whatsapp/templates/Details/ButtonSelectionMenu.tsx";
 import CardCarousel, {
   ProductCardCarouselPreview,
@@ -91,9 +89,10 @@ import {
 } from "@/utils/constants.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
-import { parseStringWithVariables, parseTemplate } from "@/utils/whatsapp/templates.tsx";
-
-import styles from "@/components/dashboard/whatsapp/templates/templateId.module.css";
+import {
+  parseStringWithVariables,
+  parseTemplate,
+} from "@/utils/whatsapp/templates.tsx";
 
 export function WhatsappTemplateById({
   forceTemplateType,

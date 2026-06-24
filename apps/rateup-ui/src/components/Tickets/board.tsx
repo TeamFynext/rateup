@@ -2,29 +2,39 @@
 
 import { useContext, useEffect, useRef, useState } from "react";
 
-import { Button, Flex, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
 import { IconPlus } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import invariant from "tiny-invariant";
 
 import { useBoard } from "@/backend/tickets/tickets.query";
 import { useUserInfo } from "@/backend/user/user.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
 
 import { Column } from "./column.tsx";
-import type { TColumn } from "./data.ts";
 import { SettingsContext } from "./settings-context.tsx";
-import type { BoardInfo, Board as BoardType } from "./types.ts";
+import type {
+  BoardInfo,
+  Board as BoardType,
+  Column as TColumn,
+} from "./types.ts";
 import {
   isCardData,
   isCardDropTargetData,
@@ -36,16 +46,25 @@ import {
 export function Board({
   initial,
   priorityFilter,
+  searchQuery,
+  assigneeFilter,
   availableBoards,
 }: {
   initial: BoardType;
-  priorityFilter: string;
+  priorityFilter: string | null;
+  searchQuery?: string;
+  assigneeFilter?: string | null;
   availableBoards?: BoardInfo[];
 }) {
+  const { t } = useTranslation();
   const { settings } = useContext(SettingsContext);
   const scrollableRef = useRef<HTMLDivElement | null>(null);
   const [newColumnTitle, setNewColumnTitle] = useState("");
-  const [isAddingColumn, { open, close }] = useDisclosure(false);
+  const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const open = () => setIsAddingColumn(true);
+  const close = () => setIsAddingColumn(false);
+
+  const [deleteColumnId, setDeleteColumnId] = useState<string | null>(null);
   // get userInformation for checking the role
   const { data: userRes } = useUserInfo() as { data: { data: UserData } };
   const role = userRes?.data?.role;
@@ -81,24 +100,11 @@ export function Board({
 
   const handleDeleteColumn = (columnId: string) => {
     if (!isAdmin) {
-      toast.warning("Only admin or super admin can delete this.");
+      toast.warning(t("Only admin or super admin can delete this."));
       return;
     }
 
-    modals.openConfirmModal({
-      title: "Delete ",
-      centered: true,
-      children: (
-        <Text size="sm">
-          Are you sure you want to delete this? This action cannot be undone
-        </Text>
-      ),
-      labels: { confirm: "Delete", cancel: "Cancel" },
-      confirmProps: { color: "red" },
-      onConfirm: () => {
-        deleteColumn(columnId);
-      },
-    });
+    setDeleteColumnId(columnId);
   };
 
   const handleUpdateColumn = (columnId: string, updates: Partial<TColumn>) => {
@@ -322,14 +328,12 @@ export function Board({
   if (isLoading) return <RateupLoader />;
 
   return (
-    <Flex direction="column" gap="md">
-      <Flex flex={1}>
-        <Flex
+    <div className="flex flex-col gap-4 w-full h-full overflow-hidden">
+      <div className="flex flex-1 min-w-0 w-full overflow-hidden">
+        <div
           ref={scrollableRef}
-          gap={"sm"}
-          mah={"calc(100vh - 121px)"}
+          className="flex gap-3 pb-4 px-6 overflow-x-auto w-full max-h-[calc(100vh-121px)]"
           style={{
-            overflowX: "auto",
             ...(settings.isBoardMoreObvious
               ? {
                   borderRadius: "0.25rem",
@@ -343,11 +347,28 @@ export function Board({
             data.ticketColumns.map((column) => {
               const filteredColumn = {
                 ...column,
-                ticketCards: priorityFilter
-                  ? column.ticketCards.filter(
-                      (card) => card.priority === priorityFilter,
-                    )
-                  : column.ticketCards,
+                ticketCards: column.ticketCards.filter((card) => {
+                  let matches = true;
+                  if (priorityFilter && card.priority !== priorityFilter) {
+                    matches = false;
+                  }
+                  if (searchQuery) {
+                    const query = searchQuery.toLowerCase();
+                    if (
+                      !card.title.toLowerCase().includes(query) &&
+                      !card.description?.toLowerCase().includes(query)
+                    ) {
+                      matches = false;
+                    }
+                  }
+                  if (assigneeFilter) {
+                    const isAssigned = card.assignees?.some(
+                      (a) => a.assigneeId === assigneeFilter,
+                    );
+                    if (!isAssigned) matches = false;
+                  }
+                  return matches;
+                }),
               };
 
               return (
@@ -364,43 +385,79 @@ export function Board({
 
           {/* Column add form */}
           {isAddingColumn ? (
-            <Flex direction="column" style={{ width: 280 }}>
-              <PaperLayout radius={"md"}>
-                <ContainedTextField
-                  autoFocus
-                  value={newColumnTitle}
-                  onChange={(e) => setNewColumnTitle(e.target.value)}
-                  placeholder="Enter column title..."
-                />
-                <Flex gap="xs" mt={"xs"}>
-                  <RateupButtonPrimary
-                    onClick={handleAddColumn}
-                    size="xs"
-                    variant="filled"
-                    title="Save"
-                  />
-                  <RateupButtonPrimary
-                    onClick={close}
-                    size="xs"
-                    variant="subtle"
-                    title="Cancel"
-                  />
-                </Flex>
-              </PaperLayout>
-            </Flex>
+            <div className="flex flex-col w-[280px] shrink-0 bg-muted/30 p-3 rounded-[12px] border border-border/50 shadow-sm self-start mt-0">
+              <Input
+                autoFocus
+                value={newColumnTitle}
+                onChange={(e) => setNewColumnTitle(e.target.value)}
+                placeholder={t("Enter list title...")}
+                className="h-9 bg-background text-sm mb-3 shadow-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddColumn();
+                  if (e.key === "Escape") close();
+                }}
+              />
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleAddColumn}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 font-semibold"
+                >
+                  {t("Add list")}
+                </Button>
+                <Button
+                  onClick={close}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 px-3 text-muted-foreground hover:text-foreground"
+                >
+                  {t("Cancel")}
+                </Button>
+              </div>
+            </div>
           ) : (
-            <Button
-              leftSection={<IconPlus size={16} />}
+            <button
               onClick={open}
-              variant="light"
-              radius={"md"}
-              miw={200}
+              className="w-[280px] shrink-0 h-[46px] rounded-[12px] self-start mt-0 border-2 border-dashed border-border/60 bg-transparent text-muted-foreground font-body text-sm font-semibold cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-150 hover:border-primary/50 hover:text-primary hover:bg-muted/30"
             >
-              Add another list
-            </Button>
+              <IconPlus size={16} strokeWidth={2.5} /> {t("Add another list")}
+            </button>
           )}
-        </Flex>
-      </Flex>
-    </Flex>
+
+          <AlertDialog
+            open={!!deleteColumnId}
+            onOpenChange={(open) => !open && setDeleteColumnId(null)}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t("Delete List")}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t(
+                    "Are you sure you want to delete this list? This action cannot be undone.",
+                  )}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setDeleteColumnId(null)}>
+                  {t("Cancel")}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-red-600 hover:bg-red-700"
+                  onClick={() => {
+                    if (deleteColumnId) {
+                      deleteColumn(deleteColumnId);
+                      setDeleteColumnId(null);
+                    }
+                  }}
+                >
+                  {t("Delete")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+    </div>
   );
 }

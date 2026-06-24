@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -18,7 +18,6 @@ import {
   ThumbsUp,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { usePDF } from "react-to-pdf";
 import {
   Bar,
   BarChart,
@@ -33,7 +32,12 @@ import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { useGetStaffDetailedConversationAnalytics } from "@/backend/conversation/conversation.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { AnalyticsStatCard } from "@/components/whatsapp/inbox/analytics/AnalyticsStaticCard.tsx";
@@ -43,7 +47,6 @@ import {
   formatTimeToNearestUnitFromSeconds,
   formatToRelativeTime,
 } from "@/utils/dateTime.ts";
-
 
 export const Route = createFileRoute("/dashboard/analytics/$staffid/")({
   component: page,
@@ -57,9 +60,16 @@ function page() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { toPDF, targetRef } = usePDF({
-    filename: `analytics-staff-${staffid}-${day}d.pdf`,
-  });
+  const targetRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPDF = async () => {
+    const generatePDF = (await import("react-to-pdf")).default;
+    if (targetRef.current) {
+      generatePDF(() => targetRef.current, {
+        filename: `analytics-staff-${staffid}-${day}d.pdf`,
+      });
+    }
+  };
   const { data: analytics, isLoading } =
     useGetStaffDetailedConversationAnalytics(staffid, {
       days: day,
@@ -166,7 +176,7 @@ function page() {
                 <DateSelector days={day} setDays={setDay} />
                 <Button
                   variant="outline"
-                  onClick={() => toPDF()}
+                  onClick={handleDownloadPDF}
                   className="flex items-center justify-center gap-1"
                 >
                   <FileText />

@@ -19,7 +19,12 @@ import ShopifySchedules from "@/components/shopify/ShopifySchedules.tsx";
 import ShopifySettings from "@/components/shopify/ShopifySettings.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 
 interface ActiveBadgeProps extends React.ComponentProps<typeof Badge> {
   active: boolean;

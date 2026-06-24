@@ -126,6 +126,5 @@ export {
   LandingPageContextProvider,
   useLandingPageObj,
   useSetLandingPageEditorTab,
-  useLandingPageEditorTab,
   useTiptapEditorInstance,
 };

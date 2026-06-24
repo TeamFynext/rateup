@@ -18,9 +18,9 @@ import {
   SmileyColorType,
   SmileyVariantStyle,
 } from "@/components/Survey/Question/QuestionExtraProps/SmileyExtraProps.tsx";
-
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+
 import {
   getEmptyIcon,
   getFullIcon,
@@ -249,4 +249,3 @@ export function getCustomSmileyIcon(response: SmileyResponse, question) {
   }
   return <Text size="2rem">{emoji}</Text>;
 }
-

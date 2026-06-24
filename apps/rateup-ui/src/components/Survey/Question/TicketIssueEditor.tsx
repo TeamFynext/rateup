@@ -18,7 +18,11 @@ import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { QuestionType as Q, QuestionType, SmileyResponse } from "@/types/enums.ts";
+import {
+  QuestionType as Q,
+  QuestionType,
+  SmileyResponse,
+} from "@/types/enums.ts";
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput.tsx";

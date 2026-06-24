@@ -18,7 +18,11 @@ import {
   UserPresenceMode,
 } from "@/backend/user/user.api";
 import { useUpdateUserAvailabilityStatus } from "@/backend/user/user.query";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,

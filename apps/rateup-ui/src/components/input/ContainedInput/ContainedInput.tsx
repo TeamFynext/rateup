@@ -135,7 +135,7 @@ export function ContainedPasswordInput(props: PasswordInputProps) {
   return <PasswordInput classNames={classes} {...props} />;
 }
 
-export function ContainedSwitchInput(props: SwitchProps) {
+function ContainedSwitchInput(props: SwitchProps) {
   return <Switch classNames={classes} {...props} />;
 }
 export const ContainedFileInput = React.forwardRef(function ContainedFileInput(
@@ -200,7 +200,7 @@ export function ContainedDateTimePickerInput(props: DateTimePickerProps) {
   );
 }
 
-export function ContainedDateInput(props: DateInputProps) {
+function ContainedDateInput(props: DateInputProps) {
   return (
     <DateInput classNames={classes} getDayProps={getDayProps} {...props} />
   );
@@ -231,7 +231,7 @@ export function ContainedDatePickerInput(props: DatePickerInputProps) {
   );
 }
 
-export function ContainedTimeInput(props: Readonly<TimeInputProps>) {
+function ContainedTimeInput(props: Readonly<TimeInputProps>) {
   const ref = useRef<HTMLInputElement>(null);
   const isChrome = navigator?.userAgent?.includes("Chrome") ?? false;
   const pickerControl = (

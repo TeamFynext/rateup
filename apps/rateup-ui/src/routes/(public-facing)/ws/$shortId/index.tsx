@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { getPublicSurvey } from "@/backend/surveys/survey.api";
+import { ResponseSubmitted } from "@/components/(public-facing)/ws/$shortId/ResponseSubmitted.tsx";
 
 import PublicSurvey from "../../../../components/(public-facing)/public/survey/$surveyId/publicSurveyC.tsx";
-import { ResponseSubmitted } from "@/components/(public-facing)/ws/$shortId/ResponseSubmitted.tsx";
 
 export const Route = createFileRoute("/(public-facing)/ws/$shortId/")({
   component: Ws,

@@ -9,7 +9,6 @@ import {
   useCreateAppleUserMutation,
   useCreateUserMutation,
 } from "@/backend/user/user.query";
-
 import {
   useConsumeVerificationCode,
   useEmailSend,
@@ -17,6 +16,7 @@ import {
   useSignUp,
 } from "@/utils/auth/index.tsx";
 import { AuthMode } from "@/utils/enums/index.ts";
+
 import styles from "./AuthForm.module.css";
 import AuthTypeSignupForm from "./AuthTypeSignupFormNew.tsx";
 import SignInFlow from "./LoginFormNew.tsx";

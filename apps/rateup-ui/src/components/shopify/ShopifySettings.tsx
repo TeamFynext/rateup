@@ -348,7 +348,7 @@ const ShopifySettings = ({
   );
 };
 
-export function getLabelsforConfirmModal(
+function getLabelsforConfirmModal(
   deletionCase,
   confirmFunc,
   confirmFuncArgs?,

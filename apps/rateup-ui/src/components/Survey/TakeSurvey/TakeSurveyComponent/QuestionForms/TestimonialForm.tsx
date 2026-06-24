@@ -19,6 +19,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { fallbackImage } from "@/utils/constants.ts";
 import {
   dataURItoBlob,
@@ -26,8 +28,6 @@ import {
   uploadFile,
 } from "@/utils/file-upload/upload.ts";
 
-import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
-import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { RateupButtonBlue } from "../../../../Button/RateupButtons.tsx";
 import WebcamCapture from "../../../../input/WebCamCapture.tsx";
 import FormModalLayout from "../../../../Modal/FormModalLayout.tsx";
@@ -250,4 +250,3 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
     </Stack>
   );
 }
-

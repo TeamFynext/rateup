@@ -18,12 +18,12 @@ import { useTranslation } from "react-i18next";
 import type { QuestionType } from "@/types/enums.ts";
 import { QuestionType as Q } from "@/types/enums.ts";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
-
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { validationSupportedTypes } from "@/utils/data.ts";
 import { validateQuestion } from "@/utils/validation/index.ts";
+
 import styles from "./TakeSurvey.module.css";
 import { getSelectedQPos, validateResponse } from "./util.tsx";
 
@@ -194,4 +194,3 @@ function NextPrev({
 }
 
 export default NextPrev;
-

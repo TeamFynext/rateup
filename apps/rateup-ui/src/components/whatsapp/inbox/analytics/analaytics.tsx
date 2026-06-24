@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
@@ -16,11 +16,10 @@ import {
   Send,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { usePDF } from "react-to-pdf";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button.tsx";
 import { AuditLogs } from "@/components/dashboard/analytics/audit-log/AuditLogs.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
 import { PageHeaderCard } from "./AnalyticsStaticCard.tsx";
 import ApiAnalytics from "./ApiAnalytics.tsx";
@@ -38,11 +37,9 @@ const Analytics = () => {
     key: "last7days",
     range: [dayjs().subtract(7, "day").toDate(), new Date()],
   });
-  const overviewPDF = usePDF({
-    filename: `analytics-overview-${dateRange.key}.pdf`,
-  });
-  const agentPDF = usePDF({ filename: `analytics-agent-${dateRange.key}.pdf` });
-  const teamPDF = usePDF({ filename: `analytics-team-${dateRange.key}.pdf` });
+  const overviewRef = useRef<HTMLDivElement>(null);
+  const agentRef = useRef<HTMLDivElement>(null);
+  const teamRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const isExportable = [
@@ -52,11 +49,21 @@ const Analytics = () => {
   ].includes(tab);
 
   const handleExport = async () => {
+    const generatePDF = (await import("react-to-pdf")).default;
     try {
-      if (tab === "overview") await overviewPDF.toPDF();
-      else if (tab === "agent-performance") await agentPDF.toPDF();
-      else if (tab === "team-performance") await teamPDF.toPDF();
-      else {
+      if (tab === "overview" && overviewRef.current) {
+        await generatePDF(() => overviewRef.current, {
+          filename: `analytics-overview-${dateRange.key}.pdf`,
+        });
+      } else if (tab === "agent-performance" && agentRef.current) {
+        await generatePDF(() => agentRef.current, {
+          filename: `analytics-agent-${dateRange.key}.pdf`,
+        });
+      } else if (tab === "team-performance" && teamRef.current) {
+        await generatePDF(() => teamRef.current, {
+          filename: `analytics-team-${dateRange.key}.pdf`,
+        });
+      } else {
         toast.error(t("Export not supported for this tab"));
       }
     } catch (err) {
@@ -185,19 +192,19 @@ const Analytics = () => {
 
         <div>
           {tab === "overview" && (
-            <div ref={overviewPDF.targetRef}>
+            <div ref={overviewRef}>
               <ConversationStatsOverview dateRange={dateRange} />
             </div>
           )}
 
           {tab === "agent-performance" && (
-            <div ref={agentPDF.targetRef}>
+            <div ref={agentRef}>
               <ConversationStatsAgentPerformance dateRange={dateRange} />
             </div>
           )}
 
           {tab === "team-performance" && (
-            <div ref={teamPDF.targetRef}>
+            <div ref={teamRef}>
               <TeamPerformance dateRange={dateRange} />
             </div>
           )}

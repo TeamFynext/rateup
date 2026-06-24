@@ -6,14 +6,14 @@ export enum TicketType {
   AUTOMATION = "AUTOMATION",
 }
 
-export enum TicketPriority {
+enum TicketPriority {
   LOW = "LOW",
   MEDIUM = "MEDIUM",
   HIGH = "HIGH",
   CRITICAL = "CRITICAL",
 }
 
-export enum TicketStatus {
+enum TicketStatus {
   OPEN = "OPEN",
   IN_PROGRESS = "IN_PROGRESS",
   RESOLVED = "RESOLVED",

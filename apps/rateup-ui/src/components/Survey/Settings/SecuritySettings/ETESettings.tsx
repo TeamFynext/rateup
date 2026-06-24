@@ -20,8 +20,8 @@ import { toast } from "sonner";
 import { useAllResponses } from "@/backend/surveys/response/response.query";
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
-
 import { useUser } from "@/context/UserContext.tsx";
+
 import ConfirmationModal from "../../../Modal/ConfirmationModal.tsx";
 import { updateEndToEndEncryption } from "../updateSettings.ts";
 
@@ -149,4 +149,3 @@ export default function ETESettings(props: ETESettingsInterface) {
     </>
   );
 }
-

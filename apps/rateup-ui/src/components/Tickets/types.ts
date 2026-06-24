@@ -3,7 +3,7 @@
 import type { TicketType } from "@/utils/enums/ticket.ts";
 
 // Base ticket types
-export interface User {
+interface User {
   id: string;
   name: string;
   email?: string;
@@ -27,6 +27,8 @@ export interface Board {
     userId: string;
     boardId?: string;
   }>;
+  description?: string;
+  createdAt?: string | Date;
 }
 
 export interface BoardInfo {
@@ -41,6 +43,9 @@ export interface Column {
   teamId: string;
   ticketBoardId?: string;
   ticketCards: Card[];
+  _count?: {
+    ticketCards: number;
+  };
 }
 
 export interface Card {
@@ -55,6 +60,7 @@ export interface Card {
   type?: TicketType;
   createdAt?: string | Date;
   columnId?: string;
+  ticketColumnId?: string;
   ticketActivities?: Activity[];
   ticketComments?: Array<TicketComment>;
   surveyResponseId?: string;
@@ -64,9 +70,19 @@ export interface Card {
   }>;
   waAutomatedReplyMessageId?: string;
   waAutomatedReplyMessage?: WaAutomatedReplyMessage;
+  contactId?: string | null;
+  contact?: {
+    id: string;
+    name: string;
+    phone: string;
+    lastReceivedMessageTimeStamp?: string;
+    consent?: boolean;
+  } | null;
+  checklists?: any;
+  attachments?: string[]; // array of file keys; full metadata stored in TicketActivity
 }
 
-export interface surveyResponse {
+interface surveyResponse {
   id: string;
   createdAt: string | Date;
   surveyTeamMapId: string;
@@ -100,7 +116,7 @@ export interface MemberData {
   name: string;
   profilePhoto?: string;
 }
-export type WaAutomatedReplyMessage = {
+type WaAutomatedReplyMessage = {
   id: string;
   createdAt: string;
   response: {
@@ -124,7 +140,23 @@ export type WaAutomatedReplyMessage = {
 
 export interface Activity {
   id: string;
-  type: "ADDED_MEMBER" | "ADDED_CARD" | "MOVED_CARD" | "EDITED_CARD";
+  type:
+    | "ADDED_MEMBER"
+    | "REMOVED_MEMBER"
+    | "ADDED_CARD"
+    | "MOVED_CARD"
+    | "EDITED_CARD"
+    | "ADDED_ATTACHMENT"
+    | "REMOVED_ATTACHMENT"
+    | "ADDED_CONTACT"
+    | "REMOVED_CONTACT"
+    | "CHANGED_PRIORITY"
+    | "ADDED_CHECKLIST"
+    | "REMOVED_CHECKLIST"
+    | "ADDED_CHECKLIST_ITEM"
+    | "REMOVED_CHECKLIST_ITEM"
+    | "CHECKED_CHECKLIST_ITEM"
+    | "UNCHECKED_CHECKLIST_ITEM";
   user?: User;
   userId?: string;
   timestamp: string;
@@ -134,6 +166,12 @@ export interface Activity {
     fromColumnName?: string;
     toColumnName?: string;
     memberName?: string;
+    contactName?: string;
+    key?: string;
+    fromPriority?: string;
+    toPriority?: string;
+    checklistName?: string;
+    itemName?: string;
   };
 }
 

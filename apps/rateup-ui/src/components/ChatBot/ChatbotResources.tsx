@@ -23,8 +23,8 @@ import {
   useDeleteManyChatborResource,
   useGetChatbotResources,
 } from "@/backend/chatbot/chatbot.query";
-
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
+
 import { RateupButtonBlue } from "../Button/RateupButtons.tsx";
 import NothingFound from "../NothingFound/NothingFound.tsx";
 import PaperLayout from "../styled/Layouts/PaperLayout.tsx";

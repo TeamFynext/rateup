@@ -6,7 +6,12 @@ import { useTranslation } from "react-i18next";
 
 import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums.ts";
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import { EditSurvey } from "../EditSurvey.tsx";

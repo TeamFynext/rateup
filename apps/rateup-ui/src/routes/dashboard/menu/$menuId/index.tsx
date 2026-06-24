@@ -34,7 +34,12 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 
 export const Route = createFileRoute("/dashboard/menu/$menuId/")({

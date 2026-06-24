@@ -7,7 +7,12 @@ import type { z } from "zod";
 
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import {
   Form,
   FormControl,

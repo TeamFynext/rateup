@@ -52,7 +52,7 @@ import RateupLoader from "../../Loaders/RateupLoader.tsx";
 import classes from "../templates/template.module.css";
 import WaTemplateStatusBadge from "./WaTemplateStatusBadge.tsx";
 
-export function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
+function SyncTemplatesModal({ opened, onClose, unsyncedFlows }) {
   const [selectedFlows, handlers] = useListState([]);
   const [currentScreen, setCurrentScreen] = useState<
     "selectFlows" | "configureFlows"
@@ -102,7 +102,7 @@ interface ImportFlowsProps {
 /**
  *  Iterates through each flow to be imported & calls ConfigureFlow for each flow.
  */
-export function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
+function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
   const [currentFlowIndex, setCurrentFlowIndex] = useState(0);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const flow = flows[currentFlowIndex];

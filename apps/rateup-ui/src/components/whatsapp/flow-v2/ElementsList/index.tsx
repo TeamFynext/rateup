@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 import {
   IconChevronDown,
@@ -202,6 +202,7 @@ function ElementCard({
           <div
             ref={provided.innerRef}
             {...provided.draggableProps}
+            style={provided.draggableProps.style as CSSProperties}
             className={cn(
               "bg-card border border-border rounded-lg transition-all duration-200 overflow-hidden",
               "hover:border-primary/60 hover:shadow-md",

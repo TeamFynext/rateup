@@ -30,8 +30,8 @@ import NothingFound from "@/components/NothingFound/NothingFound.tsx";
 import SaveTestimonialCollection from "@/components/testimonial/SaveTestimonialCollection.tsx";
 import TestimonialCard from "@/components/testimonial/TestimonialCard.tsx";
 import TestimonialCollectionCard from "@/components/testimonial/TestimonialCollectionCard.tsx";
-
 import { docsPath } from "@/utils/constants.ts";
+
 import styles from "../../../components/dashboard/contacts/contacts.module.css";
 
 export const Route = createFileRoute("/dashboard/testimonial/")({
@@ -165,4 +165,3 @@ function Testimonials() {
     </Stack>
   );
 }
-

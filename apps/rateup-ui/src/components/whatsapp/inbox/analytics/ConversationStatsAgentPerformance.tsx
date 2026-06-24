@@ -6,7 +6,12 @@ import { MessagePlatform } from "@/types/enums.ts";
 import { useGetStaffPerformanceonConversation } from "@/backend/conversation/conversation.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 

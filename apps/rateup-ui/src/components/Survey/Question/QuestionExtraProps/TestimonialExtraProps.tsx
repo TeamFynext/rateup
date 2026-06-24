@@ -9,6 +9,7 @@ import { isEmptyObject } from "@tiptap/react";
 import { useTranslation } from "react-i18next";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+
 import classes from "./Style.module.css";
 
 const TestimonialExtraProps = ({
@@ -160,4 +161,3 @@ const TestimonialExtraProps = ({
 };
 
 export default TestimonialExtraProps;
-

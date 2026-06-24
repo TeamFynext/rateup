@@ -22,11 +22,11 @@ import {
 } from "@tabler/icons-react";
 import Placeholder from "@tiptap/extension-placeholder";
 import { CharacterCount } from "@tiptap/extensions";
+import { Plugin } from "@tiptap/pm/state";
 import { Extension, generateHTML, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 import { LayoutTemplate, Paperclip, TypeOutline, X, Zap } from "lucide-react";
-import { Plugin } from "prosemirror-state";
 
 import { MessagePlatform } from "@/types/enums.ts";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
@@ -75,7 +75,7 @@ interface WaTextEditorProps extends BoxComponentProps {
   allowFiles?: boolean;
 }
 
-export const CustomEnter = Extension.create({
+const CustomEnter = Extension.create({
   name: "customEnter",
 
   addOptions() {

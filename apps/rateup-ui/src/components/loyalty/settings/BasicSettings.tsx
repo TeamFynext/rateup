@@ -7,7 +7,12 @@ import type { z } from "zod";
 
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { CountryDropdown } from "@/components/ui/country-dropdown.tsx";
 import { CurrencySelect } from "@/components/ui/currency-select.tsx";
 import {

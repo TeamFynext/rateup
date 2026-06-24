@@ -8,7 +8,6 @@ import { Clock, TimerIcon } from "lucide-react";
 
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
-
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 dayjs.extend(utc);
@@ -69,4 +68,3 @@ export default function WaInboxCountdownTimer({
     />
   );
 }
-

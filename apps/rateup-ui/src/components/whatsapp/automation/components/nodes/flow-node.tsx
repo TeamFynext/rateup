@@ -5,7 +5,6 @@ import { IconGitBranch } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
 import type { FlowNodeData } from "../../types/node-types.ts";
-
 import BaseNode from "./base-node.tsx";
 
 function FlowNode(props: NodeProps & { data: FlowNodeData }) {

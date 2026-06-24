@@ -2,19 +2,19 @@ import type { LoyaltyPointRewardSubType } from "@/types/enums.ts";
 
 import { axiosClient } from "../apiClient";
 
-export interface DiscountFixedValue {
+interface DiscountFixedValue {
   type: LoyaltyPointRewardSubType.DISCOUNT_FIXED;
   amount: number;
   currency: string;
 }
 
-export interface DiscountPercentageValue {
+interface DiscountPercentageValue {
   type: LoyaltyPointRewardSubType.DISCOUNT_PERCENTAGE;
   percentage: number;
   max_discount_amount?: number;
 }
 
-export interface FreeItemValue {
+interface FreeItemValue {
   type: LoyaltyPointRewardSubType.FREE_ITEM;
   item_name: string;
   item_sku?: string;
@@ -22,29 +22,29 @@ export interface FreeItemValue {
   quantity: number;
 }
 
-export type PointRewardValue =
+type PointRewardValue =
   | DiscountFixedValue
   | DiscountPercentageValue
   | FreeItemValue;
 
-export interface CouponValue {
+interface CouponValue {
   code?: string | null;
   description?: string | null;
 }
 
-export interface AssignedValue {
+interface AssignedValue {
   description: string;
   sku?: string | null;
 }
 
-export type LoyaltyRewardValue =
+type LoyaltyRewardValue =
   | PointRewardValue
   | CouponValue
   | AssignedValue
   | Record<string, unknown>;
 
 // Redemption rules schemas
-export interface TimeRestrictions {
+interface TimeRestrictions {
   valid_from?: string | null;
   valid_until?: string | null;
   allowed_days?: string[];
@@ -52,7 +52,7 @@ export interface TimeRestrictions {
   blackout_dates?: string[];
 }
 
-export interface QuantityRestrictions {
+interface QuantityRestrictions {
   one_time_use?: boolean;
   max_redemptions_per_customer?: number | null;
   max_redemptions_per_day?: number | null;
@@ -60,34 +60,34 @@ export interface QuantityRestrictions {
   max_redemptions_per_month?: number | null;
 }
 
-export interface SpendRequirements {
+interface SpendRequirements {
   minimum_spend?: number | null;
 }
 
-export interface TierRestrictions {
+interface TierRestrictions {
   allowed_tiers?: string[];
 }
 
-export interface CooldownRestrictions {
+interface CooldownRestrictions {
   cooldown_hours?: number | null;
 }
 
-export interface InventoryRestrictions {
+interface InventoryRestrictions {
   stock_quantity?: number | null;
 }
 
-export interface CombinationRules {
+interface CombinationRules {
   cannot_combine_with_other_rewards?: boolean;
   cannot_combine_with_promotions?: boolean;
   excluded_reward_ids?: string[];
 }
 
-export interface ApprovalRules {
+interface ApprovalRules {
   requires_approval?: boolean;
   auto_approve_under_value?: number | null;
 }
 
-export interface RedemptionRules {
+interface RedemptionRules {
   time_restrictions?: TimeRestrictions;
   quantity_restrictions?: QuantityRestrictions;
   spend_requirements?: SpendRequirements;

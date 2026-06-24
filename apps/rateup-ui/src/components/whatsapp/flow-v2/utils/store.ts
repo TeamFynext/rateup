@@ -12,7 +12,7 @@ import {
   REQUIRES_NAME_TYPES,
 } from "./typeConstants.ts";
 
-export interface Screen {
+interface Screen {
   id: string;
   title: string;
   terminal: boolean;
@@ -56,9 +56,7 @@ export interface FormElement {
 
 export enum EditorType {
   LogicEditor = "logic-editor",
-  GoogleReviewEditor = "google-review-editor",
   ElementEditor = "element-editor",
-  TicketIssueEditor = "ticket-issue-editor",
 }
 
 interface StoreState {

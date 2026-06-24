@@ -1,12 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-import { Group, Stack } from "@mantine/core";
-import { isNotEmpty, useForm } from "@mantine/form";
 import { IconPlus } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { List, NotebookTabs, Sparkles, Ticket, Type } from "lucide-react";
+import {
+  Calendar,
+  List,
+  NotebookTabs,
+  Sparkles,
+  Ticket,
+  Type,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -16,20 +21,18 @@ import {
   useBoardQueries,
   useCreateTicketMutation,
 } from "@/backend/tickets/tickets.query";
-
 import { TicketType } from "@/utils/enums/ticket.ts";
-import { RateupButtonBlue } from "../Button/RateupButtons.tsx";
-import {
-  ContainedDateInput,
-  ContainedSelection,
-  ContainedTextArea,
-  ContainedTextField,
-} from "../input/ContainedInput/ContainedInput.tsx";
+
 import { TeamSelector } from "../input/TeamSelector.tsx";
 import FormModalLayout from "../Modal/FormModalLayout.tsx";
 import Loading from "../Page/Loading.tsx";
 import { Button } from "../ui/button.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog.tsx";
 import { Input } from "../ui/input.tsx";
 import { Label } from "../ui/label.tsx";
 import {
@@ -49,6 +52,7 @@ interface iProps {
   rid?: string;
   surveyResponseId?: string;
 }
+
 const CreateTicketModal = ({
   createTicketOpened,
   closeTicketModal,
@@ -60,48 +64,38 @@ const CreateTicketModal = ({
   const isCustomTicket = type === TicketType.CUSTOM;
   const { t: translations } = useTranslation();
   const navigate = useNavigate();
-  const form = useForm({
-    initialValues: {
-      title:
-        type === TicketType.REVIEW
-          ? translations("Review Ticket")
-          : isCustomTicket
-            ? ""
-            : translations("Survey Response Ticket"),
-      type:
-        type === TicketType.REVIEW
-          ? TicketType.REVIEW
-          : isCustomTicket
-            ? TicketType.CUSTOM
-            : TicketType.SURVEY_RESPONSE,
-      firstComment: "",
-      assignedToId: "",
-      priority: "",
-      teamId: selectedTeamId,
-      deadline: "",
-      reviewId: type === TicketType.REVIEW ? rid : "",
-      surveyResponseId:
-        type === TicketType.SURVEY_RESPONSE ? surveyResponseId : "",
-    },
-    validate: {
-      title: (value) => (value.length ? null : translations("Cannot be empty")),
-      firstComment: (value) =>
-        value.trim().split(" ").length >= 2
-          ? null
-          : translations("Minimum 2 words required"),
-      assignedToId: (value) =>
-        value.length ? null : translations("Team staff selection is required"),
-      priority: (value) =>
-        value.length ? null : translations("Priority selection is required"),
-    },
+
+  const [formData, setFormData] = useState({
+    title:
+      type === TicketType.REVIEW
+        ? translations("Review Ticket")
+        : isCustomTicket
+          ? ""
+          : translations("Survey Response Ticket"),
+    type:
+      type === TicketType.REVIEW
+        ? TicketType.REVIEW
+        : isCustomTicket
+          ? TicketType.CUSTOM
+          : TicketType.SURVEY_RESPONSE,
+    firstComment: "",
+    assignedToId: "",
+    priority: "",
+    teamId: selectedTeamId,
+    deadline: "",
+    reviewId: type === TicketType.REVIEW ? rid : "",
+    surveyResponseId:
+      type === TicketType.SURVEY_RESPONSE ? surveyResponseId : "",
   });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const {
     isLoading: isLoadingMembers,
     data: teamsMembersData,
     refetch: refetchInvitedTeamMembers,
   } = useTeamMembersFromInvitation(
-    selectedTeamId || form.values.teamId,
+    selectedTeamId || formData.teamId,
   ) as UseTeamResult;
 
   const memberOptions = teamsMembersData?.members?.map((team) => ({
@@ -110,31 +104,43 @@ const CreateTicketModal = ({
   }));
 
   useEffect(() => {
-    if (rid) form.setFieldValue("reviewId", rid);
+    if (rid) setFormData((prev) => ({ ...prev, reviewId: rid }));
   }, [rid]);
 
   useEffect(() => {
-    if (selectedTeamId) form.setFieldValue("teamId", selectedTeamId);
+    if (selectedTeamId)
+      setFormData((prev) => ({ ...prev, teamId: selectedTeamId }));
   }, [selectedTeamId, createTicketOpened]);
 
   useEffect(() => {
     if (surveyResponseId)
-      form.setFieldValue("surveyResponseId", surveyResponseId);
+      setFormData((prev) => ({ ...prev, surveyResponseId }));
   }, [surveyResponseId]);
 
   const createTicket = useCreateTicketMutation();
 
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.title) newErrors.title = translations("Cannot be empty");
+    if (formData.firstComment.trim().split(" ").length < 2)
+      newErrors.firstComment = translations("Minimum 2 words required");
+    if (!formData.assignedToId)
+      newErrors.assignedToId = translations("Team staff selection is required");
+    if (!formData.priority)
+      newErrors.priority = translations("Priority selection is required");
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const onSubmit = () => {
-    const validationRes = form.validate();
-    if (validationRes.hasErrors) {
-      console.error(validationRes.errors);
-      return;
-    }
+    if (!validate()) return;
+
     toast.loading(translations("Hold on, your ticket is getting created..."), {
       id: "load-data",
     });
 
-    createTicket.mutate(form.values, {
+    createTicket.mutate(formData, {
       onSuccess: (res) => {
         if (res.id) {
           closeAll();
@@ -144,7 +150,18 @@ const CreateTicketModal = ({
   };
 
   function closeAll() {
-    form.reset();
+    setFormData({
+      title: "",
+      type: TicketType.CUSTOM,
+      firstComment: "",
+      assignedToId: "",
+      priority: "",
+      teamId: selectedTeamId,
+      deadline: "",
+      reviewId: "",
+      surveyResponseId: "",
+    });
+    setErrors({});
     closeTicketModal();
   }
 
@@ -156,100 +173,157 @@ const CreateTicketModal = ({
       centered
       size="xl"
     >
-      <Stack mt="lg">
-        <Group>
-          <ContainedTextField
-            placeholder={translations("Enter Ticket Name")}
-            label={translations("Name:")}
-            withAsterisk
-            {...form.getInputProps("title")}
-            style={{
-              minWidth:
-                form.values.title === "Survey Response Ticket" ? "100%" : "65%",
-            }}
-          />
-          {isCustomTicket && (
-            <TeamSelector
-              value={form.values.teamId}
-              onChange={(teamId) => form.setFieldValue("teamId", teamId)}
-              enableAll={false}
-              label={translations("Select Team")}
-              style={{ minWidth: "32%" }}
-              withAsterisk
+      <div className="flex flex-col gap-4 mt-6">
+        <div className="flex flex-wrap gap-4">
+          <div className="flex-1 space-y-1">
+            <Label>
+              {translations("Name:")} <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              placeholder={translations("Enter Ticket Name")}
+              value={formData.title}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
             />
-          )}
-        </Group>
-
-        <ContainedTextArea
-          placeholder={
-            isCustomTicket
-              ? translations("Enter description")
-              : translations("Enter Comment")
-          }
-          label={
-            isCustomTicket
-              ? translations("Description")
-              : translations("Comment")
-          }
-          withAsterisk
-          autosize
-          maxRows={4}
-          minRows={4}
-          {...form.getInputProps("firstComment")}
-        />
-        <Group>
-          <ContainedSelection
-            allowDeselect={false}
-            data={memberOptions}
-            withAsterisk
-            label={translations("Assign to")}
-            style={{ minWidth: "32%" }}
-            placeholder={translations(
-              "Select a team staff to assign ticket to",
+            {errors.title && (
+              <p className="text-xs text-red-500">{errors.title}</p>
             )}
-            {...form.getInputProps("assignedToId")}
-          />
-          <ContainedSelection
-            allowDeselect={false}
-            data={["LOW", "MEDIUM", "HIGH", "CRITICAL"]}
-            withAsterisk
-            label={translations("Priority")}
-            style={{ minWidth: "30%" }}
-            placeholder={translations("Select priority for the ticket")}
-            {...form.getInputProps("priority")}
-          />
-          <ContainedDateInput
-            minDate={new Date()}
-            clearable
-            label={translations("Deadline:")}
-            style={{ minWidth: "32%" }}
-            placeholder={translations("Select a deadline for the ticket")}
-            {...form.getInputProps("deadline")}
-          />
-        </Group>
+          </div>
 
-        <Group justify="flex-end" mt="sm">
-          <RateupButtonBlue
-            mt="xl"
-            title={translations("Cancel")}
-            onClick={() => {
-              closeAll();
-            }}
-          />
+          {isCustomTicket && (
+            <div className="flex-1 space-y-1 min-w-[32%]">
+              <Label>
+                {translations("Select Team")}{" "}
+                <span className="text-red-500">*</span>
+              </Label>
+              <TeamSelector
+                value={formData.teamId}
+                onChange={(teamId) => setFormData({ ...formData, teamId })}
+                enableAll={false}
+              />
+            </div>
+          )}
+        </div>
 
-          <RateupButtonBlue
-            mt="xl"
-            title={translations("Create")}
-            leftIcon={<IconPlus />}
-            onClick={onSubmit}
+        <div className="space-y-1">
+          <Label>
+            {isCustomTicket
+              ? translations("Description")
+              : translations("Comment")}
+            <span className="text-red-500">*</span>
+          </Label>
+          <Textarea
+            placeholder={
+              isCustomTicket
+                ? translations("Enter description")
+                : translations("Enter Comment")
+            }
+            rows={4}
+            value={formData.firstComment}
+            onChange={(e) =>
+              setFormData({ ...formData, firstComment: e.target.value })
+            }
           />
-        </Group>
-      </Stack>
+          {errors.firstComment && (
+            <p className="text-xs text-red-500">{errors.firstComment}</p>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-4">
+          <div className="flex-1 space-y-1 min-w-[30%]">
+            <Label>
+              {translations("Assign to")}{" "}
+              <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={formData.assignedToId}
+              onValueChange={(val) =>
+                setFormData({ ...formData, assignedToId: val })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={translations("Select a team staff")}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {memberOptions?.map((member) => (
+                  <SelectItem key={member.value} value={member.value}>
+                    {member.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.assignedToId && (
+              <p className="text-xs text-red-500">{errors.assignedToId}</p>
+            )}
+          </div>
+
+          <div className="flex-1 space-y-1 min-w-[30%]">
+            <Label>
+              {translations("Priority")} <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={formData.priority}
+              onValueChange={(val) =>
+                setFormData({ ...formData, priority: val })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={translations("Select priority")} />
+              </SelectTrigger>
+              <SelectContent>
+                {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((prio) => (
+                  <SelectItem key={prio} value={prio}>
+                    {prio}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.priority && (
+              <p className="text-xs text-red-500">{errors.priority}</p>
+            )}
+          </div>
+
+          <div className="flex-1 space-y-1 min-w-[30%]">
+            <Label>{translations("Deadline:")}</Label>
+            <Input
+              type="date"
+              value={formData.deadline}
+              onChange={(e) =>
+                setFormData({ ...formData, deadline: e.target.value })
+              }
+              min={new Date().toISOString().split("T")[0]}
+              onClick={(e) =>
+                "showPicker" in e.target && (e.target as any).showPicker()
+              }
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-4 mt-2">
+          <Button className="mt-6" variant="outline" onClick={closeAll}>
+            {translations("Cancel")}
+          </Button>
+
+          <Button className="mt-6" onClick={onSubmit}>
+            <IconPlus className="mr-2 h-4 w-4" />
+            {translations("Create")}
+          </Button>
+        </div>
+      </div>
     </FormModalLayout>
   );
 };
 
-export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
+export const CreateTicketCard = ({
+  opened,
+  close,
+  type,
+  hasTicketFeature,
+  contactId,
+}: any) => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState("");
   const { boards, isLoading: isBoardsLoading } =
@@ -258,39 +332,57 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
 
   const { t } = useTranslation();
 
-  const form = useForm({
-    initialValues: {
-      ticketColumnId: "",
-      title: "",
-      description: "",
-      type,
-    },
-    validate: {
-      ticketColumnId: isNotEmpty("required"),
-      title: isNotEmpty("required"),
-    },
+  const [formData, setFormData] = useState({
+    ticketColumnId: "",
+    title: "",
+    description: "",
+    deadline: "",
+    type,
   });
 
-  async function handleSubmit() {
-    const validationRes = await form.validate();
-    if (validationRes.hasErrors) return;
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.ticketColumnId) newErrors.ticketColumnId = "required";
+    if (!formData.title) newErrors.title = "required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!validate()) return;
     setSubmitting(true);
-    createCard(form.values, {
+
+    const payload: any = { ...formData, contactId };
+    if (!payload.deadline) {
+      delete payload.deadline;
+    }
+
+    createCard(payload, {
       onSuccess: () => {
         setSubmitting(false);
         cancel();
       },
     });
-    setSubmitting(false);
   }
 
   function cancel() {
-    form.reset();
+    setFormData({
+      ticketColumnId: "",
+      title: "",
+      description: "",
+      deadline: "",
+      type,
+    });
+    setErrors({});
     close();
   }
 
   return (
-    <Dialog open={opened} onOpenChange={close}>
+    <Dialog open={opened} onOpenChange={cancel}>
       <DialogContent className="p-0">
         <DialogHeader className="p-0">
           <DialogTitle className="p-0">
@@ -311,7 +403,7 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
           </div>
         ) : (
           <form
-            onSubmit={form.onSubmit(handleSubmit)}
+            onSubmit={handleSubmit}
             className="w-full p-4 flex flex-col gap-4 justify-center"
           >
             {/* Select Board */}
@@ -359,9 +451,9 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
               </Label>
 
               <Select
-                value={form.values.ticketColumnId}
+                value={formData.ticketColumnId}
                 onValueChange={(val) =>
-                  form.setFieldValue("ticketColumnId", val)
+                  setFormData({ ...formData, ticketColumnId: val })
                 }
               >
                 <SelectTrigger className="w-full">
@@ -377,10 +469,9 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
                 </SelectContent>
               </Select>
 
-              {/* validation error for ticketColumnId */}
-              {form.errors.ticketColumnId && (
+              {errors.ticketColumnId && (
                 <p className="text-xs text-red-500 mt-1">
-                  {form.errors.ticketColumnId}
+                  {errors.ticketColumnId}
                 </p>
               )}
             </div>
@@ -398,10 +489,13 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
 
               <Input
                 placeholder={t("Enter ticket title")}
-                {...form.getInputProps("title")}
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
               />
-              {form.errors.title && (
-                <p className="text-xs text-red-500 mt-1">{form.errors.title}</p>
+              {errors.title && (
+                <p className="text-xs text-red-500 mt-1">{errors.title}</p>
               )}
             </div>
 
@@ -419,7 +513,32 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
 
               <Textarea
                 placeholder={t("Provide detailed information about the ticket")}
-                {...form.getInputProps("description")}
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+              />
+            </div>
+
+            {/* Due Date */}
+            <div className="space-y-1">
+              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <div className="bg-red-100 text-red-600 p-1 rounded-sm">
+                  <Calendar size={14} />
+                </div>
+                <div>{t("Due Date")}</div>
+              </Label>
+
+              <Input
+                type="date"
+                value={formData.deadline}
+                onChange={(e) =>
+                  setFormData({ ...formData, deadline: e.target.value })
+                }
+                min={new Date().toISOString().split("T")[0]}
+                onClick={(e) =>
+                  "showPicker" in e.target && (e.target as any).showPicker()
+                }
               />
             </div>
 

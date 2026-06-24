@@ -47,10 +47,7 @@ const QrFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/about-us"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link to="/about-us" className="hover:text-gray-300 transition">
                   About Us
                 </Link>
               </li>
@@ -77,26 +74,17 @@ const QrFooter = () => {
             <h4 className="text-lg font-semibold mb-3">Pricing</h4>
             <ul className="space-y-2 text-sm text-gray-100">
               <li>
-                <Link
-                  to="/pricing"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link to="/pricing" className="hover:text-gray-300 transition">
                   Basic Plan
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/pricing"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link to="/pricing" className="hover:text-gray-300 transition">
                   Plus Plan
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/pricing"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link to="/pricing" className="hover:text-gray-300 transition">
                   Premium Plan
                 </Link>
               </li>

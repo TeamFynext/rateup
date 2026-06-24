@@ -37,10 +37,7 @@ function Page() {
       replace: true,
     });
 
-  if (
-    "data" in data &&
-    data.data.orgId !== import.meta.env.VITE_ROOT_ORG
-  )
+  if ("data" in data && data.data.orgId !== import.meta.env.VITE_ROOT_ORG)
     throw redirect({
       to: "/dashboard",
       replace: true,

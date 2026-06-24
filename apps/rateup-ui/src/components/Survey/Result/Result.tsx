@@ -11,12 +11,12 @@ import { QuestionType2 } from "@/types/enums.ts";
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { decryptPrivateKey } from "@/utils/encryption/index.ts";
-import { pushToSessionStorage } from "@/utils/essential/index.ts";
-
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import { decryptPrivateKey } from "@/utils/encryption/index.ts";
+import { pushToSessionStorage } from "@/utils/essential/index.ts";
+
 import {
   RateupButtonBlue,
   RateupButtonSecondary,

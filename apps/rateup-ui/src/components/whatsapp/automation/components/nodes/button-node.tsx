@@ -10,9 +10,9 @@ import {
 import { Handle, Position } from "@xyflow/react";
 import type { NodeProps } from "@xyflow/react";
 
-import type { ButtonNodeData } from "../../types/node-types.ts";
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
 
+import type { ButtonNodeData } from "../../types/node-types.ts";
 import BaseNode from "./base-node.tsx";
 import styles from "./node-styles.module.css";
 

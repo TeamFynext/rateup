@@ -1,15 +1,15 @@
 import { WaFlowFormElementType } from "@/types/enums.ts";
 
-export const WA_BODY_CHAR_LIMIT = 2048; // Actual limit is 4096
-export const WA_FOOTER_CHAR_LIMIT = 60;
-export const WA_HEADER_CHAR_LIMIT = 60;
-export const WA_FLOW_LABEL_CHAR_LIMIT = 20;
+const WA_BODY_CHAR_LIMIT = 2048; // Actual limit is 4096
+const WA_FOOTER_CHAR_LIMIT = 60;
+const WA_HEADER_CHAR_LIMIT = 60;
+const WA_FLOW_LABEL_CHAR_LIMIT = 20;
 export const WA_FLOW_HEADING_CHAR_LIMIT = 80;
 export const WA_FLOW_BODY_CHAR_LIMIT = 4096;
 export const WA_FLOW_CAPTION_CHAR_LIMIT = 4096;
 export const WA_FLOW_SUBHEADING_CHAR_LIMIT = 60;
 export const WA_FLOW_EMBEDDED_LINK_LIMIT = 25;
-export const WA_FLOW_OPT_IN_LIMIT = 100;
+const WA_FLOW_OPT_IN_LIMIT = 100;
 export const FlowMaxScreens = 8;
 export const FlowMaxElementsPerScreen = 50;
 export function getFlowLabelLimit(type: WaFlowFormElementType) {

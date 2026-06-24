@@ -6,7 +6,7 @@ import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import { IconUserShield } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 
-export function UnauthorizedPage() {
+function UnauthorizedPage() {
   const navigate = useNavigate();
   return (
     <Stack justify="center" align="center" pt={"200px"}>

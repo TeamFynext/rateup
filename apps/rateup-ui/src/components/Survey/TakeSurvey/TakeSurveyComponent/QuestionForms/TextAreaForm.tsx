@@ -6,6 +6,7 @@ import { useMantineTheme } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+
 import { ContainedTextArea } from "../../../../input/ContainedInput/ContainedInput.tsx";
 import classes from "../TakeSurvey.module.css";
 import { handleInputScrollIntoView } from "../util.tsx";
@@ -40,4 +41,3 @@ export function TextAreaForm() {
     </FormPaperLayout>
   );
 }
-

@@ -22,6 +22,7 @@ import { motion, useAnimate } from "motion/react";
 import { useTranslation } from "react-i18next";
 
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
+
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils.ts";
 import styles from "./CustomSelectForMobile.module.css";
 
@@ -223,4 +224,3 @@ function CustomSelectForMobile({
 }
 
 export default CustomSelectForMobile;
-

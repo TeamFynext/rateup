@@ -56,9 +56,8 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import PremiumFeature from "@/components/Premium/PremiumFeature.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
-import { hasFeature } from "@/utils/subscription/subscription.ts";
-
 import { useChatbotStore } from "@/store/chatbot.store";
+import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 export const Route = createFileRoute("/dashboard/chatbot/")({
   component: ChatBot,
@@ -302,7 +301,7 @@ function ChatBot() {
   );
 }
 
-export function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
+function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
   const { data: chatbot, isLoading } = useGetChatbotDetails(selectedChatbotId);
   const { t: translations } = useTranslation();
   const updateChatbotdetMut = useUpdateChatbot();
@@ -419,4 +418,3 @@ export function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
     </Skeleton>
   );
 }
-

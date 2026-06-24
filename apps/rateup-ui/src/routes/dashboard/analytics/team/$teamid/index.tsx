@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,19 +16,22 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { usePDF } from "react-to-pdf";
 
 import { MessagePlatform } from "@/types/enums.ts";
 import { useGetTeamDetailedMetrics } from "@/backend/conversation/conversation.query";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { StaffStatusBadge } from "@/components/whatsapp/inbox/analytics/ConversationStatsAgentPerformance.tsx";
 import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSelector.tsx";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
-
 
 export const Route = createFileRoute("/dashboard/analytics/team/$teamid/")({
   component: page,
@@ -42,9 +45,16 @@ function page() {
     strict: false,
   });
   const navigate = useNavigate();
-  const { toPDF, targetRef } = usePDF({
-    filename: `analytics-team-${teamid}-${day}d.pdf`,
-  });
+  const targetRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadPDF = async () => {
+    const generatePDF = (await import("react-to-pdf")).default;
+    if (targetRef.current) {
+      generatePDF(() => targetRef.current, {
+        filename: `analytics-team-${teamid}-${day}d.pdf`,
+      });
+    }
+  };
   const { data, isLoading } = useGetTeamDetailedMetrics(teamid, {
     days: day,
   });
@@ -111,7 +121,7 @@ function page() {
               <DateSelector days={day} setDays={setDay} />
               <Button
                 variant="outline"
-                onClick={() => toPDF()}
+                onClick={handleDownloadPDF}
                 className="flex items-center justify-center gap-1"
               >
                 <FileText />

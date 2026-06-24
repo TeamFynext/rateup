@@ -39,9 +39,9 @@ import { CampaignParticipantMenu } from "../../Campaign/CampaignParticipantCard.
 import { CampaignMenu, renderBadge } from "../../Card/CampaignCard.tsx";
 import ContactGroupMenu from "../ContactGroupMenu.tsx";
 
-export const DETAIL_BTN = "detail_btn_link_123";
+const DETAIL_BTN = "detail_btn_link_123";
 
-export const selectCheckBox: ColumnDef<any>[] = [
+const selectCheckBox: ColumnDef<any>[] = [
   {
     id: "select",
     accessorKey: "select",
@@ -299,7 +299,7 @@ export const contactColumn = (
   ];
 };
 
-export const loyaltyGroupColumn = [
+const loyaltyGroupColumn = [
   ...selectCheckBox,
   {
     header: () => "image",
@@ -354,7 +354,7 @@ export const loyaltyGroupColumn = [
   },
 ];
 
-export const contactParticipentColumn: ColumnDef<any>[] = [
+const contactParticipentColumn: ColumnDef<any>[] = [
   {
     header: () => "Name",
     accessorKey: "name",
@@ -454,7 +454,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     ),
   },
 ];
-export const getStatusData = (info) => {
+const getStatusData = (info) => {
   let statusData: string = (info?.waStatus || "").toUpperCase();
   const FlowId = info?.campaign?.flowId;
   const participantStatus = info.status?.toUpperCase();
@@ -489,7 +489,7 @@ const fuzzyFilter = (row, columnId, value, addMeta) => {
   return itemRank.passed;
 };
 
-export const contactParticipentDetailColumn = [
+const contactParticipentDetailColumn = [
   ...selectCheckBox,
   {
     header: () => "Name",
@@ -592,14 +592,14 @@ export const contactParticipentDetailColumn = [
 //   return <Checkbox ref={ref} {...props} />;
 // }
 
-export enum WhatsappTableType {
+enum WhatsappTableType {
   CONTACTS = "contacts",
   GROUPS = "groups",
   MEMBERS = "members",
   PARTICIPANTS = "participants",
 }
 
-export const tabHeaderLabels = {
+const tabHeaderLabels = {
   [WhatsappTableType.CONTACTS]: {
     headerLabel: "Are you sure to delete these selected contacts?",
     headerTitle: "Delete Contacts?",

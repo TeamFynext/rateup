@@ -4,9 +4,8 @@ import React from "react";
 
 import { Skeleton } from "@mantine/core";
 
-import { TableCell, TableHead, TableRow } from "@/components/ui/table.tsx";
-
 import useTableLoadingDataCount from "@/hooks/useTableLoadingDataCount.tsx";
+import { TableCell, TableHead, TableRow } from "@/components/ui/table.tsx";
 
 const columns = [
   { Header: "Column 1", accessor: "col1" },

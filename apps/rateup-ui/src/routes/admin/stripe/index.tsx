@@ -4,7 +4,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, Package, Receipt } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 
 import StripeProducts from "../../../components/admin/stripe/StripeProducts.tsx";
 import StripeSubscription from "../../../components/admin/stripe/StripeSubscription.tsx";

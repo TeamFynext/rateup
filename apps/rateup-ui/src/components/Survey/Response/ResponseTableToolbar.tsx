@@ -8,7 +8,7 @@ import {
   IconTableExport,
 } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { format, isValid, parse } from "date-fns";
+import dayjs from "dayjs";
 import type { Range } from "react-date-range";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -231,8 +231,8 @@ export function ResponseTableToolbar<TData>({
 
   const selectedDate = useMemo(() => {
     if (!searchTerm) return undefined;
-    const parsedDate = parse(searchTerm, "yyyy-MM-dd", new Date());
-    return isValid(parsedDate) ? parsedDate : undefined;
+    const parsedDate = dayjs(searchTerm, "YYYY-MM-DD");
+    return parsedDate.isValid() ? parsedDate.toDate() : undefined;
   }, [searchTerm]);
 
   const renderSearchInput = () => {
@@ -242,7 +242,10 @@ export function ResponseTableToolbar<TData>({
           <DatePicker
             value={selectedDate}
             onChange={(date) => {
-              form.setValue("searchTerm", format(date, "yyyy-MM-dd"));
+              form.setValue(
+                "searchTerm",
+                date ? dayjs(date).format("YYYY-MM-DD") : "",
+              );
             }}
             className="w-full"
           />

@@ -49,7 +49,11 @@ import {
   useUpdateProfileMutation,
   useUpdateUserPause,
 } from "@/backend/user/user.query";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -76,7 +80,12 @@ import {
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 import {
   Tooltip,
   TooltipContent,

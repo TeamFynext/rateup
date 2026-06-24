@@ -12,6 +12,7 @@ import {
   useCompleteOrgDetails,
   useOrgNameAndPhone,
 } from "@/backend/org/org.query";
+import { ChannelDetailsPage } from "@/components/dashboard/settings/channels/ChannelDetailsPage.tsx";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import { Card } from "@/components/ui/card.tsx";
 import {
@@ -19,7 +20,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
-import { ChannelDetailsPage } from "@/components/dashboard/settings/channels/ChannelDetailsPage.tsx";
 
 import OnboardingStep1 from "./Onboarding1.tsx";
 import OnboardingStep2 from "./Onboarding2.tsx";

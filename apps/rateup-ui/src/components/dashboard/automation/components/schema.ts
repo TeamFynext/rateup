@@ -40,7 +40,7 @@ export const PLATFORMS = [
 export type Platform = (typeof PLATFORMS)[number]["value"];
 
 // Single source of truth for trigger events
-export const TRIGGER_EVENTS = [
+const TRIGGER_EVENTS = [
   {
     label: "Message Received",
     value: "MESSAGE_RECEIVED",
@@ -152,12 +152,12 @@ export function getActionTypesForPlatform(platform: Platform) {
 }
 
 // Single source of truth for group operators
-export const GROUP_OPERATORS = [
+const GROUP_OPERATORS = [
   { label: "AND", value: "AND" },
   { label: "OR", value: "OR" },
 ] as const;
 
-export const ruleConditionSchema = z.object({
+const ruleConditionSchema = z.object({
   id: z.string().optional(),
   field: z.enum(CONDITION_FIELDS.map((f) => f.value) as [string, ...string[]]),
   operator: z.enum(
@@ -203,13 +203,13 @@ const regularActionSchema = z.object({
   value: z.string().min(1, "Value is required"),
 });
 
-export const ruleActionSchema = z.union([
+const ruleActionSchema = z.union([
   externalApiActionSchema,
   sendTemplateActionSchema,
   regularActionSchema,
 ]);
 
-export const ruleGroupSchema = z.object({
+const ruleGroupSchema = z.object({
   id: z.string().optional(),
   operator: z
     .enum(GROUP_OPERATORS.map((o) => o.value) as [string, ...string[]])
@@ -346,7 +346,7 @@ export type CreateRuleInput = z.input<typeof createRuleSchema>;
 
 const updateRuleSchema = createRuleBaseSchema.partial();
 
-export type UpdateRuleInput = z.infer<typeof updateRuleSchema>;
+type UpdateRuleInput = z.infer<typeof updateRuleSchema>;
 
 // --- Type Exports for Compatibility ---
 
@@ -354,6 +354,6 @@ export type TriggerEvent = z.infer<typeof createRuleSchema>["triggerEvent"];
 export type ConditionField = z.infer<typeof ruleConditionSchema>["field"];
 export type ConditionOperator = z.infer<typeof ruleConditionSchema>["operator"];
 export type ActionType = z.infer<typeof ruleActionSchema>["type"];
-export type RuleGroup = z.infer<typeof ruleGroupSchema>;
-export type RuleCondition = z.infer<typeof ruleConditionSchema>;
-export type RuleAction = z.infer<typeof ruleActionSchema>;
+type RuleGroup = z.infer<typeof ruleGroupSchema>;
+type RuleCondition = z.infer<typeof ruleConditionSchema>;
+type RuleAction = z.infer<typeof ruleActionSchema>;

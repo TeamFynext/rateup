@@ -4,7 +4,12 @@ import { useTranslation } from "react-i18next";
 
 import { useGetTeamOverview } from "@/backend/conversation/conversation.query";
 import { Badge } from "@/components/ui/badge.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime.ts";
 

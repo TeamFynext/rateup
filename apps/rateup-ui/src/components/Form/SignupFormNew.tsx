@@ -50,7 +50,7 @@ import AppleSignInButton from "./AppleSigninButton.tsx";
 import { AuthHeader } from "./AuthHeader.tsx";
 import GoogleSignInButton from "./GoogleSigninButton.tsx";
 
-export const signUpType = {
+const signUpType = {
   SIGNUP_WITH_GOOGLE: "google",
   SIGNUP_WITH_APPLE: "apple",
   SIGNUP_WITH_EMAIL: "email",

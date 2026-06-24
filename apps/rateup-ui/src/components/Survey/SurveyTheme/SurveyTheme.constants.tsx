@@ -7,8 +7,7 @@ import InputStyles from "./components/InputStyles.tsx";
 import LogoStyles from "./components/LogoStyles.tsx";
 import { ThemeTabEnum } from "./SurveyTheme.enums";
 
-export const dummyImage =
-  "https://www.freeiconspng.com/uploads/no-image-icon-4.png";
+const dummyImage = "https://www.freeiconspng.com/uploads/no-image-icon-4.png";
 
 export const swatches = [
   "#2e2e2e",
@@ -27,7 +26,7 @@ export const swatches = [
   "#fd7e14",
 ];
 
-export const swatchesNamesArray = [
+const swatchesNamesArray = [
   "blue",
   "cyan",
   "gray",
@@ -81,7 +80,7 @@ export const FontWeights = [
   },
 ];
 
-export const questionTypeEnumArray = [
+const questionTypeEnumArray = [
   QuestionType.Rating,
   QuestionType.Smiley,
   QuestionType.LD,

@@ -338,7 +338,7 @@ interface iProps {
   errors: any;
 }
 
-export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
+function MultiSelectCreatable({ value, setValue, errors }: iProps) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
     onDropdownOpen: () => combobox.updateSelectedOptionIndex("active"),

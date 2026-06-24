@@ -46,8 +46,8 @@ import {
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
-
 import { PAGE_SIZE } from "@/utils/constants.ts";
+
 import StatePagination from "./CampaignContactPagination.tsx";
 
 interface AddParticipantModalProps {
@@ -567,7 +567,7 @@ interface IndividualProps {
   isAlreadySelected?: boolean;
 }
 
-export const Individual = ({
+const Individual = ({
   customer,
   selectedContacts,
   setSelectedContacts,
@@ -623,7 +623,7 @@ interface CustomerGroupProps {
   isAlreadySelected?: boolean;
 }
 
-export const CustomerGroup = ({
+const CustomerGroup = ({
   group,
   selectedGroups,
   setSelectedGroups,

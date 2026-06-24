@@ -25,8 +25,8 @@ import type { z } from "zod/v4";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
-
 import { WHATSAPP_BUTTON_TYPE } from "@/utils/constants.ts";
+
 import {
   ContainedDateTimePickerInput,
   ContainedMultiSelect,
@@ -173,9 +173,7 @@ const ButtonInput = ({
                 rightSection={
                   <Group gap="xs">
                     {buttonState.showInsertIcon && (
-                      <Tooltip
-                        label={translations("Insert variable {{1}}")}
-                      >
+                      <Tooltip label={translations("Insert variable {{1}}")}>
                         <ActionIcon
                           size="sm"
                           variant="subtle"
@@ -836,4 +834,3 @@ const OrderDetailsButtonForm = ({
   );
 };
 export default ButtonInput;
-

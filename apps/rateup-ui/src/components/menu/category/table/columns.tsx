@@ -15,9 +15,9 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { MenuItemPriceType } from "@/types/enums.ts";
-
 import { fallbackImage } from "@/utils/constants.ts";
 import { getImageValue } from "@/utils/file-upload/upload.ts";
+
 import ConfirmationModal from "../../../Modal/ConfirmationModal.tsx";
 import { Badge } from "../../../ui/badge.tsx";
 import { Button } from "../../../ui/button.tsx";
@@ -260,4 +260,3 @@ export function getMenuItemColumns(
     },
   ];
 }
-

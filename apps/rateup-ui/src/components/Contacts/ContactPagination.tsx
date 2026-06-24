@@ -3,6 +3,7 @@ import React from "react";
 import { Group, Pagination } from "@mantine/core";
 
 import { PAGE_SIZE } from "@/utils/constants.ts";
+
 import { ContainedSelection } from "../input/ContainedInput/ContainedInput.tsx";
 
 const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {

@@ -33,7 +33,7 @@ export type WaGetMessagesBody = {
   sourceIdentifier: string;
 };
 
-export type WaMessagePage = {
+type WaMessagePage = {
   messages: WaGetMessagesBody[];
   nextCursor: string;
   hasNextPage: boolean;

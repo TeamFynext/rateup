@@ -9,6 +9,7 @@ import { IconCalendarEvent } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 import classes from "../TakeSurvey.module.css";
@@ -74,4 +75,3 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
     </FormPaperLayout>
   );
 }
-

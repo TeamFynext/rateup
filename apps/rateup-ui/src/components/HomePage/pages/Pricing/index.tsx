@@ -6,9 +6,9 @@ import { Box, SegmentedControl, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
 
+import { useCheckSession } from "@/hooks/checkSession.tsx";
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
 
-import { useCheckSession } from "@/hooks/checkSession.tsx";
 import { MotionTransition } from "../../../animation/MotionTransition.tsx";
 import RateupLoader from "../../../Loaders/RateupLoader.tsx";
 import classes from "./Pricing.module.css";
@@ -224,4 +224,3 @@ const Pricing = ({
 };
 
 export default Pricing;
-

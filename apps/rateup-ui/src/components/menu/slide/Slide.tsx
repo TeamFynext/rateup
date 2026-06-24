@@ -23,7 +23,10 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "@/utils/constants.ts";
+import {
+  MAX_FILE_SIZE_IN_BYTE,
+  MAX_FILE_SIZE_IN_MB,
+} from "@/utils/constants.ts";
 import {
   deleteUploadedFiles,
   getFileUrlFromKey,

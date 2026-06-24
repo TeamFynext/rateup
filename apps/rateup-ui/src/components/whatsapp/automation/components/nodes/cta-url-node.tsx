@@ -4,9 +4,9 @@ import { Stack, Text } from "@mantine/core";
 import { IconLink } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
-import type { CTAUrlNodeData } from "../../types/node-types.ts";
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
 
+import type { CTAUrlNodeData } from "../../types/node-types.ts";
 import BaseNode from "./base-node.tsx";
 
 // export default CtaUrlNode

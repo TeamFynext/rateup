@@ -14,6 +14,7 @@ import { modals } from "@mantine/modals";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
 
 import { mmImageCropModalClassnames } from "@/utils/constants.ts";
+
 import { getSurveyThemeKeyOf } from "../SurveyTheme.constants";
 import {
   useSelectedPageTab,
@@ -165,4 +166,3 @@ function LogoStyles() {
 }
 
 export default LogoStyles;
-

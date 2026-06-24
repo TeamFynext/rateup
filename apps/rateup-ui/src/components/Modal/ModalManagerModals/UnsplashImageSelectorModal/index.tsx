@@ -22,8 +22,8 @@ import {
   useTriggeringDownload,
   useUnsplashPhotosList,
 } from "@/backend/unsplash/unsplash.query";
-
 import { mmImageCropModalClassnames } from "@/utils/constants.ts";
+
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput.tsx";
 import useDebounce from "../../../menu/hook/useDebounce.ts";
 
@@ -172,4 +172,3 @@ const UnsplashPhoto = ({
     </Card>
   );
 };
-

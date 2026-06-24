@@ -7,8 +7,8 @@ import { useParams, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
 import { useGetLandingPageWithShortId } from "@/backend/landingPage/landingPage.query";
-
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
+
 import { LandingPageContextProvider } from "./LandingPageContext/LandingPageContext.tsx";
 import styles from "./LandingPageEditor.module.css";
 import TabPanelsComp from "./TabPanels.tsx";

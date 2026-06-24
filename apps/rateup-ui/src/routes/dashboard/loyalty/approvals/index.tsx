@@ -18,10 +18,18 @@ import {
   useRejectApprovalRequest,
 } from "@/backend/loyalty/approval/approval.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
-import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import {
+  createSortableHeader,
+  DataTable,
+} from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 import { docsPath } from "@/utils/constants.ts";
 
 export const Route = createFileRoute("/dashboard/loyalty/approvals/")({

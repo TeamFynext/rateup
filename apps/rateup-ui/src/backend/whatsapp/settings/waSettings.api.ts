@@ -230,3 +230,41 @@ export const getMetaAssets = async (waSettingsId) => {
 export const getVerificationStatus = async () => {
   return (await axiosClient.get(`${SettingsUrl}/verification-status`)).data;
 };
+
+export type ConversationalAutomationCommand = {
+  command_name: string;
+  command_description: string;
+};
+
+export type ConversationalAutomation = {
+  commands: ConversationalAutomationCommand[];
+  prompts: string[];
+};
+
+export const getConversationalAutomation = async (phoneId: string) => {
+  const res = await axiosClient.get(
+    `${SettingsUrl}/conversational-automation/${phoneId}`,
+  );
+  return res.data as ConversationalAutomation;
+};
+
+export const updateConversationalAutomation = async ({
+  phoneId,
+  data,
+}: {
+  phoneId: string;
+  data: Partial<ConversationalAutomation>;
+}) => {
+  const res = await axiosClient.post(
+    `${SettingsUrl}/conversational-automation/${phoneId}`,
+    data,
+  );
+  return res.data;
+};
+
+export const syncConversationalAutomation = async (phoneId: string) => {
+  const res = await axiosClient.post(
+    `${SettingsUrl}/conversational-automation/${phoneId}/sync`,
+  );
+  return res.data as ConversationalAutomation;
+};

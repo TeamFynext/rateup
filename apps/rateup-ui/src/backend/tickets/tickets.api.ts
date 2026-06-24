@@ -5,7 +5,6 @@ import type {
   Column,
   MemberData,
 } from "@/components/Tickets/types.ts";
-import type { TicketFormValues } from "@/routes/dashboard/tickets/$ticketId/index.tsx";
 import type { TicketType } from "@/utils/enums/ticket.ts";
 
 import { axiosClient } from "../apiClient";
@@ -90,7 +89,6 @@ export async function createComment(data) {
 }
 
 // Export types for convenience
-export type { Activity, TicketComment } from "@/components/Tickets/types.ts";
 export type { Board, Column, Card };
 
 // API functions
@@ -106,6 +104,7 @@ export const fetchBoard = async (boardId: string): Promise<Board> => {
 
 export const createBoard = async (board: {
   title: string;
+  description?: string;
   teamIds: Array<string>;
 }): Promise<Board> => {
   const { data } = await axiosClient.post("/tickets/boards/create", board);
@@ -160,12 +159,14 @@ export const createCard = async (card: {
   description?: string;
   ticketColumnId: string;
   type: TicketType;
+  contactId?: string;
+  priority?: string;
 }): Promise<Card> => {
   const { data } = await axiosClient.post("/tickets/cards/create", card);
   return data;
 };
 
-export const updateCard = async (card: TicketFormValues): Promise<Card> => {
+export const updateCard = async (card): Promise<Card> => {
   const { data } = await axiosClient.put(`/tickets/cards/${card.id}`, card);
   return data;
 };

@@ -4,7 +4,7 @@ const WEBHOOK_URL = "webhook";
 
 export type WebhookEvent = "message_status";
 
-export type WebhookConfig = {
+type WebhookConfig = {
   id: string;
   url: string;
   events: WebhookEvent[];

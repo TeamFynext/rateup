@@ -8,7 +8,12 @@ import { useTranslation } from "react-i18next";
 
 import { WaConfigType } from "@/types/enums.ts";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 
 import { MetaLoginStatus } from "./meta-login-status.tsx";
 import { WhatsAppManualConfiguration } from "./whatsapp-manual-configuration.tsx";

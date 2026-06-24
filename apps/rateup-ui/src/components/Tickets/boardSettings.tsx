@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Bell, Users } from "lucide-react";
-import { Controller, FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import {
@@ -19,11 +19,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { FieldGroup, FieldLegend, FieldSet } from "@/components/ui/field.tsx";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,13 +29,6 @@ import {
 } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
 import { MultiSelect } from "../ui/multi-select.tsx";
@@ -51,6 +42,7 @@ const notificationSchema = z.object({
   ticketAssignedWhatsapp: z.boolean().optional(),
   assignedToIds: z.array(z.string().optional()),
   title: z.string().min(1, "Board title is required"),
+  description: z.string().optional(),
   teamIds: z.array(z.string()),
 });
 
@@ -79,6 +71,7 @@ export default function TicketSettings({
       assignedToIds:
         selectedBoard?.notificationRecipients?.map((r) => r.userId) || [],
       title: selectedBoard?.title || "",
+      description: selectedBoard?.description || "",
       teamIds: selectedBoard?.teams?.map((t) => t.teamId) || [],
     },
   });
@@ -142,6 +135,22 @@ export default function TicketSettings({
                               value={field.value}
                               onValueChange={field.onChange}
                               options={teamOptions}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      name="description"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem className="col-span-1 md:col-span-2">
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Enter board description"
                             />
                           </FormControl>
                           <FormMessage />

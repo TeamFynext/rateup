@@ -105,7 +105,7 @@ export function XIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-export function BoltIcon({ size = 20 }: { size?: number }) {
+function BoltIcon({ size = 20 }: { size?: number }) {
   return (
     <svg
       width={size}

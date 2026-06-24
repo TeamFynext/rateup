@@ -36,7 +36,11 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../../../ui/tooltip.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../../../ui/tooltip.tsx";
 import Preview from "../Preview/Preview.tsx";
 
 function TagManager({

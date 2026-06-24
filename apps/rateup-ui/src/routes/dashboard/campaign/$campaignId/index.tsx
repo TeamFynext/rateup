@@ -76,10 +76,14 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
-
 
 export const Route = createFileRoute("/dashboard/campaign/$campaignId/")({
   component: CampaignDetails,

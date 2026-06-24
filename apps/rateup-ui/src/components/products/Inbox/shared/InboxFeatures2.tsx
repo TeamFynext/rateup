@@ -9,7 +9,7 @@ const Image2 = `${imagesPath}/ai-automation/SENTIMENT ANALYSIS.png`;
 const Image3 = `${imagesPath}/inbox/REAL - TIME ANALYTICS.png`;
 const Image4 = `${imagesPath}/inbox/ANONYMOIUS & SECURE.png`;
 
-export const articles = [
+const articles = [
   {
     category: "Automated Check-ins",
     date: "SEPTEMBER 1, 2022",

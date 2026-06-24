@@ -211,7 +211,7 @@ export function getChoiceIndex(choice: string | Choice, choices: Choice[]) {
 /**
  * Returns array of languages that do not have the same number of choices as the first language
  */
-export function validateChoices(
+function validateChoices(
   question: Question,
   languages: Array<string>,
 ): Array<string> {

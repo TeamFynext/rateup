@@ -5,7 +5,6 @@ import { IconTemplate } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
 import type { TemplateNodeData } from "../../types/node-types.ts";
-
 import BaseNode from "./base-node.tsx";
 
 function TemplateNode(props: NodeProps & { data: TemplateNodeData }) {

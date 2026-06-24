@@ -2,7 +2,7 @@ import { axiosClient } from "@/backend/apiClient";
 
 import { waCatalogUrl } from "./catalog.api";
 
-export const waProductSetUrl = `${waCatalogUrl}/product-sets`;
+const waProductSetUrl = `${waCatalogUrl}/product-sets`;
 
 export const syncProductSets = async (catalogId: string) => {
   return await axiosClient.post(`${waProductSetUrl}/sync`, { catalogId });

@@ -7,7 +7,6 @@ import type { NodeProps } from "@xyflow/react";
 import { Handle, Position } from "@xyflow/react";
 
 import type { InstagramGenericTemplateNodeData } from "../../types/node-types.ts";
-
 import BaseNode from "./base-node.tsx";
 import styles from "./node-styles.module.css";
 

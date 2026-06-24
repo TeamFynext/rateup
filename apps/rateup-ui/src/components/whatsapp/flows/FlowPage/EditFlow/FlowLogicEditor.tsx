@@ -45,6 +45,7 @@ import {
   ContainedSelection,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput.tsx";
+import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { logicSupportedTypes } from "@/utils/data.ts";
 import { getConditions, getResponses } from "@/utils/survey/logic/logic.utils";
 import { getQuestionLabel } from "@/utils/survey/question/question.utils";
@@ -54,7 +55,6 @@ import {
   getScreenObjById,
 } from "@/utils/whatsapp/flow.utils";
 
-import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -637,4 +637,3 @@ function ConditionsActionMapBlock({
     </Flex>
   );
 }
-

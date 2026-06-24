@@ -1,6 +1,10 @@
 import { Star, User } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 
 import { testimonials } from "../TicketingConstants.tsx";

@@ -12,13 +12,14 @@ import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
 import SurveyContext from "@/context/SurveyContext.ts";
+
 import { ImageAlignButton } from "./image-align-button/image-align-button.tsx";
 import InsertEmoji from "./InsertEmoji/index.tsx";
-import InsertImage from "./InsertImage/index.tsx";
 import CustomImageExtension from "./InsertImage/CustomImageExtenstion.tsx";
+import InsertImage from "./InsertImage/index.tsx";
 import InsertVariableControl from "./InsertVariableControl/index.tsx";
-import InsertVideo from "./InsertVideo/index.tsx";
 import { Video } from "./InsertVideo/CustomVideo.tsx";
+import InsertVideo from "./InsertVideo/index.tsx";
 import { VariableComponentExtension } from "./MantineComponentExtension.tsx";
 import { getContent } from "./utils.ts";
 

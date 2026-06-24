@@ -21,7 +21,7 @@ export const useGetAllBusinessHours = () => {
   });
 };
 
-export const useGetBusinessHour = (id: string) => {
+const useGetBusinessHour = (id: string) => {
   return useQuery({
     queryKey: ["businessHours", id],
     queryFn: async () => {

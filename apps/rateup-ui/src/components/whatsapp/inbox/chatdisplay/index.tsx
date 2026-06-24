@@ -9,11 +9,11 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useUser } from "@/context/UserContext.tsx";
 import {
   useContactsStore,
   useMessagesStore,
 } from "@/components/dashboard/inbox/store.ts";
+import { useUser } from "@/context/UserContext.tsx";
 
 import WaInboxChatDisplayBody from "./chatdisplayBody/index.tsx";
 import WaInboxChatDisplayFooter, {

@@ -5,8 +5,8 @@ import { useContext, useEffect, useState } from "react";
 import { Box, Flex, Transition, useMantineTheme } from "@mantine/core";
 
 import type { WaFlowScreen } from "@/types/global";
-
 import { getFlowJsonWithTitleAndDescription } from "@/utils/whatsapp/flow.utils";
+
 import useFlowStore from "../../flow-v2/utils/store.ts";
 import { EditFlowContext } from "../FlowPage/EditFlow/EditFlowContext.ts";
 import { FlowChatPreview } from "./FlowChatPreview.tsx";
@@ -80,4 +80,3 @@ export function PreviewPanel({ previewOpened, version = 1 }: PreviewProps) {
     </Transition>
   );
 }
-

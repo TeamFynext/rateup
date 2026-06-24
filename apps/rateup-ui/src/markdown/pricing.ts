@@ -30,7 +30,9 @@ function getPlanHighlights(plan: any) {
     features.ticket?.active
       ? `${features.ticket?.count?.max || 0} Ticketing Seats`
       : null,
-    features.menu?.active ? `${features.menu?.count?.max || 0} Digital Menus` : null,
+    features.menu?.active
+      ? `${features.menu?.count?.max || 0} Digital Menus`
+      : null,
     features.reputationManagement?.active ? "Reputation Management" : null,
     features.ai?.active
       ? `AI Tokens (${features.ai?.count?.promptTokens || 0} prompt tokens)`

@@ -295,7 +295,7 @@ const ChatselectPanelHeader = ({
     </div>
   );
 };
-export function ActionIcon({
+function ActionIcon({
   icon,
   className,
   onClick,

@@ -12,11 +12,11 @@ import {
 } from "@mantine/core";
 import { AnimatePresence, motion } from "motion/react";
 
-import { sampleChoices } from "@/utils/constants/forms.ts";
-
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+import { sampleChoices } from "@/utils/constants/forms.ts";
+
 import { MultipleSelectCard } from "../SelectionCard/MultipleSelectCard.tsx";
 import classes from "../TakeSurvey.module.css";
 
@@ -161,4 +161,3 @@ export function MSQForm({ previewChoices, features }: Readonly<MSQFormProps>) {
     </Stack>
   );
 }
-

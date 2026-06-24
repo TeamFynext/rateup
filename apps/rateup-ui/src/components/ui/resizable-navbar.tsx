@@ -240,7 +240,7 @@ export const MobileNavToggle = ({
   );
 };
 
-export const NavbarLogo = () => {
+const NavbarLogo = () => {
   return (
     <Link
       to="#"
@@ -257,7 +257,7 @@ export const NavbarLogo = () => {
   );
 };
 
-export const NavbarButton = ({
+const NavbarButton = ({
   href,
   as: Tag = "a",
   children,

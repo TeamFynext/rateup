@@ -31,7 +31,7 @@ const feature2 = `${imagesPath}/whatsapp-loyalty/feature2.png`;
 const feature3 = `${imagesPath}/whatsapp-loyalty/feature3.png`;
 const feature4 = `${imagesPath}/whatsapp-loyalty/feature4.png`;
 
-export const cardData = [
+const cardData = [
   {
     icon: <TrendingUp className="w-8 h-8 text-[#25D366]" />,
     value: "5-25x",
@@ -60,7 +60,7 @@ export const cardData = [
   },
 ];
 
-export const steps = [
+const steps = [
   {
     title: "Create Custom Actions in Minutes",
     description:
@@ -115,7 +115,7 @@ export const steps = [
   },
 ];
 
-export const features = [
+const features = [
   {
     title: "Launch",
     description: "Launch campaigns without tech headaches or complex setups.",
@@ -140,7 +140,7 @@ export const features = [
   },
 ];
 
-export const benefits = [
+const benefits = [
   {
     title: "Low Effort, High Impact",
     description: "Launch campaigns without tech headaches or complex setups.",
@@ -163,7 +163,7 @@ export const benefits = [
   },
 ];
 
-export const steps2 = [
+const steps2 = [
   {
     icon: <QrCode className="h-8 w-8 text-green-600" />,
     title: "Onboard Instantly",
@@ -189,7 +189,7 @@ export const steps2 = [
   },
 ];
 
-export const features2 = [
+const features2 = [
   {
     icon: <MessageSquareText className="h-8 w-8 text-green-600" />,
     title: "WhatsApp-Based",
@@ -246,7 +246,7 @@ export const testimonials = [
   },
 ];
 
-export const businesses = [
+const businesses = [
   {
     icon: <ShoppingBag className="h-8 w-8 text-[#009987]" />,
     title: "Retail & Fashion Boutiques",
@@ -281,7 +281,7 @@ export const businesses = [
   },
 ];
 
-export const faqs = [
+const faqs = [
   {
     question: "Do customers need to download an app?",
     answer: "Nope. Everything works right inside WhatsApp.",

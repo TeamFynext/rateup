@@ -2,19 +2,7 @@
 
 import { memo, useContext, useEffect, useRef, useState } from "react";
 
-import {
-  ActionIcon,
-  Button,
-  Group,
-  Menu,
-  Modal,
-  Paper,
-  Stack,
-  Textarea,
-  Title,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconFilter, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconDots, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
@@ -25,16 +13,31 @@ import {
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
+import { Ticket } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import invariant from "tiny-invariant";
 
 import { useBoard } from "@/backend/tickets/tickets.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
 import { TicketType } from "@/utils/enums/ticket.ts";
 
-import { Card, CardShadow } from "./card.tsx";
+import { Input } from "../ui/input.tsx";
+import { Card, CardShadow, PRIORITY_CONFIG } from "./card.tsx";
 import { blockBoardPanningAttr } from "./data-attributes.ts";
-import { isSafari } from "./is-safari.ts";
 import { isShallowEqual } from "./is-shallow-equal.ts";
 import { SettingsContext } from "./settings-context.tsx";
 import type { BoardInfo, CardData, Column as ColumnType } from "./types.ts";
@@ -72,11 +75,6 @@ const stateStyles = {
 
 const idle = { type: "idle" } satisfies TColumnState;
 
-/**
- * A memoized component for rendering out the card.
- *
- * Created so that state changes to the column don't require all cards to be rendered
- */
 const CardList = memo(function CardList({
   column,
   onCardDelete,
@@ -105,7 +103,7 @@ export function Column({
   onMoveToBoard,
   availableBoards,
   currentBoardId,
-}: {
+}: Readonly<{
   column: ColumnType;
   onDelete?: (columnId: string) => void;
   onUpdate?: (columnId: string, updates: Partial<ColumnType>) => void;
@@ -116,35 +114,38 @@ export function Column({
   ) => void;
   availableBoards?: BoardInfo[];
   currentBoardId?: string;
-}) {
+}>) {
   const scrollableRef = useRef<HTMLDivElement | null>(null);
   const outerFullHeightRef = useRef<HTMLDivElement | null>(null);
   const headerRef = useRef<HTMLDivElement | null>(null);
   const innerRef = useRef<HTMLDivElement | null>(null);
   const { settings } = useContext(SettingsContext);
+  const { t } = useTranslation();
   const [state, setState] = useState<TColumnState>(idle);
-  const [isEditModalOpen, { open: openEditModal, close: closeEditModal }] =
-    useDisclosure(false);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [newCard, setNewCard] = useState({
+    title: "",
+    description: "",
+    priority: "MEDIUM",
+    deadline: "",
+  });
+  const openEditModal = () => setIsEditModalOpen(true);
+  const closeEditModal = () => setIsEditModalOpen(false);
+
   const [editTitle, setEditTitle] = useState(column.title);
   const [selectedBoardId, setSelectedBoardId] = useState(currentBoardId || "");
 
-  // Add Card State
-  const [
-    isAddCardModalOpen,
-    { open: openAddCardModal, close: closeAddCardModal },
-  ] = useDisclosure(false);
-  const [newCard, setNewCard] = useState<{
-    title: string;
-    description: string;
-  }>({
-    title: "",
-    description: "",
-  });
+  const [isAddCardModalOpen, setIsAddCardModalOpen] = useState(false);
+  const [titleError, setTitleError] = useState(false);
+  const openAddCardModal = () => setIsAddCardModalOpen(true);
+  const closeAddCardModal = () => {
+    setIsAddCardModalOpen(false);
+    setTitleError(false);
+  };
 
-  // Get API mutation functions
   const { createCard, updateCard, deleteCard } = useBoard(currentBoardId || "");
 
-  // Update timestamp when modal opens
   const handleOpenAddCardModal = () => {
     openAddCardModal();
   };
@@ -182,17 +183,32 @@ export function Column({
   };
 
   const handleAddCard = () => {
-    if (!newCard.title.trim()) return;
+    if (!newCard.title.trim()) {
+      setTitleError(true);
+      return;
+    }
 
-    createCard({
+    const payload: any = {
       title: newCard.title,
       description: newCard.description || "",
       ticketColumnId: column.id,
       type: TicketType.CUSTOM,
-    });
+      priority: newCard.priority as any,
+    };
+
+    if (newCard.deadline) {
+      payload.deadline = newCard.deadline;
+    }
+
+    createCard(payload);
 
     // Reset and close modal
-    setNewCard({ title: "", description: "" });
+    setNewCard({
+      title: "",
+      description: "",
+      priority: "MEDIUM",
+      deadline: "",
+    });
     closeAddCardModal();
   };
 
@@ -253,20 +269,14 @@ export function Column({
               input: location.current.input,
             }),
             render({ container }) {
-              // Simple drag preview generation: just cloning the current element.
-              // Not using react for this.
-              const rect = inner.getBoundingClientRect();
-              const preview = inner.cloneNode(true);
-              invariant(preview instanceof HTMLElement);
-              preview.style.width = `${rect.width}px`;
-              preview.style.height = `${rect.height}px`;
-
-              // rotation of native drag previews does not work in safari
-              if (!isSafari()) {
-                preview.style.transform = "rotate(4deg)";
-              }
-
-              container.appendChild(preview);
+              setState({ type: "is-dragging" });
+              const el = document.createElement("div");
+              el.textContent = data.ticketColumn.title;
+              el.style.padding = "8px 16px";
+              el.style.backgroundColor = "white";
+              el.style.borderRadius = "4px";
+              el.style.boxShadow = "0 4px 6px -1px rgb(0 0 0 / 0.1)";
+              container.appendChild(el);
             },
           });
         },
@@ -365,187 +375,272 @@ export function Column({
 
   return (
     <div
-      style={{
-        display: "flex",
-        width: "18rem",
-        flexShrink: 0,
-        userSelect: "none",
-        flexDirection: "column",
-      }}
+      className="w-xs shrink-0 flex flex-col max-h-full"
       ref={outerFullHeightRef}
     >
-      <Paper
+      <div
+        className={`transition-all duration-150 border rounded-xl p-1.5 ${
+          state.type === "is-column-over"
+            ? "border-2 border-dashed border-blue-500/50 bg-blue-500/5"
+            : "border border-dashed border-slate-300 dark:border-slate-700"
+        }`}
         style={{
           display: "flex",
           maxHeight: "100%",
           flexDirection: "column",
-          borderRadius: "12px",
-          backgroundColor: "var(--board-bg)",
           color: "var(--board-text)",
-          ...stateStyles[state.type],
+          opacity: state.type === "is-dragging" ? 0.4 : 1,
+          cursor: state.type === "idle" ? "grab" : "default",
         }}
         ref={innerRef}
         {...{ [blockBoardPanningAttr]: true }}
       >
-        {/* Extra wrapping element to make it easy to toggle visibility of content when a column is dragging over */}
         <div
+          className="flex flex-col gap-[14px] pb-2"
           style={{
-            display: "flex",
             maxHeight: "100%",
-            flexDirection: "column",
             visibility: state.type === "is-column-over" ? "hidden" : "visible",
           }}
         >
-          <Group
-            justify={"space-between"}
-            align={"center"}
-            bg={"white"}
-            p={"sm"}
-            pb={"xs"}
+          <div
+            className="flex items-center gap-[7px] px-3 pt-2 group/column-header"
             ref={headerRef}
-            bd={"1px solid var(--light-blue-5)"}
-            style={{
-              borderTopLeftRadius: 12,
-              borderTopRightRadius: 12,
-              borderBottomColor: "white",
-            }}
           >
-            <Title order={5} c={"blue.9"}>
+            <span className="w-[9px] h-[9px] rounded-full shrink-0 bg-slate-400" />
+            <span className="font-display font-extrabold text-[13.5px] text-foreground flex-1 tracking-tight truncate">
               {column.title}
-            </Title>
+            </span>
+            <span
+              className="font-body text-[11px] font-bold rounded-full text-slate-800 bg-slate-100"
+              style={{
+                padding: "2px 8px",
+              }}
+            >
+              {column.ticketCards.length}
+            </span>
 
-            <Menu shadow="md" width={200} position="bottom-end">
-              <Menu.Target>
-                <ActionIcon variant="transparent" aria-label="More actions">
-                  <IconFilter color="black" size={20} />
-                </ActionIcon>
-              </Menu.Target>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="w-[22px] h-[22px] rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted"
+                  aria-label="More actions"
+                >
+                  <IconDots size={16} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[150px]">
+                <DropdownMenuItem onSelect={openEditModal}>
+                  <IconEdit size={14} className="mr-2" />
+                  {t("Edit")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                  onSelect={handleDelete}
+                >
+                  <IconTrash size={14} className="mr-2" />
+                  {t("Delete")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconEdit size={14} />}
-                  onClick={openEditModal}
-                >
-                  Edit
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconTrash size={14} />}
-                  color="red"
-                  onClick={handleDelete}
-                >
-                  Delete
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Group>
+            <button
+              onClick={handleOpenAddCardModal}
+              className="w-[22px] h-[22px] rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted hover:text-primary"
+            >
+              <IconPlus size={13} strokeWidth={2.5} />
+            </button>
+          </div>
 
           <div
             style={{
-              display: "flex",
-              flexDirection: "column",
-              overflowY: "auto",
               overflowAnchor: "none",
-              scrollbarColor: "var(--board-scrollbar) var(--board-bg) ",
+              scrollbarColor: "rgba(150, 150, 150, 0.2) transparent",
               scrollbarWidth: "thin",
-              transition: "height 0.3s ease-in-out", // Add smooth transition for height
-              minHeight: "50px", // Ensure column always has some height
             }}
             ref={scrollableRef}
-            className="column-cards-container"
+            className={`column-cards-container flex-1 flex flex-col gap-[14px] px-2 overflow-y-auto transition-all duration-150 min-h-[80px] p-[1px] rounded-xl border-2 border-dashed ${
+              state.type === "is-card-over"
+                ? "bg-blue-800/5 border-blue-800/30"
+                : "bg-transparent border-transparent"
+            }`}
           >
             <CardList column={column} onCardDelete={handleCardDelete} />
             {state.type === "is-card-over" && !state.isOverChildCard ? (
               <div
                 style={{
                   flexShrink: 0,
-                  padding: "0.75rem",
-                  paddingTop: "0.25rem",
-                  paddingBottom: "0.25rem",
                 }}
               >
                 <CardShadow dragging={state.dragging} />
               </div>
             ) : null}
+            {column.ticketCards.length === 0 &&
+              state.type !== "is-card-over" && (
+                <div className="h-14 flex items-center justify-center text-muted-foreground font-body text-xs border-2 border-dashed border-border rounded-lg">
+                  {t("No tickets")}
+                </div>
+              )}
           </div>
-          <Group p={"sm"} px={28}>
-            <Button
-              radius={15}
-              leftSection={<IconPlus size={16} />}
-              variant="light"
+          {isAddCardModalOpen ? null : (
+            <button
               onClick={handleOpenAddCardModal}
-              fullWidth
+              className="mx-2 p-2 rounded-lg bg-transparent border-2 border-dashed border-border text-muted-foreground font-body text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 px-3 transition-all duration-150 hover:bg-muted/60 hover:text-foreground shrink-0"
             >
-              Add a card
-            </Button>
-          </Group>
+              <IconPlus size={16} strokeWidth={2.5} /> {t("Add ticket")}
+            </button>
+          )}
         </div>
-      </Paper>
+      </div>
 
-      {/* Edit Column Modal */}
-      <Modal
-        opened={isEditModalOpen}
-        onClose={closeEditModal}
-        title="Edit Column"
-        size="sm"
+      <Dialog
+        open={isEditModalOpen}
+        onOpenChange={(open) => !open && closeEditModal()}
       >
-        <Stack gap="md">
-          <ContainedTextField
-            label="Title"
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            placeholder="Column title"
-            autoFocus
-          />
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("Edit Column")}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label>{t("Title")}</Label>
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder={t("Column title")}
+                autoFocus
+              />
+            </div>
 
-          <Group justify="right" mt="md">
-            <RateupButtonPrimary
-              variant="outline"
-              onClick={closeEditModal}
-              title="Cancel"
-            />
-            <RateupButtonPrimary onClick={handleSaveEdit} title="Save" />
-          </Group>
-        </Stack>
-      </Modal>
+            <div className="flex justify-end gap-2 mt-2">
+              <Button variant="outline" onClick={closeEditModal}>
+                {t("Cancel")}
+              </Button>
+              <Button onClick={handleSaveEdit}>{t("Save")}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      {/* Add Card Modal */}
-      <Modal
-        opened={isAddCardModalOpen}
-        onClose={closeAddCardModal}
-        title="Add Card"
-        size="md"
+      <Dialog
+        open={isAddCardModalOpen}
+        onOpenChange={(open) => !open && closeAddCardModal()}
       >
-        <Stack gap="md">
-          <ContainedTextField
-            label="Title"
-            value={newCard.title}
-            onChange={(e) =>
-              setNewCard((prev) => ({ ...prev, title: e.target.value }))
-            }
-            placeholder="Card title"
-            autoFocus
-            required
-          />
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("Add Ticket")}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-5 py-2">
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-semibold">
+                {t("Title")} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={newCard.title}
+                onChange={(e) => {
+                  setNewCard((prev) => ({ ...prev, title: e.target.value }));
+                  if (titleError) setTitleError(false);
+                }}
+                placeholder={t("e.g., Fix the navigation bug")}
+                className={`h-10 ${titleError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                autoFocus
+                required
+              />
+              {titleError && (
+                <span className="text-red-500 text-[13px] font-medium mt-0.5">
+                  {t("Please enter a title for the ticket")}
+                </span>
+              )}
+            </div>
 
-          <Textarea
-            label="Description"
-            value={newCard.description}
-            onChange={(e) =>
-              setNewCard((prev) => ({ ...prev, description: e.target.value }))
-            }
-            placeholder="Enter card description..."
-            minRows={3}
-          />
-          <Group justify="right" mt="md">
-            <RateupButtonPrimary
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-semibold">
+                {t("Description")}
+              </Label>
+              <Textarea
+                value={newCard.description}
+                onChange={(e) =>
+                  setNewCard((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                placeholder={t("Add a more detailed description...")}
+                className="resize-none"
+                rows={4}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-semibold">{t("Priority")}</Label>
+              <div className="flex gap-2 flex-wrap">
+                {Object.entries(PRIORITY_CONFIG)
+                  .filter(([k]) => k !== "na")
+                  .map(([k, v]) => {
+                    const priorityKey = newCard.priority.toLowerCase();
+                    const isSelected = priorityKey === k;
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() =>
+                          setNewCard((prev) => ({
+                            ...prev,
+                            priority: k.toUpperCase(),
+                          }))
+                        }
+                        className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
+                        style={{
+                          padding: "4px 10px",
+                          border: isSelected
+                            ? `2px solid ${v.dot}`
+                            : `2px solid ${v.bg}`,
+                          background: v.bg,
+                          color: v.color,
+                          boxShadow: isSelected
+                            ? `0 0 0 2px ${v.dot}22`
+                            : "none",
+                        }}
+                      >
+                        {t(v.label)}
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-semibold">{t("Due Date")}</Label>
+              <Input
+                type="date"
+                value={newCard.deadline}
+                onChange={(e) =>
+                  setNewCard((prev) => ({ ...prev, deadline: e.target.value }))
+                }
+                min={new Date().toISOString().split("T")[0]}
+                className="h-10"
+                onClick={(e) =>
+                  "showPicker" in e.target && (e.target as any).showPicker()
+                }
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
               variant="outline"
               onClick={closeAddCardModal}
-              title="Cancel"
-            />
-            <RateupButtonPrimary onClick={handleAddCard} title="Save" />
-          </Group>
-        </Stack>
-      </Modal>
+              className="h-10 px-5"
+            >
+              {t("Cancel")}
+            </Button>
+            <Button
+              onClick={handleAddCard}
+              className="h-10 px-5 font-semibold shadow-sm"
+            >
+              <Ticket size={16} className="mr-2" /> {t("Add Ticket")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

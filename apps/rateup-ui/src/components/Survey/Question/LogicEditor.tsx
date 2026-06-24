@@ -23,16 +23,20 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import type { QuestionType } from "@/types/enums.ts";
-import { LogicAction, LogicCondition, QuestionType as Q } from "@/types/enums.ts";
+import {
+  LogicAction,
+  LogicCondition,
+  QuestionType as Q,
+} from "@/types/enums.ts";
 import {
   useQuestions,
   useQuestionUpdateMutation,
 } from "@/backend/surveys/questions/questions.query";
-import { getContent } from "@/utils/index.ts";
+import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { logicSupportedTypes } from "@/utils/data.ts";
+import { getContent } from "@/utils/index.ts";
 import { getConditions, getResponses } from "@/utils/survey/logic/logic.utils";
 
-import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,

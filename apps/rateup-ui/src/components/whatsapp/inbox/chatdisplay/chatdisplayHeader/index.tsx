@@ -787,12 +787,13 @@ const ChatHeaderMenu = ({ contact }) => {
         opened={openedCreateTicket}
         type={TicketType.CUSTOM}
         hasTicketFeature={hasTicketFeature}
+        contactId={contact?.id}
       />
     </DropdownMenu>
   );
 };
 
-export const AssignInboxContent = ({
+const AssignInboxContent = ({
   form,
   memberChoice,
   setMemberChoice,

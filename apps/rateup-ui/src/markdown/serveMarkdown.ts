@@ -6,10 +6,9 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 type MarkdownSource =
   | string
   | Response
-  | ((context: { request: Request }) =>
-      | string
-      | Response
-      | Promise<string | Response>);
+  | ((context: {
+      request: Request;
+    }) => string | Response | Promise<string | Response>);
 
 /**
  * Returns TanStack Start middleware that serves markdown when requested.
@@ -42,4 +41,4 @@ export function createMarkdownMiddleware(markdownSource: MarkdownSource) {
 }
 
 // Backward-compatible alias for older imports.
-export const createMarkdownGetHandler = createMarkdownMiddleware;
+const createMarkdownGetHandler = createMarkdownMiddleware;

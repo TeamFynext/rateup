@@ -26,13 +26,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
+import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import {
   getFileNameFromKey,
   getFileUrlFromKey,
 } from "@/utils/file-upload/upload.ts";
-import { getResponse, getResponseArrayByQuestionType } from "@/utils/response.ts";
+import {
+  getResponse,
+  getResponseArrayByQuestionType,
+} from "@/utils/response.ts";
 
-import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import PreviewModal from "../../Modal/PreviewModal.tsx";
 import { HoverCardComponent } from "../HoverCard/HoverCard.tsx";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util.tsx";
@@ -198,7 +201,10 @@ export const useSurveyResponseColumns = ({
             <ActionMenu
               open={open}
               resId={info.row.original.id}
-              resTeamId={info.row.original.teamId}
+              resTeamId={
+                info.row.original.surveyTeamMap?.teamId ||
+                info.row.original.teamId
+              }
               setSelectedResponseId={setSelectedResponseId}
               setResponseTeamId={setResponseTeamId}
               setSelectedRowId={setSelectedRowId}

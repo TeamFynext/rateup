@@ -23,11 +23,10 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useSurveys } from "@/backend/surveys/surveys.query";
-
 import { useUser } from "@/context/UserContext.tsx";
 import { getTimeSince } from "@/utils/index.ts";
 
-export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
+function SurveyCardList({ getSelectedSurveys, LandingPage }) {
   const [surveyidArray, setSurveyIdArray] = useState([]);
 
   const { isLoading, error, data: surveys } = useSurveys();

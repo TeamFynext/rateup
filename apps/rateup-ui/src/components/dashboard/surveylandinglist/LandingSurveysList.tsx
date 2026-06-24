@@ -52,7 +52,6 @@ import {
   RateupButtonSecondary,
 } from "@/components/Button/RateupButtons.tsx";
 import { CreateSurveyModal } from "@/components/Survey/CreateSurveyModal.tsx";
-
 import { useUser } from "@/context/UserContext.tsx";
 import { getTimeSince } from "@/utils/index.ts";
 
@@ -239,7 +238,7 @@ export default function LandingSurveysList() {
 interface SurveyCardProps {
   survey: Survey;
 }
-export function SurveyCard({
+function SurveyCard({
   survey,
   teamsData,
 }: SurveyCardProps & { teamsData: any }): JSX.Element {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 import { IconGripVertical } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
@@ -8,8 +8,8 @@ import { useTranslation } from "react-i18next";
 
 import { useUpdateSortOrderMenuCategoryMutation } from "@/backend/menu/category/mCategory.query";
 import { useUpdateSortOrderMenuItemMutation } from "@/backend/menu/item/mItem.query";
-
 import { fallbackImage } from "@/utils/constants.ts";
+
 import { Button } from "../../../ui/button.tsx";
 import { Card } from "../../../ui/card.tsx";
 import {
@@ -105,6 +105,7 @@ const SortDrawer = ({
           className={`${classes.itemDragging} my-3 flex gap-3`}
           ref={provided.innerRef}
           {...provided.draggableProps}
+          style={provided.draggableProps.style as CSSProperties}
         >
           <div
             {...provided.dragHandleProps}
@@ -185,4 +186,3 @@ const SortDrawer = ({
 };
 
 export default SortDrawer;
-

@@ -60,7 +60,7 @@ export const exportCustomers = async (format: "csv" | "excel" = "excel") => {
   ).data;
 };
 
-export interface LoyaltyCustomerDetail extends LoyaltyCustomer {
+interface LoyaltyCustomerDetail extends LoyaltyCustomer {
   currentTier?: {
     id: string;
     programId: string;

@@ -13,8 +13,8 @@ import PaperLayout from "../../../styled/Layouts/PaperLayout.tsx";
 import { CopyLinkComponent } from "../../../Survey/ShareSurvey/ShareSurvey.tsx";
 import { useLinktreeObj } from "../LinktreeContext/LinktreeContext.tsx";
 import NoLinksFoundModal from "./NoLinksFoundModal.tsx";
-import ShareLinktree from "./ShareLinktree.tsx";
 import styles from "./ShareLinktree.module.css";
+import ShareLinktree from "./ShareLinktree.tsx";
 import SocialMediaLinks from "./SocialMediaLinks.tsx";
 
 function SharePage() {

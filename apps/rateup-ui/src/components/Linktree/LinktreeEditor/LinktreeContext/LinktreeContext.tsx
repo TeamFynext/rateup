@@ -35,9 +35,4 @@ function useLinktreeEditorTab() {
   return useContext(LinktreeEditorTabContext);
 }
 
-export {
-  LinktreeContextProvider,
-  useLinktreeObj,
-  useSetLinktreeEditorTab,
-  useLinktreeEditorTab,
-};
+export { LinktreeContextProvider, useLinktreeObj, useSetLinktreeEditorTab };

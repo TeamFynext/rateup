@@ -2,7 +2,7 @@ import type { BusinessHoursFormValues } from "@/components/account/business-hour
 
 import { axiosClient } from "../../apiClient";
 
-export interface ICreateBusinessHour {
+interface ICreateBusinessHour {
   name: string;
   timezone: string;
   channels: string[];

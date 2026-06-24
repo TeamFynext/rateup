@@ -17,7 +17,10 @@ import { IconDeviceSdCard } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { WaFlowFormElementType, WhatsappFlowFontWeight } from "@/types/enums.ts";
+import {
+  WaFlowFormElementType,
+  WhatsappFlowFontWeight,
+} from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import {
   getFlowFormElementById,

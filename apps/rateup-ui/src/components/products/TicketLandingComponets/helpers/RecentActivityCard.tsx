@@ -1,7 +1,12 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card.tsx";
 
 const RecentActivityCard = () => {
   return (

@@ -70,7 +70,7 @@ export const useCreateContactMutation = () => {
   });
 };
 
-export const useImportContactMutation = () => {
+const useImportContactMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: importContacts,
@@ -163,7 +163,7 @@ export const useEditContactMutation = (groupId?: string) => {
   });
 };
 
-export const useEditContactLabelsMutation = (contactId: string) => {
+const useEditContactLabelsMutation = (contactId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: editContactLabels,

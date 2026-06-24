@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
-import lodash from "lodash";
+import { isEqual } from "lodash";
 import {
   Check,
   ChevronDown,
@@ -20,6 +20,10 @@ import {
   useAssignInboxToUer,
   useGetAssignedUserForContact,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import useContactStore, {
+  useContactsStore,
+  useMessagesStore,
+} from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
@@ -32,10 +36,6 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import useContactStore, {
-  useContactsStore,
-  useMessagesStore,
-} from "@/components/dashboard/inbox/store.ts";
 
 import { generateInternalMessageId } from "../../util.tsx";
 
@@ -117,7 +117,7 @@ const AssignUser = ({
     }));
     if (
       assignees.length &&
-      !lodash.isEqual(
+      !isEqual(
         assignees,
         assignedUsers?.map((a) => ({
           userId: a.assignedUserId,

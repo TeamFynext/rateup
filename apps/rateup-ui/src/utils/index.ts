@@ -39,10 +39,7 @@ export function getTimeSince(date: string) {
   } ago`;
 }
 
-export function arrayEquals<T extends string | number>(
-  a: Array<T>,
-  b: Array<T>,
-) {
+function arrayEquals<T extends string | number>(a: Array<T>, b: Array<T>) {
   if (a.length !== b.length) return false;
   return a.every((val, index) => b.includes(val));
 }
@@ -106,7 +103,7 @@ export const getContent = (title: string) => {
   else return title;
 };
 
-export const getErrorMessage = (error: any, defaultMessage: string) => {
+const getErrorMessage = (error: any, defaultMessage: string) => {
   if (typeof error?.message === "string") {
     return error?.message;
   } else if (typeof error?.data === "string") {

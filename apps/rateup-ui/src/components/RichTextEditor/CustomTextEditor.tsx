@@ -12,8 +12,8 @@ import StarterKit from "@tiptap/starter-kit";
 
 import InsertEmoji from "./InsertEmoji/index.tsx";
 import InsertImage from "./InsertImage/index.tsx";
-import InsertVideo from "./InsertVideo/index.tsx";
 import { Video } from "./InsertVideo/CustomVideo.tsx";
+import InsertVideo from "./InsertVideo/index.tsx";
 
 export default function CustomTextEditor({ content, onUpdate }) {
   const editor = useEditor({

@@ -19,8 +19,8 @@ import { BasicPages, uniquePages } from "@/utils/constants.ts";
 import { getPageTypeLabel } from "@/utils/enums/index.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
-import { pageIcons } from "./PageIcons.ts";
 import classes from "../Question/QuestionDetailedView.module.css";
+import { pageIcons } from "./PageIcons.ts";
 
 interface iProps {
   questions: Question[];

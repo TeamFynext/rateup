@@ -7,9 +7,9 @@ import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 
 import { WaTemplateStatus } from "@/types/enums.ts";
+import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { useSendWaTemplateToUser } from "@/backend/whatsapp/whatsapp.query";
 
-import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { TeamSelector } from "../../../../../input/TeamSelector.tsx";
 import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout.tsx";
 import NothingFound from "../../../../../NothingFound/NothingFound.tsx";
@@ -243,4 +243,3 @@ export default function WaInboxTemplateDisplayModal({
     </SimpleModalLayout>
   );
 }
-

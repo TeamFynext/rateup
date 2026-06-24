@@ -8,7 +8,7 @@ export type InstagramIceBreaker = {
   payload: string;
 };
 
-export type InstagramPersistentMenuItem = {
+type InstagramPersistentMenuItem = {
   type: "postback" | "web_url";
   title: string;
   payload?: string;
@@ -20,7 +20,7 @@ export type InstagramPersistentMenu = {
   call_to_actions: InstagramPersistentMenuItem[];
 }[];
 
-export type InstagramProfileData = {
+type InstagramProfileData = {
   iceBreakers: InstagramIceBreaker[];
   persistentMenu: InstagramPersistentMenu;
 };
@@ -70,7 +70,7 @@ export async function deleteInstagramPersistentMenu(waSettingsId: string) {
   return axiosClient.delete(`${base}/${waSettingsId}/persistent-menu`);
 }
 
-export type InstagramMediaItem = {
+type InstagramMediaItem = {
   id: string;
   caption?: string;
   media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM" | "REEL";
@@ -80,7 +80,7 @@ export type InstagramMediaItem = {
   permalink?: string;
 };
 
-export type InstagramStoryItem = {
+type InstagramStoryItem = {
   id: string;
   media_type: "IMAGE" | "VIDEO";
   media_url?: string;

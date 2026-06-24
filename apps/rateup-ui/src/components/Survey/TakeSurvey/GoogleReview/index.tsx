@@ -18,12 +18,12 @@ import { useTranslation } from "react-i18next";
 import type { ReviewSuggestion } from "@/types/global";
 import { useUpdateReviewLinkStatsOnSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useDeleteReviewSuggestionMutation } from "@/backend/team/reviewSuggestion/reviewSuggestion.query";
-
 import { shuffleArray } from "@/utils/index.ts";
+
 import { GoogleIcon } from "../../../Button/GoogleIcon.tsx";
 import RateupRedirectCard from "../../../Card/RateupRedirectCard.tsx";
-import { ReviewPagePlatform } from "../../Question/QuestionReviewPageEditor/index.tsx";
 import { reviewPageLogosObj } from "../../Question/QuestionReviewPageEditor/constants.tsx";
+import { ReviewPagePlatform } from "../../Question/QuestionReviewPageEditor/index.tsx";
 import styles from "./GoogleReview.module.css";
 import WandIcon from "./WandIcon.tsx";
 
@@ -190,7 +190,11 @@ function GoogleReview({
         )}
         <Box className={styles["google-review-link-container"]}>
           {reviewLink ? (
-            <Link to={reviewLink} target="_blank" onClick={handleGoToReviewPage}>
+            <Link
+              to={reviewLink}
+              target="_blank"
+              onClick={handleGoToReviewPage}
+            >
               <span>{translations("Go to Review Page")}</span>
               <span className={styles["google-review-link-img-span"]}>
                 {reviewPageLogosObj[reviewPagePlatform] || null}
@@ -214,7 +218,11 @@ function GoogleReview({
           </p>
           <Box className={styles["google-review-link-container"]}>
             {reviewLink ? (
-              <Link to={reviewLink} target="_blank" onClick={handleGoToReviewPage}>
+              <Link
+                to={reviewLink}
+                target="_blank"
+                onClick={handleGoToReviewPage}
+              >
                 <span>{translations("Go to Review Page")}</span>
                 <span>
                   <GoogleIcon />
@@ -234,4 +242,3 @@ function GoogleReview({
 }
 
 export default GoogleReview;
-

@@ -11,7 +11,11 @@ import {
 import { Link } from "@tanstack/react-router";
 
 import { MenuButtons } from "@/types/enums.ts";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import {
@@ -126,11 +130,7 @@ const FloatingMenuMain = ({
               asChild
               className="flex h-auto flex-col gap-1 rounded-xl px-3 py-2"
             >
-              <Link
-                to={getMenuBtnLink(data)}
-                target="_blank"
-                rel="noreferrer"
-              >
+              <Link to={getMenuBtnLink(data)} target="_blank" rel="noreferrer">
                 {customButton(data.name)}
                 <span className="text-[10px] leading-none capitalize">
                   {data.name}

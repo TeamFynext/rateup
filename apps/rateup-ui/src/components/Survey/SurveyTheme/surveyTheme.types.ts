@@ -1,5 +1,5 @@
 // element types
-export interface Bg {
+interface Bg {
   desktopbg?: string;
   mobilebg?: string;
   styles: {
@@ -10,38 +10,38 @@ export interface Bg {
     mobile: boolean;
   };
 }
-export interface Logo {
+interface Logo {
   logo?: string;
   styles?: any;
 }
-export interface Title {
+interface Title {
   title: string;
   styles?: any;
   subtitleFontSize: number;
 }
-export interface Subtitle {
+interface Subtitle {
   subtitle: string;
   styles?: any;
 }
-export interface Button {
+interface Button {
   label: string;
   styles?: any;
   position?: any;
 }
 
-export interface Input {
+interface Input {
   primaryColor: string;
 }
 
 // theme types
-export interface WelcomeTheme {
+interface WelcomeTheme {
   bg: Bg;
   logo: Logo;
   title: Title;
   subtitle: Subtitle;
   button: Button;
 }
-export interface _SurveyTheme {
+interface _SurveyTheme {
   bg: Bg;
   title: Title;
   subtitle: Subtitle;
@@ -50,7 +50,7 @@ export interface _SurveyTheme {
   orgLogoEnabled: boolean;
   logo: Logo;
 }
-export interface ThankyouTheme {
+interface ThankyouTheme {
   bg: Bg;
   logo: Logo;
   title: Title;

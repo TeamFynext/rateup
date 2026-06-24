@@ -6,14 +6,14 @@ import { Select, useMantineTheme } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useTranslation } from "react-i18next";
 
-import CustomSelectForMobile from "../components/CustomSelectForMobile/index.tsx";
-import { sampleChoices } from "@/utils/constants/forms.ts";
-
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+import { sampleChoices } from "@/utils/constants/forms.ts";
+
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
+import CustomSelectForMobile from "../components/CustomSelectForMobile/index.tsx";
 import classes from "../TakeSurvey.module.css";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
@@ -102,4 +102,3 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
     />
   );
 }
-

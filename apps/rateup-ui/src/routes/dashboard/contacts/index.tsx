@@ -10,7 +10,10 @@ import { useTranslation } from "react-i18next";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import ContactMenu from "@/components/Contacts/ContactMenu.tsx";
-import { CONTACT_SORT, contactColumn } from "@/components/Contacts/utils/utils.tsx";
+import {
+  CONTACT_SORT,
+  contactColumn,
+} from "@/components/Contacts/utils/utils.tsx";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
@@ -24,7 +27,7 @@ export const Route = createFileRoute("/dashboard/contacts/")({
   component: Contacts,
 });
 
-export enum ContactTabs {
+enum ContactTabs {
   GROUPS = "groups",
   CONTACTS = "All Contacts",
   SETTINGS = "settings",
@@ -141,7 +144,7 @@ export function FilterSelect({ setFilterByTag, filterByTag, contactArray }) {
     />
   );
 }
-export enum ContactAcions {
+enum ContactAcions {
   DELETE_CONTACTS = "Delete Contacts",
   ADD_CONTACTS_TO_GROUP = "Add Contacts to Group",
   DELETE_GROUPS = "Delete Groups",

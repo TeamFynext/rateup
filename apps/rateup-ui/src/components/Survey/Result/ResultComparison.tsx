@@ -31,13 +31,13 @@ import {
   useResponseCount,
   useResponseForComparison,
 } from "@/backend/surveys/response/response.query";
+import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import SurveyContext from "@/context/SurveyContext.ts";
 import {
   getResponseArrayByQuestionType,
   getResponseObjectByQuestionType,
 } from "@/utils/response.ts";
 
-import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
-import SurveyContext from "@/context/SurveyContext.ts";
 import RateupLoader from "../../Loaders/RateupLoader.tsx";
 import NothingFound from "../../NothingFound/NothingFound.tsx";
 import Heading from "../../styled/Heading/Heading.tsx";

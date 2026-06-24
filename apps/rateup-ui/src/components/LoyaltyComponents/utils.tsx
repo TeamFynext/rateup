@@ -14,7 +14,7 @@ import {
   ContainedSelection,
 } from "../input/ContainedInput/ContainedInput.tsx";
 
-export const LRSelector = (props: SelectProps) => {
+const LRSelector = (props: SelectProps) => {
   const { t: translations } = useTranslation();
   const { data: rewards, isLoading } = useGetLoyaltyRewards();
   const rewardList = rewards
@@ -38,7 +38,7 @@ interface LAProps extends SelectProps {
   multiSelectProps?: MultiSelectProps;
 }
 
-export const LASelector = ({
+const LASelector = ({
   multiSelect = false,
   multiSelectProps,
   ...props
@@ -75,7 +75,7 @@ export const LASelector = ({
   );
 };
 
-export const LReferralSelector = ({
+const LReferralSelector = ({
   multiSelect = false,
   multiSelectProps,
   ...props
@@ -121,17 +121,17 @@ export const SelectSkeleton = () => {
   );
 };
 
-export const isLReferralAction = (actionType) =>
+const isLReferralAction = (actionType) =>
   actionType && [LoyaltyActionType.ReferralPurchase].includes(actionType);
 
-export const isLPurchaseAction = (actionType) =>
+const isLPurchaseAction = (actionType) =>
   actionType &&
   [
     LoyaltyActionType.DirectPurchase,
     LoyaltyActionType.ReferralPurchase,
   ].includes(actionType);
 
-export const LoyaltyReward = ({ rewardName }) => {
+const LoyaltyReward = ({ rewardName }) => {
   return (
     <Group gap={2}>
       <IconAward size={"1.5rem"} color="#F9861E" />

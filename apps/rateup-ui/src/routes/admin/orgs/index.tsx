@@ -18,7 +18,10 @@ import {
 import { useAllOrgs } from "@/backend/org/org.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import {
+  createSortableHeader,
+  DataTable,
+} from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -28,7 +31,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-
 import {
   formatIsoDateStringWithTime,
   isInLastSevenDays,
@@ -36,6 +38,7 @@ import {
   isToday,
   isYesterday,
 } from "@/utils/dateTime.ts";
+
 import { DataTableToolbar } from "../../../components/admin/orgs/data-table-toolbar.tsx";
 
 export const Route = createFileRoute("/admin/orgs/")({
@@ -180,7 +183,11 @@ function OrgDisplay() {
         <div className="flex items-center gap-2">
           <Send className="h-4 w-4 text-muted-foreground" />
           <Badge
-            variant={Number(row.getValue("invitations") ?? 0) > 0 ? "default" : "secondary"}
+            variant={
+              Number(row.getValue("invitations") ?? 0) > 0
+                ? "default"
+                : "secondary"
+            }
             className="font-mono"
           >
             {row.getValue("invitations")}
@@ -432,4 +439,3 @@ function OrgDisplay() {
     </div>
   );
 }
-

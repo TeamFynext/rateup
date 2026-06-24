@@ -36,7 +36,7 @@ import {
 } from "./tickets.api";
 
 // get all tickets
-export const useTickets = () =>
+const useTickets = () =>
   useQuery({
     enabled: true,
     queryKey: ["tickets"],
@@ -66,7 +66,7 @@ export const useCreateTicketMutation = () => {
 };
 
 // get single ticket
-export const useTicket = (id: string) =>
+const useTicket = (id: string) =>
   useQuery({
     enabled: !!id,
     queryKey: ["ticket", id],
@@ -74,7 +74,7 @@ export const useTicket = (id: string) =>
   });
 
 // update ticket status
-export const useUpdateTicketStatusMutation = (ticketId?: string) => {
+const useUpdateTicketStatusMutation = (ticketId?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: IUpdateTicketStatusRequest) => {
@@ -99,7 +99,7 @@ export const useUpdateTicketStatusMutation = (ticketId?: string) => {
 };
 
 // update ticket
-export const useUpdateTicketMutation = (id) => {
+const useUpdateTicketMutation = (id) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: IUpdateTicketRequest) => {
@@ -121,7 +121,7 @@ export const useUpdateTicketMutation = (id) => {
   });
 };
 
-export function useDeleteTicket() {
+function useDeleteTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -263,6 +263,8 @@ export const useUpdateCardMutation = () => {
         id: "update-ticket-success",
       });
       queryClient.invalidateQueries({ queryKey: ["card"] });
+      queryClient.invalidateQueries({ queryKey: ["board"] });
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   });
 };

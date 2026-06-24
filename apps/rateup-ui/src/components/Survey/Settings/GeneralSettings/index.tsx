@@ -21,8 +21,8 @@ import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-
 import { docsPath, SAVE_HOTKEY } from "@/utils/constants.ts";
+
 import InfoButton from "../../../Button/InfoButton.tsx";
 import { RateupButtonBlue } from "../../../Button/RateupButtons.tsx";
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput.tsx";
@@ -176,7 +176,7 @@ interface iProps {
   errors: any;
 }
 
-export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
+function MultiSelectCreatable({ value, setValue, errors }: iProps) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
     onDropdownOpen: () => combobox.updateSelectedOptionIndex("active"),
@@ -287,4 +287,3 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
     </Combobox>
   );
 }
-

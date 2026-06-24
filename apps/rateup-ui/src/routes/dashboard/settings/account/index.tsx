@@ -39,7 +39,11 @@ import {
 import { BusinessHoursSection } from "@/components/account/business-hours/BusinessHoursSection.tsx";
 import { ImageCropModal } from "@/components/Modal/ImageCropModal.tsx";
 import LocaleSwitcher from "@/components/translation/LocaleSwitcher.tsx";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";

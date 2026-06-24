@@ -67,9 +67,7 @@ export const useUpdateInstagramAutomationMutation = () => {
   });
 };
 
-export const useInitiateInstagramAutomationMutation = (
-  automationId: string,
-) => {
+const useInitiateInstagramAutomationMutation = (automationId: string) => {
   return useMutation({
     mutationFn: ({ igsId }: any) =>
       initiateInstagramAutomation(automationId, igsId),

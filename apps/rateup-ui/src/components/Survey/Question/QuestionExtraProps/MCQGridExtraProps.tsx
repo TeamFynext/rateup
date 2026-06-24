@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { useContext, useState, type CSSProperties } from "react";
 
 import { ActionIcon, Flex, Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -15,9 +15,9 @@ import cx from "clsx";
 import { useTranslation } from "react-i18next";
 
 import { SurveyType } from "@/types/enums.ts";
-
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { reorder } from "@/utils/questions.ts";
+
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
@@ -116,6 +116,7 @@ const MCQGridExtraProps = ({ form, qId }) => {
                       })}
                       ref={provided.innerRef}
                       {...provided.draggableProps}
+                      style={provided.draggableProps.style as CSSProperties}
                     >
                       <div
                         {...provided.dragHandleProps}
@@ -208,4 +209,3 @@ const MCQGridExtraProps = ({ form, qId }) => {
 };
 
 export default MCQGridExtraProps;
-

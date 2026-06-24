@@ -17,12 +17,12 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 
-import { sampleChoices } from "@/utils/constants/forms.ts";
-
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { useSurveyThemeData } from "@/context/SurveyThemeContext.tsx";
+import { sampleChoices } from "@/utils/constants/forms.ts";
+
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 
 interface MCQGridFormProps {
@@ -233,4 +233,3 @@ const MCQGridMobileForm = ({
 };
 
 export default MCQGridForm;
-

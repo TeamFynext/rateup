@@ -33,7 +33,6 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { PhoneInput } from "@/components/ui/phone-input.tsx";
 
-
 export const Route = createFileRoute(
   "/(public-facing)/(loyalty)/loyalty/$orgId/register/",
 )({

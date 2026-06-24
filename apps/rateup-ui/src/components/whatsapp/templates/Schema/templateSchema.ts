@@ -2,7 +2,6 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
 
 import { OrderType, TemplateType, WaTemplateStatus } from "@/types/enums.ts";
-
 import {
   WHATSAPP_BUTTON_TYPE,
   WHATSAPP_TEMPLATE_BROADCAST_TYPE,
@@ -565,4 +564,3 @@ export type WaTemplateDefaultValues = {
     link: string;
   };
 };
-

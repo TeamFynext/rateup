@@ -41,6 +41,7 @@ import {
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector.tsx";
+import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry.tsx";
 import {
   AlertDialog,
@@ -66,7 +67,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 
 interface WaInboxContactDetailsProps {
   contact: any;

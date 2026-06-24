@@ -10,14 +10,14 @@ import {
   rejectRedemption,
 } from "./redemption.api";
 
-export const useGetRedemptions = (enabled = true) =>
+const useGetRedemptions = (enabled = true) =>
   useQuery({
     queryKey: ["loyaltyRedemptions"],
     queryFn: () => getRedemptions(),
     enabled: !!enabled,
   });
 
-export const useGetRedemptionsByCustomer = (customerId: string) =>
+const useGetRedemptionsByCustomer = (customerId: string) =>
   useQuery({
     queryKey: ["loyaltyRedemptions", "customer", customerId],
     queryFn: () => getRedemptionsByCustomer(customerId),
@@ -34,7 +34,7 @@ export const useGetTransactions = (
     enabled: !!enabled,
   });
 
-export const useApproveRedemptionMutation = () => {
+const useApproveRedemptionMutation = () => {
   const qc = useQueryClient();
   const approveMutation = useMutation({
     mutationFn: approveRedemption,
@@ -51,7 +51,7 @@ export const useApproveRedemptionMutation = () => {
   return approveMutation;
 };
 
-export const useRejectRedemptionMutation = () => {
+const useRejectRedemptionMutation = () => {
   const qc = useQueryClient();
   const rejectMutation = useMutation({
     mutationFn: rejectRedemption,

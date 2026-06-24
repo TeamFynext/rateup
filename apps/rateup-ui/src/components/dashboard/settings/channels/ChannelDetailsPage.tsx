@@ -7,9 +7,10 @@ import { Link, useParams } from "@tanstack/react-router";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button.tsx";
-import { WhatsAppSettingsDetail } from "./components/whatsapp-settings-detail";
-import { InstagramSettingsDetail } from "./components/instagram-settings-detail";
+
 import { FacebookSettingsDetail } from "./components/facebook-settings-detail";
+import { InstagramSettingsDetail } from "./components/instagram-settings-detail";
+import { WhatsAppSettingsDetail } from "./components/whatsapp-settings-detail";
 
 export function ChannelDetailsPage() {
   const params = useParams({

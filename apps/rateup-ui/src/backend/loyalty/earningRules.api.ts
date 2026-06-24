@@ -2,12 +2,12 @@ import { axiosClient } from "../apiClient";
 
 const LOYALTY_EARNING_RULES_URL = "/loyalty/earning-rules";
 
-export interface TimeRange {
+interface TimeRange {
   start: string; // Format: HH:mm (e.g., "09:00")
   end: string; // Format: HH:mm (e.g., "17:00")
 }
 
-export interface LoyaltyEarningRuleConditions {
+interface LoyaltyEarningRuleConditions {
   location_ids?: string[];
   product_categories?: string[];
   product_skus?: string[];

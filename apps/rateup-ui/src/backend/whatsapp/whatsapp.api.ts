@@ -75,7 +75,7 @@ export const registerTemplates = async (
 ) => {
   return axiosClient.post(`${TEMPLATES_URL}/register`, dbTemplates);
 };
-export async function tokenizeIp() {
+async function tokenizeIp() {
   return (await axiosClient.post(`${REDIRECT_URL}`)).data;
 }
 

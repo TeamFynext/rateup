@@ -11,16 +11,16 @@ import { toast } from "sonner";
 import type { QuestionType } from "@/types/enums.ts";
 import { LogicAction, PageType } from "@/types/enums.ts";
 import { useUpdateCompletedMutation } from "@/backend/surveys/surveys.query";
-
 import { NextPrevFuncsAndLastQuestionContextProvider } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { SurveyContextProvider } from "@/context/SurveyObjContext.tsx";
 import { SurveyThemeContextProvider } from "@/context/SurveyThemeContext.tsx";
-import { isHtml } from "@/utils/index.ts";
 import { encryptResponse } from "@/utils/encryption/index.ts";
+import { isHtml } from "@/utils/index.ts";
 import { parseLogicAction } from "@/utils/survey/logic/logic.utils";
+
 import CustomHTML from "../../Page/Previews/CustomHTML.tsx";
 import {
   useIsSurveyThemeEditView,
@@ -545,4 +545,3 @@ function TakeSurvey({
 }
 
 export default TakeSurvey;
-

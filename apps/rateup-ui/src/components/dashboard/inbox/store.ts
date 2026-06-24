@@ -1,5 +1,5 @@
 import { enableMapSet, produce } from "immer";
-import lodash from "lodash";
+import { isEqual } from "lodash";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -855,7 +855,7 @@ export const useMessagesStore = create<MessagesStore>()(
               },
             };
 
-            if (!lodash.isEqual(existingMsg, merged)) {
+            if (!isEqual(existingMsg, merged)) {
               existing.set(id, merged);
               changedOrNew.push(merged);
             }

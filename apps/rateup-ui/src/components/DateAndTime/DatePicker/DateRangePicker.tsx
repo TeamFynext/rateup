@@ -1,18 +1,23 @@
 "use client";
 
+import { lazy, Suspense } from "react";
+
 import { ActionIcon, Group, Modal, TextInput, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCalendar, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import type { Range } from "react-date-range";
-import { DateRangePicker } from "react-date-range";
 import { useTranslation } from "react-i18next";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 
 import classes from "./InsideLabel.module.css";
 
-export function DateRangePickerButton({
+const DateRangePicker = lazy(() =>
+  import("react-date-range").then((m) => ({ default: m.DateRangePicker })),
+);
+
+function DateRangePickerButton({
   onChange,
   ranges,
 }: {
@@ -74,13 +79,21 @@ export const DateRangePickerModal = ({ opened, onChange, ranges, close }) => {
       title={translations("Date range picker")}
       size={"auto"}
     >
-      <DateRangePicker
-        onChange={onChange}
-        moveRangeOnFirstSelection={false}
-        months={2}
-        ranges={ranges}
-        direction="horizontal"
-      />
+      <Suspense
+        fallback={
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            Loading calendar...
+          </div>
+        }
+      >
+        <DateRangePicker
+          onChange={onChange}
+          moveRangeOnFirstSelection={false}
+          months={2}
+          ranges={ranges}
+          direction="horizontal"
+        />
+      </Suspense>
       <Group justify="end">
         <RateupButtonPrimary
           onClick={() => onChange(undefined)}

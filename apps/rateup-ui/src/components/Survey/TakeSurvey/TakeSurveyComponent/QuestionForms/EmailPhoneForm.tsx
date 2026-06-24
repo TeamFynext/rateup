@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import PhoneInput from "react-phone-number-input";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+
 import classes from "../TakeSurvey.module.css";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
 
@@ -54,4 +55,3 @@ export function EmailPhoneForm() {
     </Stack>
   );
 }
-

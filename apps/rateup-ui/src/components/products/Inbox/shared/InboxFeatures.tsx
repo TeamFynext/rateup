@@ -8,7 +8,7 @@ import { motion } from "motion/react";
 
 import { imagesPath } from "@/utils/constants.ts";
 
-export const features = [
+const features = [
   {
     title: "WhatsApp-First Approach",
     description:

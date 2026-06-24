@@ -19,7 +19,13 @@ import { IconCircleCheck, IconX } from "@tabler/icons-react";
 
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons.tsx";
 import { NumberAnimate } from "../Animate/NumberAnimate.tsx";
-import { CardWidth, Title1, Title2, Title3, Title4 } from "../Utils/constants.ts";
+import {
+  CardWidth,
+  Title1,
+  Title2,
+  Title3,
+  Title4,
+} from "../Utils/constants.ts";
 import ButtonStyles from "./Button.module.css";
 import styles from "./Modal.module.css";
 
@@ -174,8 +180,6 @@ const PricingCard = ({
     </Card>
   );
 };
-
-export default PricingCard;
 
 export const generateListItems = (listData: string[] = []) => (
   <List

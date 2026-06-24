@@ -4,18 +4,6 @@ import type { MutableRefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import {
-  ActionIcon,
-  Badge,
-  Box,
-  Divider,
-  Group,
-  Menu,
-  Stack,
-  Text,
-} from "@mantine/core";
-import { modals } from "@mantine/modals";
-import { IconClock, IconDotsVertical, IconTrash } from "@tabler/icons-react";
-import {
   attachClosestEdge,
   extractClosestEdge,
 } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
@@ -28,74 +16,127 @@ import {
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
 import { useNavigate } from "@tanstack/react-router";
+import dayjs from "dayjs";
+import {
+  Calendar,
+  CalendarClock,
+  CheckSquare,
+  MessageCircle,
+  MoreHorizontal,
+  Paperclip,
+  Trash2,
+  User,
+} from "lucide-react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import invariant from "tiny-invariant";
 
+import { useCardTeamMembersById } from "@/backend/tickets/tickets.query";
 import { useUserInfo } from "@/backend/user/user.query";
-import { formatDate, getTimeRemaining } from "@/utils/dateTime.ts";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog.tsx";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
-import type { TCard } from "./data.ts";
 import {
   getCardData,
   getCardDropTargetData,
   isCardData,
   isDraggingACard,
 } from "./data.ts";
-import { isSafari } from "./is-safari.ts";
 import { isShallowEqual } from "./is-shallow-equal.ts";
+import type { Card as TCard } from "./types.ts";
 
 type TCardState =
-  | {
-      type: "idle";
-    }
-  | {
-      type: "is-dragging";
-    }
-  | {
-      type: "is-dragging-and-left-self";
-    }
-  | {
-      type: "is-over";
-      dragging: DOMRect;
-      closestEdge: Edge;
-    }
-  | {
-      type: "preview";
-      container: HTMLElement;
-      dragging: DOMRect;
-    };
+  | { type: "idle" }
+  | { type: "is-dragging" }
+  | { type: "is-dragging-and-left-self" }
+  | { type: "is-over"; dragging: DOMRect; closestEdge: Edge }
+  | { type: "preview"; container: HTMLElement; dragging: DOMRect };
 
 const idle: TCardState = { type: "idle" };
-
-const innerStyles: { [Key in TCardState["type"]]?: string } = {
-  idle: "hover:outline  outline-neutral-50 cursor-grab",
-  "is-dragging": "opacity-40",
-};
-
-const outerStyles: { [Key in TCardState["type"]]?: string } = {
-  // We no longer render the draggable item after we have left it
-  // as it's space will be taken up by a shadow on adjacent items.
-  // Using `display:none` rather than returning `null` so we can always
-  // return refs from this component.
-  // Keeping the refs allows us to continue to receive events during the drag.
-  "is-dragging-and-left-self": "hidden",
-};
 
 export function CardShadow({ dragging }: { dragging: DOMRect }) {
   return (
     <div
+      className="border-2 border-dashed border-slate-300 dark:border-slate-700 bg-transparent rounded-xl"
       style={{
         flexShrink: 0,
-        borderRadius: "4px",
-        backgroundColor: "var(--board-card-shadow)",
         height: dragging.height,
       }}
     />
   );
 }
 
-export function CardDisplay({
+export const PRIORITY_CONFIG: Record<
+  string,
+  { label: string; color: string; bg: string; border: string; dot: string }
+> = {
+  low: {
+    label: "Low",
+    color: "#666864",
+    bg: "#F4F5F2",
+    border: "#D9DAD7",
+    dot: "#B7B9B5",
+  },
+  medium: {
+    label: "Medium",
+    color: "#174678",
+    bg: "#EEF4FB",
+    border: "#A9C3E3",
+    dot: "#4C7FBC",
+  },
+  high: {
+    label: "High",
+    color: "#A85C07",
+    bg: "#FFF8E1",
+    border: "#FFDC6D",
+    dot: "#F8951D",
+  },
+  critical: {
+    label: "Critical",
+    color: "#B91C1C",
+    bg: "#FEF2F2",
+    border: "#FECACA",
+    dot: "#DC2626",
+  },
+  na: {
+    label: "Medium",
+    color: "#174678",
+    bg: "#EEF4FB",
+    border: "#A9C3E3",
+    dot: "#4C7FBC",
+  }, // fallback
+};
+
+const TAG_COLORS = [
+  "bg-blue-50 text-blue-600",
+  "bg-red-50 text-red-600",
+  "bg-purple-50 text-purple-600",
+  "bg-yellow-50 text-yellow-700",
+  "bg-green-50 text-green-600",
+];
+
+function CardDisplay({
   card,
   state,
   outerRef,
@@ -110,29 +151,52 @@ export function CardDisplay({
   onClick?: () => void;
   onDelete?: () => void;
 }) {
-  // Stop propagation to prevent opening the card details when clicking on the menu
+  const { t } = useTranslation();
+  const { data: members = [] } = useCardTeamMembersById(card.id);
+
+  const assignedMemberId = card.assignees?.[0]?.assigneeId;
+  const assignee = members.find((m: any) => m.id === assignedMemberId);
+
+  const allItems = (card.checklists || []).flatMap((cl: any) => cl.items || []);
+  const doneCount = allItems.filter((i: any) => i.done).length;
+  const totalCount = allItems.length;
+
+  const hasDueDate = !!card.deadline;
+  const targetDate = card.deadline
+    ? new Date(card.deadline)
+    : card.createdAt
+      ? new Date(card.createdAt)
+      : null;
+
+  const dateFormatted = targetDate ? dayjs(targetDate).format("DD MMM") : "";
+
+  let isCloseToDueDate = false;
+  let isOverdue = false;
+
+  if (hasDueDate && card.deadline) {
+    const dueDateObj = new Date(card.deadline);
+    const now = Date.now();
+    isOverdue = dueDateObj.getTime() < now;
+    const twoDaysFromNow = now + 2 * 24 * 60 * 60 * 1000;
+    isCloseToDueDate = !isOverdue && dueDateObj.getTime() <= twoDaysFromNow;
+  }
+
   const handleMenuClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
 
-  const priorityStyles: Record<string, { bg: string; color: string }> = {
-    low: { bg: "#dcfce7", color: "#166534" },
-    medium: { bg: "#f3e8ff", color: "#7e22ce" },
-    high: { bg: "#fef9c3", color: "#92400e" },
-    critical: { bg: "#ffe5e5", color: "#c92a2a" },
-    na: { bg: "#edf2f7", color: "#6b7280" },
-  };
-
-  // Get priority key and styles
   const priorityKey = card.priority?.toLowerCase() || "na";
-  const barStyle = priorityStyles[priorityKey] || priorityStyles.na;
+  const priorityStyle = PRIORITY_CONFIG[priorityKey] || PRIORITY_CONFIG.na;
 
-  // Add class for animations
   const getAnimationClass = () => {
-    if (state.type === "is-dragging") return "card-exiting";
-    if (state.type === "preview") return ""; // No animation for preview
-    return "card-entering";
+    if (state.type === "is-dragging") return "opacity-40";
+    if (state.type === "preview") return "";
+    return "";
   };
+
+  const tags = [];
+  if (card.category) tags.push(card.category);
+  if (card.type) tags.push(card.type);
 
   return (
     <div
@@ -143,147 +207,186 @@ export function CardDisplay({
         flexShrink: 0,
         flexDirection: "column",
         gap: "8px",
-        paddingLeft: ".75rem",
-        paddingRight: ".75rem",
-        paddingTop: ".75rem",
         ...(state.type === "is-dragging-and-left-self"
           ? { display: "none" }
           : {}),
       }}
     >
-      {/* Put a shadow before the item if closer to the top edge */}
       {state.type === "is-over" && state.closestEdge === "top" ? (
         <CardShadow dragging={state.dragging} />
       ) : null}
+
       <div
         ref={innerRef}
+        onClick={state.type === "idle" ? onClick : undefined}
+        className={`bg-card border border-border rounded-xl cursor-pointer select-none transition-all duration-150 group/card ${state.type === "idle" ? "hover:shadow-[0_4px_20px_rgba(0,0,0,.10)] hover:-translate-y-[1px]" : ""} ${state.type === "preview" ? "rotate-2" : ""}`}
         style={{
-          borderRadius: "4px",
-          backgroundColor: "var(--board-card-bg)",
-          padding: "8px",
-          color: "var(--board-card-text)",
-          position: "relative", // Needed for absolute positioning of menu
-          ...(state.type === "idle" ? { cursor: "pointer" } : {}),
-          ...(state.type === "is-dragging" ? { opacity: 0.4 } : {}),
+          padding: "15px 16px",
+          opacity: state.type === "is-dragging" ? 0.4 : 1,
+          boxShadow:
+            state.type !== "preview" ? "0 1px 3px rgba(11,31,72,.04)" : "none",
           ...(state.type === "preview"
-            ? {
-                width: state.dragging.width,
-                height: state.dragging.height,
-                transform: !isSafari() ? "rotate(4deg)" : undefined,
-              }
+            ? { width: state.dragging.width, height: state.dragging.height }
             : {}),
         }}
-        onClick={state.type === "idle" ? onClick : undefined}
       >
-        {/* Card menu */}
-        {state.type === "idle" && (
-          <div
-            style={{
-              position: "absolute",
-              right: ".5rem",
-            }}
-            onClick={handleMenuClick}
-          >
-            <Menu withinPortal position="bottom-end" shadow="md" offset={4}>
-              <Menu.Target>
-                <ActionIcon
-                  mt={21}
-                  mr={8}
-                  variant="white"
-                  size="sm"
-                  color="var(--board-scrollbar)"
-                >
-                  <IconDotsVertical size={16} />
-                </ActionIcon>
-              </Menu.Target>
-
-              <Menu.Dropdown>
-                <Menu.Item
-                  color="red"
-                  leftSection={<IconTrash size={16} />}
-                  onClick={onDelete}
-                >
-                  Delete
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+        {/* Header */}
+        <div className="flex items-start gap-2">
+          <div className="flex-1 font-body font-bold text-sm text-foreground leading-[1.4] line-clamp-2">
+            {card.title || t("Untitled Ticket")}
           </div>
-        )}
+          {state.type === "idle" && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  onClick={handleMenuClick}
+                  className="shrink-0 w-[22px] h-[22px] -mt-0.5 rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-muted opacity-0 group-hover/card:opacity-100"
+                >
+                  <MoreHorizontal size={16} strokeWidth={2} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onDelete) onDelete();
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t("Delete")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
 
-        <Box
-          style={{
-            borderRadius: 12,
-            overflow: "hidden",
-            background: "#fff",
-            border: `1px solid #e9ecef`,
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
-          }}
-        >
-          {/* Top Bar */}
-          <Box h={3} bg={barStyle.color} />
+        {/* Subtitle */}
+        <div className="flex items-center gap-1.5 mt-1">
+          <span
+            className={`w-[7px] h-[7px] rounded-full shrink-0 ${assignee ? "bg-green-500" : "bg-gray-300"}`}
+          />
+          <span className="font-body text-[12.5px] text-muted-foreground font-medium truncate">
+            {assignee ? assignee.name : t("Unassigned")}
+          </span>
+        </div>
+        {/* Meta */}
+        <div className="flex items-center gap-1.5 flex-wrap mt-[11px]">
+          {tags.slice(0, 2).map((tag, idx) => {
+            const colorClass = TAG_COLORS[idx % TAG_COLORS.length];
+            return (
+              <span
+                key={idx}
+                className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold tracking-wide capitalize ${colorClass}`}
+              >
+                {tag}
+              </span>
+            );
+          })}
+          {card.attachments && card.attachments.length > 0 && (
+            <span className="inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium text-muted-foreground">
+              <Paperclip
+                size={12}
+                className="text-muted-foreground"
+                strokeWidth={2}
+              />
+              {card.attachments.length}
+            </span>
+          )}
+          {totalCount > 0 && (
+            <span
+              className={`inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium ${doneCount === totalCount ? "text-green-600" : "text-muted-foreground"}`}
+            >
+              <CheckSquare
+                size={12}
+                strokeWidth={2}
+                className={
+                  doneCount === totalCount ? "text-green-600" : "text-gray-400"
+                }
+              />
+              {doneCount}/{totalCount}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-[3px] font-body text-[11.5px] font-medium text-muted-foreground">
+            <MessageCircle
+              size={12}
+              className="text-muted-foreground"
+              strokeWidth={2}
+            />
+            {card.ticketComments?.length || 0}
+          </span>
+        </div>
 
-          {/* Card Body */}
-          <Stack gap={8} py={5}>
-            {card.title && (
-              <Text size="lg" mx={8} fw={400} c="gray.8">
-                {card.title}
-              </Text>
+        {/* Divider */}
+        <div className="h-px bg-border my-3" />
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Priority Badge */}
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full font-body text-[11px] font-bold tracking-wider"
+            style={{
+              padding: "2px 9px",
+              background: priorityStyle.bg,
+              color: priorityStyle.color,
+              border: `1px solid ${priorityStyle.border}`,
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: priorityStyle.dot }}
+            />
+            {t(priorityStyle.label)}
+          </span>
+
+          <div className="flex items-center gap-[9px]">
+            {dateFormatted && (
+              <span
+                className={`inline-flex items-center gap-1 font-body text-[11.5px] font-medium ${isOverdue ? "text-red-600" : isCloseToDueDate ? "text-amber-600" : "text-muted-foreground"}`}
+              >
+                {hasDueDate ? (
+                  <CalendarClock
+                    size={12}
+                    strokeWidth={2}
+                    className={
+                      isOverdue
+                        ? "text-red-600"
+                        : isCloseToDueDate
+                          ? "text-amber-600"
+                          : "text-gray-400"
+                    }
+                  />
+                ) : (
+                  <Calendar
+                    size={12}
+                    strokeWidth={2}
+                    className="text-gray-400"
+                  />
+                )}
+                {dateFormatted}
+              </span>
             )}
-            <Divider bg={"var(--grey-color-5)"} />
-
-            <Group py={1} mx={8}>
-              {[
-                { label: "Source", value: card.type },
-                { label: "Priority", value: card.priority ?? "NA" },
-              ].map((item, i) => {
-                const isPriority = item.label === "Priority";
-                const key = item.value?.toString().toLowerCase();
-                const styles = isPriority
-                  ? priorityStyles[key] || priorityStyles.na
-                  : { bg: "#e0f2fe", color: "#0369a1" };
-
-                return (
-                  <Stack gap={0} key={i}>
-                    <Text size="xs" ta="center" c="var(--board-scrollbar)">
-                      {item.label}
-                    </Text>
-                    <Badge
-                      size="sm"
-                      fw="normal"
-                      variant="light"
-                      style={{
-                        backgroundColor: styles.bg,
-                        color: styles.color,
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      {item.value}
-                    </Badge>
-                  </Stack>
-                );
-              })}
-            </Group>
-
-            <Divider color={"var(--grey-color-5)"} />
-
-            <Group justify="space-between" mx={8}>
-              <Group gap={4}>
-                <Text size="xs" c={"var(--board-scrollbar)"}>
-                  Created on:
-                </Text>
-                <Text size="xs">{formatDate(card.createdAt)}</Text>
-              </Group>
-              <Group gap={4} display={card.deadline ? "flex" : "none"}>
-                <IconClock size={16} />
-                <Text size="xs" c={"red"} fw="bold">
-                  {getTimeRemaining(card.deadline)}
-                </Text>
-              </Group>
-            </Group>
-          </Stack>
-        </Box>
+            {assignee ? (
+              <Avatar className="h-[22px] w-[22px]">
+                <AvatarImage src={getFileUrlFromKey(assignee.profilePhoto)} />
+                <AvatarFallback className="text-[9px] bg-primary/20 text-primary font-bold">
+                  {assignee.name
+                    ?.split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .substring(0, 2)
+                    .toUpperCase() || "UN"}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <div className="w-[22px] h-[22px] rounded-full border-[1.5px] border-dashed border-border flex items-center justify-center">
+                <User size={11} className="text-muted-foreground" />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-      {/* Put a shadow after the item if closer to the bottom edge */}
+
       {state.type === "is-over" && state.closestEdge === "bottom" ? (
         <CardShadow dragging={state.dragging} />
       ) : null}
@@ -300,55 +403,26 @@ export function Card({
   columnId: string;
   onDelete?: (cardId: string) => void;
 }) {
+  const { t } = useTranslation();
   const outerRef = useRef<HTMLDivElement | null>(null);
   const innerRef = useRef<HTMLDivElement | null>(null);
   const [state, setState] = useState<TCardState>(idle);
-  const [editedCard, setEditedCard] = useState<{
-    title: string;
-    description: string;
-  }>({
-    title: card.title || "",
-    description: card.description,
-  });
   const navigate = useNavigate();
-  // get userInformation for checking the role
-  const { data: userRes } = useUserInfo() as { data: { data: UserData } };
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { data: userRes } = useUserInfo() as {
+    data: { data: { role: string } };
+  };
   const role = userRes?.data?.role;
   const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
-  // Reset edited card when original card changes
-  useEffect(() => {
-    setEditedCard({
-      title: card.title || "",
-      description: card.description,
-    });
-  }, [card]);
-
-  const handleDeleteCard = () => {
+  const handleDeleteClick = () => {
     if (!isAdmin) {
-      toast.warning("Only admin or super admin can delete this ticket.");
+      toast.warning(t("Only admin or super admin can delete this ticket."));
       return;
     }
-
-    modals.openConfirmModal({
-      title: "Delete ",
-      centered: true,
-      children: (
-        <Text size="sm">
-          Are you sure you want to delete this? This action cannot be undone
-        </Text>
-      ),
-      labels: { confirm: "Delete", cancel: "Cancel" },
-      confirmProps: { color: "red" },
-      onConfirm: () => {
-        if (onDelete) {
-          onDelete(card.id);
-        }
-      },
-    });
+    setIsDeleteDialogOpen(true);
   };
 
-  // Card dragging functionality
   useEffect(() => {
     const outer = outerRef.current;
     const inner = innerRef.current;
@@ -373,7 +447,6 @@ export function Card({
               input: location.current.input,
             }),
             render({ container }) {
-              // Demonstrating using a react portal to generate a preview
               setState({
                 type: "preview",
                 container,
@@ -402,16 +475,10 @@ export function Card({
           });
         },
         onDragEnter({ source, self }) {
-          if (!isCardData(source.data)) {
-            return;
-          }
-          if (source.data.card.id === card.id) {
-            return;
-          }
+          if (!isCardData(source.data)) return;
+          if (source.data.card.id === card.id) return;
           const closestEdge = extractClosestEdge(self.data);
-          if (!closestEdge) {
-            return;
-          }
+          if (!closestEdge) return;
 
           setState({
             type: "is-over",
@@ -420,33 +487,23 @@ export function Card({
           });
         },
         onDrag({ source, self }) {
-          if (!isCardData(source.data)) {
-            return;
-          }
-          if (source.data.card.id === card.id) {
-            return;
-          }
+          if (!isCardData(source.data)) return;
+          if (source.data.card.id === card.id) return;
           const closestEdge = extractClosestEdge(self.data);
-          if (!closestEdge) {
-            return;
-          }
-          // optimization - Don't update react state if we don't need to.
+          if (!closestEdge) return;
+
           const proposed: TCardState = {
             type: "is-over",
             dragging: source.data.rect,
             closestEdge,
           };
           setState((current) => {
-            if (isShallowEqual(proposed, current)) {
-              return current;
-            }
+            if (isShallowEqual(proposed, current)) return current;
             return proposed;
           });
         },
         onDragLeave({ source }) {
-          if (!isCardData(source.data)) {
-            return;
-          }
+          if (!isCardData(source.data)) return;
           if (source.data.card.id === card.id) {
             setState({ type: "is-dragging-and-left-self" });
             return;
@@ -472,7 +529,7 @@ export function Card({
             to: `/dashboard/tickets/${card.id}`,
           })
         }
-        onDelete={handleDeleteCard}
+        onDelete={handleDeleteClick}
       />
       {state.type === "preview"
         ? createPortal(
@@ -480,6 +537,34 @@ export function Card({
             state.container,
           )
         : null}
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("Delete ticket?")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                "Are you sure you want to delete this ticket? This action cannot be undone.",
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                if (onDelete) onDelete(card.id);
+                setIsDeleteDialogOpen(false);
+              }}
+            >
+              {t("Delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

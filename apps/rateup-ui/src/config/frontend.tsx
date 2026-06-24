@@ -13,7 +13,7 @@ type RouterAdapter = {
 
 const routerInfo: { router?: RouterAdapter; pathName?: string } = {};
 
-export function setRouter(router: RouterAdapter, pathName: string) {
+function setRouter(router: RouterAdapter, pathName: string) {
   routerInfo.router = router;
   routerInfo.pathName = pathName;
 }
@@ -62,7 +62,7 @@ export const frontendConfig = (): SuperTokensConfig => {
   };
 };
 
-export const recipeDetails = {
+const recipeDetails = {
   docsLink: "https://supertokens.com/docs/emailpassword/introduction",
 };
-export const PreBuiltUIList = [EmailPasswordPreBuiltUI];
+const PreBuiltUIList = [EmailPasswordPreBuiltUI];

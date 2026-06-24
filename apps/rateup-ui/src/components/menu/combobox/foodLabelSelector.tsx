@@ -4,7 +4,12 @@ import { Image } from "@unpic/react";
 import { useTranslation } from "react-i18next";
 
 import { Checkbox } from "../../ui/checkbox.tsx";
-import { Field, FieldContent, FieldGroup, FieldLabel } from "../../ui/field.tsx";
+import {
+  Field,
+  FieldContent,
+  FieldGroup,
+  FieldLabel,
+} from "../../ui/field.tsx";
 import { menuLabelWithText } from "../util/menuLabelData.ts";
 
 type FoodLabelFormAdapter = {

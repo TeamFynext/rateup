@@ -16,8 +16,8 @@ import {
   useTiptapEditorInstance,
 } from "../LandingPageContext/LandingPageContext.tsx";
 import NoContentFoundModal from "./NoContentFoundModal.tsx";
-import ShareLandingPage from "./ShareLandingPage.tsx";
 import styles from "./ShareLandingPage.module.css";
+import ShareLandingPage from "./ShareLandingPage.tsx";
 import SocialMediaLinks from "./SocialMediaLinks.tsx";
 
 function SharePage() {

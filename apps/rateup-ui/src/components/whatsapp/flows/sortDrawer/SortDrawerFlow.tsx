@@ -45,6 +45,7 @@ const SortDrawerFlow = ({
           className={classes.itemDragging}
           ref={provided.innerRef}
           {...provided.draggableProps}
+          style={provided.draggableProps.style as React.CSSProperties}
           gap={"sm"}
           my={"md"}
         >

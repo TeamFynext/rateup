@@ -16,7 +16,7 @@ export const Route = createFileRoute("/(marketing)/blog/author/$slug/")({
   },
 });
 
-export const revalidate = 60;
+const revalidate = 60;
 
 function Author() {
   const posts = Route.useLoaderData();

@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
-export const TestimonialCTASection = () => {
+const TestimonialCTASection = () => {
   return (
     <section className="py-24 max-w-6xl mx-auto px-4 md:px-6 overflow-hidden">
       <div className="container">

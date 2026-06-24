@@ -19,7 +19,10 @@ import { FeatureBadge } from "@/components/adminPanel/Subscription/FeatureBadge.
 import { SubscriptionEditorModal } from "@/components/adminPanel/Subscription/SubscriptionEditorModal.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
-import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import {
+  createSortableHeader,
+  DataTable,
+} from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import {
   Card,

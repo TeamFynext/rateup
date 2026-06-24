@@ -322,7 +322,7 @@ function ConfirmDiscardDialog({
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
-export default function CreateAutomatedReplyPage() {
+function CreateAutomatedReplyPage() {
   const { t } = useTranslation();
 
   return (

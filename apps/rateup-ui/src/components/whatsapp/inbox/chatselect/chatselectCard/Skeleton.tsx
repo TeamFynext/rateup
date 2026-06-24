@@ -26,7 +26,7 @@ const ChatSelectSkeletonCard = () => {
   );
 };
 
-export const ChatSelectSkeletonCardList = () => {
+const ChatSelectSkeletonCardList = () => {
   return (
     <>
       {Array.from({ length: 7 }, (_, index) => (

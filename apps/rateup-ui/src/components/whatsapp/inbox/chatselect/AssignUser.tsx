@@ -9,6 +9,7 @@ import { WaMessageAssignStatus } from "@/types/enums.ts";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useBulkAssignInboxToUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import { Label } from "@/components/ui/label.tsx";
@@ -21,7 +22,6 @@ import {
 } from "@/components/ui/select.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 
 const BulkAssignUser = ({ contactIds, filterData, onSuccess }) => {
   const { user } = useUser();

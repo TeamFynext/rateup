@@ -14,15 +14,15 @@ import {
   useSurvey,
 } from "@/backend/surveys/surveys.query";
 import { useNavControlContext } from "@/context/NavControlContext.ts";
-import { SurveyContextProvider } from "@/context/SurveyObjContext.tsx";
-import modalStyles from "@/styles/commonCssModules/modal.module.css";
-
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
+import { SurveyContextProvider } from "@/context/SurveyObjContext.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 import { UserRole } from "@/utils/enums/index.ts";
 import { getFromSessionStorage } from "@/utils/essential/index.ts";
+
 import ErrorComponent from "../404/ErrorComponent.tsx";
 import RateupLoader from "../Loaders/RateupLoader.tsx";
 import TabPanelsComp from "./Tabs/TabPanels.tsx";

@@ -8,9 +8,9 @@ import { Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import CustomQRCode from "../components/CustomQrCode/CustomQrCode.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
+import CustomQRCode from "../components/CustomQrCode/CustomQrCode.tsx";
 import styles from "./Preview.module.css";
 
 function Preview({

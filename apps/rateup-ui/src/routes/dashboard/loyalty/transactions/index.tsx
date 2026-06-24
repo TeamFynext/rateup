@@ -10,7 +10,10 @@ import { useTranslation } from "react-i18next";
 
 import { useGetTransactions } from "@/backend/loyalty/redemption/redemption.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
-import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import {
+  createSortableHeader,
+  DataTable,
+} from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { docsPath } from "@/utils/constants.ts";

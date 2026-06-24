@@ -84,7 +84,7 @@ export async function getSurveysSummary() {
   return allSurveysSummary;
 }
 
-export const getSurveysList = () =>
+const getSurveysList = () =>
   axiosClient({
     url: `/survey`,
     method: "GET",
@@ -101,7 +101,7 @@ export async function getSurveyLandings() {
     return { error: "Error Occured!" };
   }
 }
-export async function getSurveysLandingPage() {
+async function getSurveysLandingPage() {
   try {
     const surveys: Array<Survey> = (
       await axiosClient.get(`${SURVEYURL}/createlanding`)
@@ -163,7 +163,10 @@ export async function getPublicSurvey(surveyId: string, ip?: string) {
     };
   }
 
-  const res = await axiosClientIP.get(`${SURVEY_PUBLIC_URL}/${surveyId}`, config);
+  const res = await axiosClientIP.get(
+    `${SURVEY_PUBLIC_URL}/${surveyId}`,
+    config,
+  );
   return res.data as ExtendedSurvey;
 }
 

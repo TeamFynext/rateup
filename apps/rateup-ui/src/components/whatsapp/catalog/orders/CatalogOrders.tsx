@@ -9,7 +9,10 @@ import { ExternalLink, ShoppingBag } from "lucide-react";
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
-import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import {
+  createSortableHeader,
+  DataTable,
+} from "@/components/Table/data-table.tsx";
 import {
   Dialog,
   DialogContent,
