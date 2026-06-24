@@ -3,6 +3,7 @@ import { z } from "zod";
 // Base schema for board
 const boardCore = {
   title: z.string(),
+  description: z.string().optional(),
   teamIds: z.array(z.uuid()),
 };
 
@@ -20,6 +21,7 @@ const createBoardResponseSchema = z.object({
 // Schema for updating a board
 const updateBoardRequestSchema = z.object({
   title: z.string().optional(),
+  description: z.string().optional(),
   teamIds: z.array(z.uuid()).optional(),
   ticketCreatedEmail: z.boolean().optional(),
   ticketCreatedWhatsapp: z.boolean().optional(),

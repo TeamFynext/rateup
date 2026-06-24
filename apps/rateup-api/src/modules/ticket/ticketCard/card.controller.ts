@@ -10,7 +10,10 @@ import {
   reorderCards,
   getCardTeamMembersById,
 } from "./card.service.js";
-import { TicketType } from "../../../../generated/prisma/client.js";
+import {
+  TicketPriority,
+  TicketType,
+} from "../../../../generated/prisma/client.js";
 import { UpdateCardRequest } from "./card.schema.js";
 
 export async function createCardHandler(
@@ -20,12 +23,23 @@ export async function createCardHandler(
       description?: string;
       ticketColumnId: string;
       type: TicketType;
+      contactId?: string;
+      priority?: TicketPriority;
+      deadline?: string | Date | null;
     };
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { title, description, ticketColumnId, type } = request.body;
+    const {
+      title,
+      description,
+      ticketColumnId,
+      type,
+      contactId,
+      priority,
+      deadline,
+    } = request.body;
     const userId = request.userId;
     const card = await createCard({
       title,
@@ -33,6 +47,9 @@ export async function createCardHandler(
       ticketColumnId,
       userId,
       type,
+      contactId,
+      priority,
+      deadline,
       orgId: request.user.orgId,
     });
     return reply.code(201).send(card);

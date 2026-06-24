@@ -307,6 +307,7 @@ model WhatsappSettings {
   igDisplayName    String?
   instagramIceBreakers   Json?
   instagramPersistentMenu Json?
+  conversationalAutomation Json?
   phoneDisplayName String?
 
   fbUserName       String?
@@ -726,6 +727,7 @@ model Contact {
   notes                       String?
   Conversations               Conversation[]
   loyaltyAccounts             CustomerLoyaltyAccount[]
+  ticketCards                 TicketCard[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -1437,6 +1439,7 @@ model TicketComment {
 model TicketBoard {
   id                     String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title                  String
+  description            String?
   ticketColumns          TicketColumn[]
   teams                  TicketBoardTeam[]
   ticketCreatedEmail     Boolean                   @default(false)
@@ -1444,6 +1447,7 @@ model TicketBoard {
   ticketAssignedEmail    Boolean                   @default(false)
   ticketAssignedWhatsapp Boolean                   @default(false)
   notificationRecipients TicketBoardNotification[]
+  createdAt              DateTime                  @default(now())
 }
 
 model TicketBoardNotification {
@@ -1487,12 +1491,16 @@ model TicketCard {
   createdAt                 DateTime                 @default(now())
   ticketColumnId            String                   @db.Uuid
   ticketColumn              TicketColumn             @relation(fields: [ticketColumnId], references: [id], onDelete: Cascade)
+  checklists                Json?
+  attachments               String[]  @default([])
   reviewId                  String?                  @db.Uuid
   surveyResponseId          String?                  @db.Uuid
   review                    Review?                  @relation(fields: [reviewId], references: [id])
   surveyResponse            SurveyResponse?          @relation(fields: [surveyResponseId], references: [id])
   waAutomatedReplyMessageId String?                  @db.Uuid
   waAutomatedReplyMessage   WaAutomatedReplyMessage? @relation(fields: [waAutomatedReplyMessageId], references: [id])
+  contactId                 String?                  @db.Uuid
+  contact                   Contact?                 @relation(fields: [contactId], references: [id])
   ticketActivities          TicketActivity[]
   ticketComments            TicketComment[]
   assignees                 TicketCardAssignee[]
@@ -1510,7 +1518,7 @@ model TicketCardAssignee {
 
 model TicketActivity {
   id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type         String // ADDED_CARD, MOVED_CARD, EDITED_CARD, etc.
+  type         String // ADDED_CARD, MOVED_CARD, EDITED_CARD, ADDED_ATTACHMENT, etc.
   timestamp    DateTime   @default(now())
   userId       String?    @db.Uuid
   user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)

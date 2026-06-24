@@ -2,6 +2,8 @@ import { FastifyInstance } from "fastify";
 import {
   createWaSettingsHandler,
   deleteWaSettingsHandler,
+  getConversationalAutomationHandler,
+  syncConversationalAutomationHandler,
   getMetaAssetsHandler,
   getMetaDatasetsHandler,
   getWaLogsHandler,
@@ -13,6 +15,7 @@ import {
   syncFbPagesHandler,
   syncLeadgenFormQuestionsHandler,
   syncLeadgenFormsHandler,
+  updateConversationalAutomationHandler,
   updateWaSettingsByIdHandler,
   upsertWaSettingsHandler,
 } from "./wa_settings.controller.js";
@@ -22,6 +25,7 @@ import {
   byFbPageQuerySchema,
   byLeadGenFormIdParamsSchema,
   byWaSettingsIdParamsSchema,
+  conversationalAutomationSchema,
   createWaSettingsInputSchema,
   paginationQuery,
   updateWaSettingsInputSchema,
@@ -140,4 +144,35 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     getMetaDatasetsHandler,
   );
   server.get("/verification-status", getWaSettingsForOrgHandler);
+
+  server.get(
+    "/conversational-automation/:phoneId",
+    {
+      schema: {
+        params: byWaSettingsIdParamsSchema,
+      },
+    },
+    getConversationalAutomationHandler,
+  );
+
+  server.post(
+    "/conversational-automation/:phoneId",
+    {
+      schema: {
+        params: byWaSettingsIdParamsSchema,
+        body: conversationalAutomationSchema,
+      },
+    },
+    updateConversationalAutomationHandler,
+  );
+
+  server.post(
+    "/conversational-automation/:phoneId/sync",
+    {
+      schema: {
+        params: byWaSettingsIdParamsSchema,
+      },
+    },
+    syncConversationalAutomationHandler,
+  );
 }

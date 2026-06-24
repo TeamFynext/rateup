@@ -171,6 +171,20 @@ export type whatsappSettingsIdParamSchema = z.infer<
   typeof whatsappSettingsIdParamSchema
 >;
 
+const conversationalAutomationCommandSchema = z.object({
+  command_name: z.string().max(32),
+  command_description: z.string().max(256),
+});
+
+const conversationalAutomationSchema = z.object({
+  commands: z.array(conversationalAutomationCommandSchema).max(30).optional(),
+  prompts: z.array(z.string().max(80)).max(4).optional(),
+});
+
+export type ConversationalAutomationInput = z.infer<
+  typeof conversationalAutomationSchema
+>;
+
 // Auto-exported after fastify-zod migration
 export {
   createWaSettingsInputSchema,
@@ -183,4 +197,5 @@ export {
   byFbPageQuerySchema,
   byAdAccountIdParamsSchema,
   whatsappSettingsIdParamSchema,
+  conversationalAutomationSchema,
 };
