@@ -34,11 +34,7 @@ import {
 } from "./response.service.js";
 import { fetchLocation } from "../../utils/location.js";
 import { getIp } from "../../utils/http.js";
-import {
-  getTeamIdsBySurveyMapId,
-  getTeamIdsByUserId,
-} from "../team/team.service.js";
-import { QuestionType } from "../../types/enums.js";
+import { getTeamIdsBySurveyMapId, getTeamIdsByUserId } from "../team/team.service.js";
 import { createTestimonial } from "../testimonial/testimonial.service.js";
 import { getQuestionsBySurveyId } from "../question/question.service.js";
 import { log } from "../../utils/logger.js";
@@ -78,8 +74,7 @@ export async function getAllResponsesHandler(
     const surveyId = request.params.surveyId;
     const teamIds = await getTeamIdsByUserId(request.userId);
     const responses = await getAllResponses(surveyId, teamIds);
-    if (responses.length === 0)
-      reply.code(404).send({ message: "No responses found" });
+    if (responses.length === 0) reply.code(404).send({ message: "No responses found" });
     reply.code(200).send(responses);
   } catch (e) {
     console.error(e);
@@ -104,10 +99,7 @@ export async function getResponsesBySurveyIdHandler(
 }
 
 //to get survey lisit for external api
-export async function getSurveyListHandler(
-  req: FastifyRequest,
-  res: FastifyReply,
-) {
+export async function getSurveyListHandler(req: FastifyRequest, res: FastifyReply) {
   try {
     const { orgId } = req.user;
     const response = await getSurveyList(orgId);
@@ -149,9 +141,7 @@ export async function downloadExcelResponseHandler(
     if (request.body.dbFlowId) {
       let flow = await getFlowFromDb(request.body.dbFlowId);
       question = flow?.json?.screens?.flatMap((screen) =>
-        screen?.layout?.children?.filter(
-          (child) => child?.type !== "Footer" && child.name,
-        ),
+        screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
       );
       const data = await downloadExcelResponseV2(
         allResponse,
@@ -216,8 +206,7 @@ export async function createResponseHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const { shouldRaiseTicket, checkUniqueDevice, selectedColumnId, ...data } =
-    request.body;
+  const { shouldRaiseTicket, checkUniqueDevice, selectedColumnId, ...data } = request.body;
   const ip = getIp(request);
 
   try {
@@ -283,8 +272,7 @@ export async function generateResponseHandler(
     await generateResponse(request.body);
     reply.code(201).send();
   } catch (e) {
-    if (e instanceof PrismaClientKnownRequestError)
-      reply.code(400).send("Survey Not Found");
+    if (e instanceof PrismaClientKnownRequestError) reply.code(400).send("Survey Not Found");
     else reply.code(500).send(e.message);
   }
 }
@@ -304,10 +292,8 @@ export async function syncResponseToGoogleSheetHandler(
     reply.code(201).send(survey);
   } catch (e) {
     console.log(e);
-    if (e instanceof PrismaClientKnownRequestError)
-      reply.code(400).send("Survey Not Found");
-    else if (e.response.data.error)
-      reply.code(500).send({ error: e.response.data.error });
+    if (e instanceof PrismaClientKnownRequestError) reply.code(400).send("Survey Not Found");
+    else if (e.response.data.error) reply.code(500).send({ error: e.response.data.error });
     else reply.code(500).send(e);
   }
 }
@@ -355,10 +341,7 @@ export async function exportContactResponseToContactsHandler(
   reply: FastifyReply,
 ) {
   try {
-    await exportContactResponseToContacts(
-      request.params.surveyId,
-      request.user.orgId,
-    );
+    await exportContactResponseToContacts(request.params.surveyId, request.user.orgId);
     reply.code(200).send();
   } catch (e) {
     log.error(e);
@@ -389,11 +372,7 @@ export async function getSurveyResponseBySurveyIdHandler(
 ) {
   try {
     const teamIds = await getTeamIdsByUserId(request.userId);
-    const res = await getSurveyResponseBySurveyId(
-      request.params.surveyId,
-      teamIds,
-      request.query,
-    );
+    const res = await getSurveyResponseBySurveyId(request.params.surveyId, teamIds, request.query);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -431,10 +410,7 @@ export async function getResponseCountForCamparisonHandler(
 ) {
   try {
     const teamIds = await getTeamIdsByUserId(request.userId);
-    const res = await getResponseCountForCamparison(
-      request.params.surveyId,
-      teamIds,
-    );
+    const res = await getResponseCountForCamparison(request.params.surveyId, teamIds);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -456,11 +432,7 @@ export async function getHappyIndexResponsesHandler(
     const { teamMapIds } = request.query;
     const surveyTeamMapIds = teamMapIds ? teamMapIds.split(",") : [];
     const teamIds = await getTeamIdsByUserId(request.userId);
-    const result = await happyIndexResponsesBySurveyId(
-      surveyId,
-      surveyTeamMapIds,
-      teamIds,
-    );
+    const result = await happyIndexResponsesBySurveyId(surveyId, surveyTeamMapIds, teamIds);
     reply.send(result);
   } catch (e) {
     console.error(e);

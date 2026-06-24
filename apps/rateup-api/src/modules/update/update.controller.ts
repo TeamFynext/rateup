@@ -27,10 +27,7 @@ export async function updateUsageStatsTemplateMessageHandler(
   }
 }
 
-export async function updateSubscriptionHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function updateSubscriptionHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     await updateSubscriptionAutomation();
     // Logic to update subscription goes here
@@ -42,10 +39,7 @@ export async function updateSubscriptionHandler(
   }
 }
 
-export async function updateRateupPlanFeatureHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function updateRateupPlanFeatureHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     await updateRateupPlanFeature();
     reply.code(200).send("plans updated successfully");
@@ -67,10 +61,7 @@ export async function updateUsageStatsAutomationHandler(
   }
 }
 
-export async function updatePlanFeaturesHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function updatePlanFeaturesHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     await updatePlanFeatures();
     reply.code(200).send("plans updated successfully");
@@ -80,10 +71,7 @@ export async function updatePlanFeaturesHandler(
   }
 }
 
-export async function updateFreePlanExpiryHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function updateFreePlanExpiryHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     await updateFreePlanExpiry();
     reply.code(200).send("success");
@@ -92,10 +80,7 @@ export async function updateFreePlanExpiryHandler(
     reply.code(500).send(e);
   }
 }
-export async function updateDefaultLifecycleHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function updateDefaultLifecycleHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const stages = await prisma.lifecycle.count();
     if (stages > 0) {
@@ -140,8 +125,7 @@ export async function seedDefaultStages(orgId: string) {
       isDefault: false,
       category: StageCategory.active,
       emoji: "⚡",
-      description:
-        "The Contact is actively interested and ready to move forward.",
+      description: "The Contact is actively interested and ready to move forward.",
       isWon: false,
     },
     {
@@ -160,8 +144,7 @@ export async function seedDefaultStages(orgId: string) {
       isDefault: false,
       category: StageCategory.won,
       emoji: "🤩",
-      description:
-        "The lead has successfully completed a purchase and become a paying customer.",
+      description: "The lead has successfully completed a purchase and become a paying customer.",
       isWon: true,
     },
   ];
@@ -174,13 +157,9 @@ export async function seedDefaultStages(orgId: string) {
   });
 }
 
-export async function migrateTagsHandle(
-  req: FastifyRequest,
-  res: FastifyReply,
-) {
+export async function migrateTagsHandle(req: FastifyRequest, res: FastifyReply) {
   try {
-    const contactCustomFieldValueCount =
-      await prisma.contactCustomFieldValue.count();
+    const contactCustomFieldValueCount = await prisma.contactCustomFieldValue.count();
 
     if (contactCustomFieldValueCount > 0) {
       return res.code(400).send("Tags have already been migrated");
@@ -240,9 +219,7 @@ async function migrateTags() {
         });
 
         if (!field) {
-          console.warn(
-            `No ContactCustomField for ${key} in org ${setting.orgId}`,
-          );
+          console.warn(`No ContactCustomField for ${key} in org ${setting.orgId}`);
           continue;
         }
 
@@ -259,10 +236,7 @@ async function migrateTags() {
   }
 }
 
-export async function backfillWithSQLHandler(
-  req: FastifyRequest,
-  res: FastifyReply,
-) {
+export async function backfillWithSQLHandler(req: FastifyRequest, res: FastifyReply) {
   try {
     const fi = await prisma.contact.findFirst({
       where: {
@@ -281,10 +255,7 @@ export async function backfillWithSQLHandler(
   }
 }
 
-export async function migrateWaTemplatePhoneIdsHandler(
-  req: FastifyRequest,
-  res: FastifyReply,
-) {
+export async function migrateWaTemplatePhoneIdsHandler(req: FastifyRequest, res: FastifyReply) {
   try {
     const result = await migrateWaTemplatePhoneIds();
     res.code(200).send({
@@ -297,10 +268,7 @@ export async function migrateWaTemplatePhoneIdsHandler(
   }
 }
 
-export async function migrateLoyaltyTierPriorityHandler(
-  req: FastifyRequest,
-  res: FastifyReply,
-) {
+export async function migrateLoyaltyTierPriorityHandler(req: FastifyRequest, res: FastifyReply) {
   try {
     const programs = await prisma.loyaltyProgram.findMany({
       select: { id: true },

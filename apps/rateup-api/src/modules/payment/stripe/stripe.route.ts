@@ -8,7 +8,6 @@ import {
   getStripeProductsHandler,
   syncStripeProductsHandler,
   updateStripeProductsHandler,
-  webHookHandler,
 } from "./stripe.controller.js";
 import { checkSession } from "../../../utils/checkSession.js";
 import { checkRoleHandler } from "../../../utils/checkRoleHandler.js";

@@ -3,10 +3,7 @@ import { UpdateInboxAutomationInput } from "./inboxautomation.schema.js";
 import { InboxAutomationCondition } from "../../../../../generated/prisma/client.js";
 import { updateContactById } from "../../../contact/contact.service.js";
 
-export async function enableInboxAutomation(
-  orgId: string,
-  condition: InboxAutomationCondition,
-) {
+export async function enableInboxAutomation(orgId: string, condition: InboxAutomationCondition) {
   const existing = await prisma.inboxAutomation.findFirst({
     where: { orgId, condition },
   });
@@ -32,10 +29,7 @@ export async function enableInboxAutomation(
   });
 }
 
-export async function getInboxAutomation(
-  orgId: string,
-  condition?: InboxAutomationCondition,
-) {
+export async function getInboxAutomation(orgId: string, condition?: InboxAutomationCondition) {
   if (condition) {
     return await prisma.inboxAutomation.findFirst({
       where: {
@@ -83,10 +77,7 @@ export async function updateInboxAutomation(
   });
 }
 
-export async function deleteInboxAutomation(
-  orgId: string,
-  condition: InboxAutomationCondition,
-) {
+export async function deleteInboxAutomation(orgId: string, condition: InboxAutomationCondition) {
   return await prisma.inboxAutomation.deleteMany({
     where: { orgId, condition },
   });
@@ -100,8 +91,7 @@ export async function runInboxAutomationCron() {
   for (const automation of activeAutomations) {
     const delayHours = getDelayHours(automation);
     const cutoffTime = new Date(Date.now() - delayHours * 60 * 60 * 1000);
-    const statusToFind =
-      automation.condition === "ASSIGNED" ? "ASSIGNED" : "UNASSIGNED";
+    const statusToFind = automation.condition === "ASSIGNED" ? "ASSIGNED" : "UNASSIGNED";
 
     const idleContacts = await prisma.contact.findMany({
       where: {
@@ -143,10 +133,6 @@ export async function runInboxAutomationCron() {
 }
 
 function getDelayHours(automation: { closeAfterHours: number | null }): number {
-  if (
-    automation.closeAfterHours === null ||
-    automation.closeAfterHours === undefined
-  )
-    return 24;
+  if (automation.closeAfterHours === null || automation.closeAfterHours === undefined) return 24;
   return automation.closeAfterHours;
 }

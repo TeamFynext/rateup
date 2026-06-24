@@ -12,7 +12,6 @@ import {
   WaQuestions,
   YNResponse,
 } from "../../../types/enums.js";
-import { CreateSurveyInput } from "../../survey/survey.schema.js";
 import { CreateQuestionInput } from "../../question/question.schema.js";
 import { ChoiceTypeQuestions } from "../../../utils/survey/question/question.utils.js";
 import { createSurvey } from "../../survey/survey.service.js";
@@ -141,23 +140,13 @@ export function generateQuestionResponsesFromFlowResponse({
   );
   let responses = [];
   for (const [payloadName, value] of Object.entries(flowResponses)) {
-    if (
-      payloadName === "flow_token" ||
-      payloadName === "wa_flow_response_params"
-    )
-      continue;
+    if (payloadName === "flow_token" || payloadName === "wa_flow_response_params") continue;
     if (!value) {
-      log.trace(
-        "Empty value for payload %s. Question must have been skipped",
-        payloadName,
-      );
+      log.trace("Empty value for payload %s. Question must have been skipped", payloadName);
       continue;
     }
     try {
-      const elementName = findElementNameFromPayloadName(
-        payloadName,
-        flow.json as any,
-      );
+      const elementName = findElementNameFromPayloadName(payloadName, flow.json as any);
 
       let questionResponse;
 
@@ -190,10 +179,7 @@ export function generateQuestionResponsesFromFlowResponse({
       );
       log.trace(
         {
-          flowPayload: findElementNameFromPayloadName(
-            payloadName,
-            flow.json as any,
-          ),
+          flowPayload: findElementNameFromPayloadName(payloadName, flow.json as any),
           flowMap,
           flowResponses,
         },
@@ -222,11 +208,7 @@ export function parseFlowResponse({
   flowJson,
   response,
 }: parseFlowResponseProps) {
-  log.trace(
-    "Parsing response for element %s\nresponse => %o",
-    elementName,
-    response,
-  );
+  log.trace("Parsing response for element %s\nresponse => %o", elementName, response);
 
   const qType = flowMap[elementName].type;
   log.trace("Question type: %s", qType);
@@ -320,10 +302,7 @@ export function getElementJson(flowJson: WaFlowJson, elementName: string) {
   }
 }
 
-export function findElementNameFromPayloadName(
-  payloadName: string,
-  flowJson: WaFlowJson,
-) {
+export function findElementNameFromPayloadName(payloadName: string, flowJson: WaFlowJson) {
   for (const formElement of waFlowFormElementIterator({
     flowJson,
     onlyInteractive: false,
@@ -429,10 +408,7 @@ export function* waFlowFormElementIterator({
         for (const formElement of screenElement.children) {
           if (!onlyInteractive || formElement.name !== undefined) {
             // if onlyInteractive is true, only include interactive elements
-            if (
-              includeFooter ||
-              formElement.type !== WaFlowFormElementType.footer
-            ) {
+            if (includeFooter || formElement.type !== WaFlowFormElementType.footer) {
               // if includeFooter is false, exclude footer element
               yield formElement;
             }
@@ -479,18 +455,10 @@ export function getFlowJsonWithTitleAndDescription(
               map,
             );
             if (!question) {
-              log.fatal(
-                `Question not found for formElement ${formElement.name}\n%o`,
-                formElement,
-              );
-              throw new Error(
-                `Question not found for formElement ${formElement.name}`,
-              );
+              log.fatal(`Question not found for formElement ${formElement.name}\n%o`, formElement);
+              throw new Error(`Question not found for formElement ${formElement.name}`);
             }
-            if (
-              formElement.type === WaFlowFormElementType.datePicker &&
-              formElement["min-date"]
-            ) {
+            if (formElement.type === WaFlowFormElementType.datePicker && formElement["min-date"]) {
               screen.data = {
                 available_slots: {
                   type: "array",
@@ -529,35 +497,27 @@ export function getFlowJsonWithTitleAndDescription(
               screenElement.children.splice(i, 0, descriptionElement);
               i++;
             }
-            for (let logicJump of (logicJumps?.[screen?.id] ?? [])?.filter(
-              (item) =>
-                item.conditions.some(
-                  (condition) => condition.questionId === formElement.id,
-                ),
+            for (let logicJump of (logicJumps?.[screen?.id] ?? []).filter((item) =>
+              item.conditions.some((condition) => condition.questionId === formElement.id),
             )) {
               if (!logicJump || typeof logicJump.action === "string") continue;
-              let { id, ...restFail } =
-                screenElement?.children?.find(
-                  (data) => data.id === logicJump.action.fail,
-                ) ?? {};
-              const { id: s_id, ...restSuccess } =
-                screenElement?.children.find(
-                  (data) => data.id === logicJump.action.success,
-                ) ?? {};
+              let { ...restFail } =
+                screenElement?.children?.find((data) => data.id === logicJump.action.fail) ?? {};
+              const { ...restSuccess } =
+                screenElement?.children.find((data) => data.id === logicJump.action.success) ?? {};
               let conditions = logicJump.conditions?.map((condition) => {
                 const elementName = screenElement?.children?.[i]?.name;
                 const isNumberType = formElement?.["input-type"] === "number";
-                const responseValue = isNumberType
-                  ? condition.response
-                  : `'${condition.response}'`;
+                const responseValue = isNumberType ? condition.response : `'${condition.response}'`;
 
-                return `(\$\{form.${elementName}\} ${condition.condition} ${responseValue})`;
+                return `($\{form.${elementName}} ${condition.condition} ${responseValue})`;
               });
 
               // Define the new element you want to insert
               const newLogicElement = {
                 type: WaFlowFormElementType.if,
                 condition: conditions.join(" && "),
+                // eslint-disable-next-line unicorn/no-thenable
                 then: [restSuccess].filter(Boolean),
                 else: [restFail].filter(Boolean),
               };
@@ -567,10 +527,7 @@ export function getFlowJsonWithTitleAndDescription(
 
               // Then, filter out any existing logic jumps
               screenElement.children = screenElement.children.filter(
-                (child) =>
-                  ![logicJump.action.success, logicJump.action.fail].includes(
-                    child.id,
-                  ),
+                (child) => ![logicJump.action.success, logicJump.action.fail].includes(child.id),
               );
             }
           }
@@ -581,10 +538,7 @@ export function getFlowJsonWithTitleAndDescription(
   return fj;
 }
 const lang = "en";
-export function getQuestionIdFromFlowFormElementName(
-  name: string,
-  map: any,
-): string {
+export function getQuestionIdFromFlowFormElementName(name: string, map: any): string {
   return map[name]?.questionId;
 }
 export function getQuestionFromFlowFormElementName(
@@ -663,9 +617,7 @@ export function getFlowElementJsonFromQuestion(question: Question) {
   };
 }
 
-export function questionTypeToFlowFormElementType(
-  qtype: qt,
-): WaFlowFormElementType {
+export function questionTypeToFlowFormElementType(qtype: qt): WaFlowFormElementType {
   switch (qtype) {
     case qt.Text:
     case qt.Email:
@@ -864,10 +816,7 @@ export function parseResponseFromCurrentScreenResponse(
   log.trace({ responses }, "responses");
   return responses;
 }
-export function parseResponseFromCurrentScreenResponseV2(
-  screens,
-  response_data,
-) {
+export function parseResponseFromCurrentScreenResponseV2(screens, response_data) {
   const responses = Object.keys(response_data).map((questionId) => {
     const question = screens
       .flatMap((screen) => screen.layout.children)
@@ -929,29 +878,23 @@ export function convertHeaderToNewQuestion(flow) {
 }
 export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
   // Clone the flow object to avoid mutating the original
-  const routing_model = transformedFlow.screens.reduce(
-    (acc, screen, index, array) => {
-      acc[screen.id] = array.slice(index + 1).map((s) => s.id);
-      return acc;
-    },
-    {},
-  );
+  const routing_model = transformedFlow.screens.reduce((acc, screen, index, array) => {
+    acc[screen.id] = array.slice(index + 1).map((s) => s.id);
+    return acc;
+  }, {});
 
   let flag = false;
   Object.entries(logicJump).forEach(([key, value]) => {
     let screen = transformedFlow?.screens?.find((screen) => screen.id === key);
-    const currentScreenPayload = screen?.layout?.children?.reduce(
-      (prev, fe) => {
-        if (fe.name) {
-          return {
-            ...prev,
-            [fe.name]: `\${form.${fe.name}}`,
-          };
-        }
-        return prev;
-      },
-      {},
-    );
+    const currentScreenPayload = screen?.layout?.children?.reduce((prev, fe) => {
+      if (fe.name) {
+        return {
+          ...prev,
+          [fe.name]: `\${form.${fe.name}}`,
+        };
+      }
+      return prev;
+    }, {});
 
     for (const element of value as Array<{
       action?: string;
@@ -965,9 +908,7 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
       }>;
     }>) {
       if (typeof element.action === "string") {
-        let footer = screen.layout.children.find(
-          (child) => child.type === "Footer",
-        );
+        let footer = screen.layout.children.find((child) => child.type === "Footer");
         footer["on-click-action"] = {
           name: "data_exchange",
           payload: currentScreenPayload,
@@ -986,27 +927,18 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
             condition: element.conditions
               ?.map((condition) => {
                 const value =
-                  (condition?.isNumber ?? false)
-                    ? condition?.value
-                    : `'${condition?.value}'`;
+                  (condition?.isNumber ?? false) ? condition?.value : `'${condition?.value}'`;
                 return `(\${form.${condition.field}} ${condition.operator} ${value})`;
               })
               .join(" && "),
+            // eslint-disable-next-line unicorn/no-thenable
             then: element.then
               .map((action) => {
-                let childIndex = screen.layout.children.findIndex(
-                  (child) => child.id === action,
-                );
+                let childIndex = screen.layout.children.findIndex((child) => child.id === action);
                 if (childIndex !== -1) {
                   let child = screen.layout.children[childIndex];
                   screen.layout.children.splice(childIndex, 1);
-                  let {
-                    id,
-                    metaType,
-                    enableNpsAnalytics,
-                    googleReview,
-                    ...rest
-                  } = child;
+                  let { metaType: _metaType, googleReview: _googleReview, ...rest } = child;
                   return { ...rest };
                 }
                 return null;
@@ -1014,13 +946,11 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
               .filter(Boolean),
             else: element.else
               .map((action) => {
-                let childIndex = screen.layout.children.findIndex(
-                  (child) => child.id === action,
-                );
+                let childIndex = screen.layout.children.findIndex((child) => child.id === action);
                 if (childIndex !== -1) {
                   let child = screen.layout.children[childIndex];
                   screen.layout.children.splice(childIndex, 1); // Remove the child from the main array
-                  let { id, metaType, enableNpsAnalytics, ...rest } = child;
+                  let { metaType: _metaType, ...rest } = child;
                   return { ...rest };
                 }
                 return null;
@@ -1040,10 +970,7 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
   }
 }
 
-export async function verifyFlowSubscriptionLimit(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function verifyFlowSubscriptionLimit(request: FastifyRequest, reply: FastifyReply) {
   try {
     let orgId = request.user.orgId;
     const subscription = request.subscription;

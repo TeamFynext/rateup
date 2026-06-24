@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  ChatBotDataSourceType,
-  ChatbotPublicPageStatus,
-} from "../../types/enums.js";
+import { ChatBotDataSourceType, ChatbotPublicPageStatus } from "../../types/enums.js";
 
 export const dataLoadSchema = z.object({
   source: z.string(),

@@ -16,10 +16,7 @@ export async function getLoyaltyApiSettingById(id: string, orgId: string) {
   });
 }
 
-export async function createLoyaltyApiSetting(
-  data: LApiSettingInput,
-  orgId: string,
-) {
+export async function createLoyaltyApiSetting(data: LApiSettingInput, orgId: string) {
   return await prisma.loyaltyApiSettings.create({
     data: {
       ...(data as any),

@@ -1,11 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { hasAccessOfTeamAdmin, hasAccessToTeam } from "../../utils/auth.js";
-import {
-  CreateTeamInput,
-  EditTeamInput,
-  IdParamInput,
-  InviteMemberInput,
-} from "./team.schema.js";
+import { CreateTeamInput, EditTeamInput, IdParamInput, InviteMemberInput } from "./team.schema.js";
 import prisma from "../../utils/prisma.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 
@@ -66,10 +61,7 @@ export async function verifyTeamMaxCountRestriction(
     },
   });
 
-  if (
-    count >=
-    request.subscription.features[SubscriptionFeaturePathName.Team].count.max
-  ) {
+  if (count >= request.subscription.features[SubscriptionFeaturePathName.Team].count.max) {
     reply.code(403).send({
       message: "You have reached the maximum limit of teams",
       displayMessageInClient: true,
@@ -97,9 +89,7 @@ export async function verifyTeamMemberMaxCountRestriction(
   const count = member + invitationCount;
 
   if (
-    count >=
-    request.subscription.features[SubscriptionFeaturePathName.Team].teamMember
-      .count.max
+    count >= request.subscription.features[SubscriptionFeaturePathName.Team].teamMember.count.max
   ) {
     reply.code(403).send({
       message: "You have reached the maximum limit of team-members",

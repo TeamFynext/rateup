@@ -40,11 +40,7 @@ export async function waCatalogProductRoutes(server: FastifyInstance) {
     syncCatalogProductsHandler,
   );
 
-  server.get(
-    "/:catalogId",
-    { schema: { params: catalogIdParams } },
-    getCatalogProductsHandler,
-  );
+  server.get("/:catalogId", { schema: { params: catalogIdParams } }, getCatalogProductsHandler);
 
   server.delete(
     "/:catalogId",

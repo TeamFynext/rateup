@@ -29,15 +29,9 @@ export async function linkRoutes(server: FastifyInstance) {
   server.put("/", updateLinktreeWithShortIdRouteOptions);
   server.delete("/:id", deleteLinktreeByIdRouteOptions);
 
-  server.get(
-    "/linkTypeDropdownOptions/:linkType",
-    getLinkTypeDropdownOptionsRouteOptions,
-  );
+  server.get("/linkTypeDropdownOptions/:linkType", getLinkTypeDropdownOptionsRouteOptions);
 
-  server.patch(
-    "/pageVisitsOrLinkClicks/:shortUrlId",
-    updatePageVisitsOrLinkClicksOptions,
-  );
+  server.patch("/pageVisitsOrLinkClicks/:shortUrlId", updatePageVisitsOrLinkClicksOptions);
 }
 
 export default linkRoutes;

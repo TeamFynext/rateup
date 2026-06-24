@@ -6,10 +6,7 @@ import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { getOrCreateContactByPhone } from "../../contact/contact.service.js";
 import { ExtCreateContactSchema } from "../../../external/v1/contact-groups/contact.external.schema.js";
 
-export async function supportUserWebhookEventHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function supportUserWebhookEventHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     log.trace(`recieved support user webhook => %o`, request.body);
     if ((request.body as any).object !== "support_user") {
@@ -24,10 +21,7 @@ export async function supportUserWebhookEventHandler(
   }
 }
 
-export async function getOrCreateContactHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getOrCreateContactHandler(request: FastifyRequest, reply: FastifyReply) {
   const { phone, ...rest } = request.body as ExtCreateContactSchema;
   const body = {
     other: phone,

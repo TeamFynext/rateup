@@ -10,27 +10,17 @@ import {
   updateMenuHandler,
 } from "./menu.controller.js";
 import { verifyTeamAccess } from "../team/team.auth.js";
-import {
-  verifyMenuAccess,
-  verifyMenuMaxCountRestriction,
-} from "./menu.auth.js";
+import { verifyMenuAccess, verifyMenuMaxCountRestriction } from "./menu.auth.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { requireFeature, TeamFeature } from "../../utils/permissions.js";
-import {
-  ByMenuIdParamsSchema,
-  menuInputSchema,
-  updateMenuInputSchema,
-} from "./menu.schema.js";
+import { ByMenuIdParamsSchema, menuInputSchema, updateMenuInputSchema } from "./menu.schema.js";
 import { byTeamIdParamsSchema } from "../team/team.schema.js";
 
 export async function menuRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook(
-    "preHandler",
-    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Menu]),
-  );
+  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeaturePathName.Menu]));
   server.addHook("preHandler", requireFeature(TeamFeature.digital_menu));
   server.post(
     "/",

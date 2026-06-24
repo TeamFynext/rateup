@@ -1,9 +1,6 @@
 import dayjs from "dayjs";
 import prisma from "../../utils/prisma.js";
-import {
-  FreePlanSubscriptionFeatures,
-  getFreeSubscriptionFeatures,
-} from "./subscription.data.js";
+import { FreePlanSubscriptionFeatures, getFreeSubscriptionFeatures } from "./subscription.data.js";
 import { updateSubscriptionInput } from "./subscription.schema.js";
 import { PaymentPlanType } from "../../../generated/prisma/client.js";
 import { createStats } from "../stats/stats.service.js";
@@ -68,9 +65,7 @@ export async function createFreePlanSubscription(
   let finalFeatures;
   if (planId && rateupPlan) {
     // Paid/custom plan
-    finalFeatures = overrides
-      ? merge({}, rateupPlan.features, overrides)
-      : rateupPlan.features;
+    finalFeatures = overrides ? merge({}, rateupPlan.features, overrides) : rateupPlan.features;
   } else {
     //Free plan
     finalFeatures = getFreeSubscriptionFeatures(overrides);
@@ -159,10 +154,7 @@ export async function getAllSubscriptions() {
   });
 }
 
-export async function updateSubscription(
-  orgId: string,
-  updatedData: updateSubscriptionInput,
-) {
+export async function updateSubscription(orgId: string, updatedData: updateSubscriptionInput) {
   return await prisma.subscription.update({
     where: {
       orgId,
@@ -187,10 +179,7 @@ export async function deleteSubscriptions(orgIds: Array<string>) {
   });
 }
 
-export async function hasFeature(
-  orgId: string,
-  featurePath: SubscriptionFeaturePathName,
-) {
+export async function hasFeature(orgId: string, featurePath: SubscriptionFeaturePathName) {
   const subscription = await prisma.subscription.findUnique({
     where: {
       orgId: orgId,
@@ -210,7 +199,7 @@ export async function getMessageStatsByOrgId(orgId, filter) {
   const params = [orgId];
   let paramIndex = 2;
   if (dateRange?.length) {
-    const [startDate, endDate] = dateRange?.split(",");
+    const [startDate, endDate] = dateRange?.split(",") || [];
     if (startDate) {
       params.push(dayjs(startDate).startOf("day").toISOString());
       filterArray.push(`wm."waCreatedAt"::DATE >= $${paramIndex++}`);

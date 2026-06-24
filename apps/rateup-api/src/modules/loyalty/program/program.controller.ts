@@ -26,10 +26,7 @@ export async function createLoyaltyProgramHandler(
   }
 }
 
-export async function getLoyaltyProgramHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getLoyaltyProgramHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const result = await getLoyaltyProgramByOrg(request.user.orgId);
     if (!result) {
@@ -50,10 +47,7 @@ export async function updateLoyaltyProgramHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await updateLoyaltyProgram(
-      request.params.programId,
-      request.body,
-    );
+    const result = await updateLoyaltyProgram(request.params.programId, request.body);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);

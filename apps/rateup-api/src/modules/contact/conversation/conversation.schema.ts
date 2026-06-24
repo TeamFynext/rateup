@@ -50,9 +50,7 @@ const teamIdParamsSchema = z.object({
 export type ConversationCore = z.infer<typeof conversationCoreSchema>;
 export type UpdateConversationSchema = z.infer<typeof updateConversationSchema>;
 export type ConversationParamsSchema = z.infer<typeof conversationParamsSchema>;
-export type ConversationAssigneeUpdateSchema = z.infer<
-  typeof conversationAssigneeUpdateSchema
->;
+export type ConversationAssigneeUpdateSchema = z.infer<typeof conversationAssigneeUpdateSchema>;
 export type StatsQuerySchema = z.infer<typeof statsQuerySchema>;
 export type StaffIdParamsSchema = z.infer<typeof staffIdParamsSchema>;
 export type TeamIdParamsSchema = z.infer<typeof teamIdParamsSchema>;

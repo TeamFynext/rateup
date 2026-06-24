@@ -8,11 +8,7 @@ import {
   WaMessageScheduleStatus,
 } from "../../types/enums.js";
 import { log } from "../../utils/logger.js";
-import {
-  createSession,
-  deleteSession,
-  sendMessage,
-} from "./whatsappSurvey/wasurvey.service.js";
+import { createSession, deleteSession, sendMessage } from "./whatsappSurvey/wasurvey.service.js";
 import { getScheduleTime } from "../../utils/date.js";
 import { updateMonthlyStat } from "../stats/stats.service.js";
 import { enqueueCampaignMessage } from "../campaign/campaign.service.js";
@@ -102,16 +98,10 @@ export async function sendSchedulesWaMessages() {
             (schedule.waTemplate.data as any).components,
           );
           if (!flowId) {
-            log.error(
-              "Flow id not found in template\n Template => %o",
-              schedule.waTemplate.data,
-            );
+            log.error("Flow id not found in template\n Template => %o", schedule.waTemplate.data);
             throw new Error("Flow id not found in template");
           }
-          const dbFlow = await getFlowWithSurveyTeamMapIds(
-            schedule.orgId,
-            flowId,
-          );
+          const dbFlow = await getFlowWithSurveyTeamMapIds(schedule.orgId, flowId);
           if (!dbFlow) {
             log.error("Flow not found in db with id %s", flowId);
             throw new Error("Flow not found in db");
@@ -128,8 +118,7 @@ export async function sendSchedulesWaMessages() {
           });
           log.trace("Session created successfully");
         }
-        const externalApi =
-          schedule.source === waMessageScheduleSource.ExternalApi;
+        const externalApi = schedule.source === waMessageScheduleSource.ExternalApi;
         const res = await sendMessage(
           schedule.orgId,
           schedule.messageBody as WaSendMessageBody,
@@ -148,9 +137,7 @@ export async function sendSchedulesWaMessages() {
             id: schedule.id,
           },
           data: {
-            status: res.status
-              ? WaMessageScheduleStatus.SENT
-              : WaMessageScheduleStatus.FAILED,
+            status: res.status ? WaMessageScheduleStatus.SENT : WaMessageScheduleStatus.FAILED,
             messageId: res.status ? res.message : undefined,
           },
         });
@@ -212,18 +199,11 @@ export async function processDripCampaigns() {
       ? dayjs(participantCreatedAt)
       : dayjs(campaignStartedAt);
 
-    let sendAfter = dayjs(baseDate).add(
-      delay,
-      delayUnit as dayjs.ManipulateType,
-    );
+    let sendAfter = dayjs(baseDate).add(delay, delayUnit as dayjs.ManipulateType);
 
     if (sendAtTime) {
       const [hours, minutes] = sendAtTime.split(":").map(Number);
-      sendAfter = sendAfter
-        .hour(hours)
-        .minute(minutes)
-        .second(0)
-        .millisecond(0);
+      sendAfter = sendAfter.hour(hours).minute(minutes).second(0).millisecond(0);
     }
 
     if (dayjs().isAfter(sendAfter)) {

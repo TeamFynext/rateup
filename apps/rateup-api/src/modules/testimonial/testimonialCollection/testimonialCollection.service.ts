@@ -22,18 +22,17 @@ export async function updateTestimonialCollection(
   collectionId: string,
 ) {
   if (testimonialCollection?.testimonialIds?.length) {
-    const collectionMap = await prisma.testimonialCollectionMap.deleteMany({
+    await prisma.testimonialCollectionMap.deleteMany({
       where: {
         collectionId,
       },
     });
-    const swappedTestimonials =
-      await prisma.testimonialCollectionMap.createMany({
-        data: testimonialCollection?.testimonialIds?.map((t) => ({
-          testimonialId: t,
-          collectionId,
-        })),
-      });
+    await prisma.testimonialCollectionMap.createMany({
+      data: testimonialCollection?.testimonialIds?.map((t) => ({
+        testimonialId: t,
+        collectionId,
+      })),
+    });
   }
   const collection = await prisma.testimonialCollection.update({
     where: {
@@ -122,12 +121,8 @@ export async function addMultipleTestimonialToCollection(
       testimonialId: true,
     },
   });
-  const exitsingTestimonialIds = existingTestimonials.map(
-    (t) => t.testimonialId,
-  );
-  const newTestimonialIds = testimonialIds.filter(
-    (t) => !exitsingTestimonialIds.includes(t),
-  );
+  const exitsingTestimonialIds = existingTestimonials.map((t) => t.testimonialId);
+  const newTestimonialIds = testimonialIds.filter((t) => !exitsingTestimonialIds.includes(t));
   const collectionmap = newTestimonialIds.map((c) => ({
     testimonialId: c,
     collectionId,

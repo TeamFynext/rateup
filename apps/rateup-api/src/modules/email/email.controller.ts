@@ -1,11 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger.js";
 import { generateOTP } from "./email.util.js";
-import {
-  GenerateOtpInput,
-  SendEmailInput,
-  validateOtpInput,
-} from "./email.schema.js";
+import { GenerateOtpInput, SendEmailInput, validateOtpInput } from "./email.schema.js";
 import { sendEmailService, storeOtp, validateOtp } from "./email.service.js";
 
 export async function sendEmailHandler(
@@ -18,9 +14,7 @@ export async function sendEmailHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply
-      .code(500)
-      .send({ error: e?.message || "Something Went Wrong! Try again." });
+    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
   }
 }
 
@@ -37,9 +31,7 @@ export async function sendOTPEmailHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply
-      .code(500)
-      .send({ error: e?.message || "Something Went Wrong! Try again." });
+    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
   }
 }
 
@@ -53,8 +45,6 @@ export async function validateOTPHandler(
     reply.code(200).send({ isValid });
   } catch (e) {
     log.error(e);
-    reply
-      .code(500)
-      .send({ error: e?.message || "Something Went Wrong! Try again." });
+    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
   }
 }

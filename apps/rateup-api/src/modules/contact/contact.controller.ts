@@ -32,16 +32,8 @@ import {
 import { ContactGroupType, Prisma } from "../../../generated/prisma/client.js";
 import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
-import {
-  createLCustomer,
-  handlePostRegisterAction,
-  handleSendTemplate,
-} from "./contact.utils.js";
-import {
-  LoyaltyTemplateTypes,
-  WaAutomatedReplyResponseType,
-  WaMessageAssignStatus,
-} from "../../types/enums.js";
+import { createLCustomer, handlePostRegisterAction, handleSendTemplate } from "./contact.utils.js";
+import { LoyaltyTemplateTypes, WaAutomatedReplyResponseType } from "../../types/enums.js";
 import {
   getLoyaltyWaCommandByType,
   replacedContentByDynamicVariable,
@@ -77,17 +69,9 @@ export async function createContactHandler(
         const { responseType, waTemplateId, content } = loyaltyWaCommand;
         const dynamicVariables = [contact.name];
         if (responseType === WaAutomatedReplyResponseType.Template)
-          await handleSendTemplate(
-            waTemplateId,
-            orgId,
-            contact.phone,
-            dynamicVariables,
-          );
+          await handleSendTemplate(waTemplateId, orgId, contact.phone, dynamicVariables);
         else if (responseType === WaAutomatedReplyResponseType.Text) {
-          const message = replacedContentByDynamicVariable(
-            content,
-            dynamicVariables,
-          );
+          const message = replacedContentByDynamicVariable(content, dynamicVariables);
           await sendTextMessage(
             {
               phone: contact.phone,
@@ -100,10 +84,7 @@ export async function createContactHandler(
       }
       await handlePostRegisterAction(orgId, contact.id);
     } else {
-      const contact = await createContact(
-        { ...request.body, orgId },
-        request.userId,
-      );
+      const contact = await createContact({ ...request.body, orgId }, request.userId);
       reply.code(201).send(contact);
     }
   } catch (error) {
@@ -187,11 +168,7 @@ export async function updateContactByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contact = await updateContactById(
-      request.params.contactId,
-      request.body,
-      request.userId,
-    );
+    const contact = await updateContactById(request.params.contactId, request.body, request.userId);
     return reply.code(200).send(contact);
   } catch (error) {
     log.error(error);
@@ -238,17 +215,12 @@ export async function deleteManyContactsHandler(
   }
 }
 
-export async function importCSVContactsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function importCSVContactsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const file = await request.file();
     const orgId = request.user.orgId;
     if (!dataExtractFileMimeTypes.includes(file?.mimetype))
-      return reply
-        .code(400)
-        .send({ error: "This file type is not permitted." });
+      return reply.code(400).send({ error: "This file type is not permitted." });
     const tags = [];
     let update = false;
     for (const key in file?.fields) {
@@ -269,10 +241,7 @@ export async function importCSVContactsHandler(
   }
 }
 
-export async function getCustomFieldHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getCustomFieldHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const data = await getCustomFields(orgId);
@@ -360,9 +329,7 @@ export async function exportContactHandler(
     "createdAt",
   ];
   const customFields = fields.filter((f) => !standardFields.includes(f));
-  const requestedStandardFields = fields.filter((f) =>
-    standardFields.includes(f),
-  );
+  const requestedStandardFields = fields.filter((f) => standardFields.includes(f));
 
   const PAGE_SIZE = 10000;
   let cursor = undefined;
@@ -430,10 +397,7 @@ export async function exportContactHandler(
     const csv = Papa.unparse(allContacts, { columns: fields });
     reply
       .header("Content-Type", "text/csv")
-      .header(
-        "Content-Disposition",
-        `attachment; filename="contacts_${orgId}.csv"`,
-      )
+      .header("Content-Disposition", `attachment; filename="contacts_${orgId}.csv"`)
       .send(csv);
     return;
   }
@@ -444,19 +408,11 @@ export async function exportContactHandler(
       fields, // headers
       ...allContacts.map((row) => fields.map((f) => row[f] ?? "")),
     ];
-    const buffer = xlsx.build([
-      { name: "Contacts", data: sheetData, options: {} },
-    ]);
+    const buffer = xlsx.build([{ name: "Contacts", data: sheetData, options: {} }]);
 
     reply
-      .header(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      )
-      .header(
-        "Content-Disposition",
-        `attachment; filename="contacts_${orgId}.xlsx"`,
-      )
+      .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+      .header("Content-Disposition", `attachment; filename="contacts_${orgId}.xlsx"`)
       .send(buffer);
     return;
   }
@@ -479,9 +435,7 @@ export async function updateLifecycleStageofContactsHandler(
     reply.send(res);
   } catch (e) {
     log.error(e);
-    reply
-      .code(500)
-      .send({ message: "Error updating lifecycle stage of contacts" });
+    reply.code(500).send({ message: "Error updating lifecycle stage of contacts" });
   }
 }
 

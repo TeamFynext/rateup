@@ -8,15 +8,9 @@ import {
   getNotificationSettings,
   updateNotificationSettings,
 } from "./notification.service.js";
-import {
-  NotificationIdParamSchema,
-  NotificationSettingSchema,
-} from "./notification.schema.js";
+import { NotificationIdParamSchema, NotificationSettingSchema } from "./notification.schema.js";
 
-export async function getNotificationsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getNotificationsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { userId, orgId } = request.user;
     const res = await getNotifications(userId, orgId);
@@ -27,10 +21,7 @@ export async function getNotificationsHandler(
   }
 }
 
-export async function getNotificationsCountHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getNotificationsCountHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { userId, orgId } = request.user;
     const res = await getNotificationsCount(userId, orgId);
@@ -55,10 +46,7 @@ export async function updateNotificationSettingHandler(
   }
 }
 
-export async function getNotificationSettingHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getNotificationSettingHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { userId, orgId } = request.user;
     const res = await getNotificationSettings(userId, orgId);
@@ -83,10 +71,7 @@ export async function deleteNotificationByIdHandler(
   }
 }
 
-export async function deleteAllNotificationsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function deleteAllNotificationsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { userId, orgId } = request.user;
     const res = await deleteAllNotificationsByUser(userId, orgId);

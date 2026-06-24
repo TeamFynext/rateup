@@ -1,13 +1,7 @@
 import prisma from "../../../utils/prisma.js";
-import {
-  LoyaltyEarningRuleInput,
-  LoyaltyEarningRuleUpdateInput,
-} from "./earningRule.schema.js";
+import { LoyaltyEarningRuleInput, LoyaltyEarningRuleUpdateInput } from "./earningRule.schema.js";
 
-export async function createLoyaltyEarningRule(
-  data: LoyaltyEarningRuleInput,
-  programId: string,
-) {
+export async function createLoyaltyEarningRule(data: LoyaltyEarningRuleInput, programId: string) {
   return await prisma.loyaltyEarningRule.create({
     data: {
       programId,

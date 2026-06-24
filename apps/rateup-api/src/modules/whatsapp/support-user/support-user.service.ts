@@ -10,10 +10,7 @@ export async function handleSupportUserWebhook(data: WaMessageBody) {
   for (const entry of data.entry) {
     const contact = await getContactById(entry.id);
     if (!contact) {
-      log.trace(
-        "No contact found for instagram business account id: %s",
-        entry.id,
-      );
+      log.trace("No contact found for instagram business account id: %s", entry.id);
       continue;
     }
     for (const messages of entry.changes) {
@@ -33,12 +30,5 @@ export async function handleSupportUserWebhook(data: WaMessageBody) {
 
 export async function handleSupportUserMessages(data, contact) {
   const { orgId, other } = contact;
-  await handleWaMessages(
-    "receive",
-    data,
-    other,
-    orgId,
-    PlatformType.WEBCHAT,
-    undefined,
-  );
+  await handleWaMessages("receive", data, other, orgId, PlatformType.WEBCHAT, undefined);
 }

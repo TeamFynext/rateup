@@ -59,8 +59,7 @@ export async function createStripePayment(invoiceData) {
         description: paymentIntentData.description,
         customer_email: invoiceData.customer_email || "",
         customer_phone: invoiceData.customer_phone || "",
-        rateupOrderId:
-          invoiceData.subscription_details?.metadata?.rateupOrderId,
+        rateupOrderId: invoiceData.subscription_details?.metadata?.rateupOrderId,
         createdAt: invoiceData.status_transitions.paid_at,
       },
     });
@@ -73,9 +72,7 @@ export async function createStripePayment(invoiceData) {
         status: OrderStatus.COMPLETE,
         subscriptionStatus: SubscriptionStatus.active,
         subscriptionId: subscription,
-        subscriptionChargeAt: new Date(
-          subscriptionData.current_period_end * 1000,
-        ),
+        subscriptionChargeAt: new Date(subscriptionData.current_period_end * 1000),
       },
       include: {
         RateupPlan: true,
@@ -83,7 +80,7 @@ export async function createStripePayment(invoiceData) {
     });
 
     if (updatedOrder) {
-      const updatedSubscription = await prisma.subscription.update({
+      await prisma.subscription.update({
         where: { orgId: updatedOrder?.orgId },
         data: {
           basePlanId: updatedOrder?.rateupPlanId,
@@ -201,9 +198,7 @@ export async function processOrder(payload) {
 
   let subscriptionData = await getSingleStripeSubscription(subscription);
 
-  let invoiceData = await getSingleStripeInvoice(
-    subscriptionData.latest_invoice,
-  );
+  let invoiceData = await getSingleStripeInvoice(subscriptionData.latest_invoice);
 
   if (invoiceData?.status && invoiceData?.status === "paid") {
     let updatedOrder = await prisma.order.update({
@@ -211,9 +206,7 @@ export async function processOrder(payload) {
       data: {
         subscriptionStatus: SubscriptionStatus.active,
         subscriptionId: subscription,
-        subscriptionChargeAt: new Date(
-          subscriptionData.current_period_end * 1000,
-        ),
+        subscriptionChargeAt: new Date(subscriptionData.current_period_end * 1000),
       },
     });
     return updatedOrder;
@@ -223,9 +216,7 @@ export async function processOrder(payload) {
       data: {
         subscriptionStatus: SubscriptionStatus.pending,
         subscriptionId: subscription,
-        subscriptionChargeAt: new Date(
-          subscriptionData.current_period_end * 1000,
-        ),
+        subscriptionChargeAt: new Date(subscriptionData.current_period_end * 1000),
       },
     });
     return updatedOrder;
@@ -253,9 +244,7 @@ export async function syncStripeProducts() {
   const priceList = priceRes?.data;
   const formattedData = [];
   for (const product of stripeProducts) {
-    const price = priceList.find(
-      (price) => price?.id === product?.default_price,
-    );
+    const price = priceList.find((price) => price?.id === product?.default_price);
     formattedData.push({
       name: product?.name,
       description: product?.description,
@@ -275,9 +264,7 @@ export async function syncStripeProducts() {
     (product) => product.productId,
   );
   const data = existingProducts
-    ? formattedData.filter(
-        (product) => !existingProducts.includes(product?.productId),
-      )
+    ? formattedData.filter((product) => !existingProducts.includes(product?.productId))
     : formattedData;
   await prisma.stripeProducts.createMany({
     data,
@@ -335,9 +322,7 @@ export async function getAllStripeSubscriptions() {
   )?.data?.data;
   const allStripeProducts = await prisma.stripeProducts.findMany();
   return subscriptions?.map((sub) => {
-    const product = allStripeProducts?.find(
-      (prod) => prod.productId === sub.plan.product,
-    );
+    const product = allStripeProducts?.find((prod) => prod.productId === sub.plan.product);
     return {
       id: sub.id,
       productName: product.name,
@@ -373,7 +358,7 @@ export async function cancelStripeSubscription(orgId) {
   console.log("Cancelling Stripe subscription");
 
   if (res && res?.id) {
-    const subscriptionStatus = await prisma.order.update({
+    await prisma.order.update({
       data: {
         subscriptionStatus: SubscriptionStatus.cancelled,
         subscriptionEndedAt: new Date(),

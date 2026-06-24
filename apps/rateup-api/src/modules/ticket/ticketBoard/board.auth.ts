@@ -17,8 +17,6 @@ export async function verifyBoardAccess(
   const hasAccess = await isBoardMember(boardId, userId);
 
   if (!hasAccess) {
-    return reply
-      .code(403)
-      .send({ message: "You don't have access to this board" });
+    return reply.code(403).send({ message: "You don't have access to this board" });
   }
 }

@@ -1,20 +1,12 @@
-import {
-  Contact,
-  WaMessage,
-  WhatsappSettings,
-} from "../../../../generated/prisma/client.js";
+import { WaMessage, WhatsappSettings } from "../../../../generated/prisma/client.js";
 import prisma from "../../../utils/prisma.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
-import {
-  CatalogWhatsappSettingSchema,
-  UpdateCatalogSchema,
-} from "./catalog.schema.js";
+import { CatalogWhatsappSettingSchema, UpdateCatalogSchema } from "./catalog.schema.js";
 import { syncProductSetsForCatalog } from "./productSet.service.js";
 import { WaReceiveMessageBody } from "../../../types/whatsapp.types.js";
 import { log } from "../../../utils/logger.js";
 import {
   getAllWaSettings,
-  getWaSettings,
   getWaSettingsById,
   getWaSettingsWithAccessTokenDecrypted,
 } from "../settings/wa_settings.service.js";
@@ -30,10 +22,7 @@ import { createNativePaymentMessage } from "../whatsappSurvey/wasurvey.utils.js"
 import { generateOrderReferenceId } from "../automatedReply/wa_automatedReply.utils.js";
 import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import { buildShopifyCartUrl } from "../../integrations/shopify/shopify.service.js";
-import {
-  sendAddressFlowToCustomer,
-  sendDeliveryListMessage,
-} from "./catalogSettings.service.js";
+import { sendAddressFlowToCustomer } from "./catalogSettings.service.js";
 
 export async function deleteWaCatalog(catalogId: string) {
   await prisma.whatsappCatalog.delete({
@@ -41,10 +30,7 @@ export async function deleteWaCatalog(catalogId: string) {
   });
 }
 
-export async function updateWaCatalog(
-  catalogId: string,
-  data: UpdateCatalogSchema,
-) {
+export async function updateWaCatalog(catalogId: string, data: UpdateCatalogSchema) {
   await prisma.whatsappCatalog.update({
     where: {
       catalogId,
@@ -85,10 +71,7 @@ export async function syncWaCatalogs(orgId: string) {
       const { accessToken, wabaId } = setting;
       if (map.has(wabaId)) continue; //already synced
       map.set(wabaId, true);
-      const businessInfo = await getMetaBusinessInfoByWABAId(
-        wabaId,
-        accessToken,
-      );
+      const businessInfo = await getMetaBusinessInfoByWABAId(wabaId, accessToken);
       if (!businessInfo) {
         continue;
       }
@@ -166,17 +149,9 @@ export async function syncWaCatalogs(orgId: string) {
       });
       for (const catalog of allCatalogs) {
         try {
-          await syncProductSetsForCatalog(
-            catalog.catalogId,
-            orgId,
-            accessToken,
-          );
+          await syncProductSetsForCatalog(catalog.catalogId, orgId, accessToken);
         } catch (e) {
-          log.error(
-            "Error syncing product sets for catalog %s: %o",
-            catalog.catalogId,
-            e,
-          );
+          log.error("Error syncing product sets for catalog %s: %o", catalog.catalogId, e);
         }
       }
 
@@ -191,9 +166,7 @@ export async function syncWaCatalogs(orgId: string) {
             },
           });
         } else {
-          const phoneIds = waSettings
-            .filter((s) => s.wabaId === wabaId)
-            .map((s) => s.phoneId);
+          const phoneIds = waSettings.filter((s) => s.wabaId === wabaId).map((s) => s.phoneId);
 
           // Clear existing mappings for these phone numbers before re-syncing from Meta
           // This ensures we always have the most up-to-date mappings
@@ -238,18 +211,13 @@ export async function syncConnectedCatalog(orgId: string) {
   }[] = [];
 
   for (const setting of waSettings) {
-    const { accessToken, wabaId, phoneId } = setting;
+    const { accessToken, wabaId } = setting;
     if (seenWabaIds.has(wabaId)) continue;
     seenWabaIds.add(wabaId);
 
     try {
-      const res = await callMetaApi(
-        `/${wabaId}/product_catalogs`,
-        "GET",
-        accessToken,
-      );
-      const connectedCatalogs: { id: string; name: string }[] =
-        res.data?.data ?? [];
+      const res = await callMetaApi(`/${wabaId}/product_catalogs`, "GET", accessToken);
+      const connectedCatalogs: { id: string; name: string }[] = res.data?.data ?? [];
 
       if (connectedCatalogs.length === 0) {
         results.push({
@@ -279,9 +247,7 @@ export async function syncConnectedCatalog(orgId: string) {
       }
 
       // Update CatalogPhoneIdMap for all phone IDs under this wabaId
-      const phoneIds = waSettings
-        .filter((s) => s.wabaId === wabaId)
-        .map((s) => s.phoneId);
+      const phoneIds = waSettings.filter((s) => s.wabaId === wabaId).map((s) => s.phoneId);
 
       await prisma.catalogPhoneIdMap.deleteMany({
         where: { whatsappSettingsPhoneId: { in: phoneIds } },
@@ -365,9 +331,7 @@ export async function handleWaOrderfromCatalog(
   });
 
   const productsWithDetails = order.product_items.map((p) => {
-    const dbProduct = dbProducts.find(
-      (dp) => dp.retailer_id === p.product_retailer_id,
-    );
+    const dbProduct = dbProducts.find((dp) => dp.retailer_id === p.product_retailer_id);
     const props = (dbProduct?.productProps as any) || {};
 
     // Exclude fields that are explicitly handled or not needed in the dynamic spread
@@ -376,8 +340,7 @@ export async function handleWaOrderfromCatalog(
       name,
       image_link,
       image,
-      retailer_id,
-      description,
+      description: _description,
       price: _price,
       currency: _currency,
       ...restProps
@@ -426,8 +389,7 @@ export async function handleWaOrderfromCatalog(
     },
   });
 
-  const catalogPaymentMethod =
-    (catalogFull as any)?.paymentMethod ?? CatalogPaymentMethod.MANUAL;
+  const catalogPaymentMethod = (catalogFull as any)?.paymentMethod ?? CatalogPaymentMethod.MANUAL;
   const collectAddress = (catalogFull as any)?.collectAddress ?? false;
   const collectDelivery = (catalogFull as any)?.collectDelivery ?? false;
   const hasApprovedFlow =
@@ -505,11 +467,7 @@ export async function handleWaOrderfromCatalog(
           waFlowId: catalogFull.addressFlowId,
           whatsappSettingsPhoneId: waSettings?.phoneId,
         });
-        log.info(
-          "Address flow sent for order %s to %s",
-          newOrder.id,
-          customerPhone,
-        );
+        log.info("Address flow sent for order %s to %s", newOrder.id, customerPhone);
         return; // Continue when customer submits flow (handleAddressFlowResponse)
       }
     } catch (e) {
@@ -526,8 +484,7 @@ export async function handleWaOrderfromCatalog(
 
   if (shouldAskDelivery) {
     try {
-      const { sendDeliveryListMessage } =
-        await import("./catalogSettings.service.js");
+      const { sendDeliveryListMessage } = await import("./catalogSettings.service.js");
       await sendDeliveryListMessage({
         orgId: catalog.orgId,
         phone: customerPhone,
@@ -551,8 +508,7 @@ export async function handleWaOrderfromCatalog(
       ? { name: "Fixed Delivery", charge: catalogFull.fixedDeliveryAmount ?? 0 }
       : null;
 
-    const { dispatchPaymentMessage } =
-      await import("./catalogSettings.service.js");
+    const { dispatchPaymentMessage } = await import("./catalogSettings.service.js");
     await dispatchPaymentMessage(
       {
         id: newOrder.id,
@@ -603,10 +559,7 @@ export async function handleWaOrderNativePayment(
     const waSetting = waSettings;
 
     if (!waSetting || !waSetting.wabaId) {
-      log.trace(
-        "WhatsApp settings or WABA ID not found for orgId => %s",
-        orgId,
-      );
+      log.trace("WhatsApp settings or WABA ID not found for orgId => %s", orgId);
       return;
     }
 
@@ -629,10 +582,7 @@ export async function handleWaOrderNativePayment(
     }
 
     if (!activeConfig) {
-      log.trace(
-        "No active payment configuration found on Meta for wabaId => %s",
-        waSetting.wabaId,
-      );
+      log.trace("No active payment configuration found on Meta for wabaId => %s", waSetting.wabaId);
       return;
     }
 
@@ -686,22 +636,13 @@ export async function handleWaOrderNativePayment(
     );
 
     await sendMessage(orgId, message);
-    log.info(
-      "Sent native payment request to %s for order %s",
-      contactPhone,
-      referenceId,
-    );
+    log.info("Sent native payment request to %s for order %s", contactPhone, referenceId);
   } catch (e) {
     log.error("Error in handleWaOrderNativePayment => %o", e);
   }
 }
 
-export async function updateConnectWaCatalog(
-  wabaId,
-  orgId,
-  catalogId,
-  syncWithMeta = true,
-) {
+export async function updateConnectWaCatalog(wabaId, orgId, catalogId, syncWithMeta = true) {
   const waSettings = await prisma.whatsappSettings.findMany({
     where: {
       wabaId: wabaId,
@@ -768,11 +709,7 @@ export async function updateConnectWaCatalog(
     if (error instanceof GraphApiError) {
       // Error code 100 or subcode 2388099 usually indicates catalog is already linked
       if (error.error.code === 100 || error.error.error_subcode === 2388099) {
-        log.info(
-          "Catalog %s already linked to WABA %s, updating mapping in DB",
-          catalogId,
-          wabaId,
-        );
+        log.info("Catalog %s already linked to WABA %s, updating mapping in DB", catalogId, wabaId);
         await prisma.catalogPhoneIdMap.deleteMany({
           where: {
             whatsappSettingsPhoneId: { in: phoneIds },
@@ -798,12 +735,9 @@ export async function disconnectCatalogFromWaba({
 }: CatalogWhatsappSettingSchema) {
   const waSettings = await getWaSettingsById(whatsappSettingsId);
   const { wabaId, accessToken } = waSettings;
-  const res = await callMetaApi(
-    `/${wabaId}/product_catalogs`,
-    "DELETE",
-    accessToken,
-    { catalog_id: catalogId },
-  );
+  const res = await callMetaApi(`/${wabaId}/product_catalogs`, "DELETE", accessToken, {
+    catalog_id: catalogId,
+  });
   if (!res.data.success) throw Error("Something went wrong");
   await prisma.catalogPhoneIdMap.deleteMany({
     where: {

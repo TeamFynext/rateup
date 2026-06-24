@@ -1,7 +1,4 @@
-import {
-  TicketPriority,
-  TicketType,
-} from "../../../../generated/prisma/client.js";
+import { TicketPriority, TicketType } from "../../../../generated/prisma/client.js";
 import { getShortUrlId } from "../../../utils/commonUtils.js";
 import prisma from "../../../utils/prisma.js";
 import { UpdateCardRequest } from "./card.schema.js";
@@ -44,8 +41,7 @@ export async function createCard(data: CardInput) {
     select: { order: true },
   });
 
-  const order =
-    data.order ?? (highestOrderCard ? highestOrderCard.order + 1 : 0);
+  const order = data.order ?? (highestOrderCard ? highestOrderCard.order + 1 : 0);
 
   const card = await prisma.ticketCard.create({
     data: {
@@ -286,17 +282,13 @@ export async function updateCard(
   });
   const newAssignees = data.assignedToIds?.filter(
     (assigneeId) =>
-      !previousCard?.assignees?.some(
-        (assignee) => assignee.assigneeId === assigneeId,
-      ),
+      !previousCard?.assignees?.some((assignee) => assignee.assigneeId === assigneeId),
   );
 
   const removedAssignees =
     data.assignedToIds !== undefined
       ? previousCard?.assignees
-          ?.filter(
-            (assignee) => !data.assignedToIds!.includes(assignee.assigneeId),
-          )
+          ?.filter((assignee) => !data.assignedToIds!.includes(assignee.assigneeId))
           .map((a) => a.assigneeId)
       : undefined;
 
@@ -304,16 +296,13 @@ export async function updateCard(
     where: { id },
     data: {
       title: data.title !== undefined ? data.title : undefined,
-      description:
-        data.description !== undefined ? data.description : undefined,
+      description: data.description !== undefined ? data.description : undefined,
       priority: data.priority !== undefined ? data.priority : undefined,
       deadline: data.deadline !== undefined ? data.deadline : undefined,
       contactId: data.contactId !== undefined ? data.contactId : undefined,
       checklists: data.checklists !== undefined ? data.checklists : undefined,
       // attachments is now String[] — replace the whole array
-      ...(data.attachments !== undefined
-        ? { attachments: { set: data.attachments } }
-        : {}),
+      ...(data.attachments !== undefined ? { attachments: { set: data.attachments } } : {}),
       ...(data.assignedToIds !== undefined
         ? {
             assignees: {
@@ -378,8 +367,7 @@ export async function updateCard(
 
   // Log ADDED_ATTACHMENT for each newly added file key (with uploader info)
   if (data.attachments !== undefined) {
-    const previousKeys: string[] =
-      (previousCard?.attachments as string[]) ?? [];
+    const previousKeys: string[] = (previousCard?.attachments as string[]) ?? [];
     const newKeys = data.attachments.filter((k) => !previousKeys.includes(k));
     if (newKeys.length > 0) {
       const uploader = userId
@@ -404,9 +392,7 @@ export async function updateCard(
       }
     }
 
-    const removedKeys = previousKeys.filter(
-      (k) => !data.attachments!.includes(k),
-    );
+    const removedKeys = previousKeys.filter((k) => !data.attachments!.includes(k));
     if (removedKeys.length > 0) {
       const remover = userId
         ? await prisma.user.findUnique({
@@ -434,8 +420,7 @@ export async function updateCard(
   // Check contact changes
   const oldContactId = previousCard?.contactId;
   const newContactId = data.contactId;
-  const contactChanged =
-    newContactId !== undefined && oldContactId !== newContactId;
+  const contactChanged = newContactId !== undefined && oldContactId !== newContactId;
 
   if (contactChanged) {
     if (newContactId) {
@@ -654,14 +639,8 @@ export async function updateCard(
 
       if (board) {
         for await (const user of users) {
-          const notificationSetting = await getNotificationSettings(
-            user.id,
-            orgId,
-          );
-          if (
-            notificationSetting &&
-            notificationSetting.ticketAssignNotification
-          ) {
+          const notificationSetting = await getNotificationSettings(user.id, orgId);
+          if (notificationSetting && notificationSetting.ticketAssignNotification) {
             await notificationQueue.add("notification", {
               systemNotificationData: {
                 userId: user.id,
@@ -824,7 +803,7 @@ export async function moveCard(
   return card;
 }
 
-export async function deleteCard(id: string, userId: string) {
+export async function deleteCard(id: string, _userId: string) {
   // Get card details before deletion for activity log
   const card = await prisma.ticketCard.findUnique({
     where: { id },

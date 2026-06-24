@@ -8,10 +8,7 @@ export function generateRandomAlphaId(length: number): string {
   return result;
 }
 
-export function getUniqueRandomAlphaId(
-  length: number,
-  existingIds: string[],
-): string {
+export function getUniqueRandomAlphaId(length: number, existingIds: string[]): string {
   let id = generateRandomAlphaId(length);
   while (existingIds.includes(id)) {
     id = generateRandomAlphaId(length);

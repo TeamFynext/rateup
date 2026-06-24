@@ -9,12 +9,8 @@ const updateSubscriptionInputSchema = z.object({
 });
 const deleteSubscriptionsInputSchema = z.array(z.string());
 
-export type updateSubscriptionInput = z.infer<
-  typeof updateSubscriptionInputSchema
->;
-export type deleteSubscriptionsInput = z.infer<
-  typeof deleteSubscriptionsInputSchema
->;
+export type updateSubscriptionInput = z.infer<typeof updateSubscriptionInputSchema>;
+export type deleteSubscriptionsInput = z.infer<typeof deleteSubscriptionsInputSchema>;
 
 // Auto-exported after fastify-zod migration
 export { updateSubscriptionInputSchema, deleteSubscriptionsInputSchema };

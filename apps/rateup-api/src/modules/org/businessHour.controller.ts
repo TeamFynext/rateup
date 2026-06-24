@@ -29,10 +29,7 @@ export async function createBusinessHourHandler(
   }
 }
 
-export async function getAllBusinessHoursHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllBusinessHoursHandler(request: FastifyRequest, reply: FastifyReply) {
   const user = request.user;
 
   try {

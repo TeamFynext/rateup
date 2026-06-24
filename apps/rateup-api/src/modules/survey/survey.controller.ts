@@ -9,7 +9,6 @@ import {
   getPhoneBySurveyTeamMapId,
   getPublicSurveyById,
   getSurveyById,
-  getSurveyBylandingId,
   getSurveyLandingByUserId,
   getSurveyLanguagesFromTeamId,
   getSurveyStatsBySurveyTeamMapId,
@@ -43,7 +42,6 @@ import {
   GetSurveyTemplatesParams,
   GraphResponseParams,
   IdParamInput,
-  PhoneParamInput,
   surveyVariableInput,
   surveyVariableUpdateInput,
   UpdateGoogleLinkInput,
@@ -52,10 +50,7 @@ import {
 } from "./survey.schema.js";
 import Session from "supertokens-node/recipe/session/index.js";
 import { Prisma } from "../../../generated/prisma/client.js";
-import {
-  BySurveyTeamMapIdParams,
-  ByTeamIdParams,
-} from "../team/team.schema.js";
+import { BySurveyTeamMapIdParams, ByTeamIdParams } from "../team/team.schema.js";
 import { getTeamIdsByUserId } from "../team/team.service.js";
 // import { createDefaultSurveyTheme } from "../surveyTheme/surveyTheme.service";
 import { SurveyType, WaFlowStatus } from "../../types/enums.js";
@@ -66,7 +61,6 @@ import {
 } from "../whatsapp/flows/flow.service.js";
 import { log } from "../../utils/logger.js";
 import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema.js";
-import { ResponseFilterQuery } from "../response/response.schema.js";
 import { getIp } from "../../utils/http.js";
 import { getSurveyResponseByIp } from "../response/response.service.js";
 
@@ -112,7 +106,7 @@ export async function getSurveyByIdHandler(
     } else {
       reply.send(survey);
     }
-  } catch (e) {
+  } catch {
     reply.code(500);
   }
 }
@@ -133,19 +127,14 @@ export async function getPublicSurveyByIdHandler(
     } else {
       if (request.query.checkUniqueDevice && survey.uniqueDeviceResponse) {
         const ip = getIp(request);
-        const surveyResponse = await getSurveyResponseByIp(
-          survey.surveyTeamMapId,
-          ip,
-        );
+        const surveyResponse = await getSurveyResponseByIp(survey.surveyTeamMapId, ip);
         if (surveyResponse) {
-          return reply
-            .code(200)
-            .send({ ...survey, message: "ALREADY_SUBMITTED" });
+          return reply.code(200).send({ ...survey, message: "ALREADY_SUBMITTED" });
         }
       }
       reply.send(survey);
     }
-  } catch (e) {
+  } catch {
     reply.code(500);
   }
 }
@@ -216,7 +205,7 @@ export async function getSurveyByTeamHandler(
     } else {
       reply.send(survey);
     }
-  } catch (e) {
+  } catch {
     reply.code(500);
   }
 }
@@ -228,15 +217,13 @@ export async function getSurveyStatsBySurveyTeamMapIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const survey = await getSurveyStatsBySurveyTeamMapId(
-      request.params.surveyTeamMapId,
-    );
+    const survey = await getSurveyStatsBySurveyTeamMapId(request.params.surveyTeamMapId);
     if (!survey) {
       reply.code(404);
     } else {
       reply.send(survey);
     }
-  } catch (e) {
+  } catch {
     reply.code(500);
   }
 }
@@ -256,10 +243,7 @@ export async function getSurveyStatsHandler(
     reply.code(500).send(e);
   }
 }
-export async function getSurveysHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getSurveysHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const surveys = await getSurveysByUserId(request.userId, true, true);
     reply.send(surveys);
@@ -269,10 +253,7 @@ export async function getSurveysHandler(
   }
 }
 
-export async function getSurveysWithQuestionsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getSurveysWithQuestionsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const includeQuestions = true;
     const surveys = await getSurveysByUserId(request.userId, includeQuestions);
@@ -283,10 +264,7 @@ export async function getSurveysWithQuestionsHandler(
   }
 }
 
-export async function getWebSurveysHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getWebSurveysHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const surveys = await getWebSurveysByUserId(request.userId);
     reply.send(surveys);
@@ -296,10 +274,7 @@ export async function getWebSurveysHandler(
   }
 }
 
-export async function getActiveSurveysSummaryHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getActiveSurveysSummaryHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userId = request.userId;
     const surveys = await getActiveSurveysSummmaryByUserId(userId);
@@ -310,10 +285,7 @@ export async function getActiveSurveysSummaryHandler(
   }
 }
 
-export async function getSurveysSummaryHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getSurveysSummaryHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userId = request.userId;
     const surveys = await getSurveysSummmaryByUserId(userId);
@@ -325,12 +297,9 @@ export async function getSurveysSummaryHandler(
 }
 
 //----------get survey landing -----------
-export async function getSurveysLandingHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getSurveysLandingHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    let session = await Session.getSession(request, reply);
+    await Session.getSession(request, reply);
     const surveys = await getSurveyLandingByUserId(request.userId);
     reply.send(surveys);
   } catch (e) {
@@ -341,10 +310,7 @@ export async function getSurveysLandingHandler(
 
 //------------get whatsapp surveys -------
 //--------@author:harshad
-export async function getWhatsappSurveysHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getWhatsappSurveysHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     let type = "whatsapp";
     const surveys = await getWhatsappSurveysByUserId(request.userId, type);
@@ -388,10 +354,7 @@ export async function deleteSurveyByIdHandler(
     }
   } catch (e) {
     console.log(e);
-    if (
-      e instanceof Prisma.PrismaClientKnownRequestError &&
-      e.code === "P2003"
-    ) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003") {
       reply.code(400).send({
         error:
           "Cannot delete Survey because it has associated responses. Cleanup responses and Try Again!",
@@ -416,9 +379,7 @@ export async function deleteTeamSurveyHandler(
     if (!response) {
       reply.code(404);
     } else {
-      reply
-        .code(200)
-        .send({ message: "Deleted successfully.", info: response });
+      reply.code(200).send({ message: "Deleted successfully.", info: response });
     }
     //TODO improve response handling
   } catch (e) {
@@ -491,10 +452,7 @@ export async function verifySurveyPasswordHandler(
   reply: FastifyReply,
 ) {
   try {
-    const verifyPassword = await verifySurveyPassword(
-      request.params.id,
-      request.body,
-    );
+    const verifyPassword = await verifySurveyPassword(request.params.id, request.body);
     if (!verifyPassword) {
       reply.code(404);
     } else {
@@ -566,9 +524,7 @@ export async function reviewPageVisitedOnSurveyHandler(
   reply: FastifyReply,
 ) {
   try {
-    const updateVisited = await updateReviewLinkVisitedOnSurvey(
-      request.params.id,
-    );
+    const updateVisited = await updateReviewLinkVisitedOnSurvey(request.params.id);
     if (!updateVisited) {
       reply.code(404);
     } else {
@@ -621,9 +577,7 @@ export async function createSurveyVariableHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply
-      .code(500)
-      .send({ error: e?.message || "Something Went Wrong! Try again." });
+    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
   }
 }
 
@@ -637,9 +591,7 @@ export async function getSurveyVariablesHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply
-      .code(500)
-      .send({ error: e?.message || "Something Went Wrong! Try again." });
+    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
   }
 }
 
@@ -656,9 +608,7 @@ export async function updateSurveyVariableHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply
-      .code(500)
-      .send({ error: e?.message || "Something Went Wrong! Try again." });
+    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
   }
 }
 
@@ -675,9 +625,7 @@ export async function deleteSurveyVariableHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
-    reply
-      .code(500)
-      .send({ error: e?.message || "Something Went Wrong! Try again." });
+    reply.code(500).send({ error: e?.message || "Something Went Wrong! Try again." });
   }
 }
 

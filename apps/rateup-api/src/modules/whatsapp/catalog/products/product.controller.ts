@@ -14,7 +14,6 @@ import { createShopifyProduct } from "../../../integrations/shopify/shopify.serv
 import {
   catalogItemBatchSchema,
   CatalogItemQueryFilter,
-  catalogItemSchema,
   CatalogProductIdsSchema,
 } from "./product.schema.js";
 import { CatalogIdParam } from "../catalog.schema.js";
@@ -35,12 +34,7 @@ export async function createCatalogProductsBatchHandler(
     if (!catalogInfo) {
       return reply.code(404).send("No catalog found");
     }
-    const res = await createCatalogProductsBatch(
-      orgId,
-      type,
-      request.body[type],
-      catalogId,
-    );
+    await createCatalogProductsBatch(orgId, type, request.body[type], catalogId);
     reply.code(200).send();
   } catch (e) {
     log.error(e);
@@ -90,11 +84,7 @@ export async function deleteCatalogProductsHandler(
   try {
     const { orgId } = request.user;
     const { catalogId } = request.params;
-    const res = await deleteCatalogProducts(
-      orgId,
-      catalogId,
-      request.body.productIds,
-    );
+    const res = await deleteCatalogProducts(orgId, catalogId, request.body.productIds);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -113,12 +103,7 @@ export async function updateCatalogProductsHandler(
     const { orgId } = request.user;
     const { type } = request.body;
     const { catalogId } = request.params;
-    const res = await updateCatalogProducts(
-      orgId,
-      catalogId,
-      request.body[type],
-      type,
-    );
+    const res = await updateCatalogProducts(orgId, catalogId, request.body[type], type);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -156,11 +141,7 @@ export async function importShopifyProductsHandler(
     if (!catalogInfo) {
       return reply.code(404).send("No catalog found");
     }
-    const result = await importSelectedShopifyProducts(
-      orgId,
-      catalogId,
-      request.body?.items ?? [],
-    );
+    const result = await importSelectedShopifyProducts(orgId, catalogId, request.body?.items ?? []);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
@@ -185,15 +166,13 @@ export async function createShopifyProductHandler(
   try {
     const { orgId } = request.user;
     const { catalogId } = request.params;
-    const { title, description, brand, price, currencyCode, imageUrl } =
-      request.body;
+    const { title, description, brand, price, currencyCode, imageUrl } = request.body;
 
     // Step 1: Create the product in Shopify
     const shopifyProduct = await createShopifyProduct(orgId, request.body);
 
     // Step 2: Auto-import into the catalog so it appears with the Shopify badge
-    const variantGid: string | undefined =
-      shopifyProduct?.variants?.nodes?.[0]?.id;
+    const variantGid: string | undefined = shopifyProduct?.variants?.nodes?.[0]?.id;
     if (variantGid && catalogId) {
       const numericVariantId = variantGid.split("/").pop() ?? variantGid;
       const productGid: string = shopifyProduct?.id ?? "";
@@ -224,9 +203,7 @@ export async function createShopifyProductHandler(
     reply.code(200).send(shopifyProduct);
   } catch (e) {
     log.error(e);
-    reply
-      .code(500)
-      .send({ message: e.message ?? "Failed to create Shopify product" });
+    reply.code(500).send({ message: e.message ?? "Failed to create Shopify product" });
   }
 }
 
@@ -245,8 +222,6 @@ export async function syncShopifyProductsFromShopifyHandler(
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
-    reply
-      .code(500)
-      .send({ message: e.message ?? "Failed to sync from Shopify" });
+    reply.code(500).send({ message: e.message ?? "Failed to sync from Shopify" });
   }
 }

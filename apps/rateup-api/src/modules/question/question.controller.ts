@@ -17,7 +17,6 @@ import {
   updateQuestion,
   updateQuestionsOnSurvey,
 } from "./question.service.js";
-import { hasAccessToSurvey } from "../../utils/auth.js";
 import { getSurveyById } from "../survey/survey.service.js";
 
 export async function createQuestionHandler(
@@ -148,7 +147,9 @@ export async function replaceQuestionsHandler(
     const surveyId = request.params.surveyId;
     const { questions, screenId } = request.body;
     await updateQuestionsOnSurvey(surveyId, questions);
-    screenId && (await updateLogicJump(screenId, surveyId));
+    if (screenId) {
+      await updateLogicJump(screenId, surveyId);
+    }
     reply.code(200).send();
   } catch (e) {
     console.log(e);
@@ -169,30 +170,21 @@ export async function importAllowedEmailIdsHandler(
       reply.code(404).send({ error: "Question not found" });
     } else {
       const file = await request.file();
-      const allowedEmails = (await getAllowedEmailsFromFile(
-        file,
-      )) as Array<string>;
+      const allowedEmails = (await getAllowedEmailsFromFile(file)) as Array<string>;
       if (allowedEmails) {
         for (const lang of languages) {
           const existingEmails = question.features?.[lang]?.allowedEmails || [];
-          const remainingEmails = allowedEmails.filter(
-            (email) => !existingEmails?.includes(email),
-          );
+          const remainingEmails = allowedEmails.filter((email) => !existingEmails?.includes(email));
           question.features = {
             ...question?.features,
             [lang]: {
               ...question?.features?.[lang],
-              isRestricted:
-                existingEmails.length || remainingEmails.length ? true : false,
+              isRestricted: existingEmails.length || remainingEmails.length ? true : false,
               allowedEmails: [...existingEmails, ...remainingEmails],
             },
           };
         }
-        await updateQuestion(
-          surveyId,
-          id,
-          question as unknown as UpdateQuestionInput,
-        );
+        await updateQuestion(surveyId, id, question as unknown as UpdateQuestionInput);
         reply.code(200).send();
       } else {
         reply.code(500).send({ error: "Something went wrong" });

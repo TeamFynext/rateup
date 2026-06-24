@@ -31,7 +31,6 @@ import {
 import Session from "supertokens-node/recipe/session/index.js";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js";
 import { log } from "../../utils/logger.js";
-import { sendEmailService } from "../email/email.service.js";
 // import { html } from "cheerio";
 import { createEmailBodyPricingPlanSelected } from "../../utils/email/payments/pricingPlanSelected.js";
 import { Order } from "../../../generated/prisma/client.js";
@@ -56,10 +55,7 @@ export async function createCheckoutSessionHandler(
   }
 }
 
-export async function verificationHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function verificationHandler(request: FastifyRequest, reply: FastifyReply) {
   interface KnownProperties {
     event?: string;
     payload?: any;
@@ -90,10 +86,7 @@ export async function verificationHandler(
   if (data?.event === "payment.captured" || data?.event === "payment.failed") {
     console.log(data?.event);
     try {
-      const paymentPlans = await verifyPayment(
-        data?.payload?.payment?.entity,
-        data?.event,
-      );
+      const paymentPlans = await verifyPayment(data?.payload?.payment?.entity, data?.event);
       return reply.code(201).send(paymentPlans);
     } catch (e) {
       console.log(e);
@@ -125,10 +118,7 @@ export async function verificationHandler(
   reply.code(500).send({ success: false });
 }
 
-export async function syncPaymentPlansHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function syncPaymentPlansHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const paymentPlans = await syncPaymentPlans();
     reply.code(201).send(paymentPlans);
@@ -138,10 +128,7 @@ export async function syncPaymentPlansHandler(
   }
 }
 
-export async function getAllPaymentPlansHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllPaymentPlansHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const paymentPlans = await getAllPaymentPlans();
     reply.code(201).send(paymentPlans);
@@ -250,10 +237,7 @@ export async function cancelRazorpaySubscriptionHandler(
   }
 }
 
-export async function getAllOrdersByOrg(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllOrdersByOrg(request: FastifyRequest, reply: FastifyReply) {
   try {
     let session = await Session.getSession(request, reply);
     const accessTokenPayload = session.getAccessTokenPayload();
@@ -267,10 +251,7 @@ export async function getAllOrdersByOrg(
   }
 }
 
-export async function getAllPaymentOrdersHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllPaymentOrdersHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const allOrders = await getAllPaymentOrders();
     reply.code(201).send(allOrders);

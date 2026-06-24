@@ -18,32 +18,9 @@ type hubSpotContact = {
   joined_date: Date;
 };
 
-export async function createHubSpotContact(
-  data: hubSpotContact,
-  hubSpotCompanyId: string,
-) {
+export async function createHubSpotContact(_data: hubSpotContact, _hubSpotCompanyId: string) {
   try {
     if (!process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
-    const res = (
-      await hubApiClient.post("/crm/v3/objects/contacts", {
-        properties: data,
-        associations: hubSpotCompanyId
-          ? [
-              {
-                to: {
-                  id: parseInt(hubSpotCompanyId),
-                },
-                types: [
-                  {
-                    associationCategory: "HUBSPOT_DEFINED",
-                    associationTypeId: 279,
-                  },
-                ],
-              },
-            ]
-          : undefined,
-      })
-    )?.data;
   } catch (e) {
     log.error("error creating hubspot contact %o", e);
   }
@@ -73,9 +50,7 @@ export async function getHubSpotCompanyByOwnerEmail(owner_email: string) {
   try {
     if (!process.env.HUB_SPOT_PRIVATE_APP_ACCESS_TOKEN) return false;
     const res = (
-      await hubApiClient.get(
-        `/crm/v3/objects/companies/${owner_email}?idProperty=owner_email`,
-      )
+      await hubApiClient.get(`/crm/v3/objects/companies/${owner_email}?idProperty=owner_email`)
     ).data;
     return res?.id;
   } catch (e) {

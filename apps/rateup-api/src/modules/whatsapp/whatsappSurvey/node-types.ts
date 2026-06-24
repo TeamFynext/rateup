@@ -366,10 +366,7 @@ export type NodeData =
   | CatalogNodeData;
 
 // Extended Node type with typed data
-export type TypedNode<T extends NodeType = NodeType> = Omit<
-  Node,
-  "data" | "type"
-> & {
+export type TypedNode<T extends NodeType = NodeType> = Omit<Node, "data" | "type"> & {
   type: T;
   data: NodeTypeMap[T];
 };

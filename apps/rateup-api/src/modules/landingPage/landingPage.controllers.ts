@@ -31,16 +31,12 @@ async function getPublicLandingPageWithShortId(
   req: FastifyRequest<{ Params: { shortUrlId: string } }>,
   rep: FastifyReply,
 ) {
-  const landingPageWithShortUrlId =
-    await getPublicLandingPageWithShortIdFromDB(req);
+  const landingPageWithShortUrlId = await getPublicLandingPageWithShortIdFromDB(req);
   rep.code(200).send(landingPageWithShortUrlId);
 }
 
 async function createLandingPage(req: FastifyRequest, rep: FastifyReply) {
-  const newLandingPage = await shortIdUniqueConstraintErrHandler(
-    createLandingPageInDB,
-    req,
-  );
+  const newLandingPage = await shortIdUniqueConstraintErrHandler(createLandingPageInDB, req);
   rep.code(201).send(newLandingPage);
 }
 
@@ -56,10 +52,8 @@ async function deleteLandingPageById(
   req: FastifyRequest<{ Params: { id: string } }>,
   rep: FastifyReply,
 ) {
-  const deletedLandingPage = await deleteLandingPageInDB(req);
-  rep
-    .code(200)
-    .send({ success: true, message: "Deleted LandingPage sucessfully." });
+  await deleteLandingPageInDB(req);
+  rep.code(200).send({ success: true, message: "Deleted LandingPage sucessfully." });
 }
 
 async function updatePageVisits(

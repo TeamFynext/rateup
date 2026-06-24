@@ -1,11 +1,5 @@
 // Any modification to this file should be reflected in the frontend
-import {
-  Contact,
-  LoyaltyReward,
-  Prisma,
-  Role,
-  WaMessage,
-} from "../../../generated/prisma/client";
+import { Contact, LoyaltyReward, Prisma, Role, WaMessage } from "../../../generated/prisma/client";
 import {
   QuestionType,
   SmileyResponse,
@@ -68,7 +62,6 @@ type ValidationRules = {
   } | null;
 };
 
-export {};
 declare global {
   type Choice = {
     value: string;
@@ -339,8 +332,7 @@ declare global {
   type subscriptionActiveField = {
     active: boolean;
   };
-  type subscriptionWithActiveAndCount = subscriptionCountRestriction &
-    subscriptionActiveField;
+  type subscriptionWithActiveAndCount = subscriptionCountRestriction & subscriptionActiveField;
   interface SubscriptionFeatures {
     // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
     [sfpn.Menu]: subscriptionCountRestriction &
@@ -380,8 +372,7 @@ declare global {
         leadAdAutomation: subscriptionWithActiveAndCount;
       };
     };
-    [sfpn.ReputationManagement]: subscriptionActiveField &
-      subscriptionCountRestriction;
+    [sfpn.ReputationManagement]: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.Ticket]: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.AI]: subscriptionActiveField & {
       count: {
@@ -772,10 +763,7 @@ declare global {
   type WaInboxMessageBody = {
     exchangeProcess: "send" | "receive" | "internal" | "privateNote";
     send?: WaSendMessageBody | IgSendMessageBody | FbSendMessageBody;
-    receive?:
-      | WaReceiveMessageBody
-      | IgReceiveMessageBody
-      | FbReceiveMessageBody;
+    receive?: WaReceiveMessageBody | IgReceiveMessageBody | FbReceiveMessageBody;
     internal?: WaInternalMessageBody;
     privateNote?: WaPrivateMessageBody;
   };
@@ -839,11 +827,7 @@ declare global {
     link?: string;
     price: string;
     video?: CatalogImage[];
-    availability:
-      | "in stock"
-      | "out of stock"
-      | "available for order"
-      | "discontinued";
+    availability: "in stock" | "out of stock" | "available for order" | "discontinued";
     brand: string;
     age_group?: "newborn" | "infant" | "toddler" | "kids" | "adult";
     color?: string;
@@ -900,10 +884,7 @@ declare global {
     isWhatsappConnected: boolean;
   };
 
-  type WaCatalogProductItem =
-    | CatalogProductCore
-    | CatalogHotel
-    | CatalogHotelRoom;
+  type WaCatalogProductItem = CatalogProductCore | CatalogHotel | CatalogHotelRoom;
 
   type WaCatalogOrder = {
     catalogId: string;
@@ -987,16 +968,11 @@ declare module "fastify" {
     };
     subscription: Subscription;
     features: Set<import("../../generated/prisma/client.js").TeamFeature>;
-    can: (
-      feature: import("../../generated/prisma/client.js").TeamFeature,
-    ) => boolean;
+    can: (feature: import("../../generated/prisma/client.js").TeamFeature) => boolean;
   }
 }
 
-export interface CustomRouteShortHandOptions extends Omit<
-  RouteShorthandOptions,
-  "config"
-> {
+export interface CustomRouteShortHandOptions extends Omit<RouteShorthandOptions, "config"> {
   config: any;
 }
 

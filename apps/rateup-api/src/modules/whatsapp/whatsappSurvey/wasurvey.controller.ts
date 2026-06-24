@@ -68,19 +68,13 @@ import {
   updateCampaignParticipant,
 } from "../../campaign/campaignParticipants/campaignParticipants.service.js";
 import prisma from "../../../utils/prisma.js";
-import {
-  updateStartedSurvey,
-  updateVisitedSurvey,
-} from "../../survey/survey.service.js";
+import { updateStartedSurvey, updateVisitedSurvey } from "../../survey/survey.service.js";
 import {
   getFlowWithSurveyTeamMapIdsWithDbFlowId,
   handleStaticFlowReply,
   sendFlow,
 } from "../flows/flow.service.js";
-import {
-  checkAndExecuteRuleByTriggerEvent,
-  selectAutomationByBusinessHours,
-} from "../automatedReply/wa_automatedReply.utils.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import {
   CampaignParticipant,
@@ -98,30 +92,18 @@ import {
 import { getOrgById } from "../../org/org.services.js";
 import { checkMessageLimitExceeded } from "./wasurvey.auth.js";
 import { updateMonthlyStat } from "../../stats/stats.service.js";
-import {
-  getLatestStatus,
-  updateCampaign,
-} from "../../campaign/campaign.service.js";
+import { getLatestStatus, updateCampaign } from "../../campaign/campaign.service.js";
 import {
   getLoyaltyWaCommandByRequestMessage,
   handleLoyaltyRedeemInteraction,
   handleLoyaltyWaCommand,
 } from "../../loyalty/settings/settings.service.js";
-import {
-  getSubscription,
-  getUsageStats,
-} from "../../campaign/campaign.auth.js";
+import { getSubscription, getUsageStats } from "../../campaign/campaign.auth.js";
 import { createJWT } from "../../../utils/jwt.js";
-import {
-  getAIResponseForQuery,
-  getChatbotDetails,
-} from "../../chatbot/chatbot.service.js";
+import { getAIResponseForQuery, getChatbotDetails } from "../../chatbot/chatbot.service.js";
 import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller.js";
 import { NodeTypeMap, TypedNode } from "./node-types.js";
-import {
-  logAutomationAction,
-  findRecentAutomation,
-} from "./automation-logger.utils.js";
+import { logAutomationAction, findRecentAutomation } from "./automation-logger.utils.js";
 import { autoGenerateTicket } from "../../ticket/ticketCard/card.service.js";
 import {
   getAutomatedReplyById,
@@ -138,15 +120,9 @@ import {
 import { getUserIdsByTeamId } from "../../user/user.service.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
 import { verifyTemplateMessageLimit } from "../messageTemplates/wa_templates.auth.js";
-import {
-  createCustomerAccount,
-  getCustomerAccountByPhone,
-} from "../../loyalty/accounts/account.service.js";
+import { createCustomerAccount } from "../../loyalty/accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
-import {
-  notificationQueue,
-  pausedAutomationQueue,
-} from "../../../utils/redisConnection.js";
+import { notificationQueue, pausedAutomationQueue } from "../../../utils/redisConnection.js";
 import { enqueueWebhookDispatch } from "../../webhook/webhook.service.js";
 
 // TODO: add as fastify schema
@@ -155,10 +131,7 @@ interface subscribeQuery {
   "hub.verify_token": string;
   "hub.challenge": string;
 }
-export async function webhookSubscribeHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function webhookSubscribeHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const query = request.query as subscribeQuery;
     if (
@@ -178,10 +151,7 @@ export async function webhookSubscribeHandler(
 
 // TODO: handle multiple changes (changes.length > 1)
 // TODO: Check for usable types in whatsapp sdk (discontinued project)
-export async function whatsappEventHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function whatsappEventHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const body = request.body as WaMessageBody;
     log.trace("WaEvent => %o", body); // Log the entire event payload
@@ -251,11 +221,7 @@ async function handleCapturedEvent(body: WaMessageBody) {
     (entry.changes || []).flatMap((change) =>
       (change.value?.statuses || []).map((status) =>
         safeAsyncOperation(
-          () =>
-            handlePaymentConfirmation(
-              status.recipient_id,
-              status.payment?.reference_id,
-            ),
+          () => handlePaymentConfirmation(status.recipient_id, status.payment?.reference_id),
           (error) =>
             log.error(
               `Error handling payment confirmation for recipient_id ${status.recipient_id}: %o`,
@@ -275,8 +241,7 @@ async function handleMessageEvent(body: WaMessageBody) {
 
   for (const entry of body.entry || []) {
     for (const change of entry.changes || []) {
-      const phoneId = (change.value as WaReceiveMessageBody)?.metadata
-        ?.phone_number_id;
+      const phoneId = (change.value as WaReceiveMessageBody)?.metadata?.phone_number_id;
       const waSettings = await getWaSettingsByPhoneId(phoneId);
 
       if (!waSettings) {
@@ -288,11 +253,7 @@ async function handleMessageEvent(body: WaMessageBody) {
         () => whatsappMessageHandler(waSettings, body),
         (error) => {
           log.error(error);
-          log.error(
-            "Error processing WhatsApp message for phone_id %s: %o",
-            phoneId,
-            error,
-          );
+          log.error("Error processing WhatsApp message for phone_id %s: %o", phoneId, error);
         },
       );
     }
@@ -330,11 +291,7 @@ async function handleSMBMessageEchoes(body: WaMessageBody) {
               message.id,
             );
           } catch (error) {
-            log.error(
-              "Error processing SMB Message Echo for message_id %s: %o",
-              message.id,
-              error,
-            );
+            log.error("Error processing SMB Message Echo for message_id %s: %o", message.id, error);
           }
         }
       }
@@ -382,10 +339,7 @@ async function handleTemplateCategoryChange(body: WaMessageBody) {
 }
 
 // Handler: Update message statuses
-async function handleMessageStatusEvent(
-  body: WaMessageBody,
-  eventType: WaEvent,
-) {
+async function handleMessageStatusEvent(body: WaMessageBody, eventType: WaEvent) {
   const promises = (body.entry || []).flatMap((entry) =>
     (entry.changes || []).flatMap((change) => {
       const value = change.value as WaReceiveMessageBody;
@@ -393,11 +347,7 @@ async function handleMessageStatusEvent(
       return (value?.statuses || []).map((status) =>
         safeAsyncOperation(
           async () => {
-            await handleMessageStatusUpdate(
-              eventType,
-              status.id,
-              status.errors,
-            );
+            await handleMessageStatusUpdate(eventType, status.id, status.errors);
             if (phoneId) {
               await enqueueWebhookDispatch(phoneId, "message_status", {
                 status: status.status,
@@ -409,10 +359,7 @@ async function handleMessageStatusEvent(
             }
           },
           (error) =>
-            log.error(
-              `Error handling message status update for status id ${status.id}: %o`,
-              error,
-            ),
+            log.error(`Error handling message status update for status id ${status.id}: %o`, error),
         ),
       );
     }),
@@ -433,13 +380,8 @@ async function handleAccountUpdateEvent(body: WaMessageBody) {
     value.ban_info?.ban_status === "BANNED" ||
     (value.restriction_info && value.restriction_info.length > 0)
   ) {
-    log.warn(
-      `WABA ID ${wabaId} account restricted or banned. Marking as DISCONNECTED.`,
-    );
-    await updateWaSettingsStatusByWabaId(
-      wabaId,
-      WhatsappSettingsStatus.DISCONNECTED,
-    );
+    log.warn(`WABA ID ${wabaId} account restricted or banned. Marking as DISCONNECTED.`);
+    await updateWaSettingsStatusByWabaId(wabaId, WhatsappSettingsStatus.DISCONNECTED);
   } else {
     // Other account updates might not imply disconnection, but we log them.
     log.info(`Account update received for WABA ID ${wabaId}: %o`, value);
@@ -455,9 +397,7 @@ interface changeValue {
 }
 
 async function templateStatusChangeHandler(changeValue: changeValue) {
-  const dbTemplate = await getTemplateWithHSMId(
-    changeValue.message_template_id.toString(),
-  );
+  const dbTemplate = await getTemplateWithHSMId(changeValue.message_template_id.toString());
   if (!dbTemplate) {
     log.error("Template not found in db");
     return false;
@@ -480,12 +420,8 @@ interface TemplateCategoryChange {
   previous_category: string;
   new_category: string;
 }
-async function templateCategoryChangeHandler(
-  changeValue: TemplateCategoryChange,
-) {
-  const dbTemplate = await getTemplateWithHSMId(
-    changeValue.message_template_id.toString(),
-  );
+async function templateCategoryChangeHandler(changeValue: TemplateCategoryChange) {
+  const dbTemplate = await getTemplateWithHSMId(changeValue.message_template_id.toString());
   if (!dbTemplate || !changeValue.new_category) {
     log.error("Template not found in db");
     return false;
@@ -506,26 +442,18 @@ async function whatsappMessageHandler(
   //   waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
   const parsedMessage = parseMessage(waMessage);
   const { orgId } = waSettings;
-  const {
-    message: tempMessage,
-    from,
-    type,
-    completeMessageObject,
-    userName,
-  } = parsedMessage;
+  const { message: tempMessage, from, type, completeMessageObject, userName } = parsedMessage;
 
   let sourcePlatform;
   let sourceIdentifier;
   if (waMessage.object === "whatsapp_business_account") {
     sourcePlatform = PlatformType.WHATSAPP;
-    sourceIdentifier = (
-      waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
-    )?.metadata?.display_phone_number;
+    sourceIdentifier = (waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody)
+      ?.metadata?.display_phone_number;
   }
   //handle dubplicate webhook
   const existingMessage = await getWaMessageByMessageId(
-    (waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody)
-      ?.messages?.[0]?.id,
+    (waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody)?.messages?.[0]?.id,
   );
 
   if (existingMessage) {
@@ -541,29 +469,20 @@ async function whatsappMessageHandler(
     sourcePlatform,
     sourceIdentifier,
     userName,
-    (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.messages?.[0]
-      ?.id,
+    (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.messages?.[0]?.id,
   );
   if (type === WaMessageTypes.order) {
-    await handleWaOrderfromCatalog(
-      completeMessageObject,
-      messageObj,
-      waSettings,
-    );
+    await handleWaOrderfromCatalog(completeMessageObject, messageObj, waSettings);
     return;
   }
 
   // ── Delivery list reply: intercept before other handlers ─────────────────────
   const rawMsg = (completeMessageObject as WaReceiveMessageBody)?.messages?.[0];
-  if (
-    rawMsg?.type === "interactive" &&
-    rawMsg?.interactive?.type === "list_reply"
-  ) {
+  if (rawMsg?.type === "interactive" && rawMsg?.interactive?.type === "list_reply") {
     const listReplyId = rawMsg.interactive?.list_reply?.id as string;
     if (listReplyId?.startsWith("delivery_")) {
       try {
-        const { handleDeliveryListReply } =
-          await import("../catalog/catalogSettings.service.js");
+        const { handleDeliveryListReply } = await import("../catalog/catalogSettings.service.js");
         const handled = await handleDeliveryListReply({
           orgId,
           contactPhone: from,
@@ -589,19 +508,10 @@ async function whatsappMessageHandler(
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);
   const messageLowerCase =
-    type === "text" || type === "interactive"
-      ? message?.trim()?.toLocaleLowerCase()
-      : "";
-  const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(
-    orgId,
-    message,
-  );
+    type === "text" || type === "interactive" ? message?.trim()?.toLocaleLowerCase() : "";
+  const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(orgId, message);
   if (parsedMessage?.buttonId) {
-    const handledLoyaltyRedeem = await handleLoyaltyRedeemInteraction(
-      from,
-      parsedMessage,
-      orgId,
-    );
+    const handledLoyaltyRedeem = await handleLoyaltyRedeemInteraction(from, parsedMessage, orgId);
     if (handledLoyaltyRedeem) {
       return;
     }
@@ -629,10 +539,7 @@ async function whatsappMessageHandler(
   if (isAiBotActive) {
     try {
       // Check for automated reply commands
-      const automatedReplyCommand = await getCommandByOrgIdAndCommand(
-        orgId,
-        messageLowerCase,
-      );
+      const automatedReplyCommand = await getCommandByOrgIdAndCommand(orgId, messageLowerCase);
 
       if (automatedReplyCommand?.waAutomatedReply) {
         if (!(await verifyAutomationTriggerLimit(orgId))) return;
@@ -642,18 +549,13 @@ async function whatsappMessageHandler(
           parsedMessage,
           orgId,
         );
-        await updateMonthlyStat(
-          SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
-          orgId,
-        );
+        await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppAutomationTrigger, orgId);
         return;
       }
 
       // Process AI chatbot interaction
       if (!chatbotId) {
-        log.warn(
-          `Active AI bot found but no chatbot ID for phone: ${from} in org: ${orgId}`,
-        );
+        log.warn(`Active AI bot found but no chatbot ID for phone: ${from} in org: ${orgId}`);
         await setAiBotActiveStatus(from, orgId, false, "");
         return;
       }
@@ -662,9 +564,7 @@ async function whatsappMessageHandler(
         await handleAiWaChat(chatbot, message, orgId, from, chatbotId);
         return;
       } else {
-        log.warn(
-          `Active AI bot found but no chatbot details for ID: ${chatbotId}`,
-        );
+        log.warn(`Active AI bot found but no chatbot details for ID: ${chatbotId}`);
         await setAiBotActiveStatus(from, orgId, false, "");
       }
     } catch (error) {
@@ -679,18 +579,16 @@ async function whatsappMessageHandler(
 
   if (loyaltyWaCommand) {
     await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand, orgId);
-  } else if (!!parseStartMessage(message)) {
+  } else if (parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
   } else if (parsedMessage.type === "nfm_reply") {
     // ── Check if this is a catalog address flow response ──────────────────────
     const addressData = parsedMessage.flowResponse;
     const flowToken = addressData?.flow_token as string | undefined;
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (flowToken && uuidRegex.test(flowToken)) {
       try {
-        const { handleAddressFlowResponse } =
-          await import("../catalog/catalogSettings.service.js");
+        const { handleAddressFlowResponse } = await import("../catalog/catalogSettings.service.js");
         const handled = await handleAddressFlowResponse({
           orgId,
           orderId: flowToken,
@@ -820,28 +718,16 @@ async function handleAiWaChat(
 
       if (lowerMessage === "yes") {
         await setAiBotActiveStatus(phone, orgId, false, "");
-        await sendTextMessage(
-          { phone: phone, orgId },
-          null,
-          "You have exited the AI chatbot.",
-        );
+        await sendTextMessage({ phone: phone, orgId }, null, "You have exited the AI chatbot.");
         pendingConfirmationMap.delete(phone); // done
         aibotNodeCompletion(phone, orgId);
         return;
       } else if (lowerMessage === "no") {
-        await sendTextMessage(
-          { phone: phone, orgId },
-          null,
-          "Okay, continuing the conversation!",
-        );
+        await sendTextMessage({ phone: phone, orgId }, null, "Okay, continuing the conversation!");
         pendingConfirmationMap.delete(phone); // still exit confirmation mode
         return;
       } else {
-        await sendTextMessage(
-          { phone: phone, orgId },
-          null,
-          "Please reply with 'Yes' or 'No'.",
-        );
+        await sendTextMessage({ phone: phone, orgId }, null, "Please reply with 'Yes' or 'No'.");
         return;
       }
     }
@@ -858,36 +744,22 @@ async function handleAiWaChat(
     );
 
     if (response.trim() === "AiBotExitTriggered") {
-      const confirmationMessage =
-        "Are you done with the conversation? Please reply 'Yes' or 'No'.";
+      const confirmationMessage = "Are you done with the conversation? Please reply 'Yes' or 'No'.";
 
       await sendTextMessage({ phone, orgId }, null, confirmationMessage);
 
       await pendingConfirmationMap.set(phone, true);
     } else {
       if (response) await sendTextMessage({ phone, orgId }, null, response);
-      else
-        await sendTextMessage(
-          { phone, orgId },
-          null,
-          "Unable to reply. Something went wrong!",
-        );
+      else await sendTextMessage({ phone, orgId }, null, "Unable to reply. Something went wrong!");
     }
   } catch (e) {
     log.error(e);
-    await sendTextMessage(
-      { phone, orgId },
-      null,
-      "Unable to reply. Something went wrong!",
-    );
+    await sendTextMessage({ phone, orgId }, null, "Unable to reply. Something went wrong!");
   }
 }
 
-async function handleSubscriptionStatus(
-  orgId: string,
-  phone: string,
-  message: string,
-) {
+async function handleSubscriptionStatus(orgId: string, phone: string, message: string) {
   const isSubscribe = message === WA_SUBSCRIBE_STATUS.SUBSCRIBE;
   const consent = await handleContactConsent(orgId, phone, isSubscribe);
   if (!consent) return;
@@ -927,9 +799,7 @@ async function handleInputReply({ phone, orgId, parsedMessage }) {
 
     if (!nextEdge) return false;
 
-    const nextNode = matchData?.json?.nodes?.find(
-      (node: any) => node.id === nextEdge.source,
-    );
+    const nextNode = matchData?.json?.nodes?.find((node: any) => node.id === nextEdge.source);
 
     if (!nextNode) return false;
 
@@ -948,13 +818,7 @@ async function handleInputReply({ phone, orgId, parsedMessage }) {
         },
       });
 
-      await processNextNode(
-        phone,
-        automation,
-        progress.currentNode,
-        orgId,
-        automation.id,
-      );
+      await processNextNode(phone, automation, progress.currentNode, orgId, automation.id);
       return true;
     }
   }
@@ -982,9 +846,8 @@ export async function handleAutomatedReply(
     if (!(await verifyAutomationTriggerLimit(orgId))) return;
   }
 
-  const phoneNumberId = (
-    waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
-  )?.metadata?.phone_number_id;
+  const phoneNumberId = (waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody)
+    ?.metadata?.phone_number_id;
 
   try {
     if (automatedReplyId) {
@@ -994,10 +857,7 @@ export async function handleAutomatedReply(
           automation.whatsappSettingsPhoneId = phoneNumberId;
         }
         await startAutomationFlow(phone, automation, parsedMessage, orgId);
-        await updateMonthlyStat(
-          SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
-          orgId,
-        );
+        await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppAutomationTrigger, orgId);
       }
     } else {
       const inputHandled = await handleInputReply({
@@ -1007,27 +867,21 @@ export async function handleAutomatedReply(
       });
       if (inputHandled) return;
       // Check rule-based automation first
-      const ruleResult = await checkAndExecuteRuleByTriggerEvent(
-        "MESSAGE_RECEIVED",
-        {
-          orgId,
-          phoneNumberId,
-          message,
-          phone,
-          waMessage,
-          buttonPayload: parsedMessage?.buttonPayload,
-          platform: "WHATSAPP",
-        },
-      );
+      const ruleResult = await checkAndExecuteRuleByTriggerEvent("MESSAGE_RECEIVED", {
+        orgId,
+        phoneNumberId,
+        message,
+        phone,
+        waMessage,
+        buttonPayload: parsedMessage?.buttonPayload,
+        platform: "WHATSAPP",
+      });
 
       if (ruleResult) {
         log.trace("Rule matched and actions executed: %o", ruleResult);
         return;
       }
-      await updateMonthlyStat(
-        SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
-        orgId,
-      );
+      await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppAutomationTrigger, orgId);
     }
   } catch (error) {
     log.error("Error handling automated reply: %o", error);
@@ -1074,13 +928,7 @@ export async function handleButtonClickInteraction(
   if (nextNodes.length) {
     for (const node of nextNodes) {
       if (node?.target) {
-        await processNextNode(
-          phone,
-          automation,
-          node.target,
-          orgId,
-          automationLog?.id,
-        );
+        await processNextNode(phone, automation, node.target, orgId, automationLog?.id);
       }
     }
   } else {
@@ -1122,13 +970,7 @@ async function startAutomationFlow(
     },
   });
 
-  await processNextNode(
-    phone,
-    automation,
-    startNode.id,
-    orgId,
-    automationLog?.id,
-  );
+  await processNextNode(phone, automation, startNode.id, orgId, automationLog?.id);
 }
 
 /**
@@ -1203,12 +1045,7 @@ export async function processNextNode(
     // Process different node types
     switch (node.type) {
       case "flowNode":
-        await handleFlowNode(
-          node,
-          userPhone,
-          orgId,
-          automation?.whatsappSettingsPhoneId,
-        );
+        await handleFlowNode(node, userPhone, orgId, automation?.whatsappSettingsPhoneId);
         break;
       case "aibotNode":
         await handleAiBotNode(node, userPhone, orgId);
@@ -1220,14 +1057,10 @@ export async function processNextNode(
           parameters = node?.data?.parameters?.map((param) => {
             if (param.type === "body") {
               const newParams = param?.parameters?.map((p) => {
-                if (
-                  typeof p?.text !== "string" &&
-                  p?.text?.type === "leadgenform-question-key"
-                ) {
+                if (typeof p?.text !== "string" && p?.text?.type === "leadgenform-question-key") {
                   const fieldName = p?.text?.value;
                   p.text =
-                    lead.field_data.find((field) => field.name === fieldName)
-                      ?.values[0] ?? null;
+                    lead.field_data.find((field) => field.name === fieldName)?.values[0] ?? null;
                 }
                 return p;
               });
@@ -1322,10 +1155,7 @@ export async function processNextNode(
           assignData?.assign?.choice === "all" &&
           (assignData?.assign?.roundRobin || false)
         ) {
-          const assignedCount = await getAssignedUsersCountForContactByTeam(
-            contact.id,
-            teamId,
-          );
+          const assignedCount = await getAssignedUsersCountForContactByTeam(contact.id, teamId);
           if (assignedCount > 0) {
             log.warn(
               `Skipping assignment: Contact ${contact.id} already has assigned users in team ${teamId}`,
@@ -1340,10 +1170,7 @@ export async function processNextNode(
           assignData?.assign?.choice === "manual" &&
           (assignData?.assign?.roundRobin || false)
         ) {
-          const assignedCount = await getAssignedUsersCountForContactByTeam(
-            contact.id,
-            teamId,
-          );
+          const assignedCount = await getAssignedUsersCountForContactByTeam(contact.id, teamId);
           if (assignedCount > 0) {
             log.warn(
               `Skipping assignment: Contact ${contact.id} already has assigned users in team ${teamId}`,
@@ -1351,11 +1178,7 @@ export async function processNextNode(
             assignedUserIds = [];
             return;
           }
-          const assigned = await assignChat(
-            teamId,
-            assignedUserIds,
-            automation?.id,
-          );
+          const assigned = await assignChat(teamId, assignedUserIds, automation?.id);
           assignedUserIds = [assigned];
         } else if (assignData?.assign?.choice === "all") {
           const users = await getUserIdsByTeamId(teamId);
@@ -1382,10 +1205,7 @@ export async function processNextNode(
       }
       default:
         // For text, buttons, and other message types
-        const waMessage: any = await convertNodeToWhatsAppMessage(
-          node,
-          userPhone,
-        );
+        const waMessage: any = await convertNodeToWhatsAppMessage(node, userPhone);
         await sendMessage(
           orgId,
           waMessage,
@@ -1397,12 +1217,9 @@ export async function processNextNode(
     }
 
     // Find and process next node unless current node requires user input
-    let requiresUserInput = [
-      "buttonNode",
-      "flowNode",
-      "listNode",
-      "textInputNode",
-    ].includes(node?.type);
+    let requiresUserInput = ["buttonNode", "flowNode", "listNode", "textInputNode"].includes(
+      node?.type,
+    );
     // Special check for AI Bot Node
     if (node?.type === "aibotNode") {
       const isActive = await getAiBotActiveStatus(userPhone, orgId);
@@ -1477,9 +1294,7 @@ async function handleFlowNode(
     }
 
     // Find survey team map
-    const surveyTeamMap = dbFlow?.survey?.teams?.find(
-      (team) => team?.teamId === teamId,
-    );
+    const surveyTeamMap = dbFlow?.survey?.teams?.find((team) => team?.teamId === teamId);
 
     if (!surveyTeamMap) {
       throw new Error(`No survey team map found for team ID ${teamId}`);
@@ -1517,7 +1332,7 @@ async function handleAiBotNode(node: any, userPhone: string, orgId: string) {
   await setAiBotActiveStatus(userPhone, orgId, true, chatbotId);
 }
 
-async function handleWaSurveySession(
+async function _handleWaSurveySession(
   orgId: string,
   waMessage: WaMessageBody,
   session: WaSessionWithRelations,
@@ -1546,11 +1361,9 @@ async function handleSurveyConsentReply(
     throw new Error("TemplateId not found in session");
   }
 
-  const { message, from } = parsedMessage;
+  const { message } = parsedMessage;
   const dbTemplate = await getDbTemplate(session.templateId);
-  if (
-    message.toLocaleLowerCase() === dbTemplate.acceptButton.toLocaleLowerCase()
-  ) {
+  if (message.toLocaleLowerCase() === dbTemplate.acceptButton.toLocaleLowerCase()) {
     await handleUserConsentedToSurvey(orgId, parsedMessage, session);
   } else {
     await handleUserDidntConsentToSurvey(orgId, parsedMessage, session);
@@ -1593,9 +1406,7 @@ async function handleUserConsentedToSurvey(
     if (session.surveyTeamMap.survey.languages.length > 1) {
       // if multiple languages, show language selection
       updateSession(orgId, from, {
-        currentQuestionId: (
-          session.surveyTeamMap.survey.questions[0] as unknown as Question
-        ).id,
+        currentQuestionId: (session.surveyTeamMap.survey.questions[0] as unknown as Question).id,
       });
       await handleLanguageSelection(session);
       return;
@@ -1685,10 +1496,7 @@ async function handleStartSurvey({
   if (session.surveyTeamMap.survey.type === SurveyType.WaFlow) {
     const msgLimit = await checkMessageLimitExceeded(orgId);
     if (!msgLimit) {
-      log.error(
-        { orgId },
-        "You have reached the maximum monthly limit of messages.",
-      );
+      log.error({ orgId }, "You have reached the maximum monthly limit of messages.");
       return;
     }
   }
@@ -1704,7 +1512,9 @@ async function handleStartSurvey({
       language: session.surveyTeamMap.survey.languages[0],
     });
     // FLOW
-    orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    if (orgId) {
+      updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    }
     await sendFlow({
       dbFlowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
       orgId,
@@ -1714,9 +1524,7 @@ async function handleStartSurvey({
     // WaSurvey
     if (session.surveyTeamMap.survey.languages.length > 1) {
       updateSession(orgId, from, {
-        currentQuestionId: (
-          session.surveyTeamMap.survey.questions[0] as unknown as Question
-        ).id,
+        currentQuestionId: (session.surveyTeamMap.survey.questions[0] as unknown as Question).id,
       });
       await handleLanguageSelection(session);
       return;
@@ -1730,23 +1538,19 @@ async function handleStartSurvey({
 }
 
 async function sendFirstQuestion(session: WaSessionWithRelations) {
-  const firstQuestion = session.surveyTeamMap.survey
-    .questions[0] as unknown as Question;
+  const firstQuestion = session.surveyTeamMap.survey.questions[0] as unknown as Question;
   await sendQuestion(firstQuestion!, session);
 }
 
 async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
-  const { from, message } = parseMessage(waMessage);
+  const { from } = parseMessage(waMessage);
   let session = await getSession(orgId, from);
   if (!session) {
     // TODO: send error message
     return;
   }
   // save response
-  const question = getQuestionByIdFromSession(
-    session,
-    session.currentQuestionId!,
-  );
+  const question = getQuestionByIdFromSession(session, session.currentQuestionId!);
   if (!question) {
     throw new Error("Question not found");
   }
@@ -1768,9 +1572,9 @@ async function handleReplyMessage(orgId: string, waMessage: WaMessageBody) {
       type: question.type,
     };
     // Just to make sure we don't have any duplicate responses
-    const currentResponses = (
-      session.responses as unknown as Array<QuestionResponse>
-    ).filter((r) => r.questionId !== session.currentQuestionId);
+    const currentResponses = (session.responses as unknown as Array<QuestionResponse>).filter(
+      (r) => r.questionId !== session.currentQuestionId,
+    );
     const updatedResponses = [...currentResponses, formattedResponse] as any;
 
     session = await updateSession(session.orgId, session.phone, {
@@ -1794,10 +1598,7 @@ async function handleLanguageSelection(session: WaSessionWithRelations) {
   await sendMessage(session.orgId, message);
 }
 
-async function handleLanguageResponse(
-  session: WaSessionWithRelations,
-  message: string,
-) {
+async function handleLanguageResponse(session: WaSessionWithRelations, message: string) {
   const survey = session.surveyTeamMap.survey;
 
   // if language is not valid, send error message
@@ -1823,10 +1624,7 @@ export async function sendCampaignToParticipants(
   userId?: string,
 ) {
   try {
-    log.trace(
-      "Sending campaign to participants with statuses %o",
-      sendToStatuses,
-    );
+    log.trace("Sending campaign to participants with statuses %o", sendToStatuses);
     const campaign = await prisma.campaign.findUnique({
       where: {
         id: campaignId,
@@ -1890,9 +1688,7 @@ export async function sendCampaignToParticipants(
     let _campaignData = campaign;
     let _sendToStatuses = sendToStatuses;
     if (participantId) {
-      let _participant = campaign?.campaignParticipants.find(
-        (p) => p.id === participantId,
-      );
+      let _participant = campaign?.campaignParticipants.find((p) => p.id === participantId);
       _campaignData.campaignParticipants = [_participant];
       _sendToStatuses = [_participant.status as CampaignParticipantStatus];
     }
@@ -1923,9 +1719,8 @@ export async function sendCampaignToParticipants(
 }
 export function convertComponentForSenting(dbTemplate) {
   const containsImage =
-    dbTemplate.data.components.find(
-      (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
-    )?.format === "IMAGE";
+    dbTemplate.data.components.find((c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER)
+      ?.format === "IMAGE";
 
   const components = [];
   const addHeaderComponent = (format, link, filename = null) => {
@@ -1947,9 +1742,7 @@ export function convertComponentForSenting(dbTemplate) {
   if (containsImage) {
     if (!dbTemplate.defaultValues?.image?.link) {
       console.error("Image not found in template %o", dbTemplate);
-      throw new Error(
-        "Image not found in template. Please delete & create a new template.",
-      );
+      throw new Error("Image not found in template. Please delete & create a new template.");
     }
     components.push({
       type: "header",
@@ -1999,11 +1792,7 @@ export function convertComponentForSenting(dbTemplate) {
 export function updateButtonText(array, newText) {
   return (
     array.map((item) => {
-      if (
-        item.type === "button" &&
-        item.sub_type === "url" &&
-        item?.parameters?.length > 0
-      ) {
+      if (item.type === "button" && item.sub_type === "url" && item?.parameters?.length > 0) {
         return {
           ...item,
           parameters: item.parameters.map((param) => {
@@ -2082,10 +1871,7 @@ async function _sendCampaignToParticipants(
     log.trace("No flow button identified in template");
   }
 
-  const [usage, subscription] = await Promise.all([
-    getUsageStats(orgId),
-    getSubscription(orgId),
-  ]);
+  const [usage, subscription] = await Promise.all([getUsageStats(orgId), getSubscription(orgId)]);
 
   if (!usage || !subscription) {
     let errorMessage = "Usage stats or subscription not found";
@@ -2100,16 +1886,13 @@ async function _sendCampaignToParticipants(
   const newMessagesCount = campaign.campaignParticipants.filter(
     (participant) =>
       (individualParticipantId ||
-        sendToStatuses.includes(
-          getStatusData(participant) as CampaignParticipantStatus,
-        )) &&
+        sendToStatuses.includes(getStatusData(participant) as CampaignParticipantStatus)) &&
       (participant.contact.consent || !campaign.useUserConsent) &&
       participant.contact.phone,
   ).length;
 
   const monthlyMessageLimit =
-    subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
-      ?.monthlyMessageLimit ?? 0;
+    subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count?.monthlyMessageLimit ?? 0;
 
   const annualLimit = monthlyMessageLimit * 12;
 
@@ -2129,10 +1912,7 @@ async function _sendCampaignToParticipants(
     });
     log.error({ errorMessage, orgId }, "in _sendCampaignToParticipants");
     return;
-  } else if (
-    (usage.monthlyTemplateMessageCount ?? 0) + newMessagesCount >
-    monthlyMessageLimit
-  ) {
+  } else if ((usage.monthlyTemplateMessageCount ?? 0) + newMessagesCount > monthlyMessageLimit) {
     let errorMessage =
       usage.monthlyTemplateMessageCount >= monthlyMessageLimit
         ? "You have reached the maximum monthly limit of messages."
@@ -2152,9 +1932,7 @@ async function _sendCampaignToParticipants(
     let copyComponents = [...components];
     if (
       !individualParticipantId &&
-      !sendToStatuses.includes(
-        getStatusData(participant) as CampaignParticipantStatus,
-      )
+      !sendToStatuses.includes(getStatusData(participant) as CampaignParticipantStatus)
     ) {
       log.warn("Campaign already sent to participant %o. Skipping...", contact);
       continue;
@@ -2169,16 +1947,15 @@ async function _sendCampaignToParticipants(
       continue;
     }
 
-    const defaultValue = dbTemplate?.data?.components?.find(
-      (data) => data.example?.body_text,
-    )?.example?.body_text?.[0];
+    const defaultValue = dbTemplate?.data?.components?.find((data) => data.example?.body_text)
+      ?.example?.body_text?.[0];
     if (defaultValue?.length > 0) {
       const parameters = contactTags?.map((tag, i) => {
         const textValue =
           tag === "name"
             ? contact?.name || defaultValue[i]
-            : contact.customFields?.find((field) => field?.field?.slug === tag)
-                ?.value || defaultValue[i];
+            : contact.customFields?.find((field) => field?.field?.slug === tag)?.value ||
+              defaultValue[i];
         return { type: "text", textValue };
       });
       copyComponents.push({
@@ -2239,10 +2016,7 @@ async function _sendCampaignToParticipants(
     };
     const templateMessage = createTemplateMessage(contact.phone, templateQuery);
 
-    async function sendCampaignCallback(messageSentStatus: {
-      status: boolean;
-      message: any;
-    }) {
+    async function sendCampaignCallback(messageSentStatus: { status: boolean; message: any }) {
       log.trace("Template sent to participant %o", contact);
       updateCampaignParticipant(id, {
         status: messageSentStatus.status

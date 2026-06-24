@@ -109,10 +109,7 @@ export async function responseRoutes(server: FastifyInstance) {
     syncResponseToGoogleSheetHandler,
   );
 
-  server.post(
-    "/export-contacts/:surveyId",
-    exportContactResponseToContactsHandler,
-  );
+  server.post("/export-contacts/:surveyId", exportContactResponseToContactsHandler);
 
   server.post(
     "/summarize/:surveyId",

@@ -35,16 +35,10 @@ export async function syncProductSetsForCatalog(
             orgId,
             name: set.name,
             filter: set.filter || null,
-            productIds: productsResponse.data.data.map(
-              (p: any) => p.retailer_id,
-            ),
+            productIds: productsResponse.data.data.map((p: any) => p.retailer_id),
           };
         } catch (e) {
-          log.error(
-            "Error fetching products for product set %s: %o",
-            set.id,
-            e,
-          );
+          log.error("Error fetching products for product set %s: %o", set.id, e);
           return {
             productSetId: set.id,
             catalogId,
@@ -73,9 +67,7 @@ export async function syncProductSetsForCatalog(
       }
 
       // Remove product sets that no longer exist in Meta
-      const existingProductSetIds = productSetsWithProducts.map(
-        (ps) => ps.productSetId,
-      );
+      const existingProductSetIds = productSetsWithProducts.map((ps) => ps.productSetId);
       await tx.whatsappProductSet.deleteMany({
         where: {
           catalogId,

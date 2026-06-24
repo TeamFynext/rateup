@@ -57,9 +57,7 @@ export async function callMetaApi(
   headerConfig: AxiosRequestConfig["headers"] = {},
   params: AxiosRequestConfig["params"] = {},
 ): Promise<AxiosResponse<any, any>> {
-  const headAuth = accessToken
-    ? { Authorization: `Bearer ${accessToken}` }
-    : {};
+  const headAuth = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
   const config: AxiosRequestConfig = {
     url: `https://graph.facebook.com/${META_API_VERSION}${url}`,
     method,
@@ -72,12 +70,7 @@ export async function callMetaApi(
     validateStatus: () => true, // don't throw error on non-2xx status
     ...otherConfig,
   };
-  log.trace(
-    "Calling Meta API with config: %s %s \n%o",
-    config.method,
-    config.url,
-    config.data,
-  );
+  log.trace("Calling Meta API with config: %s %s \n%o", config.method, config.url, config.data);
   const res = await axiosWithRetry(config);
   if (res.status.toString().startsWith("2")) {
     return res;

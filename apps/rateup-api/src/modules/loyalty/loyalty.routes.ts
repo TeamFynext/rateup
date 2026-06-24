@@ -20,10 +20,7 @@ import { loyaltyApiSettingRoutes } from "./apiSetting/apiSetting.route.js";
 
 export async function loyaltyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook(
-    "preHandler",
-    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Loyalty]),
-  );
+  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeaturePathName.Loyalty]));
   server.addHook("preHandler", requireFeature(TeamFeature.loyalty));
 
   // New Loyalty System Routes

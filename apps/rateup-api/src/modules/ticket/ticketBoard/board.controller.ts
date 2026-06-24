@@ -8,10 +8,7 @@ import {
   getBoardTeamMembersById,
 } from "./board.service.js";
 import { createColumn } from "../ticketColumn/column.service.js";
-import {
-  CreateBoardRequestSchema,
-  UpdateBoardRequestSchema,
-} from "./board.schema.js";
+import { CreateBoardRequestSchema, UpdateBoardRequestSchema } from "./board.schema.js";
 
 export async function createBoardHandler(
   request: FastifyRequest<{
@@ -36,10 +33,7 @@ export async function createBoardHandler(
   }
 }
 
-export async function getAllBoardsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllBoardsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userId = request.userId;
     const boards = await getBoards(userId);

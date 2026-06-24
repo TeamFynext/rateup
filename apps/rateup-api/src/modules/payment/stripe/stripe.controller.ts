@@ -77,9 +77,7 @@ export async function getSessionStatusHandler(
   request: FastifyRequest<{ Querystring: GetSessionStatusQuery }>,
   reply: FastifyReply,
 ) {
-  const session = await stripe.checkout.sessions.retrieve(
-    request.query.session_id,
-  );
+  const session = await stripe.checkout.sessions.retrieve(request.query.session_id);
 
   reply.send({
     status: session.status,
@@ -137,10 +135,7 @@ export async function webHookHandler(
   reply.status(200);
 }
 
-export async function getStripeProductsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getStripeProductsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const res = await getStripeProducts();
     reply.code(200).send(res);
@@ -150,10 +145,7 @@ export async function getStripeProductsHandler(
   }
 }
 
-export async function syncStripeProductsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function syncStripeProductsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const res = await syncStripeProducts();
     reply.code(200).send(res);

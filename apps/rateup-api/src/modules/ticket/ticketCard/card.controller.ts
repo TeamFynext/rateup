@@ -10,10 +10,7 @@ import {
   reorderCards,
   getCardTeamMembersById,
 } from "./card.service.js";
-import {
-  TicketPriority,
-  TicketType,
-} from "../../../../generated/prisma/client.js";
+import { TicketPriority, TicketType } from "../../../../generated/prisma/client.js";
 import { UpdateCardRequest } from "./card.schema.js";
 
 export async function createCardHandler(
@@ -31,15 +28,8 @@ export async function createCardHandler(
   reply: FastifyReply,
 ) {
   try {
-    const {
-      title,
-      description,
-      ticketColumnId,
-      type,
-      contactId,
-      priority,
-      deadline,
-    } = request.body;
+    const { title, description, ticketColumnId, type, contactId, priority, deadline } =
+      request.body;
     const userId = request.userId;
     const card = await createCard({
       title,
@@ -154,13 +144,7 @@ export async function moveCardHandler(
     const { ticketColumnId, order } = request.body;
     const userId = request.userId;
 
-    const movedCard = await moveCard(
-      id,
-      ticketColumnId,
-      userId,
-      request.user.orgId,
-      order,
-    );
+    const movedCard = await moveCard(id, ticketColumnId, userId, request.user.orgId, order);
 
     if (!movedCard) {
       return reply.code(404).send({ message: "Card not found" });
@@ -220,8 +204,6 @@ export async function getCardActivitiesHandler(
     return reply.code(200).send(activities);
   } catch (error) {
     request.log.error(error);
-    return reply
-      .code(500)
-      .send({ message: "Error retrieving card activities" });
+    return reply.code(500).send({ message: "Error retrieving card activities" });
   }
 }

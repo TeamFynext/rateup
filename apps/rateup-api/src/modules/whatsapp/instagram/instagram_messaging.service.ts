@@ -6,10 +6,7 @@
 
 import { log } from "../../../utils/logger.js";
 import { callMetaApi } from "../wa_axios.js";
-import {
-  getWaSettingsByIbaId,
-  updateWaSettingsById,
-} from "../settings/wa_settings.service.js";
+import { getWaSettingsByIbaId, updateWaSettingsById } from "../settings/wa_settings.service.js";
 
 async function callInstagramMessengerProfileApi(
   ibaId: string,
@@ -54,15 +51,10 @@ export async function sendInstagramPrivateReply(
       throw new Error(`No Facebook Page ID configured for ibaId ${ibaId}`);
     }
 
-    const response = await callMetaApi(
-      `/me/messages`,
-      "POST",
-      pageAccessToken,
-      {
-        recipient: { comment_id: commentId },
-        message: { text },
-      },
-    );
+    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, {
+      recipient: { comment_id: commentId },
+      message: { text },
+    });
 
     log.info(
       `[Instagram Messaging] Sent private reply to comment ${commentId}: "${text.substring(0, 50)}..."`,
@@ -108,12 +100,7 @@ export async function sendInstagramTextMessage(
     };
 
     // Send via Meta Graph API
-    const response = await callMetaApi(
-      `/me/messages`,
-      "POST",
-      pageAccessToken,
-      payload,
-    );
+    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(
       `[Instagram Messaging] Sent text message to igsId ${igsId}: "${text.substring(0, 50)}..."`,
@@ -121,10 +108,7 @@ export async function sendInstagramTextMessage(
 
     return response.data;
   } catch (error) {
-    log.error(
-      `[Instagram Messaging] Error sending text message to ${igsId}: %o`,
-      error,
-    );
+    log.error(`[Instagram Messaging] Error sending text message to ${igsId}: %o`, error);
     throw error;
   }
 }
@@ -143,9 +127,7 @@ export async function sendInstagramImage(
     const waSettings = await getWaSettingsByIbaId(ibaId);
 
     if (!waSettings) {
-      throw new Error(
-        `No Instagram settings found for igsId ${igsId} in org ${orgId}`,
-      );
+      throw new Error(`No Instagram settings found for igsId ${igsId} in org ${orgId}`);
     }
 
     const { pageAccessToken } = waSettings;
@@ -166,12 +148,7 @@ export async function sendInstagramImage(
     };
 
     // Send the image
-    const response = await callMetaApi(
-      `/me/messages`,
-      "POST",
-      pageAccessToken,
-      payload,
-    );
+    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(`[Instagram Messaging] Sent image to igsId ${igsId}: ${imageUrl}`);
 
@@ -182,10 +159,7 @@ export async function sendInstagramImage(
 
     return response.data;
   } catch (error) {
-    log.error(
-      `[Instagram Messaging] Error sending image to ${igsId}: %o`,
-      error,
-    );
+    log.error(`[Instagram Messaging] Error sending image to ${igsId}: %o`, error);
     throw error;
   }
 }
@@ -244,12 +218,7 @@ export async function sendInstagramGenericTemplate(
       },
     };
 
-    const response = await callMetaApi(
-      `/me/messages`,
-      "POST",
-      pageAccessToken,
-      payload,
-    );
+    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(
       `[Instagram Messaging] Sent generic template to igsId ${igsId} with ${elements.length} elements`,
@@ -257,10 +226,7 @@ export async function sendInstagramGenericTemplate(
 
     return response.data;
   } catch (error) {
-    log.error(
-      `[Instagram Messaging] Error sending generic template to ${igsId}: %o`,
-      error,
-    );
+    log.error(`[Instagram Messaging] Error sending generic template to ${igsId}: %o`, error);
     throw error;
   }
 }
@@ -304,12 +270,7 @@ export async function sendInstagramQuickReply(
       },
     };
 
-    const response = await callMetaApi(
-      `/me/messages`,
-      "POST",
-      pageAccessToken,
-      payload,
-    );
+    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(
       `[Instagram Messaging] Sent quick reply to igsId ${igsId} with ${quickReplies.length} options`,
@@ -317,10 +278,7 @@ export async function sendInstagramQuickReply(
 
     return response.data;
   } catch (error) {
-    log.error(
-      `[Instagram Messaging] Error sending quick reply to ${igsId}: %o`,
-      error,
-    );
+    log.error(`[Instagram Messaging] Error sending quick reply to ${igsId}: %o`, error);
     throw error;
   }
 }
@@ -360,12 +318,7 @@ export async function sendInstagramProductTemplate(
       },
     };
 
-    const response = await callMetaApi(
-      `/me/messages`,
-      "POST",
-      pageAccessToken,
-      payload,
-    );
+    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(
       `[Instagram Messaging] Sent product template to igsId ${igsId} for products ${productIds.join(", ")}`,
@@ -373,10 +326,7 @@ export async function sendInstagramProductTemplate(
 
     return response.data;
   } catch (error) {
-    log.error(
-      `[Instagram Messaging] Error sending product template to ${igsId}: %o`,
-      error,
-    );
+    log.error(`[Instagram Messaging] Error sending product template to ${igsId}: %o`, error);
     throw error;
   }
 }
@@ -415,23 +365,13 @@ export async function sendInstagramStoryReply(
       },
     };
 
-    const response = await callMetaApi(
-      `/me/messages`,
-      "POST",
-      pageAccessToken,
-      payload,
-    );
+    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
-    log.info(
-      `[Instagram Messaging] Sent story reply to igsId ${igsId} for story ${storyId}`,
-    );
+    log.info(`[Instagram Messaging] Sent story reply to igsId ${igsId} for story ${storyId}`);
 
     return response.data;
   } catch (error) {
-    log.error(
-      `[Instagram Messaging] Error sending story reply to ${igsId}: %o`,
-      error,
-    );
+    log.error(`[Instagram Messaging] Error sending story reply to ${igsId}: %o`, error);
     throw error;
   }
 }
@@ -478,16 +418,11 @@ export async function setInstagramIceBreakers(
       } as any);
     }
 
-    log.info(
-      `[Instagram Messaging] Set ${iceBreakers.length} ice breakers for ibaId ${ibaId}`,
-    );
+    log.info(`[Instagram Messaging] Set ${iceBreakers.length} ice breakers for ibaId ${ibaId}`);
 
     return response.data;
   } catch (error) {
-    log.error(
-      `[Instagram Messaging] Error setting ice breakers for ibaId ${ibaId}: %o`,
-      error,
-    );
+    log.error(`[Instagram Messaging] Error setting ice breakers for ibaId ${ibaId}: %o`, error);
     throw error;
   }
 }
@@ -532,14 +467,9 @@ export async function deleteInstagramIceBreakers(orgId: string, ibaId: string) {
   }
 
   const { pageAccessToken } = waSettings;
-  const response = await callInstagramMessengerProfileApi(
-    ibaId,
-    pageAccessToken,
-    "DELETE",
-    {
-      fields: ["ice_breakers"],
-    },
-  );
+  const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "DELETE", {
+    fields: ["ice_breakers"],
+  });
   await updateWaSettingsById(waSettings.id, {
     instagramIceBreakers: [],
   } as any);
@@ -566,14 +496,9 @@ export async function setInstagramPersistentMenu(
   }
 
   const { pageAccessToken } = waSettings;
-  const response = await callInstagramMessengerProfileApi(
-    ibaId,
-    pageAccessToken,
-    "POST",
-    {
-      persistent_menu: menus,
-    },
-  );
+  const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "POST", {
+    persistent_menu: menus,
+  });
 
   await updateWaSettingsById(waSettings.id, {
     instagramPersistentMenu: menus,
@@ -614,10 +539,7 @@ export async function getInstagramPersistentMenu(orgId: string, ibaId: string) {
   return response;
 }
 
-export async function deleteInstagramPersistentMenu(
-  orgId: string,
-  ibaId: string,
-) {
+export async function deleteInstagramPersistentMenu(orgId: string, ibaId: string) {
   const waSettings = await getWaSettingsByIbaId(ibaId);
 
   if (!waSettings) {
@@ -625,14 +547,9 @@ export async function deleteInstagramPersistentMenu(
   }
 
   const { pageAccessToken } = waSettings;
-  const response = await callInstagramMessengerProfileApi(
-    ibaId,
-    pageAccessToken,
-    "DELETE",
-    {
-      fields: ["persistent_menu"],
-    },
-  );
+  const response = await callInstagramMessengerProfileApi(ibaId, pageAccessToken, "DELETE", {
+    fields: ["persistent_menu"],
+  });
   await updateWaSettingsById(waSettings.id, {
     instagramPersistentMenu: [],
   } as any);
@@ -672,21 +589,13 @@ export async function sendInstagramVideo(
       },
     };
 
-    const response = await callMetaApi(
-      `/me/messages`,
-      "POST",
-      pageAccessToken,
-      payload,
-    );
+    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(`[Instagram Messaging] Sent video to igsId ${igsId}: ${videoUrl}`);
 
     return response.data;
   } catch (error) {
-    log.error(
-      `[Instagram Messaging] Error sending video to ${igsId}: %o`,
-      error,
-    );
+    log.error(`[Instagram Messaging] Error sending video to ${igsId}: %o`, error);
     throw error;
   }
 }
@@ -724,21 +633,13 @@ export async function sendInstagramFile(
       },
     };
 
-    const response = await callMetaApi(
-      `/me/messages`,
-      "POST",
-      pageAccessToken,
-      payload,
-    );
+    const response = await callMetaApi(`/me/messages`, "POST", pageAccessToken, payload);
 
     log.info(`[Instagram Messaging] Sent file to igsId ${igsId}: ${fileUrl}`);
 
     return response.data;
   } catch (error) {
-    log.error(
-      `[Instagram Messaging] Error sending file to ${igsId}: %o`,
-      error,
-    );
+    log.error(`[Instagram Messaging] Error sending file to ${igsId}: %o`, error);
     throw error;
   }
 }
@@ -760,9 +661,7 @@ export type InstagramStoryItem = {
   timestamp: string;
 };
 
-export async function getInstagramMediaPosts(
-  ibaId: string,
-): Promise<InstagramMediaItem[]> {
+export async function getInstagramMediaPosts(ibaId: string): Promise<InstagramMediaItem[]> {
   const waSettings = await getWaSettingsByIbaId(ibaId);
   if (!waSettings?.pageAccessToken) {
     throw new Error(`No Instagram settings found for ibaId ${ibaId}`);
@@ -777,9 +676,7 @@ export async function getInstagramMediaPosts(
   return (response.data?.data as InstagramMediaItem[]) ?? [];
 }
 
-export async function getInstagramStories(
-  ibaId: string,
-): Promise<InstagramStoryItem[]> {
+export async function getInstagramStories(ibaId: string): Promise<InstagramStoryItem[]> {
   const waSettings = await getWaSettingsByIbaId(ibaId);
   if (!waSettings?.pageAccessToken) {
     throw new Error(`No Instagram settings found for ibaId ${ibaId}`);

@@ -39,10 +39,7 @@ export async function getMenuBanner(menuId: string) {
   return menuBanner;
 }
 
-export async function updateMenuBanner(
-  id: string,
-  data: CreateMenuCategoryInput,
-) {
+export async function updateMenuBanner(id: string, data: CreateMenuCategoryInput) {
   const menuBanner = await prisma.menuBanner.update({
     where: { id },
     data,

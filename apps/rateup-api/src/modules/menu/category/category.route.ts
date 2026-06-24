@@ -23,10 +23,7 @@ import { ByMenuIdParamsSchema } from "../menu.schema.js";
 
 export async function menuCategoryRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook(
-    "preHandler",
-    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Menu]),
-  );
+  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeaturePathName.Menu]));
 
   server.post(
     "/",

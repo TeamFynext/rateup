@@ -1,9 +1,6 @@
 import { z } from "zod";
 
-import {
-  TicketPriority,
-  TicketType,
-} from "../../../../generated/prisma/client.js";
+import { TicketPriority, TicketType } from "../../../../generated/prisma/client.js";
 
 // Base schema for card
 const cardCore = {

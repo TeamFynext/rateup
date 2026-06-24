@@ -75,15 +75,12 @@ export async function getAllTeamsByOrgHandler(
     } else {
       reply.send(teams);
     }
-  } catch (e) {
+  } catch {
     reply.code(500).send({ message: "Internal server error" });
   }
 }
 
-export async function getTeamsByUserHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getTeamsByUserHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userId = request.userId;
     const teams = await getTeamsByUserId(userId);
@@ -158,9 +155,7 @@ export async function completeInviteHandler(
 ) {
   try {
     const invite = await completeInvite(request.params.token);
-    reply
-      .code(200)
-      .send({ message: "Invite Accepted successfully.", data: invite });
+    reply.code(200).send({ message: "Invite Accepted successfully.", data: invite });
     await addZapierTriggerToQueue(
       ZapierTriggers.NEW_TEAM_MEMBER_CREATED,
       { [ZapierTriggers.NEW_TEAM_MEMBER_CREATED]: invite },
@@ -206,7 +201,7 @@ export async function getTeamMembersHandler(
     } else {
       reply.send(members);
     }
-  } catch (e) {
+  } catch {
     reply.code(500).send({ message: "Internal server error" });
   }
 }
@@ -223,7 +218,7 @@ export async function getUsersNotInTeamHandler(
     const members = await getUsersNotInTeam(teamId, orgId);
 
     reply.send(members);
-  } catch (e) {
+  } catch {
     reply.code(500).send({ message: "Internal server error" });
   }
 }
@@ -248,7 +243,7 @@ export async function getTeamMembersFromInviteHandler(
       reply.code(200).send({ response: "Error..." });
     }
     reply.send(data);
-  } catch (e) {
+  } catch {
     reply.code(500).send({ message: "Internal server error" });
   }
 }
@@ -334,7 +329,7 @@ export async function getTeamByIdHandler(
       return;
     }
     reply.send(team);
-  } catch (e) {
+  } catch {
     reply.code(500).send({ message: "Internal server error" });
   }
 }
@@ -346,7 +341,7 @@ export async function getTeamFeaturesHandler(
   try {
     const features = await getTeamFeatures(request.params.teamId);
     reply.send({ features });
-  } catch (e) {
+  } catch {
     reply.code(500).send({ message: "Internal server error" });
   }
 }
@@ -359,12 +354,9 @@ export async function setTeamFeaturesHandler(
   reply: FastifyReply,
 ) {
   try {
-    const features = await setTeamFeatures(
-      request.params.teamId,
-      request.body as any,
-    );
+    const features = await setTeamFeatures(request.params.teamId, request.body as any);
     reply.send({ features });
-  } catch (e) {
+  } catch {
     reply.code(500).send({ message: "Internal server error" });
   }
 }

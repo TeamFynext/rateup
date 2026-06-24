@@ -49,7 +49,7 @@ const updateMenuItemInputSchema = z.object({
     .optional(),
   images: z.array(z.string()).optional(),
   videoUrl: z.string().optional().optional(),
-  itemOrder: z.string().optional(),
+  itemOrder: z.coerce.number().optional(),
   disabled: z.boolean().optional(),
   foodLabels: z.array(z.string()).optional(),
 });
@@ -62,8 +62,4 @@ export type UpdateMenuItemInput = z.infer<typeof updateMenuItemInputSchema>;
 export type ByMenuItemIdParams = z.infer<typeof ByMenuItemIdParamsSchema>;
 
 // Auto-exported after fastify-zod migration
-export {
-  createMenuItemInputSchema,
-  updateMenuItemInputSchema,
-  ByMenuItemIdParamsSchema,
-};
+export { createMenuItemInputSchema, updateMenuItemInputSchema, ByMenuItemIdParamsSchema };

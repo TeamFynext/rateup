@@ -14,19 +14,9 @@ const byReviewSuggestionIdSchema = z.object({
   reviewSuggestionId: z.uuid(),
 });
 
-export type byReviewSuggestionIdSchema = z.infer<
-  typeof byReviewSuggestionIdSchema
->;
-export type createReviewSuggestionsSchema = z.infer<
-  typeof createReviewSuggestionsSchema
->;
-export type updateReviewSuggestionSchema = z.infer<
-  typeof updateReviewSuggestionSchema
->;
+export type byReviewSuggestionIdSchema = z.infer<typeof byReviewSuggestionIdSchema>;
+export type createReviewSuggestionsSchema = z.infer<typeof createReviewSuggestionsSchema>;
+export type updateReviewSuggestionSchema = z.infer<typeof updateReviewSuggestionSchema>;
 
 // Auto-exported after fastify-zod migration
-export {
-  updateReviewSuggestionSchema,
-  byReviewSuggestionIdSchema,
-  createReviewSuggestionsSchema,
-};
+export { updateReviewSuggestionSchema, byReviewSuggestionIdSchema, createReviewSuggestionsSchema };

@@ -37,10 +37,7 @@ async function getPublicLinktreeWithShortId(
 }
 
 async function createLinktree(req: FastifyRequest, rep: FastifyReply) {
-  const newLinktree = await shortIdUniqueConstraintErrHandler(
-    createLinktreeInDB,
-    req,
-  );
+  const newLinktree = await shortIdUniqueConstraintErrHandler(createLinktreeInDB, req);
   rep.code(201).send(newLinktree);
 }
 
@@ -56,10 +53,8 @@ async function deleteLinktreeById(
   req: FastifyRequest<{ Params: { id: string } }>,
   rep: FastifyReply,
 ) {
-  const deletedLinktree = await deleteLinktreeInDB(req);
-  rep
-    .code(200)
-    .send({ success: true, message: "Deleted Linktree sucessfully." });
+  await deleteLinktreeInDB(req);
+  rep.code(200).send({ success: true, message: "Deleted Linktree sucessfully." });
 }
 
 async function getLinkTypeDropdownOptions(

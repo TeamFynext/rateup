@@ -33,28 +33,20 @@ import {
   createWaMessageOrgTeamMap,
   getWaMessageLogs,
 } from "./wamessage.service.js";
-import {
-  ByContactIdParams,
-  ContactCore,
-} from "../../../contact/contact.schema.js";
+import { ByContactIdParams, ContactCore } from "../../../contact/contact.schema.js";
 import {
   createReactionMessage,
   createTextMessage,
   parseToWhatsAppFormat,
-  validateSession,
 } from "../../whatsappSurvey/wasurvey.utils.js";
 import {
   blockWhatsappUser,
-  createSession,
-  deleteSession,
-  getSession,
   sendMessage,
   unblockWhatsappUser,
 } from "../../whatsappSurvey/wasurvey.service.js";
 import {
   extractMentions,
   handleWaReceivedImages,
-  isSessionExpired,
   returnAppropriateTimeStamp,
 } from "./wamessage.utils.js";
 import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service.js";
@@ -69,10 +61,7 @@ import {
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller.js";
 import xlsx from "node-xlsx";
 import { WaMessageAssignStatus } from "../../../../types/enums.js";
-import {
-  Contact,
-  PlatformType,
-} from "../../../../../generated/prisma/client.js";
+import { PlatformType } from "../../../../../generated/prisma/client.js";
 import { Role } from "../../../../utils/enums/index.js";
 import { getIgUserDetailsFromMeta } from "../../instagram/instagram.service.js";
 import { WaSendMessageBody } from "../../../../types/whatsapp.types.js";
@@ -102,12 +91,7 @@ export async function handleWaMessages(
   userId?: string,
   failed: boolean = false,
   teamId: string | null = null,
-  messageType:
-    | "INBOX"
-    | "TEMPLATE"
-    | "CAMPAIGN"
-    | "AUTOMATED"
-    | "FLOW" = "INBOX",
+  messageType: "INBOX" | "TEMPLATE" | "CAMPAIGN" | "AUTOMATED" | "FLOW" = "INBOX",
   isAutomated: boolean = false,
   externalApi: boolean = false,
   logs = {},
@@ -120,14 +104,10 @@ export async function handleWaMessages(
       receive: type === "receive" ? messageBody : null,
     };
     // Prepare contact core data
-    const waTimeStamp = await returnAppropriateTimeStamp(
-      waMessageBody,
-      sourcePlatform,
-    );
+    const waTimeStamp = await returnAppropriateTimeStamp(waMessageBody, sourcePlatform);
     const contactCore: ContactCore = {
       name: userName,
-      ...(sourcePlatform === PlatformType.WEBCHAT ||
-      sourcePlatform === PlatformType.FACEBOOK
+      ...(sourcePlatform === PlatformType.WEBCHAT || sourcePlatform === PlatformType.FACEBOOK
         ? { other: from }
         : { phone: from }),
       psid: sourcePlatform === PlatformType.FACEBOOK ? from : undefined,
@@ -142,10 +122,7 @@ export async function handleWaMessages(
     let additionalData = {};
     if (sourcePlatform === PlatformType.INSTAGRAM && type === "receive") {
       try {
-        const userDetails = await getIgUserDetailsFromMeta(
-          from,
-          sourceIdentifier,
-        );
+        const userDetails = await getIgUserDetailsFromMeta(from, sourceIdentifier);
         additionalData = {
           name: userDetails?.name ?? undefined,
           whatsappUserName: userDetails?.username ?? undefined,
@@ -160,10 +137,7 @@ export async function handleWaMessages(
     // Fetch additional Facebook data if needed
     if (sourcePlatform === PlatformType.FACEBOOK && type === "receive") {
       try {
-        const userDetails = await getFacebookUserDetailsFromMeta(
-          from,
-          sourceIdentifier,
-        );
+        const userDetails = await getFacebookUserDetailsFromMeta(from, sourceIdentifier);
         additionalData = {
           name: userDetails?.name ?? undefined,
           email: userDetails?.email ?? undefined,
@@ -176,9 +150,7 @@ export async function handleWaMessages(
 
     // Compose contact data
     const contactData = {
-      ...(type === "receive"
-        ? { lastReceivedMessageTimeStamp: waTimeStamp }
-        : {}),
+      ...(type === "receive" ? { lastReceivedMessageTimeStamp: waTimeStamp } : {}),
       ...(type === "send" ? { lastSentMessageTimeStamp: waTimeStamp } : {}),
       lastMessageBody: waMessageBody,
       lastMessageWaCreatedAt: waTimeStamp,
@@ -202,30 +174,15 @@ export async function handleWaMessages(
       // Facebook uses phone field but stores the Facebook User ID
       res = await getOrCreateContactByPsid(from, orgId, contactData, true);
     } else if (sourcePlatform === PlatformType.WEBCHAT) {
-      res = await getOrCreateContactByPhone(
-        from,
-        orgId,
-        contactData,
-        PlatformType.WEBCHAT,
-        true,
-      );
+      res = await getOrCreateContactByPhone(from, orgId, contactData, PlatformType.WEBCHAT, true);
     } else {
-      res = await getOrCreateContactByPhone(
-        from,
-        orgId,
-        contactData,
-        undefined,
-        true,
-      );
+      res = await getOrCreateContactByPhone(from, orgId, contactData, undefined, true);
     }
     let { contact, conversation } = res;
     // Prepare parameter data and handle specific cases
     let parameterData = {};
     if (type === "send" && messageBody?.type === "template") {
-      const template = await getTemplateByNameAndOrgId(
-        messageBody.template.name,
-        orgId,
-      );
+      const template = await getTemplateByNameAndOrgId(messageBody.template.name, orgId);
       parameterData = messageBody.template.components;
       (waMessageBody.send as WaSendMessageBody).template = template.data as any;
     }
@@ -297,11 +254,10 @@ export async function handleWaMessages(
           firstRespondedByUserAt: userId ? new Date() : undefined,
         });
       } else {
-        const isFirstUserSendMessage =
-          await checkIfFirstUserSendMessageInConversation(
-            conversation.id,
-            waMessage.id,
-          );
+        const isFirstUserSendMessage = await checkIfFirstUserSendMessageInConversation(
+          conversation.id,
+          waMessage.id,
+        );
         if (isFirstUserSendMessage) {
           await updateConversation(conversation.id, {
             firstRespondedByUserAt: new Date(),
@@ -351,14 +307,7 @@ export async function sendNewWaMessageHandler(
 ) {
   try {
     const { contactId } = request.params;
-    const {
-      type,
-      contacts,
-      location,
-      whatsappSettingsPhoneId,
-      platform,
-      teamId,
-    } = request.body;
+    const { type, contacts, location, whatsappSettingsPhoneId, platform, teamId } = request.body;
     const { orgId, userId } = request.user;
     const contact = await getContactById(contactId);
     let to;
@@ -385,8 +334,7 @@ export async function sendNewWaMessageHandler(
         const media = request.body.media;
         if (media.length) {
           const text = request.body.text.body;
-          const caption =
-            typeof text === "string" ? text : parseToWhatsAppFormat(text);
+          const caption = typeof text === "string" ? text : parseToWhatsAppFormat(text);
           await sendMediaMessages(
             media,
             contact.phone,
@@ -422,13 +370,7 @@ export async function sendNewWaMessageHandler(
       }
       case "reaction": {
         const { emoji, toWaMessageId, reaction } = request.body.reaction;
-        const messageBody = createReactionMessage(
-          to,
-          toWaMessageId,
-          emoji,
-          reaction,
-          platform,
-        );
+        const messageBody = createReactionMessage(to, toWaMessageId, emoji, reaction, platform);
         await sendMessage(
           orgId,
           messageBody,
@@ -511,20 +453,14 @@ export async function markMessagesAsReadHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await markMessagesAsRead(
-      request.params.contactId,
-      request.user.userId,
-    );
+    const res = await markMessagesAsRead(request.params.contactId, request.user.userId);
     reply.code(200).send(res);
   } catch (e) {
     reply.code(500).send(e);
   }
 }
 
-export async function generateChatFilterDataHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function generateChatFilterDataHandler(request: FastifyRequest, reply: FastifyReply) {
   const orgId = request.user.orgId;
   const chatFilters = await generateChatFilterData(orgId);
   if (chatFilters) {
@@ -552,10 +488,7 @@ export async function getFilteredContactsHandler(
     );
     reply.status(200).send({
       rows: contacts ?? [],
-      nextOffset:
-        Array.isArray(contacts) && contacts.length > 0
-          ? parseInt(page) + 1
-          : null,
+      nextOffset: Array.isArray(contacts) && contacts.length > 0 ? parseInt(page) + 1 : null,
     });
   } catch (error) {
     console.log(error);
@@ -594,9 +527,7 @@ export async function exportWhatsappChatsHandler(
   if (constraints) {
     const orgId = request.user.orgId;
 
-    const constraintsDecoded: WaChatExportConstraints = JSON.parse(
-      decodeURIComponent(constraints),
-    );
+    const constraintsDecoded: WaChatExportConstraints = JSON.parse(decodeURIComponent(constraints));
 
     const filterfilterDataDecoded = JSON.parse(
       decodeURIComponent(filterData?.replace(/(^"|"$)/g, "")),
@@ -615,9 +546,7 @@ export async function exportWhatsappChatsHandler(
       ];
     });
     const excelData = [["Date", "From", "Name", "Message"], ..._excelData];
-    const buffer = xlsx.build([
-      { name: "Chats", data: excelData, options: {} },
-    ]);
+    const buffer = xlsx.build([{ name: "Chats", data: excelData, options: {} }]);
     reply.header(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -634,11 +563,7 @@ export async function assignWaMessageHandler(
   request: FastifyRequest<{ Body: WaMessageAssignBody }>,
   reply: FastifyReply,
 ) {
-  const res = await assignWaMessageToUser(
-    request.body,
-    request.user.orgId,
-    request.user.userId,
-  );
+  const res = await assignWaMessageToUser(request.body, request.user.orgId, request.user.userId);
 
   return reply.send(res);
 }
@@ -678,10 +603,7 @@ export async function blockWhatsappUserHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await blockWhatsappUser(
-      request.user.orgId,
-      request.body.phoneNumbersList,
-    );
+    const res = await blockWhatsappUser(request.user.orgId, request.body.phoneNumbersList);
     if (res.success) return reply.code(200).send();
     reply.code(400).send(res);
   } catch (e) {
@@ -695,10 +617,7 @@ export async function unblockWhatsappUserHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await unblockWhatsappUser(
-      request.user.orgId,
-      request.body.phoneNumbersList,
-    );
+    const res = await unblockWhatsappUser(request.user.orgId, request.body.phoneNumbersList);
     if (res.success) return reply.code(200).send();
     reply.code(400).send(res);
   } catch (e) {
@@ -707,10 +626,7 @@ export async function unblockWhatsappUserHandler(
   }
 }
 
-export async function generateChatAnalyticsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function generateChatAnalyticsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const orgId = request.user.orgId;
     const analyticsData = await generateChatAnalytics(orgId);
@@ -882,13 +798,12 @@ export async function exportWaMessageLogsHandler(
       let logsStr = "";
       try {
         logsStr = row.logs ? JSON.stringify(row.logs) : "";
-      } catch (e) {}
+      } catch {}
 
       let sourceLabel = row.sourceMessage || "Export";
       if (row.sourceMessage) {
         sourceLabel =
-          row.sourceMessage.charAt(0).toUpperCase() +
-          row.sourceMessage.slice(1).toLowerCase();
+          row.sourceMessage.charAt(0).toUpperCase() + row.sourceMessage.slice(1).toLowerCase();
       }
 
       return [
@@ -907,17 +822,12 @@ export async function exportWaMessageLogsHandler(
       ..._excelData,
     ];
 
-    const buffer = xlsx.build([
-      { name: "Message_Logs", data: excelData, options: {} },
-    ]);
+    const buffer = xlsx.build([{ name: "Message_Logs", data: excelData, options: {} }]);
     reply.header(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
-    reply.header(
-      "Content-Disposition",
-      "attachment; filename=message_logs.xlsx",
-    );
+    reply.header("Content-Disposition", "attachment; filename=message_logs.xlsx");
     reply.send(buffer);
   } catch (e) {
     log.error("Error exporting message logs :%o", e);

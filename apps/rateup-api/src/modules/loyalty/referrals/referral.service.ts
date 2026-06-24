@@ -89,10 +89,7 @@ export async function trackReferral(
       await assignRewardToCustomer(referrer.id, referralRewardId);
     } catch (e) {
       if (!(e as Error).message?.includes("already assigned")) {
-        log.error(
-          { error: (e as Error).message },
-          "Error assigning referral reward",
-        );
+        log.error({ error: (e as Error).message }, "Error assigning referral reward");
       }
     }
   }
@@ -150,10 +147,7 @@ export async function trackReferral(
   };
 }
 
-export async function completeReferral(
-  referralId: string,
-  purchaseAmount: number,
-) {
+export async function completeReferral(referralId: string, _purchaseAmount: number) {
   const referral = await prisma.loyaltyReferral.findUnique({
     where: { id: referralId },
     include: {

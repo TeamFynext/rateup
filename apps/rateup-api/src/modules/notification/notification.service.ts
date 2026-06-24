@@ -68,13 +68,7 @@ export async function getNotificationSettings(userId, orgId) {
   });
 }
 
-export async function createNotification(
-  userId,
-  orgId,
-  source,
-  subSource,
-  data,
-) {
+export async function createNotification(userId, orgId, source, subSource, data) {
   await prisma.notification.create({
     data: {
       orgMember: {
@@ -155,8 +149,6 @@ export async function processNotification(job: Job<NotificationJobData>) {
   }
 
   if (!emailData && !pushNotificationData && !systemNotificationData) {
-    throw new Error(
-      "Invalid notification job: no notification payload provided",
-    );
+    throw new Error("Invalid notification job: no notification payload provided");
   }
 }

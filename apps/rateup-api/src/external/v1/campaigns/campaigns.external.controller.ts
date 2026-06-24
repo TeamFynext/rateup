@@ -18,10 +18,7 @@ export async function createCampaignExternalController(
   return createCampaignHandler(request as any, reply);
 }
 
-export async function getCampaignsExternalController(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getCampaignsExternalController(request: FastifyRequest, reply: FastifyReply) {
   return getCampaignsHandler(request as any, reply);
 }
 
@@ -39,10 +36,7 @@ export async function deleteCampaignByIdExternalController(
   return deleteCampaignByIdHandler(request as any, reply);
 }
 
-export async function sendCampaignExternalController(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function sendCampaignExternalController(request: FastifyRequest, reply: FastifyReply) {
   return sendCampaignHandler(request as any, reply);
 }
 

@@ -17,10 +17,7 @@ import EmailPassword from "supertokens-node/recipe/emailpassword/index.js";
 
 import { FastifyReply, FastifyRequest } from "fastify";
 import { Prisma } from "../../../generated/prisma/client.js";
-import {
-  createHubSpotContact,
-  getHubSpotCompanyByOwnerEmail,
-} from "../../utils/hubspot.js";
+import { createHubSpotContact, getHubSpotCompanyByOwnerEmail } from "../../utils/hubspot.js";
 
 import { getEmailBodyTemplate } from "../email/email.util.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
@@ -98,11 +95,12 @@ export async function createTeam(input: CreateTeamInput) {
     // Commit the transaction
     console.log("Transaction committed:", result);
 
-    result &&
-      (await prisma.usageStats.update({
+    if (result) {
+      await prisma.usageStats.update({
         where: { orgId: input.orgId },
         data: { teamsCount: { increment: 1 } },
-      }));
+      });
+    }
 
     return result;
   } catch (error) {
@@ -139,11 +137,12 @@ export async function deleteTeamById(id: string) {
     },
   });
 
-  team &&
-    (await prisma.usageStats.update({
+  if (team) {
+    await prisma.usageStats.update({
       where: { orgId: team.orgId },
       data: { teamsCount: { decrement: 1 } },
-    }));
+    });
+  }
   return team;
 }
 
@@ -173,9 +172,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
     });
 
     if (existingTeamMember) {
-      throw new Error(
-        "Team member with the provided email already exists in the team.",
-      );
+      throw new Error("Team member with the provided email already exists in the team.");
     }
 
     // Check if the user with the input email is already a member in any organization with role SUPER_ADMIN
@@ -240,9 +237,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         }
         return { ...input, existing: true };
       }
-      const belongsToAnotherOrg = existingMemberships.find(
-        (o) => o.orgId !== orgId,
-      );
+      const belongsToAnotherOrg = existingMemberships.find((o) => o.orgId !== orgId);
 
       if (belongsToAnotherOrg) {
         throw new Error(
@@ -270,19 +265,12 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         // Call Resend email function here
         //TODO
 
-        throw new Error(
-          "Invitation with the provided email is already pending.",
-        );
-      } else if (
-        existingInvitation.status === "ACCEPTED" &&
-        existingInvitation.teamId === teamId
-      ) {
+        throw new Error("Invitation with the provided email is already pending.");
+      } else if (existingInvitation.status === "ACCEPTED" && existingInvitation.teamId === teamId) {
         if (!user) {
           await deleteMemberInvite(existingInvitation.id);
         } else {
-          throw new Error(
-            "Team member with the provided email already exists.",
-          );
+          throw new Error("Team member with the provided email already exists.");
         }
       }
     }
@@ -321,11 +309,12 @@ export async function inviteTeamMember(input: InviteMemberInput) {
 
     console.log("Invite created successfully");
 
-    newInvite &&
-      (await prisma.usageStats.update({
+    if (newInvite) {
+      await prisma.usageStats.update({
         where: { orgId: orgId },
         data: { teamMembersCount: { increment: 1 } },
-      }));
+      });
+    }
 
     return newInvite;
   } catch (error) {
@@ -410,11 +399,7 @@ export async function completeInvite(token: string) {
   if (!isUser) {
     //Create new user , verify email
     const FAKE_PASSWORD = "qwerty123";
-    let signUpResult = await EmailPassword.signUp(
-      "public",
-      updatedInvitation.email,
-      FAKE_PASSWORD,
-    );
+    let signUpResult = await EmailPassword.signUp("public", updatedInvitation.email, FAKE_PASSWORD);
     if (signUpResult.status === "EMAIL_ALREADY_EXISTS_ERROR") {
       throw new Error("User already exists");
     }
@@ -428,9 +413,7 @@ export async function completeInvite(token: string) {
       await EmailVerification.verifyEmailUsingToken("public", tokenRes.token);
       let id = signUpResult.user.id;
       let email = updatedInvitation.email;
-      let recipeName = getUserRecipeName(
-        signUpResult.user.loginMethods[0].recipeId,
-      );
+      let recipeName = getUserRecipeName(signUpResult.user.loginMethods[0].recipeId);
       const user = await createUser({ id, email, recipeName });
 
       if (!user) {
@@ -454,10 +437,7 @@ export async function completeInvite(token: string) {
 
       //Create Team member
       if (orgMember && updatedInvitation.teamId) {
-        createTeamMemberIfNotExists(
-          updatedInvitation.teamId,
-          signUpResult.user.id,
-        );
+        createTeamMemberIfNotExists(updatedInvitation.teamId, signUpResult.user.id);
       }
 
       const linkResponse = await EmailPassword.createResetPasswordLink(
@@ -476,9 +456,7 @@ export async function completeInvite(token: string) {
       }
     }
 
-    const companyId = await getHubSpotCompanyByOwnerEmail(
-      updatedInvitation.org.owner.email,
-    );
+    const companyId = await getHubSpotCompanyByOwnerEmail(updatedInvitation.org.owner.email);
     await createHubSpotContact(
       {
         email: updatedInvitation.email,
@@ -514,17 +492,15 @@ export async function completeInvite(token: string) {
       });
       //Create Team member
       if (orgMember && updatedInvitation.teamId) {
-        const teamMember = await prisma.teamMember.create({
+        await prisma.teamMember.create({
           data: {
             teamId: updatedInvitation.teamId,
             userId: user.id,
           },
         });
       }
-    } else {
-      if (orgMember && updatedInvitation.teamId) {
-        createTeamMemberIfNotExists(updatedInvitation.teamId, user.id);
-      }
+    } else if (orgMember && updatedInvitation.teamId) {
+      await createTeamMemberIfNotExists(updatedInvitation.teamId, user.id);
     }
 
     redirectLink = `${process.env.FRONTEND_URL}/login}`;
@@ -606,10 +582,7 @@ export async function getUsersNotInTeam(teamId: string, orgId: string) {
   );
 }
 
-export async function getTeamMembersAndFromInvitation(
-  orgId: string,
-  input: GetTeamMembersInput,
-) {
+export async function getTeamMembersAndFromInvitation(orgId: string, input: GetTeamMembersInput) {
   const team = await prisma.team.findUnique({
     where: {
       id: input.teamId,
@@ -700,11 +673,12 @@ export async function deleteMemberInvite(id: string) {
     },
   });
 
-  invitation &&
-    (await prisma.usageStats.update({
+  if (invitation) {
+    await prisma.usageStats.update({
       where: { orgId: invitation.orgId },
       data: { teamMembersCount: { decrement: 1 } },
-    }));
+    });
+  }
 
   return invitation;
 }
@@ -772,8 +746,8 @@ export async function getTeamIdsBySurveyMapId(mapId: string[]) {
 export async function editTeam(
   { name, code, googleLink, reviewPageLinks, color }: EditTeamInput,
   params: IdParamInput,
-  request: FastifyRequest,
-  reply: FastifyReply,
+  _request: FastifyRequest,
+  _reply: FastifyReply,
 ) {
   if (name?.length < 3) {
     throw new Error("Invalid team name.");
@@ -805,8 +779,8 @@ export async function editTeam(
 export async function manageTags(
   { tags }: EditTeamInput,
   params: IdParamInput,
-  request: FastifyRequest,
-  reply: FastifyReply,
+  _request: FastifyRequest,
+  _reply: FastifyReply,
 ) {
   const team = await prisma.team.update({
     where: { id: params.id },
@@ -912,19 +886,14 @@ export async function getTeamFeatures(teamId: string) {
  * Replaces the full set of features for a team (upsert + delete orphans).
  * Returns the resulting feature rows.
  */
-export async function setTeamFeatures(
-  teamId: string,
-  input: SetTeamFeaturesInput,
-) {
+export async function setTeamFeatures(teamId: string, input: SetTeamFeaturesInput) {
   const desired = new Set(input.features);
   const existing = await prisma.teamFeatureAccess.findMany({
     where: { teamId },
     select: { id: true, feature: true },
   });
 
-  const toDelete = existing
-    .filter((r) => !desired.has(r.feature))
-    .map((r) => r.id);
+  const toDelete = existing.filter((r) => !desired.has(r.feature)).map((r) => r.id);
 
   const existingFeatures = new Set(existing.map((r) => r.feature));
   const toCreate = input.features.filter((f) => !existingFeatures.has(f));

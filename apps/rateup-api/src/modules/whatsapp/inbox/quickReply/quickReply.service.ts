@@ -34,10 +34,7 @@ export async function deleteWaQuickReplyById(id: string) {
   });
 }
 
-export async function updateWaQuickReplyById(
-  id: string,
-  data: UpdateQuickReplyInput,
-) {
+export async function updateWaQuickReplyById(id: string, data: UpdateQuickReplyInput) {
   return await prisma.whatsappQuickReply.update({
     where: {
       id,

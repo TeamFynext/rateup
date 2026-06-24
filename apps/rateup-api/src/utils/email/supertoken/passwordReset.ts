@@ -1,10 +1,7 @@
 import { notificationQueue } from "../../redisConnection.js";
 import { rateupLogo } from "../../constants/constants.js";
 
-export async function sendResetPasswordMail(
-  reset_link: string,
-  email_id: string,
-) {
+export async function sendResetPasswordMail(reset_link: string, email_id: string) {
   if (reset_link && email_id) {
     const msg = {
       to: email_id,

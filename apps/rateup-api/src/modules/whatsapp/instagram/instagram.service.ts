@@ -1,15 +1,11 @@
 import { callMetaApi } from "../wa_axios.js";
-import {
-  getWaSettingsByIbaId,
-  getWaSettingsById,
-} from "../settings/wa_settings.service.js";
+import { getWaSettingsByIbaId, getWaSettingsById } from "../settings/wa_settings.service.js";
 import { log } from "../../../utils/logger.js";
 import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
 import { getInstagramWebhookEvent } from "./instagram.util.js";
 import { InstagramEvent } from "../../../types/enums.js";
 import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
-import { sendInstagramPrivateReply } from "./instagram_messaging.service.js";
 import { checkAndExecuteRuleByTriggerEvent } from "../automatedReply/wa_automatedReply.utils.js";
 
 export async function getIgUserDetailsFromMeta(igsId, ibaId) {
@@ -32,10 +28,7 @@ export async function handleInstagramWebhook(data: InstagramWebhookBody) {
   for (const entry of data.entry) {
     const waSettings = await getWaSettingsByIbaId(entry.id);
     if (!waSettings) {
-      log.trace(
-        "No instagram settings found for instagram business account id: %s",
-        entry.id,
-      );
+      log.trace("No instagram settings found for instagram business account id: %s", entry.id);
       continue;
     }
 
@@ -44,9 +37,7 @@ export async function handleInstagramWebhook(data: InstagramWebhookBody) {
       for (const change of entry.changes) {
         if (change.field === "comments" || change.field === "live_comments") {
           const event =
-            change.field === "live_comments"
-              ? InstagramEvent.LIVE_COMMENT
-              : InstagramEvent.COMMENT;
+            change.field === "live_comments" ? InstagramEvent.LIVE_COMMENT : InstagramEvent.COMMENT;
           await handleInstagramComment(change.value, event, waSettings);
         }
       }
@@ -138,10 +129,7 @@ export async function handleInstagramComment(
       platform: "INSTAGRAM",
     });
   } catch (error) {
-    log.error(
-      `[Instagram] Error in rule execution for comment ${commentId}: %o`,
-      error,
-    );
+    log.error(`[Instagram] Error in rule execution for comment ${commentId}: %o`, error);
   }
 }
 
@@ -166,9 +154,7 @@ async function handleInstagramStoryMentionRule(
     mid,
   );
   try {
-    const storyAttachment = messaging.message?.attachments?.find(
-      (a) => a.type === "story_mention",
-    );
+    const storyAttachment = messaging.message?.attachments?.find((a) => a.type === "story_mention");
     await checkAndExecuteRuleByTriggerEvent("INSTAGRAM_STORY_MENTION", {
       orgId: waSettings.orgId,
       phoneNumberId: waSettings.ibaId,
@@ -178,17 +164,11 @@ async function handleInstagramStoryMentionRule(
       platform: "INSTAGRAM",
     });
   } catch (error) {
-    log.error(
-      "[Instagram] Error in rule execution for story mention: %o",
-      error,
-    );
+    log.error("[Instagram] Error in rule execution for story mention: %o", error);
   }
 }
 
-export async function handleInstagramMessages(
-  data: InstagramWebhookBody,
-  waSettings,
-) {
+export async function handleInstagramMessages(data: InstagramWebhookBody, waSettings) {
   const { orgId, ibaId } = waSettings;
   const { sender, message } = data.entry[0].messaging[0];
   const { mid } = message;
@@ -219,10 +199,7 @@ export async function handleInstagramMessages(
   }
 }
 
-export async function handleInstagramPostback(
-  data: InstagramWebhookBody,
-  waSettings,
-) {
+export async function handleInstagramPostback(data: InstagramWebhookBody, waSettings) {
   const { orgId, ibaId } = waSettings;
   const messaging = data.entry[0].messaging[0];
   const { sender, postback, timestamp } = messaging;
@@ -233,9 +210,7 @@ export async function handleInstagramPostback(
   }
 
   try {
-    log.info(
-      `[Instagram] Postback received from user ${sender.id}: ${postback.payload}`,
-    );
+    log.info(`[Instagram] Postback received from user ${sender.id}: ${postback.payload}`);
 
     const messageBody = {
       type: "postback",
@@ -265,17 +240,11 @@ export async function handleInstagramPostback(
       platform: "INSTAGRAM",
     });
   } catch (error) {
-    log.error(
-      `[Instagram] Error handling postback from user ${sender.id}: %o`,
-      error,
-    );
+    log.error(`[Instagram] Error handling postback from user ${sender.id}: %o`, error);
   }
 }
 
-export async function handleInstagramReferral(
-  data: InstagramWebhookBody,
-  waSettings,
-) {
+export async function handleInstagramReferral(data: InstagramWebhookBody, waSettings) {
   const { orgId, ibaId } = waSettings;
   const messaging = data.entry[0].messaging[0];
   const { sender, timestamp } = messaging;
@@ -294,9 +263,7 @@ export async function handleInstagramReferral(
   }
 
   try {
-    log.info(
-      `[Instagram] Referral received from user ${sender.id}: ${referralText}`,
-    );
+    log.info(`[Instagram] Referral received from user ${sender.id}: ${referralText}`);
 
     const messageBody = {
       type: "referral",
@@ -324,10 +291,7 @@ export async function handleInstagramReferral(
       platform: "INSTAGRAM",
     });
   } catch (error) {
-    log.error(
-      `[Instagram] Error handling referral from user ${sender.id}: %o`,
-      error,
-    );
+    log.error(`[Instagram] Error handling referral from user ${sender.id}: %o`, error);
   }
 }
 
@@ -342,21 +306,11 @@ export async function handleInstagramMessageSeen(data: InstagramWebhookBody) {
   });
 }
 
-export async function handleInstagramMessageReaction(
-  data: InstagramWebhookBody,
-  waSettings,
-) {
+export async function handleInstagramMessageReaction(data: InstagramWebhookBody, waSettings) {
   const messaginObj = data.entry[0].messaging[0];
   const { sender } = messaginObj;
   const { orgId, ibaId } = waSettings;
-  await handleWaMessages(
-    "receive",
-    messaginObj,
-    sender.id,
-    orgId,
-    PlatformType.INSTAGRAM,
-    ibaId,
-  );
+  await handleWaMessages("receive", messaginObj, sender.id, orgId, PlatformType.INSTAGRAM, ibaId);
 }
 
 export async function getFbPages(settingsId) {

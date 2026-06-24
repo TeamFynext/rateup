@@ -1,10 +1,5 @@
 import { faker } from "@faker-js/faker";
-import {
-  LDResponse,
-  QuestionType,
-  SmileyResponse,
-  YNResponse,
-} from "../../types/enums.js";
+import { LDResponse, QuestionType, SmileyResponse, YNResponse } from "../../types/enums.js";
 import { ResponsePlatform } from "../../../generated/prisma/client.js";
 import { load } from "cheerio";
 
@@ -31,18 +26,16 @@ const getResponseFromQuestion = (question = []) => {
         const features = data?.features;
 
         response = {
-          ...(Object.values(features as { name: { isEnabled: boolean } }[])?.[0]
-            ?.name?.isEnabled && {
+          ...(Object.values(features as { name: { isEnabled: boolean } }[])?.[0]?.name
+            ?.isEnabled && {
             name: faker.person.fullName(),
           }),
-          ...(Object.values(
-            features as { email: { isEnabled: boolean } }[],
-          )?.[0]?.email?.isEnabled && {
+          ...(Object.values(features as { email: { isEnabled: boolean } }[])?.[0]?.email
+            ?.isEnabled && {
             email: faker.internet.email(),
           }),
-          ...(Object.values(
-            features as { phone: { isEnabled: boolean } }[],
-          )?.[0]?.phone?.isEnabled && {
+          ...(Object.values(features as { phone: { isEnabled: boolean } }[])?.[0]?.phone
+            ?.isEnabled && {
             phone: faker.phone.number(),
           }),
         };
@@ -139,8 +132,7 @@ export const extractText = (htmlContent: string) => {
 };
 
 export const getContent = (title: string) => {
-  if (isHtml(title))
-    return extractText(getReplacedTitleFromVariable({ title }) || title);
+  if (isHtml(title)) return extractText(getReplacedTitleFromVariable({ title }) || title);
   else return title;
 };
 
@@ -174,11 +166,7 @@ export const getReplacedTitleFromVariable = ({
   componentName = "variable-component",
 }: IReplaceTitleForVar) => {
   const doc = load(title);
-  const variables = getPropValueFromQuestionCustomComponent(
-    title,
-    componentName,
-    prop,
-  );
+  const variables = getPropValueFromQuestionCustomComponent(title, componentName, prop);
   if (!variables) return null;
   variables.forEach((value) => {
     const component = doc(`${componentName}[${prop}="${value}"]`).first();

@@ -3,10 +3,7 @@ interface FormField {
   value: string;
 }
 
-export function getValueByKey(
-  formFields: FormField[],
-  key: string,
-): string | null {
+export function getValueByKey(formFields: FormField[], key: string): string | null {
   for (const field of formFields) {
     if (field.id === key) {
       return field.value;

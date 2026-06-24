@@ -40,18 +40,14 @@ export async function createMenu(data: CreateMenuInput) {
 }
 
 //Clone menu -  currently used to create initial sample menu for user signup
-export async function cloneMenu(
-  menuId: string,
-  newTeamId: string,
-  surveyTeamMapId: string,
-) {
+export async function cloneMenu(menuId: string, newTeamId: string, surveyTeamMapId: string) {
   const menuTemplate = await prisma.menu.findUnique({
     where: {
       id: menuId,
     },
   });
 
-  let { id, shortUrlId, teamId, createdAt, ...restMenuData } = menuTemplate;
+  let { shortUrlId: _shortUrlId, createdAt: _createdAt, ...restMenuData } = menuTemplate;
 
   const cloneMenuData = {
     ...restMenuData,
@@ -66,12 +62,7 @@ export async function cloneMenu(
     },
   });
 
-  let {
-    id: landId,
-    createdAt: landCreatedAt,
-    updatedAt,
-    ...restLandingData
-  } = menuLanding;
+  let { createdAt: _landCreatedAt, ...restLandingData } = menuLanding;
 
   await prisma.menuLanding.create({
     data: {
@@ -90,7 +81,7 @@ export async function cloneMenu(
   });
 
   for (const banner of menuBanners) {
-    let { id, createdAt, menuId, ...rest } = banner;
+    let { createdAt: _createdAt, ...rest } = banner;
     await createMenuBanner({ ...rest, menuId: newMenu.id });
   }
 
@@ -102,7 +93,7 @@ export async function cloneMenu(
   });
 
   for (const cat of menuCategories) {
-    let { id, createdAt, menuId, ...rest } = cat;
+    let { id, menuId: _menuId, ...rest } = cat;
     let newCat = await createMenuCategory({
       ...rest,
       menuId: newMenu.id,
@@ -116,7 +107,7 @@ export async function cloneMenu(
     });
 
     for (const item of menuItems) {
-      let { id, createdAt, categoryId, ...rest } = item;
+      let { createdAt: _createdAt, ...rest } = item;
       await createMenuItem({
         ...rest,
         categoryId: newCat.id,
@@ -458,8 +449,7 @@ export async function getMenuLanding(id: string) {
   else if (isExpired) menu.expiry = "Your subscription plan has expired.";
   else if (
     usage.monthlyMenuViews >=
-    subscription.features[SubscriptionFeaturePathName.Menu].count
-      .monthlyViewLimit
+    subscription.features[SubscriptionFeaturePathName.Menu].count.monthlyViewLimit
   )
     menu.expiry = "Your menu view quota has been exceeded.";
 
@@ -484,7 +474,7 @@ export async function updateVisitedMenuLanding(id: string) {
     },
     create: {
       ...createMenuLandingData,
-      ...{ visited: 1 },
+      visited: 1,
     },
     update: { visited: { increment: 1 } },
   });
@@ -502,7 +492,9 @@ export async function updateVisitedMenuLanding(id: string) {
     },
   });
 
-  menuLandingVisited && menu && updateMonthlyStat("menu", menu?.team.orgId);
+  if (menuLandingVisited && menu) {
+    updateMonthlyStat("menu", menu.team.orgId);
+  }
 
   return menuLandingVisited;
 }

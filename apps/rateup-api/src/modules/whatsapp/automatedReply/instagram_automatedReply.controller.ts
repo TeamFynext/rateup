@@ -18,10 +18,7 @@ import { startInstagramAutomationFlow } from "./instagram_automation.service.js"
 /**
  * Get all Instagram automations for an organization
  */
-export async function getInstagramAutomationsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getInstagramAutomationsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user as any;
 
@@ -32,10 +29,7 @@ export async function getInstagramAutomationsHandler(
       data: automations,
     });
   } catch (error) {
-    log.error(
-      `[Instagram Automation Controller] Error getting automations: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation Controller] Error getting automations: %o`, error);
     reply.code(500).send({
       success: false,
       error: "Failed to fetch Instagram automations",
@@ -76,10 +70,7 @@ export async function getInstagramAutomationByIdHandler(
       data: automation,
     });
   } catch (error) {
-    log.error(
-      `[Instagram Automation Controller] Error getting automation: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation Controller] Error getting automation: %o`, error);
     reply.code(500).send({
       success: false,
       error: "Failed to fetch Instagram automation",
@@ -115,19 +106,14 @@ export async function createInstagramAutomationHandler(
       isActive: body.isActive,
     });
 
-    log.info(
-      `[Instagram Automation Controller] Created automation ${automation.id}`,
-    );
+    log.info(`[Instagram Automation Controller] Created automation ${automation.id}`);
 
     reply.code(201).send({
       success: true,
       data: automation,
     });
   } catch (error) {
-    log.error(
-      `[Instagram Automation Controller] Error creating automation: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation Controller] Error creating automation: %o`, error);
     reply.code(500).send({
       success: false,
       error: "Failed to create Instagram automation",
@@ -181,10 +167,7 @@ export async function updateInstagramAutomationHandler(
       data: automation,
     });
   } catch (error) {
-    log.error(
-      `[Instagram Automation Controller] Error updating automation: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation Controller] Error updating automation: %o`, error);
     reply.code(500).send({
       success: false,
       error: "Failed to update Instagram automation",
@@ -228,10 +211,7 @@ export async function deleteInstagramAutomationHandler(
       message: "Instagram automation deleted successfully",
     });
   } catch (error) {
-    log.error(
-      `[Instagram Automation Controller] Error deleting automation: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation Controller] Error deleting automation: %o`, error);
     reply.code(500).send({
       success: false,
       error: "Failed to delete Instagram automation",
@@ -285,10 +265,7 @@ export async function initiateInstagramAutomationHandler(
       message: "Instagram automation initiated successfully",
     });
   } catch (error) {
-    log.error(
-      `[Instagram Automation Controller] Error initiating automation: %o`,
-      error,
-    );
+    log.error(`[Instagram Automation Controller] Error initiating automation: %o`, error);
     reply.code(500).send({
       success: false,
       error: "Failed to initiate Instagram automation",

@@ -1,8 +1,8 @@
 import { string, z } from "zod";
 
-enum WaChatLastMessageTypes {
-  "usermessages",
-  "all",
+export enum WaChatLastMessageTypes {
+  USER_MESSAGES = "usermessages",
+  ALL = "all",
 }
 export enum DateType {
   BETWEEN = "between",
@@ -162,9 +162,7 @@ export type WaMessageAssignBody = z.input<typeof waMessageAssignBody>;
 export type BulkWaMessageAssignBody = z.infer<typeof bulkWaMessageAssignBody>;
 export type BlockUserBody = z.infer<typeof blockUserSchema>;
 export type LogsQuery = z.infer<typeof logsQuerySchema>;
-export type GenerateInboxResponseBody = z.infer<
-  typeof generateInboxResponseBody
->;
+export type GenerateInboxResponseBody = z.infer<typeof generateInboxResponseBody>;
 
 // Auto-exported after fastify-zod migration
 export {

@@ -17,10 +17,7 @@ import {
   createEmailBodySubscriptionActivated,
   createEmailBodyTrialSubscriptionActivated,
 } from "../../utils/email/payments/subscriptionActivated.js";
-import {
-  getRecurringCharge,
-  getShopifyInfo,
-} from "../integrations/shopify/shopify.service.js";
+import { getRecurringCharge, getShopifyInfo } from "../integrations/shopify/shopify.service.js";
 import prisma from "../../utils/prisma.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
 
@@ -34,10 +31,7 @@ export enum PaymentPlanType {
 }
 
 //.......create a checkout session............
-export async function createCheckoutSession(
-  userId: string,
-  data: CreateCheckoutInput,
-) {
+export async function createCheckoutSession(userId: string, data: CreateCheckoutInput) {
   const requestBody = {
     plan_id: data.planId,
     total_count: data.period === "monthly" ? 1200 : 100,
@@ -48,21 +42,15 @@ export async function createCheckoutSession(
       orgId: data?.orgId,
       isAnnualMessageLimit: data.isAnnualMessageLimit,
     },
-    ...(data.trialDays
-      ? { start_at: dayjs().add(data.trialDays, "day").unix() }
-      : {}),
+    ...(data.trialDays ? { start_at: dayjs().add(data.trialDays, "day").unix() } : {}),
   };
 
   try {
-    const apiResponse = await axios.post(
-      "https://api.razorpay.com/v1/subscriptions",
-      requestBody,
-      {
-        headers: {
-          Authorization: `Basic ${credentials}`,
-        },
+    const apiResponse = await axios.post("https://api.razorpay.com/v1/subscriptions", requestBody, {
+      headers: {
+        Authorization: `Basic ${credentials}`,
       },
-    );
+    });
 
     const subscriptionId = apiResponse?.data?.id;
     const order = await prisma.order.create({
@@ -95,14 +83,11 @@ export async function createCheckoutSession(
 //...get razorpay plan list to rateup db
 export async function syncPaymentPlans() {
   try {
-    const apiResponse = await axios.get(
-      "https://api.razorpay.com/v1/plans?count=50",
-      {
-        headers: {
-          Authorization: `Basic ${credentials}`,
-        },
+    const apiResponse = await axios.get("https://api.razorpay.com/v1/plans?count=50", {
+      headers: {
+        Authorization: `Basic ${credentials}`,
       },
-    );
+    });
 
     const plansData = apiResponse?.data?.items;
 
@@ -198,12 +183,8 @@ export async function createRateUpPlan(data: createRateUpPlanInput) {
       displayWidgetId: data.displayWidgetId ?? undefined,
       description: data.description,
       planType: data.planType as PaymentPlanType,
-      paymentPlan: data?.paymentPlanId
-        ? { connect: { id: data?.paymentPlanId } }
-        : undefined,
-      stripeProduct: data?.stripeId
-        ? { connect: { id: data?.stripeId } }
-        : undefined,
+      paymentPlan: data?.paymentPlanId ? { connect: { id: data?.paymentPlanId } } : undefined,
+      stripeProduct: data?.stripeId ? { connect: { id: data?.stripeId } } : undefined,
       features: data.features ? JSON.parse(data.features) : null,
       trialDays: data.trialDays,
     },
@@ -264,15 +245,13 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
       description: data?.description,
       planType: data?.planType as PaymentPlanType,
       paymentPlan:
-        (data?.stripeId || !data?.paymentPlanId?.length) &&
-        existingPlan.paymentPlanId
+        (data?.stripeId || !data?.paymentPlanId?.length) && existingPlan.paymentPlanId
           ? { disconnect: { id: existingPlan.paymentPlanId } }
           : data?.paymentPlanId
             ? { connect: { id: data?.paymentPlanId } }
             : undefined,
       stripeProduct:
-        (data?.paymentPlanId || !data?.stripeId?.length) &&
-        existingPlan.stripeId
+        (data?.paymentPlanId || !data?.stripeId?.length) && existingPlan.stripeId
           ? { disconnect: { id: existingPlan.stripeId } }
           : data?.stripeId
             ? { connect: { id: data?.stripeId } }
@@ -311,20 +290,16 @@ export async function deleteRateUpPlan(data: rateupPlanParamInput) {
 //Webhook action On Subscription Activated
 export async function activateSubscription(payload) {
   try {
-    const { subscription, payment } = payload;
-    const { id, status, charge_at } = subscription?.entity;
+    const { subscription } = payload;
+    const { id, charge_at } = subscription?.entity || {};
 
-    console.log(
-      "....................Activating Subscription.....................",
-    );
+    console.log("....................Activating Subscription.....................");
 
     if (id) {
       const subscriptionStatus = await prisma.order.update({
         data: {
           subscriptionStatus: SubscriptionStatus.active,
-          ...(!charge_at
-            ? {}
-            : { subscriptionChargeAt: new Date(charge_at * 1000) }),
+          ...(!charge_at ? {} : { subscriptionChargeAt: new Date(charge_at * 1000) }),
         },
         where: {
           subscriptionId: id,
@@ -343,7 +318,7 @@ export async function activateSubscription(payload) {
 export async function updateSubscription(payload) {
   try {
     const { subscription, payment } = payload;
-    const { id, notes, current_end, charge_at } = subscription?.entity;
+    const { id, notes, current_end, charge_at } = subscription?.entity || {};
 
     const rateupPlan = await prisma.rateupPlan.findUnique({
       where: { id: notes?.rateupPlanId },
@@ -367,13 +342,11 @@ export async function updateSubscription(payload) {
       data: {
         status: OrderStatus.COMPLETE,
         subscriptionStatus: SubscriptionStatus.active,
-        ...(!charge_at
-          ? {}
-          : { subscriptionChargeAt: new Date(charge_at * 1000) }),
+        ...(!charge_at ? {} : { subscriptionChargeAt: new Date(charge_at * 1000) }),
       },
     });
 
-    const updatedUsageStats = await prisma.usageStats.update({
+    await prisma.usageStats.update({
       where: {
         orgId: notes?.orgId,
       },
@@ -390,9 +363,7 @@ export async function updateSubscription(payload) {
       },
     });
 
-    console.log(
-      "....................updating subscription.....................",
-    );
+    console.log("....................updating subscription.....................");
 
     if (updatedOrder) {
       console.log("sending email....");
@@ -427,17 +398,7 @@ export async function updateSubscription(payload) {
 //Webhook action On Payment Captured  // PAYMENT Failed
 export async function verifyPayment(data, event) {
   try {
-    const {
-      id,
-      amount,
-      currency,
-      method,
-      description,
-      email,
-      contact,
-      notes,
-      created_at,
-    } = data;
+    const { id, amount, currency, method, description, email, contact, notes, created_at } = data;
     const payment = await prisma.payments.create({
       data: {
         payId: id,
@@ -452,9 +413,9 @@ export async function verifyPayment(data, event) {
       },
     });
 
-    let updatedOrder;
+    let _updatedOrder;
     if (event === "payment.failed") {
-      updatedOrder = await prisma.order.update({
+      _updatedOrder = await prisma.order.update({
         where: { id: notes?.rateupOrderId },
         data: {
           paymentStatus: PaymentStatus.FAILED,
@@ -463,7 +424,7 @@ export async function verifyPayment(data, event) {
         },
       });
     } else {
-      updatedOrder = await prisma.order.update({
+      _updatedOrder = await prisma.order.update({
         where: { id: notes?.rateupOrderId },
         data: {
           paymentStatus: PaymentStatus.SUCCESS,
@@ -534,7 +495,7 @@ export async function cancelRazorpaySubscription(orgId) {
     throw new Error("Subscription missing");
   }
   if (!subscription.subscriptionRef.startsWith("sub")) {
-    const subscriptionStatus = await prisma.order.update({
+    await prisma.order.update({
       data: {
         subscriptionStatus: SubscriptionStatus.cancelled,
         subscriptionEndedAt: new Date(),
@@ -562,7 +523,7 @@ export async function cancelRazorpaySubscription(orgId) {
   );
 
   if (res && res?.data?.id) {
-    const subscriptionStatus = await prisma.order.update({
+    await prisma.order.update({
       data: {
         subscriptionStatus: SubscriptionStatus.cancelled,
         subscriptionEndedAt: new Date(),
@@ -677,10 +638,7 @@ export async function getAllOrgOrders(orgId: string) {
       } else if (order.shopifyPlanId) {
         const integration = await getShopifyInfo(orgId);
         if (integration) {
-          const recurringCharge = await getRecurringCharge(
-            order.subscriptionId,
-            integration,
-          );
+          const recurringCharge = await getRecurringCharge(order.subscriptionId, integration);
           if (recurringCharge) {
             const rateupPlan = await prisma.rateupPlan.findFirst({
               where: {
@@ -761,12 +719,7 @@ export async function updateOrder(orderId, data) {
   });
 }
 
-export async function updateSubscriptionForTrial(
-  orgId,
-  rateupPlanId,
-  subscriptionId,
-  userId,
-) {
+export async function updateSubscriptionForTrial(orgId, rateupPlanId, subscriptionId, userId) {
   const rateupPlan = await prisma.rateupPlan.findUnique({
     where: { id: rateupPlanId },
     include: {

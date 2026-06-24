@@ -1,9 +1,5 @@
 import { z } from "zod";
-import {
-  WaTemplateComponentType,
-  WaButtonType,
-  WaTemplateCategory,
-} from "../../../types/enums.js";
+import { WaTemplateComponentType, WaButtonType, WaTemplateCategory } from "../../../types/enums.js";
 import { TemplateType } from "../../../../generated/prisma/client.js";
 
 const waTemplateInput = {
@@ -66,9 +62,7 @@ const waTemplateInput = {
           thumbnail_product_retailer_id: z.string().optional(),
           mpm: z
             .object({
-              sections: z.array(
-                z.object({ title: z.string(), products: z.array(z.string()) }),
-              ),
+              sections: z.array(z.object({ title: z.string(), products: z.array(z.string()) })),
             })
             .optional(),
           spm: z
@@ -203,9 +197,7 @@ const waTemplateFormattedInput = {
   allow_category_change: z.boolean().optional().nullable(),
 };
 const waTemplateInputSchema = z.object(waTemplateInput);
-export const waTemplateFormattedInputSchema = z.object(
-  waTemplateFormattedInput,
-);
+export const waTemplateFormattedInputSchema = z.object(waTemplateFormattedInput);
 
 // used for saving to db
 const waTemplateCore = {
@@ -250,19 +242,13 @@ const syncTemplatesSchema = z.object({
 });
 
 export type CreateWaTemplateInput = z.infer<typeof waTemplateInputSchema>;
-export type CreateWaTemplateFormattedInput = z.infer<
-  typeof waTemplateFormattedInputSchema
->;
+export type CreateWaTemplateFormattedInput = z.infer<typeof waTemplateFormattedInputSchema>;
 export type WaTemplate = z.infer<typeof waTemplateSchema>;
 export type WaTemplateFormatted = z.infer<typeof waTemplateFormattedSchema>;
 export type ByTemplateIdParamsSchema = z.infer<typeof byTemplateIdParamsSchema>;
 export type TemplateTypeParamsSchema = z.infer<typeof templateTypeParamsSchema>;
-export type RegisterTemplatesInDbBodySchema = z.infer<
-  typeof registerTemplatesInDbBodySchema
->;
-export type WaUserSendTemplateBodySchema = z.infer<
-  typeof waUserSendTemplateBodySchema
->;
+export type RegisterTemplatesInDbBodySchema = z.infer<typeof registerTemplatesInDbBodySchema>;
+export type WaUserSendTemplateBodySchema = z.infer<typeof waUserSendTemplateBodySchema>;
 
 // Auto-exported after fastify-zod migration
 export {

@@ -1,17 +1,11 @@
-import {
-  LoyaltyTemplateTypes,
-  WaAutomatedReplyResponseType,
-} from "../../../types/enums.js";
+import { LoyaltyTemplateTypes, WaAutomatedReplyResponseType } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
 import {
   LoyaltyTemplateInput,
   EventTriggerInput,
   UpdateEventTriggerInput,
 } from "./settings.schema.js";
-import {
-  sendMessage,
-  sendTextMessage,
-} from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
+import { sendMessage, sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import { LoyaltyWaCommand } from "../../../../generated/prisma/client.js";
 import dayjs from "dayjs";
 import {
@@ -27,16 +21,13 @@ import {
   generateWhatsAppJoinLink,
 } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
 import { getActiveLoyaltyRewards } from "../rewards/reward.service.js";
-import { redeemReward } from "../redemptions/redemption.service.js";
 import { validateRedemption } from "../redemptionValidator.js";
 
 const REWARD_BUTTON_PREFIX = "loyalty_reward:";
 const REWARD_CONFIRM_PREFIX = "loyalty_reward_confirm:";
 const REWARD_CANCEL_PREFIX = "loyalty_reward_cancel:";
 
-export async function createLoyaltyWaCommand(
-  data: LoyaltyTemplateInput & { orgId: string },
-) {
+export async function createLoyaltyWaCommand(data: LoyaltyTemplateInput & { orgId: string }) {
   return await prisma.loyaltyWaCommand.create({
     data: {
       type: data.type,
@@ -80,10 +71,7 @@ export async function updateLoyaltyWaCommand(id, data) {
   });
 }
 
-export async function getLoyaltyWaCommandByRequestMessage(
-  orgId,
-  requestMessage,
-) {
+export async function getLoyaltyWaCommandByRequestMessage(orgId, requestMessage) {
   return await prisma.loyaltyWaCommand.findFirst({
     where: {
       orgId,
@@ -138,7 +126,7 @@ export async function getAllLoyaltyWaCommands(orgId) {
     },
   });
 }
-async function handleIssuedRewardsCommand(phone, orgId, loyaltyWaCommand) {
+async function handleIssuedRewardsCommand(phone, orgId, _loyaltyWaCommand) {
   const customer = await getLCustomerByPhone(phone, orgId);
 
   if (!customer || customer.status !== "active") {
@@ -153,12 +141,9 @@ async function handleIssuedRewardsCommand(phone, orgId, loyaltyWaCommand) {
   const rewards = await getActiveLoyaltyRewards(customer.programId);
   const eligibleRewards = rewards
     .filter((reward) => {
-      const inStock =
-        reward.stockQuantity === null ||
-        reward.stockRedeemed < reward.stockQuantity;
+      const inStock = reward.stockQuantity === null || reward.stockRedeemed < reward.stockQuantity;
       const hasPoints =
-        reward.rewardType === "assigned" ||
-        customer.currentPoints >= reward.pointsCost;
+        reward.rewardType === "assigned" || customer.currentPoints >= reward.pointsCost;
       return inStock && hasPoints;
     })
     .slice(0, 10);
@@ -189,13 +174,7 @@ async function handleIssuedRewardsCommand(phone, orgId, loyaltyWaCommand) {
 }
 
 async function handleReferralCommand(phone, loyaltyWaCommand) {
-  const {
-    orgId,
-    responseType,
-    waTemplateId,
-    content,
-    whatsappSettingsPhoneId,
-  } = loyaltyWaCommand;
+  const { orgId, responseType, waTemplateId, content, whatsappSettingsPhoneId } = loyaltyWaCommand;
 
   const customer = await getLCustomerByPhone(phone, orgId);
   if (!customer || customer.status !== "active") {
@@ -224,20 +203,13 @@ async function handleReferralCommand(phone, loyaltyWaCommand) {
 
   if (responseType === WaAutomatedReplyResponseType.Template) {
     const dynamicVariables = [referralCode, joinLink ?? referralCode];
-    return await handleSendTemplate(
-      waTemplateId,
-      orgId,
-      phone,
-      dynamicVariables,
-    );
+    return await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
   } else if (responseType === WaAutomatedReplyResponseType.Text) {
     const dynamicVariables = [referralCode, joinLink ?? referralCode];
     const message = replacedContentByDynamicVariable(content, dynamicVariables);
     await sendTextMessage({ phone, orgId }, null, message);
   } else {
-    const linkText = joinLink
-      ? `\n\nShare your referral link: ${joinLink}`
-      : "";
+    const linkText = joinLink ? `\n\nShare your referral link: ${joinLink}` : "";
     await sendTextMessage(
       { phone, orgId },
       null,
@@ -258,9 +230,7 @@ export async function handleLoyaltyRedeemInteraction(
   const getActiveCustomer = async () => {
     const customer = await getLCustomerByPhone(phone, orgId);
     if (!customer || customer.status !== "active") {
-      await sendLoyaltyText(
-        "You are not an active member of our loyalty programme",
-      );
+      await sendLoyaltyText("You are not an active member of our loyalty programme");
       return null;
     }
     return customer;
@@ -280,11 +250,7 @@ export async function handleLoyaltyRedeemInteraction(
   }
 
   if (buttonId.startsWith(REWARD_CONFIRM_PREFIX)) {
-    await handleRewardConfirmation(
-      buttonId,
-      getActiveCustomer,
-      sendLoyaltyText,
-    );
+    await handleRewardConfirmation(buttonId, getActiveCustomer, sendLoyaltyText);
     return true;
   }
 
@@ -306,20 +272,12 @@ async function handleRewardSelection(
   });
 
   if (reward?.programId !== customer.programId) {
-    await sendTextMessage(
-      { phone, orgId },
-      null,
-      "Selected reward is invalid.",
-    );
+    await sendTextMessage({ phone, orgId }, null, "Selected reward is invalid.");
     return;
   }
 
-  const inStock =
-    reward.stockQuantity === null ||
-    reward.stockRedeemed < reward.stockQuantity;
-  const hasPoints =
-    reward.rewardType === "assigned" ||
-    customer.currentPoints >= reward.pointsCost;
+  const inStock = reward.stockQuantity === null || reward.stockRedeemed < reward.stockQuantity;
+  const hasPoints = reward.rewardType === "assigned" || customer.currentPoints >= reward.pointsCost;
 
   if (!inStock || !hasPoints) {
     await sendTextMessage(
@@ -355,29 +313,19 @@ async function handleRewardConfirmation(
   try {
     const validation = await validateRedemption(customer.id, rewardId, {});
     if (!validation.valid) {
-      await sendLoyaltyText(
-        validation.message || "Unable to redeem reward right now.",
-      );
+      await sendLoyaltyText(validation.message || "Unable to redeem reward right now.");
       return;
     }
-    const result = await assignRewardToCustomer(
-      customer.id,
-      rewardId,
-      "WhatsApp redeem flow",
-    );
+    const result = await assignRewardToCustomer(customer.id, rewardId, "WhatsApp redeem flow");
     if (result.id) {
       await handleDeduction(result?.reward, customer, result.reward?.programId);
     }
 
-    const codeText = result?.shortCode
-      ? `\nRedemption code: ${result.shortCode}`
-      : "";
+    const codeText = result?.shortCode ? `\nRedemption code: ${result.shortCode}` : "";
 
     await sendLoyaltyText(`${"Reward redeemed successfully."}${codeText}`);
   } catch (error) {
-    await sendLoyaltyText(
-      error?.message || "Unable to redeem reward right now.",
-    );
+    await sendLoyaltyText(error?.message || "Unable to redeem reward right now.");
   }
 }
 async function handleDeduction(reward, customer, programId) {
@@ -424,12 +372,7 @@ export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
   ];
 
   if (responseType === WaAutomatedReplyResponseType.Template)
-    return await handleSendTemplate(
-      waTemplateId,
-      orgId,
-      phone,
-      dynamicVariables,
-    );
+    return await handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables);
   else if (responseType === WaAutomatedReplyResponseType.Text) {
     const message = replacedContentByDynamicVariable(content, dynamicVariables);
     await sendTextMessage({ phone, orgId }, null, message);
@@ -437,10 +380,7 @@ export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
 }
 export async function handleLoyaltyFeedback(phone, action) {
   const { waTemplateId, orgId } = action;
-  if (
-    dayjs().isBefore(dayjs(action.startDate)) ||
-    dayjs().isAfter(dayjs(action.endDate))
-  ) {
+  if (dayjs().isBefore(dayjs(action.startDate)) || dayjs().isAfter(dayjs(action.endDate))) {
     return { success: false, message: "Action Not available on this date" };
   }
   const customer = await getLCustomerByPhone(phone, orgId);
@@ -484,7 +424,6 @@ export async function handleLoyaltyFeedback(phone, action) {
     // });
   } else {
     //handling referrer/customer action having points
-    let customerPoints = action.points;
     // await createCustomerAction({
     //   customerId: customer.id,
     //   actionId: action.id,
@@ -498,9 +437,7 @@ export async function handleLoyaltyFeedback(phone, action) {
 }
 
 export function replacedContentByDynamicVariable(content, dynamicVariables) {
-  let contentArray = Array.isArray(content?.content)
-    ? content.content
-    : content;
+  let contentArray = Array.isArray(content?.content) ? content.content : content;
   const contentCopy = [...contentArray];
   for (const para of contentCopy) {
     const contents = para.content;
@@ -563,10 +500,7 @@ export async function createEventTrigger(data: EventTriggerInput) {
   });
 }
 
-export async function updateEventTrigger(
-  id: string,
-  data: UpdateEventTriggerInput,
-) {
+export async function updateEventTrigger(id: string, data: UpdateEventTriggerInput) {
   return await prisma.loyaltyEventTrigger.update({
     where: { id },
     data,

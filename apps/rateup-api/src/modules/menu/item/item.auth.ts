@@ -13,9 +13,7 @@ export async function verifyMenuItemAccess(
 
   const hasAccess = await hasAccessToMenuItem(menuItemId, request.userId);
   if (!hasAccess) {
-    reply
-      .code(403)
-      .send({ message: "You don't have access to this menu item" });
+    reply.code(403).send({ message: "You don't have access to this menu item" });
   }
 }
 

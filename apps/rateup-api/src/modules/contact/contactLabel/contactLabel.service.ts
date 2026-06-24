@@ -1,8 +1,5 @@
 import prisma from "../../../utils/prisma.js";
-import {
-  CreateContactLabelSchema,
-  UpdateContactLabelSchema,
-} from "./contactLabel.schema.js";
+import { CreateContactLabelSchema, UpdateContactLabelSchema } from "./contactLabel.schema.js";
 
 export async function createContactLabel(
   orgId: string,
@@ -78,11 +75,7 @@ export async function deleteContactLabel(labelId: string, orgId: string) {
   return label;
 }
 
-export async function assignLabelsToContact(
-  contactId: string,
-  labelIds: string[],
-  orgId: string,
-) {
+export async function assignLabelsToContact(contactId: string, labelIds: string[], orgId: string) {
   // First, remove all existing labels for this contact
   await prisma.contactLabelMap.deleteMany({
     where: {
@@ -128,10 +121,7 @@ export async function assignLabelsToContact(
   return contact;
 }
 
-export async function getContactsWithLabels(
-  orgId: string,
-  labelIds?: string[],
-) {
+export async function getContactsWithLabels(orgId: string, labelIds?: string[]) {
   const whereCondition: any = {
     orgId,
   };

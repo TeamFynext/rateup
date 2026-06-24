@@ -16,10 +16,7 @@ import {
   SurveyVariableType,
   WaQuestions,
 } from "../../types/enums.js";
-import {
-  getShortUrlId,
-  shortIdUniqueConstraintErrHandler,
-} from "../../utils/commonUtils.js";
+import { getShortUrlId, shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils.js";
 import {
   createSurveyDefaultVariableForQuestion,
   getSurveysOrgId,
@@ -45,11 +42,8 @@ dayjs.extend(timezone);
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
-export async function createSurvey(
-  data: CreateSurveyInput & { orgId: string },
-  req,
-) {
-  const { userId: createdBy, email: notificationEmail, orgId } = req?.user;
+export async function createSurvey(data: CreateSurveyInput & { orgId: string }, req) {
+  const { userId: createdBy, email: notificationEmail, orgId } = req?.user || {};
 
   const { templateId, selectedTheme, ...input } = data;
   delete input.teamIds;
@@ -123,7 +117,7 @@ export async function cloneSurvey(
   });
 
   if (survey) {
-    const { id, ...surveyWithoutId } = survey;
+    const { ...surveyWithoutId } = survey;
 
     const existingSurveys = await prisma.survey.findMany({
       where: {
@@ -184,8 +178,7 @@ export async function cloneSurvey(
       });
       return cloned;
     };
-    const newClonedSurvey =
-      await shortIdUniqueConstraintErrHandler(createClonedSurvey);
+    const newClonedSurvey = await shortIdUniqueConstraintErrHandler(createClonedSurvey);
 
     if (newClonedSurvey && teamIds.length > 0) {
       let team = await getTeamById(teamIds[0]);
@@ -292,12 +285,7 @@ export async function getPublicSurveyById(id: string) {
   let orgLogo = { orgLogo: org?.org?.logo, orgName: org?.org?.name };
 
   //check googlereview
-  if (
-    !(await hasFeature(
-      surveyTeamMap.survey.orgId,
-      SubscriptionFeaturePathName.GoogleReview,
-    ))
-  ) {
+  if (!(await hasFeature(surveyTeamMap.survey.orgId, SubscriptionFeaturePathName.GoogleReview))) {
     const questions = [...surveyTeamMap.survey.questions];
     questions.forEach((question) => {
       question.googleReview = null;
@@ -501,7 +489,7 @@ export async function getSurveysByTeam(teamId: string) {
   const surveysWithoutQuestions = surveyTeamMaps?.map((surveyTeamMap) => {
     const survey = {
       ...surveyTeamMap.survey,
-      ...{ surveyTeamMapId: surveyTeamMap.id },
+      surveyTeamMapId: surveyTeamMap.id,
     };
     return excludeFields(survey, ["questions", "password"]);
   });
@@ -747,9 +735,7 @@ export async function getSurveyTemplates(surveyType: string) {
     return surveyTeamMap.survey;
   });
 
-  const surveysFiltered = surveys.filter(
-    (survey) => survey?.type === surveyType,
-  );
+  const surveysFiltered = surveys.filter((survey) => survey?.type === surveyType);
 
   const groupedSurveys = surveysFiltered.reduce((groups, survey) => {
     const category = survey.title.split("__")[0];
@@ -790,10 +776,7 @@ export async function deleteSurveyById(id: string) {
 }
 
 //------------DELETE SURVEY from a team --------
-export async function deleteSurveyFromTeam(
-  id: string,
-  input: DeleteTeamSurveyInput,
-) {
+export async function deleteSurveyFromTeam(id: string, input: DeleteTeamSurveyInput) {
   const surveyTeams = await prisma.surveyTeamMap.findMany({
     where: {
       surveyId: id,
@@ -857,9 +840,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     if (input?.isPublished === true || input.surveyPublishAt) {
       //check for all language inputs
       const questions = fetchedSurvey.questions
-        ? fetchedSurvey.questions.filter(
-            (q) => !((q as unknown as Question).type in PageType),
-          )
+        ? fetchedSurvey.questions.filter((q) => !((q as unknown as Question).type in PageType))
         : [];
       if (questions.length < 1) {
         let data = {
@@ -930,9 +911,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
     });
 
     let existingTeams = surveyTeams.map((team) => team?.teamId);
-    let newTeams = teamIds?.filter(
-      (team) => !existingTeams?.includes(team?.teamId),
-    );
+    let newTeams = teamIds?.filter((team) => !existingTeams?.includes(team?.teamId));
 
     if (newTeams?.length) {
       const createRecordsInSurveyTeamMap = async () => {
@@ -944,9 +923,7 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
           })),
         });
       };
-      const newSurveyTeams = await shortIdUniqueConstraintErrHandler(
-        createRecordsInSurveyTeamMap,
-      );
+      await shortIdUniqueConstraintErrHandler(createRecordsInSurveyTeamMap);
     }
 
     let deletedTeams = existingTeams?.filter(
@@ -970,14 +947,11 @@ export async function updateSurveyById(id: string, input: UpdateSurveyInput) {
             throw new Error("No survey found with the provided id and teamId");
           }
 
-          if (
-            surveyTeamMap?.responses &&
-            surveyTeamMap?.responses?.length > 0
-          ) {
+          if (surveyTeamMap?.responses && surveyTeamMap?.responses?.length > 0) {
             throw new Error("Remove team failed. Team survey has responses");
           }
 
-          const deletedSurvey = await prisma.surveyTeamMap.delete({
+          await prisma.surveyTeamMap.delete({
             where: { id: surveyTeamMap?.id },
           });
         }),
@@ -1022,24 +996,18 @@ function validateSurvey(surveyData) {
     ) {
       if (question?.choices) {
         let choiceLanguages = Object.keys(question.choices);
-        let missingLangChoices = languages.filter(
-          (lang) => !choiceLanguages.includes(lang),
-        );
+        let missingLangChoices = languages.filter((lang) => !choiceLanguages.includes(lang));
         if (missingLangChoices.length > 0) {
           incompleteQuestions.push({
             id: question.id,
             title: question.title,
-            error: `Missing choices for languages: ${missingLangChoices.join(
-              ", ",
-            )}`,
+            error: `Missing choices for languages: ${missingLangChoices.join(", ")}`,
           });
         }
 
         // Check if all languages have the maximum number of choices
         let maxChoices = Math.max(
-          ...Object.values(question.choices).map(
-            (choiceArr: any[]) => choiceArr?.length,
-          ),
+          ...Object.values(question.choices).map((choiceArr: any[]) => choiceArr?.length),
         );
         let unequalChoices = Object.values(question.choices).some(
           (choiceArr: any[]) => choiceArr?.length < maxChoices,
@@ -1085,9 +1053,7 @@ function validateSurvey(surveyData) {
             if (value?.fields?.length) return lang;
           },
         );
-        let fieldMissingLangs = languages.filter(
-          (lang) => !fieldLanguages.includes(lang),
-        );
+        let fieldMissingLangs = languages.filter((lang) => !fieldLanguages.includes(lang));
         if (fieldMissingLangs.length > 0) {
           incompleteQuestions.push({
             id: question.id,
@@ -1123,10 +1089,7 @@ export async function getGoogleUrlBySurveyTeamMapId(surveyTeamMapId: string) {
   return googleLink?.length ? googleLink : reviewPageLinks["Google"];
 }
 
-export async function updateGoogleLink(
-  id: string,
-  data: UpdateGoogleLinkInput,
-) {
+export async function updateGoogleLink(id: string, data: UpdateGoogleLinkInput) {
   const survey = await prisma.surveyTeamMap.findUnique({
     where: {
       id,
@@ -1152,10 +1115,7 @@ export async function updateGoogleLink(
   }
 }
 
-export async function updateSurveyPassword(
-  id: string,
-  data: UpdateSurveyPassword,
-) {
+export async function updateSurveyPassword(id: string, data: UpdateSurveyPassword) {
   let isProtected = true;
   let password = data.password;
   try {
@@ -1182,10 +1142,7 @@ export async function updateSurveyPassword(
   }
 }
 
-export async function verifySurveyPassword(
-  id: string,
-  data: UpdateSurveyPassword,
-) {
+export async function verifySurveyPassword(id: string, data: UpdateSurveyPassword) {
   let enteredPassword = data.password;
   try {
     const survey = await prisma.survey.findUnique({
@@ -1211,63 +1168,43 @@ export async function verifySurveyPassword(
 }
 
 export async function updateVisitedSurvey(id: string) {
-  let surveyStats;
-  try {
-    surveyStats = await prisma.surveyStats.upsert({
-      where: { surveyTeamMapId: id },
-      update: { visited: { increment: 1 } },
-      create: { surveyTeamMapId: id, visited: 1 },
-    });
-  } catch (error: any) {
-    throw error;
-  }
+  const surveyStats = await prisma.surveyStats.upsert({
+    where: { surveyTeamMapId: id },
+    update: { visited: { increment: 1 } },
+    create: { surveyTeamMapId: id, visited: 1 },
+  });
   return surveyStats;
 }
 
 export async function updateStartedSurvey(id: string) {
-  let surveyStats;
-  try {
-    surveyStats = await prisma.surveyStats.upsert({
-      where: { surveyTeamMapId: id },
-      update: { started: { increment: 1 } },
-      create: { surveyTeamMapId: id, started: 1, visited: 1 },
-    });
-  } catch (error: any) {
-    throw error;
-  }
+  const surveyStats = await prisma.surveyStats.upsert({
+    where: { surveyTeamMapId: id },
+    update: { started: { increment: 1 } },
+    create: { surveyTeamMapId: id, started: 1, visited: 1 },
+  });
   return surveyStats;
 }
 
 export async function updateCompletedSurvey(id: string) {
-  let surveyStats;
-  try {
-    surveyStats = await prisma.surveyStats.upsert({
-      where: { surveyTeamMapId: id },
-      update: { completed: { increment: 1 } },
-      create: { surveyTeamMapId: id, completed: 1, visited: 1, started: 1 },
-    });
-  } catch (error: any) {
-    throw error;
-  }
+  const surveyStats = await prisma.surveyStats.upsert({
+    where: { surveyTeamMapId: id },
+    update: { completed: { increment: 1 } },
+    create: { surveyTeamMapId: id, completed: 1, visited: 1, started: 1 },
+  });
   return surveyStats;
 }
 
 export async function updateReviewLinkVisitedOnSurvey(id: string) {
-  let surveyStats;
-  try {
-    surveyStats = await prisma.surveyStats.upsert({
-      where: { surveyTeamMapId: id },
-      update: { reviewLinkVisited: { increment: 1 } },
-      create: {
-        surveyTeamMapId: id,
-        visited: 1,
-        started: 1,
-        reviewLinkVisited: 1,
-      },
-    });
-  } catch (error: any) {
-    throw error;
-  }
+  const surveyStats = await prisma.surveyStats.upsert({
+    where: { surveyTeamMapId: id },
+    update: { reviewLinkVisited: { increment: 1 } },
+    create: {
+      surveyTeamMapId: id,
+      visited: 1,
+      started: 1,
+      reviewLinkVisited: 1,
+    },
+  });
   return surveyStats;
 }
 
@@ -1300,17 +1237,12 @@ export async function getSurveyLanguagesFromTeamId(teamId: string) {
     },
   });
 
-  const languages = surveyTeamMaps?.flatMap(
-    (surveyTeamMap) => surveyTeamMap.survey.languages,
-  );
+  const languages = surveyTeamMaps?.flatMap((surveyTeamMap) => surveyTeamMap.survey.languages);
   const uniqueLanguages = [...new Set(languages)];
   return uniqueLanguages;
 }
 
-export async function createSurveyVariable(
-  surveyId: string,
-  variable: surveyVariableInput,
-) {
+export async function createSurveyVariable(surveyId: string, variable: surveyVariableInput) {
   const res = await prisma.surveyVariables.create({
     data: {
       name: variable?.name,
@@ -1363,7 +1295,6 @@ export async function deleteSurveyVariable(variableId) {
 export async function publishSurveyCronAction() {
   const currentTime = new Date();
   const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000); //TO HANDLE DELAYS- Buffer Time
-  const fiveMinutesEarlier = new Date(currentTime.getTime() - 5 * 60000);
 
   const surveysToPublish = await prisma.survey.findMany({
     where: {
@@ -1389,15 +1320,12 @@ export async function publishSurveyCronAction() {
     });
   }
 
-  console.log(
-    `Published ${surveysToPublish.length} surveys. At ${currentTime}`,
-  );
+  console.log(`Published ${surveysToPublish.length} surveys. At ${currentTime}`);
 }
 
 export async function endSurveyCronAction() {
   const currentTime = new Date();
   const fiveMinutesLater = new Date(currentTime.getTime() + 5 * 60000); //TO HANDLE DELAYS - Buffer Time
-  const fiveMinutesEarlier = new Date(currentTime.getTime() - 5 * 60000);
 
   const surveysToUnpublish = await prisma.survey.findMany({
     where: {
@@ -1422,9 +1350,7 @@ export async function endSurveyCronAction() {
     });
   }
 
-  console.log(
-    `Unpublished ${surveysToUnpublish.length} surveys. At ${currentTime}`,
-  );
+  console.log(`Unpublished ${surveysToUnpublish.length} surveys. At ${currentTime}`);
 }
 
 export async function getSurveyResponseCountForGraph(
@@ -1510,9 +1436,7 @@ const HAPPINESS_INDEX_MULTIPLIER = 10;
 function categorize(r, q, version): CategorizeResult {
   const questionType = "metaType" in q ? QuestionType[q.metaType] : q.type;
   if (questionType === QuestionType.Opinion) {
-    const val = version
-      ? Number(r.response[QuestionType.Opinion])
-      : Number(r.response);
+    const val = version ? Number(r.response[QuestionType.Opinion]) : Number(r.response);
     if (Number(val) >= OPINION_SCALE_PROMOTER_THRESHOLD) return "promoter";
     if (Number(val) >= OPINION_SCALE_PASSIVE_THRESHOLD) return "passive";
     return "detractor";
@@ -1590,15 +1514,11 @@ export async function getNPSResponsesForGraph(
   const isFlow = surveyInfo.survey.type === SurveyType.WaFlow;
   const version = !isFlow || surveyInfo.survey.WaFlow?.version === 1;
   const questions = version
-    ? surveyInfo.survey.questions.filter((q) =>
-        barGraphQuestions.includes(q.type),
-      )
+    ? surveyInfo.survey.questions.filter((q) => barGraphQuestions.includes(q.type))
     : (surveyInfo.survey.WaFlow.json.screens.flatMap((screen) =>
         screen.layout.children.filter(
           (child) =>
-            barGraphQuestions2.includes(
-              (child as any).metaType as WaQuestions,
-            ) && child.name,
+            barGraphQuestions2.includes((child as any).metaType as WaQuestions) && child.name,
         ),
       ) as unknown as Question2[]);
   let rawResponses = await prisma.$queryRaw<any>`
@@ -1695,19 +1615,10 @@ export async function getNPSResponsesForGraph(
       };
     }
 
-    const {
-      promoters,
-      passives,
-      detractors,
-      total,
-      totalScore,
-      totalNPSResponses,
-    } = d;
+    const { promoters, passives, detractors, total, totalScore, totalNPSResponses } = d;
     const npsScore = total > 0 ? ((promoters - detractors) / total) * 100 : 0;
-    const happinessIndex =
-      total > 0 ? (promoters * HAPPINESS_INDEX_MULTIPLIER) / total : 0;
-    const avgNPSRating =
-      totalNPSResponses > 0 ? totalScore / totalNPSResponses : 0;
+    const happinessIndex = total > 0 ? (promoters * HAPPINESS_INDEX_MULTIPLIER) / total : 0;
+    const avgNPSRating = totalNPSResponses > 0 ? totalScore / totalNPSResponses : 0;
 
     return {
       date: d.date,
@@ -1745,7 +1656,6 @@ export async function getNPSResponsesForGraph(
 
 function extractNumericValue(response: any): number | null {
   if (typeof response === "number") return response;
-  if (typeof response === "string" && !isNaN(Number(response)))
-    return Number(response);
+  if (typeof response === "string" && !isNaN(Number(response))) return Number(response);
   return null;
 }

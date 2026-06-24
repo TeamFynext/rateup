@@ -74,9 +74,7 @@ export async function getTeamsMembers(orgId: string) {
     team_name: t.name,
     team_code: t.code,
     members: t.members.map((member) => {
-      const orgMember = member.user.orgMember.find(
-        (orgMember) => orgMember.orgId === orgId,
-      );
+      const orgMember = member.user.orgMember.find((orgMember) => orgMember.orgId === orgId);
       return {
         id: member.user.id,
         name: member.user.name,
@@ -317,8 +315,7 @@ export async function updateOrgDetails(
     where: { id: orgId },
     select: { onboarding: true, onboardingChecklist: true },
   });
-  const existingOnboarding =
-    (existingOrg?.onboarding as Record<string, any>) ?? {};
+  const existingOnboarding = (existingOrg?.onboarding as Record<string, any>) ?? {};
   const existingOnboardingChecklist =
     (existingOrg?.onboardingChecklist as Record<string, any>) ?? {};
   const org = await prisma.org.update({
@@ -728,7 +725,7 @@ export async function completeOrgDetails(
 
     const mergedOnboarding = {
       ...existingOnboarding,
-      ...(data.onboarding || {}),
+      ...data.onboarding,
     };
 
     const updatedOrg = await tx.org.update({
@@ -785,8 +782,7 @@ export async function getOnboardingChecklist(orgId) {
   });
 
   return {
-    onboardingChecklist:
-      (org?.onboardingChecklist as Record<string, boolean>) ?? {},
+    onboardingChecklist: (org?.onboardingChecklist as Record<string, boolean>) ?? {},
     onboardingChecklistCompleted: org?.onboardingChecklistCompleted ?? false,
   };
 }

@@ -93,10 +93,7 @@ export async function getCustomerAccountByContactHandler(
     if (!program) {
       return reply.code(404).send({ error: "Loyalty program not found" });
     }
-    const result = await getCustomerAccountByContact(
-      program.id,
-      request.params.contactId,
-    );
+    const result = await getCustomerAccountByContact(program.id, request.params.contactId);
     if (!result) {
       return reply.code(404).send({ error: "Customer account not found" });
     }
@@ -139,10 +136,7 @@ export async function getCustomerAccountByPhoneHandler(
     const couponRedemptions = (account as any).redemptions
       ? (account as any).redemptions
           .filter(
-            (r: any) =>
-              r.reward?.rewardType === "coupon" &&
-              r?.status === "APPROVED" &&
-              !r.usedAt,
+            (r: any) => r.reward?.rewardType === "coupon" && r?.status === "APPROVED" && !r.usedAt,
           )
           .map((r: any) => ({
             id: r.id,
@@ -177,10 +171,7 @@ export async function getCustomerAccountByPhoneHandler(
     const eligibleRewards = availableRewards.filter((reward: any) => {
       // Check if reward is restricted to specific tiers
       if (reward.availableForTiers && reward.availableForTiers.length > 0) {
-        if (
-          !account.currentTier ||
-          !reward.availableForTiers.includes(account.currentTier.name)
-        ) {
+        if (!account.currentTier || !reward.availableForTiers.includes(account.currentTier.name)) {
           return false;
         }
       }
@@ -220,10 +211,7 @@ export async function updateCustomerAccountHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await updateCustomerAccount(
-      request.params.customerId,
-      request.body,
-    );
+    const result = await updateCustomerAccount(request.params.customerId, request.body);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);
@@ -318,15 +306,7 @@ export async function exportCustomerAccountsHandler(
     } else {
       // CSV
       const rows = [
-        [
-          "Name",
-          "Phone",
-          "Email",
-          "Tier",
-          "Points",
-          "Lifetime Points",
-          "Referral Code",
-        ],
+        ["Name", "Phone", "Email", "Tier", "Points", "Lifetime Points", "Referral Code"],
       ];
 
       customers.forEach((customer) => {

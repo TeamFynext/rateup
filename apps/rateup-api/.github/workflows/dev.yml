@@ -1,5 +1,5 @@
 name: prisma-migrate-dev
-on:  
+on:
   push:
     paths:
       - prisma/**
@@ -15,8 +15,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
       - name: Install
         run: npm install --ignore-scripts
   generate:
@@ -28,8 +28,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
       - name: Install
         run: npm install --ignore-scripts
       - run: rm -rf node_modules/.prisma
@@ -46,8 +46,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
       - name: Install
         run: npm install --ignore-scripts
       - run: rm -rf node_modules/.prisma

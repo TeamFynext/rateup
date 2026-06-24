@@ -1,8 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import {
-  ByMenuBannerIdParams,
-  CreateMenuBannerInput,
-} from "./banner.schema.js";
+import { ByMenuBannerIdParams, CreateMenuBannerInput } from "./banner.schema.js";
 import {
   createMenuBanner,
   deletemenuBanner,
@@ -43,10 +40,7 @@ export async function updateMenuBannerHandler(
   reply: FastifyReply,
 ) {
   try {
-    const menuBanner = await updateMenuBanner(
-      request.params.menuBannerId,
-      request.body,
-    );
+    const menuBanner = await updateMenuBanner(request.params.menuBannerId, request.body);
     reply.send(menuBanner);
   } catch (error) {
     reply.code(500).send(error);

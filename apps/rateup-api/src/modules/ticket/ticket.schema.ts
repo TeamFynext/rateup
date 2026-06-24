@@ -57,12 +57,8 @@ const createCommentRequestSchema = z.object({
 });
 
 export type IdParamsSchema = z.infer<typeof idParamsSchema>;
-export type GetTicketsByTeamInput = z.infer<
-  typeof getTicketsByTeamRequestSchema
->;
-export type GetTicketsByUserInput = z.infer<
-  typeof getTicketsByUserRequestSchema
->;
+export type GetTicketsByTeamInput = z.infer<typeof getTicketsByTeamRequestSchema>;
+export type GetTicketsByUserInput = z.infer<typeof getTicketsByUserRequestSchema>;
 export type CreateTicketInput = z.infer<typeof createTicketRequestSchema>;
 export type CreateTicketResponse = z.infer<typeof createTicketResponseSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentRequestSchema>;

@@ -50,15 +50,10 @@ export async function updateCatalogHandler(
     const { catalogId } = request.params;
     const { wabaId, syncWithMeta, ...rest } = request.body;
     if (wabaId) {
-      await updateConnectWaCatalog(
-        wabaId,
-        orgId,
-        catalogId,
-        syncWithMeta !== false,
-      );
+      await updateConnectWaCatalog(wabaId, orgId, catalogId, syncWithMeta !== false);
     }
     if (rest) {
-      const catalog = await updateWaCatalog(catalogId, rest);
+      await updateWaCatalog(catalogId, rest);
     }
     reply.code(200).send();
   } catch (e) {
@@ -81,10 +76,7 @@ export async function getWaCatalogInfoHandler(
   }
 }
 
-export async function syncCatalogsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function syncCatalogsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const catalogs = await syncWaCatalogs(orgId);
@@ -95,10 +87,7 @@ export async function syncCatalogsHandler(
   }
 }
 
-export async function syncConnectedCatalogHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function syncConnectedCatalogHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const results = await syncConnectedCatalog(orgId);
@@ -110,10 +99,7 @@ export async function syncConnectedCatalogHandler(
   }
 }
 
-export async function getWaCatalogByOrgHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getWaCatalogByOrgHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const catalogs = await getWaCatalogsByOrg(orgId);
@@ -129,9 +115,7 @@ export async function getConnectedWaCatalogHandler(
   reply: FastifyReply,
 ) {
   try {
-    const catalog = await getConnectedWaCatalog(
-      request.params.whatsappSettingsPhoneId,
-    );
+    const catalog = await getConnectedWaCatalog(request.params.whatsappSettingsPhoneId);
     reply.code(200).send(catalog);
   } catch (e) {
     log.error(e);

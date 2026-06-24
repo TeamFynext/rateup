@@ -1,7 +1,5 @@
-import { string } from "zod";
 import { WaMessageAssignStatus } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
-import { WaMessageClosedStatus } from "../../whatsapp/constants.js";
 import {
   ConversationAssigneeUpdateSchema,
   ConversationCore,
@@ -23,10 +21,7 @@ export async function createConversation(input: ConversationCore) {
   });
 }
 
-export async function updateConversation(
-  conversationId: string,
-  data: UpdateConversationSchema,
-) {
+export async function updateConversation(conversationId: string, data: UpdateConversationSchema) {
   return await prisma.conversation.update({
     where: {
       id: conversationId,
@@ -59,12 +54,11 @@ export async function updateConversationAssignees(
   await prisma.$transaction(async (tx) => {
     const { assignees, assignedAt, removedAt, assignedBy, removedBy } = data;
     if (assignees && assignees.length > 0) {
-      const existingAssignees =
-        await tx.conversationAssignedUserTeamMap.findMany({
-          where: {
-            conversationId: conversationId,
-          },
-        });
+      const existingAssignees = await tx.conversationAssignedUserTeamMap.findMany({
+        where: {
+          conversationId: conversationId,
+        },
+      });
 
       const assigneesToRemove = existingAssignees.filter(
         (ea) => !assignees.find((a) => a.userId === ea.userId),
@@ -99,9 +93,7 @@ export async function updateConversationAssignees(
         });
       }
       for (const assignee of assigneesToUpdate) {
-        const teamId = assignees.find(
-          (as) => as.userId === assignee.userId,
-        ).teamId;
+        const teamId = assignees.find((as) => as.userId === assignee.userId).teamId;
         await tx.conversationAssignedUserTeamMap.update({
           where: {
             userId_conversationId: {
@@ -146,9 +138,7 @@ export async function updateConversationAssignees(
           id: conversationId,
         },
         data: {
-          assignedAt: !existingAssignees.length
-            ? assignedAt || new Date()
-            : undefined,
+          assignedAt: !existingAssignees.length ? assignedAt || new Date() : undefined,
           status: WaMessageAssignStatus.ASSIGNED,
         },
       });
@@ -180,10 +170,7 @@ export async function updateClosedConversationStatus(
       status: status,
       closedAt: new Date(),
       closedBy:
-        userId &&
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-          userId,
-        )
+        userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)
           ? userId
           : null,
     },
@@ -398,11 +385,7 @@ ORDER BY day;
   return result;
 }
 
-export async function getAvargeResponseTimeofTodyaInEveryHour(
-  orgId: string,
-  dateKey,
-  dateRange,
-) {
+export async function getAvargeResponseTimeofTodyaInEveryHour(orgId: string, dateKey, dateRange) {
   const startDate = new Date(dateRange[0]);
   const endDate = new Date(dateRange[1]);
 
@@ -461,10 +444,7 @@ ORDER BY period;
   return result;
 }
 
-export async function getConversationOnAccountDistribution(
-  orgId: string,
-  dateRange,
-) {
+export async function getConversationOnAccountDistribution(orgId: string, dateRange) {
   let startDate, endDate;
   if (dateRange.length) {
     startDate = new Date(dateRange[0]);
@@ -561,14 +541,11 @@ WHERE ct."orgId" = ${orgId}::uuid;
     ...rest
   } = result[0];
   const thisWeekResolvedRate = totalConversation
-    ? Math.round(
-        ((resolvedThisWeek / totalConversation) * 100 + Number.EPSILON) * 100,
-      ) / 100
+    ? Math.round(((resolvedThisWeek / totalConversation) * 100 + Number.EPSILON) * 100) / 100
     : 0;
   const lastWeekResolvedRate = totalConversation
     ? Math.round(
-        ((resolvedLastWeek / (totalConversation - conversationCreatedToday)) *
-          100 +
+        ((resolvedLastWeek / (totalConversation - conversationCreatedToday)) * 100 +
           Number.EPSILON) *
           100,
       ) / 100
@@ -652,10 +629,7 @@ closed_stats AS (
     vc."closedBy" AS "userId",
     COUNT(*)::INT AS total_closed
   FROM valid_conversations vc
-  WHERE vc."status" = ANY (${[
-    WaMessageAssignStatus.RESOLVED,
-    WaMessageAssignStatus.CLOSED,
-  ]})
+  WHERE vc."status" = ANY (${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
     AND vc."closedAt" BETWEEN COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
                              AND COALESCE(${rangeEnd}, NOW())
   GROUP BY vc."closedBy"
@@ -791,11 +765,7 @@ AND u."deletedAt" IS NULL;
   return result;
 }
 
-export async function getStaffDetailedConversationAnalytics(
-  orgId,
-  userId,
-  days,
-) {
+export async function getStaffDetailedConversationAnalytics(orgId, userId, days) {
   const sinceDate = new Date();
   sinceDate.setDate(sinceDate.getDate() - days);
   const sevenDaysAgo = new Date();
@@ -881,10 +851,7 @@ assigned_stats AS (
     SELECT
       COUNT(*)::INT AS total_closed
     FROM valid_conversations vc
-    WHERE vc."status" = ANY (${[
-      WaMessageAssignStatus.RESOLVED,
-      WaMessageAssignStatus.CLOSED,
-    ]})
+    WHERE vc."status" = ANY (${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
       AND vc."closedBy" = ${userId}
       AND vc."closedAt" >= ${sinceDate}
   ),
@@ -1271,11 +1238,7 @@ LEFT JOIN "OrgMember" om
   return result;
 }
 
-export async function getTeamDetailedMetrics(
-  teamId: string,
-  orgId: string,
-  days,
-) {
+export async function getTeamDetailedMetrics(teamId: string, orgId: string, days) {
   const sinceDate = new Date();
   sinceDate.setDate(sinceDate.getDate() - days);
   const sevenDaysAgo = new Date();

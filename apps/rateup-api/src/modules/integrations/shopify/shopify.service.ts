@@ -3,10 +3,7 @@ import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 import shopify from "./shopify.config.js";
 import { GraphqlClient, Session, DataType } from "@shopify/shopify-api";
 import isEmpty from "lodash/isEmpty.js";
-import {
-  notificationQueue,
-  shopifySurveyQueue,
-} from "../../../utils/redisConnection.js";
+import { notificationQueue, shopifySurveyQueue } from "../../../utils/redisConnection.js";
 import crypto from "crypto";
 import _get from "lodash/get.js";
 import { log } from "../../../utils/logger.js";
@@ -42,10 +39,7 @@ import {
   shopifyRecurringChargeStatus,
   shopifyRecurringChargeSubscriptionStatusMap,
 } from "./shopify.util.js";
-import {
-  getIntegrationByName,
-  updateIntegrationByName,
-} from "../integrations.service.js";
+import { getIntegrationByName, updateIntegrationByName } from "../integrations.service.js";
 import { UpdateIntgrationInput } from "../integrations.schema.js";
 import { API_URL } from "../../../utils/constants/constants.js";
 import {
@@ -62,10 +56,7 @@ import { WEBHOOK_API_ROUTE } from "./shopify.handler.js";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
 import { getScheduleTime } from "../../../utils/date.js";
 import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth.js";
-import {
-  awardPoints,
-  getLCustomerByPhone,
-} from "../../loyalty/accounts/account.service.js";
+import { awardPoints, getLCustomerByPhone } from "../../loyalty/accounts/account.service.js";
 import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
 import { EarningRulesEngine } from "../../loyalty/earningRulesEngine.js";
 import { ShopifyBody } from "./shopify.types.js";
@@ -108,17 +99,11 @@ export async function getShopifyIntegrationByShop(shop: string) {
   })) as unknown as ShopifyIntegration & { org: Org };
 }
 
-export async function updateShopifyIntegrationByOrgId(
-  orgId: string,
-  data: UpdateIntgrationInput,
-) {
+export async function updateShopifyIntegrationByOrgId(orgId: string, data: UpdateIntgrationInput) {
   return await updateIntegrationByName(orgId, IntegratedApps.shopify, data);
 }
 
-export async function updateShopifyIntegrationByShop(
-  shop,
-  data: UpdateIntgrationInput,
-) {
+export async function updateShopifyIntegrationByShop(shop, data: UpdateIntgrationInput) {
   return await prisma.integration.updateMany({
     where: {
       credential: {
@@ -135,8 +120,7 @@ export async function registerShopifyWebhook(session: Session) {
     session,
   });
   console.dir(response, { depth: null });
-  if (!response || isEmpty(response))
-    throw new Error("Error registering webhook");
+  if (!response || isEmpty(response)) throw new Error("Error registering webhook");
 
   for (const hook of Object.keys(response)) {
     if (response[hook].length && !response[hook][0].success) {
@@ -152,7 +136,7 @@ export async function createScheduleOnShopifyEvent({
   productIds,
   webhookId,
   scheduleFromDate,
-  amount,
+  // amount,
   body,
 }: {
   customerPhone: string;
@@ -161,7 +145,7 @@ export async function createScheduleOnShopifyEvent({
   productIds: string[];
   webhookId?: string;
   scheduleFromDate: Date;
-  amount?: number;
+  // amount?: number;
   body: any;
 }) {
   log.info("Checking survey for shopify event %o", {
@@ -174,18 +158,13 @@ export async function createScheduleOnShopifyEvent({
     log.trace("Invalid phone number");
     return;
   }
-  const shopifySurvey = shopifyInfo.credential.shopifySurveys?.find(
-    (s) => s.event === event,
-  );
+  const shopifySurvey = shopifyInfo.credential.shopifySurveys?.find((s) => s.event === event);
   if (!shopifySurvey || !shopifySurvey.active) {
     log.trace(`No Survey schedule found`);
     return;
   }
 
-  if (
-    webhookId &&
-    shopifySurvey.schedules?.some((s) => s.webhookId === webhookId)
-  ) {
+  if (webhookId && shopifySurvey.schedules?.some((s) => s.webhookId === webhookId)) {
     log.trace(`Duplicate webhook event for ${webhookId}. Skipping...`);
     return;
   }
@@ -196,25 +175,12 @@ export async function createScheduleOnShopifyEvent({
   const orderId = body?.id;
 
   if (orderId && shopifySurvey.waTemplateId) {
-    const phoneWithoutPlusTemp =
-      phone.countryCallingCode + phone.nationalNumber;
-
-    // We must reload shopifyInfo fresh from the DB to see if the other worker created a history
-    const freshShopifyInfo = await prisma.integration.findUnique({
-      where: { id: shopifyInfo.id },
-    });
-    const freshSurveys =
-      (freshShopifyInfo?.credential as any)?.shopifySurveys ?? [];
-
-    const isDuplicateMessage = freshSurveys.some(
-      (survey: any) =>
-        survey.event === event &&
-        survey.waTemplateId === shopifySurvey.waTemplateId &&
-        survey.schedules?.some(
-          (sch: any) =>
-            sch.body?.id === orderId && sch.phone === phoneWithoutPlusTemp,
-        ),
-    );
+    // const _phoneWithoutPlusTemp = phone.countryCallingCode + phone.nationalNumber;
+    // // We must reload shopifyInfo fresh from the DB to see if the other worker created a history
+    // const freshShopifyInfo = await prisma.integration.findUnique({
+    //   where: { id: shopifyInfo.id },
+    // });
+    // const _freshSurveys = (freshShopifyInfo?.credential as any)?.shopifySurveys ?? [];
     // if (isDuplicateMessage) {
     //   log.trace(
     //     `Order ${orderId} already scheduled with template ${shopifySurvey.waTemplateId} for ${customerPhone}. Skipping duplicate execution of ${event}...`,
@@ -223,10 +189,7 @@ export async function createScheduleOnShopifyEvent({
     // }
   }
 
-  if (
-    shopifySurvey.isProductSpecific &&
-    !productIds.includes(shopifySurvey.productId)
-  ) {
+  if (shopifySurvey.isProductSpecific && !productIds.includes(shopifySurvey.productId)) {
     log.trace(`Specified product is not in the list`);
     return;
   }
@@ -242,10 +205,7 @@ export async function createScheduleOnShopifyEvent({
   let apiStatus = null;
 
   const scheduleId = crypto.randomUUID();
-  const scheduledTime = getScheduleTime(
-    shopifySurvey.timeDelay,
-    scheduleFromDate,
-  );
+  const scheduledTime = getScheduleTime(shopifySurvey.timeDelay, scheduleFromDate);
   const scheduleObj = {
     scheduleId,
     scheduledAt: scheduledTime,
@@ -326,8 +286,7 @@ export async function sendShopifySurveyCronAction() {
           (sch) =>
             sch.status === "SCHEDULED" ||
             (s.repeatInterval.value &&
-              dayjs().diff(dayjs(sch.sentAt), s.repeatInterval.unit) >=
-                s.repeatInterval.value),
+              dayjs().diff(dayjs(sch.sentAt), s.repeatInterval.unit) >= s.repeatInterval.value),
         ),
     );
 
@@ -344,8 +303,7 @@ export async function sendShopifySurveyCronAction() {
     }
 
     for (const config of newShopifySurveys) {
-      const { event, schedules, repeatInterval, waTemplateId, teamId, active } =
-        config;
+      const { event, schedules, repeatInterval, waTemplateId, teamId, active } = config;
       if (!schedules || !schedules.length || !active) {
         log.trace("No schedules found");
         continue;
@@ -357,17 +315,12 @@ export async function sendShopifySurveyCronAction() {
       for (const sch of newSchedules) {
         let tobeSent = false;
         const isCheckoutNotExist =
-          isAbandonedEvent &&
-          !allCheckouts.find((c) => c.id === sch.checkoutId);
-        if (
-          sch.status === "SCHEDULED" &&
-          new Date(sch.scheduledAt) <= fiveMinutesLater
-        ) {
+          isAbandonedEvent && !allCheckouts.find((c) => c.id === sch.checkoutId);
+        if (sch.status === "SCHEDULED" && new Date(sch.scheduledAt) <= fiveMinutesLater) {
           if (isCheckoutNotExist) {
             sch.status = "CHECKOUT DELETED";
             sch.history.forEach((h) => {
-              if (h.scheduledAt === sch.scheduledAt)
-                h.status = "CHECKOUT DELETED";
+              if (h.scheduledAt === sch.scheduledAt) h.status = "CHECKOUT DELETED";
             });
           } else {
             tobeSent = true;
@@ -376,8 +329,7 @@ export async function sendShopifySurveyCronAction() {
           if (isAbandonedEvent && !isCheckoutNotExist) {
             if (
               repeatInterval?.value &&
-              dayjs().diff(dayjs(sch.sentAt), repeatInterval?.unit) >=
-                repeatInterval?.value
+              dayjs().diff(dayjs(sch.sentAt), repeatInterval?.unit) >= repeatInterval?.value
             ) {
               tobeSent = true;
               //add new schedule history and update
@@ -405,16 +357,11 @@ export async function sendShopifySurveyCronAction() {
               const sortedMappings = [...config.variableMapping].sort(
                 (a, b) => a.templateParamIndex - b.templateParamIndex,
               );
-              const maxIndex = Math.max(
-                ...sortedMappings.map((m) => m.templateParamIndex),
-                -1,
-              );
+              const maxIndex = Math.max(...sortedMappings.map((m) => m.templateParamIndex), -1);
 
               if (maxIndex !== -1) {
                 for (let i = 0; i <= maxIndex; i++) {
-                  const mapping = sortedMappings.find(
-                    (m) => m.templateParamIndex === i,
-                  );
+                  const mapping = sortedMappings.find((m) => m.templateParamIndex === i);
                   const value = mapping
                     ? resolveShopifyPathValue(sch.body, mapping.shopifyPath)
                     : "";
@@ -470,11 +417,7 @@ export async function sendShopifySurveyCronAction() {
         },
       });
     } catch (e) {
-      log.error(
-        "error updating shopify integration for orgId => %s, error => %o",
-        orgId,
-        e,
-      );
+      log.error("error updating shopify integration for orgId => %s, error => %o", orgId, e);
       continue;
     }
   }
@@ -508,9 +451,7 @@ export async function processShopifySurveySchedule(jobData: {
   })) as unknown as ShopifyIntegration;
 
   if (!integration) {
-    log.error(
-      `Integration ${integrationId} not found for schedule ${scheduleId}`,
-    );
+    log.error(`Integration ${integrationId} not found for schedule ${scheduleId}`);
     return;
   }
 
@@ -532,9 +473,7 @@ export async function processShopifySurveySchedule(jobData: {
     return;
   }
 
-  const scheduleIndex = survey.schedules.findIndex(
-    (s) => (s as any).scheduleId === scheduleId,
-  );
+  const scheduleIndex = survey.schedules.findIndex((s) => (s as any).scheduleId === scheduleId);
   if (scheduleIndex === -1) {
     log.trace(`Schedule ${scheduleId} not found in survey ${event} `);
     return;
@@ -543,9 +482,7 @@ export async function processShopifySurveySchedule(jobData: {
   const sch = survey.schedules[scheduleIndex] as any;
 
   if (sch.status !== "SCHEDULED") {
-    log.info(
-      `Schedule ${scheduleId} is already processed with status ${sch.status}.Skipping.`,
-    );
+    log.info(`Schedule ${scheduleId} is already processed with status ${sch.status}.Skipping.`);
     return;
   }
 
@@ -559,19 +496,12 @@ export async function processShopifySurveySchedule(jobData: {
       const sortedMappings = [...survey.variableMapping].sort(
         (a, b) => a.templateParamIndex - b.templateParamIndex,
       );
-      const maxIndex = Math.max(
-        ...sortedMappings.map((m) => m.templateParamIndex),
-        -1,
-      );
+      const maxIndex = Math.max(...sortedMappings.map((m) => m.templateParamIndex), -1);
 
       if (maxIndex !== -1) {
         for (let i = 0; i <= maxIndex; i++) {
-          const mapping = sortedMappings.find(
-            (m) => m.templateParamIndex === i,
-          );
-          const value = mapping
-            ? resolveShopifyPathValue(sch.body, mapping.shopifyPath)
-            : "";
+          const mapping = sortedMappings.find((m) => m.templateParamIndex === i);
+          const value = mapping ? resolveShopifyPathValue(sch.body, mapping.shopifyPath) : "";
           bodyParameters.push({
             type: "text",
             text: String(value ?? ""),
@@ -601,26 +531,18 @@ export async function processShopifySurveySchedule(jobData: {
     }
     sch.sentAt = messageSentAt;
     sch.history.forEach((h: any) => {
-      if (
-        h.scheduleId === sch.scheduleId ||
-        h.scheduledAt === sch.scheduledAt
-      ) {
+      if (h.scheduleId === sch.scheduleId || h.scheduledAt === sch.scheduledAt) {
         h.status = sch.status;
         h.sentAt = messageSentAt;
       }
     });
 
-    log.info(
-      `Successfully processed schedule ${scheduleId}: status ${sch.status} `,
-    );
+    log.info(`Successfully processed schedule ${scheduleId}: status ${sch.status} `);
   } catch (e: any) {
     log.error({ e }, `Error sending template for schedule ${scheduleId}`);
     sch.status = `FAILED: ${e.message} `;
     sch.history.forEach((h: any) => {
-      if (
-        h.scheduleId === sch.scheduleId ||
-        h.scheduledAt === sch.scheduledAt
-      ) {
+      if (h.scheduleId === sch.scheduleId || h.scheduledAt === sch.scheduledAt) {
         h.status = sch.status;
       }
     });
@@ -637,10 +559,7 @@ export async function processShopifySurveySchedule(jobData: {
       },
     });
   } catch (e) {
-    log.error(
-      { e },
-      `error updating shopify integration for orgId => ${orgId}`,
-    );
+    log.error({ e }, `error updating shopify integration for orgId => ${orgId}`);
   }
 }
 
@@ -700,7 +619,7 @@ export async function sendWhatsAppTemplateToCustomer(
         }
       }
       // creating session
-      const newSession = await createSession({
+      await createSession({
         phone,
         surveyTeamMapId: surveyTeamMap.id,
         orgId: orgId,
@@ -741,10 +660,7 @@ export async function sendWhatsAppTemplateToCustomer(
       teamId,
       "TEMPLATE",
     );
-    await updateMonthlyStat(
-      SubscriptionFeaturePathName.WhatsAppTemplate,
-      orgId,
-    );
+    await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppTemplate, orgId);
     return res;
   } catch (e) {
     console.error(e);
@@ -827,9 +743,7 @@ export async function getManagableWebhooks(client) {
     );
     hasNextPage = data.data.webhookSubscriptions.pageInfo.hasNextPage;
     cursor = data.data.webhookSubscriptions.pageInfo.endCursor;
-    webhookslist.push(
-      ...data.data.webhookSubscriptions.edges.map((e) => e.node),
-    );
+    webhookslist.push(...data.data.webhookSubscriptions.edges.map((e) => e.node));
   }
   return webhookslist;
 }
@@ -870,7 +784,7 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
 
   switch (payload.app_subscription?.status) {
     case shopifyRecurringChargeStatus.pending:
-      const order = await prisma.order.create({
+      await prisma.order.create({
         data: {
           name: payload?.app_subscription?.name,
           createdById: integration.org.ownerId,
@@ -904,7 +818,7 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
           },
         });
         if (order) {
-          const subscriptionStatus = await prisma.order.update({
+          const _subscriptionStatus = await prisma.order.update({
             data: {
               subscriptionStatus: SubscriptionStatus.cancelled,
               subscriptionEndedAt: new Date(),
@@ -949,7 +863,7 @@ export async function handleSubscriptionUpdateFromShopify(shop, payload) {
   }
 
   if (haltSubscription) {
-    const order = await prisma.order.update({
+    const _order = await prisma.order.update({
       where: {
         subscriptionId: chargeId,
       },
@@ -974,8 +888,7 @@ async function activateSubscriptionThroughShopify(
     createdById: integration.org.ownerId,
     orgId: integration.orgId,
     rateupPlanId: rateupPlan.id,
-    subscriptionStatus:
-      shopifyRecurringChargeSubscriptionStatusMap[recurringCharge.status],
+    subscriptionStatus: shopifyRecurringChargeSubscriptionStatusMap[recurringCharge.status],
     subscriptionChargeAt: recurringCharge.currentPeriodEnd
       ? new Date(recurringCharge.currentPeriodEnd)
       : null,
@@ -994,27 +907,22 @@ async function activateSubscriptionThroughShopify(
     update: data,
   });
   if (recurringCharge.name !== "FREE PLAN") {
-    const payment = await prisma.payments.create({
+    const _payment = await prisma.payments.create({
       data: {
         payId: chargeId,
-        amount: Number(
-          recurringCharge?.lineItems[0].plan.pricingDetails.price.amount,
-        ),
-        currency:
-          recurringCharge?.lineItems[0].plan.pricingDetails.price.currencyCode,
+        amount: Number(recurringCharge?.lineItems[0].plan.pricingDetails.price.amount),
+        currency: recurringCharge?.lineItems[0].plan.pricingDetails.price.currencyCode,
         method: PaymentSource.Shopify,
         description: "Subscription activated through shopify",
         customer_email: shopDetails.email || "",
         customer_phone: shopDetails.phone || "",
         rateupOrderId: order.id,
-        createdAt: Math.floor(
-          new Date(recurringCharge.createdAt).getTime() / 1000,
-        ),
+        createdAt: Math.floor(new Date(recurringCharge.createdAt).getTime() / 1000),
       },
     });
   }
   const expiresAt = dayjs(recurringCharge.createdAt).add(29, "days").toDate();
-  const updatedSubscription = await prisma.subscription.update({
+  const _updatedSubscription = await prisma.subscription.update({
     where: { orgId: integration?.orgId },
     data: {
       basePlanId: rateupPlan?.id,
@@ -1032,10 +940,7 @@ async function activateSubscriptionThroughShopify(
     },
     data: {
       status: OrderStatus.COMPLETE,
-      paymentStatus:
-        recurringCharge.name === "FREE PLAN"
-          ? undefined
-          : PaymentStatus.SUCCESS,
+      paymentStatus: recurringCharge.name === "FREE PLAN" ? undefined : PaymentStatus.SUCCESS,
     },
   });
 
@@ -1051,10 +956,7 @@ async function activateSubscriptionThroughShopify(
       to: user.email,
       subject: "Rateup Subscription Activated - Rateup.app",
       text: `Your subscription from shopify for the Rateup ${recurringCharge.name} has activated`,
-      html: createEmailBodySubscriptionActivated(
-        rateupPlan?.displayName,
-        expiresAt,
-      ),
+      html: createEmailBodySubscriptionActivated(rateupPlan?.displayName, expiresAt),
     };
     try {
       await notificationQueue.add("notification", {
@@ -1170,9 +1072,7 @@ export async function handleShopifyOrderEvents(webhook) {
       hasNextPage = data.data.fulfillmentOrder.pageInfo.hasNextPage;
       cursor = data.data.fulfillmentOrder.pageInfo.endCursor;
       productIds.push(
-        ...data.data.fulfillmentOrder.lineItems.map(
-          (item) => item.lineItem.product.id,
-        ),
+        ...data.data.fulfillmentOrder.lineItems.map((item) => item.lineItem.product.id),
       );
       customerPhone = data.data.fulfillmentOrder.order.cutsomer.phone;
     }
@@ -1184,9 +1084,7 @@ export async function handleShopifyOrderEvents(webhook) {
       body?.shipping_address?.phone ||
       body?.phone;
     productIds.push(
-      ...body.line_items?.map(
-        (product) => `gid://shopify/Product/${product.product_id}`,
-      ),
+      ...body.line_items?.map((product) => `gid://shopify/Product/${product.product_id}`),
     );
   }
   if (!customerPhone) {
@@ -1200,7 +1098,7 @@ export async function handleShopifyOrderEvents(webhook) {
     productIds,
     webhookId,
     scheduleFromDate: new Date(),
-    amount: Number(body?.total_price),
+    // amount: Number(body?.total_price),
     body,
   });
 
@@ -1214,12 +1112,7 @@ export async function handleShopifyOrderEvents(webhook) {
   });
 
   // Loyalty integration: handle points only on payment, cancellation, or edit
-  await manageLoyaltyTransactionsForOrder(
-    shopifyInfo,
-    customerPhone,
-    body,
-    topic,
-  );
+  await manageLoyaltyTransactionsForOrder(shopifyInfo, customerPhone, body, topic);
 }
 
 async function manageLoyaltyTransactionsForOrder(
@@ -1231,33 +1124,21 @@ async function manageLoyaltyTransactionsForOrder(
   try {
     if (shopifyInfo?.orgId && customerPhone) {
       const loyaltyProgram = await getLoyaltyProgramByOrg(shopifyInfo.orgId);
-      if (
-        loyaltyProgram?.status === "active" &&
-        loyaltyProgram?.enableShopifyOrderPoints
-      ) {
-        const loyaltyCustomer = await getLCustomerByPhone(
-          customerPhone,
-          shopifyInfo.orgId,
-        );
+      if (loyaltyProgram?.status === "active" && loyaltyProgram?.enableShopifyOrderPoints) {
+        const loyaltyCustomer = await getLCustomerByPhone(customerPhone, shopifyInfo.orgId);
         if (loyaltyCustomer) {
           const orderId = body?.id?.toString?.() || undefined;
           // ORDERS_PAID: Award points
           if (topic === ShopifyEvents.ORDERS_PAID) {
             const purchaseAmount =
               Number(
-                body?.total_line_items_price_set?.presentment_money?.amount ||
-                  body?.total_price,
+                body?.total_line_items_price_set?.presentment_money?.amount || body?.total_price,
               ) || 0;
-            await awardPoints(
-              loyaltyProgram.id,
-              loyaltyCustomer.contactId,
-              purchaseAmount,
-              {
-                orderId,
-                channel: "shopify",
-                notes: "Shopify order auto-points (paid)",
-              },
-            );
+            await awardPoints(loyaltyProgram.id, loyaltyCustomer.contactId, purchaseAmount, {
+              orderId,
+              channel: "shopify",
+              notes: "Shopify order auto-points (paid)",
+            });
             log.info(
               "Loyalty points awarded to customer %s for org %s via Shopify order (paid).",
               customerPhone,
@@ -1424,9 +1305,7 @@ export async function getAbandonedCheckouts(client: GraphqlClient) {
     );
     hasNextPage = data.data.abandonedCheckouts.pageInfo.hasNextPage;
     cursor = data.data.abandonedCheckouts.pageInfo.endCursor;
-    allCheckouts.push(
-      ...data.data.abandonedCheckouts.nodes.filter((a) => !a.completedAt),
-    );
+    allCheckouts.push(...data.data.abandonedCheckouts.nodes.filter((a) => !a.completedAt));
   }
   return allCheckouts;
 }
@@ -1469,14 +1348,9 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
           if (!abandonedCheckoutConfig.repeatInterval.value) return false;
         }
 
-        let sentNowCheckoutList: Array<{ phone: string; checkoutId: string }> =
-          [];
+        let sentNowCheckoutList: Array<{ phone: string; checkoutId: string }> = [];
 
-        const {
-          timeDelay,
-          schedules = [],
-          repeatInterval,
-        } = abandonedCheckoutConfig;
+        const { timeDelay, schedules = [], repeatInterval } = abandonedCheckoutConfig;
         const shopifySurveys = [...credential.shopifySurveys];
 
         lastCheckouts.map(async (checkout) => {
@@ -1487,10 +1361,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
             return false;
           }
           if (timeDelay) {
-            const scheduledTime = getScheduleTime(
-              timeDelay,
-              checkout.created_at,
-            );
+            const scheduledTime = getScheduleTime(timeDelay, checkout.created_at);
             const schedule = {
               status: "SCHEDULED",
               createdAt: new Date(),
@@ -1515,8 +1386,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
               schedules.find(
                 (c) =>
                   checkout.id === c.checkoutId &&
-                  dayjs().diff(dayjs(c.sentAt), repeatInterval?.unit) >=
-                    repeatInterval?.value,
+                  dayjs().diff(dayjs(c.sentAt), repeatInterval?.unit) >= repeatInterval?.value,
               ),
             )
             .map((checkout) => {
@@ -1531,13 +1401,7 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
         const subscription = await getSubscription(orgId);
         sentNowCheckoutList.map(async (checkout) => {
           await verifyTemplateMessageLimit(subscription);
-          const res = await sendTemplateToUserCore(
-            orgId,
-            waTemplateId,
-            checkout.phone,
-            [],
-            teamId,
-          );
+          const res = await sendTemplateToUserCore(orgId, waTemplateId, checkout.phone, [], teamId);
 
           let messageSentAt = new Date();
           if (res.status) {
@@ -1580,11 +1444,10 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
         });
 
         shopifySurveys.forEach((s) => {
-          if (s.event === ShopifyEvents.ABANDONED_CHECKOUTS)
-            s.schedules = schedules;
+          if (s.event === ShopifyEvents.ABANDONED_CHECKOUTS) s.schedules = schedules;
         });
 
-        const resp1 = await updateShopifyIntegrationByOrgId(orgId, {
+        const _resp1 = await updateShopifyIntegrationByOrgId(orgId, {
           credential: { ...credential, shopifySurveys },
         });
       }),
@@ -1615,15 +1478,11 @@ export async function resolveShopifyVariants(
   // must verify it still exists — the product may have been deleted/recreated
   // giving it a new ID while the old ID stays in the Meta catalog.
   const numericProducts = products.filter((p) => /^\d+$/.test(p.retailerId));
-  const needsLookup: typeof products = products.filter(
-    (p) => !/^\d+$/.test(p.retailerId),
-  );
+  const needsLookup: typeof products = products.filter((p) => !/^\d+$/.test(p.retailerId));
 
   if (numericProducts.length > 0) {
     try {
-      const ids = numericProducts.map(
-        (p) => `gid://shopify/ProductVariant/${p.retailerId}`,
-      );
+      const ids = numericProducts.map((p) => `gid://shopify/ProductVariant/${p.retailerId}`);
       const nodesData = await client.request(
         `query validateVariants($ids: [ID!]!) {
           nodes(ids: $ids) {
@@ -1692,13 +1551,9 @@ export async function resolveShopifyVariants(
   }
 
   // ── Step 2: Title-based fallback for any product not matched by SKU ──────
-  const notFoundBySku = needsLookup.filter(
-    (p) => !variantMap.has(p.retailerId) && p.title,
-  );
+  const notFoundBySku = needsLookup.filter((p) => !variantMap.has(p.retailerId) && p.title);
   if (notFoundBySku.length > 0) {
-    const titleQuery = notFoundBySku
-      .map((p) => `title:"${p.title}"`)
-      .join(" OR ");
+    const titleQuery = notFoundBySku.map((p) => `title:"${p.title}"`).join(" OR ");
     try {
       const productsData = await client.request(
         `query getProductsByTitle($query: String!) {
@@ -1720,8 +1575,9 @@ export async function resolveShopifyVariants(
       const titleEdges = productsData.data.products.edges;
       titleEdges.forEach((edge: any) => {
         const shopifyTitle: string = edge.node.title?.toLowerCase().trim();
-        const numericId: string | undefined =
-          edge.node.variants.edges[0]?.node?.id?.split("/").pop();
+        const numericId: string | undefined = edge.node.variants.edges[0]?.node?.id
+          ?.split("/")
+          .pop();
         if (!numericId) return;
         // Find the local product whose title or retailerId matches
         const matched = notFoundBySku.find(
@@ -1747,9 +1603,7 @@ export async function resolveShopifyVariants(
   // Steps 1 & 2 use exact matches. Step 3 uses the first 3 significant words
   // of the title as unquoted keywords (Shopify "contains all words" search),
   // which handles apostrophe/encoding differences or slight title mismatches.
-  const notFoundAfterTitle = needsLookup.filter(
-    (p) => !variantMap.has(p.retailerId),
-  );
+  const notFoundAfterTitle = needsLookup.filter((p) => !variantMap.has(p.retailerId));
   if (notFoundAfterTitle.length > 0) {
     for (const product of notFoundAfterTitle) {
       const words = (product.title ?? product.retailerId)
@@ -1802,10 +1656,7 @@ export async function createShopifyPendingOrder(
 ) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
-    log.trace(
-      "Shopify integration not active for orgId %s. Will not create an order.",
-      orgId,
-    );
+    log.trace("Shopify integration not active for orgId %s. Will not create an order.", orgId);
     return null;
   }
 
@@ -1828,9 +1679,7 @@ export async function createShopifyPendingOrder(
   }
 
   if (lineItems.length === 0) {
-    log.trace(
-      "No products matched in Shopify, skipping Shopify order creation.",
-    );
+    log.trace("No products matched in Shopify, skipping Shopify order creation.");
     return null;
   }
 
@@ -1847,19 +1696,14 @@ export async function createShopifyPendingOrder(
           line_items: lineItems,
           financial_status: "pending",
           ...(customerPhone && {
-            phone: customerPhone.startsWith("+")
-              ? customerPhone
-              : `+${customerPhone}`,
+            phone: customerPhone.startsWith("+") ? customerPhone : `+${customerPhone}`,
           }),
         },
       },
     });
     return response.body.order;
   } catch (error: any) {
-    log.error(
-      "Failed to create pending order in Shopify => %o",
-      error.response?.body || error,
-    );
+    log.error("Failed to create pending order in Shopify => %o", error.response?.body || error);
     return null;
   }
 }
@@ -1888,10 +1732,7 @@ export async function createShopifyDraftOrderWithAddress(
 ) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
-    log.trace(
-      "Shopify not active for orgId %s - skipping draft order creation",
-      orgId,
-    );
+    log.trace("Shopify not active for orgId %s - skipping draft order creation", orgId);
     return null;
   }
 
@@ -1950,17 +1791,10 @@ export async function createShopifyDraftOrderWithAddress(
       type: DataType.JSON,
       data: draftOrderPayload,
     });
-    log.info(
-      "Created Shopify draft order %s for orgId %s",
-      response.body.draft_order?.id,
-      orgId,
-    );
+    log.info("Created Shopify draft order %s for orgId %s", response.body.draft_order?.id, orgId);
     return response.body.draft_order;
   } catch (error: any) {
-    log.error(
-      "Failed to create Shopify draft order => %o",
-      error.response?.body || error,
-    );
+    log.error("Failed to create Shopify draft order => %o", error.response?.body || error);
     try {
       log.warn(
         "Draft order creation failed (likely missing write_draft_orders scope). Falling back to POST /orders...",
@@ -1996,8 +1830,7 @@ export async function createShopifyDraftOrderWithAddress(
       return {
         id: orderData.id,
         invoice_url:
-          orderData.order_status_url ??
-          `https://${shopifyInfo.credential?.session?.shop}/account`,
+          orderData.order_status_url ?? `https://${shopifyInfo.credential?.session?.shop}/account`,
         ...orderData,
       };
     } catch (fallbackError: any) {
@@ -2010,11 +1843,7 @@ export async function createShopifyDraftOrderWithAddress(
   }
 }
 
-export async function captureShopifyOrderPayment(
-  orgId: string,
-  orderId: string,
-  amount: number,
-) {
+export async function captureShopifyOrderPayment(orgId: string, orderId: string, amount: number) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
     log.trace("Shopify integration not active. Cannot capture payment.");
@@ -2033,10 +1862,7 @@ export async function captureShopifyOrderPayment(
       type: DataType.JSON,
       data: {},
     });
-    log.info(
-      "Successfully completed Shopify Draft Order %s into a paid order",
-      orderId,
-    );
+    log.info("Successfully completed Shopify Draft Order %s into a paid order", orderId);
     return response.body?.draft_order?.order_id || true;
   } catch (draftError: any) {
     log.warn(
@@ -2345,10 +2171,7 @@ export async function fetchShopifyShippingRates(
 ) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
-    log.trace(
-      "Shopify not active for orgId %s - skipping shipping rates query",
-      orgId,
-    );
+    log.trace("Shopify not active for orgId %s - skipping shipping rates query", orgId);
     return [];
   }
 
@@ -2414,9 +2237,7 @@ export async function fetchShopifyShippingRates(
       },
     );
 
-    const rates =
-      response.data?.draftOrderAvailableDeliveryOptions
-        ?.availableShippingRates ?? [];
+    const rates = response.data?.draftOrderAvailableDeliveryOptions?.availableShippingRates ?? [];
     return rates.map((r: any) => ({
       id: r.handle,
       name: r.title,
@@ -2439,9 +2260,7 @@ export async function getOrderIdFromDraftOrder(
 ): Promise<string> {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
-    throw new Error(
-      `Shopify integration not active for organization: ${orgId}`,
-    );
+    throw new Error(`Shopify integration not active for organization: ${orgId}`);
   }
 
   const restClient = new shopify.clients.Rest({
@@ -2454,9 +2273,7 @@ export async function getOrderIdFromDraftOrder(
     });
     const orderId = response.body?.draft_order?.order_id;
     if (!orderId) {
-      throw new Error(
-        `Draft order ${draftOrderId} has not been completed yet.`,
-      );
+      throw new Error(`Draft order ${draftOrderId} has not been completed yet.`);
     }
     return String(orderId);
   } catch (error: any) {
@@ -2469,10 +2286,7 @@ export async function getOrderIdFromDraftOrder(
 }
 
 // Retrieve fulfillment orders for an order
-export async function getFulfillmentOrders(
-  orgId: string,
-  waCatalogOrderId: string,
-) {
+export async function getFulfillmentOrders(orgId: string, waCatalogOrderId: string) {
   const waCatalogOrder = await prisma.waCatalogOrder.findUnique({
     where: { id: waCatalogOrderId },
   });
@@ -2480,21 +2294,14 @@ export async function getFulfillmentOrders(
     throw new Error(`WaCatalogOrder not found for ID: ${waCatalogOrderId}`);
   }
   if (!waCatalogOrder.shopifyDraftOrderId) {
-    throw new Error(
-      `No Shopify Draft Order ID associated with order: ${waCatalogOrderId}`,
-    );
+    throw new Error(`No Shopify Draft Order ID associated with order: ${waCatalogOrderId}`);
   }
 
-  const shopifyOrderId = await getOrderIdFromDraftOrder(
-    orgId,
-    waCatalogOrder.shopifyDraftOrderId,
-  );
+  const shopifyOrderId = await getOrderIdFromDraftOrder(orgId, waCatalogOrder.shopifyDraftOrderId);
 
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
-    throw new Error(
-      `Shopify integration not active for organization: ${orgId}`,
-    );
+    throw new Error(`Shopify integration not active for organization: ${orgId}`);
   }
 
   const client = new shopify.clients.Graphql({
@@ -2542,10 +2349,7 @@ export async function getFulfillmentOrders(
     });
     return nodes;
   } catch (error: any) {
-    log.error(
-      "Failed to fetch Shopify fulfillment orders => %o",
-      error.response?.body || error,
-    );
+    log.error("Failed to fetch Shopify fulfillment orders => %o", error.response?.body || error);
     throw error;
   }
 }
@@ -2571,9 +2375,7 @@ export async function createShopifyFulfillment(
 ) {
   const shopifyInfo = await getShopifyInfo(orgId);
   if (!shopifyInfo || !shopifyInfo.active) {
-    throw new Error(
-      `Shopify integration not active for organization: ${orgId}`,
-    );
+    throw new Error(`Shopify integration not active for organization: ${orgId}`);
   }
 
   const client = new shopify.clients.Graphql({
@@ -2606,18 +2408,12 @@ export async function createShopifyFulfillment(
 
     return result?.fulfillment;
   } catch (error: any) {
-    log.error(
-      "Failed to create Shopify fulfillment => %o",
-      error.response?.body || error,
-    );
+    log.error("Failed to create Shopify fulfillment => %o", error.response?.body || error);
     throw error;
   }
 }
 
-export function resolveShopifyPathValue(
-  shopifyBody: any,
-  path: string,
-): string {
+export function resolveShopifyPathValue(shopifyBody: any, path: string): string {
   if (!shopifyBody) return "";
 
   let resolvedValue = "";
@@ -2660,9 +2456,7 @@ export function resolveShopifyPathValue(
     resolvedValue = String(val ?? "");
   }
 
-  log.info(
-    `[Shopify Webhook Variable] Resolved path: "${path}" -> value: "${resolvedValue}"`,
-  );
+  log.info(`[Shopify Webhook Variable] Resolved path: "${path}" -> value: "${resolvedValue}"`);
 
   return resolvedValue;
 }

@@ -16,7 +16,7 @@ export async function findRecentAutomation(
     timeWindow?: number; // in milliseconds
   } = {},
 ) {
-  const { includeCompleted = false, timeWindow } = options;
+  const { timeWindow } = options;
 
   const whereClause: any = {
     phone,

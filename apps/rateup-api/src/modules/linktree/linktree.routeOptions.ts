@@ -50,44 +50,40 @@ const createLinktreeRouteOptions: RouteShorthandOptionsWithHandler = {
   handler: asyncErrHandler(createLinktree),
 };
 
-const updateLinktreeWithShortIdRouteOptions: RouteShorthandOptionsWithHandler =
-  {
-    schema: {
-      body: updateLinktreeReqBody,
-      response: {
-        "2xx": linktreeBaseSchema,
-      },
+const updateLinktreeWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = {
+  schema: {
+    body: updateLinktreeReqBody,
+    response: {
+      "2xx": linktreeBaseSchema,
     },
-    handler: asyncErrHandler(updateLinktreeWithShortId),
-  };
+  },
+  handler: asyncErrHandler(updateLinktreeWithShortId),
+};
 
 const deleteLinktreeByIdRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {},
   handler: asyncErrHandler(deleteLinktreeById),
 };
 
-const getLinkTypeDropdownOptionsRouteOptions: RouteShorthandOptionsWithHandler =
-  {
-    schema: {},
-    handler: asyncErrHandler(getLinkTypeDropdownOptions),
-  };
+const getLinkTypeDropdownOptionsRouteOptions: RouteShorthandOptionsWithHandler = {
+  schema: {},
+  handler: asyncErrHandler(getLinkTypeDropdownOptions),
+};
 
-const getPublicLinktreeWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler =
-  {
-    schema: {},
-    config: { isPublic: true },
-    handler: asyncErrHandler(getPublicLinktreeWithShortId),
-  };
+const getPublicLinktreeWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler = {
+  schema: {},
+  config: { isPublic: true },
+  handler: asyncErrHandler(getPublicLinktreeWithShortId),
+};
 
-const updatePageVisitsOrLinkClicksOptions: CustomRouteShortHandOptionsWithHandler =
-  {
-    schema: {
-      body: updatePageVisitsOrLinkClicksReqBody,
-      params: updatePageVisitsOrLinkClicksReqParams,
-    },
-    config: { isPublic: true },
-    handler: asyncErrHandler(updatePageVisitsOrLinkClicks),
-  };
+const updatePageVisitsOrLinkClicksOptions: CustomRouteShortHandOptionsWithHandler = {
+  schema: {
+    body: updatePageVisitsOrLinkClicksReqBody,
+    params: updatePageVisitsOrLinkClicksReqParams,
+  },
+  config: { isPublic: true },
+  handler: asyncErrHandler(updatePageVisitsOrLinkClicks),
+};
 
 export {
   createLinktreeRouteOptions,

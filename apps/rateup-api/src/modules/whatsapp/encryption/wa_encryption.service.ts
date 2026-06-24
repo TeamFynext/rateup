@@ -15,7 +15,7 @@ export async function setBusinessPublicKey(
     business_public_key: businessPublicKey,
   });
   try {
-    const res = await callMetaApi(
+    await callMetaApi(
       `/${phoneId}/whatsapp_business_encryption`,
       "POST",
       accessToken,
@@ -38,16 +38,9 @@ interface WaBusinessPublicKeyResponse {
 /**
  * Get Business Public Key
  */
-export async function getBusinessPublicKey(
-  phoneId: string,
-  accessToken: string,
-) {
+export async function getBusinessPublicKey(phoneId: string, accessToken: string) {
   try {
-    const res = await callMetaApi(
-      `/${phoneId}/whatsapp_business_encryption`,
-      "GET",
-      accessToken,
-    );
+    const res = await callMetaApi(`/${phoneId}/whatsapp_business_encryption`, "GET", accessToken);
     log.info("Business public key fetched successfully");
     return res.data as WaBusinessPublicKeyResponse;
   } catch (error) {

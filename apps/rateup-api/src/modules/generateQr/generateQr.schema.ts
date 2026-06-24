@@ -28,21 +28,9 @@ const updateGenerateQrRecordReqBody = z.object({
   link: z.string().optional(),
 });
 
-const models = {
-  generateQrBaseSchema,
-  createGenerateQrRecordReqBody,
-  getGenerateQrRecordWithShortIdParams,
-  getAllGenerateQrRecordsResponse,
-  updateGenerateQrRecordReqBody,
-};
+type CreateGenerateQrRecordReqBody = z.infer<typeof createGenerateQrRecordReqBody>;
 
-type CreateGenerateQrRecordReqBody = z.infer<
-  typeof createGenerateQrRecordReqBody
->;
-
-export type updateGenerateQrRecordReqBodyType = z.infer<
-  typeof updateGenerateQrRecordReqBody
->;
+export type updateGenerateQrRecordReqBodyType = z.infer<typeof updateGenerateQrRecordReqBody>;
 
 export {
   generateQrBaseSchema,

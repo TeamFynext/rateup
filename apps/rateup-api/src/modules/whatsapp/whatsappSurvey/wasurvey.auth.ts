@@ -10,9 +10,7 @@ export async function getWhatsappSurveyVerifySubscriptionHandler(
   reply: FastifyReply,
 ) {
   request.user = { orgId: request.params.orgId } as any;
-  await getVerifySubscriptionHandler([
-    SubscriptionFeaturePathName.WhatsAppSurvey,
-  ])(request, reply);
+  await getVerifySubscriptionHandler([SubscriptionFeaturePathName.WhatsAppSurvey])(request, reply);
 }
 
 export async function checkMessageLimitExceeded(orgId: string) {
@@ -30,10 +28,7 @@ export async function checkMessageLimitExceeded(orgId: string) {
 
   return !(subscription?.isAnnualMessageLimit
     ? usage.annualMessageCount >=
-      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
-        ?.monthlyMessageLimit *
-        12
+      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count?.monthlyMessageLimit * 12
     : usage?.monthlyMessagesCount >=
-      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
-        ?.monthlyMessageLimit);
+      subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count?.monthlyMessageLimit);
 }

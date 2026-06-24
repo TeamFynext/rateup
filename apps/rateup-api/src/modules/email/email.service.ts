@@ -17,7 +17,7 @@ export async function sendEmailService(emailParams: SendEmailInput) {
 export async function storeOtp(otp, userId, surveyId = undefined) {
   const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
   const expiryTime = Date.now() + 10 * 60 * 1000;
-  const res = await prisma.otpStore.upsert({
+  await prisma.otpStore.upsert({
     where: {
       userId,
       surveyId,

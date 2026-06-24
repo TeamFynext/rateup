@@ -1,12 +1,7 @@
 import prisma from "../../../utils/prisma.js";
-import {
-  CreateBoardRequestSchema,
-  UpdateBoardRequestSchema,
-} from "./board.schema.js";
+import { CreateBoardRequestSchema, UpdateBoardRequestSchema } from "./board.schema.js";
 
-export async function createBoard(
-  data: CreateBoardRequestSchema & { userId: string },
-) {
+export async function createBoard(data: CreateBoardRequestSchema & { userId: string }) {
   return prisma.ticketBoard.create({
     data: {
       title: data.title,
@@ -175,9 +170,7 @@ export async function isBoardMember(ticketBoardId: string, userId: string) {
 }
 
 export async function getBoardTeamMembersById(id: string) {
-  const result = await prisma.$queryRaw<
-    { id: string; name: string; profilePhoto: string }[]
-  >`
+  const result = await prisma.$queryRaw<{ id: string; name: string; profilePhoto: string }[]>`
     SELECT DISTINCT u.id, u.name, u."profilePhoto"
     FROM "User" u
     INNER JOIN "TeamMember" tm ON u.id = tm."userId"

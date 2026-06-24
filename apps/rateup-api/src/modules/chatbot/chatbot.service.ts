@@ -11,10 +11,7 @@ const CHATBOT_BASEURL = `${process.env.CHATBOT_API_URL}/api/chatbot`;
 const CHATBOT_PUBLIC_BASEURL = `${process.env.CHATBOT_API_URL}/api/public/chatbot`;
 export const AI_API_URL = `${process.env.CHATBOT_API_URL}/api`;
 
-export async function uploadSourceForEmbed(
-  data: dataSourceUploadInput,
-  jwtToken: string,
-) {
+export async function uploadSourceForEmbed(data: dataSourceUploadInput, jwtToken: string) {
   return await axios.post(`${CHATBOT_BASEURL}/embed-doc`, data, {
     headers: {
       Accept: "application/json",
@@ -181,11 +178,7 @@ export async function createChatbot(orgId: string, name: string) {
   });
 }
 
-export async function getChatbotDetails(
-  orgId: string,
-  chatbotId?: string,
-  onlyEnabled = false,
-) {
+export async function getChatbotDetails(orgId: string, chatbotId?: string, onlyEnabled = false) {
   return await prisma.chatbot.findFirst({
     where: {
       id: chatbotId,
@@ -203,11 +196,7 @@ export async function getAllChatbot(orgId: string) {
   });
 }
 
-export async function updateChatbotDetails(
-  data,
-  orgId: string,
-  chatbotId: string,
-) {
+export async function updateChatbotDetails(data, orgId: string, chatbotId: string) {
   const res = await prisma.chatbot.upsert({
     where: {
       orgId,

@@ -47,9 +47,7 @@ export async function dispatchLoyaltyNotification(
     }
 
     if (program.status !== "active") {
-      log.debug(
-        `[LoyaltyWaDispatcher] Loyalty program is inactive for org ${orgId} - skipping`,
-      );
+      log.debug(`[LoyaltyWaDispatcher] Loyalty program is inactive for org ${orgId} - skipping`);
       return;
     }
 
@@ -73,9 +71,7 @@ export async function dispatchLoyaltyNotification(
     }
 
     if (!payload.customerPhone) {
-      log.warn(
-        `[LoyaltyWaDispatcher] No phone number for command ${commandKey} - skipping`,
-      );
+      log.warn(`[LoyaltyWaDispatcher] No phone number for command ${commandKey} - skipping`);
       return;
     }
     // 1. Resolve Template ID via Event Trigger system
@@ -112,30 +108,23 @@ export async function dispatchLoyaltyNotification(
       commandKey === LoyaltyEventType.POINTS_ADJUSTED
     ) {
       if (payload.points !== undefined) params.push(payload.points.toString());
-      if (payload.balanceAfter !== undefined)
-        params.push(payload.balanceAfter.toString());
+      if (payload.balanceAfter !== undefined) params.push(payload.balanceAfter.toString());
     } else if (
       commandKey === LoyaltyEventType.REWARD_ISSUED ||
       commandKey === LoyaltyEventType.REWARD_REDEEMED
     ) {
       if (payload.rewardName) params.push(payload.rewardName);
       if (payload.redemptionCode) params.push(payload.redemptionCode);
-      if (payload.points !== undefined)
-        params.push(Math.abs(payload.points).toString()); // Cost
+      if (payload.points !== undefined) params.push(Math.abs(payload.points).toString()); // Cost
     } else if (commandKey === LoyaltyEventType.TIER_UPGRADED) {
       if (payload.newTier) params.push(payload.newTier);
     }
 
-    log.trace(
-      `[LoyaltyWaDispatcher] Sending ${commandKey} to ${payload.customerPhone}`,
-    );
+    log.trace(`[LoyaltyWaDispatcher] Sending ${commandKey} to ${payload.customerPhone}`);
     await handleSendTemplate(templateId, orgId, payload.customerPhone, params);
   } catch (error) {
     console.log("🚀 ~ dispatchLoyaltyNotification ~ error:", error);
-    log.error(
-      `[LoyaltyWaDispatcher] Error dispatching ${commandKey}: %o`,
-      error,
-    );
+    log.error(`[LoyaltyWaDispatcher] Error dispatching ${commandKey}: %o`, error);
     // Don't throw, silence error to avoid blocking transaction
   }
 }

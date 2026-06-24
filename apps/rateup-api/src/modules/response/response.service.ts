@@ -6,11 +6,7 @@ import {
   getContent,
   getReplacedTitleFromVariable,
 } from "../../utils/survey/response.data.js";
-import {
-  CreateResponseInput,
-  GenerateBodyInput,
-  ResponseFilterQuery,
-} from "./response.schema.js";
+import { CreateResponseInput, GenerateBodyInput, ResponseFilterQuery } from "./response.schema.js";
 import {
   ChoiceTypeQuestions,
   IntegratedApps,
@@ -212,24 +208,17 @@ export const getResponseBySurveyById = async (id: string) => {
   const responsesWithTitles = responses.map(
     ({ id, createdAt, tag, phone, language, teamId, responses, questions }) => {
       // Create a mapping of questionId to title for easier lookup
-      const questionMap = questions.reduce(
-        (map, { id, title, description, label }) => {
-          map[id] =
-            Object.values(title)?.[0] ||
-            Object.values(description)?.[0] ||
-            Object.values(label)?.[0];
-          return map;
-        },
-        {},
-      );
+      const questionMap = questions.reduce((map, { id, title, description, label }) => {
+        map[id] =
+          Object.values(title)?.[0] || Object.values(description)?.[0] || Object.values(label)?.[0];
+        return map;
+      }, {});
       // Map over each response to replace questionId with the corresponding title
-      const updatedResponses = responses.map(
-        ({ questionId, response = {}, ...rest }) => ({
-          ...rest,
-          response: Object.values(response)?.[0],
-          title: questionMap[questionId],
-        }),
-      );
+      const updatedResponses = responses.map(({ questionId, response = {}, ...rest }) => ({
+        ...rest,
+        response: Object.values(response)?.[0],
+        title: questionMap[questionId],
+      }));
 
       // Return the updated response object
       return {
@@ -299,9 +288,7 @@ export async function downloadExcelResponse(
       let columnLabels: string[];
 
       if (question.type === QuestionType.Contact) {
-        columnLabels = Object.entries(
-          question.features?.[defaultLanguage] ?? {},
-        )
+        columnLabels = Object.entries(question.features?.[defaultLanguage] ?? {})
           .filter(([, value]: any) => value?.isEnabled)
           .map(([key]) => `${getContent(qsTitle)}: ${key}`);
       } else if (question.type === QuestionType.MCQGrid) {
@@ -312,8 +299,7 @@ export async function downloadExcelResponse(
       } else if (question.type === QuestionType.MultiTextInput) {
         columnLabels =
           question.features?.[defaultLanguage]?.fields?.map(
-            (field) =>
-              `${getContent(question.title[defaultLanguage])}: ${field?.fieldKey}`,
+            (field) => `${getContent(question.title[defaultLanguage])}: ${field?.fieldKey}`,
           ) ?? [];
       } else if (question.type === QuestionType.Testimonial) {
         columnLabels = [
@@ -321,10 +307,7 @@ export async function downloadExcelResponse(
           `${getContent(question.title[defaultLanguage])}: testimonial`,
           ...Object.entries(question?.features?.[defaultLanguage] ?? {})
             .filter(([, value]) => Boolean(value))
-            .map(
-              ([key]) =>
-                `${getContent(question.title[defaultLanguage])}: ${key}`,
-            ),
+            .map(([key]) => `${getContent(question.title[defaultLanguage])}: ${key}`),
         ];
       } else {
         columnLabels = [getContent(qsTitle)];
@@ -345,10 +328,7 @@ export async function downloadExcelResponse(
     headerArray.push(teamNameColumn);
     filteredSecondArray.push(teamNameColumn);
 
-    if (
-      platform === "WHATSAPP" &&
-      visibleColumn.includes(whatsappRespondentNumber)
-    ) {
+    if (platform === "WHATSAPP" && visibleColumn.includes(whatsappRespondentNumber)) {
       headerArray.push(whatsappRespondentNumber);
       filteredSecondArray.push(whatsappRespondentNumber);
     }
@@ -365,9 +345,7 @@ export async function downloadExcelResponse(
         bodyArray.push([]);
 
         const responsesArr = response.responses;
-        const responseObj = responsesArr.find(
-          (answerObj) => answerObj.questionId === questionId,
-        );
+        const responseObj = responsesArr.find((answerObj) => answerObj.questionId === questionId);
         let responseValue;
         let flag = true;
         if (responseObj) {
@@ -380,9 +358,7 @@ export async function downloadExcelResponse(
               break;
             }
             case QuestionType.Date: {
-              responseValue = dayjs(responseValue)
-                .tz(tz)
-                .format("DD-MM-YYYY hh:mm A");
+              responseValue = dayjs(responseValue).tz(tz).format("DD-MM-YYYY hh:mm A");
               break;
             }
             case QuestionType.PCQ: {
@@ -411,17 +387,14 @@ export async function downloadExcelResponse(
               !Array.isArray(responseValue)
             ) {
               // If responseValue is an object, push values in header order
-              Object.entries(
-                question.features?.[defaultLanguage] || {},
-              ).forEach(([key, feature]) => {
-                if ((feature as { isEnabled?: boolean })?.isEnabled) {
-                  bodyArray[answerIndex].push(responseValue[key] ?? "");
-                }
-              });
-            } else if (
-              typeof responseValue === "string" ||
-              typeof responseValue === "number"
-            ) {
+              Object.entries(question.features?.[defaultLanguage] || {}).forEach(
+                ([key, feature]) => {
+                  if ((feature as { isEnabled?: boolean })?.isEnabled) {
+                    bodyArray[answerIndex].push(responseValue[key] ?? "");
+                  }
+                },
+              );
+            } else if (typeof responseValue === "string" || typeof responseValue === "number") {
               // If responseValue is a single value, push it
               bodyArray[answerIndex].push(responseValue);
             } else {
@@ -457,18 +430,21 @@ export async function downloadExcelResponse(
             tempArray.push({ [answerIndex]: questionId });
             bodyArray[answerIndex].push(responseValue?.name ?? "");
             bodyArray[answerIndex].push(responseValue?.testimonial ?? "");
-            question?.features?.[defaultLanguage] &&
+            if (question?.features?.[defaultLanguage]) {
               Object.entries(question?.features?.[defaultLanguage])
-                .filter(([key, value]) => value)
-                .map(([key, value]) =>
-                  responseValue?.[key]
-                    ? bodyArray[answerIndex].push(
-                        key == "photo"
-                          ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue?.[key]}`
-                          : responseValue?.[key],
-                      )
-                    : bodyArray[answerIndex].push(""),
-                );
+                .filter(([_key, value]) => value)
+                .forEach(([key, _value]) => {
+                  if (responseValue?.[key]) {
+                    bodyArray[answerIndex].push(
+                      key === "photo"
+                        ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${responseValue?.[key]}`
+                        : responseValue?.[key],
+                    );
+                  } else {
+                    bodyArray[answerIndex].push("");
+                  }
+                });
+            }
             flag = false;
           } else if (!tempArray.includes({ [answerIndex]: questionId })) {
             if (ChoiceTypeQuestions.includes(responseType)) {
@@ -491,9 +467,7 @@ export async function downloadExcelResponse(
             }
           }
         } else if (question === createdAt) {
-          const createdAtFormatted = dayjs(response.createdAt)
-            .tz(tz)
-            .format("DD-MM-YYYY hh:mm A");
+          const createdAtFormatted = dayjs(response.createdAt).tz(tz).format("DD-MM-YYYY hh:mm A");
           responseValue = createdAtFormatted;
         } else if (question === teamNameColumn) {
           responseValue = response.teamName || "";
@@ -515,13 +489,13 @@ export async function downloadExcelResponse(
           });
         } else {
           if (question.type === QuestionType.MCQGrid) {
-            question?.features?.[defaultLanguage]?.questions?.map((q) =>
+            question?.features?.[defaultLanguage]?.questions?.map((_q) =>
               bodyArray[answerIndex].push(""),
             );
             flag = false;
           } else if (question.type === QuestionType.Contact) {
             Object.entries(question.features?.[defaultLanguage] || {}).forEach(
-              ([key, feature]: any) => {
+              ([_key, feature]: any) => {
                 if (feature?.isEnabled) bodyArray[answerIndex].push("");
               },
             );
@@ -536,7 +510,7 @@ export async function downloadExcelResponse(
               flag = false;
             }
           } else if (question.type === QuestionType.MultiTextInput) {
-            question?.features?.[defaultLanguage]?.fields?.forEach((field) =>
+            question?.features?.[defaultLanguage]?.fields?.forEach((_field) =>
               bodyArray[answerIndex].push(""),
             );
             flag = false;
@@ -605,9 +579,7 @@ export async function downloadExcelResponseV2(
     const tagColumns: any[] = [];
     if (visibleColumn.includes(responseTag)) {
       const maxTags = Math.max(
-        ...responses.map(
-          (response) => (response.tag || "").split(",").filter(Boolean).length,
-        ),
+        ...responses.map((response) => (response.tag || "").split(",").filter(Boolean).length),
       );
       for (let i = 0; i < maxTags; i++) {
         const tagColumnName = `Tag ${i + 1}`;
@@ -630,9 +602,7 @@ export async function downloadExcelResponseV2(
         if (responseObj) {
           responseValue = getCellData(responseObj.response, question);
         } else if (question.label === createdAt) {
-          responseValue = dayjs(response.createdAt)
-            .tz(tz)
-            .format("DD-MM-YYYY hh:mm A");
+          responseValue = dayjs(response.createdAt).tz(tz).format("DD-MM-YYYY hh:mm A");
         } else if (question.label === whatsappRespondentNumber) {
           responseValue = response?.Contact?.phone || "";
         } else if (question.label?.toLowerCase()?.startsWith(responseTag)) {
@@ -696,7 +666,7 @@ export async function resetResponsesStats(surveyId: string) {
     },
   });
 
-  const deleteStats = await prisma.surveyStats.deleteMany({
+  await prisma.surveyStats.deleteMany({
     where: {
       surveyTeamMapId: { in: mapIds },
     },
@@ -798,21 +768,21 @@ export async function createResponse(
     },
   });
 
-  surveyResponse &&
+  if (surveyResponse) {
     updateMonthlyStat(
       surveyResponse.platform === "WHATSAPP"
         ? SubscriptionFeaturePathName.WhatsAppSurvey
         : "survey",
-      surveyResponse?.surveyTeamMap?.team.orgId,
+      surveyResponse.surveyTeamMap?.team.orgId,
     );
+  }
 
   if (shouldRaiseTicket && input?.responses?.length > 0 && columnId) {
     //generate ticket
     await autoGenerateTicket({
       ticketColumnId: columnId,
       surveyResponseId: surveyResponse.id,
-      type:
-        surveyResponse.platform === "WEB" ? "SURVEY_RESPONSE" : "FLOW_RESPONSE",
+      type: surveyResponse.platform === "WEB" ? "SURVEY_RESPONSE" : "FLOW_RESPONSE",
       orgId: surveyResponse?.surveyTeamMap?.team.orgId,
     });
   }
@@ -828,10 +798,7 @@ interface Location {
   state: string;
   country: string;
 }
-export async function updateResponse(
-  responseId: string,
-  data: { ip: string; location: Location },
-) {
+export async function updateResponse(responseId: string, data: { ip: string; location: Location }) {
   const response = await prisma.surveyResponse.update({
     where: {
       id: responseId,
@@ -868,32 +835,22 @@ export async function sendEmailOnResponseCreation(id: string, surveyResponse) {
   if (
     survey?.enableNotificationEmail &&
     survey.notificationEmail &&
-    (await hasFeature(
-      team.orgId,
-      SubscriptionFeaturePathName.EmailNotification,
-    ))
+    (await hasFeature(team.orgId, SubscriptionFeaturePathName.EmailNotification))
   ) {
     const { notificationEmail } = survey;
-    const surveyQuestion =
-      surveyResponse?.surveyTeamMap?.survey?.questions ?? [];
+    const surveyQuestion = surveyResponse?.surveyTeamMap?.survey?.questions ?? [];
     const surveyAnswer = surveyResponse?.responses ?? [];
     const language = surveyResponse?.language;
     const combineArray = surveyQuestion.map((qs) => ({
       ...qs,
       response:
-        surveyAnswer.find(
-          (ans: { questionId: string }) => ans.questionId === qs.id,
-        )?.response || {},
+        surveyAnswer.find((ans: { questionId: string }) => ans.questionId === qs.id)?.response ||
+        {},
     }));
     const bodyJsx = combineArray
       ?.map((data) => {
-        const questionText = language
-          ? data?.title[language]
-          : Object.values(data?.title)[0];
-        const answerText = generateAnswerHtml(
-          Object.values(data?.response)[0],
-          data.type,
-        );
+        const questionText = language ? data?.title[language] : Object.values(data?.title)[0];
+        const answerText = generateAnswerHtml(Object.values(data?.response)[0], data.type);
         return (
           answerText &&
           `<tr>
@@ -969,22 +926,14 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     orgId,
     IntegratedApps.googlesheet,
   )) as unknown as GoogleSheetIntegration;
-  authClient.credentials.refresh_token =
-    tokenFromIntgration.credential?.refreshToken;
+  authClient.credentials.refresh_token = tokenFromIntgration.credential?.refreshToken;
   const drive = google.drive({ version: "v3", auth: authClient });
   const isDocExist = survey?.spreadSheetId
     ? await checkFileExistInDrive(survey?.spreadSheetId, drive)
     : false;
-  let doc = isDocExist
-    ? new GoogleSpreadsheet(survey.spreadSheetId, authClient)
-    : null;
+  let doc = isDocExist ? new GoogleSpreadsheet(survey.spreadSheetId, authClient) : null;
   if (!doc) {
-    const driveFolderId = await getDriveFolderId(
-      orgId,
-      authClient,
-      drive,
-      tokenFromIntgration,
-    );
+    const driveFolderId = await getDriveFolderId(orgId, authClient, drive, tokenFromIntgration);
     const existingFiles = await drive.files.list({
       q: `mimeType = 'application/vnd.google-apps.spreadsheet' and name = '${survey.title}' and '${driveFolderId}' in parents`,
       fields: "nextPageToken, files(id, name)",
@@ -1016,9 +965,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   const BATCH_SIZE = 8000; // Tune this based on memory and Google API limits
   let flow = await getFlowBySurveyId(surveyId);
   const filteredSecondArray = flow?.json?.screens?.flatMap((screen) =>
-    screen?.layout?.children?.filter(
-      (child) => child?.type !== "Footer" && child.name,
-    ),
+    screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
   ) as any[];
   const checkVersion = flow ? flow.version === 1 : true;
 
@@ -1030,22 +977,10 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     for (const lang of languages) {
       let questionTitles = [];
       questions.map((q: Question, index: number) => {
-        if (
-          [QuestionType.InfoMessage, ...Object.values(PageType)].includes(
-            q.type,
-          )
-        )
-          return false;
-        let qsTitle =
-          q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
+        if ([QuestionType.InfoMessage, ...Object.values(PageType)].includes(q.type)) return false;
+        let qsTitle = q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
         const qstnTitle = index + 1 + "_" + getContent(qsTitle)?.trim();
-        if (
-          [
-            QuestionType.Contact,
-            QuestionType.Email,
-            QuestionType.Phone,
-          ].includes(q.type)
-        )
+        if ([QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(q.type))
           Object.entries(q.features?.[lang]).map(([key, value]) =>
             typeof value === "object" &&
             value !== null &&
@@ -1062,14 +997,10 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           );
         } else if (q.type === QuestionType.MCQGrid) {
           const subQs = q.features?.[lang]?.questions;
-          subQs.map((qstn) =>
-            questionTitles.push((qstnTitle + ":" + qstn).trim()),
-          );
+          subQs.map((qstn) => questionTitles.push((qstnTitle + ":" + qstn).trim()));
         } else if (q.type === QuestionType.MultiTextInput) {
           const fields = q.features?.[lang]?.fields;
-          fields?.map((field) =>
-            questionTitles.push((qstnTitle + ":" + field?.fieldKey).trim()),
-          );
+          fields?.map((field) => questionTitles.push((qstnTitle + ":" + field?.fieldKey).trim()));
         } else questionTitles.push(qstnTitle);
       });
       languageQuestionTitles[lang] = questionTitles;
@@ -1078,21 +1009,14 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     // For each language, process responses in batches
     for (const lang of languages) {
       const additionalColumns = ["Team", "Respondent's Mobile Number", "Tags"];
-      const headerRow = [
-        "Created At",
-        ...languageQuestionTitles[lang],
-        ...additionalColumns,
-      ];
+      const headerRow = ["Created At", ...languageQuestionTitles[lang], ...additionalColumns];
       const totalColumnCount = headerRow.length;
       let sheet =
         (await doc.sheetsByTitle[lang]) ??
         (await doc.addSheet({
           title: lang,
           headerValues: headerRow,
-          gridProperties:
-            totalColumnCount > 26
-              ? { columnCount: totalColumnCount }
-              : undefined,
+          gridProperties: totalColumnCount > 26 ? { columnCount: totalColumnCount } : undefined,
         }));
       const initialRowCount = await sheet.rowCount;
       if (totalColumnCount > sheet.columnCount)
@@ -1144,27 +1068,14 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           };
           for (let i = 0; i < questions.length; i++) {
             const q = questions[i];
-            if (
-              [QuestionType.InfoMessage, ...Object.values(PageType)].includes(
-                q.type,
-              )
-            )
-              continue;
-            let qsTitle =
-              q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
+            if ([QuestionType.InfoMessage, ...Object.values(PageType)].includes(q.type)) continue;
+            let qsTitle = q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
             const qstnTitle = i + 1 + "_" + getContent(qsTitle)?.trim();
             const res = response.responses.find((r) => r.questionId === q.id);
             if (res) {
-              if (
-                [
-                  QuestionType.Contact,
-                  QuestionType.Email,
-                  QuestionType.Phone,
-                ].includes(q.type)
-              )
+              if ([QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(q.type))
                 Object.entries(res.response[res.type]).map(
-                  ([key, value]) =>
-                    (resObj[(qstnTitle + ":" + key).trim()] = value),
+                  ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
                 );
               else if (q.type === QuestionType.Testimonial)
                 Object.entries(res.response[res.type]).map(
@@ -1181,15 +1092,9 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
                 );
               else if (q.type === QuestionType.MultiTextInput)
                 Object.entries(res.response[res.type]).map(
-                  ([key, value]) =>
-                    (resObj[(qstnTitle + ":" + key).trim()] = value),
+                  ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
                 );
-              else
-                resObj[qstnTitle] = getFormattedResponse(
-                  res.response[res.type],
-                  q,
-                  lang,
-                );
+              else resObj[qstnTitle] = getFormattedResponse(res.response[res.type], q, lang);
             }
           }
           resObj["Respondent's Mobile Number"] = response?.Contact?.phone;
@@ -1231,8 +1136,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       (await doc.addSheet({
         title: lang,
         headerValues: headerArray,
-        gridProperties:
-          totalColumnCount > 26 ? { columnCount: totalColumnCount } : undefined,
+        gridProperties: totalColumnCount > 26 ? { columnCount: totalColumnCount } : undefined,
       }));
     const initialRowCount = sheet.rowCount;
     if (totalColumnCount > sheet.columnCount)
@@ -1266,16 +1170,13 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         filteredSecondArray.forEach((question) => {
           const questionId = question.id;
           const responseObj: any = response.responses.find(
-            (answerObj: { questionId: string }) =>
-              answerObj.questionId === questionId,
+            (answerObj: { questionId: string }) => answerObj.questionId === questionId,
           );
           let responseValue: string;
           if (responseObj) {
             responseValue = getCellData(responseObj.response, question);
           } else if (question === createdAt) {
-            const createdAtFormatted = dayjs(response.createdAt).format(
-              "DD-MM-YYYY HH:mm",
-            );
+            const createdAtFormatted = dayjs(response.createdAt).format("DD-MM-YYYY HH:mm");
             responseValue = createdAtFormatted;
           } else if (question === whatsappRespondentNumber) {
             responseValue = response?.Contact?.phone || "";
@@ -1285,9 +1186,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
             // Try to get team name from survey.teams
             let teamName = "";
             if (response?.surveyTeamMapId && survey.teams) {
-              const found = survey.teams.find(
-                (t) => t.team.id === response?.surveyTeamMap?.teamId,
-              );
+              const found = survey.teams.find((t) => t.team.id === response?.surveyTeamMap?.teamId);
               teamName = found?.team?.name || "";
             }
             responseValue = teamName;
@@ -1309,17 +1208,10 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   return survey;
 }
 
-export async function getDriveFolderId(
-  orgId: string,
-  authClient,
-  drive,
-  token,
-) {
-  let { driveFolderId } = token?.credential;
+export async function getDriveFolderId(orgId: string, authClient, drive, token) {
+  let { driveFolderId } = token?.credential || {};
 
-  const isFolderExist = driveFolderId
-    ? await checkFileExistInDrive(driveFolderId, drive)
-    : null;
+  const isFolderExist = driveFolderId ? await checkFileExistInDrive(driveFolderId, drive) : null;
   if (!isFolderExist) {
     const folderName = "RateUp";
     const fileMetadata = {
@@ -1405,52 +1297,37 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
         Team: team.name,
         team: team.name, // for old synced response
       };
-      resObj["Created At"] = dayjs(response.createdAt).format(
-        "DD-MM-YYYY HH:mm",
-      );
+      resObj["Created At"] = dayjs(response.createdAt).format("DD-MM-YYYY HH:mm");
 
       let flow = await getFlowBySurveyId(surveyId);
       const filteredSecondArray = flow?.json?.screens?.flatMap((screen) =>
-        screen?.layout?.children?.filter(
-          (child) => child?.type !== "Footer" && child.name,
-        ),
+        screen?.layout?.children?.filter((child) => child?.type !== "Footer" && child.name),
       ) as unknown as Question2[];
       const checkVersion = flow ? flow.version === 1 : true;
       response.responses.map((res: QuestionResponse) => {
         if (checkVersion) {
           let QIndex;
-          let qstn = (questions as unknown as Question[]).find(
-            (q: Question, index: number) => {
-              if (q.id === res.questionId) {
-                QIndex = index + 1;
-                return q;
-              }
-            },
-          );
+          let qstn = (questions as unknown as Question[]).find((q: Question, index: number) => {
+            if (q.id === res.questionId) {
+              QIndex = index + 1;
+              return q;
+            }
+          });
           let qsTitle =
             qstn?.title[response.language] ||
             qstn?.description[response.language] ||
             qstn?.label?.[response.language] ||
             "";
           let qstnTitle = QIndex + "_" + getContent(qsTitle).trim();
-          if (
-            [
-              QuestionType.Contact,
-              QuestionType.Email,
-              QuestionType.Phone,
-            ].includes(qstn.type)
-          )
+          if ([QuestionType.Contact, QuestionType.Email, QuestionType.Phone].includes(qstn.type))
             Object.entries(res.response[res.type]).map(
-              ([key, value]) =>
-                (resObj[(qstnTitle + ":" + key).trim()] = value),
+              ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
             );
           else if (qstn.type === QuestionType.Testimonial)
             Object.entries(res.response[res.type]).map(
               ([key, value]) =>
                 (resObj[(qstnTitle + ":" + key).trim()] =
-                  key == "photo"
-                    ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                    : value),
+                  key == "photo" ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}` : value),
             );
           else if (qstn.type === QuestionType.MCQGrid)
             Object.entries(res.response[res.type]).map(
@@ -1459,8 +1336,7 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
             );
           else if (qstn.type === QuestionType.MultiTextInput)
             Object.entries(res.response[res.type]).map(
-              ([key, value]) =>
-                (resObj[(qstnTitle + ":" + key).trim()] = value),
+              ([key, value]) => (resObj[(qstnTitle + ":" + key).trim()] = value),
             );
           else
             resObj[qstnTitle] = getFormattedResponse(
@@ -1473,9 +1349,7 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
           let question = filteredSecondArray.find(
             (q) => q.id === questionId,
           ) as unknown as Question2;
-          let qstnTitle = markdownToPlainText(
-            question?.header || question?.label || "",
-          );
+          let qstnTitle = markdownToPlainText(question?.header || question?.label || "");
           const responseObj = response.responses.find(
             (answerObj) => answerObj.questionId === questionId,
           );
@@ -1506,9 +1380,7 @@ export function getFormattedResponse(response, qstn, language) {
     case QuestionType.MCQ:
       formattedResponse =
         response?.value?.trim() ||
-        `${
-          qstn?.features?.[language]?.other?.title
-        }: ${response?.other?.trim()}`;
+        `${qstn?.features?.[language]?.other?.title}: ${response?.other?.trim()}`;
       break;
     case QuestionType.CustomNPS:
     case QuestionType.DDSS:
@@ -1520,9 +1392,7 @@ export function getFormattedResponse(response, qstn, language) {
         .map(
           (item) =>
             item?.value?.trim() ||
-            `${
-              qstn?.features?.[language]?.other?.title
-            }: ${item?.other?.trim()}`,
+            `${qstn?.features?.[language]?.other?.title}: ${item?.other?.trim()}`,
         )
         .join(", ");
       break;
@@ -1548,10 +1418,7 @@ export function getFormattedResponse(response, qstn, language) {
   return formattedResponse;
 }
 
-export async function getAIResponseSummaryBySurveyId(
-  surveyId: string,
-  questionId: string,
-) {
+export async function getAIResponseSummaryBySurveyId(surveyId: string, _questionId: string) {
   const { aiResponseSummary } = await prisma.survey.findUnique({
     where: {
       id: surveyId,
@@ -1585,10 +1452,7 @@ export async function getResponseSummary(
 ) {
   const allResponses = await getAllResponses(surveyId);
 
-  const aiResponseSummary = await getAIResponseSummaryBySurveyId(
-    surveyId,
-    questionId,
-  );
+  const aiResponseSummary = await getAIResponseSummaryBySurveyId(surveyId, questionId);
 
   let questionIndex = null;
   const responseSummary = aiResponseSummary.find((q, index) => {
@@ -1621,35 +1485,23 @@ export async function getResponseSummary(
   }
   const responseIds = filteredResponses.map((r) => r.responseId);
   const deletedResponses = existingSummary
-    ? existingSummary.responseIds.filter(
-        (responseId) => !responseIds.includes(responseId),
-      )
+    ? existingSummary.responseIds.filter((responseId) => !responseIds.includes(responseId))
     : [];
   let responsesNotSummarised = [];
   if (deletedResponses.length) {
     responsesNotSummarised = [...filteredResponses];
   } else {
     responsesNotSummarised = existingSummary
-      ? filteredResponses.filter(
-          (r) => !existingSummary.responseIds.includes(r.responseId),
-        )
+      ? filteredResponses.filter((r) => !existingSummary.responseIds.includes(r.responseId))
       : filteredResponses;
   }
 
   if (!responsesNotSummarised.length) return;
   const responseTexts = responsesNotSummarised.map((r) =>
-    r.response.type
-      ? r.response.response[r.response.type]
-      : r.response.response,
+    r.response.type ? r.response.response[r.response.type] : r.response.response,
   );
-  if (existingSummary && !deletedResponses.length)
-    responseTexts.push(existingSummary.summary);
-  const res = await getTextSummaryByAI(
-    responseTexts,
-    request,
-    allowedTokens,
-    usedTokens,
-  );
+  if (existingSummary && !deletedResponses.length) responseTexts.push(existingSummary.summary);
+  const res = await getTextSummaryByAI(responseTexts, request, allowedTokens, usedTokens);
   if (!res) throw new Error("Unable to get Summary");
   let updateData = null;
   if (type === ResponseSummaryType.All) {
@@ -1663,9 +1515,7 @@ export async function getResponseSummary(
   } else if (type === ResponseSummaryType.Team) {
     let updatedTeamSummary = responseSummary?.team ?? [];
     if (existingSummary) {
-      const teamSummaryIndex = updatedTeamSummary.findIndex(
-        (t) => t.teamId === teamId,
-      );
+      const teamSummaryIndex = updatedTeamSummary.findIndex((t) => t.teamId === teamId);
       updatedTeamSummary[teamSummaryIndex].summary = res.summary;
       updatedTeamSummary[teamSummaryIndex].responseIds = responseIds;
     } else {
@@ -1717,9 +1567,7 @@ export async function exportContactResponseToContacts(surveyId, orgId) {
       name: r.team.name,
     },
     responses: r.responses.flatMap((res) =>
-      res.responses.filter(
-        (r) => (r as unknown as QuestionResponse).type === QuestionType.Contact,
-      ),
+      res.responses.filter((r) => (r as unknown as QuestionResponse).type === QuestionType.Contact),
     ),
   }));
 
@@ -1730,10 +1578,7 @@ export async function exportContactResponseToContacts(surveyId, orgId) {
       let groupName = `_${surveyTitle}_${team.team.name}`;
       const teamId = team.team.id;
       const contacts = team.responses
-        .map(
-          (res) =>
-            (res as unknown as QuestionResponse).response[QuestionType.Contact],
-        )
+        .map((res) => (res as unknown as QuestionResponse).response[QuestionType.Contact])
         .filter((c) => c.phone)
         .map((c) => ({
           ...c,
@@ -1777,13 +1622,11 @@ export async function sendResponseToWebhook(responseObj, orgId) {
     },
     {},
   );
-  const responses = responseObj.responses.map(
-    ({ questionId, response = {}, type }) => ({
-      type,
-      response: response[type],
-      title: questionMap[questionId],
-    }),
-  );
+  const responses = responseObj.responses.map(({ questionId, response = {}, type }) => ({
+    type,
+    response: response[type],
+    title: questionMap[questionId],
+  }));
   const payload = {
     tag: responseObj?.tag,
     createdAt: responseObj.createdAt,
@@ -1818,27 +1661,19 @@ const getCellData = (response, question) => {
       return response || "";
     case WaQuestions.RadioButtonsGroup:
     case WaQuestions.Dropdown:
-      return (
-        question["data-source"]?.find((data) => data.id === response)?.title ||
-        ""
-      );
+      return question["data-source"]?.find((data) => data.id === response)?.title || "";
     case WaQuestions.CheckboxGroup:
     case WaQuestions.ChipsSelector:
       return (
         (Array.isArray(response) &&
           response
-            ?.map(
-              (i) =>
-                question["data-source"]?.find((data) => data.id === i)?.title,
-            )
+            ?.map((i) => question["data-source"]?.find((data) => data.id === i)?.title)
             ?.join(",")) ||
         ""
       );
     case WaQuestions.DocumentPicker:
     case WaQuestions.PhotoPicker:
-      return (
-        response && `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${response}`
-      );
+      return response && `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${response}`;
     case WaQuestions.DatePicker:
       return response ? dayjs(response).format("DD-MM-YYYY") : "";
     default:
@@ -1847,8 +1682,7 @@ const getCellData = (response, question) => {
 };
 
 export async function getSurveyResponseCount(surveyId, teamIds) {
-  const teamWiseCount =
-    (await prisma.$queryRaw`SELECT st.id,t.code as "teamCode", 
+  const teamWiseCount = (await prisma.$queryRaw`SELECT st.id,t.code as "teamCode", 
   COUNT(sr.id)::INTEGER
   FROM "SurveyTeamMap" st
   LEFT JOIN "SurveyResponse" sr ON st.id = sr."surveyTeamMapId" 
@@ -1929,7 +1763,7 @@ export async function getSurveyResponseBySurveyId(
   }
 
   if (dateRange?.length) {
-    const [startDate, endDate] = dateRange?.split(",");
+    const [startDate, endDate] = dateRange?.split(",") || [];
     if (startDate)
       filterQuery += ` AND sr."createdAt" >= '${dayjs(startDate).startOf("day").toISOString()}'`;
     if (endDate)
@@ -1941,10 +1775,7 @@ export async function getSurveyResponseBySurveyId(
   }
 
   if (Object.keys(rest)?.length) {
-    const { createdAt: createdAtFilter, ...responseFilters } = rest as Record<
-      string,
-      string
-    >;
+    const { createdAt: createdAtFilter, ...responseFilters } = rest as Record<string, string>;
 
     if (createdAtFilter?.length) {
       const startDate = dayjs
@@ -1952,11 +1783,7 @@ export async function getSurveyResponseBySurveyId(
         .startOf("day")
         .toISOString()
         .replaceAll("'", "''");
-      const endDate = dayjs
-        .utc(createdAtFilter)
-        .endOf("day")
-        .toISOString()
-        .replaceAll("'", "''");
+      const endDate = dayjs.utc(createdAtFilter).endOf("day").toISOString().replaceAll("'", "''");
       filterQuery += ` AND sr."createdAt" >= '${startDate}' AND sr."createdAt" <= '${endDate}'`;
     }
 
@@ -2048,7 +1875,7 @@ export async function getResponseAnalyticsForGraph(
       in: teamMapIds,
     };
   if (dateRange?.length) {
-    const [startDate, endDate] = dateRange?.split(",");
+    const [startDate, endDate] = dateRange?.split(",") || [];
     where["createdAt"] = {
       gte: dayjs(startDate).startOf("day").toISOString(),
       lte: dayjs(endDate).endOf("day").toISOString(),
@@ -2081,24 +1908,18 @@ export async function getResponseAnalyticsForGraph(
   const isFlow = surveyInfo.survey.type === SurveyType.WaFlow;
   const version = !isFlow || surveyInfo.survey.WaFlow?.version === 1;
   const questions = version
-    ? surveyInfo.survey.questions.filter((q) =>
-        barGraphQuestions.includes(q.type),
-      )
+    ? surveyInfo.survey.questions.filter((q) => barGraphQuestions.includes(q.type))
     : (surveyInfo.survey.WaFlow.json.screens.flatMap((screen) =>
         screen.layout.children.filter(
           (child) =>
-            barGraphQuestions2.includes(
-              (child as any).metaType as WaQuestions,
-            ) && child.name,
+            barGraphQuestions2.includes((child as any).metaType as WaQuestions) && child.name,
         ),
       ) as unknown as Question2[]);
 
   const npsQuestionIds = version
     ? questions
         .filter(
-          (q) =>
-            npsQuestionTypes.includes(q.type as QuestionType) &&
-            (q as any).enableNpsAnalytics,
+          (q) => npsQuestionTypes.includes(q.type as QuestionType) && (q as any).enableNpsAnalytics,
         )
         .map((q) => (q as any).id)
     : questions
@@ -2157,8 +1978,7 @@ export async function getResponseAnalyticsForGraph(
     for (const response of responseBatch) {
       for (const r of response.responses) {
         const questionId = r.questionId;
-        if (!barGraphQuestionIds.includes(questionId) || !counters[questionId])
-          continue;
+        if (!barGraphQuestionIds.includes(questionId) || !counters[questionId]) continue;
 
         const question = questions.find((q) => (q as any).id === questionId);
         if (!question) continue;
@@ -2186,12 +2006,8 @@ export async function getResponseAnalyticsForGraph(
 
     if (npsQuestionIds.includes(qId)) {
       const total = counter.promoters + counter.passives + counter.detractors;
-      const nps = total
-        ? ((counter.promoters - counter.detractors) / total) * 100
-        : null;
-      const csatScore = counter.total
-        ? Math.round((counter.csat / counter.total) * 100)
-        : 0;
+      const nps = total ? ((counter.promoters - counter.detractors) / total) * 100 : null;
+      const csatScore = counter.total ? Math.round((counter.csat / counter.total) * 100) : 0;
 
       result.nps[qId] = {
         csatScore,
@@ -2207,11 +2023,7 @@ export async function getResponseAnalyticsForGraph(
     }
 
     if (barGraphQuestionIds.includes(qId)) {
-      result.choiceWise[qId] = finalizeChoiceWiseData(
-        counter.choiceWise,
-        question,
-        version,
-      );
+      result.choiceWise[qId] = finalizeChoiceWiseData(counter.choiceWise, question, version);
       result.choiceWise[qId].responseCount = counter.total;
     }
   });
@@ -2281,15 +2093,7 @@ function initializeChoiceCounter(question, version) {
   }
 }
 
-function processResponse(
-  r,
-  language,
-  question,
-  counter,
-  version,
-  isNpsQuestion,
-) {
-  const questionId = r.questionId;
+function processResponse(r, language, question, counter, version, isNpsQuestion) {
   const type = version ? r.type : question.metaType;
   const value = r.response[r.type] || r.response;
 
@@ -2314,9 +2118,7 @@ function processResponse(
           else counter.detractors++;
           break;
         case QuestionType.Smiley:
-          if (
-            [SmileyResponse.VeryHappy, SmileyResponse.Happy].includes(value)
-          ) {
+          if ([SmileyResponse.VeryHappy, SmileyResponse.Happy].includes(value)) {
             counter.promoters++;
             counter.csat++;
           } else if (value === SmileyResponse.Neutral) counter.passives++;
@@ -2393,12 +2195,7 @@ function processResponse(
 
       resp.forEach((res) => {
         if (!res) return;
-        const choiceIndex = getChoiceIndex(
-          question,
-          language,
-          res.toString(),
-          type,
-        );
+        const choiceIndex = getChoiceIndex(question, language, res.toString(), type);
         if (choiceIndex !== -1 && counter.choiceWise.has(choiceIndex)) {
           const mapValue = counter.choiceWise.get(choiceIndex);
           counter.choiceWise.set(choiceIndex, {
@@ -2420,10 +2217,7 @@ function processResponse(
         if (!resp) return;
 
         const choiceIndex = getChoiceIndex(question, language, resp, type);
-        if (
-          choiceIndex !== -1 &&
-          counter.choiceWise[index]?.[subQ]?.has(choiceIndex)
-        ) {
+        if (choiceIndex !== -1 && counter.choiceWise[index]?.[subQ]?.has(choiceIndex)) {
           const mapValue = counter.choiceWise[index][subQ].get(choiceIndex);
           counter.choiceWise[index][subQ].set(choiceIndex, {
             ...mapValue,
@@ -2527,18 +2321,13 @@ export async function getResponseCountForCamparison(surveyId, teamIds) {
       },
     },
   });
-  const version1 =
-    !teamRes[0].survey.WaFlow || teamRes[0].survey.WaFlow.version === 1;
+  const version1 = !teamRes[0].survey.WaFlow || teamRes[0].survey.WaFlow.version === 1;
   const questions = version1
-    ? teamRes[0].survey.questions.filter((q) =>
-        npsQuestionTypes.includes(q.type),
-      )
+    ? teamRes[0].survey.questions.filter((q) => npsQuestionTypes.includes(q.type))
     : teamRes[0].survey.WaFlow.json.screens.flatMap((screen) =>
         screen.layout.children.filter(
           (child) =>
-            npsQuestionTypes2.includes(
-              (child as any).metaType as WaQuestions,
-            ) && child.name,
+            npsQuestionTypes2.includes((child as any).metaType as WaQuestions) && child.name,
         ),
       );
 
@@ -2583,11 +2372,8 @@ export async function getResponseCountForCamparison(surveyId, teamIds) {
         const resp = version1 ? r.response[r.type] : r.response;
         let currentResponseObj = { ...data[questionIndex].responseObj };
         if (q.type === QuestionType.CustomNPS)
-          currentResponseObj[resp.weightage] =
-            currentResponseObj[resp.weightage] + 1;
-        else
-          currentResponseObj[resp.toString()] =
-            currentResponseObj[resp.toString()] + 1;
+          currentResponseObj[resp.weightage] = currentResponseObj[resp.weightage] + 1;
+        else currentResponseObj[resp.toString()] = currentResponseObj[resp.toString()] + 1;
         data[questionIndex].responseObj = currentResponseObj;
       });
       skip += batchSize;
@@ -2782,15 +2568,11 @@ export async function happyIndexResponsesBySurveyId(
   const isFlow = surveyInfo.survey.type === SurveyType.WaFlow;
   const version = !isFlow || surveyInfo.survey.WaFlow?.version === 1;
   const questions = version
-    ? surveyInfo.survey.questions.filter((q) =>
-        barGraphQuestions.includes(q.type),
-      )
+    ? surveyInfo.survey.questions.filter((q) => barGraphQuestions.includes(q.type))
     : (surveyInfo.survey.WaFlow.json.screens.flatMap((screen) =>
         screen.layout.children.filter(
           (child) =>
-            barGraphQuestions2.includes(
-              (child as any).metaType as WaQuestions,
-            ) && child.name,
+            barGraphQuestions2.includes((child as any).metaType as WaQuestions) && child.name,
         ),
       ) as unknown as Question2[]);
 
@@ -2806,16 +2588,12 @@ export async function happyIndexResponsesBySurveyId(
           : matchedQuestion.type;
 
       if (questionType === QuestionType.Opinion) {
-        const val = version
-          ? Number(r.response[QuestionType.Opinion])
-          : Number(r.response);
+        const val = version ? Number(r.response[QuestionType.Opinion]) : Number(r.response);
         if (!isNaN(val)) score = val;
       }
 
       if (questionType === QuestionType.Rating) {
-        const val = version
-          ? r.response[QuestionType.Rating]
-          : Number(r.response);
+        const val = version ? r.response[QuestionType.Rating] : Number(r.response);
         if (val === 5) score = 10;
         else if (val === 4) score = 9;
         else if (val === 3) score = 6;
@@ -2878,26 +2656,16 @@ export async function happyIndexResponsesBySurveyId(
   });
 
   const nps = npsCount > 0 ? ((promoters - detractors) / npsCount) * 100 : null;
-  const promoterPercentage =
-    npsCount > 0 ? Math.round((promoters / npsCount) * 100) : null;
-  const passivePercentage =
-    npsCount > 0 ? Math.round((passives / npsCount) * 100) : null;
-  const detractorPercentage =
-    npsCount > 0 ? Math.round((detractors / npsCount) * 100) : null;
+  const promoterPercentage = npsCount > 0 ? Math.round((promoters / npsCount) * 100) : null;
+  const passivePercentage = npsCount > 0 ? Math.round((passives / npsCount) * 100) : null;
+  const detractorPercentage = npsCount > 0 ? Math.round((detractors / npsCount) * 100) : null;
   const happinessIndex =
-    totalCount > 0
-      ? Math.round((scoreSum / (totalCount * maxScore)) * 100)
-      : null;
-  const veryHappyPercentage =
-    totalCount > 0 ? +((veryHappy / totalCount) * 100).toFixed(2) : null;
-  const happyPercentage =
-    totalCount > 0 ? +((happy / totalCount) * 100).toFixed(2) : null;
-  const neutralPercentage =
-    totalCount > 0 ? +((neutral / totalCount) * 100).toFixed(2) : null;
-  const sadPercentage =
-    totalCount > 0 ? +((sad / totalCount) * 100).toFixed(2) : null;
-  const verySadPercentage =
-    totalCount > 0 ? +((verySad / totalCount) * 100).toFixed(2) : null;
+    totalCount > 0 ? Math.round((scoreSum / (totalCount * maxScore)) * 100) : null;
+  const veryHappyPercentage = totalCount > 0 ? +((veryHappy / totalCount) * 100).toFixed(2) : null;
+  const happyPercentage = totalCount > 0 ? +((happy / totalCount) * 100).toFixed(2) : null;
+  const neutralPercentage = totalCount > 0 ? +((neutral / totalCount) * 100).toFixed(2) : null;
+  const sadPercentage = totalCount > 0 ? +((sad / totalCount) * 100).toFixed(2) : null;
+  const verySadPercentage = totalCount > 0 ? +((verySad / totalCount) * 100).toFixed(2) : null;
 
   return {
     promoters,

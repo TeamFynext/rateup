@@ -5,10 +5,7 @@ interface DeleteLoyaltyTierOptions {
   downgradeCustomers?: boolean;
 }
 
-export async function createLoyaltyTier(
-  data: LoyaltyTierInput,
-  programId: string,
-) {
+export async function createLoyaltyTier(data: LoyaltyTierInput, programId: string) {
   const maxPriorityTier = await prisma.loyaltyTier.findFirst({
     where: { programId },
     orderBy: { priority: "desc" },
@@ -51,20 +48,14 @@ export async function getLoyaltyTierById(tierId: string) {
   });
 }
 
-export async function updateLoyaltyTier(
-  tierId: string,
-  data: LoyaltyTierUpdateInput,
-) {
+export async function updateLoyaltyTier(tierId: string, data: LoyaltyTierUpdateInput) {
   return await prisma.loyaltyTier.update({
     where: { id: tierId },
     data,
   });
 }
 
-export async function deleteLoyaltyTier(
-  tierId: string,
-  options: DeleteLoyaltyTierOptions = {},
-) {
+export async function deleteLoyaltyTier(tierId: string, options: DeleteLoyaltyTierOptions = {}) {
   // Check if there are customers in this tier
   const customers = await prisma.customerLoyaltyAccount.findMany({
     where: { currentTierId: tierId },

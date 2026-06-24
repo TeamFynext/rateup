@@ -18,10 +18,7 @@ export async function getSurveyThemeByIdHandler(
   reply.code(200).send(theme);
 }
 
-export async function getAllThemesOfUserOrg(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllThemesOfUserOrg(request: FastifyRequest, reply: FastifyReply) {
   let themes = await getAllThemesOfUserOrgFromDB(request);
   if (themes) {
     themes = themes.map((themeObj) => {
@@ -43,10 +40,7 @@ export async function getAllThemesOfUserOrg(
   reply.code(200).send(themes);
 }
 
-export async function updateSurveyThemeHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function updateSurveyThemeHandler(request: FastifyRequest, reply: FastifyReply) {
   const surveyTheme = await updateSurveyThemeActiveSurveyThemeInDB(request);
   reply.send(surveyTheme);
 }
@@ -76,10 +70,7 @@ export async function createNewTheme(
   }
 }
 
-export async function renameTheme(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function renameTheme(request: FastifyRequest, reply: FastifyReply) {
   if (!request.body["name"]) {
     reply.code(400).send({
       success: false,
@@ -91,11 +82,8 @@ export async function renameTheme(
   reply.code(200).send(updatedTheme);
 }
 
-export async function deleteTheme(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  const deletedTheme = await deleteThemeInDB(request);
+export async function deleteTheme(request: FastifyRequest, reply: FastifyReply) {
+  await deleteThemeInDB(request);
   reply.code(200).send({
     success: true,
     message: "theme deleted successfully",
@@ -104,10 +92,7 @@ export async function deleteTheme(
 
 // This function is used only, when there is a change in web survey theme json structure,
 // to update theme json of all rows of webSurveyTheme table to the new Structure.
-export async function updateAllWebSurveyThemesJson(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function updateAllWebSurveyThemesJson(request: FastifyRequest, reply: FastifyReply) {
   try {
     // const allThemes = await updateAllWebSurveyThemesInDB(reply);
     reply.code(200).send({
@@ -121,11 +106,7 @@ export async function updateAllWebSurveyThemesJson(
   }
 }
 
-export function errorHandler(
-  error: any,
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export function errorHandler(error: any, request: FastifyRequest, reply: FastifyReply) {
   log.error(error);
   reply.status(500).send({ message: "Something went wrong" });
 }

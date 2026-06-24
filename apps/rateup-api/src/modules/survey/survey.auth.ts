@@ -59,11 +59,7 @@ export async function verifySurveyMaxCountRestriction(
     },
   });
 
-  if (
-    count >=
-    request.subscription.features[SubscriptionFeaturePathName.WebSurvey].count
-      .max
-  ) {
+  if (count >= request.subscription.features[SubscriptionFeaturePathName.WebSurvey].count.max) {
     await sendUsageLimitMailAlert(orgId);
     reply.code(403).send({
       message: "You have reached the maximum limit of surveys",
@@ -119,13 +115,11 @@ export async function verifySurveyMonthlyLimitRestriction(
 
   if (
     usage.monthlySurveyResponses >=
-    subscription.features[SubscriptionFeaturePathName.WebSurvey].count
-      .monthlyResponseLimit
+    subscription.features[SubscriptionFeaturePathName.WebSurvey].count.monthlyResponseLimit
   ) {
     await sendUsageLimitMailAlert(orgId);
     reply.code(403).send({
-      message:
-        "You have reached the maximum monthly limit of surveys responses.",
+      message: "You have reached the maximum monthly limit of surveys responses.",
       displayMessageInClient: true,
     });
   }

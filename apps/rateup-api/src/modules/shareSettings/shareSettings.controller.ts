@@ -1,12 +1,9 @@
-import {
-  saveShareSettings,
-  getShareSettings,
-} from "./shareSettings.service.js";
+import { saveShareSettings, getShareSettings } from "./shareSettings.service.js";
 import { uploadFileToS3, deleteFileFromS3 } from "./utils.js";
 
 const cloudFrontDomain = process.env.AWS_CLOUDFRONT_DOMAIN;
 
-const getSettings = async (req, res) => {
+const getSettings = async (req, _res) => {
   const { resourceName, id } = req.params;
   const { shareSettings } = await getShareSettings(resourceName, id, req);
   if (shareSettings?.logoFile)
@@ -14,17 +11,13 @@ const getSettings = async (req, res) => {
   return shareSettings;
 };
 
-const updateSettings = async (req, res) => {
+const updateSettings = async (req, _res) => {
   const { resourceName, id } = req.params;
   const settingsObj = { ...req.body };
 
   const logoFile = settingsObj.logoFile;
 
-  const { shareSettings: oldShareSettings } = await getShareSettings(
-    resourceName,
-    id,
-    req,
-  );
+  const { shareSettings: oldShareSettings } = await getShareSettings(resourceName, id, req);
   const oldLogoFile = oldShareSettings && oldShareSettings["logoFile"];
 
   if (typeof logoFile === "object" && logoFile !== "null") {

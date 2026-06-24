@@ -80,10 +80,7 @@ export async function updateLoyaltyEarningRuleHandler(
   reply: FastifyReply,
 ) {
   try {
-    const result = await updateLoyaltyEarningRule(
-      request.params.ruleId,
-      request.body,
-    );
+    const result = await updateLoyaltyEarningRule(request.params.ruleId, request.body);
     reply.code(200).send(result);
   } catch (e) {
     log.error(e);

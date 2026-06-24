@@ -1,9 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { createCommentRequestSchema } from "./ticket.schema.js";
-import {
-  createCommentHandler,
-  deleteCommentHandler,
-} from "./ticket.controller.js";
+import { createCommentHandler, deleteCommentHandler } from "./ticket.controller.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 import { SubscriptionFeaturePathName } from "../../types/enums.js";
@@ -14,10 +11,7 @@ import { boardRoutes } from "./ticketBoard/board.route.js";
 
 export async function ticketRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
-  server.addHook(
-    "preHandler",
-    getVerifySubscriptionHandler([SubscriptionFeaturePathName.Ticket]),
-  );
+  server.addHook("preHandler", getVerifySubscriptionHandler([SubscriptionFeaturePathName.Ticket]));
   server.addHook("preHandler", requireFeature(TeamFeature.tickets));
   server.register(boardRoutes, {
     prefix: "boards",

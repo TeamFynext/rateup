@@ -2,7 +2,7 @@ import prisma from "./prisma.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "./logger.js";
 import { getSubscription } from "../modules/subscription/subscription.service.js";
-import { SubscriptionFeaturePathName, UserRecipes } from "../types/enums.js";
+import { SubscriptionFeaturePathName } from "../types/enums.js";
 import dayjs from "dayjs";
 import { FreePlanSubscriptionFeatures } from "../modules/subscription/subscription.data.js";
 import { getNestedProperty } from "./misc/obj.utils.js";
@@ -80,11 +80,7 @@ export async function hasAccessOfTeamAdmin(teamId: string, userId: string) {
   return false;
 }
 
-export async function verifyRole(
-  request: FastifyRequest,
-  reply: FastifyReply,
-  role: Role,
-) {
+export async function verifyRole(request: FastifyRequest, reply: FastifyReply, role: Role) {
   try {
     if (request.user.role !== role) {
       reply.code(403).send({ message: "Not authorized" });
@@ -92,21 +88,13 @@ export async function verifyRole(
       return true;
     }
   } catch (err) {
-    log.fatal(
-      { err, user: request.user },
-      "Error verifying role\n%o\nrequest.user => %o",
-    );
+    log.fatal({ err, user: request.user }, "Error verifying role\n%o\nrequest.user => %o");
     reply.code(403).send({ message: "Not authorized" });
   }
 }
 
-export function getVerifySubscriptionHandler(
-  featurePathNames: Array<SubscriptionFeaturePathName>,
-) {
-  return async function verifySubscription(
-    request: FastifyRequest,
-    reply: FastifyReply,
-  ) {
+export function getVerifySubscriptionHandler(featurePathNames: Array<SubscriptionFeaturePathName>) {
+  return async function verifySubscription(request: FastifyRequest, reply: FastifyReply) {
     try {
       const subscription = await getSubscription(request.user.orgId);
 
@@ -144,9 +132,7 @@ export function getVerifySubscriptionHandler(
         return;
       }
       if (
-        featurePathNames.includes(
-          SubscriptionFeaturePathName.LoyaltyCustomer,
-        ) &&
+        featurePathNames.includes(SubscriptionFeaturePathName.LoyaltyCustomer) &&
         (request.body as any).source !== ContactGroupType.LOYALTY
       )
         return;
@@ -175,11 +161,7 @@ export function getVerifySubscriptionHandler(
   };
 }
 
-export function assertRootOrg(
-  request: FastifyRequest,
-  reply: FastifyReply,
-  done,
-) {
+export function assertRootOrg(request: FastifyRequest, reply: FastifyReply, done) {
   if (!request.user.orgId || request.user.orgId !== process.env.ROOT_ORG) {
     reply.code(403).send({ message: "Not authorized" });
   }

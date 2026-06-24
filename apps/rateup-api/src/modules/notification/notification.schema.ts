@@ -10,12 +10,8 @@ const notificationSettingSchema = z.object({
   waMessageClosedNotification: z.boolean().optional(),
 });
 
-export type NotificationIdParamSchema = z.infer<
-  typeof notificationIdParamSchema
->;
-export type NotificationSettingSchema = z.infer<
-  typeof notificationSettingSchema
->;
+export type NotificationIdParamSchema = z.infer<typeof notificationIdParamSchema>;
+export type NotificationSettingSchema = z.infer<typeof notificationSettingSchema>;
 
 // Auto-exported after fastify-zod migration
 export { notificationSettingSchema, notificationIdParamSchema };

@@ -27,13 +27,7 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.put("/add-default-lifecycle", updateDefaultLifecycleHandler);
   server.put("/migrate-tags", migrateTagsHandle);
   server.put("/backfill", backfillWithSQLHandler);
-  server.put(
-    "/migrate-wa-template-to-whatsapp-phone-id",
-    migrateWaTemplatePhoneIdsHandler,
-  );
+  server.put("/migrate-wa-template-to-whatsapp-phone-id", migrateWaTemplatePhoneIdsHandler);
   server.put("/sync-team-features", syncTeamFeaturesHandler);
-  server.put(
-    "/migrate-loyalty-tier-priority",
-    migrateLoyaltyTierPriorityHandler,
-  );
+  server.put("/migrate-loyalty-tier-priority", migrateLoyaltyTierPriorityHandler);
 }

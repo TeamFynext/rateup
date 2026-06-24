@@ -21,12 +21,7 @@ export async function callWaAmeliaApi(
     validateStatus: () => true,
     ...otherConfig,
   };
-  log.trace(
-    "Calling amelia API with config: %s %s \n%o",
-    config.method,
-    config.url,
-    config.data,
-  );
+  log.trace("Calling amelia API with config: %s %s \n%o", config.method, config.url, config.data);
   const res = await axios(config);
   return res?.data;
 }

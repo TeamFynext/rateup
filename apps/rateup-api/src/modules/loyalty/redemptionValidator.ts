@@ -69,10 +69,7 @@ export class RedemptionValidator {
     const rules = reward.redemptionRules as LoyaltyRedemptionRules;
 
     // 1. Check points balance (skip for assigned type rewards)
-    if (
-      reward.rewardType !== "assigned" &&
-      customer.currentPoints < reward.pointsCost
-    ) {
+    if (reward.rewardType !== "assigned" && customer.currentPoints < reward.pointsCost) {
       violations.push(
         `Not enough points. Need ${reward.pointsCost}, have ${customer.currentPoints}`,
       );
@@ -145,8 +142,8 @@ export class RedemptionValidator {
    */
   private async validateTimeRestrictions(
     restrictions: any,
-    customerId: string,
-    rewardId: string,
+    _customerId: string,
+    _rewardId: string,
   ): Promise<string[]> {
     const violations: string[] = [];
     const now = new Date();
@@ -163,17 +160,12 @@ export class RedemptionValidator {
     if (restrictions.allowed_days && restrictions.allowed_days.length > 0) {
       const dayOfWeek = this.getDayOfWeek(now);
       if (!restrictions.allowed_days.includes(dayOfWeek)) {
-        violations.push(
-          `Only available on: ${restrictions.allowed_days.join(", ")}`,
-        );
+        violations.push(`Only available on: ${restrictions.allowed_days.join(", ")}`);
       }
     }
 
     // Check time ranges
-    if (
-      restrictions.allowed_time_ranges &&
-      restrictions.allowed_time_ranges.length > 0
-    ) {
+    if (restrictions.allowed_time_ranges && restrictions.allowed_time_ranges.length > 0) {
       const currentTime = this.getTimeString(now);
       const inValidRange = restrictions.allowed_time_ranges.some(
         (range: { start: string; end: string }) =>
@@ -326,8 +318,7 @@ export class RedemptionValidator {
 
     if (lastRedemption?.createdAt) {
       const hoursSince =
-        (Date.now() - new Date(lastRedemption.createdAt).getTime()) /
-        (1000 * 60 * 60);
+        (Date.now() - new Date(lastRedemption.createdAt).getTime()) / (1000 * 60 * 60);
       if (hoursSince < periodHours) {
         return `Please wait ${Math.ceil(periodHours - hoursSince)} hours`;
       }
@@ -339,14 +330,8 @@ export class RedemptionValidator {
   /**
    * Validate spend requirements
    */
-  private validateSpendRequirements(
-    requirements: any,
-    purchaseAmount: number,
-  ): string | null {
-    if (
-      requirements.minimum_spend &&
-      purchaseAmount < requirements.minimum_spend
-    ) {
+  private validateSpendRequirements(requirements: any, purchaseAmount: number): string | null {
+    if (requirements.minimum_spend && purchaseAmount < requirements.minimum_spend) {
       return `Minimum spend of ${requirements.minimum_spend} required`;
     }
     return null;
@@ -359,11 +344,7 @@ export class RedemptionValidator {
     restrictions: any,
     customerTierId: string | null,
   ): string | null {
-    if (
-      restrictions.allowed_tiers &&
-      restrictions.allowed_tiers.length > 0 &&
-      customerTierId
-    ) {
+    if (restrictions.allowed_tiers && restrictions.allowed_tiers.length > 0 && customerTierId) {
       if (!restrictions.allowed_tiers.includes(customerTierId)) {
         return "Your tier does not have access to this reward";
       }
@@ -375,10 +356,7 @@ export class RedemptionValidator {
    * Validate stock availability
    */
   private validateStock(reward: any): string | null {
-    if (
-      reward.stockQuantity !== null &&
-      reward.stockRedeemed >= reward.stockQuantity
-    ) {
+    if (reward.stockQuantity !== null && reward.stockRedeemed >= reward.stockQuantity) {
       return "This reward is out of stock";
     }
     return null;
@@ -420,7 +398,6 @@ export class RedemptionValidator {
 export const redemptionValidator = new RedemptionValidator();
 
 // Export convenience functions for easier imports
-export const validateRedemption =
-  redemptionValidator.validateRedemption.bind(redemptionValidator);
+export const validateRedemption = redemptionValidator.validateRedemption.bind(redemptionValidator);
 export const generateRedemptionCode =
   redemptionValidator.generateRedemptionCode.bind(redemptionValidator);

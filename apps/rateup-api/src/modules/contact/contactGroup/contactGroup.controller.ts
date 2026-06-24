@@ -7,7 +7,6 @@ import {
   ByContactGroupIdParams,
   contactGroupByContactId,
   ContactGroupByContactIdBody,
-  ContactGroupType,
   CreateContactGroupInput,
   DeleteManyGroupsInput,
   GetContactGroupsQuery,
@@ -23,7 +22,6 @@ import {
   deleteContactGroup,
   getContactGroupsByTeamId,
   getContactGroupsByOrgId,
-  getContactsByContactGroupId,
   removeContactsFromGroup,
   addExistingContactsToMultipleGroups,
   deleteManyContactGroups,
@@ -34,10 +32,7 @@ import {
 import { verifyRole } from "../../../utils/auth.js";
 import { Prisma, Role } from "../../../../generated/prisma/client.js";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema.js";
-import {
-  createMultipleContacts,
-  importCSVContacts,
-} from "../contact.service.js";
+import { createMultipleContacts, importCSVContacts } from "../contact.service.js";
 import { PaginationQuery } from "../contact.schema.js";
 
 export async function getContactGroupsHandler(
@@ -58,10 +53,7 @@ export async function getContactGroupsHandler(
     } else {
       // get all contact groups for all teams
       if (verifyRole(request, reply, Role.SUPER_ADMIN)) {
-        res = await getContactGroupsByOrgId(
-          request.user.orgId,
-          request.query.type,
-        );
+        res = await getContactGroupsByOrgId(request.user.orgId, request.query.type);
       }
     }
     reply.code(200).send(res);
@@ -102,8 +94,7 @@ export async function createContactGroupHandler(
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         reply.code(500).send({
-          error:
-            "Contact group with this name already exist in the provided team",
+          error: "Contact group with this name already exist in the provided team",
         });
       }
     }
@@ -143,11 +134,7 @@ export async function addNewContactsToGroupHandler(
     const { orgId } = request.user;
     let contactGroup;
     await createMultipleContacts(request.body, orgId);
-    contactGroup = await addNewContactsToGroup(
-      request.params.contactGroupId,
-      request.body,
-      orgId,
-    );
+    contactGroup = await addNewContactsToGroup(request.params.contactGroupId, request.body, orgId);
     reply.code(200).send(contactGroup);
   } catch (error) {
     log.error(error);
@@ -169,10 +156,7 @@ export async function updateContactGroupHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contactGroup = await updateContactGroup(
-      request.params.contactGroupId,
-      request.body,
-    );
+    const contactGroup = await updateContactGroup(request.params.contactGroupId, request.body);
     reply.code(200).send(contactGroup);
   } catch (error) {
     log.error(error);
@@ -185,9 +169,7 @@ export async function deleteContactGroupHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contactGroup = await deleteContactGroup(
-      request.params.contactGroupId,
-    );
+    const contactGroup = await deleteContactGroup(request.params.contactGroupId);
     reply.code(200).send(contactGroup);
   } catch (error) {
     log.error(error);
@@ -203,10 +185,7 @@ export async function removeContactsFromGroupHandler(
   reply: FastifyReply,
 ) {
   try {
-    const contacts = await removeContactsFromGroup(
-      request.params.contactGroupId,
-      request.body,
-    );
+    const contacts = await removeContactsFromGroup(request.params.contactGroupId, request.body);
     reply.code(200).send(contacts);
   } catch (error) {
     log.error(error);
@@ -255,9 +234,7 @@ export async function addNewContactsfromCSVToGroupHandler(
     const { orgId } = request.user;
     const contactGroupId = request.params.contactGroupId;
     if (!dataExtractFileMimeTypes.includes(file?.mimetype))
-      return reply
-        .code(400)
-        .send({ error: "This file type is not permitted." });
+      return reply.code(400).send({ error: "This file type is not permitted." });
     const tags = [];
     let update = false;
     for (const key in file?.fields) {
@@ -267,13 +244,7 @@ export async function addNewContactsfromCSVToGroupHandler(
         update = file?.fields?.[key]?.["value"] === "true";
       }
     }
-    const res: any = await importCSVContacts(
-      file,
-      orgId,
-      tags,
-      update,
-      contactGroupId,
-    );
+    const res: any = await importCSVContacts(file, orgId, tags, update, contactGroupId);
     if (res.status === "error") {
       return reply.code(400).send({ error: "VALIDATION_ERR", data: res.data });
     }

@@ -1,4 +1,4 @@
-import z, { nativeEnum } from "zod";
+import z from "zod";
 
 export const catalogProductCore = z.object({
   retailer_id: z.string(),
@@ -26,16 +26,9 @@ export const catalogProductCore = z.object({
       }),
     )
     .optional(),
-  availability: z.enum([
-    "in stock",
-    "out of stock",
-    "available for order",
-    "discontinued",
-  ]),
+  availability: z.enum(["in stock", "out of stock", "available for order", "discontinued"]),
   brand: z.string(),
-  age_group: z
-    .enum(["newborn", "infant", "toddler", "kids", "adult"])
-    .optional(),
+  age_group: z.enum(["newborn", "infant", "toddler", "kids", "adult"]).optional(),
   color: z.string().max(100).optional(),
   gender: z.enum(["male", "female", "unisex"]).optional(),
   pattern: z.string().max(100).optional(),
@@ -111,65 +104,54 @@ export const catalogProductResponseCoreSchema = z.object({
   description: z.string().max(5000),
 });
 
-export const catalogProductResponseSchema =
-  catalogProductResponseCoreSchema.extend({
-    custom_data: z.record(z.string(), z.string()).optional(),
-    additional_image_urls: z.array(z.string().url()).optional(),
-    additional_variant_attributes: z.record(z.string(), z.string()).optional(),
-    age_group: z
-      .enum([
-        "adult",
-        "all ages",
-        "infant",
-        "kids",
-        "newborn",
-        "teen",
-        "toddler",
-      ])
-      .optional(),
+export const catalogProductResponseSchema = catalogProductResponseCoreSchema.extend({
+  custom_data: z.record(z.string(), z.string()).optional(),
+  additional_image_urls: z.array(z.string().url()).optional(),
+  additional_variant_attributes: z.record(z.string(), z.string()).optional(),
+  age_group: z
+    .enum(["adult", "all ages", "infant", "kids", "newborn", "teen", "toddler"])
+    .optional(),
 
-    category: z.string().optional(),
-    category_specific_fields: z.record(z.string(), z.any()).optional(),
-    color: z.string().optional(),
+  category: z.string().optional(),
+  category_specific_fields: z.record(z.string(), z.any()).optional(),
+  color: z.string().optional(),
 
-    currency: z.string().optional(),
-    custom_label_0: z.string().max(100).optional(),
-    custom_label_1: z.string().max(100).optional(),
-    custom_label_2: z.string().max(100).optional(),
-    custom_label_3: z.string().max(100).optional(),
-    custom_label_4: z.string().max(100).optional(),
-    custom_number_0: z.number().int().optional(),
-    custom_number_1: z.number().int().optional(),
-    custom_number_2: z.number().int().optional(),
-    custom_number_3: z.number().int().optional(),
-    custom_number_4: z.number().int().optional(),
+  currency: z.string().optional(),
+  custom_label_0: z.string().max(100).optional(),
+  custom_label_1: z.string().max(100).optional(),
+  custom_label_2: z.string().max(100).optional(),
+  custom_label_3: z.string().max(100).optional(),
+  custom_label_4: z.string().max(100).optional(),
+  custom_number_0: z.number().int().optional(),
+  custom_number_1: z.number().int().optional(),
+  custom_number_2: z.number().int().optional(),
+  custom_number_3: z.number().int().optional(),
+  custom_number_4: z.number().int().optional(),
 
-    expiration_date: z.string().optional(),
-    fb_product_category: z.string().optional(),
-    gender: z.enum(["female", "male", "unisex"]).optional(),
-    gtin: z.string().optional(),
-    importer_address: z.record(z.string(), z.any()).optional(),
-    importer_name: z.string().optional(),
-    inventory: z.number().int().optional(),
-    manufacturer_info: z.string().optional(),
-    manufacturer_part_number: z.string().optional(),
-    marked_for_product_launch: z
-      .enum(["default", "marked", "not_marked"])
-      .optional(),
-    material: z.string().max(200).optional(),
-    mobile_link: z.string().url().optional(),
-    ordering_index: z.number().int().optional(),
-    origin_country: z.string().optional(),
-    pattern: z.string().optional(),
-    product_type: z.string().max(750).optional(),
-    retailer_product_group_id: z.string().optional(),
+  expiration_date: z.string().optional(),
+  fb_product_category: z.string().optional(),
+  gender: z.enum(["female", "male", "unisex"]).optional(),
+  gtin: z.string().optional(),
+  importer_address: z.record(z.string(), z.any()).optional(),
+  importer_name: z.string().optional(),
+  inventory: z.number().int().optional(),
+  manufacturer_info: z.string().optional(),
+  manufacturer_part_number: z.string().optional(),
+  marked_for_product_launch: z.enum(["default", "marked", "not_marked"]).optional(),
+  material: z.string().max(200).optional(),
+  mobile_link: z.string().url().optional(),
+  ordering_index: z.number().int().optional(),
+  origin_country: z.string().optional(),
+  pattern: z.string().optional(),
+  product_type: z.string().max(750).optional(),
+  retailer_product_group_id: z.string().optional(),
 
-    sale_price_end_date: z.string().optional(),
-    sale_price_start_date: z.string().optional(),
-    short_description: z.string().optional(),
-    size: z.string().optional(),
-    start_date: z.string().optional(),
-  });
+  sale_price_end_date: z.string().optional(),
+  sale_price_start_date: z.string().optional(),
+  short_description: z.string().optional(),
+  size: z.string().optional(),
+  start_date: z.string().optional(),
+});
 
 export enum CatalogProductTypes {
   PRODUCT_ITEM = "PRODUCT_ITEM",
@@ -234,9 +216,4 @@ export type CatalogResponseInput = z.infer<typeof catalogProductResponseSchema>;
 export type CatalogProductIdsSchema = z.infer<typeof catalogProductIdsSchema>;
 
 // Auto-exported after fastify-zod migration
-export {
-  catalogItemCore,
-  catalogItemBatch,
-  catalogItemQueryFilter,
-  catalogProductIdsSchema,
-};
+export { catalogItemCore, catalogItemBatch, catalogItemQueryFilter, catalogProductIdsSchema };

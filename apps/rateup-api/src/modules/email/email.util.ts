@@ -7,11 +7,7 @@ export function getEmailBodyTemplate(purpose, data) {
     case "SurveyEmailOTPQuestion":
       return createEmailBodyOTPGeneration(data);
     case "GeneralTemplate":
-      return createGeneralEmailBodyTemaple(
-        data?.body,
-        data?.buttonLink,
-        data?.title,
-      );
+      return createGeneralEmailBodyTemaple(data?.body, data?.buttonLink, data?.title);
   }
 }
 
@@ -21,11 +17,7 @@ export function generateOTP(length) {
   return String(randomNumber).padStart(length, "0");
 }
 
-export function createGeneralEmailBodyTemaple(
-  body: string,
-  buttonLink: string,
-  title?: string,
-) {
+export function createGeneralEmailBodyTemaple(body: string, buttonLink: string, title?: string) {
   return `<!DOCTYPE html>
 <html>
 <head>
