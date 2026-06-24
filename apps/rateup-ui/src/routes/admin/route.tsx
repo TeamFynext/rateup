@@ -48,7 +48,7 @@ function Page() {
       <AppSidebar data={data} />
       <SidebarInset className=" overflow-hidden">
         <NavHeader pathname={pathname} />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-4 px-4 pt-0">
           <Outlet />
         </div>
       </SidebarInset>

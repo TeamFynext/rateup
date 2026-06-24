@@ -39,12 +39,15 @@ const SHOPIFY_METHODS = [
     label: "Shopify Checkout URL",
     desc: "Customer receives a Shopify cart link to complete address, delivery, and payment directly on your store.",
     logos: [
-      { src: getFileUrlFromKey("payment-logos/visa.svg"), alt: "Visa" },
+      { src: getFileUrlFromKey("/images/icons/visa.svg", false), alt: "Visa" },
       {
-        src: getFileUrlFromKey("payment-logos/mastercard.svg"),
+        src: getFileUrlFromKey("/images/icons/mastercard.svg", false),
         alt: "Mastercard",
       },
-      { src: getFileUrlFromKey("payment-logos/rupay.svg"), alt: "RuPay" },
+      {
+        src: getFileUrlFromKey("/images/icons/rupay.png", false),
+        alt: "RuPay",
+      },
     ],
     badges: [],
     collectAddressApplicable: false,
@@ -58,9 +61,12 @@ const SHOPIFY_METHODS = [
     label: "WhatsApp Native Payment",
     desc: "Customer submits address and delivery inside WhatsApp, then pays directly via WhatsApp Pay. Orders sync to Shopify.",
     logos: [
-      { src: getFileUrlFromKey("payment-logos/gpay.svg"), alt: "GPay" },
-      { src: getFileUrlFromKey("payment-logos/phonepe.svg"), alt: "PhonePe" },
-      { src: getFileUrlFromKey("payment-logos/upi.svg"), alt: "UPI" },
+      { src: getFileUrlFromKey("/images/icons/gpay.png", false), alt: "GPay" },
+      {
+        src: getFileUrlFromKey("/images/icons/phonepe.svg", false),
+        alt: "PhonePe",
+      },
+      { src: getFileUrlFromKey("/images/icons/upi.svg", false), alt: "UPI" },
     ],
     badges: [],
     collectAddressApplicable: true,
@@ -91,9 +97,12 @@ const STANDARD_METHODS = [
     label: "UPI Payment Link",
     desc: "Customer receives an instant UPI payment link for the total order amount.",
     logos: [
-      { src: getFileUrlFromKey("payment-logos/gpay.svg"), alt: "GPay" },
-      { src: getFileUrlFromKey("payment-logos/phonepe.svg"), alt: "PhonePe" },
-      { src: getFileUrlFromKey("payment-logos/upi.svg"), alt: "UPI" },
+      { src: getFileUrlFromKey("/images/icons/gpay.png", false), alt: "GPay" },
+      {
+        src: getFileUrlFromKey("/images/icons/phonepe.svg", false),
+        alt: "PhonePe",
+      },
+      { src: getFileUrlFromKey("/images/icons/upi.svg", false), alt: "UPI" },
     ],
     badges: [],
     fields: [
@@ -163,9 +172,12 @@ const STANDARD_METHODS = [
     label: "WhatsApp Native Payment",
     desc: "Customer completes checkout and pays directly inside WhatsApp via WhatsApp Pay.",
     logos: [
-      { src: getFileUrlFromKey("payment-logos/gpay.svg"), alt: "GPay" },
-      { src: getFileUrlFromKey("payment-logos/phonepe.svg"), alt: "PhonePe" },
-      { src: getFileUrlFromKey("payment-logos/upi.svg"), alt: "UPI" },
+      { src: getFileUrlFromKey("/images/icons/gpay.png", false), alt: "GPay" },
+      {
+        src: getFileUrlFromKey("/images/icons/phonepe.svg", false),
+        alt: "PhonePe",
+      },
+      { src: getFileUrlFromKey("/images/icons/upi.svg", false), alt: "UPI" },
     ],
     badges: [],
     fields: [],
@@ -341,15 +353,15 @@ export default function PaymentTab({
     });
   };
 
-  if (isLoading || !catalogId) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 rounded-xl bg-muted/30 animate-pulse" />
-        ))}
-      </div>
-    );
-  }
+  // if (isLoading || !catalogId) {
+  //   return (
+  //     <div className="space-y-4">
+  //       {[1, 2, 3].map((i) => (
+  //         <div key={i} className="h-24 rounded-xl bg-muted/30 animate-pulse" />
+  //       ))}
+  //     </div>
+  //   );
+  // }
 
   const hasApprovedFlow = settings?.addressFlowStatus === "approved";
   const methods = storeType === "shopify" ? SHOPIFY_METHODS : STANDARD_METHODS;

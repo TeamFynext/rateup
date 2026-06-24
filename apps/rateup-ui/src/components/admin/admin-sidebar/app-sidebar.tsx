@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { IconChevronRight, IconHome } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import {
   BarChart3,
@@ -111,7 +112,7 @@ export function AppSidebar({
   ...props
 }: Readonly<AppSidebarProps>) {
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar collapsible={"icon"} {...props} className="text-white">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -136,7 +137,12 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild variant="outline">
-              <Link to="/dashboard">Go to Dashboard</Link>
+              <Link to="/dashboard" className="text-foreground justify-between">
+                <div className="group-data-[collapsible=icon]:hidden">
+                  Go to Dashboard
+                </div>
+                <IconHome />
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -76,6 +76,27 @@ export const getFileUrlFromKey = (
     : `${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}${key}`;
   return imgUrl;
 };
+const joinUrl = (base: string, path: string) =>
+  `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+
+type AssetProvider = "s3" | "web" | "unsplash";
+
+export const resolveAssetUrl = (
+  key?: string,
+  provider: AssetProvider = "s3",
+): string => {
+  if (!key) return "";
+
+  if (key.startsWith("http")) return key;
+
+  const providers = {
+    s3: import.meta.env.VITE_AWS_CLOUDFRONT_URL,
+    web: import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL,
+    unsplash: import.meta.env.VITE_UNSPLASH_URL,
+  };
+
+  return joinUrl(providers[provider], key);
+};
 
 export const getFileNameFromKey = (key: string) => {
   return key.split("-")[key.split("-").length - 1];
@@ -87,7 +108,7 @@ export const dataURItoBlob = (dataURI) => {
   const ab = new ArrayBuffer(byteString.length);
   const ia = new Uint8Array(ab);
   for (let i = 0; i < byteString.length; i++) {
-    ia[i] = byteString.charCodeAt(i);
+    ia[i] = byteString.codePointAt(i);
   }
   return new Blob([ab], { type: mimeString });
 };
