@@ -1,13 +1,5 @@
-"use client";
-
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  AlertTriangle,
-  Database,
-  RefreshCw,
-  Settings,
-  Shield,
-} from "lucide-react";
+import { AlertTriangle, Database, RefreshCw, Settings, Shield } from "lucide-react";
 
 import {
   useMigrateLoyaltyTierPriority,
@@ -42,9 +34,7 @@ function UpdateAllThemes() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
             <Settings className="h-5 w-5 text-primary" />
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Update Center
-            </h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Update Center</h1>
           </div>
           {isProduction && (
             <Badge variant="destructive" className="text-xs">
@@ -61,8 +51,8 @@ function UpdateAllThemes() {
       <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20">
         <AlertTriangle className="h-4 w-4 text-red-600" />
         <AlertDescription className="text-red-800 dark:text-red-200">
-          <strong>Warning:</strong> These operations can modify system data.
-          Ensure you have proper backups before proceeding.
+          <strong>Warning:</strong> These operations can modify system data. Ensure you have proper
+          backups before proceeding.
         </AlertDescription>
       </Alert>
 
@@ -83,8 +73,7 @@ function UpdateAllThemes() {
                     Migrate WA Template to WhatsApp Phone ID
                   </CardTitle>
                   <CardDescription className="mt-1">
-                    Runs the PUT migration for
-                    migrate-wa-template-to-whatsapp-phone-id
+                    Runs the PUT migration for migrate-wa-template-to-whatsapp-phone-id
                   </CardDescription>
                 </div>
               </div>
@@ -150,12 +139,10 @@ function UpdateAllThemes() {
                   <Database className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="flex-1">
-                  <CardTitle className="text-lg">
-                    Migrate Loyalty Tier Priority
-                  </CardTitle>
+                  <CardTitle className="text-lg">Migrate Loyalty Tier Priority</CardTitle>
                   <CardDescription className="mt-1">
-                    Reassigns tier priorities in ascending order (0, 1, 2…)
-                    based on threshold for all loyalty programs
+                    Reassigns tier priorities in ascending order (0, 1, 2…) based on threshold for
+                    all loyalty programs
                   </CardDescription>
                 </div>
               </div>
@@ -203,9 +190,7 @@ function UpdateAllThemes() {
             </div>
             <div>
               <strong>Restrictions:</strong>{" "}
-              {isProduction
-                ? "Limited operations available"
-                : "All operations available"}
+              {isProduction ? "Limited operations available" : "All operations available"}
             </div>
           </div>
         </CardContent>

@@ -40,7 +40,7 @@ export const useGetLoyaltyCustomerById = (customerId) => {
   });
 };
 
-const useGetLoyaltyCustomerByContactId = (contactId: string) => {
+const _useGetLoyaltyCustomerByContactId = (contactId: string) => {
   return useQuery({
     queryFn: () => getLoyaltyCustomerByContactId(contactId),
     queryKey: ["loyaltyCustomerByContact", contactId],
@@ -48,12 +48,7 @@ const useGetLoyaltyCustomerByContactId = (contactId: string) => {
   });
 };
 
-export const useLoyaltyCustomers = (
-  pagination,
-  searchData?,
-  sorting?,
-  columnFilters?,
-) => {
+export const useLoyaltyCustomers = (pagination, searchData?, sorting?, columnFilters?) => {
   const sort = sorting ?? CONTACT_SORT;
   const filters = columnFilters ?? [];
   const search = searchData ?? "";
@@ -63,7 +58,7 @@ export const useLoyaltyCustomers = (
   });
 };
 
-const useDeleteLoyaltyCustomerMutation = () => {
+const _useDeleteLoyaltyCustomerMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: deleteLoyaltyCustomer,
@@ -79,7 +74,7 @@ const useDeleteLoyaltyCustomerMutation = () => {
   });
 };
 
-const useLCAction = () => {
+const _useLCAction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createLCAction,
@@ -94,7 +89,7 @@ const useLCAction = () => {
   });
 };
 
-const useImportCSVCustomerMutation = () => {
+const _useImportCSVCustomerMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: importCustomers,
@@ -122,10 +117,7 @@ export const useExportCustomersMutation = () => {
       const link = document.createElement("a");
       link.href = url;
       const extension = variables === "csv" ? "csv" : "xlsx";
-      link.setAttribute(
-        "download",
-        `customers-${new Date().toISOString()}.${extension}`,
-      );
+      link.setAttribute("download", `customers-${new Date().toISOString()}.${extension}`);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -137,7 +129,7 @@ export const useExportCustomersMutation = () => {
   });
 };
 
-const useUpdateLoyaltyCustomerMutation = () => {
+const _useUpdateLoyaltyCustomerMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -194,8 +186,7 @@ export const useAssignRewardMutation = (onSuccess?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: AssignRewardRequest) =>
-      assignRewardToCustomer(payload),
+    mutationFn: (payload: AssignRewardRequest) => assignRewardToCustomer(payload),
     onSuccess: (payload) => {
       queryClient.invalidateQueries({
         queryKey: ["loyalty-customer", payload?.data?.customerId],
@@ -208,9 +199,7 @@ export const useAssignRewardMutation = (onSuccess?: () => void) => {
     },
     onError: (error) => {
       console.error("Error assigning reward:", error);
-      toast.error(
-        error?.message || error?.message || "Failed to assign reward",
-      );
+      toast.error(error?.message || "Failed to assign reward");
     },
   });
 };

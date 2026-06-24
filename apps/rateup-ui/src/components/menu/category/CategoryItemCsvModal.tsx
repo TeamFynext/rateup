@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCreateMenuItemUsingCsvMutation } from "@/backend/menu/item/mItem.query";
@@ -23,13 +20,10 @@ import { DropZoneArea } from "./dropZone/DropZone.tsx";
 
 const CategoryItemCsvModal = ({ opened, close, menuId }) => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const createMenuItemUsingCsv = useCreateMenuItemUsingCsvMutation(
-    menuId,
-    () => {
-      close();
-      setCsvFile(null);
-    },
-  );
+  const createMenuItemUsingCsv = useCreateMenuItemUsingCsvMutation(menuId, () => {
+    close();
+    setCsvFile(null);
+  });
   const { t: translations } = useTranslation();
   const handleCsvFileUpload = () => {
     if (!csvFile) return;

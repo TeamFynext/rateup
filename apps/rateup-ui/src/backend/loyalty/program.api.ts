@@ -89,19 +89,14 @@ export const updateLoyaltyProgram = async (
   programId: string,
   programData: LoyaltyProgramUpdateInput,
 ): Promise<LoyaltyProgram> => {
-  const response = await axiosClient.put(
-    `/loyalty/program/${programId}`,
-    programData,
-  );
+  const response = await axiosClient.put(`/loyalty/program/${programId}`, programData);
   return response.data;
 };
 
 /**
  * Reset all points in a loyalty program
  */
-export const resetLoyaltyProgramPoints = async (
-  programId: string,
-): Promise<void> => {
+export const resetLoyaltyProgramPoints = async (programId: string): Promise<void> => {
   await axiosClient.post(`/loyalty/program/${programId}/reset-points`);
 };
 

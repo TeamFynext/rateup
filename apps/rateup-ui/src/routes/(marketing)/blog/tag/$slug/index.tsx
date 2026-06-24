@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
-import { getPosts } from "@/lib/posts.ts";
 import BlogLayout from "@/components/blog/Layout.tsx";
+import { getPosts } from "@/lib/posts.ts";
 
 import PostGrid from "../../../../../components/(marketing)/blog/post-grid.tsx";
 

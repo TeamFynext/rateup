@@ -1,5 +1,3 @@
-"use client";
-
 import { Plus, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -18,14 +16,10 @@ export function SurveyHeader({
   filterParam,
   setFilterParam,
   openCreateSurvey,
-  openMergeSurvey,
   onSortChange,
   sortOption,
-  surveyCount,
-  surveyType,
   setSearchQuery,
   searchQuery,
-  refetch,
 }) {
   const { user } = useUser();
   const { t: translations } = useTranslation();
@@ -35,10 +29,7 @@ export function SurveyHeader({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         {/* Left Section (Create button) */}
         {user?.role !== UserRole.MEMBER && (
-          <Button
-            onClick={openCreateSurvey}
-            className="bg-primary shadow-sm h-9 w-full sm:w-auto"
-          >
+          <Button onClick={openCreateSurvey} className="bg-primary shadow-sm h-9 w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             {translations("Create Survey")}
           </Button>
@@ -56,16 +47,10 @@ export function SurveyHeader({
 
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Status Filter */}
-            <StatusFilterMenu
-              filterParam={filterParam}
-              setFilterParam={setFilterParam}
-            />
+            <StatusFilterMenu filterParam={filterParam} setFilterParam={setFilterParam} />
 
             {/* Sorting */}
-            <SortDropdown
-              onSortChange={onSortChange}
-              defaultSortOption={sortOption}
-            />
+            <SortDropdown onSortChange={onSortChange} defaultSortOption={sortOption} />
           </div>
 
           {/* Search Input */}

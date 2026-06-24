@@ -1,15 +1,11 @@
-import { useEffect, useRef } from "react";
-
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal";
 
 import { ArrowRight, IgIcon, MsgrIcon, StarIcon, WaIcon } from "./icons";
-import style from "./omnichannel.module.css";
 
-interface Props {
-  onAccess: () => void;
-}
+import style from "./omnichannel.module.css";
 
 const agentReplies = [
   "Hi Sarah! Let me look up order #8823 for you right now.",
@@ -105,7 +101,7 @@ function ChipBadge({ ch }: { ch: string }) {
   );
 }
 
-export default function Hero({ onAccess }: Props) {
+export default function Hero() {
   const navigate = useNavigate();
   const msgsRef = useRef<HTMLDivElement>(null);
   const typingRef = useRef<HTMLDivElement>(null);
@@ -171,10 +167,7 @@ export default function Hero({ onAccess }: Props) {
         <div style="position:absolute;top:12px;right:9px;width:7px;height:7px;border-radius:50%;background:#4FC3FF;box-shadow:0 0 7px rgba(79,195,255,0.8);"></div>`;
       el.style.position = "relative";
       const active = clistEl.querySelector(".rp-ci-on");
-      clistEl.insertBefore(
-        el,
-        active ? active.nextSibling : clistEl.firstChild,
-      );
+      clistEl.insertBefore(el, active ? active.nextSibling : clistEl.firstChild);
       const all = clistEl.querySelectorAll('[class*="rp-"]');
       if (all.length > 7) all[all.length - 1].remove();
     };
@@ -217,11 +210,7 @@ export default function Hero({ onAccess }: Props) {
   }, []);
 
   return (
-    <header
-      id="top"
-      className="relative overflow-hidden"
-      style={{ padding: "72px 0 80px" }}
-    >
+    <header id="top" className="relative overflow-hidden" style={{ padding: "72px 0 80px" }}>
       {/* bg glows */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -281,9 +270,8 @@ export default function Hero({ onAccess }: Props) {
               className="text-white/75 leading-[1.68] mb-8 max-w-[480px]"
               style={{ fontSize: "16.5px" }}
             >
-              WhatsApp. Instagram. Messenger. All your customer messages flow
-              into one unified workspace — so your team stops juggling tabs and
-              starts building relationships.
+              WhatsApp. Instagram. Messenger. All your customer messages flow into one unified
+              workspace — so your team stops juggling tabs and starts building relationships.
             </p>
 
             <div className="flex gap-3.5 flex-wrap mb-9">
@@ -355,16 +343,12 @@ export default function Hero({ onAccess }: Props) {
           </div>
 
           {/* RIGHT: inbox mockup */}
-          <div
-            className="reveal in"
-            style={{ "--d": "1" } as React.CSSProperties}
-          >
+          <div className="reveal in" style={{ "--d": "1" } as React.CSSProperties}>
             <div className="relative flex justify-center">
               <div
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] rounded-full pointer-events-none"
                 style={{
-                  background:
-                    "radial-gradient(circle,rgba(47,163,255,0.20),transparent 70%)",
+                  background: "radial-gradient(circle,rgba(47,163,255,0.20),transparent 70%)",
                 }}
               />
               <div
@@ -374,8 +358,7 @@ export default function Hero({ onAccess }: Props) {
                   height: "360px",
                   background: "#fff",
                   border: "1px solid rgba(0,0,0,0.07)",
-                  boxShadow:
-                    "0 16px 48px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.05)",
+                  boxShadow: "0 16px 48px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.05)",
                 }}
               >
                 {/* Icon Rail */}
@@ -623,9 +606,7 @@ export default function Hero({ onAccess }: Props) {
                             className="flex items-center gap-1 px-2.5 py-[3px] text-[10px] text-gray-500"
                           >
                             <span className="flex-1">{label}</span>
-                            <span className="text-[9px] text-gray-400">
-                              {n}
-                            </span>
+                            <span className="text-[9px] text-gray-400">{n}</span>
                           </div>
                         );
                       })}
@@ -691,9 +672,7 @@ export default function Hero({ onAccess }: Props) {
                           style={{
                             borderColor: "#F3F4F6",
                             background: active ? "#EFF6FF" : undefined,
-                            borderLeft: active
-                              ? "3px solid #2563EB"
-                              : undefined,
+                            borderLeft: active ? "3px solid #2563EB" : undefined,
                           }}
                         >
                           <div className="relative flex-shrink-0">
@@ -717,9 +696,7 @@ export default function Hero({ onAccess }: Props) {
                                 {time}
                               </span>
                             </div>
-                            <div className="text-[9.5px] text-gray-500 truncate mt-0.5">
-                              {prev}
-                            </div>
+                            <div className="text-[9.5px] text-gray-500 truncate mt-0.5">{prev}</div>
                             <div className="flex gap-1 mt-[3px]">
                               <ChipBadge ch={ch} />
                             </div>
@@ -750,12 +727,8 @@ export default function Hero({ onAccess }: Props) {
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-[11px] font-bold text-gray-900">
-                            Sarah Collins
-                          </div>
-                          <div className="text-[9px] text-green-500 font-medium">
-                            ● Online
-                          </div>
+                          <div className="text-[11px] font-bold text-gray-900">Sarah Collins</div>
+                          <div className="text-[9px] text-green-500 font-medium">● Online</div>
                         </div>
                         <span className="text-[8px] font-bold tracking-[0.04em] text-gray-500 border border-gray-300 rounded px-1.5 py-[3px] bg-white whitespace-nowrap">
                           ATTRIBUTES
@@ -782,9 +755,8 @@ export default function Hero({ onAccess }: Props) {
                             border: "1px solid rgba(37,211,102,0.14)",
                           }}
                         >
-                          Hi! I placed an order yesterday but haven't received a
-                          confirmation email yet — order #8823. Could you help
-                          me track it?
+                          Hi! I placed an order yesterday but haven't received a confirmation email
+                          yet — order #8823. Could you help me track it?
                           <div className="flex items-center justify-center gap-1 mt-1 px-2 py-1 border border-gray-300 rounded-lg text-[9.5px] font-semibold text-blue-700 bg-white cursor-pointer">
                             <svg
                               width="10"
@@ -841,9 +813,7 @@ export default function Hero({ onAccess }: Props) {
                             >
                               Still waiting — any update? 🙏
                             </div>
-                            <div className="text-[7.5px] text-gray-400 mt-0.5">
-                              08:57 am
-                            </div>
+                            <div className="text-[7.5px] text-gray-400 mt-0.5">08:57 am</div>
                           </div>
                         </div>
                         {/* Typing */}
@@ -855,25 +825,14 @@ export default function Hero({ onAccess }: Props) {
                             border: "1px solid #E5E7EB",
                           }}
                         >
-                          <span
-                            className={`w-1 h-1 rounded-full bg-gray-400 ${style.tdot}`}
-                          />
-                          <span
-                            className={`w-1 h-1 rounded-full bg-gray-400 ${style.tdot}`}
-                          />
-                          <span
-                            className={`w-1 h-1 rounded-full bg-gray-400 ${style.tdot}`}
-                          />
+                          <span className={`w-1 h-1 rounded-full bg-gray-400 ${style.tdot}`} />
+                          <span className={`w-1 h-1 rounded-full bg-gray-400 ${style.tdot}`} />
+                          <span className={`w-1 h-1 rounded-full bg-gray-400 ${style.tdot}`} />
                         </div>
                       </div>
 
                       <div className="flex items-center gap-1.5 mx-2 mb-1.5 px-2.5 py-1 rounded bg-blue-700 text-white text-[9px] font-bold tracking-[0.04em] cursor-pointer flex-shrink-0">
-                        <svg
-                          width="11"
-                          height="11"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                         </svg>
                         AUTOMATION
@@ -894,8 +853,7 @@ export default function Hero({ onAccess }: Props) {
                         <div
                           className="w-6 h-6 rounded-md flex items-center justify-center text-white flex-shrink-0 cursor-pointer"
                           style={{
-                            background:
-                              "linear-gradient(135deg,#3D8BEE,#2360C8)",
+                            background: "linear-gradient(135deg,#3D8BEE,#2360C8)",
                           }}
                         >
                           <svg

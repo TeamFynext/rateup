@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import {
   Center,
   Container,
@@ -18,6 +14,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 
 import {
   useGetAllCollectionsByOrg,
@@ -44,20 +41,15 @@ enum TestimonailInnerTabEnum {
 }
 
 function Testimonials() {
-  const [openedSave, { open: openSave, close: closeSave }] =
-    useDisclosure(false);
+  const [openedSave, { open: openSave, close: closeSave }] = useDisclosure(false);
   const [activeTab, setActiveTab] = useState<TestimonailInnerTabEnum>(
     TestimonailInnerTabEnum.TESTIMONIALS,
   );
-  const { data: collections, isLoading: isCollectionLoading } =
-    useGetAllCollectionsByOrg();
-  const { data: testimonials, isLoading: isTestimonialLoading } =
-    useGetAllTestimonialsByOrg();
+  const { data: collections, isLoading: isCollectionLoading } = useGetAllCollectionsByOrg();
+  const { data: testimonials, isLoading: isTestimonialLoading } = useGetAllTestimonialsByOrg();
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const filteredCollections =
-    selectedTeamId == "all"
-      ? collections
-      : collections?.filter((c) => c?.teamId == selectedTeamId);
+    selectedTeamId == "all" ? collections : collections?.filter((c) => c?.teamId == selectedTeamId);
 
   const filteredTestimonials =
     selectedTeamId == "all"
@@ -65,49 +57,26 @@ function Testimonials() {
       : testimonials?.filter((t) => t?.teamId === selectedTeamId);
   return (
     <Stack gap={"lg"} h="100%">
-      <Flex
-        mih={50}
-        gap="md"
-        justify="space-between"
-        align="center"
-        direction="row"
-        wrap="wrap"
-      >
+      <Flex mih={50} gap="md" justify="space-between" align="center" direction="row" wrap="wrap">
         <Group gap={"md"}>
-          <RateupButtonBlue
-            title="Create Collection"
-            rightIcon={<IconPlus />}
-            onClick={openSave}
-          />
+          <RateupButtonBlue title="Create Collection" rightIcon={<IconPlus />} onClick={openSave} />
           <InfoButton docUrl={`${docsPath}/testimonial`} />
           <SaveTestimonialCollection close={closeSave} opened={openedSave} />
         </Group>
-        <TeamSelector
-          value={selectedTeamId}
-          onChange={setSelectedTeamId}
-          enableAll={true}
-        />
+        <TeamSelector value={selectedTeamId} onChange={setSelectedTeamId} enableAll={true} />
       </Flex>
       <Tabs
         value={activeTab}
-        onChange={(value: string) =>
-          setActiveTab(value as TestimonailInnerTabEnum)
-        }
+        onChange={(value: string) => setActiveTab(value as TestimonailInnerTabEnum)}
         color="var(--tertiary-color)"
       >
         <Tabs.List w={"fit-content"}>
-          <Tabs.Tab
-            value={TestimonailInnerTabEnum.TESTIMONIALS}
-            className={styles.tabLabel}
-          >
+          <Tabs.Tab value={TestimonailInnerTabEnum.TESTIMONIALS} className={styles.tabLabel}>
             <Title order={4} fw={400}>
               Testimonials
             </Title>
           </Tabs.Tab>
-          <Tabs.Tab
-            value={TestimonailInnerTabEnum.COLLECTIONS}
-            className={styles.tabLabel}
-          >
+          <Tabs.Tab value={TestimonailInnerTabEnum.COLLECTIONS} className={styles.tabLabel}>
             <Title order={4} fw={400}>
               Collections
             </Title>
@@ -123,10 +92,7 @@ function Testimonials() {
             ) : filteredTestimonials?.length > 0 ? (
               <Group>
                 {filteredTestimonials.map((testimonial) => (
-                  <TestimonialCard
-                    testimonial={testimonial}
-                    key={testimonial.id}
-                  />
+                  <TestimonialCard testimonial={testimonial} key={testimonial.id} />
                 ))}
               </Group>
             ) : (
@@ -148,10 +114,7 @@ function Testimonials() {
                 verticalSpacing={{ base: "md", sm: "xl" }}
               >
                 {filteredCollections?.map((collection) => (
-                  <TestimonialCollectionCard
-                    collection={collection}
-                    key={collection?.id}
-                  />
+                  <TestimonialCollectionCard collection={collection} key={collection?.id} />
                 ))}
               </SimpleGrid>
             ) : (

@@ -1,19 +1,7 @@
-import { useEffect, useState } from "react";
-
-import {
-  Flex,
-  ScrollAreaAutosize,
-  Stack,
-  Title,
-  useMantineTheme,
-} from "@mantine/core";
+import { Flex, ScrollAreaAutosize, Stack, Title } from "@mantine/core";
 import { useMediaQuery, useViewportSize } from "@mantine/hooks";
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-  useSearch,
-} from "@tanstack/react-router";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import { useEffect } from "react";
 import Confetti from "react-confetti";
 import { useTranslation } from "react-i18next";
 
@@ -22,10 +10,6 @@ import { getBgImgAndBgColor } from "@/components/Layout/TakeSurveyLayout/utils.t
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
 
 import BodyComp from "./BodyComp.tsx";
-
-const Route = createFileRoute("/(public-facing)/public/survey/$surveyId/end/")({
-  component: ThankYou,
-});
 
 export default function ThankYou({
   enableGoogleReview = false,
@@ -42,23 +26,20 @@ export default function ThankYou({
   isSurveyPreview = false,
   reviewPageLinks = null,
 }) {
-  const [imageLoading, setImageLoading] = useState(true);
-  const [pulsing, setPulsing] = useState(true);
-  const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const navigate = useNavigate();
   const { t: translations } = useTranslation();
   const searchParams = useSearch({ strict: false });
   const err = searchParams.err && searchParams.err === "oops";
   let k,
-    sid,
+    _sid,
     surveyId = "";
   if (fromShortUrl) {
     k = kioskMode;
-    sid = surveyIdValue;
+    _sid = surveyIdValue;
   } else {
     k = searchParams.k;
-    sid = searchParams.sid;
+    _sid = searchParams.sid;
     surveyId = searchParams.surveyId as string;
   }
   const params = useParams({
@@ -70,17 +51,19 @@ export default function ThankYou({
     // kioskMode redirect
     if ((k === "y" || k === "cs") && !enableGoogleReview) {
       const timeoutId = setTimeout(() => {
-        k === "cs"
-          ? navigate({
-              to: `/public/survey/cs`,
-            })
-          : fromShortUrl
-            ? navigate({
-                to: `/ws/${shortId}/`,
-              })
-            : navigate({
-                to: `/public/survey/${surveyId}`,
-              });
+        if (k === "cs") {
+          navigate({
+            to: `/public/survey/cs`,
+          });
+        } else if (fromShortUrl) {
+          navigate({
+            to: `/ws/${shortId}/`,
+          });
+        } else {
+          navigate({
+            to: `/public/survey/${surveyId}`,
+          });
+        }
       }, 5000);
 
       return () => {
@@ -98,10 +81,7 @@ export default function ThankYou({
             navigate({
               to: redirect.url,
             });
-          else if (
-            redirect.url?.startsWith("http:") ||
-            redirect.url?.startsWith("https:")
-          ) {
+          else if (redirect.url?.startsWith("http:") || redirect.url?.startsWith("https:")) {
             navigate({
               to: redirect.url,
             });
@@ -117,16 +97,9 @@ export default function ThankYou({
     return () => clearTimeout(timeout);
   }, [redirect, kioskMode, navigate]);
 
-  const theme = useMantineTheme();
   const enableBody = k === "cs" || enableGoogleReview;
 
   const orgLogoSrc = surveyThemeData?.surveyTheme.logo?.logo;
-  const orgLogoStyles = surveyThemeData?.surveyTheme.logo?.styles;
-
-  const imageLoaded = () => {
-    setImageLoading(false);
-    setTimeout(() => setPulsing(false), 600);
-  };
 
   const shouldUseSurveyTheme = pagesThemeData["thankyouTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
@@ -160,25 +133,21 @@ export default function ThankYou({
 
   return (
     <CreditsCard
-      enableCredits={backgroundImageSrc?.startsWith(
-        "https://images.unsplash.com",
-      )}
+      enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
       url={backgroundImageSrc}
     >
       <Flex
         style={{
           ...surveyThemeData?.thankyouTheme?.bg?.styles,
-          ...{
-            height: isSurveyPreview ? "100%" : "100dvh",
-            backgroundColor: backgroundColor,
-            backgroundImage: `url(${backgroundImageSrc})`,
-            backgroundRepeat: "no-repeat",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            padding: "1.25rem",
-            paddingBottom: 0,
-            overflow: "hidden",
-          },
+          height: isSurveyPreview ? "100%" : "100dvh",
+          backgroundColor,
+          backgroundImage: `url(${backgroundImageSrc})`,
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          padding: "1.25rem",
+          paddingBottom: 0,
+          overflow: "hidden",
         }}
         direction={"column"}
         justify={"center"}
@@ -193,9 +162,7 @@ export default function ThankYou({
             overflow: "hidden",
           }}
         >
-          {confettiEnabled && (
-            <Confetti width={width - 1} height={height - 1} />
-          )}
+          {confettiEnabled && <Confetti width={width - 1} height={height - 1} />}
 
           {!enableGoogleReview && (
             <ScrollAreaAutosize p="sm">
@@ -233,9 +200,7 @@ export default function ThankYou({
             />
           )}
         </Stack>
-        <div className="flex">
-          {/* {!enableGoogleReview && <RateupRedirectCard />} */}
-        </div>
+        <div className="flex">{/* {!enableGoogleReview && <RateupRedirectCard />} */}</div>
       </Flex>
     </CreditsCard>
   );

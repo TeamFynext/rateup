@@ -1,27 +1,22 @@
-"use client";
-
-import { useState } from "react";
-
 import { Box } from "@mantine/core";
 import { cloneDeep } from "lodash";
+import { useState } from "react";
 
-import { PageType } from "@/types/enums.ts";
 import ThankYou from "@/components/(public-facing)/public/survey/$surveyId/end.tsx";
 import { ResponseSubmitted } from "@/components/(public-facing)/ws/$shortId/ResponseSubmitted.tsx";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { PageType } from "@/types/enums.ts";
 import { surveyUploadsPath } from "@/utils/constants.ts";
 
 import { TakeSurveyLayoutWeb } from "../../../../../Layout/TakeSurveyLayout/TakeSurveyLayoutWeb.tsx";
 import TakeSurvey from "../../../../TakeSurvey/TakeSurveyComponent/index.tsx";
 import { ThemeTabEnum } from "../../../SurveyTheme.enums";
-import {
-  useSelectedPageTab,
-  useSurveyThemeContextValue,
-} from "../../../SurveyThemeContext.tsx";
+import { useSelectedPageTab, useSurveyThemeContextValue } from "../../../SurveyThemeContext.tsx";
 import IsSurveyThemePreviewContextProvider from "./isSurveyThemePreviewContext.tsx";
-import styles from "./SurveyThemePreview.module.css";
 import { getSurveyEditViewQuestions } from "./utils.ts";
+
+import styles from "./SurveyThemePreview.module.css";
 
 function SurveyThemeView({
   survey,

@@ -1,8 +1,5 @@
-"use client";
-
-import { useContext } from "react";
-
 import { Text } from "@mantine/core";
+import { useContext } from "react";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";

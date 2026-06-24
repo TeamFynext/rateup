@@ -1,17 +1,9 @@
-"use client";
-
 import { lazy, Suspense } from "react";
-
 import { useTranslation } from "react-i18next";
 
-import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums.ts";
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import { EditSurvey } from "../EditSurvey.tsx";
@@ -21,9 +13,7 @@ import SurveySettings from "../Settings/index.tsx";
 import ShareSurvey from "../ShareSurvey/ShareSurvey.tsx";
 import { TabEnum } from "../SurveyId.tsx";
 
-const ResultsOverviewWebForm = lazy(
-  () => import("../Result/ResultsOverviewWebForm.tsx"),
-);
+const ResultsOverviewWebForm = lazy(() => import("../Result/ResultsOverviewWebForm.tsx"));
 
 function TabPanelsComp({
   value,
@@ -32,7 +22,6 @@ function TabPanelsComp({
   questions,
   addQnTrigger,
   setSelectedLanguage,
-  setFilterTags,
   encryptionpassword,
   setEncryptionPassword,
   setActiveTab,
@@ -72,24 +61,14 @@ function TabPanelsComp({
                   "preview",
                   "location",
                   "notificationEmail",
-                  hasFeature(
-                    subscription,
-                    SubscriptionFeaturePathName.Encryption,
-                  ) && "endtoendencryption",
+                  hasFeature(subscription, SubscriptionFeaturePathName.Encryption) &&
+                    "endtoendencryption",
                   "redirect",
                   "uniqueDeviceResponse",
-                  hasFeature(
-                    subscription,
-                    SubscriptionFeaturePathName.Ticket,
-                  ) && "tickets",
-                  hasFeature(
-                    subscription,
-                    SubscriptionFeaturePathName.EmailNotification,
-                  ) && "enableNotificationEmail",
-                  hasFeature(
-                    subscription,
-                    SubscriptionFeaturePathName.Webhook,
-                  ) && "webhook",
+                  hasFeature(subscription, SubscriptionFeaturePathName.Ticket) && "tickets",
+                  hasFeature(subscription, SubscriptionFeaturePathName.EmailNotification) &&
+                    "enableNotificationEmail",
+                  hasFeature(subscription, SubscriptionFeaturePathName.Webhook) && "webhook",
                 ]
           }
         />
@@ -97,15 +76,9 @@ function TabPanelsComp({
       <TabsContent value={TabEnum.Result} className="min-h-0">
         <Tabs defaultValue="responses" className="relative h-full min-h-0">
           <TabsList className="mx-auto mb-2 flex">
-            <TabsTrigger value="responses">
-              {translations("Responses")}
-            </TabsTrigger>
-            <TabsTrigger value="analytics">
-              {translations("Analytics")}
-            </TabsTrigger>
-            <TabsTrigger value="team-analytics">
-              {translations("Team Analytics")}
-            </TabsTrigger>
+            <TabsTrigger value="responses">{translations("Responses")}</TabsTrigger>
+            <TabsTrigger value="analytics">{translations("Analytics")}</TabsTrigger>
+            <TabsTrigger value="team-analytics">{translations("Team Analytics")}</TabsTrigger>
           </TabsList>
           <TabsContent value="responses" className="min-h-0">
             <Result
@@ -117,16 +90,11 @@ function TabPanelsComp({
           </TabsContent>
           <TabsContent value="analytics" className="min-h-0">
             <Suspense
-              fallback={
-                <div className="flex items-center justify-center h-64">
-                  Loading...
-                </div>
-              }
+              fallback={<div className="flex items-center justify-center h-64">Loading...</div>}
             >
               <ResultsOverviewWebForm
                 surveyId={surveyId}
                 aiResponseSummary={survey?.aiResponseSummary}
-                survey={survey}
                 flowId={null}
                 version={1}
                 flowQuestions={[]}

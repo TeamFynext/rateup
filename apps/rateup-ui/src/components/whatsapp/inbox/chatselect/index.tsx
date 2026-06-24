@@ -1,34 +1,15 @@
-"use client";
-
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-
-import { Card, Divider, Group, Indicator, Text } from "@mantine/core";
-import {
-  IconForbid2,
-  IconMessageCheck,
-  IconUserCheck,
-  IconUserCircle,
-} from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { Card, Divider, Group, Text } from "@mantine/core";
 import { useSearch } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { CheckCircle, Loader, Loader2, UserCheck } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
-import type { WaInboxMessage } from "@/types/global";
 import { useBulkAssignStatusMutation } from "@/backend/campaign/contacts/contacts.query";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import useContactStore, {
   makeFilterKey,
-  useChatContactCountStore,
   useContactsStore,
   useMessagesStore,
 } from "@/components/dashboard/inbox/store.ts";
@@ -49,6 +30,8 @@ import {
 } from "@/components/ui/tooltip.tsx";
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
+import type { WaInboxMessage } from "@/types/global";
 
 import WhatsAppInboxLoader from "../loader/index.tsx";
 import AddUnknownContactModal from "./addUnknownContactModal/index.tsx";
@@ -62,12 +45,10 @@ import ChatselectPanelHeader from "./ChatselectPanelHeader.tsx";
 const WaInboxChatSelect = () => {
   const searchParams = useSearch({ strict: false });
   const tab = (searchParams.tab as string) ?? "New";
-  const { filter, setFilter, previousFilterForTab, clearFilter } =
-    useChatFilterStore();
+  const { filter, setFilter, previousFilterForTab, clearFilter } = useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
   const {
     setSelectedContact,
-    selectedContact,
     loadContactsFromDB,
     isLoading: isStoreLoading,
     clearContactsForFilter,
@@ -91,8 +72,6 @@ const WaInboxChatSelect = () => {
       cancelled = true;
     };
   }, [processedFilter]);
-
-  const queryClient = useQueryClient();
 
   const { t: translations } = useTranslation();
   const checkIfAnyFilterisActive = useCallback((filters: any) => {
@@ -120,19 +99,14 @@ const WaInboxChatSelect = () => {
     hasNextPage: hasNextPageFilteredContacts,
     isLoading: isContactLoading,
     isFetching,
-  } = useFilteredContacts(
-    encodeURIComponent(JSON.stringify(processedFilter)),
-    !!processedFilter,
-  );
+  } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)), !!processedFilter);
 
   const { data: waSettings, isLoading } = useWaSettings();
 
   const { setFilterData, filterData } = useContactStore();
 
-  const {
-    mutate: bulkAssignStatusMutation,
-    isPending: isBulkAssignStatusPending,
-  } = useBulkAssignStatusMutation(null);
+  const { mutate: bulkAssignStatusMutation, isPending: isBulkAssignStatusPending } =
+    useBulkAssignStatusMutation(null);
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
@@ -160,12 +134,9 @@ const WaInboxChatSelect = () => {
     [checkIfAnyFilterisActive],
   );
 
-  const validateSearchStringAsMobileNumber = useCallback(
-    (searchString: string): boolean => {
-      return !!RegExp(/^\d{10}$/).exec(searchString);
-    },
-    [],
-  );
+  const validateSearchStringAsMobileNumber = useCallback((searchString: string): boolean => {
+    return !!RegExp(/^\d{10}$/).exec(searchString);
+  }, []);
   function updateInitialMessagesToStore(contacts) {
     contacts.map((c) => {
       const messageMap = new Map();
@@ -273,19 +244,14 @@ const WaInboxChatSelect = () => {
   }, [filter]);
 
   useEffect(() => {
-    const openStatus = [
-      WaMessageAssignStatus.ASSIGNED,
-      WaMessageAssignStatus.UNASSIGNED,
-    ];
+    const openStatus = [WaMessageAssignStatus.ASSIGNED, WaMessageAssignStatus.UNASSIGNED];
     const hasOpenStatus = filter?.status?.some((s) =>
       openStatus.includes(s as WaMessageAssignStatus),
     );
     if (tab === "Addressed" && hasOpenStatus) {
       setFilter({
         ...filter,
-        status: filter.status.filter(
-          (s) => !openStatus.includes(s as WaMessageAssignStatus),
-        ),
+        status: filter.status.filter((s) => !openStatus.includes(s as WaMessageAssignStatus)),
       });
     } else if (tab === "All" && !hasOpenStatus) {
       const prFilter = previousFilterForTab?.find((t) => t.tab === "All");
@@ -418,8 +384,7 @@ const WaInboxChatSelect = () => {
         setSelectedChats={setSelectedChats}
       />
       <div>
-        {isStoreLoading ||
-        (!contactIds.length && filteredContactsStatus === "pending") ? (
+        {isStoreLoading || (!contactIds.length && filteredContactsStatus === "pending") ? (
           <Text px={"md"}>Loading...</Text>
         ) : !contactIds.length && filteredContactsStatus === "error" ? (
           <Text px={"md"}>Error: {filteredContactsError?.message}</Text>
@@ -569,9 +534,7 @@ const WaInboxChatSelect = () => {
                   <Card component={Group}>
                     <Text c="dimmed" size="sm" ta="center">
                       {translations("No chats found")} <br />
-                      {translations(
-                        "search for a valid phone number or contact name",
-                      )}
+                      {translations("search for a valid phone number or contact name")}
                     </Text>
                   </Card>
                 ))}
@@ -580,10 +543,7 @@ const WaInboxChatSelect = () => {
         )}
       </div>
       {/* confirm close */}
-      <Dialog
-        open={openConfirmHandleClose}
-        onOpenChange={setOpenConfirmHandleClose}
-      >
+      <Dialog open={openConfirmHandleClose} onOpenChange={setOpenConfirmHandleClose}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>{translations("Close selected chats")}?</DialogTitle>
@@ -594,10 +554,7 @@ const WaInboxChatSelect = () => {
           </p>
 
           <DialogFooter className="flex gap-2 justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setOpenConfirmHandleClose(false)}
-            >
+            <Button variant="outline" onClick={() => setOpenConfirmHandleClose(false)}>
               {translations("Cancel")}
             </Button>
 
@@ -607,19 +564,14 @@ const WaInboxChatSelect = () => {
                 handleBulkClose();
               }}
             >
-              {isBulkAssignStatusPending && (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              )}
+              {isBulkAssignStatusPending && <Loader2 className="w-4 h-4 animate-spin" />}
               {translations("Confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       {/* bulk assign*/}
-      <Dialog
-        open={showBulkAssignDialog}
-        onOpenChange={setShowBulkAssignDialog}
-      >
+      <Dialog open={showBulkAssignDialog} onOpenChange={setShowBulkAssignDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
@@ -628,9 +580,7 @@ const WaInboxChatSelect = () => {
             </DialogTitle>
 
             <DialogDescription>
-              {translations(
-                "Select a team member to assign the selected conversations",
-              )}
+              {translations("Select a team member to assign the selected conversations")}
             </DialogDescription>
           </DialogHeader>
           <BulkAssignUser
@@ -644,54 +594,6 @@ const WaInboxChatSelect = () => {
           />
         </DialogContent>
       </Dialog>
-    </div>
-  );
-};
-
-const AssignedInboxIcon = (props) => {
-  const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.assigned) return <IconUserCheck {...props} />;
-  return (
-    <div className="flex">
-      <Indicator label={totalCount.assigned} inline size={16} color="black">
-        <IconUserCheck {...props} />
-      </Indicator>
-    </div>
-  );
-};
-
-const AssignedToMeInboxIcon = (props) => {
-  const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.assignedToMe) return <IconUserCircle {...props} />;
-  return (
-    <div className="flex">
-      <Indicator label={totalCount.assignedToMe} inline size={16} color="black">
-        <IconUserCircle {...props} />
-      </Indicator>
-    </div>
-  );
-};
-
-const ClosedInboxIcon = (props) => {
-  const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.closed) return <IconMessageCheck {...props} />;
-  return (
-    <div className="flex">
-      <Indicator label={totalCount.closed} inline size={16} color="black">
-        <IconMessageCheck {...props} />
-      </Indicator>
-    </div>
-  );
-};
-
-const BlockedInboxIcon = (props) => {
-  const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.blocked) return <IconForbid2 {...props} />;
-  return (
-    <div className="flex">
-      <Indicator label={totalCount.blocked} inline size={16} color="black">
-        <IconForbid2 {...props} />
-      </Indicator>
     </div>
   );
 };

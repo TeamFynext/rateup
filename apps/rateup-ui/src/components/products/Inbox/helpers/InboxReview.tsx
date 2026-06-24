@@ -1,5 +1,3 @@
-"use client";
-
 import { Star } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -31,10 +29,7 @@ const testimonials = [
 ];
 
 const StarRating = ({ count }: { count: number }) => (
-  <div
-    className="flex items-center gap-1 mt-2"
-    aria-label={`Rating: ${count} out of 5 stars`}
-  >
+  <div className="flex items-center gap-1 mt-2" aria-label={`Rating: ${count} out of 5 stars`}>
     {[...Array(count)].map((_, i) => (
       <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
     ))}

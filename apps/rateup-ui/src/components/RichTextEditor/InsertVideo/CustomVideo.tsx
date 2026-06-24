@@ -20,11 +20,7 @@ declare module "@tiptap/core" {
        *   .commands
        *   .setVideo({ src: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', height:'200px',widht:'400px' })
        */
-      setVideo: (options: {
-        src: string;
-        height?: number;
-        width?: number;
-      }) => ReturnType;
+      setVideo: (options: { src: string; height?: number; width?: number }) => ReturnType;
     };
   }
 }
@@ -72,11 +68,7 @@ export const Video = Node.create<VideoOptions>({
   renderHTML({ HTMLAttributes }) {
     return [
       "video",
-      mergeAttributes(
-        { controls: "true" },
-        this.options.HTMLAttributes,
-        HTMLAttributes,
-      ),
+      mergeAttributes({ controls: "true" }, this.options.HTMLAttributes, HTMLAttributes),
     ];
   },
 

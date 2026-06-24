@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-
 import { toast } from "sonner";
 
 import { useAddExistingContactMutation } from "@/backend/campaign/contactGroup/contactGroup.query";
@@ -27,8 +26,7 @@ const AddToGroupModal = ({
   onSuccess = null,
 }) => {
   const [contactGroupId, setContactGroupId] = useState("");
-  const addExistingContactsMutation =
-    useAddExistingContactMutation(contactGroupId);
+  const addExistingContactsMutation = useAddExistingContactMutation(contactGroupId);
   const handleAddExistingContacts = async () => {
     if (!contactGroupId.length) {
       return toast.error("Please select a group");
@@ -59,9 +57,7 @@ const AddToGroupModal = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add contacts to Group</DialogTitle>
-          <DialogDescription>
-            Select Group to add the contacts
-          </DialogDescription>
+          <DialogDescription>Select Group to add the contacts</DialogDescription>
         </DialogHeader>
         {selectedContactIds?.length === 1 && contact ? (
           <div className="flex flex-col gap-2">

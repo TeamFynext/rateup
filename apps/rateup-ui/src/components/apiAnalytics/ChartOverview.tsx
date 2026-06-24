@@ -17,8 +17,7 @@ import { Skeleton } from "../ui/skeleton.tsx";
 
 function ChartOverview({ messageTrendData, isLoading }) {
   const { t } = useTranslation("apianalytics");
-  const hasData =
-    Array.isArray(messageTrendData) && messageTrendData.length > 0;
+  const hasData = Array.isArray(messageTrendData) && messageTrendData.length > 0;
 
   return (
     <Card>
@@ -101,8 +100,7 @@ export default ChartOverview;
 
 export function DailyTrend({ dailyMessageData, isLoading }) {
   const { t } = useTranslation("apianalytics");
-  const hasData =
-    Array.isArray(dailyMessageData) && dailyMessageData.length > 0;
+  const hasData = Array.isArray(dailyMessageData) && dailyMessageData.length > 0;
 
   return (
     <Card>
@@ -154,12 +152,7 @@ export function DailyTrend({ dailyMessageData, isLoading }) {
                 name="Success"
               />
 
-              <Bar
-                dataKey="failedMessages"
-                fill="#EF4444"
-                radius={[4, 4, 0, 0]}
-                name="Failed"
-              />
+              <Bar dataKey="failedMessages" fill="#EF4444" radius={[4, 4, 0, 0]} name="Failed" />
             </BarChart>
           </ResponsiveContainer>
         )}

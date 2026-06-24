@@ -1,5 +1,3 @@
-"use client";
-
 import {
   IconArrowRight,
   IconAt,
@@ -26,32 +24,28 @@ function InstagramDashboardHub() {
   const features = [
     {
       title: "Ice Breakers",
-      description:
-        "Manage the starter questions users see before they open a conversation.",
+      description: "Manage the starter questions users see before they open a conversation.",
       icon: IconMessageDots,
       to: "/dashboard/instagram/ice-breakers",
       action: "Manage ice breakers",
     },
     {
       title: "ig.me Links",
-      description:
-        "Generate and copy direct conversation links with referral parameters.",
+      description: "Generate and copy direct conversation links with referral parameters.",
       icon: IconBrandInstagram,
       to: "/dashboard/instagram/ig-me-links",
       action: "Generate links",
     },
     {
       title: "Persistent Menu",
-      description:
-        "Control the menu of always-available actions in Instagram conversations.",
+      description: "Control the menu of always-available actions in Instagram conversations.",
       icon: IconSettings,
       to: "/dashboard/instagram/persistent-menu",
       action: "Edit menu",
     },
     {
       title: "chatbots",
-      description:
-        "Create and manage Instagram chatbots, triggers, and handoff flows.",
+      description: "Create and manage Instagram chatbots, triggers, and handoff flows.",
       icon: IconMessageDots,
       to: "/dashboard/instagram/flowbots",
       action: "Manage chatbots",
@@ -88,18 +82,15 @@ function InstagramDashboardHub() {
                 Manage every Instagram entry point in one place
               </h1>
               <p className="max-w-xl text-sm text-muted-foreground md:text-base">
-                Configure channel connections, automate replies, and control the
-                profile-level experiences that users see before they start a
-                conversation.
+                Configure channel connections, automate replies, and control the profile-level
+                experiences that users see before they start a conversation.
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="outline">
-              <Link to="/dashboard/settings/channels/instagram">
-                Channel settings
-              </Link>
+              <Link to="/dashboard/settings/channels/instagram">Channel settings</Link>
             </Button>
             <Button asChild>
               <Link to="/dashboard/instagram/flowbots">Open automations</Link>
@@ -124,18 +115,12 @@ function InstagramDashboardHub() {
                   </div>
                   <div>
                     <CardTitle className="text-base">{feature.title}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {feature.description}
-                    </CardDescription>
+                    <CardDescription className="mt-1">{feature.description}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="px-0 text-pink-600 hover:text-pink-700"
-                >
+                <Button asChild variant="ghost" className="px-0 text-pink-600 hover:text-pink-700">
                   <Link to={feature.to}>
                     {feature.action}
                     <IconArrowRight className="ml-2 h-4 w-4" />

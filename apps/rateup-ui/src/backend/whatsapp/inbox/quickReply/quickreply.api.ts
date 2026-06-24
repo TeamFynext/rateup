@@ -11,9 +11,7 @@ export async function getWaQuickReplies() {
   return (await axiosClient.get(WA_QUICK_REPLY_BASE)).data;
 }
 
-export async function createWaQuickReply(
-  data: z.infer<typeof quickReplySchema>,
-) {
+export async function createWaQuickReply(data: z.infer<typeof quickReplySchema>) {
   await axiosClient.post(WA_QUICK_REPLY_BASE, data);
 }
 

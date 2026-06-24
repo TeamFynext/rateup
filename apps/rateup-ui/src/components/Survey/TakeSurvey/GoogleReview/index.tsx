@@ -1,31 +1,21 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-
-import {
-  Box,
-  Button,
-  Image,
-  Modal,
-  Skeleton,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Box, Button, Image, Modal, Skeleton, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { ReviewSuggestion } from "@/types/global";
 import { useUpdateReviewLinkStatsOnSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useDeleteReviewSuggestionMutation } from "@/backend/team/reviewSuggestion/reviewSuggestion.query";
+import type { ReviewSuggestion } from "@/types/global";
 import { shuffleArray } from "@/utils/index.ts";
 
 import { GoogleIcon } from "../../../Button/GoogleIcon.tsx";
 import RateupRedirectCard from "../../../Card/RateupRedirectCard.tsx";
 import { reviewPageLogosObj } from "../../Question/QuestionReviewPageEditor/constants.tsx";
 import { ReviewPagePlatform } from "../../Question/QuestionReviewPageEditor/index.tsx";
-import styles from "./GoogleReview.module.css";
 import WandIcon from "./WandIcon.tsx";
+
+import styles from "./GoogleReview.module.css";
 
 function GoogleReview({
   reviewSuggestions = [],
@@ -41,11 +31,9 @@ function GoogleReview({
   ] = useDisclosure(false);
 
   const [reviewIndex, setReviewIndex] = useState<number>(null);
-  const [shuffledArray, setShuffledArray] =
-    useState<Array<ReviewSuggestion>>(null);
+  const [shuffledArray, setShuffledArray] = useState<Array<ReviewSuggestion>>(null);
   const [fakeLoading, setFakeLoading] = useState(false);
-  const [lastCopiedReview, setLastCopiedReview] =
-    useState<ReviewSuggestion>(null);
+  const [lastCopiedReview, setLastCopiedReview] = useState<ReviewSuggestion>(null);
   const { t: translations } = useTranslation();
   useEffect(() => {
     if (reviewSuggestions.length > 0) {
@@ -72,22 +60,18 @@ function GoogleReview({
     );
   }
 
-  const deleteReviewMutation = useDeleteReviewSuggestionMutation(
-    surveyTeamMapId,
-    true,
-  );
-  const updateReviewPageVisits = useUpdateReviewLinkStatsOnSurveyMutation(
-    survey?.id,
-  );
+  const deleteReviewMutation = useDeleteReviewSuggestionMutation(surveyTeamMapId, true);
+  const updateReviewPageVisits = useUpdateReviewLinkStatsOnSurveyMutation(survey?.id);
   // if user clicks on go to review page, delete the last copied review
   function handleGoToReviewPage() {
     updateReviewPageVisits.mutate(surveyTeamMapId);
-    lastCopiedReview &&
+    if (lastCopiedReview) {
       deleteReviewMutation.mutate(lastCopiedReview.id, {
         onSuccess: () => {
           setLastCopiedReview(null);
         },
       });
+    }
   }
 
   const handleCopyBtnClick = useCallback(() => {
@@ -106,11 +90,9 @@ function GoogleReview({
   if (!reviewPageLinks) reviewPageLinks = survey?.reviewPageLinks;
 
   let reviewPagePlatform =
-    questionWithReviewPageOptions?.reviewPagePlatform ||
-    ReviewPagePlatform.Google;
+    questionWithReviewPageOptions?.reviewPagePlatform || ReviewPagePlatform.Google;
   if (reviewPagePlatform === ReviewPagePlatform.Custom) {
-    reviewPagePlatform =
-      questionWithReviewPageOptions?.reviewPageOptions?.customPlatformName;
+    reviewPagePlatform = questionWithReviewPageOptions?.reviewPageOptions?.customPlatformName;
   }
 
   const link = reviewPageLinks?.[reviewPagePlatform];
@@ -177,10 +159,7 @@ function GoogleReview({
                   >
                     {shuffledArray?.[reviewIndex]?.review}
                   </Text>
-                  <Button
-                    className={styles["copy-btn"]}
-                    onClick={handleCopyBtnClick}
-                  >
+                  <Button className={styles["copy-btn"]} onClick={handleCopyBtnClick}>
                     {translations("Copy")}
                   </Button>
                 </Box>
@@ -190,11 +169,7 @@ function GoogleReview({
         )}
         <Box className={styles["google-review-link-container"]}>
           {reviewLink ? (
-            <Link
-              to={reviewLink}
-              target="_blank"
-              onClick={handleGoToReviewPage}
-            >
+            <Link to={reviewLink} target="_blank" onClick={handleGoToReviewPage}>
               <span>{translations("Go to Review Page")}</span>
               <span className={styles["google-review-link-img-span"]}>
                 {reviewPageLogosObj[reviewPagePlatform] || null}
@@ -218,11 +193,7 @@ function GoogleReview({
           </p>
           <Box className={styles["google-review-link-container"]}>
             {reviewLink ? (
-              <Link
-                to={reviewLink}
-                target="_blank"
-                onClick={handleGoToReviewPage}
-              >
+              <Link to={reviewLink} target="_blank" onClick={handleGoToReviewPage}>
                 <span>{translations("Go to Review Page")}</span>
                 <span>
                   <GoogleIcon />

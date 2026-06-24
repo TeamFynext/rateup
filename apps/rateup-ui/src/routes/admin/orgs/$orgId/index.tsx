@@ -1,11 +1,5 @@
-import { useEffect, useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
-import {
-  createFileRoute,
-  useNavigate,
-  useParams,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import {
@@ -27,6 +21,7 @@ import {
   Utensils,
   Zap,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
 
@@ -59,11 +54,7 @@ import {
 import { Label } from "@/components/ui/label.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 export const Route = createFileRoute("/admin/orgs/$orgId/")({
@@ -107,16 +98,12 @@ function StatCard({ title, count, icon: Icon, color = "blue" }) {
     <Card className={`relative overflow-hidden ${getColorClasses()}`}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            {title}
-          </CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
           <Icon className={`h-4 w-4 ${getIconColor()}`} />
         </div>
       </CardHeader>
       <CardContent>
-        <div className={`text-2xl font-bold ${getIconColor()}`}>
-          {count || 0}
-        </div>
+        <div className={`text-2xl font-bold ${getIconColor()}`}>{count || 0}</div>
       </CardContent>
     </Card>
   );
@@ -137,10 +124,8 @@ function StatSection({ title, children, icon: Icon }) {
 function OrgById() {
   const [opened, { close, open }] = useDisclosure(false);
   const [isAnnualMessageLimit, setIsAnnualMessageLimit] = useState(false);
-  const [
-    openedConfirmModal,
-    { open: openConfirmModal, close: closeConfirmModal },
-  ] = useDisclosure(false);
+  const [openedConfirmModal, { open: openConfirmModal, close: closeConfirmModal }] =
+    useDisclosure(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const params = useParams({
     strict: false,
@@ -184,8 +169,7 @@ function OrgById() {
   };
 
   useEffect(() => {
-    if (subscription)
-      setIsAnnualMessageLimit(subscription.isAnnualMessageLimit);
+    if (subscription) setIsAnnualMessageLimit(subscription.isAnnualMessageLimit);
   }, [subscription]);
 
   const [ranges, setRange] = useState<Range[]>([
@@ -201,10 +185,7 @@ function OrgById() {
     dateRange:
       !ranges.length || !ranges[0].startDate || !ranges[0].endDate
         ? []
-        : [
-            ranges[0]?.startDate.toISOString(),
-            ranges[0]?.endDate.toISOString(),
-          ],
+        : [ranges[0]?.startDate.toISOString(), ranges[0]?.endDate.toISOString()],
   });
 
   useEffect(() => {
@@ -219,17 +200,14 @@ function OrgById() {
         <Card className="w-96">
           <CardHeader>
             <CardTitle className="text-destructive">Error</CardTitle>
-            <CardDescription>
-              An error occurred while loading organization data.
-            </CardDescription>
+            <CardDescription>An error occurred while loading organization data.</CardDescription>
           </CardHeader>
         </Card>
       </div>
     );
   }
 
-  if (isLoading || isOrgsLoading || !stats || isSubLoading)
-    return <RateupLoader h={"100dvh"} />;
+  if (isLoading || isOrgsLoading || !stats || isSubLoading) return <RateupLoader h={"100dvh"} />;
 
   const lastActivity = orgDetails?.AuditLog?.[0]?.createdAt;
   const last = lastActivity ? dayjs(lastActivity) : null;
@@ -243,12 +221,8 @@ function OrgById() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <Building2 className="h-5 w-5 text-primary" />
-              <h1 className="text-2xl font-semibold tracking-tight">
-                {stats.name}
-              </h1>
-              {orgDetails?.isPaused && (
-                <Badge variant="destructive">Paused</Badge>
-              )}
+              <h1 className="text-2xl font-semibold tracking-tight">{stats.name}</h1>
+              {orgDetails?.isPaused && <Badge variant="destructive">Paused</Badge>}
             </div>
             <RefreshButton queryKeys={["org", "stats"]} />
             <div className="flex flex-col leading-tight">
@@ -263,9 +237,7 @@ function OrgById() {
                   </span>
 
                   <span className="text-xs text-muted-foreground">
-                    {isInactive
-                      ? `Inactive for ${last.fromNow(true)}`
-                      : `Active ${last.fromNow()}`}
+                    {isInactive ? `Inactive for ${last.fromNow(true)}` : `Active ${last.fromNow()}`}
                   </span>
 
                   <span className="text-xs text-muted-foreground">
@@ -273,9 +245,7 @@ function OrgById() {
                   </span>
                 </>
               ) : (
-                <span className="text-muted-foreground text-sm">
-                  No activity
-                </span>
+                <span className="text-muted-foreground text-sm">No activity</span>
               )}
             </div>
           </div>
@@ -299,9 +269,7 @@ function OrgById() {
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>
-                        Updation will affect only in current subscription year
-                      </p>
+                      <p>Updation will affect only in current subscription year</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -329,10 +297,7 @@ function OrgById() {
                   : translations("Pause Organization")}
               </Button>
             )}
-            <Button
-              variant="destructive"
-              onClick={() => setOpenDeleteModal(true)}
-            >
+            <Button variant="destructive" onClick={() => setOpenDeleteModal(true)}>
               <Info />
               Delete Options
             </Button>
@@ -343,34 +308,14 @@ function OrgById() {
       <div className="space-y-8">
         {/* Organization Stats */}
         <StatSection title="Organization" icon={Building2}>
-          <StatCard
-            title="Staff"
-            count={stats.members}
-            icon={Users}
-            color="blue"
-          />
-          <StatCard
-            title="Invitations"
-            count={stats.invitations}
-            icon={Calendar}
-            color="amber"
-          />
+          <StatCard title="Staff" count={stats.members} icon={Users} color="blue" />
+          <StatCard title="Invitations" count={stats.invitations} icon={Calendar} color="amber" />
         </StatSection>
 
         {/* Teams Stats */}
         <StatSection title={translations("Teams")} icon={Users}>
-          <StatCard
-            title="Total Teams"
-            count={stats.teams.total}
-            icon={Users}
-            color="purple"
-          />
-          <StatCard
-            title="Team Staff"
-            count={stats.teams.members}
-            icon={Users}
-            color="blue"
-          />
+          <StatCard title="Total Teams" count={stats.teams.total} icon={Users} color="purple" />
+          <StatCard title="Team Staff" count={stats.teams.members} icon={Users} color="blue" />
           <StatCard
             title="Team Invitations"
             count={stats.teams.invitations}
@@ -381,65 +326,32 @@ function OrgById() {
 
         {/* Web Surveys Stats */}
         <StatSection title={translations("Web Surveys")} icon={Globe}>
-          <StatCard
-            title="Surveys"
-            count={stats.web.surveys}
-            icon={Globe}
-            color="green"
-          />
-          <StatCard
-            title="Responses"
-            count={stats.web.responses}
-            icon={Star}
-            color="blue"
-          />
-          <StatCard
-            title="Visited"
-            count={stats.web.visited}
-            icon={Users}
-            color="purple"
-          />
+          <StatCard title="Surveys" count={stats.web.surveys} icon={Globe} color="green" />
+          <StatCard title="Responses" count={stats.web.responses} icon={Star} color="blue" />
+          <StatCard title="Visited" count={stats.web.visited} icon={Users} color="purple" />
         </StatSection>
 
         {/* WhatsApp Surveys Stats */}
-        <StatSection
-          title={translations("WhatsApp Surveys")}
-          icon={MessageSquare}
-        >
+        <StatSection title={translations("WhatsApp Surveys")} icon={MessageSquare}>
           <StatCard
             title="Surveys"
             count={stats.whatsapp.surveys}
             icon={MessageSquare}
             color="green"
           />
-          <StatCard
-            title="Responses"
-            count={stats.whatsapp.responses}
-            icon={Star}
-            color="blue"
-          />
+          <StatCard title="Responses" count={stats.whatsapp.responses} icon={Star} color="blue" />
           <StatCard
             title="Templates"
             count={stats.whatsapp.templates}
             icon={Settings}
             color="purple"
           />
-          <StatCard
-            title="Visited"
-            count={stats.whatsapp.visited}
-            icon={Users}
-            color="amber"
-          />
+          <StatCard title="Visited" count={stats.whatsapp.visited} icon={Users} color="amber" />
         </StatSection>
 
         {/* Reputation Management Stats */}
         <StatSection title={translations("Reputation Mangement")} icon={Star}>
-          <StatCard
-            title="Reviews"
-            count={stats.rm.reviews}
-            icon={Star}
-            color="rose"
-          />
+          <StatCard title="Reviews" count={stats.rm.reviews} icon={Star} color="rose" />
           <StatCard
             title="Analyzed Reviews"
             count={stats.rm.analyzedReviews}
@@ -450,12 +362,7 @@ function OrgById() {
 
         {/* Campaigns Stats */}
         <StatSection title={translations("Campaigns")} icon={Zap}>
-          <StatCard
-            title="Campaigns"
-            count={stats.campaigns.campaigns}
-            icon={Zap}
-            color="purple"
-          />
+          <StatCard title="Campaigns" count={stats.campaigns.campaigns} icon={Zap} color="purple" />
           <StatCard
             title="Participants"
             count={stats.campaigns.participants}
@@ -466,26 +373,14 @@ function OrgById() {
 
         {/* Digital Menu Stats */}
         <StatSection title={translations("Digitl Menu")} icon={Utensils}>
-          <StatCard
-            title="Menus"
-            count={stats.menu.total}
-            icon={Utensils}
-            color="amber"
-          />
-          <StatCard
-            title="Banners"
-            count={stats.menu.banners}
-            icon={Settings}
-            color="rose"
-          />
+          <StatCard title="Menus" count={stats.menu.total} icon={Utensils} color="amber" />
+          <StatCard title="Banners" count={stats.menu.banners} icon={Settings} color="rose" />
         </StatSection>
       </div>
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <LayoutTemplate className="h-5 w-5 text-muted-foreground" />
-          <h3 className="text-lg font-semibold tracking-tight">
-            Template Message Count
-          </h3>
+          <h3 className="text-lg font-semibold tracking-tight">Template Message Count</h3>
           <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -505,11 +400,7 @@ function OrgById() {
       </div>
       {/* Modals */}
       {subscription && (
-        <SubscriptionEditorModal
-          subscription={subscription}
-          opened={opened}
-          onClose={close}
-        />
+        <SubscriptionEditorModal subscription={subscription} opened={opened} onClose={close} />
       )}
       <ConfirmationModal
         opened={openedConfirmModal}
@@ -596,8 +487,7 @@ function DeleteOrgModal({
           <div>
             <h2 className="text-lg font-semibold">Delete Organization</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              You can notify the organization before deleting or delete
-              immediately.
+              You can notify the organization before deleting or delete immediately.
             </p>
           </div>
 
@@ -623,10 +513,7 @@ function DeleteOrgModal({
             </Button>
 
             {/* Delete Org → opens second modal */}
-            <Button
-              variant="destructive"
-              onClick={() => setOpenConfirmDelete(true)}
-            >
+            <Button variant="destructive" onClick={() => setOpenConfirmDelete(true)}>
               <Trash />
               Delete Organization
             </Button>
@@ -644,20 +531,14 @@ function DeleteOrgModal({
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
           <div className="bg-white dark:bg-gray-900 rounded-xl p-6 w-[420px] space-y-5 shadow-lg">
             <div>
-              <h2 className="text-lg font-semibold text-destructive">
-                Confirm Deletion
-              </h2>
+              <h2 className="text-lg font-semibold text-destructive">Confirm Deletion</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                This action is irreversible. Are you sure you want to delete
-                this organization?
+                This action is irreversible. Are you sure you want to delete this organization?
               </p>
             </div>
 
             <div className="flex justify-end gap-3">
-              <Button
-                variant="ghost"
-                onClick={() => setOpenConfirmDelete(false)}
-              >
+              <Button variant="ghost" onClick={() => setOpenConfirmDelete(false)}>
                 Cancel
               </Button>
 

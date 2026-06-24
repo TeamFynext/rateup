@@ -1,9 +1,6 @@
-"use client";
-
-import { useTransition } from "react";
-
 import { Select } from "@mantine/core";
 import { IconLanguage } from "@tabler/icons-react";
+import { useTransition } from "react";
 
 import i18n from "@/i18n.ts";
 
@@ -15,11 +12,7 @@ type Props = {
   label: string;
 };
 
-export default function LocaleSwitcherSelect({
-  defaultValue,
-  items,
-  label,
-}: Readonly<Props>) {
+export default function LocaleSwitcherSelect({ defaultValue, items, label }: Readonly<Props>) {
   const [isPending, startTransition] = useTransition();
 
   function onChange(value: string | null) {

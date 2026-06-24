@@ -1,11 +1,7 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
 import { CreditCard, MapPin, Truck } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
-import { IntegratedApps } from "@/types/enums";
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
@@ -22,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { IntegratedApps } from "@/types/enums";
 
 const TABS = [
   { id: "payment", label: "Payment", icon: CreditCard },
@@ -35,8 +32,9 @@ export const Route = createFileRoute("/dashboard/whatsapp/payments/")({
 
 function PaymentsPage() {
   const { data: waSettings, isLoading: isLoadingSettings } = useWaSettings();
-  const { data: shopifyIntegration, isLoading: isLoadingShopify } =
-    useIntegrationByType(IntegratedApps.shopify);
+  const { data: shopifyIntegration, isLoading: isLoadingShopify } = useIntegrationByType(
+    IntegratedApps.shopify,
+  );
 
   const [currentSettingId, setCurrentSettingId] = useState<string>("");
 
@@ -46,13 +44,10 @@ function PaymentsPage() {
     }
   }, [waSettings, currentSettingId]);
 
-  const currentSetting =
-    waSettings?.find((s) => s.id === currentSettingId) ?? waSettings?.[0];
+  const currentSetting = waSettings?.find((s) => s.id === currentSettingId) ?? waSettings?.[0];
 
   // Resolve catalogId from connected catalog for this phone number
-  const { data: connectedCatalog } = useConnectedWaCatalog(
-    currentSetting?.phoneId,
-  );
+  const { data: connectedCatalog } = useConnectedWaCatalog(currentSetting?.phoneId);
   const catalogId: string = connectedCatalog?.catalogId ?? "";
 
   const isShopifyConnected = !!shopifyIntegration?.credential?.session?.shop;
@@ -80,12 +75,9 @@ function PaymentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Payments & Checkout
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">Payments & Checkout</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Configure payment, address collection, and delivery for WhatsApp
-            orders
+            Configure payment, address collection, and delivery for WhatsApp orders
           </p>
         </div>
 
@@ -94,10 +86,7 @@ function PaymentsPage() {
             <Label htmlFor="wa-selector" className="text-sm whitespace-nowrap">
               WhatsApp Number
             </Label>
-            <Select
-              value={currentSettingId}
-              onValueChange={setCurrentSettingId}
-            >
+            <Select value={currentSettingId} onValueChange={setCurrentSettingId}>
               <SelectTrigger id="wa-selector" className="w-[220px]">
                 <SelectValue placeholder="Select number" />
               </SelectTrigger>
@@ -116,9 +105,8 @@ function PaymentsPage() {
       {/* No catalog warning */}
       {!catalogId && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
-          ⚠️ No WhatsApp catalog connected to this phone number. Connect a
-          catalog first in the <strong>Catalog</strong> section to enable
-          address collection and delivery features.
+          ⚠️ No WhatsApp catalog connected to this phone number. Connect a catalog first in the{" "}
+          <strong>Catalog</strong> section to enable address collection and delivery features.
         </div>
       )}
 
@@ -139,10 +127,7 @@ function PaymentsPage() {
         </TabsList>
 
         <TabsContent value="payment" className="mt-0">
-          <PaymentTab
-            catalogId={catalogId}
-            isShopifyConnected={isShopifyConnected}
-          />
+          <PaymentTab catalogId={catalogId} isShopifyConnected={isShopifyConnected} />
         </TabsContent>
 
         <TabsContent value="address" className="mt-0">

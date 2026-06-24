@@ -1,11 +1,6 @@
-"use client";
-
+import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 
-import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-
-import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
@@ -24,11 +19,9 @@ import SurveyContext from "@/context/SurveyContext.ts";
 
 import styles from "../../../../../../components/dashboard/whatsapp/flows/v2/FlowPage.module.css";
 
-export const Route = createFileRoute("/dashboard/whatsapp/flows/v2/$dbFlowId/")(
-  {
-    component: Flow,
-  },
-);
+export const Route = createFileRoute("/dashboard/whatsapp/flows/v2/$dbFlowId/")({
+  component: Flow,
+});
 
 const ResultsOverviewWebForm = lazy(
   () => import("@/components/Survey/Result/ResultsOverviewWebForm.tsx"),
@@ -52,56 +45,40 @@ function Flow() {
   const tabView = searchParams.tab as string;
 
   const { data: flow, isPending } = useWaFlowFromDb(dbFlowId);
-  const { data: survey, isPending: isSurveyPending } = useSurvey(
-    flow?.surveyId,
-  );
-  const { data: subscription } = useSubscription();
+  const { data: survey, isPending: isSurveyPending } = useSurvey(flow?.surveyId);
 
   const flowQuestions = useMemo(() => {
     if (!flow?.json?.screens) return [];
     return flow.json.screens.flatMap((screen: any) =>
       screen.layout.children
         .filter((child: any) => child.type !== "Footer")
-        .map(
-          ({
-            id,
-            label,
-            metaType,
-            name,
-            "data-source": dataSource,
-            header,
-          }: any) => ({
-            id,
-            label,
-            metaType,
-            dataSource,
-            name,
-            header,
-          }),
-        )
+        .map(({ id, label, metaType, name, "data-source": dataSource, header }: any) => ({
+          id,
+          label,
+          metaType,
+          dataSource,
+          name,
+          header,
+        }))
         .filter(({ name }: any) => name),
     );
   }, [flow]);
 
   const { update } = useRouteParams();
-  const { t: translations } = useTranslation();
+
   useEffect(() => {
     update({ dbFlowId: flow?.name });
   }, [flow, update]);
 
   useEffect(() => {
     if (selectedTeamId) {
-      setSurveyTeamMapId(
-        survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId,
-      );
-      setSelectedTeamName(
-        survey?.teams?.find((team) => team.id === selectedTeamId)?.name,
-      );
+      setSurveyTeamMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId);
+      setSelectedTeamName(survey?.teams?.find((team) => team.id === selectedTeamId)?.name);
     }
   }, [selectedTeamId]);
 
   useEffect(() => {
-    teamOptions && setSelectedTeamId(teamOptions?.[0]?.value);
+    if (teamOptions) setSelectedTeamId(teamOptions?.[0]?.value);
   }, [teamOptions]);
 
   useEffect(() => {
@@ -169,15 +146,9 @@ function Flow() {
               className={styles["flow-page-panels-container"]}
             >
               <TabsContent value={FlowTabEnum.Edit} className="h-full mt-0">
-                <EditFlow
-                  previewOpened={previewOpened}
-                  setPreviewOpened={setPreviewOpened}
-                />
+                <EditFlow previewOpened={previewOpened} />
               </TabsContent>
-              <TabsContent
-                value={FlowTabEnum.Settings}
-                className="h-full overflow-y-auto mt-0"
-              >
+              <TabsContent value={FlowTabEnum.Settings} className="h-full overflow-y-auto mt-0">
                 <FlowSettings
                   flowName={flow.name}
                   flowDbId={flow.dbFlowId}
@@ -186,23 +157,16 @@ function Flow() {
                   surveyId={survey.id}
                 />
               </TabsContent>
-              <TabsContent
-                value={FlowTabEnum.Responses}
-                className="mt-0 relative h-full"
-              >
+              <TabsContent value={FlowTabEnum.Responses} className="mt-0 relative h-full">
                 <Result
                   encryptionpassword={""}
                   setEncryptionPassword={() => {}}
                   survey={survey}
-                  flowId={flow.flowId}
                   version={flow.version}
                   flow={flow}
                 />
               </TabsContent>
-              <TabsContent
-                value={FlowTabEnum.Share}
-                className="h-full overflow-y-auto mt-0"
-              >
+              <TabsContent value={FlowTabEnum.Share} className="h-full overflow-y-auto mt-0">
                 <FlowShare
                   flowName={flow.name}
                   flowDbId={flow.dbFlowId}
@@ -210,21 +174,13 @@ function Flow() {
                   surveyId={survey.id}
                 />
               </TabsContent>
-              <TabsContent
-                value={FlowTabEnum.Analytics}
-                className="h-full overflow-y-auto mt-0"
-              >
+              <TabsContent value={FlowTabEnum.Analytics} className="h-full overflow-y-auto mt-0">
                 <Suspense
-                  fallback={
-                    <div className="flex items-center justify-center h-64">
-                      Loading...
-                    </div>
-                  }
+                  fallback={<div className="flex items-center justify-center h-64">Loading...</div>}
                 >
                   <ResultsOverviewWebForm
                     surveyId={survey?.id}
                     aiResponseSummary={(survey as any)?.aiResponseSummary}
-                    survey={survey}
                     flowId={flow?.flowId}
                     version={flow?.version}
                     flowQuestions={flowQuestions}

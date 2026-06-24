@@ -1,31 +1,20 @@
-"use client";
-
-import { useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Building2, Calendar, ShoppingBag, Store, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { IntegratedApps } from "@/types/enums.ts";
 import { useGetAllIntegrations } from "@/backend/appsIntegration/integration.query";
 import { useDeleteShopifyIntegrationByShop } from "@/backend/appsIntegration/shopify/shopify.query";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { IntegratedApps } from "@/types/enums.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
 import { DataTableToolbar } from "../../../components/admin/shopify/data-table-toolbar.tsx";
@@ -145,9 +134,6 @@ function Shopify() {
   };
 
   // Calculate stats
-  const totalIntegrations = tableData.length;
-  const activeIntegrations = tableData.filter((item) => item.status).length;
-  const inactiveIntegrations = tableData.filter((item) => !item.status).length;
 
   return (
     <div className="container mx-auto space-y-8">
@@ -177,23 +163,17 @@ function Shopify() {
         </CardHeader>
         <CardContent className="pt-0">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            Manage all Shopify store integrations connected to your platform.
-            You can view integration status and remove integrations when needed.
+            Manage all Shopify store integrations connected to your platform. You can view
+            integration status and remove integrations when needed.
           </p>
         </CardContent>
       </Card>
-      <h2 className="text-xl font-semibold tracking-tight">
-        Integration Management
-      </h2>
+      <h2 className="text-xl font-semibold tracking-tight">Integration Management</h2>
       <p className="text-sm text-muted-foreground">
         View and manage all Shopify store integrations
       </p>
       <div>
-        <DataTable
-          columns={columns}
-          data={tableData}
-          DataTableToolbar={DataTableToolbar}
-        />
+        <DataTable columns={columns} data={tableData} DataTableToolbar={DataTableToolbar} />
       </div>
       <ConfirmationModal
         confirmLabel={translations("Yes")}

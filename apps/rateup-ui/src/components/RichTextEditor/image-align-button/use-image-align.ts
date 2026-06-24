@@ -1,7 +1,3 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-
 import { NodeSelection } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/react";
 import {
@@ -9,6 +5,7 @@ import {
   AlignEndVerticalIcon,
   AlignStartVerticalIcon,
 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useTiptapEditor } from "./image-align-button.tsx";
 
@@ -79,9 +76,7 @@ function canSetImageAlign(
   if (!editor || !editor.isEditable) return false;
   if (!isExtensionAvailable(editor, [extensionName])) return false;
 
-  return editor
-    .can()
-    .updateAttributes(extensionName, { [attributeName]: align });
+  return editor.can().updateAttributes(extensionName, { [attributeName]: align });
 }
 
 /**
@@ -125,9 +120,7 @@ function setImageAlign(
   try {
     const { selection } = editor.state;
     const isNodeSelection = selection instanceof NodeSelection;
-    const selectionPosition = isNodeSelection
-      ? selection.from
-      : selection.$anchor.pos;
+    const selectionPosition = isNodeSelection ? selection.from : selection.$anchor.pos;
 
     const currentAttrs = editor.getAttributes(extensionName);
 
@@ -237,18 +230,8 @@ export function useImageAlign(config: UseImageAlignConfig) {
   const { editor } = useTiptapEditor(providedEditor);
   const isMobile = useIsBreakpoint();
   const [isVisible, setIsVisible] = useState<boolean>(true);
-  const canAlign = canSetImageAlign(
-    editor,
-    align,
-    extensionName,
-    attributeName,
-  );
-  const isActive = isImageAlignActive(
-    editor,
-    align,
-    extensionName,
-    attributeName,
-  );
+  const canAlign = canSetImageAlign(editor, align, extensionName, attributeName);
+  const isActive = isImageAlignActive(editor, align, extensionName, attributeName);
 
   useEffect(() => {
     if (!editor) return;
@@ -304,15 +287,10 @@ export function useImageAlign(config: UseImageAlignConfig) {
     Icon: imageAlignIcons[align],
   };
 }
-function isExtensionAvailable(
-  editor: Editor | null,
-  extensionNames: string | string[],
-): boolean {
+function isExtensionAvailable(editor: Editor | null, extensionNames: string | string[]): boolean {
   if (!editor) return false;
 
-  const names = Array.isArray(extensionNames)
-    ? extensionNames
-    : [extensionNames];
+  const names = Array.isArray(extensionNames) ? extensionNames : [extensionNames];
 
   const found = names.some((name) =>
     editor.extensionManager.extensions.some((ext) => ext.name === name),
@@ -333,9 +311,7 @@ function useIsBreakpoint(mode: BreakpointMode = "max", breakpoint = 768) {
 
   useEffect(() => {
     const query =
-      mode === "min"
-        ? `(min-width: ${breakpoint}px)`
-        : `(max-width: ${breakpoint - 1}px)`;
+      mode === "min" ? `(min-width: ${breakpoint}px)` : `(max-width: ${breakpoint - 1}px)`;
 
     const mql = window.matchMedia(query);
     const onChange = (e: MediaQueryListEvent) => setMatches(e.matches);

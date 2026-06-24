@@ -3,8 +3,6 @@ import { Paper, Stack } from "@mantine/core";
 import TemplateCard from "./templateCard.tsx";
 
 const SurveyTemplates = ({ survey, setSelectedTemplate, bgTemp, open }) => {
-  const { theme: surveyTheme } = survey?.webSurveyTheme;
-
   return (
     <Stack>
       <Paper
@@ -16,9 +14,7 @@ const SurveyTemplates = ({ survey, setSelectedTemplate, bgTemp, open }) => {
           open();
         }}
         style={{
-          ...(survey?.WelcomeTheme?.bgType === "bgcolor"
-            ? survey?.WelcomeTheme?.bgStyles
-            : bgTemp),
+          ...(survey?.WelcomeTheme?.bgType === "bgcolor" ? survey?.WelcomeTheme?.bgStyles : bgTemp),
           width: "300px",
           minHeight: "150px",
           cursor: "pointer",

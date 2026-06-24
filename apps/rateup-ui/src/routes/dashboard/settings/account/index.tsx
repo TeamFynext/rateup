@@ -1,36 +1,18 @@
-"use client";
-
-import React, { useEffect, useRef, useState } from "react";
-
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
+import { Building, Camera, Edit, Globe, Home, Mail, MapPin, Phone, Upload } from "lucide-react";
 
 import "react-phone-number-input/style.css";
 
-import {
-  Building,
-  Camera,
-  Edit,
-  Globe,
-  Home,
-  Mail,
-  MapPin,
-  Phone,
-  Upload,
-} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import PhoneInputWithCountrySelect, {
-  isValidPhoneNumber,
-} from "react-phone-number-input";
+import PhoneInputWithCountrySelect, { isValidPhoneNumber } from "react-phone-number-input";
 import SelectR from "react-select";
 import countryList from "react-select-country-list";
 import { toast } from "sonner";
 
-import {
-  useUpdateOrgDetailsMutation,
-  useUpdateOrgLogoMutation,
-} from "@/backend/org/org.query";
+import { useUpdateOrgDetailsMutation, useUpdateOrgLogoMutation } from "@/backend/org/org.query";
 import {
   useGetUserProfile,
   useUpdateProfileMutation,
@@ -39,11 +21,7 @@ import {
 import { BusinessHoursSection } from "@/components/account/business-hours/BusinessHoursSection.tsx";
 import { ImageCropModal } from "@/components/Modal/ImageCropModal.tsx";
 import LocaleSwitcher from "@/components/translation/LocaleSwitcher.tsx";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -76,8 +54,7 @@ export const Route = createFileRoute("/dashboard/settings/account/")({
 
 function Account() {
   const { t: translations } = useTranslation();
-  const { isLoading: isProfileLoading, data: profileData } =
-    useGetUserProfile();
+  const { isLoading: isProfileLoading, data: profileData } = useGetUserProfile();
   const { user } = useUser();
   const countries = countryList().getData();
 
@@ -94,8 +71,7 @@ function Account() {
     validate: {
       name: isNotEmpty(translations("Name cannot be blank")),
       phone: (value) => {
-        if (value && !isValidPhoneNumber(value))
-          return translations("Invalid phone number");
+        if (value && !isValidPhoneNumber(value)) return translations("Invalid phone number");
         return null;
       },
       businessmail: (value) => {
@@ -116,8 +92,7 @@ function Account() {
       title: isNotEmpty(translations("Select a title")),
       fullname: isNotEmpty(translations("Name Cannot be blank")),
       phone: (value) => {
-        if (value && !isValidPhoneNumber(value))
-          return translations("Invalid phone number");
+        if (value && !isValidPhoneNumber(value)) return translations("Invalid phone number");
         return null;
       },
     },
@@ -134,11 +109,9 @@ function Account() {
   const [orgAvatarSrc, setOrgAvatarSrc] = useState("");
   const [selectedImage, setSelectedImage] = useState({ url: "", name: "" });
   const resetRef = useRef<HTMLInputElement>(null);
-  const [
-    openedCropDialog,
-    { toggle: toggleCropDialog, close: closeCropDialog },
-  ] = useDisclosure(false);
-  const [isLoadingUpload, setIsLoadingUpload] = useState(false);
+  const [openedCropDialog, { toggle: toggleCropDialog, close: closeCropDialog }] =
+    useDisclosure(false);
+  const [, setIsLoadingUpload] = useState(false);
   const updateProfile = useUpdateProfileMutation();
   const updateLogo = useUpdateOrgLogoMutation(setIsLoadingUpload);
   const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoadingUpload);
@@ -165,9 +138,7 @@ function Account() {
 
       const profilePhoto = profile.profilePhoto;
       if (profilePhoto && profilePhoto !== "REMOVED_PHOTO") {
-        setAvatarSrc(
-          `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${profilePhoto}`,
-        );
+        setAvatarSrc(`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${profilePhoto}`);
       }
     }
   }, [profileData]);
@@ -185,9 +156,7 @@ function Account() {
       });
 
       if (user.orgLogo && user.orgLogo !== "REMOVED_PHOTO") {
-        setOrgAvatarSrc(
-          `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${user.orgLogo}`,
-        );
+        setOrgAvatarSrc(`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${user.orgLogo}`);
       }
     }
   }, [user]);
@@ -202,23 +171,17 @@ function Account() {
             if (typeof fileKey === "string") {
               updateLogo.mutate(data);
 
-              toast.loading(
-                translations("Hold on, changing your organization Logo"),
-                {
-                  id: "load-data",
-                },
-              );
+              toast.loading(translations("Hold on, changing your organization Logo"), {
+                id: "load-data",
+              });
             }
           } else {
             const data = { profilePhoto: fileKey };
             updateProfilePhoto.mutate(data, {
               onSuccess: () => {
-                toast.success(
-                  translations("Profile photo updated successfully"),
-                  {
-                    id: "upload-photo",
-                  },
-                );
+                toast.success(translations("Profile photo updated successfully"), {
+                  id: "upload-photo",
+                });
               },
             });
           }
@@ -256,12 +219,9 @@ function Account() {
       industry: values?.industry ?? "",
       businessmail: values?.businessmail ?? "",
     };
-    toast.loading(
-      translations("Hold on, Organization info is getting updated.."),
-      {
-        id: "load-data",
-      },
-    );
+    toast.loading(translations("Hold on, Organization info is getting updated.."), {
+      id: "load-data",
+    });
     orgDetailsUpdate.mutate(data);
   };
 
@@ -287,12 +247,9 @@ function Account() {
         id: "upload-photo",
       });
       if (updateLogo.isPending) {
-        toast.loading(
-          translations("Hold on, changing your organization photo"),
-          {
-            id: "upload-photo",
-          },
-        );
+        toast.loading(translations("Hold on, changing your organization photo"), {
+          id: "upload-photo",
+        });
       }
     }
   }, [updateLogo.isPending, updateProfilePhoto.isPending]);
@@ -302,9 +259,7 @@ function Account() {
       <div>
         <h2 className="text-2xl mb-1">{translations("Account Settings")}</h2>
         <p className="text-sm text-muted-foreground">
-          {translations(
-            "Manage your profile, business information and account preferences",
-          )}
+          {translations("Manage your profile, business information and account preferences")}
         </p>
       </div>
       {/* User Profile Section */}
@@ -361,8 +316,7 @@ function Account() {
                     {profileData?.data?.data?.name}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    {profileData?.data?.data?.email} •{" "}
-                    {translations("Member since")}{" "}
+                    {profileData?.data?.data?.email} • {translations("Member since")}{" "}
                     {profileData?.data?.data?.createdAt
                       ? new Date(profileData.data.data.createdAt).getFullYear()
                       : "—"}
@@ -372,14 +326,10 @@ function Account() {
                   <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
                     <Badge
                       className={`${
-                        profileData?.data?.data?.active
-                          ? "bg-green-600"
-                          : "bg-gray-400"
+                        profileData?.data?.data?.active ? "bg-green-600" : "bg-gray-400"
                       } text-white text-xs sm:text-sm`}
                     >
-                      {profileData?.data?.data?.active
-                        ? "Active Account"
-                        : "Inactive Account"}
+                      {profileData?.data?.data?.active ? "Active Account" : "Inactive Account"}
                     </Badge>
                     <Badge
                       variant="outline"
@@ -454,9 +404,7 @@ function Account() {
           </div>
           <div>
             <p className="font-medium text-base">{user?.orgName}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              {user?.onboarding?.industry}
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{user?.onboarding?.industry}</p>
           </div>
         </div>
 
@@ -465,9 +413,7 @@ function Account() {
           <div className="flex items-start gap-2.5">
             <Phone className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">
-                {translations("Phone")}
-              </p>
+              <p className="font-medium text-gray-700 mb-0.5">{translations("Phone")}</p>
               <p className="text-gray-500">{orgForm?.values?.phone || "—"}</p>
             </div>
           </div>
@@ -475,45 +421,31 @@ function Account() {
           <div className="flex items-start gap-2.5">
             <Mail className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">
-                {translations("Email")}
-              </p>
-              <p className="text-gray-500">
-                {user?.onboarding?.businessmail || "—"}
-              </p>
+              <p className="font-medium text-gray-700 mb-0.5">{translations("Email")}</p>
+              <p className="text-gray-500">{user?.onboarding?.businessmail || "—"}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2.5">
             <Globe className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">
-                {translations("Website")}
-              </p>
-              <p className="text-gray-500">
-                {user?.onboarding?.website || "—"}
-              </p>
+              <p className="font-medium text-gray-700 mb-0.5">{translations("Website")}</p>
+              <p className="text-gray-500">{user?.onboarding?.website || "—"}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2.5">
             <MapPin className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">
-                {translations("Location")}
-              </p>
-              <p className="text-gray-500">
-                {user?.onboarding?.location || "—"}
-              </p>
+              <p className="font-medium text-gray-700 mb-0.5">{translations("Location")}</p>
+              <p className="text-gray-500">{user?.onboarding?.location || "—"}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-2.5 md:col-span-2">
             <Home className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">
-                {translations("Address")}
-              </p>
+              <p className="font-medium text-gray-700 mb-0.5">{translations("Address")}</p>
               <p className="text-gray-500">{orgForm?.values?.address || "—"}</p>
             </div>
           </div>
@@ -521,25 +453,16 @@ function Account() {
       </Card>
       {/* Business Information Dialog */}
       {user?.role === UserRole.SUPADM && (
-        <Dialog
-          open={isBusinessDialogOpen}
-          onOpenChange={setIsBusinessDialogOpen}
-        >
+        <Dialog open={isBusinessDialogOpen} onOpenChange={setIsBusinessDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>{translations("Business Information")}</DialogTitle>
               <DialogDescription>
-                {translations(
-                  "Update your organization details and upload your company logo",
-                )}
-                .
+                {translations("Update your organization details and upload your company logo")}.
               </DialogDescription>
             </DialogHeader>
 
-            <form
-              onSubmit={orgForm.onSubmit(onOrgSubmit)}
-              className="space-y-4 py-4"
-            >
+            <form onSubmit={orgForm.onSubmit(onOrgSubmit)} className="space-y-4 py-4">
               {/* Logo Upload */}
               <div className="flex items-center gap-6">
                 <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
@@ -552,9 +475,7 @@ function Account() {
                   <Label htmlFor="orgLogoUpload" className="cursor-pointer">
                     <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
                       <Upload className="w-4 h-4" />
-                      <span className="text-sm">
-                        {translations("Upload Logo")}
-                      </span>
+                      <span className="text-sm">{translations("Upload Logo")}</span>
                     </div>
                     <input
                       id="orgLogoUpload"
@@ -576,8 +497,7 @@ function Account() {
                     />
                   </Label>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {translations("JPG, PNG or GIF")}.
-                    {translations("Max size 2MB")}.
+                    {translations("JPG, PNG or GIF")}.{translations("Max size 2MB")}.
                   </p>
                 </div>
               </div>
@@ -585,9 +505,7 @@ function Account() {
               {/* Organization Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="businessName">
-                    {translations("Business Name")}
-                  </Label>
+                  <Label htmlFor="businessName">{translations("Business Name")}</Label>
                   <Input
                     id="businessName"
                     {...orgForm.getInputProps("name")}
@@ -599,9 +517,7 @@ function Account() {
                   <Label htmlFor="industry">{translations("Industry")}</Label>
                   <Select
                     defaultValue={user?.onboarding?.industry || "E-commerce"}
-                    onValueChange={(val) =>
-                      orgForm.setFieldValue("industry", val)
-                    }
+                    onValueChange={(val) => orgForm.setFieldValue("industry", val)}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue />
@@ -626,9 +542,7 @@ function Account() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="businessPhone">
-                    {translations("Business Phone")}
-                  </Label>
+                  <Label htmlFor="businessPhone">{translations("Business Phone")}</Label>
                   <PhoneInputWithCountrySelect
                     defaultCountry="IN"
                     international
@@ -639,25 +553,19 @@ function Account() {
                     className="rounded-md border border-gray-300 px-2 py-1 w-full"
                   />
                   {orgForm.errors.phone && (
-                    <p className="text-xs text-red-500">
-                      {orgForm.errors.phone}
-                    </p>
+                    <p className="text-xs text-red-500">{orgForm.errors.phone}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="businessEmail">
-                    {translations("Business Email")}
-                  </Label>
+                  <Label htmlFor="businessEmail">{translations("Business Email")}</Label>
                   <Input
                     id="businessEmail"
                     {...orgForm.getInputProps("businessmail")}
                     placeholder="business@company.com"
                   />
                   {orgForm.errors.businessmail && (
-                    <p className="text-xs text-red-500">
-                      {orgForm.errors.businessmail}
-                    </p>
+                    <p className="text-xs text-red-500">{orgForm.errors.businessmail}</p>
                   )}
                 </div>
 
@@ -666,13 +574,9 @@ function Account() {
                   <SelectR
                     options={countries}
                     value={
-                      countries.find(
-                        (country) => country.label === orgForm.values.location,
-                      ) || null
+                      countries.find((country) => country.label === orgForm.values.location) || null
                     }
-                    onChange={(option) =>
-                      orgForm.setFieldValue("location", option?.label || "")
-                    }
+                    onChange={(option) => orgForm.setFieldValue("location", option?.label || "")}
                     placeholder={translations("Select Your Location")}
                     isSearchable
                     className="rounded-md text-sm bg-white [&>input]:w-full border-gray-200"
@@ -684,9 +588,7 @@ function Account() {
                   <Textarea
                     id="address"
                     {...orgForm.getInputProps("address")}
-                    placeholder={translations(
-                      "Enter your complete business address",
-                    )}
+                    placeholder={translations("Enter your complete business address")}
                     className="resize-none"
                     rows={2}
                   />
@@ -716,9 +618,7 @@ function Account() {
           </div>
           <div>
             <h4 className="mb-0">{translations("Regional Settings")}</h4>
-            <p className="text-xs text-muted-foreground">
-              {translations("Language Preferences")}
-            </p>
+            <p className="text-xs text-muted-foreground">{translations("Language Preferences")}</p>
           </div>
         </div>
         <LocaleSwitcher />
@@ -733,10 +633,7 @@ function Account() {
         aspect={1}
       />
       {/* Edit Profile Dialog */}
-      <Dialog
-        open={isEditProfileDialogOpen}
-        onOpenChange={setIsEditProfileDialogOpen}
-      >
+      <Dialog open={isEditProfileDialogOpen} onOpenChange={setIsEditProfileDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{translations("Edit Profile")}</DialogTitle>
@@ -745,10 +642,7 @@ function Account() {
             </DialogDescription>
           </DialogHeader>
 
-          <form
-            onSubmit={profileForm.onSubmit(onSubmit)}
-            className="space-y-4 py-4"
-          >
+          <form onSubmit={profileForm.onSubmit(onSubmit)} className="space-y-4 py-4">
             {/* Profile Image Upload */}
             <div className="flex items-center gap-6">
               <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
@@ -761,9 +655,7 @@ function Account() {
                 <Label htmlFor="profileImageUpload" className="cursor-pointer">
                   <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
                     <Upload className="w-4 h-4" />
-                    <span className="text-sm">
-                      {translations("Upload Photo")}
-                    </span>
+                    <span className="text-sm">{translations("Upload Photo")}</span>
                   </div>
                   <input
                     ref={resetRef}
@@ -775,8 +667,7 @@ function Account() {
                   />
                 </Label>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {translations("JPG, PNG or GIF")}.{" "}
-                  {translations("Max size 2MB")}.
+                  {translations("JPG, PNG or GIF")}. {translations("Max size 2MB")}.
                 </p>
               </div>
             </div>
@@ -788,9 +679,7 @@ function Account() {
               </Label>
               <Select
                 value={profileForm.values.title}
-                onValueChange={(value) =>
-                  profileForm.setFieldValue("title", value)
-                }
+                onValueChange={(value) => profileForm.setFieldValue("title", value)}
                 required
               >
                 <SelectTrigger className="w-full">
@@ -803,17 +692,14 @@ function Account() {
                 </SelectContent>
               </Select>
               {profileForm.errors.title && (
-                <p className="text-xs text-red-500">
-                  {profileForm.errors.title}
-                </p>
+                <p className="text-xs text-red-500">{profileForm.errors.title}</p>
               )}
             </div>
 
             {/* Full Name */}
             <div className="space-y-2">
               <Label htmlFor="fullname">
-                {translations("Full Name")}{" "}
-                <span className="text-red-500">*</span>
+                {translations("Full Name")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="fullname"
@@ -821,17 +707,13 @@ function Account() {
                 {...profileForm.getInputProps("fullname")}
               />
               {profileForm.errors.fullname && (
-                <p className="text-xs text-red-500">
-                  {profileForm.errors.fullname}
-                </p>
+                <p className="text-xs text-red-500">{profileForm.errors.fullname}</p>
               )}
             </div>
 
             {/* Email - Read Only */}
             <div className="space-y-2">
-              <Label htmlFor="profileEmail">
-                {translations("Email Address")}
-              </Label>
+              <Label htmlFor="profileEmail">{translations("Email Address")}</Label>
               <Input
                 id="profileEmail"
                 type="email"
@@ -841,17 +723,13 @@ function Account() {
                 className="bg-gray-100 cursor-not-allowed opacity-70"
               />
               {profileForm.errors.email && (
-                <p className="text-xs text-red-500">
-                  {profileForm.errors.email}
-                </p>
+                <p className="text-xs text-red-500">{profileForm.errors.email}</p>
               )}
             </div>
 
             {/* Phone */}
             <div className="space-y-2">
-              <Label htmlFor="profilePhone">
-                {translations("Phone Number")}
-              </Label>
+              <Label htmlFor="profilePhone">{translations("Phone Number")}</Label>
               <PhoneInputWithCountrySelect
                 defaultCountry="IN"
                 international
@@ -861,9 +739,7 @@ function Account() {
                 className="rounded-md border border-gray-300 px-2 py-1 w-full"
               />
               {profileForm.errors.phone && (
-                <p className="text-xs text-red-500">
-                  {profileForm.errors.phone}
-                </p>
+                <p className="text-xs text-red-500">{profileForm.errors.phone}</p>
               )}
             </div>
 

@@ -13,7 +13,7 @@ export const useContactTableStore = create<{
   selectedContact: ContactsData;
   setSelectedContact: (contact: ContactsData) => void;
 }>()(
-  immer((set, get) => ({
+  immer((set, _get) => ({
     filter: {
       searchTerm: "",
       lifecycleId: "all",

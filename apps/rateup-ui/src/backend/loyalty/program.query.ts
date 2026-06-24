@@ -1,10 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type {
-  LoyaltyProgramInput,
-  LoyaltyProgramUpdateInput,
-} from "./program.api";
+import type { LoyaltyProgramInput, LoyaltyProgramUpdateInput } from "./program.api";
 import {
   createLoyaltyProgram,
   deleteLoyaltyProgram,
@@ -25,15 +22,11 @@ export const useLoyaltyProgram = () =>
 /**
  * Hook to create a new loyalty program
  */
-export const useCreateLoyaltyProgramMutation = (
-  onSuccess?: () => void,
-  onError?: () => void,
-) => {
+export const useCreateLoyaltyProgramMutation = (onSuccess?: () => void, onError?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (programData: LoyaltyProgramInput) =>
-      createLoyaltyProgram(programData),
+    mutationFn: (programData: LoyaltyProgramInput) => createLoyaltyProgram(programData),
     onSuccess: () => {
       toast.success("Loyalty program created successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-program"] });
@@ -74,20 +67,12 @@ export const useUpdateLoyaltyProgramMutation = (
 /**
  * Hook to delete a loyalty program
  */
-export const useDeleteLoyaltyProgramMutation = (
-  onSuccess?: () => void,
-  onError?: () => void,
-) => {
+export const useDeleteLoyaltyProgramMutation = (onSuccess?: () => void, onError?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      programId,
-      force = false,
-    }: {
-      programId: string;
-      force?: boolean;
-    }) => deleteLoyaltyProgram(programId, force),
+    mutationFn: ({ programId, force = false }: { programId: string; force?: boolean }) =>
+      deleteLoyaltyProgram(programId, force),
     onSuccess: () => {
       toast.success("Loyalty program deleted successfully", {
         id: "loyalty-program-delete",

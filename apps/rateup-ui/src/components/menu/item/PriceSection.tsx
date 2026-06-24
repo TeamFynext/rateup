@@ -1,5 +1,3 @@
-"use client";
-
 import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 
@@ -55,17 +53,11 @@ export function PriceSection({
             className="flex gap-4"
           >
             <label className="flex items-center gap-2 text-sm">
-              <RadioGroupItem
-                value={MenuItemPriceType.FIXED}
-                id="price-fixed"
-              />
+              <RadioGroupItem value={MenuItemPriceType.FIXED} id="price-fixed" />
               {translations("Fixed")}
             </label>
             <label className="flex items-center gap-2 text-sm">
-              <RadioGroupItem
-                value={MenuItemPriceType.VARIANT}
-                id="price-variant"
-              />
+              <RadioGroupItem value={MenuItemPriceType.VARIANT} id="price-variant" />
               {translations("Variant")}
             </label>
           </RadioGroup>
@@ -79,13 +71,10 @@ export function PriceSection({
             <Input
               placeholder="399"
               value={form.getInputProps("price.price").value ?? ""}
-              onChange={(event) =>
-                form.setFieldValue("price.price", event.target.value)
-              }
+              onChange={(event) => form.setFieldValue("price.price", event.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              {translations("Currency")}:{" "}
-              {currencyLabel[Number(currency)]?.symbol}
+              {translations("Currency")}: {currencyLabel[Number(currency)]?.symbol}
             </p>
           </FieldContent>
         </Field>
@@ -102,28 +91,16 @@ export function PriceSection({
                   <Input
                     placeholder="Small"
                     className="mb-2"
-                    value={
-                      form.getInputProps(`price.variants.${index}.name`)
-                        .value ?? ""
-                    }
+                    value={form.getInputProps(`price.variants.${index}.name`).value ?? ""}
                     onChange={(event) =>
-                      form.setFieldValue(
-                        `price.variants.${index}.name`,
-                        event.target.value,
-                      )
+                      form.setFieldValue(`price.variants.${index}.name`, event.target.value)
                     }
                   />
                   <Input
                     placeholder="399"
-                    value={
-                      form.getInputProps(`price.variants.${index}.price`)
-                        .value ?? ""
-                    }
+                    value={form.getInputProps(`price.variants.${index}.price`).value ?? ""}
                     onChange={(event) =>
-                      form.setFieldValue(
-                        `price.variants.${index}.price`,
-                        event.target.value,
-                      )
+                      form.setFieldValue(`price.variants.${index}.price`, event.target.value)
                     }
                   />
                 </div>

@@ -33,25 +33,19 @@ const getSelectedSurveyTitleOptions = (surveysData) => {
 
 const getSelectedTeamOptions = (surveysData, selectedSurveyTitle) => {
   if (surveysData) {
-    const data = surveysData.find(
-      (surveyObj) => surveyObj.id === selectedSurveyTitle,
-    );
-    const options = data?.teams.map(
-      ({ id, shortUrlId, team: { name: teamName } }) => {
-        return {
-          label: teamName,
-          value: shortUrlId || id,
-        };
-      },
-    );
+    const data = surveysData.find((surveyObj) => surveyObj.id === selectedSurveyTitle);
+    const options = data?.teams.map(({ id, shortUrlId, team: { name: teamName } }) => {
+      return {
+        label: teamName,
+        value: shortUrlId || id,
+      };
+    });
     return options;
   }
 };
 
 const getSurveyTitleWithId = (surveysData, surveyId) => {
-  return (
-    surveysData?.find((surveyObj) => surveyObj.id === surveyId)?.title ?? ""
-  );
+  return surveysData?.find((surveyObj) => surveyObj.id === surveyId)?.title ?? "";
 };
 
 export {

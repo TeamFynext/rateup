@@ -1,16 +1,14 @@
-"use client";
-
-import { useContext, useRef } from "react";
-
 import { Stack, TextInput, useMantineTheme } from "@mantine/core";
 import { IconMail } from "@tabler/icons-react";
+import { useContext, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import PhoneInput from "react-phone-number-input";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 
-import classes from "../TakeSurvey.module.css";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
+
+import classes from "../TakeSurvey.module.css";
 
 export function EmailPhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -34,10 +32,7 @@ export function EmailPhoneForm() {
             root: classes.textRoot,
           }}
           leftSection={
-            <IconMail
-              size="1.2rem"
-              color={`var(--mantine-color-${theme.primaryColor}-outline)`}
-            />
+            <IconMail size="1.2rem" color={`var(--mantine-color-${theme.primaryColor}-outline)`} />
           }
         />
       </FormPaperLayout>

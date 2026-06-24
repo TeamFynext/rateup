@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import {
   ActionIcon,
   Button,
@@ -17,6 +13,7 @@ import {
 } from "@mantine/core";
 import { IconRestore } from "@tabler/icons-react";
 import { produce } from "immer";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
@@ -42,9 +39,7 @@ const TestimonialFilter = ({
     label: team?.name,
   }));
   const surveyMultiSelectOptions = testimonials
-    ?.filter(({ teamId }) =>
-      filters?.teams?.length > 0 ? filters?.teams?.includes(teamId) : true,
-    )
+    ?.filter(({ teamId }) => (filters?.teams?.length > 0 ? filters?.teams?.includes(teamId) : true))
     .map(({ survey }) => ({ label: survey?.name, value: survey?.id }));
   const { t: translations } = useTranslation();
   function removeDuplicates(surveyMultiSelectOptions) {
@@ -60,11 +55,8 @@ const TestimonialFilter = ({
     return uniqueArray;
   }
 
-  const [allRatings, setAllRatings] = useState(true);
-  const filterData = (
-    type: "date" | "rating" | "surveys" | "teams" | "length",
-    newValue,
-  ) => {
+  const [allRatings] = useState(true);
+  const filterData = (type: "date" | "rating" | "surveys" | "teams" | "length", newValue) => {
     setFilters(
       produce((draft: filterType) => {
         draft[type as string] = newValue;
@@ -115,9 +107,7 @@ const TestimonialFilter = ({
                 data={teamMultiSelectOptions}
                 value={filters?.teams}
                 onChange={(value) => filterData("teams", value)}
-                placeholder={
-                  filters?.teams?.length > 0 ? "" : translations("All Teams")
-                }
+                placeholder={filters?.teams?.length > 0 ? "" : translations("All Teams")}
               />
               <MultiSelect
                 radius={"10px"}
@@ -128,9 +118,7 @@ const TestimonialFilter = ({
                 data={removeDuplicates(surveyMultiSelectOptions)}
                 value={filters?.surveys}
                 onChange={(value) => filterData("surveys", value)}
-                placeholder={
-                  filters?.teams?.length > 0 ? "" : translations("All Surveys")
-                }
+                placeholder={filters?.teams?.length > 0 ? "" : translations("All Surveys")}
               />
             </>
           )}
@@ -138,10 +126,7 @@ const TestimonialFilter = ({
             {activeTab != TestimonialTabs.Share && (
               <>
                 <Divider label={translations("Date")} labelPosition="left" />
-                <Radio.Group
-                  onChange={(value) => filterData("date", value)}
-                  value={filters?.date}
-                >
+                <Radio.Group onChange={(value) => filterData("date", value)} value={filters?.date}>
                   <Group>
                     <Radio
                       label={translations("newest")}

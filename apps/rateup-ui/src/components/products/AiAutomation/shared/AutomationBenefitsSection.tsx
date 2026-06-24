@@ -1,6 +1,5 @@
-import React from "react";
-
 import { Image } from "@unpic/react";
+import React from "react";
 
 import { imagesPath } from "@/utils/constants.ts";
 
@@ -57,8 +56,8 @@ export default function AutomationBenefitsSection() {
           Transform Your Business with <br /> RateUp&apos;s AI Agents
         </h3>
         <p className="pt-6 text-gray-200 font-medium text-xl max-w-2xl mx-auto">
-          See how RateUp&apos;s AI-Enabled Automation Builder can revolutionize
-          various aspects of your business operations:
+          See how RateUp&apos;s AI-Enabled Automation Builder can revolutionize various aspects of
+          your business operations:
         </p>
 
         {/* Article Sections */}
@@ -67,9 +66,7 @@ export default function AutomationBenefitsSection() {
             <div
               key={index}
               className={`flex flex-col-reverse md:flex-row items-center justify-between gap-12 
-                transition-all duration-300 ${
-                  index % 2 === 1 ? "md:flex-row-reverse" : ""
-                }`}
+                transition-all duration-300 ${index % 2 === 1 ? "md:flex-row-reverse" : ""}`}
             >
               {/* Text Content */}
               <div className="md:w-1/2 text-left">

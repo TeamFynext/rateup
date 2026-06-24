@@ -1,9 +1,6 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { isNotEmpty, useForm } from "@mantine/form";
 import { IconTrash } from "@tabler/icons-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -12,12 +9,7 @@ import {
   useUpsertWaSettingsMutation,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
@@ -74,9 +66,7 @@ export function WhatsAppManualConfiguration({
   return (
     <Card className="border-border/80">
       <CardHeader>
-        <CardDescription>
-          Configure this WhatsApp Business Account manually.
-        </CardDescription>
+        <CardDescription>Configure this WhatsApp Business Account manually.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.onSubmit(handleSubmit)} className="space-y-4">
@@ -84,9 +74,7 @@ export function WhatsAppManualConfiguration({
             <Label htmlFor="phoneDisplayName">Channel Name</Label>
             <Input
               id="phoneDisplayName"
-              placeholder={translations(
-                "Enter a name to identify this WhatsApp channel",
-              )}
+              placeholder={translations("Enter a name to identify this WhatsApp channel")}
               {...form.getInputProps("phoneDisplayName")}
             />
           </div>
@@ -96,9 +84,7 @@ export function WhatsAppManualConfiguration({
               <Label htmlFor="wabaId">WABA ID</Label>
               <Input
                 id="wabaId"
-                placeholder={translations(
-                  "Enter your Whatsapp Business Account ID",
-                )}
+                placeholder={translations("Enter your Whatsapp Business Account ID")}
                 {...form.getInputProps("wabaId")}
               />
             </div>
@@ -153,9 +139,7 @@ export function WhatsAppManualConfiguration({
               {translations("Delete Configuration")}
             </Button>
             <Button type="submit" disabled={upsertMutation.isPending}>
-              {upsertMutation.isPending
-                ? "Saving"
-                : translations("Save Changes")}
+              {upsertMutation.isPending ? "Saving" : translations("Save Changes")}
             </Button>
           </div>
         </form>

@@ -30,10 +30,7 @@ interface ColumnsProps {
 
 const LabelCell = ({ label }: { label: ContactLabel }) => (
   <div className="flex items-center space-x-2">
-    <div
-      className="w-3 h-3 rounded-full"
-      style={{ backgroundColor: label.color }}
-    />
+    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: label.color }} />
     <span className="font-medium">{label.name}</span>
   </div>
 );
@@ -42,13 +39,9 @@ const DescriptionCell = ({ description }: { description: string | null }) => (
   <span className="text-gray-600">{description || "No description"}</span>
 );
 
-const ContactsCell = ({ count }: { count: number }) => (
-  <Badge variant="secondary">{count}</Badge>
-);
+const ContactsCell = ({ count }: { count: number }) => <Badge variant="secondary">{count}</Badge>;
 
-const DateCell = ({ date }: { date: string }) => (
-  <span>{new Date(date).toLocaleDateString()}</span>
-);
+const DateCell = ({ date }: { date: string }) => <span>{new Date(date).toLocaleDateString()}</span>;
 
 const ActionsCell = ({
   label,
@@ -71,10 +64,7 @@ const ActionsCell = ({
         <Edit2 className="mr-2 h-4 w-4" />
         Edit
       </DropdownMenuItem>
-      <DropdownMenuItem
-        onClick={() => onDelete(label)}
-        className="text-red-600"
-      >
+      <DropdownMenuItem onClick={() => onDelete(label)} className="text-red-600">
         <Trash2 className="mr-2 h-4 w-4" />
         Delete
       </DropdownMenuItem>
@@ -82,10 +72,7 @@ const ActionsCell = ({
   </DropdownMenu>
 );
 
-export const createColumns = ({
-  onEdit,
-  onDelete,
-}: ColumnsProps): ColumnDef<ContactLabel>[] => [
+export const createColumns = ({ onEdit, onDelete }: ColumnsProps): ColumnDef<ContactLabel>[] => [
   {
     accessorKey: "name",
     header: createSortableHeader("Label"),
@@ -94,16 +81,12 @@ export const createColumns = ({
   {
     accessorKey: "description",
     header: "Description",
-    cell: ({ row }) => (
-      <DescriptionCell description={row.getValue("description")} />
-    ),
+    cell: ({ row }) => <DescriptionCell description={row.getValue("description")} />,
   },
   {
     accessorKey: "_count.contactLabels",
     header: createSortableHeader("Contacts"),
-    cell: ({ row }) => (
-      <ContactsCell count={row.original._count.contactLabels} />
-    ),
+    cell: ({ row }) => <ContactsCell count={row.original._count.contactLabels} />,
   },
   {
     accessorKey: "createdAt",
@@ -112,8 +95,6 @@ export const createColumns = ({
   },
   {
     id: "actions",
-    cell: ({ row }) => (
-      <ActionsCell label={row.original} onEdit={onEdit} onDelete={onDelete} />
-    ),
+    cell: ({ row }) => <ActionsCell label={row.original} onEdit={onEdit} onDelete={onDelete} />,
   },
 ];

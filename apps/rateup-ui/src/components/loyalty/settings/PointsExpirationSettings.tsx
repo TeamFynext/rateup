@@ -1,17 +1,10 @@
-"use client";
-
 import { Loader2 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import {
   Form,
   FormControl,
@@ -61,9 +54,7 @@ export function PointsExpirationSettings({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between p-2.5 border rounded-lg space-y-0">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-sm font-medium">
-                      {t("Enable Expiration")}
-                    </FormLabel>
+                    <FormLabel className="text-sm font-medium">{t("Enable Expiration")}</FormLabel>
                     <FormDescription className="text-xs text-muted-foreground">
                       {t("Points expire after period")}
                     </FormDescription>
@@ -84,15 +75,11 @@ export function PointsExpirationSettings({
               name="months"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs">
-                    {t("Expiration Period")}
-                  </FormLabel>
+                  <FormLabel className="text-xs">{t("Expiration Period")}</FormLabel>
                   <Select
                     value={field.value.toString()}
                     onValueChange={
-                      disabled
-                        ? undefined
-                        : (val) => field.onChange(Number.parseInt(val))
+                      disabled ? undefined : (val) => field.onChange(Number.parseInt(val))
                     }
                     disabled={disabled}
                   >
@@ -113,12 +100,7 @@ export function PointsExpirationSettings({
               )}
             />
 
-            <Button
-              size="sm"
-              className="w-full"
-              type="submit"
-              disabled={isPending || disabled}
-            >
+            <Button size="sm" className="w-full" type="submit" disabled={isPending || disabled}>
               {isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

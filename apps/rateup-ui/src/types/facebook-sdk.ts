@@ -1,3 +1,4 @@
+// oxlint-disable-next-line no-unused-vars
 interface Window {
   fbAsyncInit: FbAsyncInit;
   FB: {
@@ -34,10 +35,7 @@ type GetLoginStatusCallback = (response: {
   };
 }) => void;
 
-type GetLoginStatus = (
-  callback: GetLoginStatusCallback,
-  force?: boolean,
-) => void;
+type GetLoginStatus = (callback: GetLoginStatusCallback, force?: boolean) => void;
 type FBLoginResponse = {
   status: "connected" | "not_authorized" | "unknown";
   authResponse?: {

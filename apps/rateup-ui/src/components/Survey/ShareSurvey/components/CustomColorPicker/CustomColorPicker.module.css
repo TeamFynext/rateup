@@ -62,10 +62,7 @@
   height: 2.25rem;
 }
 
-.size-md
-  .custom-color-picker-container
-  .eye-dropper-btn
-  .mantine-Button-section {
+.size-md .custom-color-picker-container .eye-dropper-btn .mantine-Button-section {
   margin-right: 0.3125rem;
 }
 

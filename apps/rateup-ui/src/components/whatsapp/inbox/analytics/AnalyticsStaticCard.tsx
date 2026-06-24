@@ -1,6 +1,5 @@
-import type { ReactNode } from "react";
-
 import { TrendingDown, TrendingUp } from "lucide-react";
+import type { ReactNode } from "react";
 
 import {
   Card,
@@ -34,9 +33,7 @@ export function AnalyticsStatCard({
     <Card className=" p-0">
       <CardContent className="p-4 flex flex-col gap-1">
         <div className="flex items-center justify-between mb-1">
-          <div className="p-2 rounded-lg bg-blue-100 dark:bg-transparent">
-            {icon}
-          </div>
+          <div className="p-2 rounded-lg bg-blue-100 dark:bg-transparent">{icon}</div>
 
           {trendValue !== undefined &&
             (isPositive ? (
@@ -51,11 +48,7 @@ export function AnalyticsStatCard({
         <p className="text-2xl font-bold leading-none">{value ?? "NA"}</p>
 
         {trendValue !== undefined && (
-          <p
-            className={`text-xs leading-tight ${
-              isPositive ? "text-green-600" : "text-red-600"
-            }`}
-          >
+          <p className={`text-xs leading-tight ${isPositive ? "text-green-600" : "text-red-600"}`}>
             {Math.abs(trendValue)}%{trendSuffix && ` ${trendSuffix}`}
           </p>
         )}
@@ -71,12 +64,7 @@ type PageHeaderCardProps = {
   actions?: ReactNode;
 };
 
-export function PageHeaderCard({
-  title,
-  description,
-  icon,
-  actions,
-}: PageHeaderCardProps) {
+export function PageHeaderCard({ title, description, icon, actions }: PageHeaderCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -88,9 +76,7 @@ export function PageHeaderCard({
           )}
           <div className="flex flex-col">
             <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              {description}
-            </CardDescription>
+            <CardDescription className="text-xs sm:text-sm">{description}</CardDescription>
           </div>
         </div>
 

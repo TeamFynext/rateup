@@ -1,12 +1,7 @@
-"use client";
-
-import { useEffect, useMemo, useRef, useState } from "react";
-
 import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { LogicAction, LogicCondition, QuestionType2 } from "@/types/enums.ts";
-import type { FlowLogicJump } from "@/types/global";
 import {
   Accordion,
   AccordionContent,
@@ -30,11 +25,10 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import { LogicAction, LogicCondition, QuestionType2 } from "@/types/enums.ts";
+import type { FlowLogicJump } from "@/types/global";
 import { logicSupportedTypes3 } from "@/utils/data.ts";
-import {
-  getConditionsv2,
-  getResponses2,
-} from "@/utils/survey/logic/logic.utils";
+import { getConditionsv2, getResponses2 } from "@/utils/survey/logic/logic.utils";
 
 import useFlowStoreV3 from "../utils/store.ts";
 
@@ -44,20 +38,13 @@ interface LogicJumpModalProps {
   elementId: string;
 }
 
-export function LogicJumpModal({
-  opened,
-  onClose,
-  elementId,
-}: LogicJumpModalProps) {
+export function LogicJumpModal({ opened, onClose, elementId }: LogicJumpModalProps) {
   const { t: translations } = useTranslation();
-  const { getCurrentScreen, getScreens, getLogicJumps, updateLogicJumps } =
-    useFlowStoreV3();
+  const { getCurrentScreen, getScreens, getLogicJumps, updateLogicJumps } = useFlowStoreV3();
 
   const currentScreen = getCurrentScreen();
   const screens = getScreens();
-  const [openedAccordion, setOpenedAccordion] = useState<string | undefined>(
-    undefined,
-  );
+  const [openedAccordion, setOpenedAccordion] = useState<string | undefined>(undefined);
   const [localJumps, setLocalJumps] = useState<FlowLogicJump[]>([]);
   const initializedRef = useRef(false);
 
@@ -98,10 +85,7 @@ export function LogicJumpModal({
     return currentScreen.layout.children.filter(({ label, type, metaType }) => {
       const qType = metaType || type;
       return (
-        label &&
-        logicSupportedTypes3.includes(
-          QuestionType2[qType as keyof typeof QuestionType2],
-        )
+        label && logicSupportedTypes3.includes(QuestionType2[qType as keyof typeof QuestionType2])
       );
     });
   }, [currentScreen]);
@@ -233,9 +217,7 @@ export function LogicJumpModal({
         i === jumpIndex
           ? {
               ...jump,
-              conditions: jump.conditions.filter(
-                (_, idx) => idx !== conditionIndex,
-              ),
+              conditions: jump.conditions.filter((_, idx) => idx !== conditionIndex),
             }
           : jump,
       ),
@@ -258,8 +240,7 @@ export function LogicJumpModal({
     const allLogicJumps = getLogicJumps(currentScreen.id);
 
     const otherJumps = (allLogicJumps || []).filter(
-      (jump: any) =>
-        !jump.conditions?.some((cond: any) => cond.questionId === elementId),
+      (jump: any) => !jump.conditions?.some((cond: any) => cond.questionId === elementId),
     );
 
     const allJumps = [...otherJumps, ...localJumps];
@@ -277,10 +258,7 @@ export function LogicJumpModal({
         </DialogHeader>
 
         {/* Scrollable body — grows, shrinks, scrolls */}
-        <div
-          className="px-6 py-4 overflow-y-auto"
-          style={{ flex: "1 1 0", minHeight: 0 }}
-        >
+        <div className="px-6 py-4 overflow-y-auto" style={{ flex: "1 1 0", minHeight: 0 }}>
           {localJumps.length === 0 ? (
             <p className="text-muted-foreground text-center py-12">
               {translations("No logic jumps configured for this element")}
@@ -309,9 +287,7 @@ export function LogicJumpModal({
                       {/* ── Conditions ── */}
                       <div>
                         <div className="flex justify-between items-center mb-3">
-                          <p className="font-semibold text-sm">
-                            {translations("Conditions")}
-                          </p>
+                          <p className="font-semibold text-sm">{translations("Conditions")}</p>
                           <Button
                             size="sm"
                             variant="secondary"
@@ -329,8 +305,7 @@ export function LogicJumpModal({
                               className="grid gap-2 items-end"
                               style={{
                                 gridTemplateColumns:
-                                  condition.condition !==
-                                  LogicCondition.Submitted
+                                  condition.condition !== LogicCondition.Submitted
                                     ? "1fr 1fr 1fr auto"
                                     : "1fr 1fr auto",
                               }}
@@ -343,20 +318,11 @@ export function LogicJumpModal({
                                 <Select
                                   value={condition.questionId}
                                   onValueChange={(value) =>
-                                    handleUpdateCondition(
-                                      jumpIndex,
-                                      condIndex,
-                                      "questionId",
-                                      value,
-                                    )
+                                    handleUpdateCondition(jumpIndex, condIndex, "questionId", value)
                                   }
                                 >
                                   <SelectTrigger className="w-full truncate">
-                                    <SelectValue
-                                      placeholder={translations(
-                                        "Select question",
-                                      )}
-                                    />
+                                    <SelectValue placeholder={translations("Select question")} />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {questions.map((q) => (
@@ -376,39 +342,24 @@ export function LogicJumpModal({
                                 <Select
                                   value={condition.condition}
                                   onValueChange={(value) =>
-                                    handleUpdateCondition(
-                                      jumpIndex,
-                                      condIndex,
-                                      "condition",
-                                      value,
-                                    )
+                                    handleUpdateCondition(jumpIndex, condIndex, "condition", value)
                                   }
                                 >
                                   <SelectTrigger className="w-full truncate">
-                                    <SelectValue
-                                      placeholder={translations(
-                                        "Select condition",
-                                      )}
-                                    />
+                                    <SelectValue placeholder={translations("Select condition")} />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {getConditions(condition.questionId).map(
-                                      (c: any) => (
-                                        <SelectItem
-                                          key={c.value}
-                                          value={c.value}
-                                        >
-                                          {c.label}
-                                        </SelectItem>
-                                      ),
-                                    )}
+                                    {getConditions(condition.questionId).map((c: any) => (
+                                      <SelectItem key={c.value} value={c.value}>
+                                        {c.label}
+                                      </SelectItem>
+                                    ))}
                                   </SelectContent>
                                 </Select>
                               </div>
 
                               {/* Response (only when not Submitted) */}
-                              {condition.condition !==
-                                LogicCondition.Submitted && (
+                              {condition.condition !== LogicCondition.Submitted && (
                                 <div className="min-w-0">
                                   <Label className="text-xs mb-1 block">
                                     {translations("Response")}
@@ -416,29 +367,15 @@ export function LogicJumpModal({
                                   <Select
                                     value={condition.response}
                                     onValueChange={(value) =>
-                                      handleUpdateCondition(
-                                        jumpIndex,
-                                        condIndex,
-                                        "response",
-                                        value,
-                                      )
+                                      handleUpdateCondition(jumpIndex, condIndex, "response", value)
                                     }
                                   >
                                     <SelectTrigger className="w-full truncate">
-                                      <SelectValue
-                                        placeholder={translations(
-                                          "Select response",
-                                        )}
-                                      />
+                                      <SelectValue placeholder={translations("Select response")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {getResponseOptions(
-                                        condition.questionId,
-                                      ).map((r: any) => (
-                                        <SelectItem
-                                          key={r.value}
-                                          value={r.value}
-                                        >
+                                      {getResponseOptions(condition.questionId).map((r: any) => (
+                                        <SelectItem key={r.value} value={r.value}>
                                           {r.label}
                                         </SelectItem>
                                       ))}
@@ -453,9 +390,7 @@ export function LogicJumpModal({
                                   variant="ghost"
                                   size="icon"
                                   className="text-destructive shrink-0 self-end"
-                                  onClick={() =>
-                                    handleRemoveCondition(jumpIndex, condIndex)
-                                  }
+                                  onClick={() => handleRemoveCondition(jumpIndex, condIndex)}
                                 >
                                   <IconTrash size={16} />
                                 </Button>
@@ -472,34 +407,21 @@ export function LogicJumpModal({
 
                       {/* ── Action ── */}
                       <div>
-                        <p className="font-semibold text-sm mb-2">
-                          {translations("Action")}
-                        </p>
+                        <p className="font-semibold text-sm mb-2">{translations("Action")}</p>
                         <div className="max-w-xs">
                           <Label className="text-xs mb-1 block">
                             {translations("Navigate to Screen")}
                           </Label>
                           <Select
-                            value={
-                              typeof jump.action === "string" ? jump.action : ""
-                            }
-                            onValueChange={(value) =>
-                              handleUpdateAction(jumpIndex, value)
-                            }
+                            value={typeof jump.action === "string" ? jump.action : ""}
+                            onValueChange={(value) => handleUpdateAction(jumpIndex, value)}
                           >
                             <SelectTrigger className="w-full truncate">
-                              <SelectValue
-                                placeholder={translations(
-                                  "Select target screen",
-                                )}
-                              />
+                              <SelectValue placeholder={translations("Select target screen")} />
                             </SelectTrigger>
                             <SelectContent>
                               {screenOptions.map((screen) => (
-                                <SelectItem
-                                  key={screen.value}
-                                  value={screen.value}
-                                >
+                                <SelectItem key={screen.value} value={screen.value}>
                                   {screen.label}
                                 </SelectItem>
                               ))}
@@ -526,11 +448,7 @@ export function LogicJumpModal({
             </Accordion>
           )}
 
-          <Button
-            onClick={handleAddJump}
-            variant="secondary"
-            className="w-full mt-3"
-          >
+          <Button onClick={handleAddJump} variant="secondary" className="w-full mt-3">
             <IconPlus size={16} className="mr-2" />
             {translations("Add Logic Jump")}
           </Button>
@@ -542,9 +460,7 @@ export function LogicJumpModal({
             <Button variant="outline" onClick={onClose}>
               {translations("Cancel")}
             </Button>
-            <Button onClick={handleSave}>
-              {translations("Save Logic Jumps")}
-            </Button>
+            <Button onClick={handleSave}>{translations("Save Logic Jumps")}</Button>
           </DialogFooter>
         </div>
       </DialogContent>

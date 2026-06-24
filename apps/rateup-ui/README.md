@@ -11,7 +11,7 @@ The project uses Vite for development/build, Nitro for server output, and Tailwi
 - Tailwind CSS
 - shadcn/ui (preferred for new UI) + existing Mantine components
 - Vitest for tests
-- ESLint + Prettier for linting/formatting
+- OXC (oxlint + oxfmt) for linting/formatting
 
 ## Prerequisites
 
@@ -32,9 +32,11 @@ npm run build      # Build production output
 npm run preview    # Preview production build locally
 npm run start      # Start Nitro server from .output/server/index.mjs
 npm run test       # Run tests with Vitest
-npm run lint       # Run ESLint
-npm run format     # Prettier write + ESLint fix
-npm run check      # Prettier check
+npm run lint       # Run oxlint
+npm run lint:fix   # Run oxlint with auto-fix
+npm run fmt        # Format with oxfmt
+npm run fmt:check  # Check formatting with oxfmt
+npm run typecheck  # Run TypeScript type checking
 npm run translate  # Run locale translation script
 npx i18next-cli extract  # Extract i18n keys to locale files
 ```

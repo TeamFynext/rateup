@@ -1,18 +1,12 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Flex, Group, Space, Stack, Tabs } from "@mantine/core";
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
-import { useLandingPage } from "@/backend/surveys/surveys.query";
 import StyledTabs from "@/components/styled/StyledTabs/StyledTabs.tsx";
 
 import LandingSurveysList from "../../../../components/dashboard/surveylandinglist/LandingSurveysList.tsx";
 
-export const Route = createFileRoute(
-  "/dashboard/surveylandinglist/$LandingId/",
-)({
+export const Route = createFileRoute("/dashboard/surveylandinglist/$LandingId/")({
   component: LandingById,
 });
 
@@ -42,12 +36,6 @@ function LandingById() {
 
   const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Surveys);
 
-  const {
-    isLoading: isLandingPageLoading,
-    error: LandingPageError,
-    data: LandingPageData,
-  } = useLandingPage(LandingId);
-
   if (Array.isArray(LandingId)) {
     throw new Error("surveyId is an array");
   }
@@ -55,10 +43,7 @@ function LandingById() {
   return (
     <Flex direction={"column"}>
       <Stack>
-        <StyledTabs
-          value={activeTab}
-          onChange={(tab) => setActiveTab(tab as TabEnum)}
-        >
+        <StyledTabs value={activeTab} onChange={(tab) => setActiveTab(tab as TabEnum)}>
           <Group justify="space-between">
             <Tabs.List
               style={{

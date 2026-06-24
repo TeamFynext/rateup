@@ -1,24 +1,12 @@
-"use client";
-
-import { useCallback, useRef } from "react";
-
-import {
-  ActionIcon,
-  Box,
-  Button,
-  FileButton,
-  Group,
-  Slider,
-} from "@mantine/core";
+import { ActionIcon, Box, Button, FileButton, Group, Slider } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconTrash, IconUpload } from "@tabler/icons-react";
+import { useCallback, useRef } from "react";
 
 import { mmImageCropModalClassnames } from "@/utils/constants.ts";
 
-import {
-  useThemeDispatch,
-  useThemeObj,
-} from "../../../../ThemeContext/ThemeContext.tsx";
+import { useThemeDispatch, useThemeObj } from "../../../../ThemeContext/ThemeContext.tsx";
+
 import styles from "./LogoEditor.module.css";
 
 function LogoEditor() {

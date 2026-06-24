@@ -1,18 +1,9 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import { IconLogin2, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import {
-  IntegratedApps,
-  MetaLoginAssets,
-  WaConfigType,
-} from "@/types/enums.ts";
-import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import {
   useDeleteWaCatalog,
   useDisconnectCatalogFromWa,
@@ -39,6 +30,7 @@ import {
 import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { ImportFromShopifyModal } from "@/components/whatsapp/catalog/products/ImportFromShopifyModal.tsx";
+import { MetaLoginAssets, WaConfigType } from "@/types/enums.ts";
 
 const CatalogSettings = ({ catalogData }) => {
   const navigate = useNavigate();
@@ -46,14 +38,10 @@ const CatalogSettings = ({ catalogData }) => {
   const disconnect = useDisconnectCatalogFromWa(catalogData?.catalogId);
   const deleteCatalog = useDeleteWaCatalog();
   const [opened, { open, close }] = useDisclosure(false);
-  const [openedConnect, { open: openConnect, close: closeConnect }] =
-    useDisclosure(false);
-  const [openedDelete, { open: openDelete, close: closeDelete }] =
-    useDisclosure(false);
+  const [openedConnect, { open: openConnect, close: closeConnect }] = useDisclosure(false);
+  const [openedDelete, { open: openDelete, close: closeDelete }] = useDisclosure(false);
   const [wabaId, setWabaId] = useState("");
-  const [connectMode, setConnectMode] = useState<"manual" | "automatic">(
-    "automatic",
-  );
+  const [connectMode, setConnectMode] = useState<"manual" | "automatic">("automatic");
   const { data: waSettings, isLoading } = useWaSettings();
   const wabaIds = waSettings
     ? Array.from(
@@ -71,9 +59,7 @@ const CatalogSettings = ({ catalogData }) => {
   useEffect(() => {
     if (waSettings && catalogData) {
       const setting = waSettings.find((s) =>
-        catalogData.connectedWaPhoneIds.some(
-          (c) => c.whatsappSettingsPhoneId === s.phoneId,
-        ),
+        catalogData.connectedWaPhoneIds.some((c) => c.whatsappSettingsPhoneId === s.phoneId),
       );
       if (setting) {
         setWabaId(setting.wabaId);
@@ -122,13 +108,9 @@ const CatalogSettings = ({ catalogData }) => {
             <span className="text-sm font-medium">Normal Account</span>
             <Switch
               checked={connectMode === "manual"}
-              onCheckedChange={(checked) =>
-                setConnectMode(checked ? "manual" : "automatic")
-              }
+              onCheckedChange={(checked) => setConnectMode(checked ? "manual" : "automatic")}
             />
-            <span className="text-sm font-medium">
-              SMB (Coexistence Account)
-            </span>
+            <span className="text-sm font-medium">SMB (Coexistence Account)</span>
           </div>
           <Select
             value={wabaId}
@@ -149,11 +131,7 @@ const CatalogSettings = ({ catalogData }) => {
             </SelectContent>
           </Select>
         </Field>
-        <Button
-          variant="destructive"
-          onClick={open}
-          disabled={disconnect.isPending}
-        >
+        <Button variant="destructive" onClick={open} disabled={disconnect.isPending}>
           <IconLogin2 size={16} />
           Disconnect WhatsApp Business Account
         </Button>
@@ -166,8 +144,7 @@ const CatalogSettings = ({ catalogData }) => {
             Auto-generate Shopify Checkout Link
           </FieldLabel>
           <p className="text-sm text-muted-foreground">
-            Automatically send a Shopify checkout link when a customer sends a
-            cart.
+            Automatically send a Shopify checkout link when a customer sends a cart.
           </p>
         </div>
         <Switch
@@ -198,16 +175,12 @@ const CatalogSettings = ({ catalogData }) => {
 
       <ConfirmationModal
         forDeleteFunctionality
-        deleteQuotion={
-          "The catalog in automation on the connected accont won't work."
-        }
+        deleteQuotion={"The catalog in automation on the connected accont won't work."}
         opened={opened}
         onClose={close}
         onConfirm={handleDisconnect}
         confirmLabel={"Disconnect"}
-        headerLabel={
-          "Are you sure you want to disconnect catalog from whatsapp"
-        }
+        headerLabel={"Are you sure you want to disconnect catalog from whatsapp"}
         headerTitle={"Disconnect Whatsapp Business Account"}
         loading={disconnect.isPending}
         closeAfterOnConfirm={false}
@@ -234,9 +207,9 @@ const CatalogSettings = ({ catalogData }) => {
         <div className="flex flex-col gap-1">
           <p className="font-semibold text-destructive">Danger Zone</p>
           <p className="text-sm text-destructive/80">
-            Deleting this catalog is permanent and cannot be undone. All
-            associated products, product sets, orders, and settings will be
-            removed. Any automations using this catalog will stop working.
+            Deleting this catalog is permanent and cannot be undone. All associated products,
+            product sets, orders, and settings will be removed. Any automations using this catalog
+            will stop working.
           </p>
         </div>
         <Button
@@ -275,18 +248,13 @@ const CatalogSettings = ({ catalogData }) => {
 
 const ProductManagementSection = ({ catalogData }) => {
   const catalogId = catalogData?.catalogId;
-  const [
-    shopifyImportOpened,
-    { open: openShopifyImport, close: closeShopifyImport },
-  ] = useDisclosure(false);
-  const { data: shopifyIntegration, isLoading: shopifyLoading } =
-    useIntegrationByType(IntegratedApps.shopify);
+  const [shopifyImportOpened, { close: closeShopifyImport }] = useDisclosure(false);
 
   return (
     <div className="flex flex-col gap-2 mt-4">
       <p className="font-semibold">Product Management</p>
 
-      {/* Import from Shopify 
+      {/* Import from Shopify
       <div className="flex flex-col gap-1">
         <div className="flex justify-between items-center p-3 border border-gray-300 rounded-lg bg-gray-50">
           <div className="flex flex-col gap-1">
@@ -357,9 +325,7 @@ const ProductSetsSection = ({ catalogId }) => {
             >
               <div className="flex flex-col gap-1">
                 <p className="font-medium text-sm">{set.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  ID: {set.productSetId}
-                </p>
+                <p className="text-xs text-muted-foreground">ID: {set.productSetId}</p>
               </div>
               <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
                 {set.productIds?.length || 0} Products
@@ -368,9 +334,7 @@ const ProductSetsSection = ({ catalogId }) => {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground italic">
-          No product sets synced yet.
-        </p>
+        <p className="text-sm text-muted-foreground italic">No product sets synced yet.</p>
       )}
     </div>
   );

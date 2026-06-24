@@ -1,8 +1,6 @@
-import { useState } from "react";
-
-import { useDebouncedState } from "@mantine/hooks";
 import type { Table } from "@tanstack/react-table";
 import { Plus, Search } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { CustomFieldForm } from "@/components/Contacts/label-form.tsx";
@@ -22,11 +20,8 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
 
-export function DataTableToolbar<TData>({
-  table,
-}: Readonly<DataTableToolbarProps<TData>>) {
+export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
   const [isOpenedAddModal, setIsOpenedAddModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
   const { t } = useTranslation();
   return (
     <Card className="p-2 mb-4">
@@ -37,12 +32,8 @@ export function DataTableToolbar<TData>({
             <Input
               placeholder="Search by field name..."
               className="pl-10 placeholder:text-sm bg-gray-100 border-none"
-              value={
-                (table.getColumn("name")?.getFilterValue() as string) ?? ""
-              }
-              onChange={(event) =>
-                table.getColumn("name")?.setFilterValue(event.target.value)
-              }
+              value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+              onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
             />
           </div>
           <Button
@@ -56,10 +47,7 @@ export function DataTableToolbar<TData>({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-          <AddCustomField
-            opened={isOpenedAddModal}
-            setOpened={setIsOpenedAddModal}
-          />
+          <AddCustomField opened={isOpenedAddModal} setOpened={setIsOpenedAddModal} />
           <DataTableViewOptions table={table} />
         </div>
       </div>
@@ -76,9 +64,7 @@ const AddCustomField = ({ opened, setOpened }) => {
         <DialogHeader>
           <DialogTitle>{t("Add Custom Field")}</DialogTitle>
           <DialogDescription>
-            {t(
-              "Create a custom field to store additional information about your contacts.",
-            )}
+            {t("Create a custom field to store additional information about your contacts.")}
           </DialogDescription>
         </DialogHeader>
         <CustomFieldForm onSubmitCallback={() => setOpened(false)} />

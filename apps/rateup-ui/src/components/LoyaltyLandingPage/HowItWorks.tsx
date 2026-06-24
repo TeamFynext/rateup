@@ -5,11 +5,7 @@ import styles from "./loyalty.landing.module.css";
 export default function HowItWorks() {
   const navigate = useNavigate();
   return (
-    <section
-      className={`${styles["light-sec"]}`}
-      id="how"
-      data-screen-label="How It Works"
-    >
+    <section className={`${styles["light-sec"]}`} id="how" data-screen-label="How It Works">
       <div className={styles.wrap}>
         <div className={`${styles["sec-head"]} ${styles.reveal}`}>
           <h2>How It Works</h2>

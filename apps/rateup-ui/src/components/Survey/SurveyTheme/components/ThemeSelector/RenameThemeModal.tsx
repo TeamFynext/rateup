@@ -1,11 +1,9 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-
 import { Box, Button, Modal, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useRenameSurveyThemeMutation } from "@/backend/surveyTheme/surveyTheme.query";
+
 import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 function RenameThemeModal({ opened, onClose, themeId, oldName }) {
@@ -24,8 +22,7 @@ function RenameThemeModal({ opened, onClose, themeId, oldName }) {
 
   const [isRenaming, setIsRenaming] = useState(false);
 
-  const { mutateAsync: renameThemeMutationAsync } =
-    useRenameSurveyThemeMutation();
+  const { mutateAsync: renameThemeMutationAsync } = useRenameSurveyThemeMutation();
 
   const submitBtnRef = useRef(null);
 

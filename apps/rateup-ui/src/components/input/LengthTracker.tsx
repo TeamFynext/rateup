@@ -5,11 +5,7 @@ export interface LengthTrackerProps {
   maxValue: number;
   atStart?: boolean;
 }
-export function LengthTracker({
-  maxValue,
-  length,
-  atStart = false,
-}: LengthTrackerProps) {
+export function LengthTracker({ maxValue, length, atStart = false }: LengthTrackerProps) {
   return (
     <Group justify={atStart ? "start" : "flex-end"}>
       <Text c="dimmed" fz={".8rem"} pr="sm">

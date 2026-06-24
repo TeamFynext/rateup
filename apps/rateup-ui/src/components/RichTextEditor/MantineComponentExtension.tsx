@@ -38,7 +38,7 @@ const MantineComponentExtension = ({ MantineComponent, componentName }) => {
   });
 };
 
-const VariableComponent = ({ node, updateAttributes }) => {
+const VariableComponent = ({ node }) => {
   return (
     <NodeViewWrapper as={"span"}>
       <Badge variant="light" radius={"sm"}>

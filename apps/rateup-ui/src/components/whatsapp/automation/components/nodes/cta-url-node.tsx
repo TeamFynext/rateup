@@ -1,8 +1,7 @@
-import { memo } from "react";
-
 import { Stack, Text } from "@mantine/core";
 import { IconLink } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
+import { memo } from "react";
 
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
 

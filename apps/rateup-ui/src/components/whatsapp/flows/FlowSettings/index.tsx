@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import {
   IconLock,
   IconRefresh,
@@ -11,6 +7,7 @@ import {
   IconUsers,
   IconWorldWww,
 } from "@tabler/icons-react";
+import { useState } from "react";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
@@ -46,9 +43,7 @@ export default function FlowSettings({
   const [anonymousChecked, setAnonymousChecked] = useState(anonymous ?? false);
 
   // State for ticketing
-  const [enableTicketing, setEnableTicketing] = useState(
-    survey?.enableTickets || false,
-  );
+  const [enableTicketing, setEnableTicketing] = useState(survey?.enableTickets || false);
   const [enableAutoGenerateTicket, setEnableAutoGenerateTicket] = useState(
     survey?.enableAutoGenerateTicket || false,
   );
@@ -57,14 +52,10 @@ export default function FlowSettings({
   const [selectedTeams, setSelectedTeams] = useState<string[]>(
     survey?.teams?.map((team) => team.id) || [],
   );
-  const [sendWeeklyReport, setSendWeeklyReport] = useState(
-    survey?.sendWeeklyReport || false,
-  );
+  const [sendWeeklyReport, setSendWeeklyReport] = useState(survey?.sendWeeklyReport || false);
 
   // State for webhooks
-  const [webhookUrl, setWebhookUrl] = useState(
-    survey?.responseWebhookEndpoint || "",
-  );
+  const [webhookUrl, setWebhookUrl] = useState(survey?.responseWebhookEndpoint || "");
 
   const { data: teamRes } = useTeamsByUser();
   const teamOptions =
@@ -107,10 +98,7 @@ export default function FlowSettings({
         {/* Left Column */}
         <div className="space-y-6">
           {/* General Settings */}
-          <SettingsCard
-            title="General Settings"
-            icon={<IconSettings size={20} />}
-          >
+          <SettingsCard title="General Settings" icon={<IconSettings size={20} />}>
             <div className="flex flex-col gap-6">
               <div className="space-y-2">
                 <Label htmlFor="flow-name">
@@ -131,16 +119,11 @@ export default function FlowSettings({
                     checked={anonymousChecked}
                     onCheckedChange={setAnonymousChecked}
                   />
-                  <Label
-                    htmlFor="anonymous"
-                    className="font-medium cursor-pointer"
-                  >
+                  <Label htmlFor="anonymous" className="font-medium cursor-pointer">
                     Anonymous
                   </Label>
                 </div>
-                <p className="text-xs text-muted-foreground ml-10">
-                  Anonymous Flow is disabled
-                </p>
+                <p className="text-xs text-muted-foreground ml-10">Anonymous Flow is disabled</p>
               </div>
 
               <div>
@@ -156,10 +139,7 @@ export default function FlowSettings({
           </SettingsCard>
 
           {/* Team & Notifications */}
-          <SettingsCard
-            title="Team & Notifications"
-            icon={<IconUsers size={20} />}
-          >
+          <SettingsCard title="Team & Notifications" icon={<IconUsers size={20} />}>
             <div className="flex flex-col gap-6">
               <div className="space-y-2">
                 <Label htmlFor="team-select">Select Teams</Label>
@@ -173,10 +153,7 @@ export default function FlowSettings({
               </div>
 
               <div className="flex justify-between items-center">
-                <Label
-                  htmlFor="weekly-report"
-                  className="font-medium cursor-pointer"
-                >
+                <Label htmlFor="weekly-report" className="font-medium cursor-pointer">
                   Send weekly report to email
                 </Label>
                 <Switch
@@ -187,11 +164,7 @@ export default function FlowSettings({
               </div>
 
               <div>
-                <Button
-                  size="default"
-                  onClick={handleSaveTeams}
-                  disabled={editSurvey.isPending}
-                >
+                <Button size="default" onClick={handleSaveTeams} disabled={editSurvey.isPending}>
                   {editSurvey.isPending ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
@@ -202,16 +175,10 @@ export default function FlowSettings({
         {/* Right Column */}
         <div className="space-y-6">
           {/* Ticketing & Automation */}
-          <SettingsCard
-            title="Ticketing & Automation"
-            icon={<IconTicket size={20} />}
-          >
+          <SettingsCard title="Ticketing & Automation" icon={<IconTicket size={20} />}>
             <div className="flex flex-col gap-6">
               <div className="flex justify-between items-center">
-                <Label
-                  htmlFor="enable-ticketing"
-                  className="font-medium cursor-pointer"
-                >
+                <Label htmlFor="enable-ticketing" className="font-medium cursor-pointer">
                   Enable Ticketing
                 </Label>
                 <Switch
@@ -222,10 +189,7 @@ export default function FlowSettings({
               </div>
 
               <div className="flex justify-between items-center">
-                <Label
-                  htmlFor="auto-generate"
-                  className="font-medium cursor-pointer"
-                >
+                <Label htmlFor="auto-generate" className="font-medium cursor-pointer">
                   Enable Auto-Generate Ticket
                 </Label>
                 <Switch
@@ -252,9 +216,7 @@ export default function FlowSettings({
             <div className="flex flex-col gap-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-1">
-                  <Label htmlFor="webhook-url">
-                    Enter webhook url endpoint for response
-                  </Label>
+                  <Label htmlFor="webhook-url">Enter webhook url endpoint for response</Label>
                   <span className="text-xs text-muted-foreground">ⓘ</span>
                 </div>
                 <Input
@@ -266,11 +228,7 @@ export default function FlowSettings({
               </div>
 
               <div>
-                <Button
-                  size="default"
-                  onClick={handleSaveWebhook}
-                  disabled={editSurvey.isPending}
-                >
+                <Button size="default" onClick={handleSaveWebhook} disabled={editSurvey.isPending}>
                   {editSurvey.isPending ? "Saving..." : "Save Changes"}
                 </Button>
               </div>

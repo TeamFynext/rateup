@@ -1,9 +1,6 @@
-"use client";
-
-import { useContext, useEffect, useRef, useState } from "react";
-
 import { Select, useMantineTheme } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
@@ -11,11 +8,11 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { sampleChoices } from "@/utils/constants/forms.ts";
 
-import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
 import CustomSelectForMobile from "../components/CustomSelectForMobile/index.tsx";
-import classes from "../TakeSurvey.module.css";
 import FormPaperLayout from "./layout/FormPaperLayout.tsx";
+
+import classes from "../TakeSurvey.module.css";
 
 interface MCQFormProps {
   previewChoices?: Record<string, Array<Choice>>;
@@ -27,11 +24,10 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   const choices = selectedQ?.choices?.[selectedLanguage];
   const [selectedOp, setSelectedOp] = useState("");
   const selectedPreview = useSelectedPreview();
-  const isMobile =
-    useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
+  const isMobile = useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
   const { t: translations } = useTranslation();
   const takeSurveyLayoutWebDomNodeRef = useRef(null);
-  const isSurveyThemePreview = useIsSurveyThemePreview();
+
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const options = selectedQ
     ? choices
@@ -47,9 +43,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   }, [response]);
 
   useEffect(() => {
-    const takeSurveyLayoutWebRootDiv = document.querySelector(
-      ".take-survey-layout-web-root-div",
-    );
+    const takeSurveyLayoutWebRootDiv = document.querySelector(".take-survey-layout-web-root-div");
     takeSurveyLayoutWebDomNodeRef.current = takeSurveyLayoutWebRootDiv;
   }, []);
 

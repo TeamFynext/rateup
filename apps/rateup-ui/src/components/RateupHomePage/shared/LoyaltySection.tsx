@@ -1,8 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
 
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
-
 import { BookDemoModal } from "../helper/BookDemoModal";
+
+import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 function LoyaltySection() {
   const navigate = useNavigate();
@@ -26,15 +26,11 @@ function LoyaltySection() {
               Start For Free
             </button>
             <BookDemoModal>
-              <button className={`${styles.btn} ${styles["btn-ghost"]}`}>
-                Book a Demo
-              </button>
+              <button className={`${styles.btn} ${styles["btn-ghost"]}`}>Book a Demo</button>
             </BookDemoModal>
           </div>
 
-          <div className={styles.micro}>
-            No credit card required · Cancel anytime
-          </div>
+          <div className={styles.micro}>No credit card required · Cancel anytime</div>
         </div>
       </div>
     </section>

@@ -15,7 +15,7 @@ import {
   updateWaAutomatedReply,
 } from "./automatedReply.api";
 
-const useWaAutomatedReplies = (teamId: string) =>
+const _useWaAutomatedReplies = (teamId: string) =>
   useQuery({
     queryKey: ["waAutomatedReplies", { teamId }],
     queryFn: () => getWaAutomatedRepliesByTeamId(teamId),
@@ -46,7 +46,7 @@ export const useCreateWaAutomatedReplyMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: any) => createWaAutomatedReply(data),
-    onSuccess: (_, data) => {
+    onSuccess: (_, _data) => {
       qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
       toast.success("Automated Reply Created Successfully");
     },
@@ -60,9 +60,8 @@ export const useCreateWaAutomatedReplyMutation = () => {
 export const useDeleteWaAutomatedReplyMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (waAutomatedReplyId: string) =>
-      deleteWaAutomatedReply(waAutomatedReplyId),
-    onSuccess: (res) => {
+    mutationFn: (waAutomatedReplyId: string) => deleteWaAutomatedReply(waAutomatedReplyId),
+    onSuccess: (_res) => {
       qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
       toast.success("Automated Reply Deleted Successfully");
     },
@@ -98,9 +97,8 @@ export const useUpdateWaAutomatedReplyMutation = () => {
 
 export const useInitiateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
   return useMutation({
-    mutationFn: ({ phone }: any) =>
-      initiateWaAutomatedReply(waAutomatedReplyId, phone),
-    onSuccess: (res) => {
+    mutationFn: ({ phone }: any) => initiateWaAutomatedReply(waAutomatedReplyId, phone),
+    onSuccess: (_res) => {
       toast.success("Automation initiated Successfully");
     },
     onError: (error) => {

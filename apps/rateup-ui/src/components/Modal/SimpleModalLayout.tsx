@@ -75,13 +75,9 @@ export default function SimpleModalLayout({
         {noCustomHeader && title && (
           <DialogHeader className="mb-4">
             <div className="flex items-center justify-between gap-4">
-              <DialogTitle className="text-lg font-semibold">
-                {title}
-              </DialogTitle>
+              <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
               {withCloseButton && (
-                <DialogClose className="rounded-full border px-2 py-1 text-sm">
-                  ×
-                </DialogClose>
+                <DialogClose className="rounded-full border px-2 py-1 text-sm">×</DialogClose>
               )}
             </div>
           </DialogHeader>

@@ -1,7 +1,4 @@
-"use client";
-
-import * as React from "react";
-
+import { IconHome } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import {
   BarChart3,
@@ -17,6 +14,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import * as React from "react";
 
 import {
   Sidebar,
@@ -106,12 +104,9 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   data?: any;
 }
 
-export function AppSidebar({
-  data: propData,
-  ...props
-}: Readonly<AppSidebarProps>) {
+export function AppSidebar({ data: propData, ...props }: Readonly<AppSidebarProps>) {
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar collapsible={"icon"} {...props} className="text-white">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -136,7 +131,10 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild variant="outline">
-              <Link to="/dashboard">Go to Dashboard</Link>
+              <Link to="/dashboard" className="text-foreground justify-between">
+                <div className="group-data-[collapsible=icon]:hidden">Go to Dashboard</div>
+                <IconHome />
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

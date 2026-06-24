@@ -1,20 +1,17 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Badge, Flex, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { ChatbotPublicPageStatus } from "@/types/enums.ts";
 import {
   useCreateChatbot,
   useGetChatbotDetails,
   useUpdateChatbot,
 } from "@/backend/chatbot/chatbot.query";
+import { ChatbotPublicPageStatus } from "@/types/enums.ts";
 
 import { RateupButtonSecondary } from "../Button/RateupButtons.tsx";
 import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
@@ -23,9 +20,7 @@ import { CopyLinkComponent } from "../Survey/ShareSurvey/ShareSurvey.tsx";
 const PublishChatbot = (selectedChatbotId) => {
   const [chatbotPublicUrl, setChatbotPublicUrl] = useState("");
   const createChatbotUrlMutate = useCreateChatbot();
-  const { data: chatbotDetails } = useGetChatbotDetails(
-    selectedChatbotId.selectedChatbotId,
-  );
+  const { data: chatbotDetails } = useGetChatbotDetails(selectedChatbotId.selectedChatbotId);
   const updateChatbotMutate = useUpdateChatbot();
   const [opened, { toggle }] = useDisclosure(false);
   const [isActive, setIsActive] = useState(false);
@@ -53,9 +48,7 @@ const PublishChatbot = (selectedChatbotId) => {
     const loadingMessage = isActive
       ? translations("Hold On..Deactivating public page")
       : translations("Hold On..Activating public page");
-    const loadingTitle = isActive
-      ? translations("Deactivating")
-      : translations("Activating");
+
     toast.loading(loadingMessage, {
       id: "chatbot-page",
     });
@@ -97,9 +90,7 @@ const PublishChatbot = (selectedChatbotId) => {
       );
     if (chatbotDetails?.publicPageStatus) {
       setIsActive(
-        chatbotDetails?.publicPageStatus === ChatbotPublicPageStatus.ACTIVE
-          ? true
-          : false,
+        chatbotDetails?.publicPageStatus === ChatbotPublicPageStatus.ACTIVE ? true : false,
       );
     }
   }, [chatbotDetails]);
@@ -117,30 +108,18 @@ const PublishChatbot = (selectedChatbotId) => {
             }
             onClick={chatbotDetails?.shortUrlId ? toggle : generateUrl}
             rightIcon={
-              chatbotDetails?.shortUrlId ? (
-                !opened ? (
-                  <IconChevronDown />
-                ) : (
-                  <IconChevronUp />
-                )
-              ) : null
+              chatbotDetails?.shortUrlId ? !opened ? <IconChevronDown /> : <IconChevronUp /> : null
             }
           />
           {chatbotDetails ? (
             <>
               <Group>
                 <Text>{translations("Current Status:")}</Text>
-                <Badge color={isActive ? "green" : "red"}>
-                  {chatbotDetails?.publicPageStatus}
-                </Badge>
+                <Badge color={isActive ? "green" : "red"}>{chatbotDetails?.publicPageStatus}</Badge>
               </Group>
               <RateupButtonSecondary
                 color={isActive ? "red" : "var(--tertiary-color)"}
-                title={
-                  isActive
-                    ? translations("Deactivate")
-                    : translations("Activate")
-                }
+                title={isActive ? translations("Deactivate") : translations("Activate")}
                 onClick={handleChatbotStatus}
               />
             </>

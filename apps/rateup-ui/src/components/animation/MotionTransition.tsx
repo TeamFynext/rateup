@@ -1,15 +1,9 @@
-import React from "react";
-
 import { AnimatePresence, motion } from "motion/react";
+import React from "react";
 
 type MotionTransitionProps = {
   keyValue: any;
-  type?:
-    | "fade"
-    | "leftSlideIn"
-    | "rightSlideIn"
-    | "bottomSlideIn"
-    | "bottomSlideOut";
+  type?: "fade" | "leftSlideIn" | "rightSlideIn" | "bottomSlideIn" | "bottomSlideOut";
   apEnable?: boolean;
   duration?: number;
   layout?: boolean;

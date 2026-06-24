@@ -15,17 +15,9 @@ function SurveyPreviewModal({ opened, onClose, children }) {
         withOverlay={false}
         size={"100%"}
       >
-        <Stack
-          className={styles["close-btn-preview-container"]}
-          align="center"
-          gap={0}
-        >
+        <Stack className={styles["close-btn-preview-container"]} align="center" gap={0}>
           <Group justify="center">
-            <ActionIcon
-              className={styles["close-btn"]}
-              variant="subtle"
-              onClick={onClose}
-            >
+            <ActionIcon className={styles["close-btn"]} variant="subtle" onClick={onClose}>
               <IconX color="gray" />
             </ActionIcon>
           </Group>

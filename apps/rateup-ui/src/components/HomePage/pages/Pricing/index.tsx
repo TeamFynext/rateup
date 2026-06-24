@@ -1,35 +1,29 @@
-"use client";
-
-import React, { useState } from "react";
-
 import { Box, SegmentedControl, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
+import React, { useState } from "react";
 
-import { useCheckSession } from "@/hooks/checkSession.tsx";
 import { useRateupPaymentsPlans } from "@/backend/payment/payment.query";
+import { useCheckSession } from "@/hooks/checkSession.tsx";
 
 import { MotionTransition } from "../../../animation/MotionTransition.tsx";
 import RateupLoader from "../../../Loaders/RateupLoader.tsx";
-import classes from "./Pricing.module.css";
 import { CustomSection } from "./Section/CustomSection.tsx";
 import { MenuSection } from "./Section/MenuSection.tsx";
 import { SurveySection } from "./Section/SurveySection.tsx";
 import { WhatsAppSection } from "./Section/WhatsAppSection.tsx";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
 
-const Pricing = ({
-  isAccount = false,
-  handleSelection = () => {},
-  source = "WebSurveys",
-}) => {
+import classes from "./Pricing.module.css";
+
+const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebSurveys" }) => {
   const [value, setValue] = useState(source);
-  const [checked, setChecked] = useState(false);
+  const [checked] = useState(false);
   const largeScreen = useMediaQuery("(min-width: 40em)");
   const extraLargeScren = useMediaQuery("(min-width: 88em)");
   const { updateRouteAndCart } = useRouteAndCartStore();
   const navigate = useNavigate();
-  const { data, isPending, isError } = useRateupPaymentsPlans();
+  const { data, isPending } = useRateupPaymentsPlans();
 
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
@@ -103,9 +97,7 @@ const Pricing = ({
 
   const updatedPlans = plans?.map((plan) => {
     const correspondingInversePlan = inversePlans?.find(
-      (inversePlan) =>
-        inversePlan?.displayName?.toLowerCase() ===
-        plan?.displayName?.toLowerCase(),
+      (inversePlan) => inversePlan?.displayName?.toLowerCase() === plan?.displayName?.toLowerCase(),
     );
 
     if (correspondingInversePlan) {
@@ -121,24 +113,15 @@ const Pricing = ({
   return (
     <Stack mt={isAccount ? 0 : 30} align="center" fw={500} mb={60}>
       <Box ta={"center"} display={isAccount ? "none" : "block"}>
-        <Text
-          c={"var(--grey-color-4)"}
-          fz={"clamp(14px, 9.008px + 0.833vw, 21.008px)"}
-        >
+        <Text c={"var(--grey-color-4)"} fz={"clamp(14px, 9.008px + 0.833vw, 21.008px)"}>
           Our Pricing Plans
         </Text>
-        <Text
-          c={"var(--tertiary-color)"}
-          fz={"clamp(24px, 15.424px + 1.429vw, 36px)"}
-        >
+        <Text c={"var(--tertiary-color)"} fz={"clamp(24px, 15.424px + 1.429vw, 36px)"}>
           Choose what you need
         </Text>
       </Box>
       {source === "WebSurveys" && (
-        <SimpleGrid
-          cols={{ base: 1, xl: 3 }}
-          spacing={extraLargeScren ? "80px" : "40px"}
-        >
+        <SimpleGrid cols={{ base: 1, xl: 3 }} spacing={extraLargeScren ? "80px" : "40px"}>
           <Box display={extraLargeScren ? "block" : "none"} />
           <SegmentedControl
             value={value}
@@ -184,7 +167,6 @@ const Pricing = ({
           <SurveySection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
-            plans={updatedPlans}
             freePlan={freePlan}
             currencySymbol={currencySymbol}
           />
@@ -193,7 +175,6 @@ const Pricing = ({
           <MenuSection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
-            plans={updatedPlans}
             freePlan={freePlan}
             currencySymbol={currencySymbol}
           />
@@ -203,7 +184,6 @@ const Pricing = ({
           <WhatsAppSection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
-            plans={updatedPlans}
             freePlan={freePlan}
             currencySymbol={currencySymbol}
           />
@@ -214,7 +194,6 @@ const Pricing = ({
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
             plans={updatedPlans}
-            freePlan={freePlan}
             currencySymbol={currencySymbol}
           />
         )}

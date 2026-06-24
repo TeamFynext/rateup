@@ -38,13 +38,9 @@ function useCreateLandingPageMutation() {
       queryClient.invalidateQueries({ queryKey: ["landingPages"] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          "Unable to create landingPage, please try again later",
-        {
-          id: "CreateLandingPage",
-        },
-      );
+      toast.error(error?.message || "Unable to create landingPage, please try again later", {
+        id: "CreateLandingPage",
+      });
     },
   });
 }
@@ -63,13 +59,9 @@ function useUpdateLandingPageMutation(shortUrlId) {
       queryClient.invalidateQueries({ queryKey: ["landingPage", shortUrlId] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          "Unable to update Landing Page, please try again later",
-        {
-          id: "CreateLandingPage",
-        },
-      );
+      toast.error(error?.message || "Unable to update Landing Page, please try again later", {
+        id: "CreateLandingPage",
+      });
     },
   });
 }
@@ -87,19 +79,15 @@ function useDeleteLandingPageMutation(id) {
       queryClient.invalidateQueries({ queryKey: ["landingPages"] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          "unable to delete landingPage, please try again later",
-        {
-          id: "deleteLandingPage",
-        },
-      );
+      toast.error(error?.message || "unable to delete landingPage, please try again later", {
+        id: "deleteLandingPage",
+      });
     },
   });
 }
 
 // This is being used to get options for dropdowns in landingPage AddLinkOverlay component.
-function useLinkTypeOptions(linkType) {
+function _useLinkTypeOptions(linkType) {
   return useQuery({
     queryKey: ["linktype-options", linkType],
     queryFn: getDropdownOptionsOfLinkType(linkType),

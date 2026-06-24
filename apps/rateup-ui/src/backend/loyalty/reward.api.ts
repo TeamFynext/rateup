@@ -22,10 +22,7 @@ interface FreeItemValue {
   quantity: number;
 }
 
-type PointRewardValue =
-  | DiscountFixedValue
-  | DiscountPercentageValue
-  | FreeItemValue;
+type PointRewardValue = DiscountFixedValue | DiscountPercentageValue | FreeItemValue;
 
 interface CouponValue {
   code?: string | null;
@@ -37,11 +34,7 @@ interface AssignedValue {
   sku?: string | null;
 }
 
-type LoyaltyRewardValue =
-  | PointRewardValue
-  | CouponValue
-  | AssignedValue
-  | Record<string, unknown>;
+type _LoyaltyRewardValue = PointRewardValue | CouponValue | AssignedValue | Record<string, unknown>;
 
 // Redemption rules schemas
 interface TimeRestrictions {
@@ -99,11 +92,7 @@ interface RedemptionRules {
 }
 
 // Status type matching backend
-export type LoyaltyRewardStatus =
-  | "ACTIVE"
-  | "INACTIVE"
-  | "OUT_OF_STOCK"
-  | "EXPIRED";
+export type LoyaltyRewardStatus = "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK" | "EXPIRED";
 
 // Main reward interface matching backend response
 export interface LoyaltyReward {
@@ -176,9 +165,7 @@ export const getLoyaltyRewards = async (): Promise<LoyaltyReward[]> => {
 /**
  * Get a single loyalty reward by ID
  */
-export const getLoyaltyRewardById = async (
-  rewardId: string,
-): Promise<LoyaltyReward> => {
+export const getLoyaltyRewardById = async (rewardId: string): Promise<LoyaltyReward> => {
   const response = await axiosClient.get(`${LOYALTY_REWARDS_BASE}/${rewardId}`);
   return response.data;
 };
@@ -200,10 +187,7 @@ export const updateLoyaltyReward = async (
   rewardId: string,
   rewardData: LoyaltyRewardUpdateInput,
 ): Promise<LoyaltyReward> => {
-  const response = await axiosClient.put(
-    `${LOYALTY_REWARDS_BASE}/${rewardId}`,
-    rewardData,
-  );
+  const response = await axiosClient.put(`${LOYALTY_REWARDS_BASE}/${rewardId}`, rewardData);
   return response.data;
 };
 

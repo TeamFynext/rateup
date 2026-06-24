@@ -1,10 +1,7 @@
-"use client";
-
-import React, { useCallback, useEffect } from "react";
-
 import { Box, Image } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { produce } from "immer";
+import React, { useCallback, useEffect } from "react";
 
 import { usePageVisitsOrLinkClicksUpdateMutation } from "@/backend/linktree/linktree.query";
 import UnsplashCreditText from "@/components/Linktree/LinktreeEditor/ThemeEditor/components/UnsplashCreditText/index.tsx";
@@ -15,8 +12,7 @@ import styles from "./lt.module.css";
 
 const LinkTreeC = ({ linktreeObj }) => {
   const shortUrlId = linktreeObj?.shortUrlId;
-  const pageVisitsOrLinkClicksMutation =
-    usePageVisitsOrLinkClicksUpdateMutation(shortUrlId);
+  const pageVisitsOrLinkClicksMutation = usePageVisitsOrLinkClicksUpdateMutation(shortUrlId);
 
   const isMobile = useMediaQuery("(max-width: 425px)");
 
@@ -30,13 +26,13 @@ const LinkTreeC = ({ linktreeObj }) => {
     linkListItem: { styles: linkListItemStyles },
   } = theme;
 
-  let backgroundImageUrl = "";
+  let _backgroundImageUrl = "";
   const backgroundImageObj = {};
   if (!isMobile) {
-    if (desktopBgImgUrl) backgroundImageUrl = desktopBgImgUrl;
+    if (desktopBgImgUrl) _backgroundImageUrl = desktopBgImgUrl;
     backgroundImageObj["backgroundImage"] = `url(${desktopBgImgUrl})`;
   } else if (isMobile) {
-    if (mobileBgImgUrl) backgroundImageUrl = mobileBgImgUrl;
+    if (mobileBgImgUrl) _backgroundImageUrl = mobileBgImgUrl;
     backgroundImageObj["backgroundImage"] = `url(${mobileBgImgUrl})`;
   }
   const backgroundStylesObj = {
@@ -60,25 +56,16 @@ const LinkTreeC = ({ linktreeObj }) => {
         resourceToBeUpdated: "page-visit",
       });
     } else if (linktreeVisitsData) {
-      const parsedVisitsDataObj = JSON.parse(
-        localStorage.getItem("linktreeVisitsData"),
-      );
-      const currentLinktreeLastVisited =
-        parsedVisitsDataObj[shortUrlId]?.lastVisitedAt;
+      const parsedVisitsDataObj = JSON.parse(localStorage.getItem("linktreeVisitsData"));
+      const currentLinktreeLastVisited = parsedVisitsDataObj[shortUrlId]?.lastVisitedAt;
       if (!currentLinktreeLastVisited) {
-        const updatedParsedVisitsDataObj = produce(
-          parsedVisitsDataObj,
-          (draft) => {
-            draft[shortUrlId] = {
-              lastVisitedAt: new Date().toISOString(),
-              linkClicks: {},
-            };
-          },
-        );
-        localStorage.setItem(
-          "linktreeVisitsData",
-          JSON.stringify(updatedParsedVisitsDataObj),
-        );
+        const updatedParsedVisitsDataObj = produce(parsedVisitsDataObj, (draft) => {
+          draft[shortUrlId] = {
+            lastVisitedAt: new Date().toISOString(),
+            linkClicks: {},
+          };
+        });
+        localStorage.setItem("linktreeVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
         pageVisitsOrLinkClicksMutation.mutate({
           resourceToBeUpdated: "page-visit",
         });
@@ -89,20 +76,13 @@ const LinkTreeC = ({ linktreeObj }) => {
       // currentLinktreeLastVisited is an ISO time string.
       const lastVisitedDateObj = new Date(currentLinktreeLastVisited);
 
-      const differenceInMinutes =
-        (+newDateObj - +lastVisitedDateObj) / (1000 * 60);
+      const differenceInMinutes = (+newDateObj - +lastVisitedDateObj) / (1000 * 60);
 
       if (differenceInMinutes > 60) {
-        const updatedParsedVisitsDataObj = produce(
-          parsedVisitsDataObj,
-          (draft) => {
-            draft[shortUrlId].lastVisitedAt = new Date().toISOString();
-          },
-        );
-        localStorage.setItem(
-          "linktreeVisitsData",
-          JSON.stringify(updatedParsedVisitsDataObj),
-        );
+        const updatedParsedVisitsDataObj = produce(parsedVisitsDataObj, (draft) => {
+          draft[shortUrlId].lastVisitedAt = new Date().toISOString();
+        });
+        localStorage.setItem("linktreeVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
         pageVisitsOrLinkClicksMutation.mutate({
           resourceToBeUpdated: "page-visit",
         });
@@ -112,23 +92,15 @@ const LinkTreeC = ({ linktreeObj }) => {
 
   const handleLinkClick = useCallback((linkId) => {
     const shortUrlId = linktreeObj.shortUrlId;
-    const parsedVisitsDataObj = JSON.parse(
-      localStorage.getItem("linktreeVisitsData"),
-    );
+    const parsedVisitsDataObj = JSON.parse(localStorage.getItem("linktreeVisitsData"));
     const linkClicksObj = parsedVisitsDataObj[shortUrlId]["linkClicks"][linkId];
     if (!linkClicksObj) {
-      const updatedParsedVisitsDataObj = produce(
-        parsedVisitsDataObj,
-        (draft) => {
-          draft[shortUrlId]["linkClicks"][linkId] = {
-            lastClickedAt: new Date().toISOString(),
-          };
-        },
-      );
-      localStorage.setItem(
-        "linktreeVisitsData",
-        JSON.stringify(updatedParsedVisitsDataObj),
-      );
+      const updatedParsedVisitsDataObj = produce(parsedVisitsDataObj, (draft) => {
+        draft[shortUrlId]["linkClicks"][linkId] = {
+          lastClickedAt: new Date().toISOString(),
+        };
+      });
+      localStorage.setItem("linktreeVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
       pageVisitsOrLinkClicksMutation.mutate({
         resourceToBeUpdated: "link-click",
         linkId,
@@ -138,20 +110,12 @@ const LinkTreeC = ({ linktreeObj }) => {
       const { lastClickedAt } = linkClicksObj;
       const lastClickedDateObj = new Date(lastClickedAt);
       const newDateObj = new Date();
-      const differenceInMinutes =
-        (+newDateObj - +lastClickedDateObj) / (1000 * 60);
+      const differenceInMinutes = (+newDateObj - +lastClickedDateObj) / (1000 * 60);
       if (differenceInMinutes > 60) {
-        const updatedParsedVisitsDataObj = produce(
-          parsedVisitsDataObj,
-          (draft) => {
-            draft[shortUrlId]["linkClicks"][linkId]["lastClickedAt"] =
-              new Date().toISOString();
-          },
-        );
-        localStorage.setItem(
-          "linktreeVisitsData",
-          JSON.stringify(updatedParsedVisitsDataObj),
-        );
+        const updatedParsedVisitsDataObj = produce(parsedVisitsDataObj, (draft) => {
+          draft[shortUrlId]["linkClicks"][linkId]["lastClickedAt"] = new Date().toISOString();
+        });
+        localStorage.setItem("linktreeVisitsData", JSON.stringify(updatedParsedVisitsDataObj));
         pageVisitsOrLinkClicksMutation.mutate({
           resourceToBeUpdated: "link-click",
           linkId,
@@ -164,11 +128,7 @@ const LinkTreeC = ({ linktreeObj }) => {
     <Box style={backgroundStylesObj} className={`${styles["root-div"]}`}>
       <Box className={styles["logo-img-container"]}>
         {logoUrl ? (
-          <Image
-            src={logoUrl}
-            alt="logo"
-            style={{ ...logoStyles, objectFit: "contain" }}
-          />
+          <Image src={logoUrl} alt="logo" style={{ ...logoStyles, objectFit: "contain" }} />
         ) : (
           <Image
             src={`${imagesPath}/camera-off.svg`}

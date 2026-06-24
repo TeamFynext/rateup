@@ -1,9 +1,8 @@
-import type { CSSProperties } from "react";
-
+import { Draggable } from "@hello-pangea/dnd";
 import { Box } from "@mantine/core";
 import { IconGripVertical } from "@tabler/icons-react";
-import { Draggable } from "@hello-pangea/dnd";
 import cx from "clsx";
+import type { CSSProperties } from "react";
 
 import classes from "./Reorder.module.css";
 
@@ -17,11 +16,7 @@ function ReorderItem({ children, id, index, className = "" }) {
             {...provided.dragHandleProps}
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
             style={provided.draggableProps.style as CSSProperties}
-            className={cx(
-              classes.item,
-              { [classes.itemDragging]: snapshot.isDragging },
-              className,
-            )}
+            className={cx(classes.item, { [classes.itemDragging]: snapshot.isDragging }, className)}
             ref={provided.innerRef}
           >
             <div {...provided.dragHandleProps} className={classes.dragHandle}>

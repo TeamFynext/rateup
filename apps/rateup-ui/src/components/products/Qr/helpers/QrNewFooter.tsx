@@ -9,18 +9,11 @@ const QrNewFooter = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Logo */}
-          <Image
-            src={rateupLogoBlue}
-            alt="RateUp Logo"
-            width={100}
-            height={40}
-          />
+          <Image src={rateupLogoBlue} alt="RateUp Logo" width={100} height={40} />
 
           {/* Our Company */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-800 mb-3">
-              Our Company
-            </h4>
+            <h4 className="text-sm font-semibold text-gray-800 mb-3">Our Company</h4>
             <ul className="space-y-2 text-sm text-gray-700">
               <li>
                 <Link to="/about-us" className="hover:text-gray-900">
@@ -33,10 +26,7 @@ const QrNewFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link
-                  to="https://blog.rateup.app/"
-                  className="hover:text-gray-900"
-                >
+                <Link to="https://blog.rateup.app/" className="hover:text-gray-900">
                   Blog
                 </Link>
               </li>
@@ -46,9 +36,7 @@ const QrNewFooter = () => {
           {/* Pricing & Legal */}
           <div className="flex flex-col sm:flex-row sm:justify-between gap-6">
             <div>
-              <h4 className="text-sm font-semibold text-gray-800 mb-3">
-                Pricing
-              </h4>
+              <h4 className="text-sm font-semibold text-gray-800 mb-3">Pricing</h4>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li>
                   <Link to="/pricing" className="hover:text-gray-900">
@@ -68,9 +56,7 @@ const QrNewFooter = () => {
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-gray-800 mb-3">
-                Legal
-              </h4>
+              <h4 className="text-sm font-semibold text-gray-800 mb-3">Legal</h4>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li>
                   <Link to="/privacy-policy" className="hover:text-gray-900">

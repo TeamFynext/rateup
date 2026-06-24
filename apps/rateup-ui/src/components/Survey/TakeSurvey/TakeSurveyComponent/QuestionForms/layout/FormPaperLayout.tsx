@@ -1,5 +1,3 @@
-"use client";
-
 import { Paper, useMantineTheme } from "@mantine/core";
 
 import classes from "../../TakeSurvey.module.css";

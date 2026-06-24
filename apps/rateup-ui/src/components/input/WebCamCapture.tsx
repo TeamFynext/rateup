@@ -1,8 +1,5 @@
-"use client";
-
-import React, { useCallback, useRef, useState } from "react";
-
 import { Group, Image, Stack } from "@mantine/core";
+import React, { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Webcam from "react-webcam";
 
@@ -21,12 +18,7 @@ interface WebcamProps {
   close;
 }
 
-const WebcamCapture = ({
-  height = 720,
-  width = 1280,
-  setCapturedImg,
-  close,
-}: WebcamProps) => {
+const WebcamCapture = ({ height = 720, width = 1280, setCapturedImg, close }: WebcamProps) => {
   const webcamRef = useRef(null);
   const [imgSrc, setImgSrc] = useState(null);
   const { t: translations } = useTranslation();
@@ -53,15 +45,9 @@ const WebcamCapture = ({
       )}
       <Group justify="center">
         {imgSrc ? (
-          <RateupButtonBlue
-            title={translations("Retake")}
-            onClick={() => setImgSrc(null)}
-          />
+          <RateupButtonBlue title={translations("Retake")} onClick={() => setImgSrc(null)} />
         ) : (
-          <RateupButtonBlue
-            title={translations("Capture photo")}
-            onClick={capture}
-          />
+          <RateupButtonBlue title={translations("Capture photo")} onClick={capture} />
         )}
         <RateupButtonBlue
           title={translations("save")}

@@ -1,5 +1,3 @@
-"use client";
-
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Clock, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -24,8 +22,6 @@ interface SurveyCardProps {
 
 export function SurveyCard({
   survey,
-  handleCheckBox,
-  isChecked,
   selectedTeamId,
   teamsData,
   route,
@@ -54,11 +50,7 @@ export function SurveyCard({
       onClick={(e) => {
         e.stopPropagation();
         navigate({
-          to:
-            route ||
-            `${pathname}/${survey?.id}${
-              survey?.isPublished ? `?tab=Result` : ""
-            }`,
+          to: route || `${pathname}/${survey?.id}${survey?.isPublished ? `?tab=Result` : ""}`,
         });
       }}
     >
@@ -80,9 +72,7 @@ export function SurveyCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="text-sm line-clamp-1 group-hover:text-primary transition-colors font-semibold">
-                {survey?.title?.length > 18
-                  ? survey?.title?.slice(0, 18) + "..."
-                  : survey?.title}
+                {survey?.title?.length > 18 ? survey?.title?.slice(0, 18) + "..." : survey?.title}
               </h3>
             </div>
           </div>
@@ -97,9 +87,7 @@ export function SurveyCard({
         <div className="flex items-baseline gap-1 text-gray-500 px-3">
           <span className="text-xs">{totalResponses}</span>
           <span className="text-xs">
-            {totalResponses === 0
-              ? translations("Response")
-              : translations("Responses")}
+            {totalResponses === 0 ? translations("Response") : translations("Responses")}
           </span>
         </div>
 
@@ -109,9 +97,7 @@ export function SurveyCard({
             <span
               className={`${survey?.active ? "bg-green-100 text-green-500" : "bg-red-100 text-red-500"} text-[10px] px-2 py-1 rounded-full`}
             >
-              {survey?.active
-                ? translations("ACTIVE")
-                : translations("INACTIVE")}
+              {survey?.active ? translations("ACTIVE") : translations("INACTIVE")}
             </span>
           </div>
           <div className="flex items-center text-[11px] text-muted-foreground">

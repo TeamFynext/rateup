@@ -1,17 +1,10 @@
-"use client";
-
+import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 
-import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
-
-import { cn } from "@/lib/utils.ts";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import { cn } from "@/lib/utils.ts";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -33,9 +26,7 @@ function OptionRow({ label, active, onClick }) {
       onClick={onClick}
       className={cn(
         "flex w-full items-center justify-between rounded-md px-3 py-1.5 text-sm transition-colors",
-        active
-          ? "bg-primary/10 text-primary font-medium"
-          : "text-foreground hover:bg-muted",
+        active ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-muted",
       )}
     >
       {label}
@@ -95,11 +86,7 @@ function FilterSection({ label, hint, isOpen, onToggle, children }) {
   );
 }
 
-export function TemplateFilterSort({
-  filters,
-  setFilters,
-  templateTypeOptions = [],
-}) {
+export function TemplateFilterSort({ filters, setFilters, templateTypeOptions = [] }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [openSection, setOpenSection] = useState(null); // "status" | "category" | "templateType" | null
 
@@ -168,9 +155,7 @@ export function TemplateFilterSort({
                 key={opt.value}
                 label={opt.label}
                 active={filters.category === opt.value}
-                onClick={() =>
-                  setFilters((f) => ({ ...f, category: opt.value }))
-                }
+                onClick={() => setFilters((f) => ({ ...f, category: opt.value }))}
               />
             ))}
           </FilterSection>
@@ -180,9 +165,7 @@ export function TemplateFilterSort({
               <Separator className="my-1" />
               <FilterSection
                 label="Type"
-                hint={
-                  filters.templateType === "all" ? null : filters.templateType
-                }
+                hint={filters.templateType === "all" ? null : filters.templateType}
                 isOpen={openSection === "templateType"}
                 onToggle={() => toggleSection("templateType")}
               >
@@ -191,9 +174,7 @@ export function TemplateFilterSort({
                     key={opt.value}
                     label={opt.label}
                     active={filters.templateType === opt.value}
-                    onClick={() =>
-                      setFilters((f) => ({ ...f, templateType: opt.value }))
-                    }
+                    onClick={() => setFilters((f) => ({ ...f, templateType: opt.value }))}
                   />
                 ))}
               </FilterSection>

@@ -38,7 +38,7 @@ export default function SliderCompatible({
   };
 
   // prefer controlled `value` when provided, else defaultValue fallback
-  const controlled = value !== undefined;
+
   const arrayValue = normalizeToArray(value ?? defaultValue, min);
 
   // Handler invoked by Radix/shadcn Slider which gives number[].

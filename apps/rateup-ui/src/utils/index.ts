@@ -34,14 +34,7 @@ export function getTimeSince(date: string) {
     return `${interval} minute${interval === 1 ? "" : "s"} ago`;
   }
 
-  return `${Math.floor(seconds)} second${
-    Math.floor(seconds) === 1 ? "" : "s"
-  } ago`;
-}
-
-function arrayEquals<T extends string | number>(a: Array<T>, b: Array<T>) {
-  if (a.length !== b.length) return false;
-  return a.every((val, index) => b.includes(val));
+  return `${Math.floor(seconds)} second${Math.floor(seconds) === 1 ? "" : "s"} ago`;
 }
 
 export function shuffleArray(array) {
@@ -103,18 +96,6 @@ export const getContent = (title: string) => {
   else return title;
 };
 
-const getErrorMessage = (error: any, defaultMessage: string) => {
-  if (typeof error?.message === "string") {
-    return error?.message;
-  } else if (typeof error?.data === "string") {
-    return error?.data;
-  } else if (typeof error?.data?.message === "string") {
-    return error?.data?.message;
-  } else {
-    return defaultMessage;
-  }
-};
-
 export function getUserRoleColor(role) {
   switch (role) {
     case UserRole.SUPADM:
@@ -143,7 +124,7 @@ export function isValidUrl(url: string, checkHttps: boolean = true) {
     const validatedUrl = new URL(url);
     if (checkHttps) return validatedUrl.protocol === "https:";
     return ["http:", "https:"].includes(validatedUrl.protocol);
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -152,9 +133,7 @@ export const safeStrOrNull = (str: string): string | null =>
   !str || !str.trim().length ? null : str;
 
 export function hasRealContent(obj) {
-  return obj?.content?.some(
-    (block) => block.content && block.content.length > 0,
-  );
+  return obj?.content?.some((block) => block.content && block.content.length > 0);
 }
 
 export function randomHexColor(): string {

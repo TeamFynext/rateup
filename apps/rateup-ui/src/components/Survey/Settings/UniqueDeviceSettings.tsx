@@ -1,24 +1,15 @@
-"use client";
-
 import React, { useState } from "react";
-
 import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
 import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 import { updateUniqueDevice } from "./updateSettings.ts";
 
 const UniqueDeviceSettings = ({ survey, surveyId }) => {
-  const [enableUniqueDevice, setEnableUniqueDevice] = useState(
-    survey?.uniqueDeviceResponse,
-  );
+  const [enableUniqueDevice, setEnableUniqueDevice] = useState(survey?.uniqueDeviceResponse);
   const editSurvey = useEditSurveyMutation(surveyId);
   const { t: translations } = useTranslation();
   return (
@@ -28,20 +19,14 @@ const UniqueDeviceSettings = ({ survey, surveyId }) => {
           <Switch
             id="unique-device"
             checked={enableUniqueDevice}
-            onCheckedChange={() =>
-              updateUniqueDevice(setEnableUniqueDevice, editSurvey)
-            }
+            onCheckedChange={() => updateUniqueDevice(setEnableUniqueDevice, editSurvey)}
           />
         </TooltipTrigger>
         <TooltipContent>
           <span>
             {enableUniqueDevice
-              ? translations(
-                  "Click here to allow multiple user entry from a device",
-                )
-              : translations(
-                  "Click here to allow only Single user entry from a device",
-                )}
+              ? translations("Click here to allow multiple user entry from a device")
+              : translations("Click here to allow only Single user entry from a device")}
           </span>
         </TooltipContent>
       </Tooltip>

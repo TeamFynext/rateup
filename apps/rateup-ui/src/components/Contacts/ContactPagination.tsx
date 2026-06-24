@@ -1,6 +1,5 @@
-import React from "react";
-
 import { Group, Pagination } from "@mantine/core";
+import React from "react";
 
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
@@ -22,12 +21,8 @@ const ContactPagination = ({ totalPageCount, setPagination, pagination }) => {
         <Pagination.First disabled={pagination.pageIndex === 0} />
         <Pagination.Previous disabled={pagination.pageIndex === 0} />
         <Pagination.Items />
-        <Pagination.Next
-          disabled={pagination.pageIndex === Math.round(totalPageCount)}
-        />
-        <Pagination.Last
-          disabled={pagination.pageIndex === Math.round(totalPageCount)}
-        />
+        <Pagination.Next disabled={pagination.pageIndex === Math.round(totalPageCount)} />
+        <Pagination.Last disabled={pagination.pageIndex === Math.round(totalPageCount)} />
         <ContainedSelection
           onChange={(value) => {
             setPagination((prev) => ({

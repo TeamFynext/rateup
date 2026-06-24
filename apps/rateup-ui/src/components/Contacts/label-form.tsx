@@ -1,7 +1,6 @@
-import { useEffect } from "react";
-
-import { TagsInput } from "@mantine/core";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { TagsInput } from "@mantine/core";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import z from "zod";
@@ -12,13 +11,7 @@ import {
 } from "@/backend/campaign/contacts/contacts.query";
 import { Button } from "@/components/ui/button.tsx";
 import { DialogClose, DialogFooter } from "@/components/ui/dialog.tsx";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
+import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
   Select,
@@ -54,10 +47,7 @@ const buildSlug = (value: string) =>
     .replaceAll(/_+/g, "_")
     .replaceAll(/^_|_$/g, "");
 
-export const CustomFieldForm = ({
-  data,
-  onSubmitCallback,
-}: CustomFieldFormProps) => {
+export const CustomFieldForm = ({ data, onSubmitCallback }: CustomFieldFormProps) => {
   const { t } = useTranslation();
   const updateCustomFieldMutation = useUpdateCustomFieldMutation();
   const createCustomFieldMutation = useCreateCustomFieldMutation();
@@ -89,8 +79,7 @@ export const CustomFieldForm = ({
 
   const nameValue = form.watch("name");
   const typeValue = form.watch("type");
-  const isPending =
-    updateCustomFieldMutation.isPending || createCustomFieldMutation.isPending;
+  const isPending = updateCustomFieldMutation.isPending || createCustomFieldMutation.isPending;
 
   useEffect(() => {
     form.reset({
@@ -188,11 +177,7 @@ export const CustomFieldForm = ({
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="custom-field-type">{t("Type")}</FieldLabel>
-              <Select
-                name={field.name}
-                value={field.value}
-                onValueChange={field.onChange}
-              >
+              <Select name={field.name} value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger
                   id="custom-field-type"
                   className="w-full"
@@ -219,9 +204,7 @@ export const CustomFieldForm = ({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="custom-field-list-values">
-                  {t("Input Values")}
-                </FieldLabel>
+                <FieldLabel htmlFor="custom-field-list-values">{t("Input Values")}</FieldLabel>
                 <TagsInput
                   id="custom-field-list-values"
                   value={field.value}
@@ -229,9 +212,7 @@ export const CustomFieldForm = ({
                   aria-invalid={fieldState.invalid}
                   placeholder={t("Enter values and press Enter")}
                 />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}
           />
@@ -243,12 +224,8 @@ export const CustomFieldForm = ({
           render={({ field, fieldState }) => (
             <Field orientation="horizontal" data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="custom-field-visibility">
-                  {t("Visibility")}
-                </FieldLabel>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
+                <FieldLabel htmlFor="custom-field-visibility">{t("Visibility")}</FieldLabel>
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </FieldContent>
               <Switch
                 id="custom-field-visibility"

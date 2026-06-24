@@ -1,5 +1,3 @@
-"use client";
-
 import type { Table } from "@tanstack/react-table";
 import { X } from "lucide-react";
 
@@ -11,9 +9,7 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
 
-export function DataTableToolbar<TData>({
-  table,
-}: Readonly<DataTableToolbarProps<TData>>) {
+export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
   const globalFilter = table.getState().globalFilter as string;
 
   return (

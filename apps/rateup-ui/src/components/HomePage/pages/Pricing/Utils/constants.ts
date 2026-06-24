@@ -1,23 +1,3 @@
-const BlueGradient = {
-  from: "var(--shade-of-blue-5)",
-  to: "var(--shade-of-blue-3)",
-  deg: 131,
-};
-const initialPrices = {
-  essentials: 664,
-  plus: 830,
-  menu: 664,
-  surveyAddon: 249,
-  currency: "₹",
-};
-const defaultPrices = {
-  essentials: 8,
-  plus: 10,
-  menu: 8,
-  surveyAddon: 3,
-  currency: "$",
-};
-const DISCOUNT_PERCENTAGE = 2;
 export const CardWidth = "clamp(260px, 202.864px + 9.524vw, 340px)";
 export const PlanCardWidth = "clamp(220px, 202.864px + 9.524vw, 300px)";
 export const Title1 = "clamp(34px, 22.576px + 1.905vw, 50px)";

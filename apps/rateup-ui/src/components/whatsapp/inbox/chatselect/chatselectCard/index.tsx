@@ -1,23 +1,7 @@
-"use client";
-
+import { AlertCircle, Archive, BadgeCheck, CheckCircle, Circle, UserX } from "lucide-react";
 import { useMemo } from "react";
-
-import { useSearch } from "@tanstack/react-router";
-import {
-  AlertCircle,
-  Archive,
-  BadgeCheck,
-  CheckCircle,
-  CheckCircle2,
-  Circle,
-  CircleCheckBig,
-  CircleHelp,
-  CircleSlash,
-  UserX,
-} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import type { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
@@ -26,11 +10,9 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
-import {
-  formatDateWithRelativeTime,
-  formatToRelativeTime,
-} from "@/utils/dateTime.ts";
+import { formatDateWithRelativeTime, formatToRelativeTime } from "@/utils/dateTime.ts";
 import {
   isInboxSessionExpired,
   parseWaMessage,
@@ -59,19 +41,15 @@ export default function WaInboxChatSelectCard({
   selectedChats,
   setSelectedChats,
 }: Readonly<WaInboxChatSelectCardProps>) {
-  const params = useSearch({ strict: false });
   const lastMessage = contact?.lastMessage;
   const { t: translations } = useTranslation();
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
-  const tab = params.tab ?? "New";
 
   const { setSelectedContact, selectedContact } = useContactsStore();
 
   const platform = lastMessage?.sourcePlatform;
   const lifecycleInfo = useMemo(() => {
-    const label = lifeCycleLabels?.find(
-      (label) => label.id === contact?.lifecycleId,
-    );
+    const label = lifeCycleLabels?.find((label) => label.id === contact?.lifecycleId);
     return label;
   }, [contact?.lifecycleId, lifeCycleLabels]);
 
@@ -105,9 +83,7 @@ export default function WaInboxChatSelectCard({
               if (checked) {
                 setSelectedChats((prev) => [...prev, contact.id]);
               } else {
-                setSelectedChats((prev) =>
-                  prev.filter((id) => id !== contact.id),
-                );
+                setSelectedChats((prev) => prev.filter((id) => id !== contact.id));
               }
             }}
           />
@@ -124,9 +100,7 @@ export default function WaInboxChatSelectCard({
             }
             size="lg"
             showOnlineStatus={true}
-            isOnline={
-              !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp)
-            }
+            isOnline={!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp)}
             onlineStatusPosition="topLeft"
             src={contact?.profilePic}
             showRing={true}
@@ -159,9 +133,7 @@ export default function WaInboxChatSelectCard({
                   contact?.psid ||
                   "Unknown"}
               </p>
-              {contact?.isIgVerifiedUser && (
-                <BadgeCheck size={12} color="blue" />
-              )}
+              {contact?.isIgVerifiedUser && <BadgeCheck size={12} color="blue" />}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -211,9 +183,7 @@ export default function WaInboxChatSelectCard({
             {WaMessageClosedStatus.includes(contact?.waMessageAssignStatus) ? (
               <div className="flex ">
                 <CustomTooltip
-                  trigger={
-                    <Icon className={`text-[10px] h-4 ${closed.color}`} />
-                  }
+                  trigger={<Icon className={`text-[10px] h-4 ${closed.color}`} />}
                   content={
                     <span>
                       {contact.closedAt ? (
@@ -230,8 +200,7 @@ export default function WaInboxChatSelectCard({
                   </span>
                 )}
               </div>
-            ) : contact?.waMessageAssignStatus ===
-              WaMessageAssignStatus.UNASSIGNED ? (
+            ) : contact?.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED ? (
               <CustomTooltip
                 trigger={
                   <UserX
@@ -297,7 +266,6 @@ export function getContactClosedIcon(status) {
         icon: CheckCircle,
         color: "text-green-500 dark:text-green-600",
       };
-      break;
     case WaMessageAssignStatus.UNRESOLVED:
       return {
         icon: Circle,
@@ -310,38 +278,3 @@ export function getContactClosedIcon(status) {
       };
   }
 }
-
-const ContactClosedIcon = ({ status, className = "" }) => {
-  let closedIcon = null;
-  switch (status) {
-    case WaMessageAssignStatus.CLOSED:
-      closedIcon = (
-        <CircleCheckBig
-          className={`${className} text-blue-500 dark:text-blue-600`}
-        />
-      );
-      break;
-    case WaMessageAssignStatus.RESOLVED:
-      closedIcon = (
-        <CheckCircle2
-          className={`${className} text-green-500 dark:text-green-600`}
-        />
-      );
-      break;
-    case WaMessageAssignStatus.UNRESOLVED:
-      closedIcon = (
-        <CircleHelp
-          className={`${className} text-orange-500 dark:text-orange-600`}
-        />
-      );
-      break;
-    case WaMessageAssignStatus.SPAM:
-      closedIcon = (
-        <CircleSlash
-          className={`${className} text-red-500 dark:text-red-600`}
-        />
-      );
-      break;
-  }
-  return closedIcon;
-};

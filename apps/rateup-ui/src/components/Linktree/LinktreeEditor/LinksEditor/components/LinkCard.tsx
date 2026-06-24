@@ -1,28 +1,23 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-
 import { Box, Button, Loader, Text, TextInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconGripVertical, IconPencil, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useUpdateLinktreeMutation } from "@/backend/linktree/linktree.query";
-import modalStyles from "@/styles/commonCssModules/modal.module.css";
+
+import { useLinktreeObj } from "../../LinktreeContext/LinktreeContext.tsx";
 
 import restOfModalStyles from "../../../LinktreeCard/LinktreeCard.module.css";
-import { useLinktreeObj } from "../../LinktreeContext/LinktreeContext.tsx";
 import styles from "../LinksEditor.module.css";
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 function LinkCard({ linkObj, onDelete }) {
   const { id, linkDisplayName, linkUrl } = linkObj;
-  const [linkDisplayNameInputState, setLinkDisplayNameInputState] =
-    useState(linkDisplayName);
+  const [linkDisplayNameInputState, setLinkDisplayNameInputState] = useState(linkDisplayName);
 
-  const [isLinkDisplayNameBeingEdited, setIsLinkDisplayNameBeingEdited] =
-    useState(false);
-  const [isLinkDisplayNameBeingUpdated, setIsLinkDisplayNameBeingUpdated] =
-    useState(false);
+  const [isLinkDisplayNameBeingEdited, setIsLinkDisplayNameBeingEdited] = useState(false);
+  const [isLinkDisplayNameBeingUpdated, setIsLinkDisplayNameBeingUpdated] = useState(false);
 
   const [isLinkUrlBeingEdited, setIsLinkUrlBeingEdited] = useState(false);
   const [isLinkUrlBeingUpdated, setIsLinkUrlBeingUpdated] = useState(false);
@@ -153,11 +148,7 @@ function LinkCard({ linkObj, onDelete }) {
             <Button
               className={styles["link-url-edit-btn"]}
               rightSection={
-                isLinkUrlBeingUpdated ? (
-                  <Loader size={"1rem"} />
-                ) : (
-                  <IconPencil size={"1rem"} />
-                )
+                isLinkUrlBeingUpdated ? <Loader size={"1rem"} /> : <IconPencil size={"1rem"} />
               }
               onClick={() => setIsLinkUrlBeingEdited(true)}
             >

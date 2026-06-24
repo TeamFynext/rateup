@@ -1,5 +1,3 @@
-"use client";
-
 import { Rating, Stack, Text, Title } from "@mantine/core";
 import { motion } from "motion/react";
 
@@ -63,10 +61,7 @@ export const PricingPlanReview = () => {
           transition={{ duration: 1, ease: "easeOut" }}
           viewport={{ once: true }}
         >
-          <Carousel
-            opts={{ loop: true, align: "start", slidesToScroll: 1 }}
-            className="w-full"
-          >
+          <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="w-full">
             <CarouselContent>
               {reviews.map((review, index) => (
                 <CarouselItem key={index} className="px-15">

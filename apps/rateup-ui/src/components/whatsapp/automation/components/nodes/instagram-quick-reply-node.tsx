@@ -1,15 +1,13 @@
-"use client";
-
-import { memo, useMemo } from "react";
-
 import { IconMessages } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 import { Handle, Position } from "@xyflow/react";
+import { memo, useMemo } from "react";
 
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
 
 import type { InstagramQuickReplyNodeData } from "../../types/node-types.ts";
 import BaseNode from "./base-node.tsx";
+
 import styles from "./node-styles.module.css";
 
 function InstagramQuickReplyNode(
@@ -29,16 +27,9 @@ function InstagramQuickReplyNode(
   }, [data.quick_replies]);
 
   return (
-    <BaseNode
-      {...props}
-      icon={<IconMessages size={16} />}
-      color="#ec4899"
-      disableRight
-    >
+    <BaseNode {...props} icon={<IconMessages size={16} />} color="#ec4899" disableRight>
       <div className={styles.buttonContent}>
-        {data.text && (
-          <div className={styles.question}>{parseJsonToReact(data.text)}</div>
-        )}
+        {data.text && <div className={styles.question}>{parseJsonToReact(data.text)}</div>}
 
         <div className={styles.buttons}>
           {quickReplies.map((reply, index) => (

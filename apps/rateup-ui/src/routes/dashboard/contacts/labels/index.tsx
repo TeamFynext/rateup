@@ -1,9 +1,6 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Tag } from "lucide-react";
+import { useMemo, useState } from "react";
 
 import {
   useContactLabels,
@@ -133,9 +130,7 @@ function LabelsPage() {
   }
 
   const submitting =
-    createLabelMutation.isPending ||
-    updateLabelMutation.isPending ||
-    deleteLabelMutation.isPending;
+    createLabelMutation.isPending || updateLabelMutation.isPending || deleteLabelMutation.isPending;
 
   return (
     <div className="h-full">
@@ -143,9 +138,7 @@ function LabelsPage() {
         <div className="grid place-content-center py-12 h-full">
           <div className="text-center">
             <Tag className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No labels yet
-            </h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No labels yet</h3>
             <p className="text-gray-600 mb-4">
               Create your first label to start organizing contacts.
             </p>
@@ -189,9 +182,7 @@ function LabelsPage() {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Enter label name"
                   required
                 />
@@ -203,16 +194,12 @@ function LabelsPage() {
                     type="color"
                     id="color"
                     value={formData.color}
-                    onChange={(e) =>
-                      setFormData({ ...formData, color: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                     className="w-12 h-10 rounded border"
                   />
                   <Input
                     value={formData.color}
-                    onChange={(e) =>
-                      setFormData({ ...formData, color: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                     placeholder="#3b82f6"
                   />
                 </div>
@@ -222,20 +209,14 @@ function LabelsPage() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Optional description"
                   rows={3}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCreateModalOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={submitting}>
@@ -259,9 +240,7 @@ function LabelsPage() {
                 <Input
                   id="edit-name"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Enter label name"
                   required
                 />
@@ -273,16 +252,12 @@ function LabelsPage() {
                     type="color"
                     id="edit-color"
                     value={formData.color}
-                    onChange={(e) =>
-                      setFormData({ ...formData, color: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                     className="w-12 h-10 rounded border"
                   />
                   <Input
                     value={formData.color}
-                    onChange={(e) =>
-                      setFormData({ ...formData, color: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                     placeholder="#3b82f6"
                   />
                 </div>
@@ -292,20 +267,14 @@ function LabelsPage() {
                 <Textarea
                   id="edit-description"
                   value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Optional description"
                   rows={3}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsEditModalOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={submitting}>
@@ -317,10 +286,7 @@ function LabelsPage() {
       </Dialog>
 
       {/* Delete Dialog */}
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Label</AlertDialogTitle>
@@ -332,8 +298,8 @@ function LabelsPage() {
                   <br />
                   This label is currently assigned to{" "}
                   <strong>{selectedLabel._count.contactLabels}</strong> contact
-                  {selectedLabel._count.contactLabels === 1 ? "" : "s"}.
-                  Deleting this label will remove it from all contacts.
+                  {selectedLabel._count.contactLabels === 1 ? "" : "s"}. Deleting this label will
+                  remove it from all contacts.
                 </>
               )}
             </AlertDialogDescription>

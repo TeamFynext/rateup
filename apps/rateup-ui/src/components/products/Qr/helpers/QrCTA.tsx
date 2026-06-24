@@ -1,10 +1,7 @@
-"use client";
-
-import React from "react";
-
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
+import React from "react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -66,8 +63,7 @@ function QrCTA() {
           </h1>
 
           <p className="text-white text-sm sm:text-base text-center max-w-2xl">
-            Stop guessing what your customers think. Start listening, learning,
-            and growing today.
+            Stop guessing what your customers think. Start listening, learning, and growing today.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">

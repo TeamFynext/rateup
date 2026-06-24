@@ -1,18 +1,10 @@
-"use client";
-
 import React from "react";
-
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
-import {
-  PageType,
-  QuestionType as Q,
-  QuestionType,
-  SurveyVariableType,
-} from "@/types/enums.ts";
 import { createResponsePublic } from "@/backend/surveys/response/response.api";
 import { useGetSurveyVariables } from "@/backend/surveys/surveys.query";
+import { PageType, QuestionType as Q, QuestionType, SurveyVariableType } from "@/types/enums.ts";
 import { emailPattern } from "@/utils/constants.ts";
 import { getContent } from "@/utils/index.ts";
 
@@ -45,18 +37,11 @@ import { YNForm } from "./QuestionForms/YNForm.tsx";
 const shouldShowGoogleReview = (question, userResponse) => {
   switch (question.type) {
     case QuestionType.Rating:
-      return (
-        userResponse.response.Rating >= question.reviewPageOptions.minRating
-      );
+      return userResponse.response.Rating >= question.reviewPageOptions.minRating;
     case QuestionType.Opinion:
-      return (
-        userResponse.response["Opinion Scale"] >=
-        question.reviewPageOptions.minOpinion
-      );
+      return userResponse.response["Opinion Scale"] >= question.reviewPageOptions.minOpinion;
     case QuestionType.Smiley:
-      return question.reviewPageOptions.reqOptions.includes(
-        userResponse.response.Smiley,
-      );
+      return question.reviewPageOptions.reqOptions.includes(userResponse.response.Smiley);
     default:
       return false;
   }
@@ -65,9 +50,7 @@ const shouldShowGoogleReview = (question, userResponse) => {
 export const checkGoogleReviewForQuestion = (questions, responses) => {
   for (const question of questions) {
     if (question?.reviewPageOptions) {
-      const userResponse = responses.find(
-        (r) => r?.questionId === question?.id,
-      );
+      const userResponse = responses.find((r) => r?.questionId === question?.id);
       if (userResponse && shouldShowGoogleReview(question, userResponse)) {
         return true;
       }
@@ -82,14 +65,9 @@ const shouldRaiseTicket = (question, userResponse, selectedLanguage) => {
     case QuestionType.Rating:
       return userResponse.response.Rating <= question.ticketIssue.minRating;
     case QuestionType.Opinion:
-      return (
-        userResponse.response["Opinion Scale"] <=
-        question.ticketIssue.minOpinion
-      );
+      return userResponse.response["Opinion Scale"] <= question.ticketIssue.minOpinion;
     case QuestionType.Smiley:
-      return question.ticketIssue.reqOptions.includes(
-        userResponse.response.Smiley,
-      );
+      return question.ticketIssue.reqOptions.includes(userResponse.response.Smiley);
     case QuestionType.CustomNPS:
     case QuestionType.DDMS:
     case QuestionType.DDSS:
@@ -99,9 +77,7 @@ const shouldRaiseTicket = (question, userResponse, selectedLanguage) => {
       let flag = false;
       if (Array.isArray(response)) {
         response.forEach((res) => {
-          const index = question.choices[selectedLanguage].findIndex(
-            (c) => c.value === res.value,
-          );
+          const index = question.choices[selectedLanguage].findIndex((c) => c.value === res.value);
           flag = question.ticketIssue.reqOptions.includes(index.toString());
           if (flag) return;
         });
@@ -117,20 +93,11 @@ const shouldRaiseTicket = (question, userResponse, selectedLanguage) => {
   }
 };
 
-export const checkRaiseTicketIssueQuestion = (
-  questions,
-  responses,
-  selectedLanguage,
-) => {
+export const checkRaiseTicketIssueQuestion = (questions, responses, selectedLanguage) => {
   for (const question of questions) {
     if (question?.ticketIssue) {
-      const userResponse = responses.find(
-        (r) => r?.questionId === question?.id,
-      );
-      if (
-        userResponse &&
-        shouldRaiseTicket(question, userResponse, selectedLanguage)
-      ) {
+      const userResponse = responses.find((r) => r?.questionId === question?.id);
+      if (userResponse && shouldRaiseTicket(question, userResponse, selectedLanguage)) {
         return true;
       }
     }
@@ -211,9 +178,7 @@ export function getQuestionForm(type, selectedQ) {
     case Q.DDMS:
       return <DDMSForm key={selectedQ?.id} />;
     case Q.Testimonial:
-      return (
-        <TestimonialForm key={selectedQ?.id} features={selectedQ?.features} />
-      );
+      return <TestimonialForm key={selectedQ?.id} features={selectedQ?.features} />;
     case Q.EmailPhone:
       return <EmailPhoneForm key={selectedQ?.id} />;
     case Q.Date:
@@ -225,18 +190,11 @@ export function getQuestionForm(type, selectedQ) {
     case Q.Contact:
       return <ContactForm key={selectedQ?.id} features={selectedQ?.features} />;
     case Q.TnC:
-      return (
-        <TermsNConditionsForm key={selectedQ?.id} tncData={selectedQ?.tnc} />
-      );
+      return <TermsNConditionsForm key={selectedQ?.id} tncData={selectedQ?.tnc} />;
     case Q.InfoMessage:
       return <></>;
     case Q.MultiTextInput:
-      return (
-        <MultiTextInputForm
-          key={selectedQ?.id}
-          features={selectedQ?.features}
-        />
-      );
+      return <MultiTextInputForm key={selectedQ?.id} features={selectedQ?.features} />;
     case Q.MCQGrid:
       return <MCQGridForm key={selectedQ?.id} features={selectedQ?.features} />;
     case Q.File:
@@ -267,25 +225,20 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
           break;
         }
       } else {
-        if (
-          selectedQ.features?.[selectedLanguage]?.name.isEnabled &&
-          !response?.name?.length
-        ) {
+        if (selectedQ.features?.[selectedLanguage]?.name.isEnabled && !response?.name?.length) {
           errMsg = "Name cannot be blank";
         } else if (
           selectedQ.features?.[selectedLanguage]?.phone.isEnabled &&
           (!response?.phone || !isValidPhoneNumber(response?.phone))
         ) {
           if (!response?.phone) errMsg = "phone number cannot be blank";
-          else if (!isValidPhoneNumber(response?.phone))
-            errMsg = "Enter a valid phone number";
+          else if (!isValidPhoneNumber(response?.phone)) errMsg = "Enter a valid phone number";
         } else if (
           selectedQ.features?.[selectedLanguage]?.email.isEnabled &&
           (!response?.email?.length || !emailPattern.test(response?.email))
         ) {
           if (!response?.email?.length) errMsg = "Email cannot be blank";
-          else if (!emailPattern.test(response?.email))
-            errMsg = "Enter a valid email";
+          else if (!emailPattern.test(response?.email)) errMsg = "Enter a valid email";
         }
       }
       break;
@@ -297,17 +250,13 @@ export const validateResponse = (response, selectedQ, selectedLanguage) => {
         response?.name?.length < 3 ||
         response?.testimonial?.length < 5
       )
-        errMsg =
-          "Name - min 3 characters, and \n testimonial - min 5 characters";
+        errMsg = "Name - min 3 characters, and \n testimonial - min 5 characters";
       break;
     case QuestionType.MCQGrid:
       if (!selectedQ.required) break;
       const questions = selectedQ?.features?.[selectedLanguage]?.questions;
       const responsedQuestions = response ? Object.keys(response) : [];
-      if (
-        !responsedQuestions.length ||
-        !questions.every((q) => responsedQuestions.includes(q))
-      )
+      if (!responsedQuestions.length || !questions.every((q) => responsedQuestions.includes(q)))
         errMsg = "All questions are mandatory";
       break;
     case QuestionType.EmailOtp:
@@ -365,11 +314,7 @@ export const getReplacedTitleFromVariable = ({
 }: IReplaceTitleForVar) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(title, "text/html");
-  const variables = getPropValueFromQuestionCustomComponent(
-    title,
-    componentName,
-    prop,
-  );
+  const variables = getPropValueFromQuestionCustomComponent(title, componentName, prop);
   if (!variables) return isPublicPage ? title : getContent(title) || title;
   variables.forEach((value) => {
     const component = Array.from(doc.querySelectorAll(componentName)).find(
@@ -378,9 +323,7 @@ export const getReplacedTitleFromVariable = ({
     if (component) {
       const parent = component.parentNode;
       const replacementNode = doc.createTextNode(
-        isPublicPage
-          ? getValueFromVariable(value, responses, surveyId)
-          : `{${value}}`,
+        isPublicPage ? getValueFromVariable(value, responses, surveyId) : `{${value}}`,
       );
       parent.replaceChild(replacementNode, component);
     }
@@ -388,20 +331,12 @@ export const getReplacedTitleFromVariable = ({
   return doc.body.innerHTML;
 };
 
-function getValueFromVariable(
-  variable: string,
-  responses: QuestionResponse[],
-  surveyId,
-) {
+function getValueFromVariable(variable: string, responses: QuestionResponse[], surveyId) {
   const { data: variables } = useGetSurveyVariables(surveyId, true);
-  const variableObj =
-    variables && variables?.find((val) => val?.name === variable);
+  const variableObj = variables && variables?.find((val) => val?.name === variable);
   if (variableObj) {
-    if (variableObj.type === SurveyVariableType.CUSTOM)
-      return variableObj.value;
-    const response = responses?.find(
-      (res) => res?.questionId === variableObj.value,
-    );
+    if (variableObj.type === SurveyVariableType.CUSTOM) return variableObj.value;
+    const response = responses?.find((res) => res?.questionId === variableObj.value);
     return response
       ? getFormattedResponseForVariable(
           response.response?.[response?.type],
@@ -500,9 +435,7 @@ export function getQuestionsLength(survey) {
 export function getSelectedQPos(survey, selectedQ) {
   if (survey?.questions && selectedQ) {
     const questions = getQuestionsArrWithoutPageTypeQuestions(survey);
-    const selectedQuestionIndex = questions.findIndex(
-      (question) => question.id === selectedQ.id,
-    );
+    const selectedQuestionIndex = questions.findIndex((question) => question.id === selectedQ.id);
     return selectedQuestionIndex + 1;
   } else {
     return 1;

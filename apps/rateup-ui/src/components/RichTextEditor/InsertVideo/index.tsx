@@ -1,19 +1,8 @@
-"use client";
-
-import { useRef } from "react";
-
-import {
-  Group,
-  NumberInput,
-  Popover,
-  Stack,
-  Switch,
-  TextInput,
-  Tooltip,
-} from "@mantine/core";
+import { Group, NumberInput, Popover, Stack, Switch, TextInput, Tooltip } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconVideo } from "@tabler/icons-react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
@@ -50,7 +39,7 @@ function InsertVideo() {
       }
       ref?.current?.click();
       form.reset();
-    } catch (error) {
+    } catch {
       form.setErrors({ src: "Enter a valid url" });
     }
   };
@@ -68,10 +57,7 @@ function InsertVideo() {
       <Popover.Dropdown>
         <Stack justify="center">
           <Group>
-            <Tooltip
-              label={translations("Enable Custom size")}
-              refProp="rootRef"
-            >
+            <Tooltip label={translations("Enable Custom size")} refProp="rootRef">
               <Switch {...form.getInputProps("customSize")} mt={"lg"} />
             </Tooltip>
             <NumberInput
@@ -95,10 +81,7 @@ function InsertVideo() {
             placeholder={translations("Enter the url of video")}
             {...form.getInputProps("src")}
           />
-          <RateupButtonPrimary
-            title={translations("submit")}
-            onClick={handleImageVideo}
-          />
+          <RateupButtonPrimary title={translations("submit")} onClick={handleImageVideo} />
         </Stack>
       </Popover.Dropdown>
     </Popover>

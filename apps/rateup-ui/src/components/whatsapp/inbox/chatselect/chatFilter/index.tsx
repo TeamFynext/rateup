@@ -1,5 +1,3 @@
-"use client";
-
 import { Loader, Text } from "@mantine/core";
 import { useSearch } from "@tanstack/react-router";
 import { CheckCircle, Filter, RotateCcw } from "lucide-react";
@@ -7,15 +5,12 @@ import { useTranslation } from "react-i18next";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import {
-  WaMessageAssignStatus,
-  WaMessageAssignStatusTab,
-} from "@/types/enums.ts";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useChatFilterData } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
+import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums.ts";
 import { WaMessageClosedStatus } from "@/utils/constants.ts";
 
 import {
@@ -45,20 +40,12 @@ export type ChatFilter = {
   lifecycle?: string;
   assignedUserIds: string[];
 };
-interface Props {
-  setFilterCount: (value: number) => void;
-}
 
-export default function WaInboxChatFilter({ setFilterCount }: Props) {
+export default function WaInboxChatFilter() {
   const { data, isLoading, error } = useChatFilterData();
 
-  const {
-    filter,
-    setFilter,
-    clearFilter,
-    setPreviousFilterForTab,
-    previousFilterForTab,
-  } = useChatFilterStore();
+  const { filter, setFilter, clearFilter, setPreviousFilterForTab, previousFilterForTab } =
+    useChatFilterStore();
 
   const { t: translations } = useTranslation();
   const searchParams = useSearch({ strict: false });
@@ -66,9 +53,9 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
 
   const allMultiSelectFilters = [
-    ...filter?.contactGroups,
-    ...filter?.campaigns,
-    ...filter?.tags,
+    ...(filter?.contactGroups ?? []),
+    ...(filter?.campaigns ?? []),
+    ...(filter?.tags ?? []),
   ];
 
   const teamOptions = teamRes
@@ -85,9 +72,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
     } else {
       const fcgs = value?.filter((v) => v.group === "contactGroups");
       const fcs = value?.filter((v) => v.group === "campaigns");
-      const fts = value?.filter(
-        (v) => v.group !== "contactGroups" && v.group !== "campaigns",
-      );
+      const fts = value?.filter((v) => v.group !== "contactGroups" && v.group !== "campaigns");
       if (fcgs.length > 0) {
         current_filter.contactGroups = fcgs;
       }
@@ -135,9 +120,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
           <div className="bg-white/20 rounded-full p-2 flex items-center justify-center">
             <Filter className="w-4 h-4 text-white" />
           </div>
-          <span className="font-semibold text-white text-sm">
-            {translations("Filters")}
-          </span>
+          <span className="font-semibold text-white text-sm">{translations("Filters")}</span>
         </div>
 
         <Button
@@ -190,9 +173,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
         {/* Tags, Groups, Campaigns */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-            <div className="leading-tight">
-              {translations("Tags/ Groups/ Campaigns")}
-            </div>
+            <div className="leading-tight">{translations("Tags/ Groups/ Campaigns")}</div>
           </label>
 
           <div className="mt-2">
@@ -214,9 +195,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
               // }
               placeholder={translations("Tags/ Groups/ Campaigns")}
               data={data}
-              value={allMultiSelectFilters?.map(
-                (val) => `${val.group}|-${val.value}`,
-              )}
+              value={allMultiSelectFilters?.map((val) => `${val.group}|-${val.value}`)}
               onChange={(value) => {
                 multiSelectOnChange(
                   filter,
@@ -285,17 +264,13 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
                       const newFilter = {
                         ...filter,
                         status: checked
-                          ? Array.from(
-                              new Set([...(filter.status || []), status.id]),
-                            )
+                          ? Array.from(new Set([...(filter.status || []), status.id]))
                           : filter.status?.filter((s) => s !== status.id),
                       };
                       setFilter({
                         ...newFilter,
                       });
-                      const index = previousFilterForTab.findIndex(
-                        (p) => p.tab === tab,
-                      );
+                      const index = previousFilterForTab.findIndex((p) => p.tab === tab);
 
                       let updated;
 
@@ -304,10 +279,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
                           i === index ? { ...p, filter: newFilter } : p,
                         );
                       } else {
-                        updated = [
-                          ...previousFilterForTab,
-                          { tab, filter: newFilter },
-                        ];
+                        updated = [...previousFilterForTab, { tab, filter: newFilter }];
                       }
 
                       setPreviousFilterForTab(updated);
@@ -329,9 +301,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
         {["Assigned", "mine"].includes(tab) && (
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <div className="leading-tight">
-                {translations("Assigned Teams")}
-              </div>
+              <div className="leading-tight">{translations("Assigned Teams")}</div>
             </label>
 
             <div className="mt-2">

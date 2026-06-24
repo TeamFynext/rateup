@@ -1,7 +1,6 @@
-import { useState } from "react";
-
 import { useNavigate } from "@tanstack/react-router";
 import { Check, Clock, Copy, LinkIcon, MousePointerClick } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import TimeSinceText from "../DateAndTime/TimeSinceText.tsx";
@@ -37,15 +36,12 @@ function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
               <p
                 className={`text-[11px] border px-2 py-0.5 rounded-full ${v?.isPublished ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}
               >
-                {v?.isPublished
-                  ? translations("ACTIVE")
-                  : translations("INACTIVE")}
+                {v?.isPublished ? translations("ACTIVE") : translations("INACTIVE")}
               </p>
               <div className="flex items-center gap-1.5 text-xs text-gray-500">
                 <Clock className="w-3.5 h-3.5" />
                 <span>
-                  {translations("Created")}{" "}
-                  <TimeSinceText isoDateString={v?.createdAt} />
+                  {translations("Created")} <TimeSinceText isoDateString={v?.createdAt} />
                 </span>
               </div>
             </div>
@@ -58,9 +54,7 @@ function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
                   <MousePointerClick className="w-4 h-4" />
                   <span>{translations("Clicks")}</span>
                 </div>
-                <span className="text-lg font-semibold">
-                  {v?.visitorsCount || 0}
-                </span>
+                <span className="text-lg font-semibold">{v?.visitorsCount || 0}</span>
               </div>
             </div>
 
@@ -81,7 +75,7 @@ function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
                   className="h-8 w-8 shrink-0 hover:text-primary border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-auto"
                   onClick={(e) => {
                     e.stopPropagation();
-                    !v?.isPublished && e.preventDefault();
+                    if (!v?.isPublished) e.preventDefault();
                     handleCopy(v?.id, `${shareURL}/${v?.shortUrlId}`);
                   }}
                 >

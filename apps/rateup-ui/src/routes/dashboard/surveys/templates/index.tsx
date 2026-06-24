@@ -1,21 +1,15 @@
-"use client";
-
-import React, { useState } from "react";
-
 import { Box, Group, Loader, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { useSurveyTemplates } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import InfoButton from "@/components/Button/InfoButton.tsx";
-import {
-  RateupButtonBlue,
-  RateupButtonPrimary,
-} from "@/components/Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import SurveyTemplates from "@/components/dashboard/surveys/templates/surveyTemplates.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
@@ -31,19 +25,17 @@ export const Route = createFileRoute("/dashboard/surveys/templates/")({
   component: Templates,
 });
 
-function Templates({ survey }) {
+function Templates() {
   const { user } = useUser();
-  const { data: teamRes, isLoading: teamsLoading, isError } = useTeamsByUser();
+  const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const navigate = useNavigate();
   const [opened, { open, close }] = useDisclosure(false);
   const { t: translations } = useTranslation();
-  const [
-    createSurveyOpened,
-    { open: openCreateSurvey, close: closeCreateSurvey },
-  ] = useDisclosure(false);
+  const [createSurveyOpened, { open: openCreateSurvey, close: closeCreateSurvey }] =
+    useDisclosure(false);
 
-  const { isLoading, data: allTemplates, refetch } = useSurveyTemplates("web");
+  const { isLoading, data: allTemplates } = useSurveyTemplates("web");
 
   const bgTemp = {
     backgroundColor: "#fff",
@@ -85,9 +77,7 @@ function Templates({ survey }) {
   return (
     <Stack gap={0}>
       {/* <Modal opened={opened} onClose={close} title="Create Survey from Template" size="auto" centered> */}
-      <Group
-        style={{ textAlign: "center", alignItems: "center", margin: "auto" }}
-      >
+      <Group style={{ textAlign: "center", alignItems: "center", margin: "auto" }}>
         <FormModalLayout
           opened={opened}
           title={translations("Create Survey from Template")}
@@ -96,10 +86,7 @@ function Templates({ survey }) {
           size={"lg"}
         >
           <Stack style={{ Width: "100%", textAlign: "center" }}>
-            <Title
-              order={3}
-              style={{ alignItems: "center", color: "var(--shade-of-blue-3)" }}
-            >
+            <Title order={3} style={{ alignItems: "center", color: "var(--shade-of-blue-3)" }}>
               {selectedTemplate?.title || translations("Template")}
             </Title>
             <Text
@@ -135,10 +122,7 @@ function Templates({ survey }) {
       />
       <Group gap="md" justify="space-between">
         <Group ml="md">
-          <Heading
-            title={translations("Survey Templates")}
-            titleprops={{ w: "500px" }}
-          />
+          <Heading title={translations("Survey Templates")} titleprops={{ w: "500px" }} />
           <InfoButton docUrl={`${docsPath}/webSurvey/surveyTemplates`} />
           <RefreshButton queryKeys={["survey-templates"]} />
         </Group>
@@ -152,12 +136,9 @@ function Templates({ survey }) {
               navigate({
                 to: `/dashboard/surveys?action=create`,
               });
-              toast.loading(
-                translations("Hold.. your survey is getting setup.."),
-                {
-                  id: "blank-survey",
-                },
-              );
+              toast.loading(translations("Hold.. your survey is getting setup.."), {
+                id: "blank-survey",
+              });
             }}
           />
         )}
@@ -174,15 +155,9 @@ function Templates({ survey }) {
             <NothingFound text={translations("No templates found..!!")} />
           )}
 
-          {Object?.entries(allTemplates)?.map(
-            ([categoryName, surveys], index) => (
-              <Category
-                key={index}
-                categoryName={categoryName}
-                surveys={surveys}
-              />
-            ),
-          )}
+          {Object?.entries(allTemplates)?.map(([categoryName, surveys], index) => (
+            <Category key={index} categoryName={categoryName} surveys={surveys} />
+          ))}
         </Box>
       )}
     </Stack>

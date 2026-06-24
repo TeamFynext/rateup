@@ -1,8 +1,5 @@
-"use client";
-
-import React from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
+import React from "react";
 
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext.tsx";
@@ -20,11 +17,5 @@ function CustomFields() {
 
 function CustomFieldsSettings() {
   const { customFields } = useCustomFieldsContext();
-  return (
-    <DataTable
-      data={customFields}
-      columns={columns}
-      DataTableToolbar={DataTableToolbar}
-    />
-  );
+  return <DataTable data={customFields} columns={columns} DataTableToolbar={DataTableToolbar} />;
 }

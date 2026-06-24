@@ -1,9 +1,4 @@
-import {
-  createFileRoute,
-  Outlet,
-  redirect,
-  useRouterState,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 
 import { useUserInfo } from "@/backend/user/user.query";
 import NavHeader from "@/components/nav-header.tsx";
@@ -48,7 +43,7 @@ function Page() {
       <AppSidebar data={data} />
       <SidebarInset className=" overflow-hidden">
         <NavHeader pathname={pathname} />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-4 px-4 pt-0">
           <Outlet />
         </div>
       </SidebarInset>

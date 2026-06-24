@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
@@ -21,12 +19,11 @@ const TestimonialHero = () => {
           className="space-y-6 text-center flex flex-col justify-center md:text-left px-4 md:px-16"
         >
           <h1 className="text-3xl sm:text-3xl lg:text-5xl font-bold text-gray-900 leading-tight tracking-tight">
-            Turn happy customers into{" "}
-            <span className="text-[#0041a8]">powerful testimonials</span>
+            Turn happy customers into <span className="text-[#0041a8]">powerful testimonials</span>
           </h1>
           <p className="text-gray-600 text-lg sm:text-xl max-w-xl mx-auto md:mx-0 py-3">
-            Collect, manage, and showcase authentic testimonials to build trust,
-            convert more users, and grow faster.
+            Collect, manage, and showcase authentic testimonials to build trust, convert more users,
+            and grow faster.
           </p>
 
           <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">

@@ -1,17 +1,10 @@
-import React from "react";
-
 import { Box, Flex, Stack, Text } from "@mantine/core";
+import React from "react";
 
 import PlanCard from "../Card/PlanCard.tsx";
 import { PlanCardWidth } from "../Utils/constants.ts";
 
-export const CustomSection = ({
-  largeScreen,
-  handlePlanSelection,
-  plans,
-  freePlan,
-  currencySymbol,
-}) => {
+export const CustomSection = ({ largeScreen, handlePlanSelection, plans, currencySymbol }) => {
   const customPlan = plans
     ?.filter((item) => item?.name?.includes("Custom"))
     ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
@@ -26,8 +19,6 @@ export const CustomSection = ({
       },
     });
   }
-  const inversePeriod =
-    customPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
 
   const customPlans = [...customPlan];
 
@@ -62,7 +53,6 @@ export const CustomSection = ({
                 handlePlanSelection={handlePlanSelection}
                 index={index}
                 totalItems={customPlans.length}
-                inversePeriod={inversePeriod}
                 largeScreen={largeScreen}
                 key={data.id}
               />

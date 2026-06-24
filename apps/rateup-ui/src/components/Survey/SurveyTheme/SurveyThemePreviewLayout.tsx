@@ -1,5 +1,3 @@
-"use client";
-
 import { Box, Stack, Tabs } from "@mantine/core";
 
 import LanguagePageThemeView from "./components/previewcomponents/languagePage/index.tsx";
@@ -7,11 +5,9 @@ import SurveyThemeView from "./components/previewcomponents/surveytheme/index.ts
 import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage/index.tsx";
 import WelcomePageThemeView from "./components/previewcomponents/welcomepage/index.tsx";
 import { PreviewTypeEnum, ThemeTabEnum } from "./SurveyTheme.enums";
+import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext.tsx";
+
 import styles from "./SurveyTheme.module.css";
-import {
-  useSelectedPageTab,
-  useSelectedPreview,
-} from "./SurveyThemeContext.tsx";
 
 function SurveyThemePreviewLayout({
   survey,
@@ -37,10 +33,7 @@ function SurveyThemePreviewLayout({
         }}
         h={"100%"}
       >
-        <Box
-          h={"100%"}
-          w={selectedPreview === PreviewTypeEnum.MOBILE ? 380 : "100%"}
-        >
+        <Box h={"100%"} w={selectedPreview === PreviewTypeEnum.MOBILE ? 380 : "100%"}>
           <Tabs
             value={selectedPageTab}
             classNames={{

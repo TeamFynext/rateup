@@ -1,24 +1,15 @@
-"use client";
-
-import { useContext, useEffect, useState } from "react";
-
 import { Flex, Paper, Stack, Switch, Textarea, Tooltip } from "@mantine/core";
 import type { UseFormReturnType } from "@mantine/form";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { isEmptyObject } from "@tiptap/react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 import classes from "./Style.module.css";
 
-const TestimonialExtraProps = ({
-  qId,
-  form,
-}: {
-  qId: string;
-  form: UseFormReturnType<any>;
-}) => {
+const TestimonialExtraProps = ({ form }: { form: UseFormReturnType<any> }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const features = form.values.features?.[selectedLanguage] || {
     rating: false,
@@ -30,11 +21,11 @@ const TestimonialExtraProps = ({
     jobTitleQn: "",
     photoQn: "",
   };
-  const [selectedField, setSelectedField] = useState(null);
+  const [selectedField, setSelectedField] = useState<string | null>(null);
   const [text, setText] = useState("");
   const { t: translations } = useTranslation();
 
-  function updateFeatures(featurekey, value) {
+  function updateFeatures(featurekey: string, value: any) {
     form.setFieldValue("features", {
       ...form.values.features,
       [selectedLanguage]: { ...features, [featurekey]: value },
@@ -99,9 +90,7 @@ const TestimonialExtraProps = ({
             label={translations("Add job title")}
             c={features?.jobTitle ? "var(--tertiary-color)" : "dimmed"}
             checked={features?.jobTitle}
-            onChange={(e) =>
-              updateFeatures("jobTitle", e.currentTarget.checked)
-            }
+            onChange={(e) => updateFeatures("jobTitle", e.currentTarget.checked)}
           />
         </Paper>
         <Paper shadow="xl" p={"lg"}>
@@ -127,8 +116,7 @@ const TestimonialExtraProps = ({
               disabled={questionTitle == "<p></p>"}
               onChange={(e) => setText(e.currentTarget.value)}
               onBlur={() => {
-                if (text !== features[field.key])
-                  updateFeatures(field.key, text);
+                if (text !== features[field.key]) updateFeatures(field.key, text);
                 setSelectedField(null);
               }}
               value={selectedField === field.key ? text : features[field.key]}
@@ -144,8 +132,7 @@ const TestimonialExtraProps = ({
                   <Tooltip label={translations("save")}>
                     <IconCircleCheckFilled
                       onClick={() => {
-                        if (text !== features[field.key])
-                          updateFeatures(field.key, text);
+                        if (text !== features[field.key]) updateFeatures(field.key, text);
                         setSelectedField(null);
                       }}
                     />

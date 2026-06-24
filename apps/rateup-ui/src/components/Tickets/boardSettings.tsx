@@ -1,14 +1,9 @@
-"use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Bell, Users } from "lucide-react";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
-import {
-  useBoardTeamMembersById,
-  useUpdateBoardMutation,
-} from "@/backend/tickets/tickets.query";
+import { useBoardTeamMembersById, useUpdateBoardMutation } from "@/backend/tickets/tickets.query";
 import { Alert } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -58,8 +53,7 @@ export default function TicketSettings({
   teamOptions: { value: string; label: string }[];
 }>) {
   const updateBoardMutation = useUpdateBoardMutation();
-  const { data: members = [], isPending: isMembersLoading } =
-    useBoardTeamMembersById(boardId);
+  const { isPending: isMembersLoading } = useBoardTeamMembersById(boardId);
   const form = useForm<NotificationFormValues>({
     resolver: zodResolver(notificationSchema),
     defaultValues: {
@@ -68,8 +62,7 @@ export default function TicketSettings({
       ticketCreatedWhatsapp: selectedBoard?.ticketCreatedWhatsapp || false,
       ticketAssignedEmail: selectedBoard?.ticketAssignedEmail || false,
       ticketAssignedWhatsapp: selectedBoard?.ticketAssignedWhatsapp || false,
-      assignedToIds:
-        selectedBoard?.notificationRecipients?.map((r) => r.userId) || [],
+      assignedToIds: selectedBoard?.notificationRecipients?.map((r) => r.userId) || [],
       title: selectedBoard?.title || "",
       description: selectedBoard?.description || "",
       teamIds: selectedBoard?.teams?.map((t) => t.teamId) || [],
@@ -103,9 +96,7 @@ export default function TicketSettings({
               <CardContent className="space-y-8">
                 {/* Board Information */}
                 <div>
-                  <div className="mb-2 font-semibold text-base">
-                    Board Information
-                  </div>
+                  <div className="mb-2 font-semibold text-base">Board Information</div>
                   <div className="text-sm text-muted-foreground mb-4">
                     Update board title and associated teams
                   </div>
@@ -148,10 +139,7 @@ export default function TicketSettings({
                         <FormItem className="col-span-1 md:col-span-2">
                           <FormLabel>Description</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Enter board description"
-                            />
+                            <Input {...field} placeholder="Enter board description" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -162,9 +150,7 @@ export default function TicketSettings({
 
                 {/* Notification Recipients (users) */}
                 <div>
-                  <div className="mb-2 font-semibold text-base">
-                    Notification Recipients
-                  </div>
+                  <div className="mb-2 font-semibold text-base">Notification Recipients</div>
                   <div className="text-sm text-muted-foreground mb-4">
                     Select users who should receive notifications
                   </div>
@@ -179,9 +165,7 @@ export default function TicketSettings({
 
                 {/* Ticket Creation Notifications */}
                 <div>
-                  <div className="mb-2 font-semibold text-base">
-                    Ticket Creation
-                  </div>
+                  <div className="mb-2 font-semibold text-base">Ticket Creation</div>
                   <div className="text-sm text-muted-foreground mb-4">
                     Notifications to send when a new ticket is created
                   </div>
@@ -193,10 +177,7 @@ export default function TicketSettings({
                         <FormItem className="flex flex-row items-center justify-between gap-4">
                           <FormLabel>Send email notification</FormLabel>
                           <FormControl>
-                            <Switch
-                              checked={!!field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -207,14 +188,10 @@ export default function TicketSettings({
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between gap-4">
                           <FormLabel>
-                            Send WhatsApp notification (when session is
-                            available)
+                            Send WhatsApp notification (when session is available)
                           </FormLabel>
                           <FormControl>
-                            <Switch
-                              checked={!!field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -224,12 +201,10 @@ export default function TicketSettings({
 
                 {/* Ticket Assignment Notifications */}
                 <div>
-                  <div className="mb-2 font-semibold text-base">
-                    Ticket Assignment
-                  </div>
+                  <div className="mb-2 font-semibold text-base">Ticket Assignment</div>
                   <div className="text-sm text-muted-foreground mb-4">
-                    Notifications are sent when a ticket is assigned to a user,
-                    and the notification is sent to the assigned user.
+                    Notifications are sent when a ticket is assigned to a user, and the notification
+                    is sent to the assigned user.
                   </div>
                   <div className="flex flex-col gap-3">
                     <FormField
@@ -239,10 +214,7 @@ export default function TicketSettings({
                         <FormItem className="flex flex-row items-center justify-between gap-4">
                           <FormLabel>Send email notification</FormLabel>
                           <FormControl>
-                            <Switch
-                              checked={!!field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -254,10 +226,7 @@ export default function TicketSettings({
                         <FormItem className="flex flex-row items-center justify-between gap-4">
                           <FormLabel>Send WhatsApp notification</FormLabel>
                           <FormControl>
-                            <Switch
-                              checked={!!field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                         </FormItem>
                       )}

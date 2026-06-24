@@ -1,19 +1,15 @@
-import { Suspense, useEffect } from "react";
-
 import { Center, Stack, Text } from "@mantine/core";
 import { IconLoader } from "@tabler/icons-react";
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { Suspense, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import Session from "supertokens-auth-react/recipe/session";
 
 import { useUpdateShopifySession } from "@/backend/appsIntegration/shopify/shopify.query";
-import style from "@/components/Graph/graph.module.css";
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+
+import style from "@/components/Graph/graph.module.css";
 
 export const Route = createFileRoute("/auth/shopify/")({
   component: Page,
@@ -53,10 +49,7 @@ function ShopifyAuthCallback({
     const checkSession = async () => {
       const isExist = await Session.doesSessionExist();
       if (!isExist) {
-        localStorage.setItem(
-          "shopify-auth-callback",
-          `/auth/shopify?shop=${shop}`,
-        );
+        localStorage.setItem("shopify-auth-callback", `/auth/shopify?shop=${shop}`);
         updateRouteAndCart(`/auth/shopify?shop=${shop}`, null);
         navigate({
           to: "/login",

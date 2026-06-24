@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { buildPageHead } from "@/lib/metadata.ts";
 import Comparison from "@/components/products/OmnichannelInbox/Comparison";
 import CTABand from "@/components/products/OmnichannelInbox/CTABand";
 import Features from "@/components/products/OmnichannelInbox/Features";
@@ -12,6 +11,8 @@ import ProductIntro from "@/components/products/OmnichannelInbox/ProductIntro";
 import SocialProof from "@/components/products/OmnichannelInbox/SocialProof";
 import UseCases from "@/components/products/OmnichannelInbox/UseCases";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
+
 import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 const jsonLd = {
@@ -28,8 +29,7 @@ const jsonLd = {
       applicationCategory: "BusinessApplication",
       applicationSubCategory: "Customer Service Software",
       operatingSystem: "Web, Android, iOS",
-      browserRequirements:
-        "Requires a modern web browser with JavaScript enabled",
+      browserRequirements: "Requires a modern web browser with JavaScript enabled",
       softwareVersion: "2026",
       releaseNotes: "https://rateup.app/products/omnichannel-inbox",
       featureList: [
@@ -78,9 +78,7 @@ const jsonLd = {
   ],
 };
 
-export const Route = createFileRoute(
-  "/(marketing)/products/omnichannel-inbox/",
-)({
+export const Route = createFileRoute("/(marketing)/products/omnichannel-inbox/")({
   component: RouteComponent,
   head: () => ({
     ...buildPageHead("/products/omnichannel-inbox"),
@@ -94,11 +92,9 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
-  const openAccess = () => {};
-
   return (
     <Layout contentClassName={styles.themeOmnichannel}>
-      <Hero onAccess={openAccess} />
+      <Hero />
       <SocialProof />
       <Problem />
       <ProductIntro />
@@ -107,7 +103,7 @@ function RouteComponent() {
       <HowItWorks />
       <UseCases />
       <Comparison />
-      <CTABand onAccess={openAccess} />
+      <CTABand />
     </Layout>
   );
 }

@@ -1,12 +1,9 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import { Flex, Popover, PopoverDropdown, Stack, Text } from "@mantine/core";
 import { RichTextEditorControl } from "@mantine/tiptap";
 import { IconLocation, IconMapPin } from "@tabler/icons-react";
 import type { Point } from "pigeon-maps";
 import { Map, Marker } from "pigeon-maps";
+import React, { useEffect, useState } from "react";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
@@ -49,17 +46,10 @@ const LocationMap = ({ onGetLocation, onCancel, submitBtnTitle }) => {
 
   useEffect(() => {
     if (!currentLocation.length)
-      navigator.geolocation.getCurrentPosition(
-        (position: GeolocationPosition) => {
-          if (position)
-            setCurrentLocation([
-              position.coords.latitude,
-              position.coords.longitude,
-            ]);
-        },
-      );
-    if (currentLocation.length && !coordinates.length)
-      setCoordinates(currentLocation);
+      navigator.geolocation.getCurrentPosition((position: GeolocationPosition) => {
+        if (position) setCurrentLocation([position.coords.latitude, position.coords.longitude]);
+      });
+    if (currentLocation.length && !coordinates.length) setCoordinates(currentLocation);
     navigator.permissions.query({ name: "geolocation" }).then((permission) => {
       setPermissionStatus(permission.state);
     });
@@ -74,24 +64,14 @@ const LocationMap = ({ onGetLocation, onCancel, submitBtnTitle }) => {
     onGetLocation({ latitude: coordinates[0], longitude: coordinates[1] });
   }
 
-  if (permissionStatus === "denied")
-    return <Text>Browser location access denied</Text>;
+  if (permissionStatus === "denied") return <Text>Browser location access denied</Text>;
   if (permissionStatus === "prompt") return <Text>loading...</Text>;
 
   return (
     <Stack>
       <Flex justify={"space-between"}>
-        <RateupButtonPrimary
-          variant="light"
-          size="xs"
-          title="cancel"
-          onClick={handleCancel}
-        />
-        <RateupButtonPrimary
-          title={submitBtnTitle ?? "next"}
-          size="xs"
-          onClick={handleSubmit}
-        />
+        <RateupButtonPrimary variant="light" size="xs" title="cancel" onClick={handleCancel} />
+        <RateupButtonPrimary title={submitBtnTitle ?? "next"} size="xs" onClick={handleSubmit} />
       </Flex>
       <Map
         height={300}
@@ -100,11 +80,7 @@ const LocationMap = ({ onGetLocation, onCancel, submitBtnTitle }) => {
         defaultCenter={[28.704, 77.1025]}
         onClick={({ latLng }) => setCoordinates(latLng)}
       >
-        <Marker
-          anchor={[coordinates[0], coordinates[1]]}
-          width={25}
-          color="red"
-        />
+        <Marker anchor={[coordinates[0], coordinates[1]]} width={25} color="red" />
       </Map>
       <RateupButtonPrimary
         variant="transparent"

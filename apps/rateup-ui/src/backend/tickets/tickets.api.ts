@@ -1,10 +1,5 @@
 import type { NotificationFormValues } from "@/components/Tickets/boardSettings.tsx";
-import type {
-  Board,
-  Card,
-  Column,
-  MemberData,
-} from "@/components/Tickets/types.ts";
+import type { Board, Card, Column, MemberData } from "@/components/Tickets/types.ts";
 import type { TicketType } from "@/utils/enums/ticket.ts";
 
 import { axiosClient } from "../apiClient";
@@ -12,9 +7,7 @@ import type { ICreateTicketResponse, ITicket } from "./tickets";
 
 const TICKET_URL = "/tickets";
 export async function createTicket(data) {
-  const res: ICreateTicketResponse = (
-    await axiosClient.post(`${TICKET_URL}/create`, data)
-  ).data;
+  const res: ICreateTicketResponse = (await axiosClient.post(`${TICKET_URL}/create`, data)).data;
   return res;
 }
 
@@ -51,9 +44,7 @@ export async function deleteTicket(id: string) {
 // update ticket status
 export async function updateTicketStatus(ticketId, data) {
   try {
-    const ticket: any = (
-      await axiosClient.put(`${TICKET_URL}/${ticketId}/status`, data)
-    ).data;
+    const ticket: any = (await axiosClient.put(`${TICKET_URL}/${ticketId}/status`, data)).data;
     return ticket;
   } catch (e) {
     console.error(e);
@@ -64,9 +55,7 @@ export async function updateTicketStatus(ticketId, data) {
 // update ticket - deadline, priority
 export async function updateTicket(ticketId, data) {
   try {
-    const ticket: any = (
-      await axiosClient.put(`${TICKET_URL}/${ticketId}`, data)
-    ).data;
+    const ticket: any = (await axiosClient.put(`${TICKET_URL}/${ticketId}`, data)).data;
     return ticket;
   } catch (e) {
     console.error(e);
@@ -78,9 +67,7 @@ export async function updateTicket(ticketId, data) {
 export async function createComment(data) {
   const id = data.ticketId;
   try {
-    const comment: any = (
-      await axiosClient.post(`${TICKET_URL}/${id}/comment`, data)
-    ).data;
+    const comment: any = (await axiosClient.post(`${TICKET_URL}/${id}/comment`, data)).data;
     return comment;
   } catch (e) {
     console.error(e);
@@ -111,9 +98,7 @@ export const createBoard = async (board: {
   return data;
 };
 
-export const updateBoard = async (
-  board: Partial<NotificationFormValues>,
-): Promise<Board> => {
+export const updateBoard = async (board: Partial<NotificationFormValues>): Promise<Board> => {
   const { data } = await axiosClient.put(`/tickets/boards/${board.id}`, board);
   return data;
 };
@@ -130,14 +115,8 @@ export const createColumn = async (column: {
   return data;
 };
 
-export const updateColumn = async (column: {
-  id: string;
-  title?: string;
-}): Promise<Column> => {
-  const { data } = await axiosClient.put(
-    `/tickets/columns/${column.id}`,
-    column,
-  );
+export const updateColumn = async (column: { id: string; title?: string }): Promise<Column> => {
+  const { data } = await axiosClient.put(`/tickets/columns/${column.id}`, column);
   return data;
 };
 
@@ -160,6 +139,8 @@ export const createCard = async (card: {
   ticketColumnId: string;
   type: TicketType;
   contactId?: string;
+  surveyResponseId?: string;
+  reviewId?: string;
   priority?: string;
 }): Promise<Card> => {
   const { data } = await axiosClient.post("/tickets/cards/create", card);
@@ -182,12 +163,9 @@ export const moveCard = async (params: {
 }): Promise<Card> => {
   console.log("here");
 
-  const { data } = await axiosClient.put(
-    `/tickets/cards/${params.cardId}/move`,
-    {
-      ticketColumnId: params.targetColumnId,
-    },
-  );
+  const { data } = await axiosClient.put(`/tickets/cards/${params.cardId}/move`, {
+    ticketColumnId: params.targetColumnId,
+  });
   return data;
 };
 
@@ -225,20 +203,12 @@ export const deleteComment = async (commentId: string): Promise<void> => {
   await axiosClient.delete(`/tickets/${commentId}/comment`);
 };
 
-export const fetchCardTeamMemberById = async (
-  cardId: string,
-): Promise<Array<MemberData>> => {
-  const { data } = await axiosClient.get(
-    `/tickets/cards/${cardId}/team-members`,
-  );
+export const fetchCardTeamMemberById = async (cardId: string): Promise<Array<MemberData>> => {
+  const { data } = await axiosClient.get(`/tickets/cards/${cardId}/team-members`);
   return data;
 };
 
-export const fetchBoardTeamMemberById = async (
-  cardId: string,
-): Promise<Array<MemberData>> => {
-  const { data } = await axiosClient.get(
-    `/tickets/boards/${cardId}/team-members`,
-  );
+export const fetchBoardTeamMemberById = async (cardId: string): Promise<Array<MemberData>> => {
+  const { data } = await axiosClient.get(`/tickets/boards/${cardId}/team-members`);
   return data;
 };

@@ -1,13 +1,5 @@
-"use client";
-
+import { IconEdit, IconExternalLink, IconShoppingBag, IconTrash } from "@tabler/icons-react";
 import React, { useState } from "react";
-
-import {
-  IconEdit,
-  IconExternalLink,
-  IconShoppingBag,
-  IconTrash,
-} from "@tabler/icons-react";
 import { toast } from "sonner";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
@@ -21,11 +13,7 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { fallbackImage } from "@/utils/constants.ts";
 
 import { AddCatalogProductModal } from "./AddCatalogProduct.tsx";
@@ -52,26 +40,13 @@ const ProductItems = ({ catalogId }) => {
   }
 
   function handleOpenEdit(product) {
-    const {
-      currency,
-      price,
-      base_price,
-      sale_price,
-      image,
-      image_link,
-      addition_image_link,
-      url,
-      ...rest
-    } = product.productProps;
+    const { currency, price, base_price, sale_price, image, image_link, url, ...rest } =
+      product.productProps;
     const formattedProduct = {
       currencyCode: currency,
       ...(price ? { price: parseFloat(price.replace(/[^0-9.-]+/g, "")) } : {}),
-      ...(base_price
-        ? { base_price: parseFloat(base_price.replace(/[^0-9.-]+/g, "")) }
-        : {}),
-      ...(sale_price
-        ? { sale_price: parseFloat(sale_price.replace(/[^0-9.-]+/g, "")) }
-        : {}),
+      ...(base_price ? { base_price: parseFloat(base_price.replace(/[^0-9.-]+/g, "")) } : {}),
+      ...(sale_price ? { sale_price: parseFloat(sale_price.replace(/[^0-9.-]+/g, "")) } : {}),
       ...(image?.length || image_link.length
         ? { image: image ?? [{ url: image_link, tag: [] }] }
         : {}),
@@ -102,8 +77,7 @@ const ProductItems = ({ catalogId }) => {
     deleteProducts.mutate(
       { productIds },
       {
-        onSuccess: () =>
-          toast.success("Product deleted", { id: "delete-catalog-product" }),
+        onSuccess: () => toast.success("Product deleted", { id: "delete-catalog-product" }),
         onError: (error) =>
           toast.error(error?.message || "Deletion failed", {
             id: "delete-catalog-product",
@@ -119,15 +93,11 @@ const ProductItems = ({ catalogId }) => {
           const { productProps } = product;
           const itemId = product.id ?? product.retailer_id;
           const hasSalePrice =
-            productProps.sale_price &&
-            productProps.sale_price !== productProps.price;
+            productProps.sale_price && productProps.sale_price !== productProps.price;
           const filledAttrs = extraProps.filter((p) => productProps[p.key]);
 
           return (
-            <Card
-              key={itemId}
-              className="group overflow-hidden flex flex-col p-0 gap-0"
-            >
+            <Card key={itemId} className="group overflow-hidden flex flex-col p-0 gap-0">
               {vertical === "commerce" ? (
                 <>
                   {/* Image */}
@@ -140,11 +110,7 @@ const ProductItems = ({ catalogId }) => {
                     )}
                     <img
                       alt={productProps.title ?? productProps.name}
-                      src={
-                        productProps.image_link ||
-                        productProps.image?.[0]?.url ||
-                        fallbackImage
-                      }
+                      src={productProps.image_link || productProps.image?.[0]?.url || fallbackImage}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = fallbackImage;
                       }}
@@ -214,11 +180,7 @@ const ProductItems = ({ catalogId }) => {
                         <Separator className="mt-auto" />
                         <div className="flex flex-wrap gap-1">
                           {filledAttrs.map((pp) => (
-                            <Badge
-                              key={pp.key}
-                              variant="secondary"
-                              className="text-xs font-normal"
-                            >
+                            <Badge key={pp.key} variant="secondary" className="text-xs font-normal">
                               {pp.label}: {productProps[pp.key]}
                             </Badge>
                           ))}

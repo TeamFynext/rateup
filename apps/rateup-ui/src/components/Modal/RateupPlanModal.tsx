@@ -1,16 +1,13 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import { Chip, Group, SimpleGrid, Stack, Text } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
+import { useRateupPaymentsPlanMutation } from "@/backend/payment/payment.query";
 // import { PaymentPlans } from "../../app/admin/rateup";
 import { PaymentType } from "@/types/enums.ts";
-import { useRateupPaymentsPlanMutation } from "@/backend/payment/payment.query";
 import { widgetIds } from "@/utils/constants/forms.ts";
 import { getSampleSubscriptionFeatures } from "@/utils/subscription/subscription.ts";
 
@@ -78,9 +75,7 @@ const RateupPlanModal = ({ opened, close, planList }) => {
     if (form?.values?.paymentPlanId) {
       const name = planList
         ?.find((data) => data?.group === PaymentPlans.razorpay)
-        ?.items?.find(
-          (item) => item.value === form?.values?.paymentPlanId,
-        )?.label;
+        ?.items?.find((item) => item.value === form?.values?.paymentPlanId)?.label;
       form?.setFieldValue("name", name);
     }
     if (form?.values?.stripeId) {
@@ -138,14 +133,8 @@ const RateupPlanModal = ({ opened, close, planList }) => {
             let otherFieldId = "";
             for (const plan of planList) {
               if (plan?.items?.find((pl) => pl.value === value)) {
-                fieldId =
-                  plan?.group === PaymentPlans.razorpay
-                    ? "paymentPlanId"
-                    : "stripeId";
-                otherFieldId =
-                  plan?.group === PaymentPlans.razorpay
-                    ? "stripeId"
-                    : "paymentPlanId";
+                fieldId = plan?.group === PaymentPlans.razorpay ? "paymentPlanId" : "stripeId";
+                otherFieldId = plan?.group === PaymentPlans.razorpay ? "stripeId" : "paymentPlanId";
                 break;
               }
             }
@@ -200,19 +189,12 @@ const RateupPlanModal = ({ opened, close, planList }) => {
       <Stack gap={3} py="xs">
         <Group justify="space-between">
           <Group gap={0}>
-            <Text fz={"xs"}>
-              {translations("Features - (give data in json format)")}
-            </Text>
+            <Text fz={"xs"}>{translations("Features - (give data in json format)")}</Text>
             <Text fz={"xs"} c="red">
               *
             </Text>
           </Group>
-          <Chip
-            size="xs"
-            checked={checked}
-            onChange={setChecked}
-            variant="light"
-          >
+          <Chip size="xs" checked={checked} onChange={setChecked} variant="light">
             {translations("Sample Feature")}
           </Chip>
         </Group>

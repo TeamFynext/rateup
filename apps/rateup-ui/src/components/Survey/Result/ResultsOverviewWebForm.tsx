@@ -1,14 +1,9 @@
-"use client";
-
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-
 import { Flex } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
 
-import { QuestionType, WaQuestions } from "@/types/enums.ts";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useResponseAnalytics } from "@/backend/surveys/response/response.query";
 import { useAllResponseNPSForGraph } from "@/backend/surveys/surveys.query";
@@ -21,6 +16,7 @@ import NothingFound from "@/components/NothingFound/NothingFound.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
+import { QuestionType, WaQuestions } from "@/types/enums.ts";
 
 import HappyIndex from "./HappyIndex.tsx";
 import LargeTextResponseSummary from "./LargeTextResponseSummary.tsx";
@@ -30,7 +26,6 @@ import SurveyStatsWebForm from "./SurveyStatsWebForm.tsx";
 const ResultsOverviewWebForm = ({
   surveyId,
   aiResponseSummary,
-  survey,
   flowId,
   version,
   flowQuestions,
@@ -65,10 +60,7 @@ const ResultsOverviewWebForm = ({
     dateRange:
       !ranges.length || !ranges[0].startDate || !ranges[0].endDate
         ? []
-        : [
-            ranges[0]?.startDate.toISOString(),
-            ranges[0]?.endDate.toISOString(),
-          ],
+        : [ranges[0]?.startDate.toISOString(), ranges[0]?.endDate.toISOString()],
   });
   const [timePeriod, setTimePeriod] = useState("daily");
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -76,13 +68,7 @@ const ResultsOverviewWebForm = ({
     data: graphResponse,
     isLoading: isrLoading,
     isRefetching: isrRefetching,
-  } = useAllResponseNPSForGraph(
-    timePeriod,
-    userTimeZone,
-    surveyId,
-    filterTeams,
-  );
-  const queryClient = useQueryClient();
+  } = useAllResponseNPSForGraph(timePeriod, userTimeZone, surveyId, filterTeams);
 
   useEffect(() => {
     if (ranges.length === 0) {
@@ -93,19 +79,14 @@ const ResultsOverviewWebForm = ({
   const [npsOverView, choiceWiseOverView] = useMemo(
     () =>
       responseAnalytics
-        ? [
-            Object.entries(responseAnalytics?.nps),
-            Object.entries(responseAnalytics?.choiceWise),
-          ]
+        ? [Object.entries(responseAnalytics?.nps), Object.entries(responseAnalytics?.choiceWise)]
         : [[], []],
     [responseAnalytics],
   );
 
   const textAreaQuestions = useMemo(() => {
     return version === 1
-      ? questions?.filter(
-          (question) => question?.type === QuestionType.TextArea,
-        )
+      ? questions?.filter((question) => question?.type === QuestionType.TextArea)
       : flowQuestions.filter((q) => q.metaType === WaQuestions.TextArea);
   }, [questions, flowQuestions, version]);
 
@@ -139,20 +120,6 @@ const ResultsOverviewWebForm = ({
           timePeriod={timePeriod}
           setTimePeriod={setTimePeriod}
           isLoading={isrLoading || isrRefetching}
-          onRefresh={async () => {
-            await queryClient.invalidateQueries({
-              queryKey: [
-                [
-                  "reponse-nps",
-                  "graph-nps",
-                  timePeriod,
-                  userTimeZone,
-                  surveyId,
-                  filterTeams,
-                ],
-              ],
-            });
-          }}
         />
         <SurveyQuestion
           choiceWise={choiceWiseOverView}

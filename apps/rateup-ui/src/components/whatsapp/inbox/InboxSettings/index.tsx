@@ -1,31 +1,22 @@
-"use client";
-
-import { useState } from "react";
-
 import { MessageSquare, Zap } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import WaQuickReplySettings from "@/components/RichTextEditor/WaQuickReply/WaQuickReplySettings.tsx";
-import { useUser } from "@/context/UserContext.tsx";
 
 import InboxAutomation from "./InboxAutomation.tsx";
 
 // import WaInboxPermissions from "../chatselect/permissions";
 
 const InboxSettings = () => {
-  const { user } = useUser();
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"quick_replies" | "automation">(
-    "quick_replies",
-  );
+  const [activeTab, setActiveTab] = useState<"quick_replies" | "automation">("quick_replies");
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-6xl mx-auto w-full h-full overflow-hidden">
       {/* Page Header */}
       <div className="space-y-1 shrink-0">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {t("Inbox Settings")}
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("Inbox Settings")}</h1>
         <p className="text-sm text-muted-foreground">
           {t("Configure quick replies and automation rules for this inbox")}
         </p>
@@ -64,11 +55,7 @@ const InboxSettings = () => {
             <WaInboxPermissions />
           </div>
         )} */}
-        {activeTab === "quick_replies" ? (
-          <WaQuickReplySettings />
-        ) : (
-          <InboxAutomation />
-        )}
+        {activeTab === "quick_replies" ? <WaQuickReplySettings /> : <InboxAutomation />}
       </div>
     </div>
   );

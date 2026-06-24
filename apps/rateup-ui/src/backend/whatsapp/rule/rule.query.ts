@@ -3,13 +3,7 @@ import { toast } from "sonner";
 
 import type { CreateRule } from "@/types/rule.ts";
 
-import {
-  createRule,
-  deleteRule,
-  getAllRules,
-  getRuleById,
-  updateRule,
-} from "./rule.api";
+import { createRule, deleteRule, getAllRules, getRuleById, updateRule } from "./rule.api";
 
 export const useRules = () =>
   useQuery({
@@ -41,8 +35,7 @@ export const useCreateRuleMutation = () => {
 export const useUpdateRuleMutation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: Partial<CreateRule> & { id: string }) =>
-      updateRule(id, data),
+    mutationFn: ({ id, ...data }: Partial<CreateRule> & { id: string }) => updateRule(id, data),
     onSuccess: (data, variables) => {
       qc.invalidateQueries({ queryKey: ["rules"] });
       qc.invalidateQueries({ queryKey: ["rule", { id: variables.id }] });

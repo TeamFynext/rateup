@@ -3,12 +3,7 @@ import { z } from "zod";
 export const pointRewardSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  rewardType: z.enum([
-    "fixed-discount",
-    "percentage-discount",
-    "free-item",
-    "free-service",
-  ]),
+  rewardType: z.enum(["fixed-discount", "percentage-discount", "free-item", "free-service"]),
   pointsCost: z.coerce.number().min(0, "Points must be 0 or greater"),
   cashbackAmount: z.coerce.number().optional(),
   discountPercentage: z.coerce.number().min(0).max(100).optional(),

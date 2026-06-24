@@ -1,21 +1,19 @@
-"use client";
-
-import { useState } from "react";
-
 import { IconFile, IconFileDescription, IconSearch } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { WaTemplateStatus } from "@/types/enums.ts";
-import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
 import { useSendWaTemplateToUser } from "@/backend/whatsapp/whatsapp.query";
+import useTemplatesAvailableForTeam from "@/hooks/team.tsx";
+import { WaTemplateStatus } from "@/types/enums.ts";
 
 import { TeamSelector } from "../../../../../input/TeamSelector.tsx";
 import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout.tsx";
 import NothingFound from "../../../../../NothingFound/NothingFound.tsx";
 import { usePhoneIdStore } from "../../../chatselect/accountSelectorStore.ts";
-import classes from "./styles.module.css";
 import { WaInboxTemplatePreviewNew } from "./templatePreview/index.tsx";
+
+import classes from "./styles.module.css";
 
 interface Props {
   sessionExpired: boolean;
@@ -30,18 +28,10 @@ function templateBodyText(templateComponent) {
 
   const truncated = text.length > 50 ? text.slice(0, 20) + "..." : text;
 
-  return (
-    <div className="text-gray-500 text-sm py-4 w-full sm:max-w-[23vw]">
-      {truncated}
-    </div>
-  );
+  return <div className="text-gray-500 text-sm py-4 w-full sm:max-w-[23vw]">{truncated}</div>;
 }
 
-export default function WaInboxTemplateDisplayModal({
-  contact,
-  opened,
-  onClose,
-}: Readonly<Props>) {
+export default function WaInboxTemplateDisplayModal({ contact, opened, onClose }: Readonly<Props>) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const sendTemplate = useSendWaTemplateToUser(contact?.phone, contact?.id);
   const [teamId, setTeamId] = useState<string>("");
@@ -104,11 +94,7 @@ export default function WaInboxTemplateDisplayModal({
             className="w-full outline-none text-sm"
           />
         </div>
-        <TeamSelector
-          value={teamId}
-          onChange={setTeamId}
-          className="sm:max-w-xs w-full"
-        />
+        <TeamSelector value={teamId} onChange={setTeamId} className="sm:max-w-xs w-full" />
       </div>
       {/* Main content: list + divider + preview */}
       <div className="flex flex-col sm:flex-row gap-6 items-start">
@@ -162,18 +148,12 @@ export default function WaInboxTemplateDisplayModal({
               <div
                 key={i}
                 className={`border p-3 sm:p-4 rounded-xl flex flex-col items-start justify-center gap-2 transition-all duration-200 hover:scale-[1.02] cursor-pointer shadow-sm ${
-                  selectedTemplateId === template?.id
-                    ? "border-green-500 bg-green-50"
-                    : ""
+                  selectedTemplateId === template?.id ? "border-green-500 bg-green-50" : ""
                 }`}
                 onClick={() => setSelectedTemplateId(template.id)}
               >
                 <div className="flex items-center justify-start gap-2">
-                  <IconFileDescription
-                    className="text-gray-500"
-                    strokeWidth={1}
-                    size={18}
-                  />
+                  <IconFileDescription className="text-gray-500" strokeWidth={1} size={18} />
                   <h1 className="text-sm sm:text-base font-semibold line-clamp-1">
                     {template?.data?.name}
                   </h1>
@@ -220,9 +200,7 @@ export default function WaInboxTemplateDisplayModal({
             <WaInboxTemplatePreviewNew
               teamId={teamId}
               template={
-                filteredTemplates.find(
-                  (template) => template.id === selectedTemplateId,
-                )?.data
+                filteredTemplates.find((template) => template.id === selectedTemplateId)?.data
               }
               selectedTemplateId={selectedTemplateId}
               sendTemplate={sendTemplate}

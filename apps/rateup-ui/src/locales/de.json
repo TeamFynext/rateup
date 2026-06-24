@@ -60,6 +60,7 @@
     "Add checklist": "Checkliste hinzufügen",
     "Add choice": "Auswahl hinzufügen",
     "Add Column": "Spalte hinzufügen",
+    "Add Command": "Befehl hinzufügen",
     "Add Components": "Komponenten hinzufügen",
     "Add Condition": "Bedingung hinzufügen",
     "Add Contact": "Kontakt hinzufügen",
@@ -69,6 +70,7 @@
     "Add Else Component": "Andere Komponente hinzufügen",
     "Add Existing Contacts": "Vorhandene Kontakte hinzufügen",
     "Add Field": "Feld hinzufügen",
+    "Add Ice Breaker": "Eisbrecher hinzufügen",
     "Add If Block": "Wenn-Block hinzufügen",
     "Add Images (max 3)": "Bilder hinzufügen (max. 3)",
     "Add job title": "Berufsbezeichnung hinzufügen",
@@ -514,6 +516,7 @@
     "Continue to Payment": "Weiter zur Zahlung",
     "Contrast color": "Kontrastfarbe",
     "Conversation Trends": "Konversationstrends",
+    "Conversational": "Konversation",
     "Conversations": "Gespräche",
     "copied": "kopiert",
     "Copied": "Kopiert",
@@ -1326,6 +1329,7 @@
     "Max size 2MB": "Maximale Größe 2 MB",
     "max uploaded documents": "Max. hochgeladene Dokumente",
     "max uploaded photos": "Max. hochgeladene Fotos",
+    "Maximum 4 ice breakers allowed": "Maximal 4 Eisbrecher erlaubt",
     "maximum file size (in kilobytes) that can be uploaded": "maximale Dateigröße (in Kilobyte), die hochgeladen werden kann",
     "maximum number of documents that can be uploaded": "Maximale Anzahl an Dokumenten, die hochgeladen werden können",
     "maximum number of photos that can be uploaded": "maximale Anzahl an Fotos, die hochgeladen werden können",
@@ -1652,6 +1656,7 @@
     "Please retry loading the application. If the problem continues, you may need to logout and login again": "Bitte versuchen Sie erneut, die Anwendung zu laden. Wenn das Problem weiterhin besteht, müssen Sie sich möglicherweise abmelden und erneut anmelden",
     "Please select a CSV file to import.": "Bitte wählen Sie eine CSV-Datei zum Importieren aus.",
     "Please select a page": "Bitte wählen Sie eine Seite aus",
+    "Please select a phone account to configure conversational settings.": "Bitte wählen Sie ein Telefonkonto aus, um die Gesprächseinstellungen zu konfigurieren.",
     "Please select a redemption": "Bitte wählen Sie eine Einlösung aus",
     "Please select a reward": "Bitte wählen Sie eine Belohnung aus",
     "Please select a screen first": "Bitte wählen Sie zunächst einen Bildschirm aus",
@@ -2099,6 +2104,7 @@
     "Skip approval flow": "Genehmigungsablauf überspringen",
     "Skip Preview Screen": "Vorschaubildschirm überspringen",
     "Skips Responses preview screen on survey completion": "Überspringt den Vorschaubildschirm für Antworten nach Abschluss der Umfrage",
+    "Slash commands users can access by typing '/' in chat. Maximum 30 commands. Name up to 32 chars, description up to 256 chars.": "Auf Slash-Befehle können Benutzer zugreifen, indem sie im Chat „/“ eingeben. Maximal 30 Befehle. Name bis zu 32 Zeichen, Beschreibung bis zu 256 Zeichen.",
     "Sliding banners to be shown in top of menu. You can add upto 4 banners.": "Verschiebbare Banner, die oben im Menü angezeigt werden. Sie können bis zu 4 Banner hinzufügen.",
     "slower vs last week": "langsamer als letzte Woche",
     "Slug is required": "Slug ist erforderlich",
@@ -2169,6 +2175,7 @@
     "Swap the order of flow screens": "Vertauschen Sie die Reihenfolge der Flow-Bildschirme",
     "Sync": "Synchronisieren",
     "Sync FB pages": "FB-Seiten synchronisieren",
+    "Sync from WhatsApp": "Von WhatsApp synchronisieren",
     "Sync Google Account": "Google-Konto synchronisieren",
     "Sync Google Sheet": "Google Sheet synchronisieren",
     "Sync products": "Produkte synchronisieren",
@@ -2183,10 +2190,12 @@
     "Syncing Shopify products": "Shopify-Produkte synchronisieren",
     "Syncing Zoho contacts to Rateup...": "Synchronisierung von Zoho-Kontakten mit Rateup...",
     "Syncing Zoho leads to Rateup...": "Die Synchronisierung von Zoho führt zu Rateup...",
+    "Syncing...": "Synchronisierung...",
     "System Settings": "Systemeinstellungen",
     "tags": "Tags",
     "Tags": "Schlagworte",
     "Tags/ Groups/ Campaigns": "Tags/Gruppen/Kampagnen",
+    "Tappable text prompts shown to users the first time they message you. Maximum 4, up to 80 characters each.": "Tippbare Textaufforderungen, die Benutzern angezeigt werden, wenn sie Ihnen zum ersten Mal eine Nachricht senden. Maximal 4, jeweils bis zu 80 Zeichen.",
     "Target URL for redirection": "Ziel-URL für die Weiterleitung",
     "tax": "Steuer",
     "Tax": "Steuer",
@@ -2562,13 +2571,6 @@
   "Example": {
     " /points": "Beispiel: /points"
   },
-  "Eg": {
-    "https://www": {
-      "example": {
-        "com": "ZB:https://www.example.com"
-      }
-    }
-  },
   "campaign.resend": {
     "Cancel": "Abbrechen",
     "Choose when to send and which participants to resend to": "Wählen Sie aus, wann gesendet werden soll und an welche Teilnehmer erneut gesendet werden soll",
@@ -2696,8 +2698,12 @@
     "Selected": "Ausgewählt",
     "You have not selected any participant": "Sie haben keinen Teilnehmer ausgewählt"
   },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Wählen Sie nur Stufen aus, die zur ausgewählten Pipeline- und Sub-Pipeline-Konfiguration gehören."
+  "Eg": {
+    "https://www": {
+      "example": {
+        "com": "ZB:https://www.example.com"
+      }
+    }
   },
   "apianalytics": {
     "All": "Alle",
@@ -2724,6 +2730,9 @@
     "Total Messages Sent": "Gesamtzahl der gesendeten Nachrichten",
     "WhatsApp Messages Analytics": "WhatsApp-Nachrichtenanalyse",
     "WhatsApp Template Analytics": "WhatsApp-Vorlagenanalyse"
+  },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Wählen Sie nur Stufen aus, die zur ausgewählten Pipeline- und Sub-Pipeline-Konfiguration gehören."
   },
   "campaign.list": {
     "Active": "Aktiv",

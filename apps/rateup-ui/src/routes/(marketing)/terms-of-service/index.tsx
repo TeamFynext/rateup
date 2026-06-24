@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { buildPageHead } from "@/lib/metadata.ts";
 import TermsOfServicePage from "@/components/HomePage/pages/TermsOfService/index.tsx";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/terms-of-service/")({
   component: TermsOfService,

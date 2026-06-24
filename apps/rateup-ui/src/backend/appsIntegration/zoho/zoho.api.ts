@@ -2,10 +2,7 @@ import { axiosClient } from "@/backend/apiClient";
 
 const ZOHO_BASE_URL = "/integration/external/zoho";
 
-export async function getZohoContacts(
-  orgId: string,
-  product: "crm" | "bigin" = "crm",
-) {
+export async function getZohoContacts(orgId: string, product: "crm" | "bigin" = "crm") {
   return (
     await axiosClient.get(`${ZOHO_BASE_URL}/contacts`, {
       params: {
@@ -17,9 +14,7 @@ export async function getZohoContacts(
 }
 
 export async function syncZohoContacts(product: "crm" | "bigin" = "crm") {
-  return (
-    await axiosClient.post(`${ZOHO_BASE_URL}/contacts/sync?product=${product}`)
-  ).data;
+  return (await axiosClient.post(`${ZOHO_BASE_URL}/contacts/sync?product=${product}`)).data;
 }
 
 export async function getZohoLeads(orgId: string) {
@@ -32,10 +27,7 @@ export async function getZohoLeads(orgId: string) {
   ).data;
 }
 
-export async function getZohoUsers(
-  orgId: string,
-  product: "crm" | "bigin" = "crm",
-) {
+export async function getZohoUsers(orgId: string, product: "crm" | "bigin" = "crm") {
   return (
     await axiosClient.get(`${ZOHO_BASE_URL}/users`, {
       params: {

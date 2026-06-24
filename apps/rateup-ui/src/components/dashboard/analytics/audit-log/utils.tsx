@@ -1,22 +1,12 @@
-import { useMemo } from "react";
-
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { AlertTriangle, Calendar, Code, Shield, User } from "lucide-react";
+import { useMemo } from "react";
 
 import type { AuditLogData } from "@/backend/user/user.api";
 import { createSortableHeader } from "@/components/Table/data-table.tsx";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 
 // Types
@@ -25,8 +15,6 @@ interface ParsedRoute {
   id: string | null;
   isValid: boolean;
 }
-
-type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 // Constants
 const ROUTE_PATTERNS = {
@@ -86,8 +74,7 @@ const formatActionMessage = (method: string, route: string): string => {
     return method.toUpperCase();
   }
 
-  const actionLabel =
-    ACTION_LABELS[method.toLowerCase()] || method.toLowerCase();
+  const actionLabel = ACTION_LABELS[method.toLowerCase()] || method.toLowerCase();
 
   return id ? `${type} ${id} ${actionLabel}` : `${type} ${actionLabel}`;
 };
@@ -98,10 +85,7 @@ const formatTimestamp = (timestamp: string): string => {
 
 // Components
 const ActionCell = ({ action, route }: { action: string; route: string }) => {
-  const formattedMessage = useMemo(
-    () => formatActionMessage(action, route),
-    [action, route],
-  );
+  const formattedMessage = useMemo(() => formatActionMessage(action, route), [action, route]);
 
   return (
     <div className="flex items-center gap-2">
@@ -172,9 +156,7 @@ export const columns = [
   {
     accessorKey: "action",
     header: "Action",
-    cell: ({ row }) => (
-      <ActionCell action={row.original?.method} route={row.original?.route} />
-    ),
+    cell: ({ row }) => <ActionCell action={row.original?.method} route={row.original?.route} />,
     meta: { title: "Action" },
   },
   {

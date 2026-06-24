@@ -1,18 +1,11 @@
-"use client";
-
-import { useState } from "react";
-
 import { RichTextEditor } from "@mantine/tiptap";
 import { IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/index.tsx";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -43,9 +36,7 @@ const InsertInboxImage = () => {
       setFiles([]);
     } catch (e) {
       const errorMessage =
-        e instanceof Error
-          ? e.message
-          : String(e || "Failed to upload image. Please try again.");
+        e instanceof Error ? e.message : String(e || "Failed to upload image. Please try again.");
       toast.error(errorMessage || "Failed to upload image. Please try again.");
       resetMedia();
     }

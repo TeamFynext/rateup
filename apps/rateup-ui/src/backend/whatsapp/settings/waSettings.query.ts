@@ -38,7 +38,7 @@ export const useWaSettings = (enabled = true) =>
     gcTime: 1000 * 60 * 60 * 24,
   });
 
-const useCreateWaSettingsMutation = () => {
+const _useCreateWaSettingsMutation = () => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createWaSettings,
@@ -74,8 +74,7 @@ export const useUpsertWaSettingsMutation = () => {
 export const useUpdateUserAccessToken = () => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
-    mutationFn: (data: { code: string; waSettingId: string }) =>
-      updateUserAccessToken(data),
+    mutationFn: (data: { code: string; waSettingId: string }) => updateUserAccessToken(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["waSettings"] });
       toast.success("Updated Successfully");
@@ -91,8 +90,7 @@ export const useUpdateUserAccessToken = () => {
 export const useUpdateWaSettingsMutation = (settingId) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
-    mutationFn: (data: UpdateWaSettingsInput) =>
-      updateWaSettingsById(settingId, data),
+    mutationFn: (data: UpdateWaSettingsInput) => updateWaSettingsById(settingId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["waSettings"] });
       toast.success("Updated Successfully");
@@ -147,7 +145,7 @@ export const useDeregisterBusinessClientMutation = () => {
   });
 };
 
-const useWaLogs = (pagination, search, sort, columnFilters) =>
+const _useWaLogs = (pagination, search, sort, columnFilters) =>
   useQuery({
     queryKey: ["waLogs", pagination, search, sort, columnFilters],
     queryFn: () => getWaLogs(pagination, search, sort, columnFilters),
@@ -191,8 +189,7 @@ export const useSyncMetaLeadgenForms = (waSettingsId) => {
 export const useSyncLeadgenFormQuestions = (formId, waSettingsId) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: fbPageQuery) =>
-      syncLeadgenFormQuestions(formId, waSettingsId, data),
+    mutationFn: (data: fbPageQuery) => syncLeadgenFormQuestions(formId, waSettingsId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
       toast.success("success");
@@ -255,10 +252,8 @@ export const useConversationalAutomation = (phoneId: string) =>
 export const useUpdateConversationalAutomation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (params: {
-      phoneId: string;
-      data: Partial<ConversationalAutomation>;
-    }) => updateConversationalAutomation(params),
+    mutationFn: (params: { phoneId: string; data: Partial<ConversationalAutomation> }) =>
+      updateConversationalAutomation(params),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({
         queryKey: ["conversationalAutomation", variables.phoneId],

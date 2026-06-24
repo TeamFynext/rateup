@@ -11,7 +11,7 @@ import {
   getCampaignParticipants,
 } from "./campaignParticipants.api";
 
-const useAddContactParticipantMutation = (campaignId) => {
+const _useAddContactParticipantMutation = (campaignId) => {
   const queryClient = useQueryClient();
   const { t: translations } = useTranslation();
   return useMutation({
@@ -31,7 +31,7 @@ const useAddContactParticipantMutation = (campaignId) => {
   });
 };
 
-const useAddGroupParticipantMutation = (campaignId) => {
+const _useAddGroupParticipantMutation = (campaignId) => {
   const queryClient = useQueryClient();
   const { t: translations } = useTranslation();
   return useMutation({
@@ -82,10 +82,7 @@ export const useCampaignParticipants = (
   });
 };
 
-export const useAddCampaignParticipants = (
-  campaignId,
-  onSuccess = () => {},
-) => {
+export const useAddCampaignParticipants = (campaignId, onSuccess = () => {}) => {
   const queryClient = useQueryClient();
   const { t: translations } = useTranslation();
   return useMutation({
@@ -113,10 +110,9 @@ export const useRemoveCampaignParticipant = (campaignId: string) => {
   return useMutation({
     mutationFn: deleteCampaignParticipant,
     onSuccess() {
-      toast.success(
-        translations("Participants removed from campaign successfully."),
-        { id: "campaign-participants-remove" },
-      );
+      toast.success(translations("Participants removed from campaign successfully."), {
+        id: "campaign-participants-remove",
+      });
       queryClient.invalidateQueries({
         queryKey: ["campaignParticipants", campaignId],
       });
@@ -125,26 +121,20 @@ export const useRemoveCampaignParticipant = (campaignId: string) => {
       });
     },
     onError(error) {
-      toast.error(
-        error?.message || `Error removing participants from campaign`,
-        { id: "campaign-participants-remove" },
-      );
+      toast.error(error?.message || `Error removing participants from campaign`, {
+        id: "campaign-participants-remove",
+      });
     },
   });
 };
 
-export const useRemoveMulitpleGroupParticipants = (
-  campaignId: string,
-  onSucess: () => void,
-) => {
+export const useRemoveMulitpleGroupParticipants = (campaignId: string, onSucess: () => void) => {
   const queryClient = useQueryClient();
   const { t: translations } = useTranslation();
   return useMutation({
     mutationFn: deleteMulitpleGroupParticipants,
     onSuccess() {
-      toast.success(
-        translations("Participants removed from campaign successfully."),
-      );
+      toast.success(translations("Participants removed from campaign successfully."));
       queryClient.invalidateQueries({
         queryKey: ["campaignParticipants", campaignId],
       });
@@ -154,10 +144,9 @@ export const useRemoveMulitpleGroupParticipants = (
       onSucess();
     },
     onError(error) {
-      toast.error(
-        error?.message || `Error removing participants from campaign`,
-        { id: "campaign-mulitiple-participants-remove" },
-      );
+      toast.error(error?.message || `Error removing participants from campaign`, {
+        id: "campaign-mulitiple-participants-remove",
+      });
     },
   });
 };

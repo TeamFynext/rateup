@@ -1,7 +1,3 @@
-"use client";
-
-import { useCallback } from "react";
-
 import {
   Accordion,
   Box,
@@ -17,15 +13,12 @@ import {
 } from "@mantine/core";
 import { produce } from "immer";
 import { difference } from "lodash";
+import { useCallback } from "react";
 
 import { useSurveyUpdateMutation } from "@/backend/surveys/surveys.query";
 
-import {
-  getSurveyThemeKeyOf,
-  supportedPageEditors,
-} from "../../SurveyTheme.constants";
+import { getSurveyThemeKeyOf, supportedPageEditors } from "../../SurveyTheme.constants";
 import { ThemeTabEnum } from "../../SurveyTheme.enums";
-import surveyThemeStyles from "../../SurveyTheme.module.css";
 import {
   useOpenEditors,
   useSelectedPageTab,
@@ -34,6 +27,8 @@ import {
 import PageThemeSaveBtn from "../PageThemeSaveButton/indext.tsx";
 import SaveButton from "../SaveButton/index.tsx";
 import ThemeSelector from "../ThemeSelector/index.tsx";
+
+import surveyThemeStyles from "../../SurveyTheme.module.css";
 import styles from "./StylesComponent.module.css";
 
 function StylesComponent({
@@ -54,8 +49,7 @@ function StylesComponent({
   const isSurveyPageTab = selectedPageTab === "surveyPage";
   const selectedPageUseSurveyThemeValue =
     survey?.webSurveyPagesTheme?.[surveyThemeKey]?.["useSurveyTheme"];
-  const shouldUseSurveyTheme =
-    selectedPageUseSurveyThemeValue && !isSurveyPageTab;
+  const shouldUseSurveyTheme = selectedPageUseSurveyThemeValue && !isSurveyPageTab;
 
   const editorComponents = supportedPageEditors[selectedPageTab];
   const shouldDisplayThemeSelector = selectedPageTab === ThemeTabEnum.SURVEY;
@@ -116,21 +110,15 @@ function StylesComponent({
         className={`${styles["styles-component-div"]} styles-component-div`}
         scrollbarSize={10}
       >
-        {((isSurveyPageTab && isThemeObjBeingEditedDefaultTheme) ||
-          shouldUseSurveyTheme) && (
+        {((isSurveyPageTab && isThemeObjBeingEditedDefaultTheme) || shouldUseSurveyTheme) && (
           <Overlay className={surveyThemeStyles["overlay"]} zIndex={198}>
             {isSurveyPageTab && isThemeObjBeingEditedDefaultTheme && (
               <Center
-                className={
-                  styles[
-                    "default-theme-not-editable-overlay-message-container-root-div"
-                  ]
-                }
+                className={styles["default-theme-not-editable-overlay-message-container-root-div"]}
               >
                 <Flex className={styles["overlay-message-container"]}>
                   <p className={styles["overlay-message-p"]}>
-                    Default themes are not editable. Choose another theme or
-                    create a new one.
+                    Default themes are not editable. Choose another theme or create a new one.
                   </p>
                 </Flex>
               </Center>
@@ -141,10 +129,7 @@ function StylesComponent({
           className={styles["accordion-root-div"]}
           multiple
           onChange={(valuesArr) => {
-            if (
-              openEditors?.length ===
-              supportedPageEditors[selectedPageTab]?.length
-            ) {
+            if (openEditors?.length === supportedPageEditors[selectedPageTab]?.length) {
               const editorsObjArr = supportedPageEditors[selectedPageTab];
               const allValues = editorsObjArr?.map(({ value }) => value);
               const diff = difference(allValues, valuesArr);
@@ -177,11 +162,7 @@ function StylesComponent({
       <Divider />
       <Group className={styles["close-save-btns-container"]}>
         <Box className={styles["close-btn-div"]}>
-          <Button
-            className={styles["close-btn"]}
-            onClick={onClose}
-            variant="outline"
-          >
+          <Button className={styles["close-btn"]} onClick={onClose} variant="outline">
             Close
           </Button>
         </Box>
@@ -190,9 +171,7 @@ function StylesComponent({
           <SaveButton
             className={styles["save-btn-div"]}
             survey={survey}
-            isThemeObjBeingEditedDefaultTheme={
-              isThemeObjBeingEditedDefaultTheme
-            }
+            isThemeObjBeingEditedDefaultTheme={isThemeObjBeingEditedDefaultTheme}
             themeObjBeingEdited={themeObjBeingEdited}
             onSave={onClose}
           />
@@ -203,7 +182,6 @@ function StylesComponent({
             className={styles["page-theme-save-btn"]}
             disabled={shouldUseSurveyTheme}
             survey={survey}
-            selectedPageTab={selectedPageTab}
           />
         )}
       </Group>

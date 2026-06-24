@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import { IconArrowLeft } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { CreditsCard } from "@/components/Card/CreditsCard.tsx";
@@ -118,11 +115,7 @@ export function ItemDetailedViewModal({
                     <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} />
                   </div>
                 </div>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => setAllergyView(false)}
-                >
+                <Button className="w-full" variant="outline" onClick={() => setAllergyView(false)}>
                   <IconArrowLeft data-icon="inline-start" />
                   {translations("Go Back")}
                 </Button>
@@ -151,9 +144,7 @@ export function ItemDetailedViewModal({
                         className="flex min-h-6 flex-1 items-center gap-1 overflow-hidden"
                         style={{ maxWidth: "300px" }}
                       >
-                        <MenuFoodLabelBadge
-                          foodLabels={item?.foodLabels ?? []}
-                        />
+                        <MenuFoodLabelBadge foodLabels={item?.foodLabels ?? []} />
                       </div>
                       {foodLabelLength > 1 && (
                         <Button
@@ -173,10 +164,7 @@ export function ItemDetailedViewModal({
               <div className="grid grid-cols-[repeat(auto-fit,minmax(96px,1fr))] gap-3 px-4 py-4 text-center text-foreground">
                 {item.price.variants?.length > 0 ? (
                   item.price.variants.map((varient, index) => (
-                    <div
-                      className="flex flex-col items-center gap-1"
-                      key={varient.name ?? index}
-                    >
+                    <div className="flex flex-col items-center gap-1" key={varient.name ?? index}>
                       <span className="truncate text-sm font-medium capitalize">
                         {varient.name}
                       </span>

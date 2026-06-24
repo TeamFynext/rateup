@@ -8,7 +8,7 @@ const uploadFile = async (prop, file) => {
         prop,
         url: `${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${uploadedFileKey}`,
       };
-    } catch (err) {
+    } catch {
       return {
         prop,
         url: null,

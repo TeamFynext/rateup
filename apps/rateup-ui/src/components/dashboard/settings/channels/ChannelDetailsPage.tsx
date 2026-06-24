@@ -1,9 +1,6 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { IconArrowLeft } from "@tabler/icons-react";
 import { Link, useParams } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button.tsx";
@@ -67,19 +64,10 @@ export function ChannelDetailsPage() {
         </Button>
       </div>
 
-      {isWhatsapp && (
-        <WhatsAppSettingsDetail waSettings={waSettings} isLoading={isLoading} />
-      )}
-      {isInstagram && (
-        <InstagramSettingsDetail
-          waSettings={waSettings}
-          isLoading={isLoading}
-        />
-      )}
+      {isWhatsapp && <WhatsAppSettingsDetail waSettings={waSettings} isLoading={isLoading} />}
+      {isInstagram && <InstagramSettingsDetail waSettings={waSettings} isLoading={isLoading} />}
 
-      {isFacebook && (
-        <FacebookSettingsDetail waSettings={waSettings} isLoading={isLoading} />
-      )}
+      {isFacebook && <FacebookSettingsDetail waSettings={waSettings} isLoading={isLoading} />}
     </div>
   );
 }

@@ -1,23 +1,15 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { WaAutomatedReply } from "@/types/global";
-import { AutomationPlatform } from "@/types/platform.ts";
 import { useAllInstagramAutomations } from "@/backend/whatsapp/instagram-automation/instagramAutomation.query";
 import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
 import { sortData } from "@/components/dashboard/SortDropDown.tsx";
 import useDebounce from "@/components/menu/hook/useDebounce.ts";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { WaAutomationCards } from "@/components/whatsapp/automation/AutomationCards.tsx";
+import type { WaAutomatedReply } from "@/types/global";
+import { AutomationPlatform } from "@/types/platform.ts";
 
 import { AutomatedReplyForm } from "../../../../components/dashboard/whatsapp/flowbots/create.tsx";
 
@@ -87,15 +79,10 @@ function InstagramFlowbotsPage() {
         emptyDescription={
           debouncedSearchQuery
             ? translations("Try a different search term.")
-            : translations(
-                "Create your first chatbot to start automating conversations.",
-              )
+            : translations("Create your first chatbot to start automating conversations.")
         }
       >
-        <WaAutomationCards
-          data={filteredData}
-          detailsBasePath="/dashboard/instagram/flowbots"
-        />
+        <WaAutomationCards data={filteredData} detailsBasePath="/dashboard/instagram/flowbots" />
       </ListPageLayout>
       <Dialog open={opened} onOpenChange={setOpened}>
         <DialogContent className="sm:max-w-175">

@@ -30,8 +30,7 @@ export async function redeemReward(data: {
   orderId?: string;
   notes?: string;
 }) {
-  return (await axiosClient.post<RedeemRewardResponse>(`${base}/redeem`, data))
-    .data;
+  return (await axiosClient.post<RedeemRewardResponse>(`${base}/redeem`, data)).data;
 }
 
 export async function updateRedeem({ redeemId, data }) {
@@ -51,8 +50,6 @@ export async function getRewardByShortCode(shortCode: string) {
 
 export async function redeemRewardByShortCode(shortCode: string) {
   return (
-    await axiosClient.post<ShortCodeRedeemResponse>(
-      `/loyalty/accounts/rewards/${shortCode}/redeem`,
-    )
+    await axiosClient.post<ShortCodeRedeemResponse>(`/loyalty/accounts/rewards/${shortCode}/redeem`)
   ).data;
 }

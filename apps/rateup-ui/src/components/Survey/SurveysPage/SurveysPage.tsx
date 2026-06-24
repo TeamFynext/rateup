@@ -1,9 +1,6 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
@@ -38,18 +35,10 @@ export function SurveysPage({
   const searchParams = useSearch({ strict: false });
   const action = searchParams.action;
 
-  const [
-    createSurveyOpened,
-    { open: openCreateSurvey, close: closeCreateSurvey },
-  ] = useDisclosure(action === "create");
-  const [
-    surveyTemplatesOpened,
-    { open: openSurveyTemplates, close: closeSurveyTemplates },
-  ] = useDisclosure(false);
-  const [
-    mergeSurveyOpened,
-    { open: openMergeSurvey, close: closeMergeSurveyModal },
-  ] = useDisclosure(false);
+  const [createSurveyOpened, { open: openCreateSurvey, close: closeCreateSurvey }] = useDisclosure(
+    action === "create",
+  );
+  const [surveyTemplatesOpened, { close: closeSurveyTemplates }] = useDisclosure(false);
   const [sortOption, setSortOption] = useState("latest");
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
@@ -58,40 +47,31 @@ export function SurveysPage({
 
   const [template, setTemplate] = useState(null);
 
-  const {
-    data: teamRes,
-    isLoading: teamsLoading,
-    isError,
-    error,
-  } = useTeamsByUser();
+  const { data: teamRes } = useTeamsByUser();
 
   useEffect(() => {
     if (createSurveyOpened === false) {
-      surveyType === "web"
-        ? navigate({
-            to: `/dashboard/surveys`,
-          })
-        : navigate({
-            to: `/dashboard/whatsapp`,
-          });
+      if (surveyType === "web") {
+        navigate({
+          to: `/dashboard/surveys`,
+        });
+      } else {
+        navigate({
+          to: `/dashboard/whatsapp`,
+        });
+      }
     }
   }, [createSurveyOpened]);
 
   // ----------close merge survey modal ---------
-  const closeMergeSurvey = () => {
-    setSurveyIdArray([]);
-    closeMergeSurveyModal();
-  };
 
   const surveys =
     selectedTeamId === "all" || !selectedTeamId
       ? allSurveys
-      : allSurveys?.filter((s: Survey) =>
-          s?.teams?.some((team) => team?.id === selectedTeamId),
-        );
+      : allSurveys?.filter((s: Survey) => s?.teams?.some((team) => team?.id === selectedTeamId));
   // --------handle check box click ----------
 
-  const handleCheckBox = (e, surveyid, checked) => {
+  const handleCheckBox = (e, surveyid, _checked) => {
     e.stopPropagation();
     if (surveyidArray.includes(surveyid)) {
       setSurveyIdArray(surveyidArray.filter((id) => id !== surveyid));
@@ -117,9 +97,7 @@ export function SurveysPage({
     sortOption,
   );
 
-  const filteredSurvey = sortedSurveys.filter((s) =>
-    s.title.includes(searchQuery),
-  );
+  const filteredSurvey = sortedSurveys.filter((s) => s.title.includes(searchQuery));
 
   return (
     <div className="flex flex-col gap-2 h-full">
@@ -129,12 +107,8 @@ export function SurveysPage({
         filterParam={filterParam}
         setFilterParam={setFilterParam}
         openCreateSurvey={openCreateSurvey}
-        openMergeSurvey={openMergeSurvey}
         onSortChange={setSortOption}
         sortOption={sortOption} //
-        surveyCount={surveyidArray.length}
-        surveyType={surveyType}
-        refetch={refetch}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />

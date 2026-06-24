@@ -18,12 +18,10 @@
   margin-bottom: 0.3125rem;
 }
 
-.width-height-inputs-container
-  :global(.mantine-NumberInput-control:nth-child(1)) {
+.width-height-inputs-container :global(.mantine-NumberInput-control:nth-child(1)) {
   border-top-right-radius: 1rem;
 }
 
-.width-height-inputs-container
-  :global(.mantine-NumberInput-control:nth-child(2)) {
+.width-height-inputs-container :global(.mantine-NumberInput-control:nth-child(2)) {
   border-bottom-right-radius: 1rem;
 }

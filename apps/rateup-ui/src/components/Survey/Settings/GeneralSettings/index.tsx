@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import {
   Box,
   CheckIcon,
@@ -17,6 +13,7 @@ import {
 } from "@mantine/core";
 import { hasLength, isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
@@ -27,15 +24,10 @@ import InfoButton from "../../../Button/InfoButton.tsx";
 import { RateupButtonBlue } from "../../../Button/RateupButtons.tsx";
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput.tsx";
 import PaperLayout from "../../../styled/Layouts/PaperLayout.tsx";
+
 import styles from "./GeneralSettings.module.css";
 
-const Languages = new Set([
-  "English",
-  "Malayalam",
-  "Hindi",
-  "Kannada",
-  "Tamil",
-]);
+const Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
   const { t: translations } = useTranslation();
   const settingsForm = useForm({
@@ -47,14 +39,8 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
     },
     validate: {
       title: isNotEmpty(translations("Cannot be Empty")),
-      languages: hasLength(
-        { min: 1 },
-        translations("Must contain atleast one language"),
-      ),
-      teams: hasLength(
-        { min: 1 },
-        translations("Must contain atleast one team"),
-      ),
+      languages: hasLength({ min: 1 }, translations("Must contain atleast one language")),
+      teams: hasLength({ min: 1 }, translations("Must contain atleast one team")),
     },
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +51,7 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
     editSurvey.mutate(values, {
       onSettled: () => {
         setIsLoading(false);
-        setSelectedLanguage && setSelectedLanguage(values.languages[0]);
+        if (setSelectedLanguage) setSelectedLanguage(values.languages[0]);
       },
     });
   };
@@ -85,16 +71,11 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
   }, [languages]);
 
   return (
-    <PaperLayout
-      className={`${styles["general-settings-root-div"]} section-div`}
-    >
+    <PaperLayout className={`${styles["general-settings-root-div"]} section-div`}>
       <Box className={styles["heading-and-desc-container"]}>
         <Grid style={{ marginBottom: "1rem" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <h2
-              className={"settings-section-heading"}
-              style={{ marginRight: "1rem" }}
-            >
+            <h2 className={"settings-section-heading"} style={{ marginRight: "1rem" }}>
               {translations("Survey Settings")}
             </h2>
             <InfoButton docUrl={`${docsPath}/webSurvey/shareSurvey`} />
@@ -107,10 +88,7 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
       <form
         onSubmit={settingsForm.onSubmit(handleSubmit)}
         onKeyDown={getHotkeyHandler([
-          [
-            SAVE_HOTKEY,
-            (event: any) => settingsForm.onSubmit(handleSubmit)(event),
-          ],
+          [SAVE_HOTKEY, (event: any) => settingsForm.onSubmit(handleSubmit)(event)],
         ])}
         className={styles["form"]}
       >
@@ -197,9 +175,7 @@ function MultiSelectCreatable({ value, setValue, errors }: iProps) {
       setSearch("");
     } else {
       setValue((current) =>
-        current.includes(val)
-          ? current.filter((v) => v !== val)
-          : [...current, val],
+        current.includes(val) ? current.filter((v) => v !== val) : [...current, val],
       );
     }
   };
@@ -230,11 +206,7 @@ function MultiSelectCreatable({ value, setValue, errors }: iProps) {
     ));
 
   return (
-    <Combobox
-      store={combobox}
-      onOptionSubmit={handleValueSelect}
-      withinPortal={false}
-    >
+    <Combobox store={combobox} onOptionSubmit={handleValueSelect} withinPortal={false}>
       <Combobox.DropdownTarget>
         <PillsInput
           error={errors ? errors : false}
@@ -277,11 +249,9 @@ function MultiSelectCreatable({ value, setValue, errors }: iProps) {
             </Combobox.Option>
           )}
 
-          {exactOptionMatch &&
-            search.trim().length > 0 &&
-            options.length === 0 && (
-              <Combobox.Empty>Nothing found</Combobox.Empty>
-            )}
+          {exactOptionMatch && search.trim().length > 0 && options.length === 0 && (
+            <Combobox.Empty>Nothing found</Combobox.Empty>
+          )}
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>

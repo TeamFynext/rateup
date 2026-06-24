@@ -1,28 +1,12 @@
-"use client";
-
+import { Link } from "@tanstack/react-router";
+import { Activity, ChevronsUpDown, Circle, CircleX, LogOut } from "lucide-react";
 import type { JSX } from "react";
 import { startTransition, useCallback, useMemo, useOptimistic } from "react";
 
-import { Link } from "@tanstack/react-router";
-import {
-  Activity,
-  ChevronsUpDown,
-  Circle,
-  CircleX,
-  LogOut,
-} from "lucide-react";
-
 import type { IUserInfoApiResponse } from "@/backend/user/user.api";
-import {
-  UserAvailabilityStatus,
-  UserPresenceMode,
-} from "@/backend/user/user.api";
+import { UserAvailabilityStatus, UserPresenceMode } from "@/backend/user/user.api";
 import { useUpdateUserAvailabilityStatus } from "@/backend/user/user.query";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,10 +70,7 @@ const getStatusRing = (status: UserAvailabilityStatus): string => {
   }
 };
 
-const getStatusOption = (
-  presenceMode: UserPresenceMode,
-  status: UserAvailabilityStatus,
-) => {
+const getStatusOption = (presenceMode: UserPresenceMode, status: UserAvailabilityStatus) => {
   if (presenceMode === UserPresenceMode.automatic) {
     return statusOptions.find((opt) => opt.value === "automatic");
   } else {
@@ -115,10 +96,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
   }));
   const updateUserAvailabilityStatus = useUpdateUserAvailabilityStatus();
 
-  const statusRing = useMemo(
-    () => getStatusRing(optimisticUser.status),
-    [optimisticUser.status],
-  );
+  const statusRing = useMemo(() => getStatusRing(optimisticUser.status), [optimisticUser.status]);
   const currentStatusOption = useMemo(
     () => getStatusOption(optimisticUser.presenceMode, optimisticUser.status),
     [optimisticUser.status, optimisticUser.presenceMode],
@@ -131,9 +109,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
           ? UserAvailabilityStatus.online
           : (newStatus as UserAvailabilityStatus);
       const presenceMode =
-        newStatus === "automatic"
-          ? UserPresenceMode.automatic
-          : UserPresenceMode.manual;
+        newStatus === "automatic" ? UserPresenceMode.automatic : UserPresenceMode.manual;
 
       addOptimisticUser({ status, presenceMode });
 
@@ -171,10 +147,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton className="w-8 mx-auto data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:h-8 md:p-0 rounded-lg">
               <Avatar className="h-8 w-8 rounded-lg text-accent-foreground">
-                <AvatarImage
-                  src={getFileUrlFromKey(user.profilePhoto)}
-                  alt={user.userName}
-                />
+                <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} alt={user.userName} />
                 <AvatarFallback className="rounded-lg uppercase">
                   {user.userName?.slice(0, 2)}
                 </AvatarFallback>
@@ -195,10 +168,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className={`h-8 w-8 rounded-lg ${statusRing}`}>
-                  <AvatarImage
-                    src={getFileUrlFromKey(user.profilePhoto)}
-                    alt={user.userName}
-                  />
+                  <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} alt={user.userName} />
                   <AvatarFallback className="rounded-lg uppercase">
                     {user.userName?.slice(0, 2)}
                   </AvatarFallback>
@@ -224,11 +194,9 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
                   <DropdownMenuSubContent>
                     {statusOptions.map((opt) => {
                       const isActive =
-                        (optimisticUser.presenceMode ===
-                          UserPresenceMode.automatic &&
+                        (optimisticUser.presenceMode === UserPresenceMode.automatic &&
                           opt.value === "automatic") ||
-                        (optimisticUser.presenceMode ===
-                          UserPresenceMode.manual &&
+                        (optimisticUser.presenceMode === UserPresenceMode.manual &&
                           optimisticUser.status === opt.value);
 
                       return (
@@ -238,9 +206,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
                             e.preventDefault();
                             handleStatusChange(opt.value);
                           }}
-                          className={
-                            isActive ? "bg-accent text-accent-foreground" : ""
-                          }
+                          className={isActive ? "bg-accent text-accent-foreground" : ""}
                         >
                           {opt.icon}
                           {opt.label}

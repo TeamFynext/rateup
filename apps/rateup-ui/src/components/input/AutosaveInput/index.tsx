@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-
 import { Box, Button, Loader, Textarea, TextInput } from "@mantine/core";
 import { IconPencil } from "@tabler/icons-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -39,14 +36,14 @@ function AutosaveInput({
   }, [inputRef.current]);
 
   const handleInputBlur = useCallback(
-    async (e) => {
+    async (_e) => {
       setIsInputBeingEdited(false);
       if (inputState !== value) {
         setIsSavingText(true);
         try {
           await onSave(inputState, name);
           if (showToasts) toast.success(translations("Saved Changes"));
-        } catch (err) {
+        } catch {
           setInputState(value);
           if (showToasts) toast.error(translations("Failed to Save Changes"));
         }
@@ -84,9 +81,7 @@ function AutosaveInput({
     componentToBeRendered = (
       <Button
         className={`${styles["auto-save-input-edit-btn"]} auto-save-input-edit-btn`}
-        rightSection={
-          isSavingText ? <Loader size={"1rem"} /> : <IconPencil size={"1rem"} />
-        }
+        rightSection={isSavingText ? <Loader size={"1rem"} /> : <IconPencil size={"1rem"} />}
         onClick={handleEditBtnClick}
         style={style}
       >
@@ -125,9 +120,7 @@ function AutosaveInput({
   }
 
   return (
-    <Box
-      className={`${styles["auto-save-input-div"]} auto-save-input-div  ${className}`}
-    >
+    <Box className={`${styles["auto-save-input-div"]} auto-save-input-div  ${className}`}>
       {componentToBeRendered}
     </Box>
   );

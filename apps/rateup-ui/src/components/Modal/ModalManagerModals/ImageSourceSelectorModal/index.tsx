@@ -1,10 +1,7 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Button, FileButton, Group } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconBrandUnsplash, IconUpload } from "@tabler/icons-react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import { mmImageCropModalClassnames } from "@/utils/constants.ts";
@@ -12,7 +9,7 @@ import { mmImageCropModalClassnames } from "@/utils/constants.ts";
 import commonStyles from "../mmCommonStyles.module.css";
 import styles from "./ImageSourceSelectorModal.module.css";
 
-function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
+function ImageSourceSelectorModal({ context: _context, id: _thisModalId, innerProps }) {
   const { onImageSelected, forDevice } = innerProps;
   const aspectRatio = forDevice === "desktop" ? 16 / 9 : 9 / 16;
   const { t: translations } = useTranslation();
@@ -63,11 +60,7 @@ function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
       <FileButton onChange={handleFileBtnValueChange}>
         {(props) => {
           return (
-            <Button
-              className={styles["card"]}
-              {...props}
-              rightSection={<IconUpload size={16} />}
-            >
+            <Button className={styles["card"]} {...props} rightSection={<IconUpload size={16} />}>
               {translations("Upload from Device")}
             </Button>
           );

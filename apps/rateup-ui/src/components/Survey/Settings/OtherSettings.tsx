@@ -1,10 +1,7 @@
-"use client";
-
-import React, { useContext, useEffect, useState } from "react";
-
 import { Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useNavigate, useParams } from "@tanstack/react-router";
+import React, { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -20,10 +17,8 @@ import PaperLayout from "../../styled/Layouts/PaperLayout.tsx";
 
 const OtherSettings = () => {
   const [opened, { open, close }] = useDisclosure(false);
-  const [
-    deleteModalOpened,
-    { open: openDeleteModal, close: closeDeleteModal },
-  ] = useDisclosure(false);
+  const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] =
+    useDisclosure(false);
   const params = useParams({
     strict: false,
   });

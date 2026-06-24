@@ -1,10 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type {
-  IUpdateTicketRequest,
-  IUpdateTicketStatusRequest,
-} from "./tickets";
+import type { IUpdateTicketRequest, IUpdateTicketStatusRequest } from "./tickets";
 import type { Board } from "./tickets.api";
 import {
   createBoard,
@@ -36,7 +33,7 @@ import {
 } from "./tickets.api";
 
 // get all tickets
-const useTickets = () =>
+const _useTickets = () =>
   useQuery({
     enabled: true,
     queryKey: ["tickets"],
@@ -66,7 +63,7 @@ export const useCreateTicketMutation = () => {
 };
 
 // get single ticket
-const useTicket = (id: string) =>
+const _useTicket = (id: string) =>
   useQuery({
     enabled: !!id,
     queryKey: ["ticket", id],
@@ -74,7 +71,7 @@ const useTicket = (id: string) =>
   });
 
 // update ticket status
-const useUpdateTicketStatusMutation = (ticketId?: string) => {
+const _useUpdateTicketStatusMutation = (ticketId?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: IUpdateTicketStatusRequest) => {
@@ -99,7 +96,7 @@ const useUpdateTicketStatusMutation = (ticketId?: string) => {
 };
 
 // update ticket
-const useUpdateTicketMutation = (id) => {
+const _useUpdateTicketMutation = (id) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: IUpdateTicketRequest) => {
@@ -121,12 +118,12 @@ const useUpdateTicketMutation = (id) => {
   });
 };
 
-function useDeleteTicket() {
+function _useDeleteTicket() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: string) => deleteTicket(id),
-    onSuccess: (response) => {
+    onSuccess: (_response) => {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       queryClient.invalidateQueries({ queryKey: ["allresponses"] });
       queryClient.invalidateQueries({ queryKey: ["waTickets"] });
@@ -396,9 +393,7 @@ export function useBoard(boardId: string) {
 
       if (previousBoard) {
         // Create a copy of the board to make optimistic updates
-        const optimisticBoard = JSON.parse(
-          JSON.stringify(previousBoard),
-        ) as Board;
+        const optimisticBoard = JSON.parse(JSON.stringify(previousBoard)) as Board;
 
         // Find source and target columns
         const sourceColumnIndex = optimisticBoard.ticketColumns.findIndex(
@@ -411,16 +406,13 @@ export function useBoard(boardId: string) {
         if (sourceColumnIndex >= 0 && targetColumnIndex >= 0) {
           // Find the card to move
 
-          const cardIndex = optimisticBoard.ticketColumns[
-            sourceColumnIndex
-          ].ticketCards.findIndex((card) => card.id === params.cardId);
+          const cardIndex = optimisticBoard.ticketColumns[sourceColumnIndex].ticketCards.findIndex(
+            (card) => card.id === params.cardId,
+          );
 
           if (cardIndex >= 0) {
             // Get the card
-            const card =
-              optimisticBoard.ticketColumns[sourceColumnIndex].ticketCards[
-                cardIndex
-              ];
+            const card = optimisticBoard.ticketColumns[sourceColumnIndex].ticketCards[cardIndex];
 
             // Create an updated version with movement activity
             const updatedCard = {
@@ -433,25 +425,18 @@ export function useBoard(boardId: string) {
                   user: "you",
                   timestamp: new Date(),
                   details: {
-                    columnName:
-                      optimisticBoard.ticketColumns[targetColumnIndex].title,
-                    sourceColumnName:
-                      optimisticBoard.ticketColumns[sourceColumnIndex].title,
+                    columnName: optimisticBoard.ticketColumns[targetColumnIndex].title,
+                    sourceColumnName: optimisticBoard.ticketColumns[sourceColumnIndex].title,
                   },
                 },
               ],
             };
 
             // Remove from source
-            optimisticBoard.ticketColumns[sourceColumnIndex].ticketCards.splice(
-              cardIndex,
-              1,
-            );
+            optimisticBoard.ticketColumns[sourceColumnIndex].ticketCards.splice(cardIndex, 1);
 
             // Add to target
-            optimisticBoard.ticketColumns[targetColumnIndex].ticketCards.push(
-              updatedCard,
-            );
+            optimisticBoard.ticketColumns[targetColumnIndex].ticketCards.push(updatedCard);
 
             // Update the query cache with our optimistic board
             queryClient.setQueryData(["board", boardId], optimisticBoard);
@@ -491,9 +476,7 @@ export function useBoard(boardId: string) {
 
       if (previousBoard) {
         // Create a copy of the board to make optimistic updates
-        const optimisticBoard = JSON.parse(
-          JSON.stringify(previousBoard),
-        ) as Board;
+        const optimisticBoard = JSON.parse(JSON.stringify(previousBoard)) as Board;
 
         // Find column
         const columnIndex = optimisticBoard.ticketColumns.findIndex(
@@ -549,16 +532,12 @@ export function useBoard(boardId: string) {
 
       if (previousBoard) {
         // Create a copy of the board to make optimistic updates
-        const optimisticBoard = JSON.parse(
-          JSON.stringify(previousBoard),
-        ) as Board;
+        const optimisticBoard = JSON.parse(JSON.stringify(previousBoard)) as Board;
 
         // Create a new columns array in the order specified by the params
         const orderedColumns = params.columns.map((columnOrder) => {
           // Find the column in the original columns array
-          const column = optimisticBoard.ticketColumns.find(
-            (c) => c.id === columnOrder.id,
-          );
+          const column = optimisticBoard.ticketColumns.find((c) => c.id === columnOrder.id);
           return column; // Using ! because we know the column exists
         });
 

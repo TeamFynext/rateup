@@ -14,8 +14,8 @@ const QrWorkFlow = () => {
             Get Started in Minutes
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl">
-            Launch your first interactive QR code campaign quickly and easily
-            with our intuitive platform.
+            Launch your first interactive QR code campaign quickly and easily with our intuitive
+            platform.
           </p>
         </div>
 
@@ -40,9 +40,7 @@ const QrWorkFlow = () => {
                 )}
 
                 {/* Title & Description */}
-                <h3 className="text-xl font-semibold text-[#0F172A] mb-2">
-                  {step.title}
-                </h3>
+                <h3 className="text-xl font-semibold text-[#0F172A] mb-2">{step.title}</h3>
                 <p className="text-gray-600 text-sm">{step.description}</p>
               </div>
             ))}

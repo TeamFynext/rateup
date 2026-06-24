@@ -26,7 +26,7 @@ export function useCreateLifeCycleMutation() {
       });
     },
     onError: (error) => {
-      toast.error(error?.message || error?.message, {
+      toast.error(error?.message || "An error occurred", {
         id: "c-life-cycle",
       });
     },
@@ -48,7 +48,7 @@ export function useUpdateLifeCycleMutation() {
       });
     },
     onError: (error) => {
-      toast.error(error?.message || error?.message, {
+      toast.error(error?.message || "An error occurred", {
         id: "c-life-cycle",
       });
     },
@@ -69,7 +69,7 @@ export function useDeleteLifeCycleMutation() {
       });
     },
     onError: (error) => {
-      toast.error(error?.message || error?.message, {
+      toast.error(error?.message || "An error occurred", {
         id: "c-life-cycle",
       });
     },
@@ -97,7 +97,7 @@ export function useReorderLifeCycleMutation() {
       });
     },
     onError: (error) => {
-      toast.error(error?.message || error?.message, {
+      toast.error(error?.message || "An error occurred", {
         id: "c-life-cycle",
       });
     },

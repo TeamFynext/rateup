@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useRef } from "react";
-
 import type {
   ColorInputProps,
   FileButtonProps,
@@ -11,13 +7,11 @@ import type {
   NumberInputProps,
   PasswordInputProps,
   SelectProps,
-  SwitchProps,
   TagsInputProps,
   TextareaProps,
   TextInputProps,
 } from "@mantine/core";
 import {
-  ActionIcon,
   Box,
   Button,
   ColorInput,
@@ -27,31 +21,19 @@ import {
   MultiSelect,
   NumberInput,
   PasswordInput,
-  rem,
   Select,
-  Switch,
   TagsInput,
   Text,
   Textarea,
   TextInput,
 } from "@mantine/core";
-import type {
-  DateFormatter,
-  DateInputProps,
-  DatePickerInputProps,
-  DateTimePickerProps,
-  TimeInputProps,
-} from "@mantine/dates";
-import {
-  DateInput,
-  DatePickerInput,
-  DateTimePicker,
-  TimeInput,
-} from "@mantine/dates";
-import { IconClock } from "@tabler/icons-react";
+import type { DateFormatter, DatePickerInputProps, DateTimePickerProps } from "@mantine/dates";
+import { DatePickerInput, DateTimePicker } from "@mantine/dates";
 import dayjs from "dayjs";
+import React from "react";
 
 import { LengthTracker } from "../LengthTracker.tsx";
+
 import classes from "./ContainedInput.module.css";
 
 export const ContainedTextField = React.forwardRef(function ContainedTextField(
@@ -84,9 +66,7 @@ export const ContainedTextInputWithCounter = (props: TextInputProps) => {
         props.max && (
           <LengthTracker
             length={
-              typeof props.value === "string" || Array.isArray(props.value)
-                ? props.value.length
-                : 0
+              typeof props.value === "string" || Array.isArray(props.value) ? props.value.length : 0
             }
             maxValue={props.max as number}
           />
@@ -122,22 +102,13 @@ export function ContainedTextArea(props: TextareaProps) {
 }
 
 export function ContainedSelection(props: SelectProps) {
-  return (
-    <Select
-      comboboxProps={{ withinPortal: true }}
-      classNames={classes}
-      {...props}
-    />
-  );
+  return <Select comboboxProps={{ withinPortal: true }} classNames={classes} {...props} />;
 }
 
 export function ContainedPasswordInput(props: PasswordInputProps) {
   return <PasswordInput classNames={classes} {...props} />;
 }
 
-function ContainedSwitchInput(props: SwitchProps) {
-  return <Switch classNames={classes} {...props} />;
-}
 export const ContainedFileInput = React.forwardRef(function ContainedFileInput(
   props: FileInputProps,
   ref: React.Ref<HTMLButtonElement>,
@@ -161,9 +132,7 @@ export function ContainedFileButton(props: fileButtonPropsExtend) {
   const { label, error, helperText, ...restProps } = props;
   return (
     <Box mt={"xs"}>
-      <FileButton {...restProps}>
-        {(props) => <Button {...props}>{label}</Button>}
-      </FileButton>
+      <FileButton {...restProps}>{(props) => <Button {...props}>{label}</Button>}</FileButton>
       {error ? (
         <Text c="var(--mantine-color-error)" fz="xs">
           {error}
@@ -195,16 +164,9 @@ const getDayProps = (date) => ({
 });
 
 export function ContainedDateTimePickerInput(props: DateTimePickerProps) {
-  return (
-    <DateTimePicker classNames={classes} getDayProps={getDayProps} {...props} />
-  );
+  return <DateTimePicker classNames={classes} getDayProps={getDayProps} {...props} />;
 }
 
-function ContainedDateInput(props: DateInputProps) {
-  return (
-    <DateInput classNames={classes} getDayProps={getDayProps} {...props} />
-  );
-}
 const formatter: DateFormatter = ({ type, date, locale, format }) => {
   if (!date) return null;
 
@@ -231,28 +193,6 @@ export function ContainedDatePickerInput(props: DatePickerInputProps) {
   );
 }
 
-function ContainedTimeInput(props: Readonly<TimeInputProps>) {
-  const ref = useRef<HTMLInputElement>(null);
-  const isChrome = navigator?.userAgent?.includes("Chrome") ?? false;
-  const pickerControl = (
-    <ActionIcon
-      variant="subtle"
-      color="gray"
-      onClick={() => ref?.current?.showPicker()}
-      disabled={props.disabled}
-    >
-      <IconClock style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-    </ActionIcon>
-  );
-  return (
-    <TimeInput
-      ref={ref}
-      rightSection={isChrome && pickerControl}
-      classNames={classes}
-      {...props}
-    />
-  );
-}
 export function ContainedMultiSelect(props: MultiSelectProps) {
   const { styles, ...restProps } = props;
   return (

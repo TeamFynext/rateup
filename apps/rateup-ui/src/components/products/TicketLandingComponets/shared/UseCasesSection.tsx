@@ -5,9 +5,7 @@ const UseCasesSection = () => {
     <section className="py-20 px-6 lg:px-8 bg-white" id="use-cases">
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-            More Than Just Ticketing
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">More Than Just Ticketing</h2>
           <div className="mt-4 h-1 w-24 bg-[#0041a8] mx-auto"></div>
         </div>
 
@@ -22,9 +20,7 @@ const UseCasesSection = () => {
               >
                 <useCase.icon className="w-7 h-7" />
               </div>
-              <h3 className="text-base font-medium text-center">
-                {useCase.title}
-              </h3>
+              <h3 className="text-base font-medium text-center">{useCase.title}</h3>
             </div>
           ))}
         </div>

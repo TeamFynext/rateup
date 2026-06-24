@@ -1,17 +1,7 @@
-"use client";
-
-import { useCallback, useRef } from "react";
-
-import {
-  Blockquote,
-  Button,
-  FileButton,
-  Group,
-  NavLink,
-  Stack,
-} from "@mantine/core";
+import { Blockquote, Button, FileButton, Group, NavLink, Stack } from "@mantine/core";
 import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
 import classNames from "classnames/bind";
+import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import readXlsxFile from "read-excel-file/browser";
 import { toast } from "sonner";
@@ -20,20 +10,13 @@ import styles from "./ImportChoices.module.css";
 
 const cx = classNames.bind(styles);
 
-function ImportChoices({
-  mantineFormObj,
-  surveyLanguagesArr,
-  questionObj,
-  handleSave,
-}) {
+function ImportChoices({ mantineFormObj, surveyLanguagesArr, questionObj, handleSave }) {
   const fileButtonResetRef = useRef<() => void>(null);
   const { t: translations } = useTranslation();
   // checks if excel rows has all surveyLanguages columns.
   const areAllSurveyLanguagesColumnsPresent = useCallback((headerRow) => {
     let result = true;
-    const headerRowArr = headerRow.map((languageStr) =>
-      languageStr.toString().toLowerCase(),
-    );
+    const headerRowArr = headerRow.map((languageStr) => languageStr.toString().toLowerCase());
     for (const surveyLanguage of surveyLanguagesArr) {
       if (!headerRowArr.includes(surveyLanguage.toLowerCase())) {
         result = false;
@@ -47,14 +30,9 @@ function ImportChoices({
       if (file) {
         const rows = await readXlsxFile(file);
         const headerRow = rows[0]?.data;
-        const areAllSurveyLangsColsPresent =
-          areAllSurveyLanguagesColumnsPresent(headerRow);
+        const areAllSurveyLangsColsPresent = areAllSurveyLanguagesColumnsPresent(headerRow);
         if (!areAllSurveyLangsColsPresent) {
-          toast.error(
-            translations(
-              "Please add all survey languages columns in excel file",
-            ),
-          );
+          toast.error(translations("Please add all survey languages columns in excel file"));
           return;
         }
         // Format => { English: Set("choice1", "choice 2") }
@@ -68,23 +46,19 @@ function ImportChoices({
             const newSet = new Set();
             if (questionObj.choices) {
               const existingOptionsStrsArr =
-                questionObj.choices[surveyLanguage]?.map((obj) => obj.value) ||
-                [];
+                questionObj.choices[surveyLanguage]?.map((obj) => obj.value) || [];
               for (const str of existingOptionsStrsArr) newSet.add(str);
             }
             choiceStringsSets[surveyLanguage] = newSet;
           }
           const surveyLanguageColIndexInHeaderRow = headerRow.findIndex(
-            (language) =>
-              language.toString().toLowerCase() ===
-              surveyLanguage.toLowerCase(),
+            (language) => language.toString().toLowerCase() === surveyLanguage.toLowerCase(),
           );
           if (
             surveyLanguageColIndexInHeaderRow >= 0 &&
             !columnLanguageObj[surveyLanguageColIndexInHeaderRow]
           ) {
-            columnLanguageObj[surveyLanguageColIndexInHeaderRow] =
-              surveyLanguage;
+            columnLanguageObj[surveyLanguageColIndexInHeaderRow] = surveyLanguage;
           }
         }
         for (let i = 1; i < rows.length; i++) {
@@ -140,9 +114,7 @@ function ImportChoices({
         <Stack className={cx("blockquote-container")}>
           <Blockquote icon={<IconInfoCircle />} iconSize={"1.25rem"}>
             <span>
-              {translations(
-                "Column headings in Excel file should be the selected language key.",
-              )}
+              {translations("Column headings in Excel file should be the selected language key.")}
             </span>
             <NavLink
               href={`${import.meta.env.VITE_CLOUDFRONT_WEB_IMAGES_URL}/File/multiple-choice-questions-choices-demo.xlsx`}

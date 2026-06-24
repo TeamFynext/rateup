@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 import { useForm } from "@mantine/form";
 import {
   IconBrandInstagram,
@@ -15,11 +11,10 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import type { WaAutomatedReply } from "@/types/global";
-import { AutomationPlatform } from "@/types/platform.ts";
 import {
   useCreateWaAutomatedReplyMutation,
   useUpdateWaAutomatedReplyMutation,
@@ -60,6 +55,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip.tsx";
+import type { WaAutomatedReply } from "@/types/global";
+import { AutomationPlatform } from "@/types/platform.ts";
 
 import { DEMO_TEMPLATES } from "./demoTemplates.ts";
 
@@ -72,12 +69,7 @@ interface TemplatePickerProps {
   platform?: AutomationPlatform;
 }
 
-function TemplatePicker({
-  open,
-  onClose,
-  onSelect,
-  platform,
-}: Readonly<TemplatePickerProps>) {
+function TemplatePicker({ open, onClose, onSelect, platform }: Readonly<TemplatePickerProps>) {
   // FIX: search state persists across dialog open/close via useRef-backed state
   const searchRef = useRef("");
   const [search, setSearch] = useState("");
@@ -100,9 +92,7 @@ function TemplatePicker({
       (!platform || template.platform === platform) &&
       (template.name.toLowerCase().includes(search.toLowerCase()) ||
         template.description.toLowerCase().includes(search.toLowerCase()) ||
-        template.tags.some((tag) =>
-          tag.toLowerCase().includes(search.toLowerCase()),
-        ))
+        template.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase())))
     );
   });
 
@@ -115,9 +105,7 @@ function TemplatePicker({
     }
   }
 
-  const selectedTemplate = DEMO_TEMPLATES.find(
-    (template) => template.id === selected,
-  );
+  const selectedTemplate = DEMO_TEMPLATES.find((template) => template.id === selected);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -159,13 +147,8 @@ function TemplatePicker({
         <div className="flex-1 overflow-y-auto px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filtered.length === 0 && (
             <div className="col-span-2 flex flex-col items-center justify-center py-12 text-center">
-              <IconTemplate
-                size={32}
-                className="text-muted-foreground/40 mb-3"
-              />
-              <p className="text-sm font-medium text-muted-foreground">
-                {t("No templates found")}
-              </p>
+              <IconTemplate size={32} className="text-muted-foreground/40 mb-3" />
+              <p className="text-sm font-medium text-muted-foreground">{t("No templates found")}</p>
               <p className="text-xs text-muted-foreground/70 mt-1">
                 {t("Try a different search term")}
               </p>
@@ -193,10 +176,7 @@ function TemplatePicker({
 
                     {/* FIX: Larger, readable badges + node count info */}
                     <div className="flex flex-wrap gap-1.5 mt-3">
-                      <Badge
-                        variant="secondary"
-                        className="text-xs px-2 py-0.5"
-                      >
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5">
                         {tpl.platform === AutomationPlatform.WHATSAPP ? (
                           <span className="flex items-center gap-1">
                             <IconBrandWhatsapp size={11} /> {t("WhatsApp")}
@@ -208,11 +188,7 @@ function TemplatePicker({
                         )}
                       </Badge>
                       {tpl.tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="outline"
-                          className="text-xs px-2 py-0.5"
-                        >
+                        <Badge key={tag} variant="outline" className="text-xs px-2 py-0.5">
                           {tag}
                         </Badge>
                       ))}
@@ -249,9 +225,7 @@ function TemplatePicker({
             {selectedTemplate ? (
               <span>
                 {t("Selected:")}{" "}
-                <span className="font-medium text-foreground">
-                  {selectedTemplate.name}
-                </span>
+                <span className="font-medium text-foreground">{selectedTemplate.name}</span>
               </span>
             ) : (
               <span>{t("No template selected")}</span>
@@ -261,12 +235,7 @@ function TemplatePicker({
             <Button type="button" variant="outline" size="sm" onClick={onClose}>
               {t("Cancel")}
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              disabled={!selected}
-              onClick={handleApply}
-            >
+            <Button type="button" size="sm" disabled={!selected} onClick={handleApply}>
               {t("Use Template")}
             </Button>
           </div>
@@ -284,11 +253,7 @@ interface ConfirmDiscardProps {
   onCancel: () => void;
 }
 
-function ConfirmDiscardDialog({
-  open,
-  onConfirm,
-  onCancel,
-}: Readonly<ConfirmDiscardProps>) {
+function ConfirmDiscardDialog({ open, onConfirm, onCancel }: Readonly<ConfirmDiscardProps>) {
   const { t } = useTranslation();
 
   return (
@@ -297,21 +262,14 @@ function ConfirmDiscardDialog({
         <DialogHeader>
           <DialogTitle>{t("Discard Changes?")}</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            {t(
-              "You have unsaved changes. Are you sure you want to discard them?",
-            )}
+            {t("You have unsaved changes. Are you sure you want to discard them?")}
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2 mt-2">
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             {t("Keep Editing")}
           </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            onClick={onConfirm}
-          >
+          <Button type="button" variant="destructive" size="sm" onClick={onConfirm}>
             {t("Discard")}
           </Button>
         </div>
@@ -320,34 +278,9 @@ function ConfirmDiscardDialog({
   );
 }
 
-// ─── Main Page ─────────────────────────────────────────────────────────────────
-
-function CreateAutomatedReplyPage() {
-  const { t } = useTranslation();
-
-  return (
-    <div className="space-y-6 p-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {t("Create Chatbot")}
-        </h1>
-        <p className="text-muted-foreground">
-          {t(
-            "Set up automated replies for your WhatsApp or Instagram conversations.",
-          )}
-        </p>
-      </div>
-      <AutomatedReplyForm />
-    </div>
-  );
-}
-
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-function getInitialValues(
-  initialValues?: WaAutomatedReply,
-  forcedPlatform?: AutomationPlatform,
-) {
+function getInitialValues(initialValues?: WaAutomatedReply, forcedPlatform?: AutomationPlatform) {
   if (initialValues) {
     return {
       ...initialValues,
@@ -465,10 +398,7 @@ export function AutomatedReplyForm({
         updateInstagramMutation.mutate(data, {
           onSuccess: () => {
             qc.invalidateQueries({
-              queryKey: [
-                "instagramAutomation",
-                { automationId: waAutomatedReplyId },
-              ],
+              queryKey: ["instagramAutomation", { automationId: waAutomatedReplyId }],
             });
             toast.success(t("Instagram Automation updated successfully"));
             setSaveSuccess(true);
@@ -521,9 +451,7 @@ export function AutomatedReplyForm({
       whatsappSettingsPhoneId: null,
     });
     rootForm.resetDirty();
-    toast.success(
-      t("Template {templateName} applied!", { templateName: template.name }),
-    );
+    toast.success(t("Template {templateName} applied!", { templateName: template.name }));
   }
 
   const isSaving =
@@ -556,11 +484,7 @@ export function AutomatedReplyForm({
         onCancel={() => setConfirmDiscardOpen(false)}
       />
 
-      <form
-        onSubmit={rootForm.onSubmit(handleSubmitClick)}
-        className="space-y-6"
-        noValidate
-      >
+      <form onSubmit={rootForm.onSubmit(handleSubmitClick)} className="space-y-6" noValidate>
         <Card>
           {/* FIX: Template button moved into CardHeader as a secondary action */}
           <CardHeader className="flex flex-row items-start justify-between gap-4">
@@ -594,15 +518,9 @@ export function AutomatedReplyForm({
                     aria-invalid={!!rootForm.errors.name}
                     {...rootForm.getInputProps("name")}
                   />
-                  <FieldDescription>
-                    {t("Give this bot a clear internal name.")}
-                  </FieldDescription>
+                  <FieldDescription>{t("Give this bot a clear internal name.")}</FieldDescription>
                   <FieldError
-                    errors={
-                      nameErrorMessage
-                        ? [{ message: nameErrorMessage }]
-                        : undefined
-                    }
+                    errors={nameErrorMessage ? [{ message: nameErrorMessage }] : undefined}
                   />
                 </FieldContent>
               </Field>
@@ -624,9 +542,7 @@ export function AutomatedReplyForm({
                         )}
                       </TooltipContent>
                     </Tooltip>
-                    <span className="text-xs text-muted-foreground">
-                      ({t("Optional")})
-                    </span>
+                    <span className="text-xs text-muted-foreground">({t("Optional")})</span>
                   </FieldLabel>
                   <FieldContent>
                     <AccountSelector
@@ -660,9 +576,7 @@ export function AutomatedReplyForm({
           {/* Right: Save with proper spinner */}
           <Button type="submit" disabled={isSaving} className="min-w-30">
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {!isSaving && saveSuccess && editMode && (
-              <IconCheck size={16} className="mr-2" />
-            )}
+            {!isSaving && saveSuccess && editMode && <IconCheck size={16} className="mr-2" />}
             {submitLabel}
           </Button>
         </div>

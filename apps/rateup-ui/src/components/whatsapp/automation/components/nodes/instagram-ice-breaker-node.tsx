@@ -1,10 +1,7 @@
-"use client";
-
-import { memo } from "react";
-
 import { IconInputSpark } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 import { Handle, Position } from "@xyflow/react";
+import { memo } from "react";
 
 import BaseNode from "./base-node.tsx";
 

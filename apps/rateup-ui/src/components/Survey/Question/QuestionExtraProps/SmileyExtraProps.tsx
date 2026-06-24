@@ -1,25 +1,14 @@
-"use client";
-
-import React from "react";
-
-import {
-  ActionIcon,
-  Collapse,
-  Flex,
-  Group,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { ActionIcon, Collapse, Flex, Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import React from "react";
 
-import { SmileyResponse } from "@/types/enums.ts";
 import {
   ContainedColorInput,
   ContainedSelection,
 } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
+import { SmileyResponse } from "@/types/enums.ts";
 
 import { getSmileyIcon } from "../../TakeSurvey/TakeSurveyComponent/SmileyRating/index.tsx";
 
@@ -48,8 +37,7 @@ const SmileyExtraProps = ({ form }) => {
     if (
       field === "colorType" &&
       value === SmileyColorType.Gradient &&
-      (!features?.iconStyle?.gradientStartColor ||
-        !features?.iconStyle?.gradientEndColor)
+      (!features?.iconStyle?.gradientStartColor || !features?.iconStyle?.gradientEndColor)
     ) {
       updateData["gradientStartColor"] = "#ff0000";
       updateData["gradientEndColor"] = "#00ff00";
@@ -143,13 +131,10 @@ const SmileyExtraProps = ({ form }) => {
       </Group>
 
       <Collapse expanded={opened}>
-        {features?.iconStyle?.variant ===
-        SmileyVariantStyle.Emojis ? null : features?.iconStyle?.variant ===
-          SmileyVariantStyle.Custom ? (
+        {features?.iconStyle?.variant === SmileyVariantStyle.Emojis ? null : features?.iconStyle
+            ?.variant === SmileyVariantStyle.Custom ? (
           <Stack>
-            <Text size="sm">
-              Click on each smiley to insert corresponding emoji
-            </Text>
+            <Text size="sm">Click on each smiley to insert corresponding emoji</Text>
             {Object.values(SmileyResponse)
               .reverse()
               .map((smiley, i) => {
@@ -162,9 +147,7 @@ const SmileyExtraProps = ({ form }) => {
                     <PopoverEmojiPicker
                       showIcon={
                         features?.iconStyle?.emojies?.[i + 1] ? (
-                          <Text size={"md"}>
-                            {features?.iconStyle?.emojies?.[i + 1]}
-                          </Text>
+                          <Text size={"md"}>{features?.iconStyle?.emojies?.[i + 1]}</Text>
                         ) : null
                       }
                       onEmojiClick={(emoji) => updateSmileyEmoji(i + 1, emoji)}
@@ -216,15 +199,12 @@ function hexToRgb(hex) {
 }
 
 function rgbToHex(r, g, b) {
-  return (
-    "#" +
-    ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()
-  );
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
 }
 
 export function generateGradient(startColor, endColor, steps, defaultColor) {
   if (!startColor || !endColor) {
-    return Array.from({ length: steps }, (_, i) => defaultColor);
+    return Array.from({ length: steps }, (_, _i) => defaultColor);
   }
   const startRGB = hexToRgb(startColor);
   const endRGB = hexToRgb(endColor);
@@ -232,15 +212,9 @@ export function generateGradient(startColor, endColor, steps, defaultColor) {
   const gradientColors = [startColor];
 
   for (let i = 1; i <= steps; i++) {
-    const r = Math.round(
-      startRGB[0] + stepFactor * i * (endRGB[0] - startRGB[0]),
-    );
-    const g = Math.round(
-      startRGB[1] + stepFactor * i * (endRGB[1] - startRGB[1]),
-    );
-    const b = Math.round(
-      startRGB[2] + stepFactor * i * (endRGB[2] - startRGB[2]),
-    );
+    const r = Math.round(startRGB[0] + stepFactor * i * (endRGB[0] - startRGB[0]));
+    const g = Math.round(startRGB[1] + stepFactor * i * (endRGB[1] - startRGB[1]));
+    const b = Math.round(startRGB[2] + stepFactor * i * (endRGB[2] - startRGB[2]));
     gradientColors.push(rgbToHex(r, g, b));
   }
 

@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { ContactGroupType } from "@/types/enums.ts";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
+import { ContactGroupType } from "@/types/enums.ts";
 
 import {
   addExistingContactsToGroup,
@@ -21,9 +21,7 @@ import {
   updateContactGroupsForContact,
 } from "./contactGroup.api";
 
-export const useContactGroup = (
-  type: ContactGroupType = ContactGroupType.NORMAL,
-) => {
+export const useContactGroup = (type: ContactGroupType = ContactGroupType.NORMAL) => {
   return useQuery({
     queryKey: ["campaignContactGroupsData", type],
     queryFn: () => getContactGroupList(type),
@@ -43,8 +41,7 @@ export const useContactGroupById = (
   const search = searchData ?? "";
   return useQuery({
     queryKey: ["contactGroupById", groupId, pagination, search, sort, filters],
-    queryFn: () =>
-      getContactGroupById(groupId, pagination, search, sort, filters),
+    queryFn: () => getContactGroupById(groupId, pagination, search, sort, filters),
     enabled: !!groupId && enabled,
   });
 };
@@ -74,12 +71,9 @@ export const useCreateContactGroupMutation = () => {
       });
     },
     onError: (error) => {
-      toast.error(
-        error?.message || `${error?.message || "Error creating group"}`,
-        {
-          id: "contact-group-create",
-        },
-      );
+      toast.error(error?.message || `${error?.message || "Error creating group"}`, {
+        id: "contact-group-create",
+      });
     },
   });
 };
@@ -89,18 +83,18 @@ export const useAddNewContactMutation = (groupId: string) => {
   return useMutation({
     mutationFn: (data) => addNewContact({ data, groupId }),
     onSuccess: () => {
-      (queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
-      }),
-        queryClient.invalidateQueries({ queryKey: ["contacts"] }),
-        queryClient.invalidateQueries({
-          queryKey: ["contactGroupsDataByContactId"],
-          exact: false,
-          refetchType: "all",
-        }),
-        toast.success("Added new member successfully.", {
-          id: "contact-group-add-member",
-        }));
+      });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["contactGroupsDataByContactId"],
+        exact: false,
+        refetchType: "all",
+      });
+      toast.success("Added new member successfully.", {
+        id: "contact-group-add-member",
+      });
     },
     onError: (error) => {
       toast.error(error?.message || `Error adding member`, {
@@ -115,13 +109,13 @@ export const useAddNewContactFromCSVMutation = (groupId: string) => {
   return useMutation({
     mutationFn: (data) => addNewContactFromCSV({ data, groupId }),
     onSettled: () => {
-      (queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
-      }),
-        queryClient.invalidateQueries({ queryKey: ["contacts"] }),
-        toast.success("Added new member successfully.", {
-          id: "contact-group-add-member",
-        }));
+      });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success("Added new member successfully.", {
+        id: "contact-group-add-member",
+      });
     },
     onError: (error) => {
       toast.error(error?.message || `Error adding member`, {
@@ -159,8 +153,7 @@ export const useDeleteGroupMutation = () => {
 export const useEditContactGroupMutation = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Partial<ContactGroup>, "tags">) =>
-      updateContactGroup(groupId, data),
+    mutationFn: (data: Omit<Partial<ContactGroup>, "tags">) => updateContactGroup(groupId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
@@ -174,7 +167,7 @@ export const useEditContactGroupMutation = (groupId: string) => {
       //   <IconCheck />,
       // );
     },
-    onError: (error) => {
+    onError: (_error) => {
       // showErrorToast(
       //   `Error updating contact group:
       //   ${error?.message}`,
@@ -247,7 +240,7 @@ export const useRemoveContactsFromGroup = (groupId) => {
   });
 };
 
-const useAddExistingContactToMultipleGroupsMutation = (
+const _useAddExistingContactToMultipleGroupsMutation = (
   groupIds: string[],
   onSuccess: () => void,
 ) => {
@@ -269,18 +262,14 @@ const useAddExistingContactToMultipleGroupsMutation = (
       onSuccess();
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          `${error?.message || "Error adding contacts to groups"}`,
-        {
-          id: "contact-group-add-existing",
-        },
-      );
+      toast.error(error?.message || `${error?.message || "Error adding contacts to groups"}`, {
+        id: "contact-group-add-existing",
+      });
     },
   });
 };
 
-const useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
+const _useDeleteManyContactGroupsMutation = (onSucess: () => void) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteManyContactGroups,
@@ -314,7 +303,7 @@ export const useUpdateContactGroupsForContactMutation = (contactId) => {
       removeGroupIds: string[];
     }) => updateContactGroupsForContact(contactId, addGroupIds, removeGroupIds),
 
-    onSuccess: (_, variables) => {
+    onSuccess: (_, _variables) => {
       queryClient.invalidateQueries({
         queryKey: ["contacts"],
       });

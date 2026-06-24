@@ -1,9 +1,4 @@
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -158,7 +153,7 @@ export function useUpdateMemberProfileMutation() {
   });
 }
 
-function useUpdateUserLanguageMutation(setIsLoading) {
+function _useUpdateUserLanguageMutation(setIsLoading) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: IUpdateUserLanguage) => updateUserLanguage(values),
@@ -271,10 +266,7 @@ export const useUpdateUserPause = () => {
 export const useUpdateUserAvailabilityStatus = () => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (data: {
-      status: UserAvailabilityStatus;
-      presenceMode: UserPresenceMode;
-    }) => {
+    mutationFn: (data: { status: UserAvailabilityStatus; presenceMode: UserPresenceMode }) => {
       toast.loading("Updating status...", {
         id: "user-status",
       });

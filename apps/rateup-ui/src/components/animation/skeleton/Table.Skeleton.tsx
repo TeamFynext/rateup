@@ -1,11 +1,8 @@
-"use client";
-
+import { Skeleton } from "@mantine/core";
 import React from "react";
 
-import { Skeleton } from "@mantine/core";
-
-import useTableLoadingDataCount from "@/hooks/useTableLoadingDataCount.tsx";
 import { TableCell, TableHead, TableRow } from "@/components/ui/table.tsx";
+import useTableLoadingDataCount from "@/hooks/useTableLoadingDataCount.tsx";
 
 const columns = [
   { Header: "Column 1", accessor: "col1" },
@@ -23,11 +20,7 @@ export const TableHeadSkeleton = () => {
     <TableRow>
       {columns.map((_, i) => (
         <TableHead key={i}>
-          <Skeleton
-            height={30}
-            maw={i === 0 ? "30%" : "80%"}
-            miw={i === 0 ? 30 : 80}
-          />
+          <Skeleton height={30} maw={i === 0 ? "30%" : "80%"} miw={i === 0 ? 30 : 80} />
         </TableHead>
       ))}
     </TableRow>
@@ -41,11 +34,7 @@ export const TableBodySkeleton = () => {
         <TableRow key={rowIndex}>
           {columns.map((_, i) => (
             <TableCell key={i}>
-              <Skeleton
-                height={30}
-                maw={i === 0 ? "30%" : "100%"}
-                miw={i === 0 ? 30 : 100}
-              />
+              <Skeleton height={30} maw={i === 0 ? "30%" : "100%"} miw={i === 0 ? 30 : 100} />
             </TableCell>
           ))}
         </TableRow>

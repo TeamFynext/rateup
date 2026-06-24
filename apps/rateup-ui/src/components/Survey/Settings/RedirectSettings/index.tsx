@@ -1,5 +1,3 @@
-"use client";
-
 import { Box, Group, SimpleGrid, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
@@ -30,7 +28,7 @@ function RedirectSettings({
       if (url === "/") return false;
       new URL(url);
       return false;
-    } catch (err) {
+    } catch {
       return true;
     }
   }
@@ -52,9 +50,7 @@ function RedirectSettings({
             <p>
               {kioskMode
                 ? translations("Not available since KioskMode is Enabled")
-                : translations(
-                    "Redirect to a specific url after the user completes the survey",
-                  )}
+                : translations("Redirect to a specific url after the user completes the survey")}
             </p>
           </Box>
         </Group>
@@ -71,23 +67,22 @@ function RedirectSettings({
                 if (e.target.value?.trim()?.length === 0) {
                   return setRedirectError((prev) => ({
                     ...prev,
-                    ...{ url: translations("Url should not be empty") },
+                    url: translations("Url should not be empty"),
                   }));
                 } else if (validateUrl(e.target.value.trim())) {
                   return setRedirectError((prev) => ({
                     ...prev,
-                    ...{
-                      url: translations(
-                        "Enter the Url in Correct format or / for RateUp homepage",
-                      ),
-                    },
+                    url: translations("Enter the Url in Correct format or / for RateUp homepage"),
                   }));
                 }
                 setRedirectError((prev) => ({
                   ...prev,
-                  ...{ url: "" },
+                  url: "",
                 }));
-                const data = { ...redirect, ...{ url: e.target.value } };
+                const data = {
+                  ...redirect,
+                  url: e.target.value,
+                };
                 setRedirect(data);
               }}
               error={redirectError.url}
@@ -103,14 +98,17 @@ function RedirectSettings({
                 if (e < 2 || e > 60) {
                   return setRedirectError((prev) => ({
                     ...prev,
-                    ...{ time: translations("Time must be between 2-60") },
+                    time: translations("Time must be between 2-60"),
                   }));
                 }
                 setRedirectError((prev) => ({
                   ...prev,
-                  ...{ time: "" },
+                  time: "",
                 }));
-                const data = { ...redirect, ...{ time: e } };
+                const data = {
+                  ...redirect,
+                  time: e,
+                };
                 updateRedirect(setRedirect, editSurvey, data);
               }}
               error={redirectError.time}
@@ -131,7 +129,10 @@ function RedirectSettings({
               }
               onClick={() => {
                 if (debounced && !kioskMode && redirect?.enable) {
-                  const data = { ...redirect, ...{ url: debounced } };
+                  const data = {
+                    ...redirect,
+                    url: debounced,
+                  };
                   updateRedirect(setRedirect, editSurvey, data);
                 }
               }}

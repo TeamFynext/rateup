@@ -1,17 +1,4 @@
-"use client";
-
-import React from "react";
-
-import {
-  Button,
-  Flex,
-  Grid,
-  Group,
-  Stack,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { Button, Flex, Grid, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import { PageType, SubscriptionFeaturePathName } from "@/types/enums.ts";
@@ -19,18 +6,11 @@ import { BasicPages, uniquePages } from "@/utils/constants.ts";
 import { getPageTypeLabel } from "@/utils/enums/index.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
-import classes from "../Question/QuestionDetailedView.module.css";
 import { pageIcons } from "./PageIcons.ts";
 
-interface iProps {
-  questions: Question[];
-  handleTypeSelection: (type: PageType) => void;
-}
-const PageTypeSelection = ({
-  handleTypeSelection,
-  questions,
-  subscription,
-}) => {
+import classes from "../Question/QuestionDetailedView.module.css";
+
+const PageTypeSelection = ({ handleTypeSelection, questions, subscription }) => {
   const handleQuestionTypeClick = (type) => {
     handleTypeSelection(type);
   };
@@ -58,16 +38,12 @@ const PageTypeSelection = ({
           onClick={() => handleQuestionTypeClick(type as PageType)}
           disabled={(() => {
             if (type === PageType.Custom) {
-              return hasFeature(
-                subscription,
-                SubscriptionFeaturePathName.HTMLCodePage,
-              )
+              return hasFeature(subscription, SubscriptionFeaturePathName.HTMLCodePage)
                 ? false
                 : true;
             } else {
               return (
-                questions?.filter((q) => q.type === type).length > 0 &&
-                uniquePages.includes(type)
+                questions?.filter((q) => q.type === type).length > 0 && uniquePages.includes(type)
               );
             }
           })()}

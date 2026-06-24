@@ -1,9 +1,6 @@
 import {
-  CampaignParticipantStatus,
-  LoyaltyCampaignType,
   PageType,
   QuestionType,
-  SentimentClass,
   SubscriptionFeaturePathName as sfpn,
   WaFlowFormElementType,
   WaFlowFormNonInputElementType,
@@ -14,10 +11,6 @@ export const AuthMode = {
   LOGIN: "LOGIN",
   SIGNUP: "SIGNUP",
   VERIFY_PHONE_NO: "VERIFY_PHONE_NO",
-};
-
-const UserMode = {
-  GUEST: "GUEST",
 };
 
 export const UserRole = {
@@ -64,9 +57,7 @@ export function getPageTypeLabel(type: PageType) {
       return false;
   }
 }
-export function getQuestionTypeLabel(
-  type: QuestionType | WaFlowFormNonInputElementType,
-) {
+export function getQuestionTypeLabel(type: QuestionType | WaFlowFormNonInputElementType) {
   switch (type) {
     case QuestionType.Rating:
       return "Rating";
@@ -147,19 +138,6 @@ export function getQuestionTypeLabel(
   }
 }
 
-function getSentimentTypeLabel(sentiment: SentimentClass) {
-  switch (sentiment) {
-    case SentimentClass.POSITIVE:
-      return "Positive";
-    case SentimentClass.NEGATIVE:
-      return "Negative";
-    case SentimentClass.NEUTRAL:
-      return "Neutral";
-    default:
-      throw new Error("Invalid Sentiment Type");
-  }
-}
-
 export function getSubscriptionFeatureLabel(feature: sfpn) {
   switch (feature) {
     case sfpn.WebSurvey:
@@ -219,15 +197,6 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
   }
 }
 
-function getLoyaltyCampaignTypeLabel(type: LoyaltyCampaignType): string {
-  switch (type) {
-    case LoyaltyCampaignType.ReferralTransaction:
-      return "Referral Transaction";
-    default:
-      return type;
-  }
-}
-
 export function getWaFlowFormElementTypeLabel(type: WaFlowFormElementType) {
   switch (type) {
     case WaFlowFormElementType.textInput:
@@ -250,24 +219,5 @@ export function getWaFlowFormElementTypeLabel(type: WaFlowFormElementType) {
       return "Opt In";
     default:
       throw new Error("Invalid WaFlowFormElementType" + type);
-  }
-}
-
-function getCampaignParticipantStatusLabel(status: CampaignParticipantStatus) {
-  switch (status) {
-    case CampaignParticipantStatus.PENDING:
-      return "Pending";
-    case CampaignParticipantStatus.SENT:
-      return "Sent";
-    case CampaignParticipantStatus.FAILED:
-      return "Failed";
-    case CampaignParticipantStatus.COMPLETED:
-      return "Completed";
-    case CampaignParticipantStatus.DELIVERED:
-      return "Delivered";
-    case CampaignParticipantStatus.READ:
-      return "Read";
-    default:
-      throw new Error("Invalid CampaignParticipantStatus" + status);
   }
 }

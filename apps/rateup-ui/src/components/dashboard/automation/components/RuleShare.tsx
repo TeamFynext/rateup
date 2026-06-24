@@ -1,9 +1,7 @@
-import React, { useState } from "react";
-
 import { Copy } from "lucide-react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 
-import type { RuleGroup } from "@/types/rule.ts";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR/index.tsx";
@@ -18,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import type { RuleGroup } from "@/types/rule.ts";
 
 interface RuleShareProps {
   groups: RuleGroup[];
@@ -25,11 +24,7 @@ interface RuleShareProps {
   platform?: "WHATSAPP" | "INSTAGRAM" | "FACEBOOK";
 }
 
-const RuleShare: React.FC<RuleShareProps> = ({
-  groups,
-  channels,
-  platform = "WHATSAPP",
-}) => {
+const RuleShare: React.FC<RuleShareProps> = ({ groups, channels, platform = "WHATSAPP" }) => {
   const [shareAccountId, setShareAccountId] = useState<string>("");
   const [shareKeyword, setShareKeyword] = useState<string>("");
   const { data: waSettings } = useWaSettings();
@@ -40,14 +35,10 @@ const RuleShare: React.FC<RuleShareProps> = ({
     .map((c: any) => c.value);
 
   const validKeyword =
-    shareKeyword && keywordOptions.includes(shareKeyword)
-      ? shareKeyword
-      : keywordOptions[0] || "";
+    shareKeyword && keywordOptions.includes(shareKeyword) ? shareKeyword : keywordOptions[0] || "";
 
   const validAccountId =
-    shareAccountId && channels?.includes(shareAccountId)
-      ? shareAccountId
-      : channels?.[0] || "";
+    shareAccountId && channels?.includes(shareAccountId) ? shareAccountId : channels?.[0] || "";
 
   const selectedAccount =
     platform === "WHATSAPP"

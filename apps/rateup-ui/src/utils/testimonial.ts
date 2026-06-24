@@ -1,5 +1,5 @@
-import type { Testimonial, TestimonialStyleType } from "@/types/global";
 import type { filterType } from "@/routes/dashboard/testimonial/$collectionId/index.tsx";
+import type { Testimonial, TestimonialStyleType } from "@/types/global";
 
 export const getFilteredTestimonials = (
   testimonials: Array<Testimonial>,
@@ -25,10 +25,8 @@ function filterByDate(testimonials: Array<Testimonial>, order: string) {
   return order
     ? testimonials?.sort((t1, t2) =>
         order === "new"
-          ? new Date(t2?.createdAt).getTime() -
-            new Date(t1?.createdAt).getTime()
-          : new Date(t1?.createdAt).getTime() -
-            new Date(t2?.createdAt).getTime(),
+          ? new Date(t2?.createdAt).getTime() - new Date(t1?.createdAt).getTime()
+          : new Date(t1?.createdAt).getTime() - new Date(t2?.createdAt).getTime(),
       )
     : testimonials;
 }
@@ -37,34 +35,24 @@ function filterByLength(testimonials: Array<Testimonial>, length: string) {
   return length
     ? testimonials?.sort((t1, t2) =>
         length == "longest"
-          ? t2?.testimonial.testimonial.length -
-            t1?.testimonial.testimonial.length
-          : t1?.testimonial.testimonial.length -
-            t2?.testimonial.testimonial.length,
+          ? t2?.testimonial.testimonial.length - t1?.testimonial.testimonial.length
+          : t1?.testimonial.testimonial.length - t2?.testimonial.testimonial.length,
       )
     : testimonials;
 }
 
 function filterByTeams(testimonials: Array<Testimonial>, teams) {
-  return testimonials?.filter((t) =>
-    teams.length ? teams.includes(t.teamId) : true,
-  );
+  return testimonials?.filter((t) => (teams.length ? teams.includes(t.teamId) : true));
 }
 
 function filterBySurveys(testimonials: Array<Testimonial>, surveys, teams) {
   return testimonials?.filter((t) =>
-    teams?.length
-      ? teams?.includes(t.teamId)
-      : surveys?.length
-        ? surveys.includes(t.survey.id)
-        : t,
+    teams?.length ? teams?.includes(t.teamId) : surveys?.length ? surveys.includes(t.survey.id) : t,
   );
 }
 
 function filterByRating(testimonials: Array<Testimonial>, rating) {
-  return testimonials?.filter((t) =>
-    rating ? t?.testimonial?.rating === rating : t,
-  );
+  return testimonials?.filter((t) => (rating ? t?.testimonial?.rating === rating : t));
 }
 
 export const defaultTestimonialStyle: TestimonialStyleType = {

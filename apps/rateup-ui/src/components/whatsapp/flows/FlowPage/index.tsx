@@ -1,25 +1,18 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Tabs } from "@mantine/core";
 import { useParams, useSearch } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useImmer } from "use-immer";
 
-import { QuestionType, WaFlowStatus } from "@/types/enums.ts";
-import type { WaFlowJson, WaFlowMap } from "@/types/global";
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
-import {
-  useUpdateFlowMutation,
-  useWaFlowFromDb,
-} from "@/backend/whatsapp/flow/flow.query";
+import { useUpdateFlowMutation, useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import { QuestionType, WaFlowStatus } from "@/types/enums.ts";
+import type { WaFlowJson, WaFlowMap } from "@/types/global";
 import { UserRole } from "@/utils/enums/index.ts";
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
 import {
@@ -57,14 +50,12 @@ function FlowPage() {
   const { data: questions } = useQuestions(survey?.id);
   const [map, updateMap] = useImmer<WaFlowMap>(undefined); // map of flowElementName to questionType & also responseId to corresponding response type or value
 
-  const [selectedFormElementId, setSelectedFormElementId] =
-    useState<string>(undefined); // if no question is selected, then show question types list in the right side
+  const [selectedFormElementId, setSelectedFormElementId] = useState<string>(undefined); // if no question is selected, then show question types list in the right side
   const [selectedScreenId, setSelectedScreenId] = useState<string>(undefined); // if no screen is selected, then show screens list in the left side
-  const [selectedLang, setSelectedLang] = useState("en");
+  const [selectedLang] = useState("en");
   const [tab, setTab] = useState(FlowTabEnum.Edit);
   const [previewOpened, setPreviewOpened] = useState(true);
   const { update } = useRouteParams();
-  const { t: translations } = useTranslation();
 
   // initial data
   useEffect(() => {
@@ -119,9 +110,7 @@ function FlowPage() {
             ];
             updateFlowJsonNavigationAndDataPassing(draft, flow);
             questions
-              ?.filter((data) =>
-                Object.values(QuestionType).includes(data.type as QuestionType),
-              )
+              ?.filter((data) => Object.values(QuestionType).includes(data.type as QuestionType))
               .forEach((newQ) => {
                 const newElement = {
                   type: newQ.type as any,
@@ -138,19 +127,14 @@ function FlowPage() {
           }
         }
         if (!draft.screens) draft.screens = [];
-        for (const screen of draft?.screens) {
+        for (const screen of draft.screens) {
           const form = screen.layout.children.find((se) => se.type === "Form");
           for (let i = 0; i < form?.children?.length; i++) {
             const fe = form.children[i];
-            const question = getQuestionFromFlowFormElementName(
-              fe.name,
-              questions,
-              map,
-            );
+            const question = getQuestionFromFlowFormElementName(fe.name, questions, map);
             if (question) {
               const {
                 formElements: { questionElement },
-                map: updatedMap,
               } = getFlowElementJsonFromQuestion(question);
               questionElement.name = fe.name;
               form.children[i] = questionElement;
@@ -166,13 +150,13 @@ function FlowPage() {
   const { user } = useUser();
 
   const [selectedLanguage, setSelectedLanguage] = useState(null);
-  const [defaultLanguage, setdefaultLanguage] = useState(null);
+  const [, setdefaultLanguage] = useState(null);
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
   const [teamOptions, setTeamOptions] = useState([]);
   const [filterTeams, setFilterTeams] = useState([]);
-  const [filterTags, setFilterTags] = useState([]);
+  const [filterTags] = useState([]);
   const [screenNumber, setScreenNumber] = useState(0);
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
@@ -187,14 +171,12 @@ function FlowPage() {
   }, [tabView]);
 
   useEffect(() => {
-    teamOptions && setSelectedTeamId(teamOptions[0]?.value);
+    if (teamOptions) setSelectedTeamId(teamOptions[0]?.value);
   }, [teamOptions]);
   useEffect(() => {
     if (survey) {
       if (tab !== FlowTabEnum.Responses) {
-        setSelectedLanguage(
-          selectedLanguage ? selectedLanguage : survey?.languages?.[0],
-        );
+        setSelectedLanguage(selectedLanguage ? selectedLanguage : survey?.languages?.[0]);
       } else {
         setSelectedLanguage("");
       }
@@ -209,12 +191,8 @@ function FlowPage() {
 
   useEffect(() => {
     if (selectedTeamId) {
-      setSurveyTeamMapId(
-        survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId,
-      );
-      setSelectedTeamName(
-        survey?.teams?.find((team) => team.id === selectedTeamId)?.name,
-      );
+      setSurveyTeamMapId(survey?.teams?.find((team) => team.id === selectedTeamId)?.mapId);
+      setSelectedTeamName(survey?.teams?.find((team) => team.id === selectedTeamId)?.name);
     }
   }, [selectedTeamId]);
 
@@ -240,9 +218,7 @@ function FlowPage() {
         setScreenNumber,
       }}
     >
-      <SelectedLanguageContext.Provider
-        value={{ selectedLanguage: "en", defaultLanguage: "en" }}
-      >
+      <SelectedLanguageContext.Provider value={{ selectedLanguage: "en", defaultLanguage: "en" }}>
         <div className="relative h-full">
           <div className="flex flex-col h-full">
             <SurveyContext.Provider
@@ -272,10 +248,7 @@ function FlowPage() {
                 h={"100%"}
               >
                 <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
-                  <EditFlow
-                    previewOpened={previewOpened}
-                    setPreviewOpened={setPreviewOpened}
-                  />
+                  <EditFlow previewOpened={previewOpened} setPreviewOpened={setPreviewOpened} />
                 </Tabs.Panel>
                 <Tabs.Panel value={FlowTabEnum.Settings}>
                   <SurveySettings
@@ -292,7 +265,6 @@ function FlowPage() {
                     encryptionpassword={""}
                     setEncryptionPassword={() => {}}
                     survey={survey}
-                    flowId={flow.flowId}
                   />
                 </Tabs.Panel>
                 <Tabs.Panel value={FlowTabEnum.Share}>

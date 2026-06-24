@@ -14,16 +14,12 @@ export interface InboxAutomationData {
   orgId: string;
 }
 
-export async function enableInboxAutomation(
-  condition: string,
-): Promise<InboxAutomationData> {
+export async function enableInboxAutomation(condition: string): Promise<InboxAutomationData> {
   const res = await axiosClient.post(`${BASE_URL}/enable`, { condition });
   return res.data;
 }
 
-export async function getInboxAutomation(
-  condition?: string,
-): Promise<InboxAutomationData[]> {
+export async function getInboxAutomation(condition?: string): Promise<InboxAutomationData[]> {
   const params = condition ? { condition } : {};
   const res = await axiosClient.get(BASE_URL, { params });
   // Ensure we always return an array

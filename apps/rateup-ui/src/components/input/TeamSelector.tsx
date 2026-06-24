@@ -1,21 +1,12 @@
-"use client";
-
-import { useEffect } from "react";
-
 import type { SelectProps } from "@mantine/core";
 import { Card, Group, Skeleton, Text } from "@mantine/core";
 import { Users } from "lucide-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { ContainedSelection } from "./ContainedInput/ContainedInput.tsx";
 
 interface TeamSelectorProps extends SelectProps {
@@ -35,12 +26,7 @@ export function TeamSelector({
   ...props
 }: Readonly<TeamSelectorProps>) {
   // TODO: remove some nesting on results of the query?
-  const {
-    data: teamRes,
-    isPending: teamsLoading,
-    isError,
-    error,
-  } = useTeamsByUser();
+  const { data: teamRes, isPending: teamsLoading, isError } = useTeamsByUser();
 
   const { t: translations } = useTranslation();
 

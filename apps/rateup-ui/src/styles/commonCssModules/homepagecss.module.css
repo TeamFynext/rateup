@@ -296,11 +296,7 @@ a {
   transform: scale(0.97);
 }
 .btn-primary {
-  background: linear-gradient(
-    180deg,
-    var(--btn-primary-start),
-    var(--btn-primary-end)
-  );
+  background: linear-gradient(180deg, var(--btn-primary-start), var(--btn-primary-end));
   color: #fff;
   box-shadow:
     0 10px 30px var(--btn-primary-shadow),
@@ -386,11 +382,7 @@ a {
   background: linear-gradient(135deg, #00b2ff, #006aff);
 }
 .ic-blue {
-  background: linear-gradient(
-    135deg,
-    var(--btn-primary-start),
-    var(--btn-primary-end)
-  );
+  background: linear-gradient(135deg, var(--btn-primary-start), var(--btn-primary-end));
 }
 .ic-cyan {
   background: linear-gradient(135deg, var(--cyan), var(--cyan-2));
@@ -517,11 +509,7 @@ nav.top .row {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(
-      ellipse 60% 50% at 75% 38%,
-      rgba(var(--primary-rgb), 0.3),
-      transparent 60%
-    ),
+    radial-gradient(ellipse 60% 50% at 75% 38%, rgba(var(--primary-rgb), 0.3), transparent 60%),
     radial-gradient(
       ellipse 50% 45% at 12% 18%,
       rgba(var(--primary-dark-rgb), 0.28),
@@ -810,8 +798,8 @@ nav.top .row {
   --r: 29cqmin;
   --fd: 0s;
   z-index: 2;
-  transform: translate(-50%, -50%) rotate(var(--a))
-    translateY(calc(-1 * var(--r))) rotate(calc(-1 * var(--a)));
+  transform: translate(-50%, -50%) rotate(var(--a)) translateY(calc(-1 * var(--r)))
+    rotate(calc(-1 * var(--a)));
 }
 .orbit-node.ring-in {
   --r: 29cqmin;
@@ -877,11 +865,7 @@ nav.top .row {
   background: linear-gradient(135deg, #00b2ff, #006aff);
 }
 .ic-blue {
-  background: linear-gradient(
-    135deg,
-    var(--btn-primary-start),
-    var(--btn-primary-end)
-  );
+  background: linear-gradient(135deg, var(--btn-primary-start), var(--btn-primary-end));
 }
 .ic-cyan {
   background: linear-gradient(135deg, var(--cyan), var(--cyan-2));
@@ -977,20 +961,8 @@ nav.top .row {
   flex: 1;
   overflow: hidden;
   position: relative;
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 6%,
-    #000 94%,
-    transparent
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 6%,
-    #000 94%,
-    transparent
-  );
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
 }
 .logo-track {
   display: flex;
@@ -1255,11 +1227,7 @@ nav.top .row {
   height: 92px;
   margin: 0 auto 18px;
   border-radius: 24px;
-  background: linear-gradient(
-    160deg,
-    rgba(255, 255, 255, 0.09),
-    rgba(255, 255, 255, 0.03)
-  );
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
   border: 1px solid var(--hair-2);
   display: flex;
   align-items: center;
@@ -1275,11 +1243,7 @@ nav.top .row {
   transform: translateY(-4px);
 }
 .fstep.active .badge {
-  background: linear-gradient(
-    160deg,
-    var(--btn-primary-start),
-    var(--btn-primary-end)
-  );
+  background: linear-gradient(160deg, var(--btn-primary-start), var(--btn-primary-end));
   border-color: rgba(var(--light-blue-rgb), 0.5);
   box-shadow:
     0 0 0 1px rgba(var(--light-blue-rgb), 0.4),
@@ -1449,11 +1413,7 @@ nav.top .row {
   position: relative;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.055),
-    rgba(255, 255, 255, 0.018)
-  );
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018));
   border: 1px solid var(--hair);
   display: flex;
   flex-direction: column;
@@ -1475,11 +1435,7 @@ nav.top .row {
   overflow: hidden;
   border-bottom: 1px solid var(--hair);
   background:
-    radial-gradient(
-      ellipse 80% 90% at 50% 0%,
-      rgba(var(--primary-rgb), 0.12),
-      transparent 70%
-    ),
+    radial-gradient(ellipse 80% 90% at 50% 0%, rgba(var(--primary-rgb), 0.12), transparent 70%),
     #06182f;
 }
 .feat .body {
@@ -1651,11 +1607,7 @@ nav.top .row {
 .bars .b {
   flex: 1;
   border-radius: 6px 6px 0 0;
-  background: linear-gradient(
-    180deg,
-    var(--cyan),
-    rgba(var(--primary-rgb), 0.25)
-  );
+  background: linear-gradient(180deg, var(--cyan), rgba(var(--primary-rgb), 0.25));
 }
 .phones {
   position: absolute;
@@ -1707,11 +1659,7 @@ nav.top .row {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(
-    135deg,
-    var(--btn-primary-start),
-    var(--btn-primary-end)
-  );
+  background: linear-gradient(135deg, var(--btn-primary-start), var(--btn-primary-end));
   box-shadow: 0 0 30px rgba(var(--primary-rgb), 0.5);
   z-index: 2;
 }
@@ -1750,11 +1698,7 @@ nav.top .row {
   width: 320px;
   height: 320px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(var(--primary-rgb), 0.4),
-    transparent 70%
-  );
+  background: radial-gradient(circle, rgba(var(--primary-rgb), 0.4), transparent 70%);
 }
 .footer-theme {
   --page-0: #04101f;

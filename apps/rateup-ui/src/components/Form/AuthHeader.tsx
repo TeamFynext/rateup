@@ -49,10 +49,7 @@ export function AuthHeader({
             </Button>
           ) : (
             <Link to={isSignup ? "/login" : "/signup"}>
-              <Button
-                variant="outline"
-                className="h-[30px] px-4 bg-transparent text-white"
-              >
+              <Button variant="outline" className="h-[30px] px-4 bg-transparent text-white">
                 <ButtonContent />
               </Button>
             </Link>

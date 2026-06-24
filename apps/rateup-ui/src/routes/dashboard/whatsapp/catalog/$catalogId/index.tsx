@@ -1,26 +1,16 @@
-"use client";
-
-import React from "react";
-
 import { createFileRoute, useParams } from "@tanstack/react-router";
+import React from "react";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import CatalogSettings from "@/components/whatsapp/catalog/CatalogSettings.tsx";
 import CatalogOrders from "@/components/whatsapp/catalog/orders/CatalogOrders.tsx";
 import CatalogProducts from "@/components/whatsapp/catalog/products/CatalogProducts.tsx";
 
-export const Route = createFileRoute("/dashboard/whatsapp/catalog/$catalogId/")(
-  {
-    component: CatalogID,
-  },
-);
+export const Route = createFileRoute("/dashboard/whatsapp/catalog/$catalogId/")({
+  component: CatalogID,
+});
 
 function CatalogID() {
   const params = useParams({

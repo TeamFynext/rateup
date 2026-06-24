@@ -1,5 +1,3 @@
-"use client";
-
 import { ThemeTabEnum } from "../SurveyTheme.enums";
 import {
   useSelectedPageTab,

@@ -1,10 +1,7 @@
-"use client";
-
-import { useMemo, useState } from "react";
-import type { ComponentProps, Dispatch, SetStateAction } from "react";
-
 import { IconBell, IconSettings } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import type { ComponentProps, Dispatch, SetStateAction } from "react";
 
 import {
   useDeleteAllNotifications,
@@ -14,12 +11,7 @@ import {
 } from "@/backend/notification/notification.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet.tsx";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet.tsx";
 
 import NotificationList from "./NotificationList.tsx";
 import NotificationSettings from "./NotificationSettings.tsx";
@@ -33,27 +25,18 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
   const [opened, setOpened] = useState(false);
   const qc = useQueryClient();
   const [tab, setTab] = useState(NotificationTabs.notifications);
-  const { data, isLoading, refetch } = useNotifications(
-    tab === NotificationTabs.notifications,
-  );
+  const { data, isLoading, refetch } = useNotifications(tab === NotificationTabs.notifications);
   const deleteAll = useDeleteAllNotifications();
-  const { isLoading: isLoadingSettings, refetch: refetchSettings } =
-    useNotificationSettings(tab === NotificationTabs.notificationSettings);
-  const {
-    data: notificationCount,
-    isLoading: isLoadingCount,
-    isFetched,
-  } = useNotificationsCount();
+  const { isLoading: isLoadingSettings, refetch: refetchSettings } = useNotificationSettings(
+    tab === NotificationTabs.notificationSettings,
+  );
+  const { data: notificationCount, isLoading: isLoadingCount, isFetched } = useNotificationsCount();
 
   const NotificationDrawerComp = useMemo(() => {
     switch (tab) {
       case NotificationTabs.notifications:
         return (
-          <NotificationList
-            close={() => setOpened(false)}
-            data={data}
-            isLoading={isLoading}
-          />
+          <NotificationList close={() => setOpened(false)} data={data} isLoading={isLoading} />
         );
       case NotificationTabs.notificationSettings:
         return <NotificationSettings />;
@@ -83,28 +66,16 @@ const NotificationBellIcon = (props: ComponentProps<typeof IconBell>) => {
         <SheetContent>
           <SheetHeader className="flex-row items-center justify-between gap-1 border-b pb-3 pr-10">
             <SheetTitle>
-              {tab === NotificationTabs.notifications
-                ? "Notifications"
-                : "Notification Settings"}
+              {tab === NotificationTabs.notifications ? "Notifications" : "Notification Settings"}
             </SheetTitle>
             <div className="flex items-center gap-2">
               {tab === NotificationTabs.notifications ? (
-                <RefreshButton
-                  isLoading={isLoading}
-                  onClick={() => refetch()}
-                />
+                <RefreshButton isLoading={isLoading} onClick={() => refetch()} />
               ) : (
-                <RefreshButton
-                  isLoading={isLoadingSettings}
-                  onClick={() => refetchSettings()}
-                />
+                <RefreshButton isLoading={isLoadingSettings} onClick={() => refetchSettings()} />
               )}
               {tab === NotificationTabs.notifications && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => deleteAll.mutate()}
-                >
+                <Button size="sm" variant="outline" onClick={() => deleteAll.mutate()}>
                   Clear all
                 </Button>
               )}
@@ -168,9 +139,7 @@ const NotificationDrawerFooter = ({
         ) : (
           <IconBell className="size-4" />
         )}
-        {tab === NotificationTabs.notifications
-          ? "Notification settings"
-          : "Notifications"}
+        {tab === NotificationTabs.notifications ? "Notification settings" : "Notifications"}
       </Button>
     </div>
   );

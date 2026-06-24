@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -18,25 +16,21 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import { useState } from "react";
 
-import { buildPageHead } from "@/lib/metadata.ts";
 import { PartnerApplyModal } from "@/components/partner/partnerData";
 import Layout from "@/components/RateupHomePage/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { buildPageHead } from "@/lib/metadata.ts";
 
 export const Route = createFileRoute("/(marketing)/partner-page/")({
   component: PartnershipPage,
   head: () => buildPageHead("/contact-us"),
 });
 
-interface PartnershipPageProps {
-  onGetStarted?: () => void;
-  onBackToHome?: () => void;
-}
-
-function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
+function PartnershipPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   const toggleFaq = (index: number) => {
@@ -72,9 +66,8 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
               </h1>
 
               <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                Refer your clients to RateUp and start earning monthly
-                commissions. Grow your business while helping companies
-                transform their customer engagement.
+                Refer your clients to RateUp and start earning monthly commissions. Grow your
+                business while helping companies transform their customer engagement.
               </p>
 
               {/* CTA Buttons */}
@@ -98,17 +91,11 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-8 max-w-3xl mx-auto pt-12 border-t border-white/10">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-1">
-                    15-40%
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    Lifetime Commission
-                  </div>
+                  <div className="text-3xl font-bold text-white mb-1">15-40%</div>
+                  <div className="text-sm text-gray-400">Lifetime Commission</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-1">
-                    5,000+
-                  </div>
+                  <div className="text-3xl font-bold text-white mb-1">5,000+</div>
                   <div className="text-sm text-gray-400">Active Businesses</div>
                 </div>
                 <div className="text-center">
@@ -131,8 +118,8 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                 What is the RateUp Partner Program?
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Designed for businesses ready to enhance their portfolio by
-                offering RateUp's customer engagement platform
+                Designed for businesses ready to enhance their portfolio by offering RateUp's
+                customer engagement platform
               </p>
             </div>
 
@@ -141,13 +128,10 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2E5BFF] to-[#1a3db8] flex items-center justify-center mb-4">
                   <Target className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  Your Role
-                </h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Your Role</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Handle promotion, reselling, and implementation support for
-                  RateUp. You maintain ongoing client relationships and provide
-                  first-line support to your customers.
+                  Handle promotion, reselling, and implementation support for RateUp. You maintain
+                  ongoing client relationships and provide first-line support to your customers.
                 </p>
               </Card>
 
@@ -155,13 +139,10 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#FF9500] to-[#cc7700] flex items-center justify-center mb-4">
                   <DollarSign className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  Your Earnings
-                </h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Your Earnings</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Earn 15% to 40% lifetime commissions on all referred clients.
-                  The more you grow, the more you earn. Monthly recurring
-                  revenue that scales with your efforts.
+                  Earn 15% to 40% lifetime commissions on all referred clients. The more you grow,
+                  the more you earn. Monthly recurring revenue that scales with your efforts.
                 </p>
               </Card>
 
@@ -169,13 +150,10 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2E5BFF] to-[#1a3db8] flex items-center justify-center mb-4">
                   <Users className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  Customer Ownership
-                </h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Customer Ownership</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  You own the customer relationship. Build long-term
-                  partnerships with your clients while RateUp provides the
-                  technology platform and technical support.
+                  You own the customer relationship. Build long-term partnerships with your clients
+                  while RateUp provides the technology platform and technical support.
                 </p>
               </Card>
 
@@ -183,13 +161,10 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#FF9500] to-[#cc7700] flex items-center justify-center mb-4">
                   <Rocket className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  Growth Support
-                </h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Growth Support</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Access sales collaterals, training materials, and dedicated
-                  partner manager support to accelerate your success and close
-                  more deals faster.
+                  Access sales collaterals, training materials, and dedicated partner manager
+                  support to accelerate your success and close more deals faster.
                 </p>
               </Card>
             </div>
@@ -219,9 +194,7 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                       <TrendingUp className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">
-                        40%
-                      </div>
+                      <div className="text-2xl font-bold text-gray-900">40%</div>
                       <div className="text-xs text-gray-600">Top Tier Rate</div>
                     </div>
                   </div>
@@ -233,9 +206,7 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                       <Users className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">
-                        500+
-                      </div>
+                      <div className="text-2xl font-bold text-gray-900">500+</div>
                       <div className="text-xs text-gray-600">Partners</div>
                     </div>
                   </div>
@@ -256,10 +227,9 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                 </h2>
 
                 <p className="text-lg text-gray-600 leading-relaxed">
-                  Our partners are experiencing unprecedented growth by offering
-                  RateUp's comprehensive customer engagement platform. From
-                  digital agencies to consulting firms, partners across
-                  industries are transforming their business models with
+                  Our partners are experiencing unprecedented growth by offering RateUp's
+                  comprehensive customer engagement platform. From digital agencies to consulting
+                  firms, partners across industries are transforming their business models with
                   recurring revenue streams.
                 </p>
 
@@ -268,20 +238,17 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                     {
                       icon: CheckCircle2,
                       title: "Proven Track Record",
-                      description:
-                        "Partners average 35% revenue growth in their first year",
+                      description: "Partners average 35% revenue growth in their first year",
                     },
                     {
                       icon: CheckCircle2,
                       title: "Dedicated Support",
-                      description:
-                        "Personal partner manager and 24/7 technical assistance",
+                      description: "Personal partner manager and 24/7 technical assistance",
                     },
                     {
                       icon: CheckCircle2,
                       title: "Market Leader",
-                      description:
-                        "Industry-leading platform trusted by 5,000+ businesses",
+                      description: "Industry-leading platform trusted by 5,000+ businesses",
                     },
                   ].map((item, idx) => (
                     <div key={idx} className="flex items-start gap-3">
@@ -289,12 +256,8 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                         <item.icon className="w-4 h-4 text-[#2E5BFF]" />
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-900">
-                          {item.title}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {item.description}
-                        </div>
+                        <div className="font-semibold text-gray-900">{item.title}</div>
+                        <div className="text-sm text-gray-600">{item.description}</div>
                       </div>
                     </div>
                   ))}
@@ -330,9 +293,7 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
               <Badge className="bg-white/10 text-white border-white/20 mb-4">
                 Partner Benefits
               </Badge>
-              <h2 className="text-4xl font-bold text-white mb-4">
-                Why Partner with RateUp?
-              </h2>
+              <h2 className="text-4xl font-bold text-white mb-4">Why Partner with RateUp?</h2>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto">
                 Six powerful advantages to help you succeed as a RateUp partner
               </p>
@@ -392,12 +353,8 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                   >
                     <benefit.icon className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-gray-300 leading-relaxed text-sm">
-                    {benefit.description}
-                  </p>
+                  <h3 className="text-xl font-bold text-white mb-2">{benefit.title}</h3>
+                  <p className="text-gray-300 leading-relaxed text-sm">{benefit.description}</p>
                 </Card>
               ))}
             </div>
@@ -411,9 +368,7 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
               <Badge className="bg-[#2E5BFF]/10 text-[#2E5BFF] border-[#2E5BFF]/20 mb-4">
                 Your Journey
               </Badge>
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                How to Get Started
-              </h2>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">How to Get Started</h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
                 Simple steps to become a RateUp partner and start earning
               </p>
@@ -451,12 +406,8 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                     <div className="mb-4">
                       <step.icon className="w-8 h-8 text-[#2E5BFF] mx-auto" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                      {step.title}
-                    </h3>
-                    <p className="text-gray-600 leading-relaxed">
-                      {step.description}
-                    </p>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">{step.title}</h3>
+                    <p className="text-gray-600 leading-relaxed">{step.description}</p>
                   </div>
                   {idx < 2 && (
                     <div className="hidden md:block absolute top-8 left-full w-full h-0.5 bg-gradient-to-r from-[#2E5BFF] to-[#FF9500] -translate-x-1/2"></div>
@@ -474,9 +425,7 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
               <Badge className="bg-[#2E5BFF]/10 text-[#2E5BFF] border-[#2E5BFF]/20 mb-4">
                 FAQs
               </Badge>
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Frequently Asked Questions
-              </h2>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
               <p className="text-xl text-gray-600">
                 Everything you need to know about the RateUp Partner Program
               </p>
@@ -518,9 +467,7 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                     onClick={() => toggleFaq(idx)}
                     className="w-full px-6 py-5 flex items-center justify-between text-left"
                   >
-                    <span className="text-lg font-semibold text-gray-900 pr-4">
-                      {faq.question}
-                    </span>
+                    <span className="text-lg font-semibold text-gray-900 pr-4">{faq.question}</span>
                     <div
                       className={`flex-shrink-0 w-8 h-8 rounded-lg bg-[#2E5BFF]/10 flex items-center justify-center transition-transform ${openFaqIndex === idx ? "rotate-180" : ""}`}
                     >
@@ -529,9 +476,7 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
                   </button>
                   {openFaqIndex === idx && (
                     <div className="px-6 pb-5">
-                      <p className="text-gray-600 leading-relaxed">
-                        {faq.answer}
-                      </p>
+                      <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
                     </div>
                   )}
                 </Card>
@@ -564,9 +509,8 @@ function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
             </h2>
 
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Apply now to become a RateUp partner and start earning recurring
-              commissions while helping businesses transform their customer
-              engagement.
+              Apply now to become a RateUp partner and start earning recurring commissions while
+              helping businesses transform their customer engagement.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

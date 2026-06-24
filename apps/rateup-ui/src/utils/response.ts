@@ -1,5 +1,3 @@
-import { useContext } from "react";
-
 import {
   IconMoodAngry,
   IconMoodCrazyHappy,
@@ -8,7 +6,9 @@ import {
   IconMoodSad,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useContext } from "react";
 
+import type { TeamWiseResponses } from "@/backend/surveys/response/response.api";
 import {
   LDResponse,
   LDResponse2,
@@ -19,10 +19,8 @@ import {
   WaQuestions,
   YNResponse,
 } from "@/types/enums.ts";
-import type { TeamWiseResponses } from "@/backend/surveys/response/response.api";
 
 import SelectedLanguageContext from "../context/SelectedLanguage.ts";
-import { isToday } from "./dateTime.ts";
 import { decryptPrivateKey, decryptResponse } from "./encryption/index.ts";
 
 export function getResponse(q: any, response: any) {
@@ -76,31 +74,22 @@ function formatEmailOtpResponse(response) {
 }
 function formatMultiTextInput(q, response) {
   if (typeof response === "string") return response;
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
+  const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
   const fields = q?.features?.[selectedLanguage || defaultLanguage]?.fields;
   if (fields) {
-    return fields?.map(
-      (f) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`,
-    );
+    return fields?.map((f) => `${f.fieldKey}:  ${response?.[f.fieldKey] ?? "NA"}`);
   }
 }
 
 function formatMCQGridResponse(question, response) {
   if (!response) return;
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
-  const gridQuestions =
-    question?.features?.[selectedLanguage || defaultLanguage]?.questions;
+  const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
+  const gridQuestions = question?.features?.[selectedLanguage || defaultLanguage]?.questions;
   return gridQuestions?.map((q) => `${q}: ${response?.[q]?.value ?? "NA"}`);
 }
 
 function formatChoiceTypeQuestions(q, response) {
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
+  const { selectedLanguage, defaultLanguage } = useContext(SelectedLanguageContext);
   let formattedValue = "";
   if (response) {
     if ([QuestionType.DDMS, QuestionType.MSQ].includes(q?.type)) {
@@ -148,39 +137,6 @@ function formatTestimonialResponse(response) {
 function formatDefaultResponse(q, response) {
   // Handle other types or default case
   return response;
-}
-
-function filterResponses(
-  responses: SurveyResponse[],
-  filters: Array<{ question_id: string; responses: Array<string> }>,
-) {
-  if (filters.length === 0) {
-    return responses;
-  } else {
-    const filteredResponses = responses?.filter((response) =>
-      filters?.every((filter) => {
-        const question = response?.responses?.find(
-          (item) => item?.questionId === filter?.question_id,
-        );
-        if (question) {
-          if (
-            question.type === QuestionType.Opinion ||
-            question.type === QuestionType.Rating
-          ) {
-            return filter?.responses.includes(
-              question?.response[question?.type]?.toString(),
-            );
-          }
-          return filter?.responses?.includes(
-            question?.response[question?.type],
-          );
-        } else {
-          return false;
-        }
-      }),
-    );
-    return filteredResponses;
-  }
 }
 
 export function getResponseObjectByQuestionType(questionType: QuestionType) {
@@ -242,9 +198,7 @@ export function getResponseObjectByQuestionType(questionType: QuestionType) {
   }
 }
 
-export function getResponseArrayByQuestionType(
-  questionType: QuestionType | WaQuestions,
-): Array<{
+export function getResponseArrayByQuestionType(questionType: QuestionType | WaQuestions): Array<{
   value: string | number;
   color: string;
   Icon?: any;
@@ -325,9 +279,7 @@ export function getResponseArrayByQuestionType(
     }
   }
 }
-export function getResponseArrayByQuestionTypeV2(
-  questionType: WaQuestions,
-): Array<{
+export function getResponseArrayByQuestionTypeV2(questionType: WaQuestions): Array<{
   value: string | number;
   color: string;
   Icon?: any;
@@ -398,40 +350,6 @@ export function getResponseArrayByQuestionTypeV2(
     }
   }
 }
-function getfilteredResponseUsingLanguage(
-  responses: SurveyResponse[],
-  language: string,
-) {
-  let filteredResponsesByLanguage = responses;
-  let noofResponses = responses?.length;
-  if (language) {
-    filteredResponsesByLanguage = responses?.filter(
-      (response) => response.language === language,
-    );
-    noofResponses = filteredResponsesByLanguage?.length;
-  }
-  return { filteredResponsesByLanguage, noofResponses };
-}
-
-function getFilteredResponseUsingTags(
-  responses: SurveyResponse[],
-  selectedTags: string[],
-) {
-  let filteredResponsesByTags = responses;
-  let noofResponses = responses?.length;
-  if (selectedTags?.length > 0) {
-    filteredResponsesByTags = responses?.filter((response) =>
-      selectedTags.includes(response.tag),
-    );
-    noofResponses = filteredResponsesByTags?.length;
-  }
-  filteredResponsesByTags?.sort((a, b) => {
-    const dateA = dayjs(a.createdAt);
-    const dateB = dayjs(b.createdAt);
-    return dateA.diff(dateB);
-  });
-  return { filteredResponsesByTags, noofResponses };
-}
 
 export async function decryptResultResponse(
   responses: TeamWiseResponses[],
@@ -440,10 +358,7 @@ export async function decryptResultResponse(
   passkey: string,
 ) {
   const decryptedResponses = responses;
-  const { privateKey } = await decryptPrivateKey(
-    nonceWithEncryptedPrivateKey,
-    passkey,
-  );
+  const { privateKey } = await decryptPrivateKey(nonceWithEncryptedPrivateKey, passkey);
   for (let i = 0; i < responses.length; i++) {
     for (let j = 0; j < responses[i].responses.length; j++) {
       const response = responses[i].responses[j];
@@ -458,63 +373,4 @@ export async function decryptResultResponse(
     }
   }
   return { decryptedResponses };
-}
-
-function getFormattedResponseForAreaGraph(responses, timePeriod) {
-  const dateResponseCount = {};
-  const dayResponseCount = {};
-  const weekResponseCount = {};
-  responses.forEach((response) => {
-    if (isToday(response.createdAt)) {
-      const hour = dayjs(response.createdAt).format("h A");
-      if (dayResponseCount[hour]) dayResponseCount[hour]++;
-      else dayResponseCount[hour] = 1;
-    }
-    if (dayjs().diff(dayjs(response.createdAt), "day") <= 30) {
-      const date = dayjs(response.createdAt).format("MMM DD");
-      if (dateResponseCount[date]) dateResponseCount[date]++;
-      else dateResponseCount[date] = 1;
-    }
-    if (dayjs().diff(dayjs(response.createdAt), "year") === 0) {
-      const week = dayjs().diff(dayjs(response.createdAt), "week");
-      if (weekResponseCount[week]) weekResponseCount[week]++;
-      else weekResponseCount[week] = 1;
-    }
-  });
-
-  const resData = [];
-  switch (timePeriod) {
-    case "hourly":
-      for (let i = 0; i < 24; i++) {
-        const date = dayjs().hour(i).format("h A");
-        resData.push(
-          dayResponseCount[date]
-            ? { date, responses: dayResponseCount[date] }
-            : { date, responses: 0 },
-        );
-      }
-      break;
-    case "daily":
-      for (let i = 30; i > 0; i--) {
-        const date = dayjs()
-          .subtract(i - 1, "day")
-          .format("MMM DD");
-        resData.push(
-          dateResponseCount[date]
-            ? { date, responses: dateResponseCount[date] }
-            : { date, responses: 0 },
-        );
-      }
-      break;
-    case "weekly":
-      for (let i = 52; i >= 0; i--) {
-        resData.push(
-          weekResponseCount[i]
-            ? { date: i, responses: weekResponseCount[i] }
-            : { date: i, responses: 0 },
-        );
-      }
-      break;
-  }
-  return resData;
 }

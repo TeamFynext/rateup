@@ -23,10 +23,10 @@ export const useChatMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: sendChatbotMessage,
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       queryClient.invalidateQueries({ queryKey: ["aiChat"] });
     },
-    onError: (error) => {},
+    onError: (_error) => {},
   });
 };
 
@@ -115,10 +115,10 @@ export const usePublicChatMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: sendPublicChatbotMessage,
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       queryClient.invalidateQueries({ queryKey: ["aiChat"] });
     },
-    onError: (error) => {},
+    onError: (_error) => {},
   });
 };
 

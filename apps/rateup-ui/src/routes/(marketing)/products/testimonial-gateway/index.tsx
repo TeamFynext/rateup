@@ -13,9 +13,7 @@ import TestimonialFeaturesGrid from "@/components/products/TestimonialGateway/sh
 import TestimonialHero from "@/components/products/TestimonialGateway/shared/TestimonialHero.tsx";
 import TestimonialSteps from "@/components/products/TestimonialGateway/shared/TestimonialSteps.tsx";
 
-export const Route = createFileRoute(
-  "/(marketing)/products/testimonial-gateway/",
-)({
+export const Route = createFileRoute("/(marketing)/products/testimonial-gateway/")({
   component: page,
 });
 

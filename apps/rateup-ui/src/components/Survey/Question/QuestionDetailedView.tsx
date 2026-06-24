@@ -1,31 +1,13 @@
-"use client";
-
-import React, { useContext, useEffect, useRef, useState } from "react";
-
-import {
-  Alert,
-  Box,
-  Divider,
-  Group,
-  Portal,
-  ScrollArea,
-  Stack,
-} from "@mantine/core";
+import { Alert, Box, Divider, Group, Portal, ScrollArea, Stack } from "@mantine/core";
 import type { UseFormReturnType } from "@mantine/form";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconAlertOctagon, IconEye } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  NPSWeightage,
-  PageType,
-  QuestionType,
-  SubscriptionFeaturePathName,
-  SurveyType,
-} from "@/types/enums.ts";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import {
   useQuestionCreateMutation,
@@ -34,12 +16,16 @@ import {
 import HTMLEditor from "@/components/RichTextEditor/HTMLEditor.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import {
+  NPSWeightage,
+  PageType,
+  QuestionType,
+  SubscriptionFeaturePathName,
+  SurveyType,
+} from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload.ts";
-import {
-  getInitialQuestionValues,
-  validateAllLanguagesArePopulated,
-} from "@/utils/questions.ts";
+import { getInitialQuestionValues, validateAllLanguagesArePopulated } from "@/utils/questions.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
 import { useImageStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore.ts";
@@ -48,7 +34,6 @@ import type { QuestionTabsEnum } from "../EditSurvey.tsx";
 import ImportChoices from "./ImportChoices/index.tsx";
 import { LanguageCompletionView } from "./LanguageCompletionView.tsx";
 import QuestionTypePreview from "./Previews/QuestionTypePreview.tsx";
-import styles from "./QuestionDetailedView.module.css";
 import QuestionDetailedViewBadge from "./QuestionDetailedViewBadge.tsx";
 import QuestionDetailedViewFooter from "./QuestionDetailedViewFooter.tsx";
 import { ChoicesCreator } from "./QuestionExtraProps/ChoicesCreator.tsx";
@@ -60,6 +45,8 @@ import SmileyExtraProps from "./QuestionExtraProps/SmileyExtraProps.tsx";
 import TestimonialExtraProps from "./QuestionExtraProps/TestimonialExtraProps.tsx";
 import TncExtraProps from "./QuestionExtraProps/TncExtraProps.tsx";
 import WOPExtraProps from "./QuestionExtraProps/WOPExtraProps.tsx";
+
+import styles from "./QuestionDetailedView.module.css";
 
 // TODO: use a routing method instead of passing the question as a prop?
 // or use react-query?
@@ -99,8 +86,7 @@ export function QuestionDetailedView({
   });
   const { t: translations } = useTranslation();
   const { data: subscription } = useSubscription();
-  const [isGoogleReviewFeatureActive, setIsGoogleReviewFeatureActive] =
-    useState(false);
+  const [isGoogleReviewFeatureActive, setIsGoogleReviewFeatureActive] = useState(false);
   const [isTicketFeatureActive, setIsTicketFeatureActive] = useState(false);
 
   useEffect(() => {
@@ -108,26 +94,21 @@ export function QuestionDetailedView({
       hasFeature(subscription, SubscriptionFeaturePathName.GoogleReview),
     );
 
-    setIsTicketFeatureActive(
-      hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
-    );
+    setIsTicketFeatureActive(hasFeature(subscription, SubscriptionFeaturePathName.Ticket));
   }, [subscription]);
 
   const form = useForm({
     initialValues: getInitialQuestionValues(question, surveyLanguages),
   });
 
-  form.watch("choices", ({ previousValue, value, touched, dirty }) => {
+  form.watch("choices", () => {
     if (!getIncompleteLanguages()?.length) {
       handleSave();
     }
   });
 
-  form.watch("features", ({ previousValue, value, touched, dirty }) => {
-    if (
-      JSON.stringify(previousValue) !== JSON.stringify(value) &&
-      !getIncompleteLanguages().length
-    )
+  form.watch("features", ({ previousValue, value }) => {
+    if (JSON.stringify(previousValue) !== JSON.stringify(value) && !getIncompleteLanguages().length)
       handleSave();
   });
 
@@ -148,10 +129,7 @@ export function QuestionDetailedView({
 
   const handleSave = async () => {
     try {
-      if (
-        !form.values.title[selectedLanguage] ||
-        form.values.title[selectedLanguage] == ""
-      ) {
+      if (!form.values.title[selectedLanguage] || form.values.title[selectedLanguage] == "") {
         toast.error(translations("Question title is missing"));
         setIsSaved(false);
         return "error";
@@ -159,9 +137,7 @@ export function QuestionDetailedView({
         if (getIncompleteLanguages().length > 0) {
           setSelectedLanguage(getIncompleteLanguages()[0]);
           toast.error(
-            translations(
-              "Please Enter heading and choices for all languages before saving.",
-            ),
+            translations("Please Enter heading and choices for all languages before saving."),
           );
           setIsSaved(false);
           return "error";
@@ -185,12 +161,9 @@ export function QuestionDetailedView({
           });
         } else {
           // Updating existing question
-          toast.loading(
-            translations("Hold on, your changes are getting updated.."),
-            {
-              id: "load-data",
-            },
-          );
+          toast.loading(translations("Hold on, your changes are getting updated.."), {
+            id: "load-data",
+          });
           questionUpdateMutation.mutate({
             qId: question.id,
             data: form.getValues(),
@@ -199,7 +172,7 @@ export function QuestionDetailedView({
       }
 
       return "saved";
-    } catch (error) {
+    } catch {
       setDeleteFileLoading(false);
       return "no saved";
     }
@@ -216,9 +189,7 @@ export function QuestionDetailedView({
   }, [form]);
 
   const isSaving =
-    questionCreateMutation.isPending ||
-    questionUpdateMutation.isPending ||
-    deleteFileLoading;
+    questionCreateMutation.isPending || questionUpdateMutation.isPending || deleteFileLoading;
 
   return (
     <form
@@ -305,9 +276,7 @@ export function QuestionDetailedView({
             }
           />
 
-          <CurrentResponsesContext.Provider
-            value={{ response: currentResponse, updateResponse }}
-          >
+          <CurrentResponsesContext.Provider value={{ response: currentResponse, updateResponse }}>
             <QuestionTypePreview
               type={question?.type}
               choices={form.values.choices}
@@ -358,13 +327,7 @@ interface ExtraPropsProps {
   surveyLanguages: string[];
   handleSave: () => void;
 }
-function ExtraProps({
-  form,
-  question,
-  surveyType,
-  surveyLanguages,
-  handleSave,
-}: ExtraPropsProps) {
+function ExtraProps({ form, question, surveyType, surveyLanguages, handleSave }: ExtraPropsProps) {
   switch (question.type) {
     case QuestionType.MCQ:
     case QuestionType.MSQ:
@@ -380,24 +343,13 @@ function ExtraProps({
             handleSave={handleSave}
           />
 
-          <ChoicesCreator
-            qId={question?.id}
-            form={form}
-            surveyType={surveyType}
-          />
+          <ChoicesCreator qId={question?.id} form={form} surveyType={surveyType} />
         </>
       );
     case QuestionType.PCQ:
-      return (
-        <ChoicesCreator
-          qId={question?.id}
-          form={form}
-          image
-          surveyType={surveyType}
-        />
-      );
+      return <ChoicesCreator qId={question?.id} form={form} image surveyType={surveyType} />;
     case QuestionType.Testimonial:
-      return <TestimonialExtraProps qId={question.id} form={form} />;
+      return <TestimonialExtraProps form={form} />;
     case QuestionType.Contact:
     case QuestionType.Email:
     case QuestionType.Phone:
@@ -409,13 +361,7 @@ function ExtraProps({
     case QuestionType.MCQGrid:
       return <MCQGridExtraProps form={form} qId={question.id} />;
     case QuestionType.EmailOtp:
-      return (
-        <EmailOtpExtraProps
-          form={form}
-          qId={question.id}
-          surveyLanguages={surveyLanguages}
-        />
-      );
+      return <EmailOtpExtraProps form={form} qId={question.id} surveyLanguages={surveyLanguages} />;
     case QuestionType.WOP:
       return <WOPExtraProps form={form} />;
     case QuestionType.Smiley:

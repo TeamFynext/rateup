@@ -1,10 +1,7 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { Grid, Stack } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import { produce } from "immer";
+import { useCallback } from "react";
 
 import { useSurveyUpdateMutation } from "@/backend/surveys/surveys.query";
 import AutosaveInput from "@/components/input/AutosaveInput/index.tsx";
@@ -12,7 +9,7 @@ import AutosaveInput from "@/components/input/AutosaveInput/index.tsx";
 import styles from "./EditTranslations.module.css";
 
 function EditTranslations({ survey, element, uiTextTranslations, languages }) {
-  const { name, label, id } = element;
+  const { name, label } = element;
 
   const translatedValues = uiTextTranslations(name) || {};
 

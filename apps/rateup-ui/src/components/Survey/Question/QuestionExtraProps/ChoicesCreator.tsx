@@ -1,7 +1,3 @@
-"use client";
-
-import { useContext, useEffect, useRef, useState } from "react";
-
 import {
   ActionIcon,
   Badge,
@@ -22,11 +18,11 @@ import type { UseFormReturnType } from "@mantine/form";
 import { schemaResolver, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
-import { NPSWeightage, QuestionType, SurveyType } from "@/types/enums.ts";
 import { useResponses } from "@/backend/surveys/response/response.query";
 import {
   RateupButtonBlue,
@@ -45,6 +41,7 @@ import { ImageCropModal } from "@/components/Modal/ImageCropModal.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
+import { NPSWeightage, QuestionType, SurveyType } from "@/types/enums.ts";
 import {
   DEFAULT_IMAGE_BASE64_START,
   MAX_DESCRIPTION_COUNT,
@@ -54,8 +51,9 @@ import {
 } from "@/utils/constants.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
-import inputStyles from "../../../input/InputStyles.module.css";
 import { getNpsColor } from "../QuestionDetailedView.tsx";
+
+import inputStyles from "../../../input/InputStyles.module.css";
 
 interface ChoicesCreatorProps {
   form: UseFormReturnType<any>;
@@ -67,16 +65,13 @@ interface ChoicesCreatorProps {
 }
 export function ChoicesCreator({
   form,
-  qId,
   maxCharCount,
   maxChoiceCount,
   image = false,
   surveyType,
-}: ChoicesCreatorProps) {
+}: Readonly<ChoicesCreatorProps>) {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
-  const [choiceWeightage, setChoiceWeightage] = useState<NPSWeightage>(
-    NPSWeightage.PROMOTER,
-  );
+  const [choiceWeightage, setChoiceWeightage] = useState<NPSWeightage>(NPSWeightage.PROMOTER);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>();
   const [selectedInputImage, setSelectedInputImage] = useState({
     url: "",
@@ -85,10 +80,8 @@ export function ChoicesCreator({
   const [fileError, setFileError] = useState("");
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
   const [isSubmited, setIsSubmited] = useState(false);
-  const [
-    openedCropDialog,
-    { toggle: toggleCropDialog, close: closeCropDialog },
-  ] = useDisclosure(false);
+  const [openedCropDialog, { toggle: toggleCropDialog, close: closeCropDialog }] =
+    useDisclosure(false);
   const resetRef = useRef<() => void>(null);
   const buttonRef = useRef<HTMLButtonElement>(undefined);
   const choiceResetRef = useRef<() => void>(null);
@@ -135,7 +128,7 @@ export function ChoicesCreator({
   };
 
   const { updateImageArray } = useImageStore();
-  const [inputError, setInputError] = useState("");
+  const [inputError] = useState("");
 
   useEffect(() => {
     if (form?.values?.choices && isSubmited) {
@@ -155,14 +148,11 @@ export function ChoicesCreator({
           surveyType !== SurveyType.Web
             ? Object.fromEntries(
                 Object.entries(choiceForm.getValues()).filter(
-                  ([key, value]) => value?.trim() !== "",
+                  ([_key, value]) => value?.trim() !== "",
                 ),
               )
             : choiceForm.getValues().title,
-        weightage:
-          form.values.type === QuestionType.CustomNPS
-            ? choiceWeightage
-            : undefined,
+        weightage: form.values.type === QuestionType.CustomNPS ? choiceWeightage : undefined,
       };
       if (image) {
         if (!selectedImageFile) return setFileError("select image");
@@ -186,7 +176,7 @@ export function ChoicesCreator({
       }
       choiceForm.reset();
       setChoiceWeightage(NPSWeightage.PROMOTER);
-    } catch (error) {
+    } catch {
       choiceForm.reset();
       setFileUploadLoading(false);
     }
@@ -203,9 +193,7 @@ export function ChoicesCreator({
   const onChangePicture = (event: File | null) => {
     if (!event) return;
     if (event.size > MAX_FILE_SIZE_IN_BYTE) {
-      toast.error(
-        `${translations("Max file size is")} ${MAX_FILE_SIZE_IN_MB} MB`,
-      );
+      toast.error(`${translations("Max file size is")} ${MAX_FILE_SIZE_IN_MB} MB`);
       return;
     }
     setSelectedInputImage({
@@ -223,8 +211,7 @@ export function ChoicesCreator({
   const handleFileChange = async (file: File) => {
     try {
       if (!file) return;
-      if (file.size > 300000)
-        return choiceForm.setFieldError("image", "max image size is 300KB");
+      if (file.size > 300000) return choiceForm.setFieldError("image", "max image size is 300KB");
       choiceForm.clearFieldError("image");
       const base64String = await FileConverter.fileToBase64(file);
       choiceForm.setFieldValue("image", base64String);
@@ -240,10 +227,7 @@ export function ChoicesCreator({
   };
   return (
     <>
-      <Stack
-        py="xs"
-        gap={form.values.type == QuestionType.CustomNPS ? "lg" : "xs"}
-      >
+      <Stack py="xs" gap={form.values.type == QuestionType.CustomNPS ? "lg" : "xs"}>
         <ImageCropModal
           opened={openedCropDialog}
           onclose={closeCropDialog}
@@ -360,11 +344,7 @@ export function ChoicesCreator({
             />
           )}
           {image && (
-            <Stack
-              gap={0}
-              mt={fileError && "lg"}
-              mb={inputError?.length > 0 && "lg"}
-            >
+            <Stack gap={0} mt={fileError && "lg"} mb={inputError?.length > 0 && "lg"}>
               <FileButton
                 onChange={onChangePicture}
                 accept="image/png,image/jpeg,image/svg+xml,image/webp"
@@ -380,9 +360,7 @@ export function ChoicesCreator({
                   </Button>
                 )}
               </FileButton>
-              {fileError && (
-                <Text c={"red"}>{translations("Image Is Required")}</Text>
-              )}
+              {fileError && <Text c={"red"}>{translations("Image Is Required")}</Text>}
             </Stack>
           )}
           <Button type="submit" display={"none"} ref={buttonRef} />
@@ -489,10 +467,7 @@ class FileConverter {
 
       reader.onload = () => {
         const base64URL = reader.result as string;
-        const base64Data = base64URL.replace(
-          /^data:image\/[a-zA-Z]+;base64,/,
-          "",
-        );
+        const base64Data = base64URL.replace(/^data:image\/[a-zA-Z]+;base64,/, "");
         resolve(base64Data);
       };
 
@@ -525,8 +500,7 @@ function Choice({
   surveyType,
 }: ChoiceProps) {
   const [opened, { open, close }] = useDisclosure(false);
-  const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
-    useDisclosure(false);
+  const [openedEditModal, { open: openEditModal, close: closeEditModal }] = useDisclosure(false);
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>();
   const [selectedInputImage, setSelectedInputImage] = useState({
@@ -536,10 +510,8 @@ function Choice({
   const [fileError, setFileError] = useState("");
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
   const [isSubmited, setIsSubmited] = useState(false);
-  const [
-    openedCropDialog,
-    { toggle: toggleCropDialog, close: closeCropDialog },
-  ] = useDisclosure(false);
+  const [openedCropDialog, { toggle: toggleCropDialog, close: closeCropDialog }] =
+    useDisclosure(false);
   const { surveyTeamMapId } = useContext(SurveyContext);
   const { data: responses } = useResponses(surveyTeamMapId);
   const resetRef = useRef<() => void>(null);
@@ -620,17 +592,15 @@ function Choice({
           surveyType !== SurveyType.Web
             ? Object.fromEntries(
                 Object.entries(choiceForm.getValues()).filter(
-                  ([key, value]) => value?.trim() !== "",
+                  ([_key, value]) => value?.trim() !== "",
                 ),
               )
             : choiceForm.getValues().title,
       };
-      const updatedChoices = form.values.choices?.[selectedLanguage]?.map(
-        (c, i) => {
-          if (i == index) return { ...c, ...choiceObj };
-          else return c;
-        },
-      );
+      const updatedChoices = form.values.choices?.[selectedLanguage]?.map((c, i) => {
+        if (i == index) return { ...c, ...choiceObj };
+        else return c;
+      });
       form.setFieldValue("choices", {
         ...form.values.choices,
         [selectedLanguage]: updatedChoices,
@@ -684,19 +654,14 @@ function Choice({
   const handleFileChange = async (file: File) => {
     try {
       if (!file) return;
-      if (file.size > 300000)
-        return choiceForm.setFieldError("image", "max image size is 300KB");
+      if (file.size > 300000) return choiceForm.setFieldError("image", "max image size is 300KB");
       choiceForm.clearFieldError("image");
       const base64String = await FileConverter.fileToBase64(file);
       choiceForm.setFieldValue("image", base64String);
     } catch (error) {
-      toast.error(
-        translations("Error converting file to Base64:") +
-          JSON.stringify(error),
-        {
-          id: "file-converting",
-        },
-      );
+      toast.error(translations("Error converting file to Base64:") + JSON.stringify(error), {
+        id: "file-converting",
+      });
     }
   };
   return (
@@ -712,9 +677,7 @@ function Choice({
       {form.values.type == QuestionType.CustomNPS ? (
         <Flex gap={"xs"} w={"85%"}>
           <Badge color={getNpsColor(choice.weightage)} mt={"5px"}></Badge>
-          <Text w={"85%"}>
-            {typeof choice.value !== "object" && choice.value}
-          </Text>
+          <Text w={"85%"}>{typeof choice.value !== "object" && choice.value}</Text>
           <Select
             data={Object.values(NPSWeightage)}
             value={newWeightage}
@@ -739,11 +702,7 @@ function Choice({
         >
           <Checkbox checked={false} readOnly />
           {choice.value?.image ? (
-            <Image
-              src={`${DEFAULT_IMAGE_BASE64_START}${choice.value?.image}`}
-              h={30}
-              w={30}
-            />
+            <Image src={`${DEFAULT_IMAGE_BASE64_START}${choice.value?.image}`} h={30} w={30} />
           ) : (
             <Box h={30} w={30} />
           )}
@@ -790,12 +749,7 @@ function Choice({
       >
         <IconEdit />
       </ActionIcon>
-      <ActionIcon
-        variant="transparent"
-        color="red"
-        onClick={onDelete}
-        size={"sm"}
-      >
+      <ActionIcon variant="transparent" color="red" onClick={onDelete} size={"sm"}>
         <IconTrash />
       </ActionIcon>
       <FormModalLayout

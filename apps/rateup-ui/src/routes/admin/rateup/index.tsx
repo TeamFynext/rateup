@@ -1,26 +1,14 @@
-"use client";
-
-import { useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  Calendar,
-  CreditCard,
-  Edit,
-  Package,
-  Star,
-  Trash2,
-  Zap,
-} from "lucide-react";
+import { Calendar, CreditCard, Edit, Package, Star, Trash2, Zap } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import {
   usePaymentsPlans,
   useRateupPaymentsPlanDeleteMutation,
-  useRateupPaymentsPlanMutation,
   useRateupPaymentsPlans,
   useRateupPaymentsPlanUpdateMutation,
 } from "@/backend/payment/payment.query";
@@ -29,10 +17,7 @@ import { ContainedTagInput } from "@/components/input/ContainedInput/ContainedIn
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import RateupPlanModal from "@/components/Modal/RateupPlanModal.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -72,10 +57,8 @@ function RateupPlan() {
   const [opened, { toggle, close }] = useDisclosure(false);
   const [error, setError] = useState("");
   const [updatedField, setUpdatedField] = useState<any>("");
-  const [
-    openedDescriptonModal,
-    { toggle: toggleDescriptonModal, close: closeDescriptonModal },
-  ] = useDisclosure(false);
+  const [openedDescriptonModal, { toggle: toggleDescriptonModal, close: closeDescriptonModal }] =
+    useDisclosure(false);
   const { t: translations } = useTranslation();
   const { data: plans, isPending, isError } = useRateupPaymentsPlans();
   const {
@@ -84,7 +67,7 @@ function RateupPlan() {
     isError: isRazorPayPlansError,
   } = usePaymentsPlans();
   const { data: stripeProducts } = useGetStripeProducts();
-  const rateupPaymentsPlanMutation = useRateupPaymentsPlanMutation(close);
+
   const rateupPaymentsPlanUpdateMutation =
     useRateupPaymentsPlanUpdateMutation(closeDescriptonModal);
   const rateupPaymentsPlanDelete = useRateupPaymentsPlanDeleteMutation();
@@ -94,9 +77,7 @@ function RateupPlan() {
       accessorKey: "id",
       header: "ID",
       cell: ({ row }) => (
-        <div className="font-mono text-xs text-muted-foreground">
-          {row.getValue("id")}
-        </div>
+        <div className="font-mono text-xs text-muted-foreground">{row.getValue("id")}</div>
       ),
       meta: { title: "ID" },
     },
@@ -126,8 +107,7 @@ function RateupPlan() {
       accessorKey: "description",
       header: "Description",
       cell: ({ row }) => {
-        const description =
-          (row.getValue("description") as string[] | undefined) ?? [];
+        const description = (row.getValue("description") as string[] | undefined) ?? [];
         return (
           <div className="max-w-[200px]">
             {description.length > 0 ? (
@@ -144,9 +124,7 @@ function RateupPlan() {
                 )}
               </div>
             ) : (
-              <span className="text-muted-foreground text-sm">
-                No description
-              </span>
+              <span className="text-muted-foreground text-sm">No description</span>
             )}
           </div>
         );
@@ -158,11 +136,7 @@ function RateupPlan() {
       header: createSortableHeader("Plan Type"),
       cell: ({ row }) => {
         const planType = String(row.getValue("planType") ?? "");
-        return (
-          <Badge variant={planType === "FREE" ? "secondary" : "default"}>
-            {planType}
-          </Badge>
-        );
+        return <Badge variant={planType === "FREE" ? "secondary" : "default"}>{planType}</Badge>;
       },
       meta: { title: "Plan Type" },
     },
@@ -184,11 +158,7 @@ function RateupPlan() {
       header: "Widget ID",
       cell: ({ row }) => {
         const widgetId = String(row.getValue("displayWidgetId") ?? "");
-        return (
-          <Badge variant={widgetId === "Nil" ? "destructive" : "secondary"}>
-            {widgetId}
-          </Badge>
-        );
+        return <Badge variant={widgetId === "Nil" ? "destructive" : "secondary"}>{widgetId}</Badge>;
       },
       meta: { title: "Widget ID" },
     },
@@ -249,9 +219,7 @@ function RateupPlan() {
         <Card className="w-96">
           <CardHeader>
             <CardTitle className="text-destructive">Error</CardTitle>
-            <CardDescription>
-              An error occurred while loading plans.
-            </CardDescription>
+            <CardDescription>An error occurred while loading plans.</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -290,9 +258,7 @@ function RateupPlan() {
       displayName: plan.displayName,
       name: plan.name,
       description: plan.description,
-      displayWidgetId: plan.displayWidgetId?.length
-        ? plan.displayWidgetId
-        : "Nil",
+      displayWidgetId: plan.displayWidgetId?.length ? plan.displayWidgetId : "Nil",
       features: plan,
       planType: plan.planType,
       paymentPlanId: plan.paymentPlanId ?? "",
@@ -356,9 +322,7 @@ function RateupPlan() {
               <div className="text-3xl font-bold text-green-700 dark:text-green-400">
                 {freePlans}
               </div>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                No cost plans
-              </p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">No cost plans</p>
             </CardContent>
           </Card>
 
@@ -376,9 +340,7 @@ function RateupPlan() {
               <div className="text-3xl font-bold text-purple-700 dark:text-purple-400">
                 {paidPlans}
               </div>
-              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                Premium plans
-              </p>
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">Premium plans</p>
             </CardContent>
           </Card>
 
@@ -396,9 +358,7 @@ function RateupPlan() {
               <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">
                 {plansWithTrials}
               </div>
-              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                Trial available
-              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Trial available</p>
             </CardContent>
           </Card>
         </div>
@@ -411,9 +371,7 @@ function RateupPlan() {
         <DataTable
           columns={columns}
           data={tableData}
-          DataTableToolbar={(props) => (
-            <DataTableToolbar {...props} onCreatePlan={toggle} />
-          )}
+          DataTableToolbar={(props) => <DataTableToolbar {...props} onCreatePlan={toggle} />}
         />
       </div>
       <RateupPlanModal opened={opened} close={close} planList={planList} />

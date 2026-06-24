@@ -14,8 +14,7 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
       ? getResponseArrayByQuestionTypeV2(questionType)
       : getResponseArrayByQuestionType(questionType);
 
-  const getResObj = (val) =>
-    chartData.find((res) => res?.choice?.toString() === val?.toString());
+  const getResObj = (val) => chartData.find((res) => res?.choice?.toString() === val?.toString());
 
   const getVoteText = (count) => (count > 1 ? "votes" : "vote");
 
@@ -40,9 +39,7 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
             {badge}
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-sm text-[#343A40] font-medium">
-            {label}
-          </div>
+          <div className="flex items-center gap-2 text-sm text-[#343A40] font-medium">{label}</div>
         )}
       </div>
       <div className="flex items-center gap-2">
@@ -63,9 +60,7 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
   );
 
   const getValue = (res) =>
-    res
-      ? `${res.count} ${getVoteText(res.count)} (${res.percentage}%)`
-      : "0 vote (0.00%)";
+    res ? `${res.count} ${getVoteText(res.count)} (${res.percentage}%)` : "0 vote (0.00%)";
 
   // --- Types ---
   switch (questionType) {
@@ -103,8 +98,7 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
             return renderStatRow({
               label: item.choice,
               value: getValue(res),
-              isMostVoted:
-                item.choice.toString() === mostVotedChoice?.toString(),
+              isMostVoted: item.choice.toString() === mostVotedChoice?.toString(),
               badge: null,
             });
           } else {
@@ -118,8 +112,7 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
                 />
               ),
               value: getValue(res),
-              isMostVoted:
-                item.choice.toString() === mostVotedChoice?.toString(),
+              isMostVoted: item.choice.toString() === mostVotedChoice?.toString(),
               badge: null,
             });
           }
@@ -190,9 +183,7 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
           return renderStatRow({
             label: (
               <div className="flex items-center gap-2">
-                {version !== 2 && (
-                  <Icon size={20} color={item.color} stroke={2} />
-                )}
+                {version !== 2 && <Icon size={20} color={item.color} stroke={2} />}
                 <span>{item.value}</span>
               </div>
             ),

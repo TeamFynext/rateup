@@ -1,17 +1,15 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Box, Center, Loader } from "@mantine/core";
 import { useParams, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 import { useGetLinktreeWithShortId } from "@/backend/linktree/linktree.query";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 
 import { LinktreeContextProvider } from "./LinktreeContext/LinktreeContext.tsx";
-import styles from "./LinktreeEditor.module.css";
 import TabPanelsComp from "./TabPanels.tsx";
 import TabsListComp from "./TabsList.tsx";
+
+import styles from "./LinktreeEditor.module.css";
 
 function LinktreeEdtior() {
   const searchParams = useSearch({ strict: false });
@@ -65,14 +63,8 @@ function LinktreeEdtior() {
   }
 
   return (
-    <LinktreeContextProvider
-      linktreeData={data}
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-    >
-      <Box className={`${styles["linktree-editor-page-root-div"]}`}>
-        {componentToBeRendered}
-      </Box>
+    <LinktreeContextProvider linktreeData={data} activeTab={activeTab} setActiveTab={setActiveTab}>
+      <Box className={`${styles["linktree-editor-page-root-div"]}`}>{componentToBeRendered}</Box>
     </LinktreeContextProvider>
   );
 }

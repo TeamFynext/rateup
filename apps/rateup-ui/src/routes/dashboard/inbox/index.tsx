@@ -1,16 +1,9 @@
+import { useMediaQuery } from "@mantine/hooks";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { useMediaQuery } from "@mantine/hooks";
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
-
 import { useContactById } from "@/backend/campaign/contacts/contacts.query";
-import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
-import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -24,6 +17,7 @@ import InboxSettings from "@/components/whatsapp/inbox/InboxSettings/index.tsx";
 import ChatDisplayContext, {
   useIsChatDisplayOpen,
 } from "../../../components/dashboard/inbox/ChatDisplayContext.tsx";
+
 import styles from "../../../components/dashboard/inbox/WhatsappInbox.module.css";
 
 export const Route = createFileRoute("/dashboard/inbox/")({
@@ -38,8 +32,7 @@ function WhatsAppInbox() {
   const contactId = searchParams.contactId;
   const navigate = useNavigate();
 
-  const { selectedContact, setSelectedContact, contactsById } =
-    useContactsStore();
+  const { selectedContact, setSelectedContact, contactsById } = useContactsStore();
   const { data: fetchedContact } = useContactById(
     contactId && !contactsById.has(contactId) ? contactId : "",
   );
@@ -108,21 +101,14 @@ function WhatsAppInbox() {
 }
 
 function ResizeableChat() {
-  const { data, isPending } = useWaSettings();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const isChatDisplayOpen = useIsChatDisplayOpen();
-
-  if (isPending) return <RateupLoader />;
 
   // Mobile: show either chat list or chat display (full width, no resize)
   if (isMobile) {
     return (
       <div className="h-full w-full">
-        {isChatDisplayOpen ? (
-          <WaInboxChatDisplay waSettings={data} smallScreen />
-        ) : (
-          <WaInboxChatSelect />
-        )}
+        {isChatDisplayOpen ? <WaInboxChatDisplay /> : <WaInboxChatSelect />}
       </div>
     );
   }
@@ -135,7 +121,7 @@ function ResizeableChat() {
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel defaultSize={"72%"} minSize={"60%"} maxSize={"78%"}>
-        <WaInboxChatDisplay waSettings={data} />
+        <WaInboxChatDisplay />
       </ResizablePanel>
     </ResizablePanelGroup>
   );

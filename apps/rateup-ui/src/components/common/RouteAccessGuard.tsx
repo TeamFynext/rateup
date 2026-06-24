@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect } from "react";
-
 import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { useTeamFeatures } from "@/context/TeamFeaturesContext.tsx";
 import {
@@ -18,9 +15,7 @@ import {
  * - Members with an empty feature set are sent to /dashboard/settings.
  * - Owners / admins (allowedFeatures === null) bypass all checks.
  */
-export function RouteAccessGuard({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export function RouteAccessGuard({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = useRouterState({
     select: (s) => s.location.pathname,
   });

@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 import {
   ActionIcon,
   Card,
@@ -15,12 +11,10 @@ import {
 } from "@mantine/core";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import {
-  useTriggeringDownload,
-  useUnsplashPhotosList,
-} from "@/backend/unsplash/unsplash.query";
+import { useTriggeringDownload, useUnsplashPhotosList } from "@/backend/unsplash/unsplash.query";
 
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput.tsx";
 import useDebounce from "../menu/hook/useDebounce.ts";
@@ -43,18 +37,11 @@ type UnsplashPhotoProps = {
   setSearchQuery: (query: string) => void;
   reference?: any;
 };
-export const UnsplashModal = ({
-  opened,
-  onclose,
-  handleUnsplashImageSave,
-}: UnsplashModalProps) => {
+export const UnsplashModal = ({ opened, onclose, handleUnsplashImageSave }: UnsplashModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 600);
   const largeScreen = useMediaQuery("(min-width: 60em)");
-  const unsplashPhotosList = useUnsplashPhotosList(
-    opened,
-    debouncedSearchQuery,
-  );
+  const unsplashPhotosList = useUnsplashPhotosList(opened, debouncedSearchQuery);
   const lastImageRef = useRef<HTMLElement>(null);
   const { ref, entry } = useIntersection({
     root: lastImageRef?.current,
@@ -90,41 +77,23 @@ export const UnsplashModal = ({
           overlayProps={{ radius: "sm", blur: 2 }}
         />
         {unsplashPhotosList?.isError && (
-          <Text c={"red"}>
-            {translations("Currently Unsplash Is Unavailable")}
-          </Text>
+          <Text c={"red"}>{translations("Currently Unsplash Is Unavailable")}</Text>
         )}
         {!unsplashPhotosList?.isError && (
           <Center mb={"lg"}>
             <ContainedTextField
               w={largeScreen ? "60%" : "90%"}
-              leftSection={
-                <IconSearch
-                  style={{ width: rem(18), height: rem(18) }}
-                  stroke={1.5}
-                />
-              }
+              leftSection={<IconSearch style={{ width: rem(18), height: rem(18) }} stroke={1.5} />}
               rightSection={
-                <ActionIcon
-                  size={32}
-                  radius="xl"
-                  color={"var(--tertiary-color)"}
-                  variant="filled"
-                >
-                  <IconArrowRight
-                    style={{ width: rem(18), height: rem(18) }}
-                    stroke={1.5}
-                  />
+                <ActionIcon size={32} radius="xl" color={"var(--tertiary-color)"} variant="filled">
+                  <IconArrowRight style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
                 </ActionIcon>
               }
               onChange={(e) => setSearchQuery(e?.target?.value)}
             />
           </Center>
         )}
-        <SimpleGrid
-          cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 4, xl: 5 }}
-          mx={"lg"}
-        >
+        <SimpleGrid cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 4, xl: 5 }} mx={"lg"}>
           {_photoList?.length === 0 ? (
             <Text>{translations("Images Not Found")}</Text>
           ) : (
@@ -180,11 +149,7 @@ const UnsplashPhoto = ({
       ref={reference}
     >
       <Card.Section>
-        <Image
-          src={regular}
-          h={200}
-          alt={translations("image from unsplash")}
-        />
+        <Image src={regular} h={200} alt={translations("image from unsplash")} />
       </Card.Section>
     </Card>
   );

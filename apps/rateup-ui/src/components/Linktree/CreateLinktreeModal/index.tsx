@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback, useRef } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit, Info, LinkIcon, Plus } from "lucide-react";
+import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -24,13 +21,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 
-function CreateLinktreeModal({
-  opened,
-  onClose,
-  mode,
-  shortUrlId,
-  initialName,
-}) {
+function CreateLinktreeModal({ opened, onClose, mode, shortUrlId, initialName }) {
   const { t: translations } = useTranslation();
   const formSchema = z.object({
     name: z
@@ -51,8 +42,6 @@ function CreateLinktreeModal({
 
   const createLinktreeMutation = useCreateLinktreeMutation();
   const updateLinktreeMutation = useUpdateLinktreeMutation(shortUrlId);
-
-  const formSubmitBtnRef = useRef(null);
 
   const handleCreateLinktreeFormSubmit = useCallback(async (values) => {
     await createLinktreeMutation.mutateAsync(values);
@@ -92,9 +81,7 @@ function CreateLinktreeModal({
             <p className="text-sm text-white/90 mt-1.5">
               {mode === "create"
                 ? translations("Set up a quick access link for your campaigns")
-                : translations(
-                    "Rename the quick access link for your campaigns",
-                  )}
+                : translations("Rename the quick access link for your campaigns")}
             </p>
           </div>
           <DialogDescription className="sr-only">
@@ -122,8 +109,7 @@ function CreateLinktreeModal({
                 <div className="w-5 h-5 bg-primary rounded-md flex items-center justify-center shadow-sm">
                   <Edit className="w-3 h-3 text-white" />
                 </div>
-                {translations("Access Link Name")}{" "}
-                <span className="text-red-500">*</span>
+                {translations("Access Link Name")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="display-name"
@@ -146,9 +132,7 @@ function CreateLinktreeModal({
                 <Info className="w-3 h-3 text-white" />
               </div>
               <p className="text-xs leading-relaxed">
-                <span className="font-semibold">
-                  {translations("Pro Tip")}:
-                </span>{" "}
+                <span className="font-semibold">{translations("Pro Tip")}:</span>{" "}
                 {translations(
                   "Access links can be shared via QR codes, social media, or embedded directly in your campaigns for maximum reach",
                 )}
@@ -158,11 +142,7 @@ function CreateLinktreeModal({
 
           {/* Footer */}
           <DialogFooter className="px-6 py-4 border-t gap-3 sm:gap-3">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={handleCancelBtnClick}
-            >
+            <Button variant="outline" type="button" onClick={handleCancelBtnClick}>
               {translations("Cancel")}
             </Button>
             <Button
@@ -179,9 +159,7 @@ function CreateLinktreeModal({
               ) : (
                 <Edit className="w-4 h-4 mr-2" />
               )}
-              {mode === "create"
-                ? translations("Create Link")
-                : translations("Rename Link")}
+              {mode === "create" ? translations("Create Link") : translations("Rename Link")}
             </Button>
           </DialogFooter>
         </form>

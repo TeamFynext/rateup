@@ -45,7 +45,6 @@ interface LoyaltyDashboardStats {
   }[];
 }
 
-export const getLoyaltyDashboardData =
-  async (): Promise<LoyaltyDashboardStats> => {
-    return (await axiosClient.get(`${BASE_PATH}`))?.data;
-  };
+export const getLoyaltyDashboardData = async (): Promise<LoyaltyDashboardStats> => {
+  return (await axiosClient.get(`${BASE_PATH}`))?.data;
+};

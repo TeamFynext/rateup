@@ -1,6 +1,3 @@
-import type { JSX } from "react";
-import { useEffect, useState } from "react";
-
 import {
   ActionIcon,
   Avatar,
@@ -18,7 +15,6 @@ import {
   Stack,
   Text,
   Title,
-  useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -36,20 +32,15 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import type { JSX } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { deleteSurvey, updateSurvey } from "@/backend/surveys/survey.api";
-import {
-  useCloneSurveyMutation,
-  useSurveys,
-  useSurveysByTeam,
-} from "@/backend/surveys/surveys.query";
+import { useSurveys, useSurveysByTeam } from "@/backend/surveys/surveys.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "@/components/Button/RateupButtons.tsx";
+import { RateupButtonPrimary, RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
 import { CreateSurveyModal } from "@/components/Survey/CreateSurveyModal.tsx";
 import { useUser } from "@/context/UserContext.tsx";
 import { getTimeSince } from "@/utils/index.ts";
@@ -59,7 +50,7 @@ export const Route = createFileRoute("/dashboard/surveylandinglist/")({
 });
 
 function SurveyLandingList() {
-  const [createSurveyOpened, { open, close }] = useDisclosure(false);
+  const [createSurveyOpened, { close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
   const [options, setOptions] = useState([
     {
@@ -68,12 +59,7 @@ function SurveyLandingList() {
     },
   ]);
   const [selectedTeamId, setSelectedTeamId] = useState(options[0].value);
-  const {
-    data: teamRes,
-    isLoading: teamsLoading,
-    isError,
-    error: teamsError,
-  } = useTeamsByUser();
+  const { data: teamRes } = useTeamsByUser();
 
   const specificTeamIsSelected = selectedTeamId !== "all";
   const { t: translations } = useTranslation();
@@ -88,20 +74,11 @@ function SurveyLandingList() {
     }
   }, [selectedTeamId, queryClient]);
 
-  const {
-    isLoading: isLoadingTeamsUser,
-    data: teamsDataUser,
-    error: errorTeamsDataUser,
-    refetch: reftchTeams,
-  } = useTeamsByUser() as UseTeamsByUserResult;
+  const { data: teamsDataUser } = useTeamsByUser() as UseTeamsByUserResult;
 
   const teamsData = teamsDataUser?.data;
 
-  const {
-    isLoading: isLoadingSurveys,
-    error: errSurveysByTeams,
-    data: surveysByTeam,
-  } = useSurveysByTeam(selectedTeamId, specificTeamIsSelected);
+  const { data: surveysByTeam } = useSurveysByTeam(selectedTeamId, specificTeamIsSelected);
 
   useEffect(() => {
     if (teamsData?.length) {
@@ -112,9 +89,7 @@ function SurveyLandingList() {
 
       setOptions((prev) => {
         const uniqueValues = new Set(prev.map((option) => option.value));
-        const nonDuplicateOptions = newOptions.filter(
-          (option) => !uniqueValues.has(option.value),
-        );
+        const nonDuplicateOptions = newOptions.filter((option) => !uniqueValues.has(option.value));
         return [...prev, ...nonDuplicateOptions];
       });
     }
@@ -134,14 +109,7 @@ function SurveyLandingList() {
 
   return (
     <Container fluid>
-      <Flex
-        mih={50}
-        gap="md"
-        justify="space-between"
-        align="center"
-        direction="row"
-        wrap="wrap"
-      >
+      <Flex mih={50} gap="md" justify="space-between" align="center" direction="row" wrap="wrap">
         <Flex
           mih={50}
           gap="md"
@@ -162,14 +130,7 @@ function SurveyLandingList() {
           />
         </Flex>
 
-        <Flex
-          mih={50}
-          gap="md"
-          justify="flex-start"
-          align="flex-start"
-          direction="row"
-          wrap="wrap"
-        >
+        <Flex mih={50} gap="md" justify="flex-start" align="flex-start" direction="row" wrap="wrap">
           <Menu shadow="md" width={200} position="bottom-end" offset={2}>
             <Menu.Target>
               <RateupButtonPrimary
@@ -178,7 +139,7 @@ function SurveyLandingList() {
                 rightIcon={<IconChevronDown size="1rem" />}
               />
             </Menu.Target>
-            {/* 
+            {/*
               <Menu.Dropdown >
                 <Menu.Item color="teal" icon={<IconCheck size={14} />}>Active</Menu.Item>
                 <Menu.Item color="red" icon={<IconX size={14} />}>Inactive</Menu.Item>
@@ -205,10 +166,8 @@ function SurveyLandingList() {
           ?.slice()
           ?.sort((a, b) =>
             sort
-              ? new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-              : new Date(a.createdAt).getTime() -
-                new Date(b.createdAt).getTime(),
+              ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
           )
           ?.map((s) => (
             <SurveyCard key={s.id} survey={s} teamsData={teamsData} />
@@ -231,16 +190,12 @@ function SurveyCard({
   survey,
   teamsData,
 }: SurveyCardProps & { teamsData: TeamData[] }): JSX.Element {
-  const theme = useMantineTheme();
   const [timeSince, setTimeSince] = useState("");
   const { user } = useUser();
   const { t: translations } = useTranslation();
   useEffect(() => {
     setTimeSince(getTimeSince(survey.createdAt));
-    const timeoutID = setInterval(
-      () => setTimeSince(getTimeSince(survey.createdAt)),
-      5000,
-    );
+    const timeoutID = setInterval(() => setTimeSince(getTimeSince(survey.createdAt)), 5000);
     return () => clearInterval(timeoutID);
   }, []);
 
@@ -253,22 +208,22 @@ function SurveyCard({
       radius="lg"
       style={{ cursor: "pointer" }}
       onClick={() => {
-        user?.role === "MEMBER"
-          ? navigate({
-              to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`,
-            })
-          : navigate({
-              to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/${survey?.id}`,
-            });
+        if (user?.role === "MEMBER") {
+          navigate({
+            to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`,
+          });
+        } else {
+          navigate({
+            to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/${survey?.id}`,
+          });
+        }
       }}
     >
       <Flex justify={"space-between"} align={"center"}>
         <Text mr={"sm"} truncate size="xl" fw={500}>
           {survey.title}
         </Text>
-        <Badge color={survey?.type == "web" ? "blue" : "green"}>
-          {survey.type}
-        </Badge>
+        <Badge color={survey?.type == "web" ? "blue" : "green"}>{survey.type}</Badge>
         <Group align={"center"} mt="sm" gap="xs">
           <IconPencil />
           <SurveyMenu survey={survey} teamsData={teamsData} />
@@ -313,10 +268,6 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
   const { t: translations } = useTranslation();
   const [opened, { close, open }] = useDisclosure(false);
   const [selectedTeamID, setSelectedTeamID] = useState("");
-  const cloneSurvey = useCloneSurveyMutation({
-    close,
-    selectedTeamId: selectedTeamID,
-  });
 
   const [options, setOptions] = useState([]);
 
@@ -380,10 +331,7 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
             />
           </Group>
           <Group mt="xl">
-            <RateupButtonSecondary
-              title={translations("Cancel")}
-              onClick={close}
-            />
+            <RateupButtonSecondary title={translations("Cancel")} onClick={close} />
             <RateupButtonPrimary
               title={translations("Submit")}
               onClick={() => {
@@ -409,13 +357,9 @@ function SurveyMenu({ survey, teamsData }: SurveyMenuProps) {
       >
         <Menu.Item
           leftSection={survey.active ? <IconPlayerPause /> : <IconPlayerPlay />}
-          onClick={() =>
-            surveyUpdateMutation.mutate({ active: !survey.active })
-          }
+          onClick={() => surveyUpdateMutation.mutate({ active: !survey.active })}
         >
-          {survey.active
-            ? translations("Pause Survey")
-            : translations("Resume Survey")}
+          {survey.active ? translations("Pause Survey") : translations("Resume Survey")}
         </Menu.Item>
 
         <Menu.Item

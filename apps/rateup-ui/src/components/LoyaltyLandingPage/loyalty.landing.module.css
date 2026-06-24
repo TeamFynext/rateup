@@ -287,16 +287,8 @@ section {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(
-      closest-side at 72% 38%,
-      rgba(47, 163, 255, 0.2),
-      transparent 70%
-    ),
-    radial-gradient(
-      closest-side at 22% 78%,
-      rgba(248, 149, 29, 0.1),
-      transparent 70%
-    );
+    radial-gradient(closest-side at 72% 38%, rgba(47, 163, 255, 0.2), transparent 70%),
+    radial-gradient(closest-side at 22% 78%, rgba(248, 149, 29, 0.1), transparent 70%);
 }
 
 /* light beam from top */
@@ -308,11 +300,7 @@ section {
   width: 90px;
   height: 360px;
   z-index: 1;
-  background: linear-gradient(
-    to bottom,
-    rgba(180, 210, 255, 0.85),
-    rgba(120, 170, 255, 0)
-  );
+  background: linear-gradient(to bottom, rgba(180, 210, 255, 0.85), rgba(120, 170, 255, 0));
   filter: blur(26px);
   opacity: 0.7;
   -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
@@ -1068,11 +1056,7 @@ section {
   left: -30px;
   width: 260px;
   height: 230px;
-  background: radial-gradient(
-    circle,
-    rgba(120, 230, 120, 0.55),
-    rgba(60, 160, 60, 0) 70%
-  );
+  background: radial-gradient(circle, rgba(120, 230, 120, 0.55), rgba(60, 160, 60, 0) 70%);
   filter: blur(8px);
 }
 .app-mock .cols {
@@ -1316,11 +1300,7 @@ section {
   position: absolute;
   inset: 14px;
   border-radius: 22px;
-  background: radial-gradient(
-    circle at 50% 40%,
-    rgba(47, 163, 255, 0.18),
-    transparent 70%
-  );
+  background: radial-gradient(circle at 50% 40%, rgba(47, 163, 255, 0.18), transparent 70%);
   border: 1px solid rgba(120, 170, 255, 0.18);
 }
 .chip-core .st {
@@ -1362,11 +1342,7 @@ section {
   transform: translateX(-50%);
   width: 60px;
   height: 260px;
-  background: linear-gradient(
-    to bottom,
-    rgba(160, 200, 255, 0.85),
-    rgba(120, 170, 255, 0)
-  );
+  background: linear-gradient(to bottom, rgba(160, 200, 255, 0.85), rgba(120, 170, 255, 0));
   filter: blur(20px);
   opacity: 0.7;
   -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
@@ -1441,11 +1417,7 @@ section {
 }
 .tcard {
   position: relative;
-  background: linear-gradient(
-    160deg,
-    rgba(28, 55, 110, 0.55),
-    rgba(14, 30, 66, 0.6)
-  );
+  background: linear-gradient(160deg, rgba(28, 55, 110, 0.55), rgba(14, 30, 66, 0.6));
   border: 1px solid rgba(120, 160, 230, 0.18);
   border-radius: 24px;
   padding: 30px 32px 26px;
@@ -1458,11 +1430,7 @@ section {
   bottom: 0;
   width: 240px;
   height: 200px;
-  background: radial-gradient(
-    circle at 80% 90%,
-    rgba(81, 128, 230, 0.45),
-    transparent 65%
-  );
+  background: radial-gradient(circle at 80% 90%, rgba(81, 128, 230, 0.45), transparent 65%);
   pointer-events: none;
 }
 .tcard .qbadge {
@@ -1565,11 +1533,7 @@ section {
 
 .tstats {
   margin-top: 44px;
-  background: linear-gradient(
-    160deg,
-    rgba(24, 48, 98, 0.5),
-    rgba(12, 26, 58, 0.5)
-  );
+  background: linear-gradient(160deg, rgba(24, 48, 98, 0.5), rgba(12, 26, 58, 0.5));
   border: 1px solid rgba(120, 160, 230, 0.16);
   border-radius: 26px;
   padding: 56px 32px;
@@ -1584,11 +1548,7 @@ section {
   transform: translateX(-50%);
   width: 320px;
   height: 200px;
-  background: radial-gradient(
-    circle,
-    rgba(120, 170, 255, 0.4),
-    transparent 70%
-  );
+  background: radial-gradient(circle, rgba(120, 170, 255, 0.4), transparent 70%);
 }
 .tstats .row {
   display: grid;
@@ -1935,11 +1895,7 @@ section {
 .mck-chart .cb > i {
   width: 100%;
   border-radius: 6px 6px 0 0;
-  background: linear-gradient(
-    180deg,
-    var(--loyalty-blue-2),
-    var(--loyalty-blue)
-  );
+  background: linear-gradient(180deg, var(--loyalty-blue-2), var(--loyalty-blue));
 }
 .mck-chart .cb span {
   font-size: 9.5px;

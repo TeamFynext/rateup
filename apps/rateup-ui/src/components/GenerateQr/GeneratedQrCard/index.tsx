@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback, useState } from "react";
-
 import { useNavigate } from "@tanstack/react-router";
 import { Check, Copy, Edit, Eye, QrCode } from "lucide-react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Card, CardContent } from "@/components/ui/card.tsx";
@@ -11,14 +8,7 @@ import { Card, CardContent } from "@/components/ui/card.tsx";
 import CreatedSinceText from "../../DateAndTime/CreatedSinceText/index.tsx";
 import MoreOptionsMenu from "./MoreOptionsMenu.tsx";
 
-function GeneratedQrCard({
-  name,
-  shortUrlId,
-  id,
-  createdAt,
-  isPublished,
-  scans,
-}) {
+function GeneratedQrCard({ name, shortUrlId, id, createdAt, scans }) {
   const navigate = useNavigate();
   const qrUrl = `${import.meta.env.VITE_FRONTEND_URL}/qr/${shortUrlId}`;
   const handleCardClick = useCallback(() => {
@@ -37,10 +27,7 @@ function GeneratedQrCard({
   };
 
   return (
-    <Card
-      key={id}
-      className="rounded-xl shadow-sm  overflow-hidden  p-0 py-2 px-2"
-    >
+    <Card key={id} className="rounded-xl shadow-sm  overflow-hidden  p-0 py-2 px-2">
       <CardContent className="p-4 flex flex-col gap-3">
         {/* Header */}
         <div className="flex items-start justify-between">

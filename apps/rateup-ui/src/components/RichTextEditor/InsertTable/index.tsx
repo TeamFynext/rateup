@@ -1,15 +1,13 @@
-"use client";
-
-import { useCallback, useState } from "react";
-
 import { Popover } from "@mantine/core";
 import { RichTextEditor } from "@mantine/tiptap";
 import { IconTable } from "@tabler/icons-react";
+import { useCallback, useState } from "react";
 
 import { useTiptopTableBtnHandlersObj } from "./HandlersObjHook.tsx";
-import styles from "./InsertTable.module.css";
 import { tableActionsBtnsData } from "./TableActionBtnsList.tsx";
 import TableActionButton from "./TableActionButton.tsx";
+
+import styles from "./InsertTable.module.css";
 
 function TiptapEditorInsertTable() {
   const [isPopoverOpened, setIsPopoverOpened] = useState(false);

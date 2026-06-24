@@ -1,22 +1,16 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 import { useParams } from "@tanstack/react-router";
 import { Copy, Edit, ExternalLink, Sparkles, TrendingUp } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import {
-  useGetQrWithShortUrlId,
-  useUpdateQrMutation,
-} from "@/backend/generateQr/generateQr.query";
+import { useGetQrWithShortUrlId, useUpdateQrMutation } from "@/backend/generateQr/generateQr.query";
 import ShareQR from "@/components/Survey/ShareSurvey/ShareQR/index.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 
-function GeneratedQrPage({}) {
+function GeneratedQrPage() {
   const params = useParams({
     strict: false,
   });
@@ -28,12 +22,10 @@ function GeneratedQrPage({}) {
 
   const qrUrl = `${import.meta.env.VITE_FRONTEND_URL}/qr/${shortUrlId}`;
   const [destinationUrl, setDestinationUrl] = useState(data?.link);
-  const [isDestinationUrlEditable, setIsDestinationUrlEditable] =
-    useState(false);
+  const [isDestinationUrlEditable, setIsDestinationUrlEditable] = useState(false);
   const destinationUrlFromApi = data?.link || "";
-  const isDestinationUrlFromApiAndDestinationUrlSame =
-    destinationUrlFromApi === destinationUrl;
-  const [isSaving, setIsSaving] = useState(false);
+  const isDestinationUrlFromApiAndDestinationUrlSame = destinationUrlFromApi === destinationUrl;
+  const [, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const destinationUrlInputRef = useRef(null);
@@ -49,7 +41,7 @@ function GeneratedQrPage({}) {
         setIsDestinationUrlEditable(false);
         setIsSaving(false);
       }
-    } catch (err) {
+    } catch {
       setDestinationUrl(data?.link || "");
       setIsDestinationUrlEditable(false);
     }
@@ -100,9 +92,7 @@ function GeneratedQrPage({}) {
             </div>
             <div className="flex items-center gap-2">
               <div className="px-2.5 py-1 rounded-lg border">
-                <span className="text-xs font-medium">
-                  {translations("Editor Mode")}
-                </span>
+                <span className="text-xs font-medium">{translations("Editor Mode")}</span>
               </div>
             </div>
           </div>
@@ -135,9 +125,7 @@ function GeneratedQrPage({}) {
                   className="bg-primary px-3 h-8 min-w-32 rounded-lg text-xs shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
                 >
                   <Edit className="w-3 h-3 mr-1" />
-                  {isDestinationUrlFromApiAndDestinationUrlSame
-                    ? "Edit"
-                    : "Save"}
+                  {isDestinationUrlFromApiAndDestinationUrlSame ? "Edit" : "Save"}
                 </Button>
               </div>
             </div>
@@ -153,12 +141,7 @@ function GeneratedQrPage({}) {
               </Label>
               <div className="flex gap-1.5">
                 <div className="relative flex-1">
-                  <Input
-                    id="qr-url"
-                    value={qrUrl}
-                    readOnly
-                    className="flex-1 h-8 text-xs"
-                  />
+                  <Input id="qr-url" value={qrUrl} readOnly className="flex-1 h-8 text-xs" />
                 </div>
                 <Button
                   onClick={handleCopy}
@@ -180,12 +163,8 @@ function GeneratedQrPage({}) {
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-xs mb-0.5 font-medium">
-                  {translations("Total Scans")}
-                </div>
-                <div className="text-2xl font-bold text-primary">
-                  {data?.noOfScans}
-                </div>
+                <div className="text-xs mb-0.5 font-medium">{translations("Total Scans")}</div>
+                <div className="text-2xl font-bold text-primary">{data?.noOfScans}</div>
               </div>
             </div>
           </div>

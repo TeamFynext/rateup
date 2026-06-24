@@ -28,11 +28,5 @@ export const Route = createFileRoute("/(public-facing)/was/$shortId/")({
 function Was() {
   const { data, surveyTeamMapIdOrShortId, tag } = Route.useLoaderData();
 
-  return (
-    <Redirect
-      tag={tag}
-      res={data}
-      surveyTeamMapIdOrShortId={surveyTeamMapIdOrShortId}
-    />
-  );
+  return <Redirect tag={tag} res={data} surveyTeamMapIdOrShortId={surveyTeamMapIdOrShortId} />;
 }

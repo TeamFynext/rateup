@@ -1,5 +1,3 @@
-"use client";
-
 import { motion } from "motion/react";
 
 const ComparisonSection = () => {
@@ -37,24 +35,20 @@ const ComparisonSection = () => {
          md:text-xl leading-relaxed"
       >
         <p>
-          In the competitive world of packaging, standing out and connecting
-          with consumers is crucial. QR Codes are changing the way brands
-          connect with consumers. By providing instant access to product info,
-          promotions, and more, they help build trust and boost brand image.
+          In the competitive world of packaging, standing out and connecting with consumers is
+          crucial. QR Codes are changing the way brands connect with consumers. By providing instant
+          access to product info, promotions, and more, they help build trust and boost brand image.
         </p>
 
         <p>
-          Industry leaders like{" "}
-          <span className="text-[#0057B7] font-semibold">Coca-Cola</span>,{" "}
+          Industry leaders like <span className="text-[#0057B7] font-semibold">Coca-Cola</span>,{" "}
           <span className="text-[#0057B7] font-semibold">PepsiCo</span>, and{" "}
-          <span className="text-[#0057B7] font-semibold">Amazon</span> have seen
-          great success with QR codes, increasing sales, ROI, and achieving
-          KPIs.
+          <span className="text-[#0057B7] font-semibold">Amazon</span> have seen great success with
+          QR codes, increasing sales, ROI, and achieving KPIs.
         </p>
 
         <p>
-          With the rise of smartphones and seamless QR code integration, smart
-          packaging{" "}
+          With the rise of smartphones and seamless QR code integration, smart packaging{" "}
           <span className="text-[#0057B7] font-extrabold text-2xl sm:text-3xl">
             isn’t just a trend — it’s the future.
           </span>

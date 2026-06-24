@@ -4,9 +4,7 @@ import { axiosClient } from "../apiClient";
 
 export async function getTeamsMembersOfOrg() {
   try {
-    const members: MembersResponse = (
-      await axiosClient.get("/org/members-with-teams")
-    ).data;
+    const members: MembersResponse = (await axiosClient.get("/org/members-with-teams")).data;
     return members;
   } catch (e) {
     console.error(e);
@@ -16,9 +14,7 @@ export async function getTeamsMembersOfOrg() {
 
 export async function getAllTeamsMembersOfOrg() {
   try {
-    const members = (
-      await axiosClient.get("/org/members-with-teams-and-invitation")
-    ).data;
+    const members = (await axiosClient.get("/org/members-with-teams-and-invitation")).data;
     return members;
   } catch (e) {
     console.error(e);

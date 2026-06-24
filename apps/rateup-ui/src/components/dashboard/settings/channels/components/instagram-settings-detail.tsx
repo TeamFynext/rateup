@@ -1,9 +1,6 @@
-"use client";
-
-import type { ReactNode } from "react";
-
 import { Group, Skeleton, Stack } from "@mantine/core";
 import { IconBrandInstagram } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -50,9 +47,7 @@ export function InstagramSettingsDetail({
     <div className="space-y-4 rounded-xl border bg-background p-4">
       <div className="flex items-center gap-2 border-b pb-3">
         <IconBrandInstagram className="h-5 w-5 text-pink-600" />
-        <h3 className="text-lg font-semibold">
-          {translations("Instagram Settings")}
-        </h3>
+        <h3 className="text-lg font-semibold">{translations("Instagram Settings")}</h3>
       </div>
 
       {content}

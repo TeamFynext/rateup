@@ -1,8 +1,6 @@
 import { isProduction } from "./constants.ts";
 import { fbEvent } from "./fbpixel.ts";
 
-const GA_TRACKING_ID = import.meta.env.VITE_GOOGLE_ANALYTICS_ID;
-
 const analyseEvent = ({
   action,
   category,
@@ -22,10 +20,7 @@ const analyseEvent = ({
 };
 
 export const setGAConsent = (consent: "granted" | "denied") => {
-  if (
-    typeof globalThis !== "undefined" &&
-    typeof globalThis.gtag === "function"
-  ) {
+  if (typeof globalThis !== "undefined" && typeof globalThis.gtag === "function") {
     globalThis.gtag("consent", "update", {
       ad_storage: consent,
       analytics_storage: consent,

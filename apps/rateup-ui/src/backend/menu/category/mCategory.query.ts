@@ -90,10 +90,7 @@ export const useDeleteMenuCategoryMutation = (
   return deleteMutation;
 };
 
-export const useUpdateSortOrderMenuCategoryMutation = (
-  menuId: string,
-  onSuccess = () => {},
-) => {
+export const useUpdateSortOrderMenuCategoryMutation = (menuId: string, onSuccess = () => {}) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: ({ menuCategory }: { menuCategory: any }) =>

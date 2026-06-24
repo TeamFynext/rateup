@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useCallback, useEffect, useState } from "react";
-
 import {
   Box,
   Card,
@@ -18,22 +14,22 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconCircleCheck, IconX } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { gAnalyticsAndFbEvent } from "@/utils/gtag.ts";
 
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons.tsx";
 import { NumberAnimate } from "../Animate/NumberAnimate.tsx";
 import { PlanCardWidth, Title4 } from "../Utils/constants.ts";
+
 import ButtonStyles from "./Button.module.css";
 import styles from "./Modal.module.css";
 
 const PlanCard = ({
   index,
   totalItems,
-  mainColor = null,
   currencySymbol,
   data,
-  inversePeriod,
   largeScreen,
   handlePlanSelection,
   isPopular = false,
@@ -93,11 +89,7 @@ const PlanCard = ({
                   <>
                     {currencySymbol}
                     <NumberAnimate
-                      value={
-                        data?.paymentPlan?.amount ||
-                        data?.stripeProduct?.amount ||
-                        0
-                      }
+                      value={data?.paymentPlan?.amount || data?.stripeProduct?.amount || 0}
                     />
                     {(
                       !isStripe
@@ -185,9 +177,7 @@ const PlanCard = ({
                       : data?.stripeProduct?.interval,
                     gateway: data?.paymentPlan ? "RAZORPAY" : "STRIPE",
                     planId: data?.paymentPlan ? data?.paymentPlan?.planId : "",
-                    priceId: data?.paymentPlan
-                      ? ""
-                      : data?.stripeProduct?.priceId,
+                    priceId: data?.paymentPlan ? "" : data?.stripeProduct?.priceId,
                   });
                 }
               }}
@@ -229,11 +219,7 @@ const generateListItems = (listData: string[] = []) => (
     spacing="xs"
     size="md"
     center
-    icon={
-      <IconCircleCheck
-        style={{ width: rem(16), height: rem(16), color: "green" }}
-      />
-    }
+    icon={<IconCircleCheck style={{ width: rem(16), height: rem(16), color: "green" }} />}
   >
     {listData.map((item) => {
       const isNegative = item.startsWith("-");
@@ -241,13 +227,7 @@ const generateListItems = (listData: string[] = []) => (
       return (
         <Stack key={item} gap={2}>
           <List.Item
-            icon={
-              isNegative && (
-                <IconX
-                  style={{ width: rem(16), height: rem(16), color: "red" }}
-                />
-              )
-            }
+            icon={isNegative && <IconX style={{ width: rem(16), height: rem(16), color: "red" }} />}
           >
             {displayName}
           </List.Item>

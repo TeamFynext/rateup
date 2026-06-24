@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useContext, useEffect, useState } from "react";
-
 import {
   ActionIcon,
   Divider,
@@ -21,19 +17,17 @@ import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
 import { isEmptyObject } from "@tiptap/react";
+import React, { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import type { QuestionType } from "@/types/enums.ts";
-import { QuestionType as Q } from "@/types/enums.ts";
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import type { QuestionType } from "@/types/enums.ts";
+import { QuestionType as Q } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
 import {
   ContainedNumberInput,
   ContainedSelection,
@@ -73,27 +67,18 @@ type FormValues = {
   [ruleType: string]: RuleValue;
 };
 
-type ChangeHandler = (value: string | RuleValue) => void;
-
-const ValidationRulesEditor = ({
-  selectedQ,
-  setSelectedQ,
-  setActiveTab,
-  activeTab,
-}: IProps) => {
+const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTab }: IProps) => {
   const params = useParams({
     strict: false,
   });
   const surveyId = params.surveyId as string;
-  const [linkUpdateStatus, setLinkUpdateStatus] = useState(false);
   const { colors } = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [selectedFieldKey, setSelectedFieldKey] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
   const [ruleList, setRuleList] = useState(["length", "wordCount", "textType"]);
 
-  const [multiInputRules, setMultiInputRules] =
-    useState<Record<string, Rule[]>>(null);
+  const [multiInputRules, setMultiInputRules] = useState<Record<string, Rule[]>>(null);
   const [selectedRule, setSelectedRule] = useState(null);
 
   const questionUpdateMutation = useQuestionUpdateMutation({
@@ -166,7 +151,7 @@ const ValidationRulesEditor = ({
   }, [activeTab]);
 
   const updateValidationRules = (validationRules: any) => {
-    selectedQ && setSelectedQ({ ...selectedQ, validationRules });
+    if (selectedQ) setSelectedQ({ ...selectedQ, validationRules });
   };
 
   useEffect(() => {
@@ -257,9 +242,7 @@ const ValidationRulesEditor = ({
         setFieldValue(ruleType, {
           min: "3",
           max: "50",
-          errorMessage: translations(
-            "Input Length should be between 3 and 50 characters",
-          ),
+          errorMessage: translations("Input Length should be between 3 and 50 characters"),
         });
       }
     }
@@ -285,9 +268,7 @@ const ValidationRulesEditor = ({
     });
 
     const data = {
-      validationRules: [Q.MultiTextInput].includes(
-        selectedQ?.type as QuestionType,
-      )
+      validationRules: [Q.MultiTextInput].includes(selectedQ?.type as QuestionType)
         ? multiInputRules
         : { ...form.values },
     };
@@ -304,12 +285,9 @@ const ValidationRulesEditor = ({
     const ruleForm = useForm({
       initialValues: selectedRule,
       validate: {
-        min:
-          selectedRule?.ruleType === "length" ? isNotEmpty("required") : null,
-        max:
-          selectedRule?.ruleType === "length" ? isNotEmpty("required") : null,
-        type:
-          selectedRule?.ruleType === "textType" ? isNotEmpty("required") : null,
+        min: selectedRule?.ruleType === "length" ? isNotEmpty("required") : null,
+        max: selectedRule?.ruleType === "length" ? isNotEmpty("required") : null,
+        type: selectedRule?.ruleType === "textType" ? isNotEmpty("required") : null,
         errorMessage: isNotEmpty("required"),
       },
     });
@@ -343,9 +321,7 @@ const ValidationRulesEditor = ({
         <Paper bg={colors.yellow[0]} p="sm">
           <Group>
             <Select
-              data={selectedQ?.features?.[selectedLanguage]?.fields?.map(
-                (f) => f?.fieldKey,
-              )}
+              data={selectedQ?.features?.[selectedLanguage]?.fields?.map((f) => f?.fieldKey)}
               onChange={(value) => setSelectedFieldKey(value)}
               label={translations("select field Key")}
               placeholder={translations("select key")}
@@ -356,9 +332,7 @@ const ValidationRulesEditor = ({
               placeholder={translations("Select rule type")}
               data={ruleList?.filter(
                 (ruleType) =>
-                  !multiInputRules?.[selectedFieldKey]?.some(
-                    (r) => r.ruleType == ruleType,
-                  ),
+                  !multiInputRules?.[selectedFieldKey]?.some((r) => r.ruleType == ruleType),
               )}
               onChange={(ruleType) => addRule(ruleType)}
             />
@@ -376,39 +350,24 @@ const ValidationRulesEditor = ({
                       const updatedMultiInputRules = { ...multiInputRules };
                       if (fieldKey in updatedMultiInputRules)
                         delete updatedMultiInputRules[fieldKey];
-                      if (!Object.keys(updatedMultiInputRules).length)
-                        setMultiInputRules(null);
+                      if (!Object.keys(updatedMultiInputRules).length) setMultiInputRules(null);
                       setMultiInputRules(updatedMultiInputRules);
                     }}
                   >
                     <IconTrash color={colors.red[5]} />
                   </ActionIcon>
                 </Group>
-                {rules?.map((r: Rule, ruleIndex) => (
+                {rules?.map((r: Rule, _ruleIndex) => (
                   <Group py={"xs"} key={r?.ruleType}>
                     <Text w={80}>{r?.ruleType}:</Text>
                     {r?.ruleType === "length" && (
                       <>
-                        <ContainedNumberInput
-                          value={r?.min}
-                          readOnly
-                          label={"Min"}
-                          w={100}
-                        />
-                        <ContainedNumberInput
-                          value={r?.max}
-                          readOnly
-                          label={"Max"}
-                          w={100}
-                        />
+                        <ContainedNumberInput value={r?.min} readOnly label={"Min"} w={100} />
+                        <ContainedNumberInput value={r?.max} readOnly label={"Max"} w={100} />
                       </>
                     )}
                     {r?.ruleType === "textType" && (
-                      <ContainedTextField
-                        value={r?.type}
-                        readOnly
-                        label={translations("Type")}
-                      />
+                      <ContainedTextField value={r?.type} readOnly label={translations("Type")} />
                     )}
                     <ContainedTextField
                       value={r?.errorMessage}
@@ -431,13 +390,10 @@ const ValidationRulesEditor = ({
                     <ActionIcon
                       variant="subtle"
                       onClick={() => {
-                        const newRules = rules?.filter(
-                          (rule) => rule?.ruleType !== r?.ruleType,
-                        );
+                        const newRules = rules?.filter((rule) => rule?.ruleType !== r?.ruleType);
                         if (!newRules.length) {
                           delete multiInputRules?.[fieldKey];
-                          if (isEmptyObject(multiInputRules))
-                            setMultiInputRules(null);
+                          if (isEmptyObject(multiInputRules)) setMultiInputRules(null);
                           else setMultiInputRules(multiInputRules);
                         }
                         setMultiInputRules({
@@ -485,15 +441,9 @@ const ValidationRulesEditor = ({
             <ContainedTextField
               {...ruleForm.getInputProps("errorMessage")}
               label={translations("Error Message")}
-              description={translations(
-                "please change according to display text of the field",
-              )}
+              description={translations("please change according to display text of the field")}
             />
-            <RateupButtonBlue
-              title={translations("update")}
-              onClick={handleUpdateRule}
-              mt="sm"
-            />
+            <RateupButtonBlue title={translations("update")} onClick={handleUpdateRule} mt="sm" />
           </FormModalLayout>
         </ScrollAreaAutosize>
       </>
@@ -505,17 +455,13 @@ const ValidationRulesEditor = ({
         <Title order={3}>{translations("Validation Editor")}</Title>
         <Text c="gray">
           {" "}
-          {translations(
-            "Add validation rules to the user input for this question.",
-          )}
+          {translations("Add validation rules to the user input for this question.")}
         </Text>
         <Divider />
         {[Q.MultiTextInput].includes(selectedQ?.type as QuestionType) ? (
           <MultiInputValidationRules />
         ) : (
-          <Paper
-            style={{ minHeight: "300px", minWidth: "650px", maxWidth: "650px" }}
-          >
+          <Paper style={{ minHeight: "300px", minWidth: "650px", maxWidth: "650px" }}>
             <ScrollArea h={400}>
               <form onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSave]])}>
                 {Object.entries(values).map(([ruleType, ruleValues]) => {
@@ -533,10 +479,7 @@ const ValidationRulesEditor = ({
                           borderRadius: "12px",
                         }}
                       >
-                        <Title
-                          order={4}
-                          style={{ maxWidth: "100px", minWidth: "100px" }}
-                        >
+                        <Title order={4} style={{ maxWidth: "100px", minWidth: "100px" }}>
                           {ruleTitle(ruleType) || ruleType}
                         </Title>
                         {"min" in ruleData && "max" in ruleData ? (
@@ -605,10 +548,7 @@ const ValidationRulesEditor = ({
                         />
 
                         <Group px="xl">
-                          <ActionIcon
-                            variant="subtle"
-                            onClick={() => deleteRule(ruleType)}
-                          >
+                          <ActionIcon variant="subtle" onClick={() => deleteRule(ruleType)}>
                             <IconTrash color={colors.red[5]} />
                           </ActionIcon>
                         </Group>
@@ -632,9 +572,7 @@ const ValidationRulesEditor = ({
                     </Title>
                     <Select
                       placeholder={translations("Select rule type")}
-                      data={ruleList?.filter(
-                        (ruleType) => !(ruleType in values),
-                      )}
+                      data={ruleList?.filter((ruleType) => !(ruleType in values))}
                       onChange={(ruleType) => addRule(ruleType)}
                     />
                   </Group>

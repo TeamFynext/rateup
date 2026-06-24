@@ -1,7 +1,3 @@
-"use client";
-
-import { useContext, useEffect, useState } from "react";
-
 import type { TextInputProps } from "@mantine/core";
 import {
   Alert,
@@ -17,38 +13,24 @@ import {
   Switch,
   Text,
   TextInput,
-  useMantineTheme,
 } from "@mantine/core";
 import type { UseFormReturnType } from "@mantine/form";
 import { schemaResolver, useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { isEqual } from "lodash";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import {
-  DocumentMimeType,
-  InputType,
-  IntegratedApps,
-  PhotoSource,
-  QuestionType,
-  SurveyType,
-  WaFlowFormElementType,
-  WaFlowStatus,
-} from "@/types/enums.ts";
-import type { WaFlowScreen } from "@/types/global";
-import {
   useQuestionCreateMutation,
   useQuestionUpdateMutation,
 } from "@/backend/surveys/questions/questions.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "@/components/Button/RateupButtons.tsx";
+import { RateupButtonPrimary, RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
 import {
   ContainedMultiSelect,
   ContainedNumberInput,
@@ -65,19 +47,21 @@ import {
   WA_FLOW_HEADING_CHAR_LIMIT,
 } from "@/components/whatsapp/whatsappConfig.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import {
+  DocumentMimeType,
+  InputType,
+  IntegratedApps,
+  PhotoSource,
+  QuestionType,
+  SurveyType,
+  WaFlowFormElementType,
+  WaFlowStatus,
+} from "@/types/enums.ts";
+import type { WaFlowScreen } from "@/types/global";
 import { SAVE_HOTKEY, WaNPSQuestions } from "@/utils/constants.ts";
-import {
-  googleReviewSupportedTypes,
-  logicSupportedTypes,
-} from "@/utils/data.ts";
-import {
-  getInitialQuestionValues,
-  validateAllLanguagesArePopulated,
-} from "@/utils/questions.ts";
-import {
-  getFlowTextLimit,
-  questionTypeToFlowFormElementType,
-} from "@/utils/whatsapp/flow.utils";
+import { googleReviewSupportedTypes, logicSupportedTypes } from "@/utils/data.ts";
+import { getInitialQuestionValues, validateAllLanguagesArePopulated } from "@/utils/questions.ts";
+import { getFlowTextLimit, questionTypeToFlowFormElementType } from "@/utils/whatsapp/flow.utils";
 
 import { EditFlowContext } from "./EditFlowContext.ts";
 import { FlowLogicEditor } from "./FlowLogicEditor.tsx";
@@ -102,9 +86,7 @@ export function FlowQuestionDetailedView({
   surveyId,
   onCreated,
 }: Readonly<QuestionDetailedViewProps>) {
-  const [activeEditor, setActiveEditor] = useState<EditorType>(
-    EditorType.ElementEditor,
-  );
+  const [activeEditor, setActiveEditor] = useState<EditorType>(EditorType.ElementEditor);
 
   const updateQuestionMutation = useQuestionUpdateMutation({ surveyId });
 
@@ -129,11 +111,7 @@ export function FlowQuestionDetailedView({
         />
       );
     case EditorType.LogicEditor:
-      return (
-        <FlowLogicEditor
-          afterSave={() => setActiveEditor(EditorType.ElementEditor)}
-        />
-      );
+      return <FlowLogicEditor afterSave={() => setActiveEditor(EditorType.ElementEditor)} />;
     case EditorType.GoogleReviewEditor:
       return (
         <GoogleReviewEditor
@@ -158,11 +136,9 @@ function ElementEditor({
   onCreated,
   setActiveTab,
 }: Readonly<ElementEditorProps>) {
-  const theme = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const { selectedScreenId, flowJson, updateFlowJson, selectedFormElementId } =
-    useContext(EditFlowContext);
-  const navigate = useNavigate();
+  const { selectedScreenId, flowJson } = useContext(EditFlowContext);
+
   const params = useParams({
     strict: false,
   });
@@ -176,9 +152,7 @@ function ElementEditor({
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
-  const currentIndex = flowJson.screens.findIndex(
-    (s) => s.id === selectedScreenId,
-  );
+  const currentIndex = flowJson.screens.findIndex((s) => s.id === selectedScreenId);
   const nextScreens = flowJson.screens.slice(currentIndex + 1);
 
   const labelMaxLength = getFlowLabelLimit(
@@ -192,11 +166,7 @@ function ElementEditor({
     }
   }
 
-  const formInitialValues = getInitialQuestionValues(
-    question,
-    surveyLanguages,
-    SurveyType.WaFlow,
-  );
+  const formInitialValues = getInitialQuestionValues(question, surveyLanguages, SurveyType.WaFlow);
   const form = useForm({
     initialValues: formInitialValues,
     validate: {
@@ -250,20 +220,14 @@ function ElementEditor({
         ctx.issues.push({
           path: ["max-uploaded-photos"],
           code: "custom",
-          message: translations(
-            "Minimum uploaded photos cannot be greater than maximum",
-          ),
+          message: translations("Minimum uploaded photos cannot be greater than maximum"),
           input: values["min-uploaded-photos"],
         });
-      } else if (
-        values["min-uploaded-documents"] > values["max-uploaded-documents"]
-      ) {
+      } else if (values["min-uploaded-documents"] > values["max-uploaded-documents"]) {
         ctx.issues.push({
           path: ["min-uploaded-documents"],
           code: "custom",
-          message: translations(
-            "Minimum uploaded documents cannot be greater than maximum",
-          ),
+          message: translations("Minimum uploaded documents cannot be greater than maximum"),
           input: values["min-uploaded-documents"],
         });
       }
@@ -300,14 +264,12 @@ function ElementEditor({
     }
   }, [question.extraConfig]);
 
-  form.watch("choices", ({ previousValue, value, touched, dirty }) => {
+  form.watch("choices", () => {
     handleSave();
   });
 
   function getIncompleteLanguages() {
-    return validateAllLanguagesArePopulated(form.values, surveyLanguages, [
-      "choices",
-    ]);
+    return validateAllLanguagesArePopulated(form.values, surveyLanguages, ["choices"]);
   }
   // Copy of handleSave from QuestionDetailedView.tsx
   const handleSave = () => {
@@ -366,18 +328,14 @@ function ElementEditor({
           return {
             "photo-source": extraConfigForm.values["photo-source"],
             "max-file-size-kb": extraConfigForm.values["max-file-size-kb"],
-            "min-uploaded-photos":
-              extraConfigForm.values["min-uploaded-photos"],
-            "max-uploaded-photos":
-              extraConfigForm.values["max-uploaded-photos"],
+            "min-uploaded-photos": extraConfigForm.values["min-uploaded-photos"],
+            "max-uploaded-photos": extraConfigForm.values["max-uploaded-photos"],
           };
         case QuestionType.DocumentPicker:
           return {
             "max-file-size-kb": extraConfigForm.values["max-file-size-kb"],
-            "min-uploaded-documents":
-              extraConfigForm.values["min-uploaded-documents"],
-            "max-uploaded-documents":
-              extraConfigForm.values["max-uploaded-documents"],
+            "min-uploaded-documents": extraConfigForm.values["min-uploaded-documents"],
+            "max-uploaded-documents": extraConfigForm.values["max-uploaded-documents"],
             "allowed-mime-types": extraConfigForm.values["allowed-mime-types"],
           };
         case QuestionType.Text:
@@ -422,30 +380,24 @@ function ElementEditor({
       {
         onSuccess: () => {
           toast.dismiss();
-          toast.success(
-            translations("Your question was updated successfully"),
-            {
-              id: "load-data",
-            },
-          );
+          toast.success(translations("Your question was updated successfully"), {
+            id: "load-data",
+          });
         },
       },
     );
   };
 
-  const isSaving =
-    questionCreateMutation.isPending || questionUpdateMutation.isPending;
+  const isSaving = questionCreateMutation.isPending || questionUpdateMutation.isPending;
 
   const labelInputProps = form.getInputProps(`label.${selectedLanguage}`);
   // Ensure value is always a string (handle undefined, null, or non-string values)
-  const labelValue =
-    typeof labelInputProps.value === "string" ? labelInputProps.value : "";
+  const labelValue = typeof labelInputProps.value === "string" ? labelInputProps.value : "";
   // TODO: defer error checking until user has entered some text
   labelInputProps.error = validateLabel(labelValue);
 
   useEffect(() => {
-    if (formInitialValues.required !== form.values.required && form.isValid())
-      handleSave();
+    if (formInitialValues.required !== form.values.required && form.isValid()) handleSave();
   }, [form.values.required]);
 
   return (
@@ -494,16 +446,10 @@ function ElementEditor({
                   autosize
                   maxRows={3}
                   placeholder={translations("Enter question title here")}
-                  maxValue={getFlowTextLimit(
-                    WaFlowFormElementType.textSubHeading,
-                  )}
+                  maxValue={getFlowTextLimit(WaFlowFormElementType.textSubHeading)}
                   {...form.getInputProps(`title.${selectedLanguage}`)}
                   onBlur={() => {
-                    if (
-                      !isEqual(form.values, formInitialValues) &&
-                      form.isValid()
-                    )
-                      handleSave();
+                    if (!isEqual(form.values, formInitialValues) && form.isValid()) handleSave();
                   }}
                 />
 
@@ -522,32 +468,24 @@ function ElementEditor({
                   }}
                   maxValue={getFlowTextLimit(WaFlowFormElementType.textBody)}
                   onBlur={() => {
-                    if (
-                      !isEqual(form.values, formInitialValues) &&
-                      form.isValid()
-                    )
-                      handleSave();
+                    if (!isEqual(form.values, formInitialValues) && form.isValid()) handleSave();
                   }}
                 />
               </>
             )}
             <LabelTextInput
               value={labelValue}
-              onChange={(e) =>
-                form.setFieldValue(`label.${selectedLanguage}`, e.target.value)
-              }
+              onChange={(e) => form.setFieldValue(`label.${selectedLanguage}`, e.target.value)}
               error={labelInputProps.error}
               maxLength={labelMaxLength}
               onBlur={() => {
-                if (!isEqual(form.values, formInitialValues) && form.isValid())
-                  handleSave();
+                if (!isEqual(form.values, formInitialValues) && form.isValid()) handleSave();
               }}
             />
 
             <FlowQuestionExtraProps
               form={form}
               question={question}
-              handleSave={handleSave}
               nextScreens={nextScreens}
               extraConfigForm={extraConfigForm}
             />
@@ -591,22 +529,23 @@ function ElementEditor({
                 size="sm"
                 onClick={() => {
                   const save = handleSave();
-                  save === "saved" && setActiveTab(EditorType.LogicEditor);
+                  if (save === "saved") {
+                    setActiveTab(EditorType.LogicEditor);
+                  }
                 }}
               />
             )}
             {/* TODO: Implement Custom Validation*/}
-            {googleReviewSupportedTypes.includes(
-              question?.type as QuestionType,
-            ) && (
+            {googleReviewSupportedTypes.includes(question?.type as QuestionType) && (
               <RateupButtonSecondary
                 title={translations("Google Review")}
                 leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
                 size="sm"
                 onClick={() => {
                   const save = handleSave();
-                  save === "saved" &&
+                  if (save === "saved") {
                     setActiveTab(EditorType.GoogleReviewEditor);
+                  }
                 }}
               />
             )}
@@ -645,9 +584,7 @@ function LabelTextInput(props: TextInputProps & { maxLength: number }) {
           fontWeight: 400, // set custom font size for this TextInput
         },
       }}
-      rightSection={
-        <LengthTracker length={safeValue.length} maxValue={props.maxLength} />
-      }
+      rightSection={<LengthTracker length={safeValue.length} maxValue={props.maxLength} />}
       rightSectionProps={{
         style: {
           minWidth: "80px",
@@ -660,7 +597,6 @@ function LabelTextInput(props: TextInputProps & { maxLength: number }) {
 interface ExtraPropsProps {
   form: UseFormReturnType<any>;
   question: Question;
-  handleSave: () => void;
   nextScreens?: WaFlowScreen[];
   extraConfigForm: UseFormReturnType<any>;
 }
@@ -668,9 +604,8 @@ function FlowQuestionExtraProps({
   form,
   question,
   nextScreens,
-  handleSave,
   extraConfigForm,
-}: ExtraPropsProps) {
+}: Readonly<ExtraPropsProps>) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { t: translations } = useTranslation();
   switch (question.type) {
@@ -679,9 +614,7 @@ function FlowQuestionExtraProps({
     case QuestionType.DDSS:
     case QuestionType.DDMS:
     case QuestionType.CustomNPS:
-      const maxChoiceCount = getFlowOptionsLimit(
-        questionTypeToFlowFormElementType(question.type),
-      );
+      const maxChoiceCount = getFlowOptionsLimit(questionTypeToFlowFormElementType(question.type));
       return (
         <Stack gap={0} mt="xl">
           <Group justify="space-between">
@@ -754,17 +687,13 @@ function FlowQuestionExtraProps({
           <ContainedSelection
             label={translations("Photo Source")}
             placeholder={translations("Select Photo Source")}
-            description={translations(
-              "source where the image can be selected from",
-            )}
+            description={translations("source where the image can be selected from")}
             data={Object.values(PhotoSource)}
             {...extraConfigForm.getInputProps("photo-source")}
           />
           <ContainedNumberInput
             label={translations("max file size in kb")}
-            description={translations(
-              "maximum file size (in kilobytes) that can be uploaded",
-            )}
+            description={translations("maximum file size (in kilobytes) that can be uploaded")}
             placeholder={translations("max file size in kb")}
             min={1}
             max={25600}
@@ -772,9 +701,7 @@ function FlowQuestionExtraProps({
           />
           <ContainedNumberInput
             label={translations("min uploaded photos")}
-            description={translations(
-              "minimum number of photos that are required",
-            )}
+            description={translations("minimum number of photos that are required")}
             placeholder={translations("min uploaded photos")}
             min={0}
             max={30}
@@ -782,9 +709,7 @@ function FlowQuestionExtraProps({
           />
           <ContainedNumberInput
             label={translations("max uploaded photos")}
-            description={translations(
-              "maximum number of photos that can be uploaded",
-            )}
+            description={translations("maximum number of photos that can be uploaded")}
             placeholder={translations("max uploaded photos")}
             min={1}
             max={30}
@@ -807,9 +732,7 @@ function FlowQuestionExtraProps({
           </Alert>
           <ContainedNumberInput
             label={translations("max file size in kb")}
-            description={translations(
-              "maximum file size (in kilobytes) that can be uploaded",
-            )}
+            description={translations("maximum file size (in kilobytes) that can be uploaded")}
             placeholder={translations("max file size in kb")}
             min={1}
             max={25600}
@@ -817,9 +740,7 @@ function FlowQuestionExtraProps({
           />
           <ContainedNumberInput
             label={translations("min uploaded documents")}
-            description={translations(
-              "minimum number of documents that are required",
-            )}
+            description={translations("minimum number of documents that are required")}
             placeholder={translations("min uploaded documents")}
             min={0}
             max={30}
@@ -827,9 +748,7 @@ function FlowQuestionExtraProps({
           />
           <ContainedNumberInput
             label={translations("max uploaded documents")}
-            description={translations(
-              "maximum number of documents that can be uploaded",
-            )}
+            description={translations("maximum number of documents that can be uploaded")}
             placeholder={translations("max uploaded documents")}
             min={1}
             max={30}
@@ -838,9 +757,7 @@ function FlowQuestionExtraProps({
           <ContainedMultiSelect
             label={translations("allowed mime types")}
             placeholder={translations("Select allowed mime types")}
-            description={translations(
-              "by default all the mime types are allowed",
-            )}
+            description={translations("by default all the mime types are allowed")}
             data={Object.entries(DocumentMimeType).map(([key, value]) => ({
               label: key,
               value: value,

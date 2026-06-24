@@ -1,5 +1,3 @@
-"use client";
-
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 
@@ -17,9 +15,7 @@ export default function QrHowItWorks() {
           viewport={{ once: true }}
           className="w-full max-w-7xl px-6 sm:px-10 lg:px-12 mx-auto py-10 space-y-6 text-base sm:text-lg md:text-xl leading-relaxed"
         >
-          <h3 className="text-[#003B7A] text-3xl font-semibold pb-3">
-            {item.title}
-          </h3>
+          <h3 className="text-[#003B7A] text-3xl font-semibold pb-3">{item.title}</h3>
           <p className="max-w-5xl font-semibold">{item.description}</p>
 
           {/* Centered Image */}

@@ -1,8 +1,5 @@
-"use client";
-
-import { useCallback, useRef } from "react";
-
 import { Box, Center, Image, Textarea } from "@mantine/core";
+import { useCallback, useRef } from "react";
 
 import { useLinktreeObj } from "@/components/Linktree/LinktreeEditor/LinktreeContext/LinktreeContext.tsx";
 
@@ -15,6 +12,7 @@ import {
   useThemeObj,
 } from "../../ThemeContext/ThemeContext.tsx";
 import UnsplashCreditText from "../UnsplashCreditText/index.tsx";
+
 import styles from "./ThemePreview.module.css";
 
 function ThemePreview() {
@@ -88,11 +86,7 @@ function ThemePreview() {
           <>
             <Box className={styles["logo-img-container"]}>
               {logoUrl ? (
-                <Image
-                  src={logoUrl}
-                  alt="logo"
-                  style={{ ...logoStyles, objectFit: "contain" }}
-                />
+                <Image src={logoUrl} alt="logo" style={{ ...logoStyles, objectFit: "contain" }} />
               ) : (
                 <Image
                   src={`${imagesPath}/camera-off.svg`}

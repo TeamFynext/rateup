@@ -1,21 +1,17 @@
-"use client";
-
 import { Box, Divider, Select } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 
-import {
-  useSelectedEditor,
-  useSetSelectedEditor,
-} from "../../ThemeContext/ThemeContext.tsx";
+import { useSelectedEditor, useSetSelectedEditor } from "../../ThemeContext/ThemeContext.tsx";
 import BackgroundEditor from "./components/BackgroundEditor/index.tsx";
 import LinklistItemEditor from "./components/LinklistItemEditor/index.tsx";
 import LogoEditor from "./components/LogoEditor/index.tsx";
 import SubtitleEditor from "./components/SubtitleEditor/index.tsx";
 import TitleEditor from "./components/TitleEditor/index.tsx";
 import { editorsList } from "./constants.tsx";
+
 import styles from "./ThemeStylesEditor.module.css";
 
-function RenderOption({ option, checked }) {
+function RenderOption({ option }) {
   return <Box>{option.label}</Box>;
 }
 

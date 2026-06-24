@@ -18,15 +18,12 @@ export function CampaignPerformance({ data }: CampaignPerformanceProps) {
   const { t } = useTranslation("campaign.performance");
   const { sent, delivered, read, pending, failed } = data;
 
-  const percent = (value: number) =>
-    sent > 0 ? ((value / sent) * 100).toFixed(1) : "0.0";
+  const percent = (value: number) => (sent > 0 ? ((value / sent) * 100).toFixed(1) : "0.0");
 
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-lg text-muted-foreground">
-          {t("Campaign Performance")}
-        </h2>
+        <h2 className="text-lg text-muted-foreground">{t("Campaign Performance")}</h2>
         <Badge variant="outline" className="text-xs">
           {t("Last updated: Just now")}
         </Badge>
@@ -93,23 +90,10 @@ interface MetricCardProps {
   badge: string;
   color?: "primary" | "green" | "emerald" | "amber" | "red";
   badgeColor: "sent" | "delivered" | "read" | "pending" | "failed";
-  iconColor:
-    | "sentBadge"
-    | "delBadge"
-    | "readBadge"
-    | "pendingBadge"
-    | "faildBadge";
+  iconColor: "sentBadge" | "delBadge" | "readBadge" | "pendingBadge" | "faildBadge";
 }
 
-function MetricCard({
-  icon,
-  value,
-  label,
-  badge,
-  color,
-  badgeColor,
-  iconColor,
-}: MetricCardProps) {
+function MetricCard({ icon, value, label, badge, color, badgeColor, iconColor }: MetricCardProps) {
   const colorMap = {
     primary:
       "text-primary border-[#2E5BFF]/20 " +

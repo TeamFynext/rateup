@@ -1,19 +1,13 @@
-import React from "react";
-
 import { Box, Container, Image, Stack, Text, Title } from "@mantine/core";
-import type {
-  QueryObserverResult,
-  RefetchOptions,
-} from "@tanstack/react-query";
+import type { QueryObserverResult, RefetchOptions } from "@tanstack/react-query";
+import React from "react";
 
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 
 import { RateupButtonPrimary } from "../Button/RateupButtons.tsx";
 
 type ErrorComponentProps = {
-  refetch: (
-    options?: RefetchOptions,
-  ) => Promise<QueryObserverResult<any, Error>>;
+  refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<any, Error>>;
   isRefetching?: boolean;
 };
 const ErrorComponent = ({ refetch, isRefetching }: ErrorComponentProps) => {

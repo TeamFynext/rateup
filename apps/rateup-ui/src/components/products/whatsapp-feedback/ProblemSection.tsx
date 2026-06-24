@@ -84,10 +84,9 @@ export default function ProblemSection() {
             Because You Can't Hear Them?
           </h6>
           <p className="mt-4 text-[17px] leading-[1.55] text-ink-500">
-            Email surveys get lost in spam. SMS goes unread. Phone calls annoy.
-            Relying on these outdated methods means you're missing critical
-            feedback, operating blind, and potentially losing business to a
-            dismal <strong>2% response rate</strong>.
+            Email surveys get lost in spam. SMS goes unread. Phone calls annoy. Relying on these
+            outdated methods means you're missing critical feedback, operating blind, and
+            potentially losing business to a dismal <strong>2% response rate</strong>.
           </p>
         </div>
 
@@ -109,9 +108,7 @@ export default function ProblemSection() {
               <h6 className="font-nunito font-extrabold text-[20px] text-ink-800 mb-2.5">
                 {c.title}
               </h6>
-              <p className="text-sm text-ink-500 leading-[1.55] mb-5">
-                {c.desc}
-              </p>
+              <p className="text-sm text-ink-500 leading-[1.55] mb-5">{c.desc}</p>
               <div className="inline-flex items-center gap-1.5 bg-[#FFF0F0] text-red-600 font-extrabold text-sm py-1.5 px-3.5 rounded-full">
                 <XIcon />
                 {c.badge}
@@ -135,9 +132,9 @@ export default function ProblemSection() {
                 No apps. No forms. Just feedback.
               </h6>
               <p className="text-[15px] text-white/70 mb-3.5 leading-[1.5]">
-                2 billion people use WhatsApp daily. RateUp sends feedback
-                requests directly into the app they already check 23 times a day
-                — in a conversation they actually want to open.
+                2 billion people use WhatsApp daily. RateUp sends feedback requests directly into
+                the app they already check 23 times a day — in a conversation they actually want to
+                open.
               </p>
               <div className="flex gap-2 flex-wrap">
                 <span className="bg-[rgba(37,211,102,0.15)] border border-[rgba(37,211,102,0.3)] rounded-full py-1 px-3 text-[13px] font-bold text-[#6CDEA4]">

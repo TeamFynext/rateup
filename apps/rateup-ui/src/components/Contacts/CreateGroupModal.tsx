@@ -1,19 +1,16 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import { Folder } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { ContactGroupType } from "@/types/enums.ts";
 import {
   useCreateContactGroupMutation,
   useEditContactGroupMutation,
 } from "@/backend/campaign/contactGroup/contactGroup.query";
+import { ContactGroupType } from "@/types/enums.ts";
 import { SAVE_HOTKEY } from "@/utils/constants.ts";
 import { getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
@@ -41,13 +38,7 @@ interface GroupModalProps {
   type?: ContactGroupType;
 }
 
-const CreateGroupModal = ({
-  opened,
-  setOpened,
-  isEdit,
-  groupDetails,
-  type,
-}: GroupModalProps) => {
+const CreateGroupModal = ({ opened, setOpened, isEdit, groupDetails, type }: GroupModalProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const navigate = useNavigate();
@@ -64,8 +55,7 @@ const CreateGroupModal = ({
         },
     validate: {
       name: (value) => (value.length ? null : translations("Cannot be empty")),
-      teamId: (value) =>
-        !isEdit && !value && translations("Must select a team"),
+      teamId: (value) => !isEdit && !value && translations("Must select a team"),
     },
   });
 
@@ -80,9 +70,7 @@ const CreateGroupModal = ({
 
   const createContactGroupMutation = useCreateContactGroupMutation();
 
-  const editContactGroupMutation = useEditContactGroupMutation(
-    groupDetails?.id,
-  );
+  const editContactGroupMutation = useEditContactGroupMutation(groupDetails?.id);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -140,7 +128,7 @@ const CreateGroupModal = ({
         form.setFieldValue("icon", key);
         setIsUploading(false);
       })
-      .catch((err) => {
+      .catch((_err) => {
         toast.error(translations("Error uploading icon. Please try again."));
         setIsUploading(false);
       });
@@ -149,15 +137,10 @@ const CreateGroupModal = ({
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
       <DialogContent onClick={(e) => e.stopPropagation()}>
-        <form
-          onSubmit={handleSubmit}
-          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
-        >
+        <form onSubmit={handleSubmit} onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}>
           <DialogHeader>
             <DialogTitle>Create New Group</DialogTitle>
-            <DialogDescription>
-              Create a new contact group with team
-            </DialogDescription>
+            <DialogDescription>Create a new contact group with team</DialogDescription>
           </DialogHeader>
           <div className="my-5">
             <div className="flex flex-col gap-4">
@@ -181,10 +164,7 @@ const CreateGroupModal = ({
             <div className="flex flex-col gap-2 mt-4 ">
               {form.values.icon?.length ? (
                 <Avatar>
-                  <AvatarImage
-                    src={getFileUrlFromKey(form.values.icon)}
-                    alt={form.values.name}
-                  />
+                  <AvatarImage src={getFileUrlFromKey(form.values.icon)} alt={form.values.name} />
                 </Avatar>
               ) : (
                 <Folder />
@@ -199,9 +179,7 @@ const CreateGroupModal = ({
 
                 <Button asChild>
                   <Label htmlFor="file-upload">
-                    {file
-                      ? `Selected: ${file.name}`
-                      : translations("Upload Icon")}
+                    {file ? `Selected: ${file.name}` : translations("Upload Icon")}
                   </Label>
                 </Button>
               </div>
@@ -211,14 +189,13 @@ const CreateGroupModal = ({
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="secondary">
-                <span className="text-sm font-normal">
-                  {translations("Cancel")}
-                </span>
+                <span className="text-sm font-normal">{translations("Cancel")}</span>
               </Button>
             </DialogClose>
             <Button disabled={isUploading} type="submit">
-              {(editContactGroupMutation.isPending ||
-                createContactGroupMutation.isPending) && <Spinner />}
+              {(editContactGroupMutation.isPending || createContactGroupMutation.isPending) && (
+                <Spinner />
+              )}
               <span className="text-sm font-normal">
                 {isEdit ? translations("Save") : translations("Create Group")}
               </span>

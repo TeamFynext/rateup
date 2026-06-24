@@ -1,12 +1,9 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Check, Copy, RefreshCw, Trash2, Users } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -16,10 +13,7 @@ import {
   useCreateReferralMutation,
   useDeleteReferralMutation,
 } from "@/backend/referrals/referrals.query";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
   Card,
@@ -39,11 +33,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 
 function ReferralActionsCell({ id, code }: { id: string; code: string }) {
   const [copiedCode, setCopiedCode] = useState(false);
@@ -52,8 +42,7 @@ function ReferralActionsCell({ id, code }: { id: string; code: string }) {
   const { t: translations } = useTranslation();
   const deleteMutation = useDeleteReferralMutation();
 
-  const websiteUrl =
-    import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+  const websiteUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
   const finalUrl = `${websiteUrl}?ref=${code}`;
 
   const copyCode = () => {
@@ -214,20 +203,14 @@ function ReferralsPage() {
   const { t: translations } = useTranslation();
   const queryClient = useQueryClient();
 
-  const {
-    data: referrals,
-    isLoading,
-    isFetching,
-    refetch,
-  } = useAllReferralsQuery();
+  const { data: referrals, isLoading, isFetching, refetch } = useAllReferralsQuery();
 
   const createReferralMutation = useCreateReferralMutation({
     onSuccess: (data) => {
       const { referral_code } = data;
       setGeneratedCode(referral_code);
 
-      const websiteUrl =
-        import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+      const websiteUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
       const finalUrl = `${websiteUrl}?ref=${referral_code}`;
       setGeneratedLink(finalUrl);
 
@@ -268,9 +251,7 @@ function ReferralsPage() {
         accessorKey: "name",
         header: createSortableHeader(translations("Partner Name")),
         cell: ({ row }) => (
-          <div className="font-medium text-black dark:text-white">
-            {row.getValue("name")}
-          </div>
+          <div className="font-medium text-black dark:text-white">{row.getValue("name")}</div>
         ),
         meta: { title: translations("Partner Name") },
       },
@@ -278,9 +259,7 @@ function ReferralsPage() {
         accessorKey: "email",
         header: createSortableHeader(translations("Email")),
         cell: ({ row }) => (
-          <div className="text-black dark:text-white">
-            {row.getValue("email")}
-          </div>
+          <div className="text-black dark:text-white">{row.getValue("email")}</div>
         ),
         meta: { title: translations("Email") },
       },
@@ -298,9 +277,7 @@ function ReferralsPage() {
         accessorKey: "visit_count",
         header: createSortableHeader(translations("Visits")),
         cell: ({ row }) => (
-          <div className="text-black dark:text-white">
-            {row.getValue("visit_count")}
-          </div>
+          <div className="text-black dark:text-white">{row.getValue("visit_count")}</div>
         ),
         meta: { title: translations("Visits") },
       },
@@ -308,9 +285,7 @@ function ReferralsPage() {
         accessorKey: "signup_count",
         header: createSortableHeader(translations("Signups")),
         cell: ({ row }) => (
-          <div className="text-black dark:text-white">
-            {row.getValue("signup_count")}
-          </div>
+          <div className="text-black dark:text-white">{row.getValue("signup_count")}</div>
         ),
         meta: { title: translations("Signups") },
       },
@@ -328,10 +303,7 @@ function ReferralsPage() {
         id: "actions",
         header: () => <div>{translations("Actions")}</div>,
         cell: ({ row }) => (
-          <ReferralActionsCell
-            id={row.original.id}
-            code={row.original.referral_code}
-          />
+          <ReferralActionsCell id={row.original.id} code={row.original.referral_code} />
         ),
         meta: { title: translations("Actions") },
       },
@@ -367,9 +339,7 @@ function ReferralsPage() {
                 <CardTitle className="text-lg text-black dark:text-white">
                   Generate Referral Link
                 </CardTitle>
-                <CardDescription>
-                  Enter name to generate a unique referral link
-                </CardDescription>
+                <CardDescription>Enter name to generate a unique referral link</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -392,10 +362,7 @@ function ReferralsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label
-                  htmlFor="influencerEmail"
-                  className="text-sm font-medium"
-                >
+                <Label htmlFor="influencerEmail" className="text-sm font-medium">
                   Email
                 </Label>
                 <Input
@@ -411,11 +378,7 @@ function ReferralsPage() {
 
               <Button
                 onClick={handleCreateReferral}
-                disabled={
-                  createReferralMutation.isPending ||
-                  !name.trim() ||
-                  !email.trim()
-                }
+                disabled={createReferralMutation.isPending || !name.trim() || !email.trim()}
                 className="w-full bg-purple-600 hover:bg-purple-700"
                 size="lg"
               >
@@ -493,9 +456,7 @@ function ReferralsPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="space-y-1">
-            <CardTitle className="text-lg text-black dark:text-white">
-              Referrals List
-            </CardTitle>
+            <CardTitle className="text-lg text-black dark:text-white">Referrals List</CardTitle>
             <CardDescription>
               View and monitor all active referral codes, visits, and signups.
             </CardDescription>

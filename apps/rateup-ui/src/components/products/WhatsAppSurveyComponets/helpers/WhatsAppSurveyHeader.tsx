@@ -1,10 +1,7 @@
-"use client";
-
-import { useState } from "react";
-
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { Menu, X } from "lucide-react";
+import { useState } from "react";
 
 import DropDownMobileNavItems from "@/components/RateupHomePage/helpers/DropDownMobileNavItems.tsx";
 import DropDownNavItems from "@/components/RateupHomePage/helpers/DropDownNavItems.tsx";
@@ -74,11 +71,7 @@ const WhatsAppSurveyHeader = () => {
                hover:text-[#1c518e] transition-colors duration-300"
               onClick={toggleMenu}
             >
-              {isOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>

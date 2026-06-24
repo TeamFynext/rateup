@@ -13,10 +13,7 @@ import {
 
 export type ChannelStatus = "connected" | "pending" | "disconnected";
 
-export function getWaStatus(
-  isLoading: boolean,
-  waConnected: boolean,
-): ChannelStatus {
+export function getWaStatus(isLoading: boolean, waConnected: boolean): ChannelStatus {
   if (isLoading) return "pending";
   return waConnected ? "connected" : "disconnected";
 }
@@ -88,27 +85,18 @@ export function ChannelOverviewCard({
         <div className="flex h-16 w-16 items-center justify-center rounded-xl border bg-muted/40 text-primary transition-colors group-hover:bg-accent">
           {icon}
         </div>
-        <Badge
-          variant={getBadgeVariant(status)}
-          className={getBadgeClassName(status)}
-        >
+        <Badge variant={getBadgeVariant(status)} className={getBadgeClassName(status)}>
           {isLoading ? "loading" : status}
         </Badge>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col px-5 pb-4">
         <CardTitle className="mb-2 text-base">{title}</CardTitle>
-        <CardDescription className="flex-1 text-sm leading-6">
-          {description}
-        </CardDescription>
+        <CardDescription className="flex-1 text-sm leading-6">{description}</CardDescription>
         {helperText ? (
-          <div className="mt-4 border-t pt-4 text-xs text-amber-600">
-            {helperText}
-          </div>
+          <div className="mt-4 border-t pt-4 text-xs text-amber-600">{helperText}</div>
         ) : null}
         {summary ? (
-          <div className="mt-4 border-t pt-4 text-xs text-muted-foreground">
-            {summary}
-          </div>
+          <div className="mt-4 border-t pt-4 text-xs text-muted-foreground">{summary}</div>
         ) : null}
       </CardContent>
       <CardFooter className="px-5 pb-5 pt-0">

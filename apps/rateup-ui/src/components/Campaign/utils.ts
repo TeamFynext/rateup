@@ -1,8 +1,6 @@
 import { CampaignParticipantStatus } from "@/types/enums.ts";
 
-export const getStatusBadgeStyle = (
-  status: CampaignParticipantStatus,
-): string => {
+export const getStatusBadgeStyle = (status: CampaignParticipantStatus): string => {
   switch (status) {
     case CampaignParticipantStatus.READ:
       return "bg-green-100 text-green-700 border-green-200";

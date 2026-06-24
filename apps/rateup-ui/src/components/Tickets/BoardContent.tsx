@@ -1,36 +1,14 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { useNavigate } from "@tanstack/react-router";
-import {
-  ChevronLeft,
-  Columns3,
-  LayoutPanelTop,
-  List,
-  Search,
-  Settings,
-} from "lucide-react";
+import { ChevronLeft, Columns3, LayoutPanelTop, List, Search, Settings } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import {
-  useBoard,
-  useBoardTeamMembersById,
-} from "@/backend/tickets/tickets.query";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
+import { useBoard, useBoardTeamMembersById } from "@/backend/tickets/tickets.query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 
 import { Board } from "./board.tsx";
 import TicketSettings from "./boardSettings.tsx";
@@ -71,8 +49,7 @@ export function BoardContent({
     let criticalCount = 0;
     let overdueCount = 0;
 
-    if (!selectedBoard?.ticketColumns)
-      return { openCount, criticalCount, overdueCount };
+    if (!selectedBoard?.ticketColumns) return { openCount, criticalCount, overdueCount };
 
     selectedBoard.ticketColumns.forEach((col) => {
       const isResolvedColumn =
@@ -114,11 +91,7 @@ export function BoardContent({
   if (showSettings) {
     return (
       <div className="h-full flex flex-col p-4">
-        <Button
-          variant="ghost"
-          onClick={() => setShowSettings(false)}
-          className="self-start mb-4"
-        >
+        <Button variant="ghost" onClick={() => setShowSettings(false)} className="self-start mb-4">
           <ChevronLeft className="w-4 h-4 mr-2" /> {t("Back to Board")}
         </Button>
         <TicketSettings
@@ -198,39 +171,22 @@ export function BoardContent({
                 <ChevronLeft className="w-4 h-4 mr-1" /> {t("All boards")}
               </button>
 
-              <Separator
-                orientation="vertical"
-                className="h-6 mx-0 hidden md:block"
-              />
+              <Separator orientation="vertical" className="h-6 mx-0 hidden md:block" />
 
               <div className="flex items-center gap-2 shrink-0">
                 <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-                <h1 className="text-lg font-bold tracking-tight">
-                  {selectedBoard.title}
-                </h1>
+                <h1 className="text-lg font-bold tracking-tight">{selectedBoard.title}</h1>
               </div>
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex gap-[7px] items-center md:mr-2 flex-wrap">
-                <StatPill
-                  label={t("Open")}
-                  value={stats.openCount}
-                  color="#1C518E"
-                />
+                <StatPill label={t("Open")} value={stats.openCount} color="#1C518E" />
                 {stats.criticalCount > 0 && (
-                  <StatPill
-                    label={t("Critical")}
-                    value={stats.criticalCount}
-                    color="#DC2626"
-                  />
+                  <StatPill label={t("Critical")} value={stats.criticalCount} color="#DC2626" />
                 )}
                 {stats.overdueCount > 0 && (
-                  <StatPill
-                    label={t("Overdue")}
-                    value={stats.overdueCount}
-                    color="#F8951D"
-                  />
+                  <StatPill label={t("Overdue")} value={stats.overdueCount} color="#F8951D" />
                 )}
               </div>
 
@@ -240,8 +196,7 @@ export function BoardContent({
                     value="board"
                     className="text-xs px-3 sm:px-4 data-[state=active]:text-primary"
                   >
-                    <LayoutPanelTop className="w-3.5 h-3.5 mr-1.5" />{" "}
-                    {t("Board")}
+                    <LayoutPanelTop className="w-3.5 h-3.5 mr-1.5" /> {t("Board")}
                   </TabsTrigger>
                   <TabsTrigger
                     value="list"
@@ -258,9 +213,7 @@ export function BoardContent({
                   onClick={() => setIsManageColumnsOpen(true)}
                 >
                   <Columns3 className="w-4 h-4 sm:mr-2 text-primary" />
-                  <span className="hidden sm:inline text-primary">
-                    {t("Manage Columns")}
-                  </span>
+                  <span className="hidden sm:inline text-primary">{t("Manage Columns")}</span>
                 </Button>
 
                 <Button
@@ -307,8 +260,7 @@ export function BoardContent({
                     priorityFilter === null
                       ? "1.5px solid currentColor"
                       : "1.5px solid transparent",
-                  background:
-                    priorityFilter === null ? "#EEF4FB" : "transparent",
+                  background: priorityFilter === null ? "#EEF4FB" : "transparent",
                   color: priorityFilter === null ? "#1C518E" : "#8B8E8A",
                 }}
               >
@@ -324,9 +276,7 @@ export function BoardContent({
                     className="rounded-full font-body text-[11px] font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center leading-none"
                     style={{
                       padding: "2px 8px",
-                      border: on
-                        ? "1.5px solid currentColor"
-                        : "1.5px solid transparent",
+                      border: on ? "1.5px solid currentColor" : "1.5px solid transparent",
                       background: on ? pConf?.bg : "transparent",
                       color: on ? pConf?.color : "#8B8E8A",
                     }}
@@ -348,9 +298,7 @@ export function BoardContent({
                 className="rounded-full font-body text-[11px] font-semibold cursor-pointer transition-all duration-150 flex items-center justify-center leading-none"
                 style={{
                   padding: "2px 8px",
-                  border: !assigneeFilter
-                    ? "1.5px solid #1C518E"
-                    : "1.5px solid transparent",
+                  border: !assigneeFilter ? "1.5px solid #1C518E" : "1.5px solid transparent",
                   background: !assigneeFilter ? "#EEF4FB" : "transparent",
                   color: !assigneeFilter ? "#1C518E" : "#8B8E8A",
                 }}
@@ -367,9 +315,7 @@ export function BoardContent({
                     onClick={() => setAssigneeFilter(on ? null : user.id)}
                     className="bg-none border-none cursor-pointer p-0 rounded-full transition-all duration-150 outline-none hover:opacity-80"
                     style={{
-                      outline: on
-                        ? `3px solid ${userColor}`
-                        : "3px solid transparent",
+                      outline: on ? `3px solid ${userColor}` : "3px solid transparent",
                       outlineOffset: 2,
                     }}
                   >
@@ -401,10 +347,7 @@ export function BoardContent({
             assigneeFilter={assigneeFilter}
           />
         </TabsContent>
-        <TabsContent
-          value="list"
-          className="flex-1 mt-0 min-h-0 overflow-y-auto"
-        >
+        <TabsContent value="list" className="flex-1 mt-0 min-h-0 overflow-y-auto">
           <TicketListView
             board={selectedBoard}
             priorityFilter={priorityFilter}
@@ -417,7 +360,6 @@ export function BoardContent({
 
       {isManageColumnsOpen && (
         <ManageColumnsDialog
-          boardId={selectedBoardId}
           columns={selectedBoard?.ticketColumns || []}
           onClose={() => setIsManageColumnsOpen(false)}
           onSave={handleSaveColumns}
@@ -443,10 +385,7 @@ function StatPill({ label, value, color }: StatPillProps) {
         border: `1px solid ${color}24`,
       }}
     >
-      <span
-        className="font-display font-black text-sm leading-none"
-        style={{ color }}
-      >
+      <span className="font-display font-black text-sm leading-none" style={{ color }}>
         {value}
       </span>
       <span

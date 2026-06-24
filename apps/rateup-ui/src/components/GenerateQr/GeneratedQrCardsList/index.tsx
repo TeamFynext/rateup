@@ -8,7 +8,6 @@ function GenerateQrCardsList({ generatedQrs }) {
           key={generatedQr.id}
           id={generatedQr.id}
           shortUrlId={generatedQr.shortUrlId}
-          isPublished={generatedQr.isPublished}
           createdAt={generatedQr.createdAt}
           scans={generatedQr.noOfScans}
           name={generatedQr.name}

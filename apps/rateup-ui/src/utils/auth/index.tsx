@@ -1,6 +1,5 @@
-import { useCallback } from "react";
-
 import { useNavigate } from "@tanstack/react-router";
+import { useCallback } from "react";
 import { toast } from "sonner";
 import { signIn, signUp } from "supertokens-auth-react/recipe/emailpassword";
 import {
@@ -15,21 +14,18 @@ import {
 
 import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore.ts";
 
-const handleCreateCode = async (
-  phoneNumber: string,
-  navigate: ReturnType<typeof useNavigate>,
-) => {
+const handleCreateCode = async (phoneNumber: string, navigate: ReturnType<typeof useNavigate>) => {
   try {
     const response = await createCode({
       phoneNumber,
     });
-    if (response.status !== "OK") {
-      // this can happen due to automatic account linking. See that section in our docs.
-    } else {
+    if (response.status === "OK") {
       // OTP sent successfully.
       navigate({
         to: `/login/verify-phone-number`,
       });
+    } else {
+      // this can happen due to automatic account linking. See that section in our docs.
     }
   } catch (err: any) {
     if (err.isSuperTokensGeneralError === true) {
@@ -100,35 +96,6 @@ export function useSignIn() {
   };
 }
 
-async function sendOTP(phoneNumber: string) {
-  const navigate = useNavigate();
-
-  try {
-    const response = await createCode({
-      phoneNumber,
-    });
-    if (response.status !== "OK") {
-      // this can happen due to automatic account linking. See that section in our docs.
-    } else {
-      // OTP sent successfully.
-      navigate({
-        to: "/login/verify-email",
-      });
-    }
-  } catch (err: any) {
-    if (err.isSuperTokensGeneralError === true) {
-      // this may be a custom error message sent from the API by you,
-      // or if the input email / phone number is not valid.
-      toast.error(err.message || "Failed to send OTP", {
-        id: "load-data",
-      });
-    } else {
-      toast.error("Oops! Something went wrong.", {
-        id: "load-data",
-      });
-    }
-  }
-}
 export async function resendOTP() {
   try {
     const response = await resendCode();

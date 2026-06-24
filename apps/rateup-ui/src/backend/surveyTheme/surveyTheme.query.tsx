@@ -11,7 +11,7 @@ import {
   updateSurveyTheme,
 } from "./surveyTheme.api";
 
-const useSurveyTheme = (surveyThemeId: string) => {
+const _useSurveyTheme = (surveyThemeId: string) => {
   return useQuery({
     queryKey: ["surveyTheme", surveyThemeId],
     queryFn: () => getSurveyTheme(surveyThemeId),
@@ -27,10 +27,7 @@ export const useAllThemes = () => {
   });
 };
 
-export const useUpdateSurveyTheme = (
-  surveyThemeId: string,
-  surveyId: string,
-) => {
+export const useUpdateSurveyTheme = (surveyThemeId: string, surveyId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateSurveyTheme,
@@ -47,9 +44,7 @@ export const useUpdateSurveyTheme = (
       toast.success("Survey theme updated successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message || "Something went wrong, Error updating survey theme",
-      );
+      toast.error(error?.message || "Something went wrong, Error updating survey theme");
     },
   });
 };
@@ -65,9 +60,7 @@ export const useRenameSurveyThemeMutation = () => {
       toast.success("Renamed theme successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message || "Something went wrong, Error renaming survey theme",
-      );
+      toast.error(error?.message || "Something went wrong, Error renaming survey theme");
     },
   });
 };
@@ -91,9 +84,7 @@ export const useCreateNewThemeMutation = (surveyId) => {
         // @ts-ignore
         toast.error(error?.message || err?.response?.data?.message);
       } else {
-        toast.error(
-          error?.message || "Unable to create theme, please try again later.",
-        );
+        toast.error(error?.message || "Unable to create theme, please try again later.");
       }
     },
   });
@@ -110,14 +101,12 @@ export const useDeleteThemeMutation = () => {
       toast.success("Deleted theme successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message || "unable to delete theme, please try again later.",
-      );
+      toast.error(error?.message || "unable to delete theme, please try again later.");
     },
   });
 };
 
-const useUpdateAllThemesMutation = () => {
+const _useUpdateAllThemesMutation = () => {
   return useMutation({
     mutationFn: updateAllThemes,
     onSuccess: () => {
@@ -126,9 +115,7 @@ const useUpdateAllThemesMutation = () => {
       );
     },
     onError: (error) => {
-      toast.error(
-        error?.message || "Unable to update themes, please try again later.",
-      );
+      toast.error(error?.message || "Unable to update themes, please try again later.");
     },
   });
 };

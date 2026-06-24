@@ -1,15 +1,5 @@
-"use client";
-
+import { Badge, Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";
 import React from "react";
-
-import {
-  Badge,
-  Box,
-  HoverCard,
-  Image,
-  ScrollAreaAutosize,
-  Text,
-} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import { QuestionType } from "@/types/enums.ts";
@@ -39,9 +29,8 @@ export const HoverCardComponent = ({
       styles={{ dropdown: { maxWidth: 400 } }}
       position="bottom-start"
     >
-      {[QuestionType.MultiTextInput, QuestionType.MCQGrid].includes(
-        questionType,
-      ) && content?.length > 0 ? (
+      {[QuestionType.MultiTextInput, QuestionType.MCQGrid].includes(questionType) &&
+      content?.length > 0 ? (
         <HoverCard.Target>
           <Text c={c} miw={200} maw={200} fw={fw} fz={fz} lineClamp={lineClamp}>
             {content[0]}
@@ -56,14 +45,7 @@ export const HoverCardComponent = ({
               alt={translations("answer image of question")}
             />
           ) : (
-            <Text
-              c={c}
-              miw={200}
-              maw={200}
-              fw={fw}
-              fz={fz}
-              lineClamp={lineClamp}
-            >
+            <Text c={c} miw={200} maw={200} fw={fw} fz={fz} lineClamp={lineClamp}>
               {getContent(content)}
             </Text>
           )}
@@ -79,9 +61,7 @@ export const HoverCardComponent = ({
             }}
             mah={250}
           >
-            {[QuestionType.MultiTextInput, QuestionType.MCQGrid].includes(
-              questionType,
-            ) ? (
+            {[QuestionType.MultiTextInput, QuestionType.MCQGrid].includes(questionType) ? (
               content?.length > 0 &&
               content?.map((c) => (
                 <Text c={c} miw={200} maw={200} fw={fw} fz={fz} key={c}>

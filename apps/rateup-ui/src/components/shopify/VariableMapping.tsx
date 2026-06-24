@@ -1,40 +1,21 @@
-"use client";
-
-import React, { useMemo } from "react";
-
 import { Loader2 } from "lucide-react";
+import React, { useMemo } from "react";
 
 import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useWaTemplateById } from "@/backend/whatsapp/whatsapp.query";
 
 import { Label } from "../ui/label.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select.tsx";
-import {
-  contactVariablePresets,
-  shopifyVariablePresets,
-} from "./shopifyVariables.ts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
+import { contactVariablePresets, shopifyVariablePresets } from "./shopifyVariables.ts";
 
 interface VariableMappingProps {
   waTemplateId: string;
   value: { templateParamIndex: number; shopifyPath: string }[];
-  onChange: (
-    value: { templateParamIndex: number; shopifyPath: string }[],
-  ) => void;
+  onChange: (value: { templateParamIndex: number; shopifyPath: string }[]) => void;
   triggerEvent?: string;
 }
 
-const VariableMapping = ({
-  waTemplateId,
-  value,
-  onChange,
-  triggerEvent,
-}: VariableMappingProps) => {
+const VariableMapping = ({ waTemplateId, value, onChange, triggerEvent }: VariableMappingProps) => {
   const { data: template, isLoading } = useWaTemplateById(waTemplateId);
   const isShopify = triggerEvent === "SHOPIFY_EVENT";
   const { data: customFields } = useCustomFields();
@@ -61,9 +42,7 @@ const VariableMapping = ({
 
   const handleMappingChange = (index: number, shopifyPath: string) => {
     const newValue = [...value];
-    const existingIndex = newValue.findIndex(
-      (m) => m.templateParamIndex === index,
-    );
+    const existingIndex = newValue.findIndex((m) => m.templateParamIndex === index);
     if (existingIndex !== -1) {
       newValue[existingIndex] = { ...newValue[existingIndex], shopifyPath };
     } else {
@@ -76,9 +55,7 @@ const VariableMapping = ({
     return (
       <div className="flex items-center gap-2 py-4">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span className="text-sm text-muted-foreground">
-          Loading template variables...
-        </span>
+        <span className="text-sm text-muted-foreground">Loading template variables...</span>
       </div>
     );
   }
@@ -113,11 +90,7 @@ const VariableMapping = ({
               >
                 <SelectTrigger className="h-9">
                   <SelectValue
-                    placeholder={
-                      isShopify
-                        ? "Select Shopify Field"
-                        : "Select Contact Field"
-                    }
+                    placeholder={isShopify ? "Select Shopify Field" : "Select Contact Field"}
                   />
                 </SelectTrigger>
                 <SelectContent>

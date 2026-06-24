@@ -1,27 +1,22 @@
-"use client";
-
-import { useState } from "react";
-
 import { Center, Image, Stack, Text } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { isEmptyObject } from "@tiptap/react";
+import { useState } from "react";
 import { v4 as uuid } from "uuid";
 
-import { ChatbotPublicPageStatus, ChatBotSource } from "@/types/enums.ts";
-import type { ChatBotMessage } from "@/types/global";
-import useLocalStorage from "@/hooks/localStorage.tsx";
 import {
   useDeletePublicChatHistory,
   useGetChatbotPublicPageStatus,
   usePublicChatMutation,
 } from "@/backend/chatbot/chatbot.query";
 import ChatbotMessageContainer from "@/components/ChatBot/ChatbotMessageContainer.tsx";
+import useLocalStorage from "@/hooks/localStorage.tsx";
+import { ChatbotPublicPageStatus, ChatBotSource } from "@/types/enums.ts";
+import type { ChatBotMessage } from "@/types/global";
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
-export const Route = createFileRoute(
-  "/(public-facing)/public/chatbot/$chatbotId/",
-)({
+export const Route = createFileRoute("/(public-facing)/public/chatbot/$chatbotId/")({
   component: ChatbotId,
   head: ({ params }) => ({
     meta: [

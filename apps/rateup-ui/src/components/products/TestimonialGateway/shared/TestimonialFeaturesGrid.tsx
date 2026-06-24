@@ -1,5 +1,3 @@
-"use client";
-
 import { motion } from "motion/react";
 
 import { features } from "../TestimonialContants.tsx";
@@ -41,12 +39,8 @@ const TestimonialFeaturesGrid = () => {
                   </div>
 
                   <div className="pt-8">
-                    <h3 className="text-xl font-semibold text-[#013553] mb-2">
-                      {step.title}
-                    </h3>
-                    <p className="text-base text-gray-600 leading-relaxed">
-                      {step.description}
-                    </p>
+                    <h3 className="text-xl font-semibold text-[#013553] mb-2">{step.title}</h3>
+                    <p className="text-base text-gray-600 leading-relaxed">{step.description}</p>
                   </div>
                 </motion.div>
               ))}

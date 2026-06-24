@@ -1,11 +1,8 @@
-"use client";
-
+import { Button, Image, Stack } from "@mantine/core";
 import React from "react";
 
-import { Button, Image, Stack } from "@mantine/core";
-
-import { PageType } from "@/types/enums.ts";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage/index.tsx";
+import { PageType } from "@/types/enums.ts";
 import { cordinateStyle } from "@/utils/index.ts";
 
 const _buttonStyles = {
@@ -20,12 +17,11 @@ function WelcomePage({
   surveyThemeData,
   pagesThemeData,
   onStart,
-  largeScreen,
   orgLogoSrc,
   orgLogoStyles,
   questionsArr,
   isMobile,
-}: {
+}: Readonly<{
   surveyThemeData: any;
   onStart: any;
   largeScreen: any;
@@ -34,7 +30,7 @@ function WelcomePage({
   questionsArr: any;
   pagesThemeData: any;
   isMobile: boolean;
-}) {
+}>) {
   const defaultTitleSubtitleStartButtonTexts = {
     titleText: `<h3 style="text-align: center">Welcome</h3><p style="text-align: center">Welcome to the survey</p>`,
     startButtonText: "Start Survey",
@@ -86,12 +82,7 @@ function WelcomePage({
         w={isMobile ? "100%" : "80%"}
       >
         {orgLogoSrc && (
-          <Image
-            fit="contain"
-            src={orgLogoSrc}
-            alt="Logo"
-            style={{ ...orgLogoStyles }}
-          />
+          <Image fit="contain" src={orgLogoSrc} alt="Logo" style={{ ...orgLogoStyles }} />
         )}
         <div
           dangerouslySetInnerHTML={{

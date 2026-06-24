@@ -1,8 +1,3 @@
-"use client";
-
-import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-
 import { useDebouncedCallback, useHotkeys } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -21,11 +16,13 @@ import {
   useNodesState,
 } from "@xyflow/react";
 import type { Node } from "@xyflow/react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
-import type { WaAutomatedReply } from "@/types/global";
 import { useUpdateWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import type { WaAutomatedReply } from "@/types/global";
 
 import { validateNodeData } from "../types/node-types.ts";
 import type { TypedNode } from "../types/node-types.ts";
@@ -33,15 +30,12 @@ import { getLayoutedElements } from "../utils/auto-layout.ts";
 import { HistoryManager } from "../utils/history.ts";
 import ComponentSidebar from "./component-sidebar.tsx";
 import CustomEdge from "./CustomEdge.tsx";
-import styles from "./flow-editor.module.css";
-import {
-  initialEdges,
-  initialNodes,
-  leadAutomationinitialNodes,
-} from "./initial-data.ts";
+import { initialEdges, initialNodes, leadAutomationinitialNodes } from "./initial-data.ts";
 import NodeEditor from "./node-editor.tsx";
 import { nodeTypes } from "./nodes/index.tsx";
 import Toolbar from "./toolbar.tsx";
+
+import styles from "./flow-editor.module.css";
 
 const defaultEdgeOptions = {
   style: { stroke: "#6366f1", strokeWidth: 2 },
@@ -165,14 +159,7 @@ function FlowEditorContent({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [
-    nodes,
-    edges,
-    historyManager,
-    updateUndoRedoState,
-    reactFlowInstance,
-    debouncedSaveFlow,
-  ]);
+  }, [nodes, edges, historyManager, updateUndoRedoState, reactFlowInstance, debouncedSaveFlow]);
 
   const handleUndo = useCallback(() => {
     if (!historyManager.canUndo()) {
@@ -190,7 +177,7 @@ function FlowEditorContent({
         setTimeout(() => {
           isUndoRedoOperationRef.current = false;
         }, 600);
-      } catch (error) {
+      } catch {
         isUndoRedoOperationRef.current = false;
       }
     }
@@ -212,7 +199,7 @@ function FlowEditorContent({
         setTimeout(() => {
           isUndoRedoOperationRef.current = false;
         }, 600);
-      } catch (error) {
+      } catch {
         isUndoRedoOperationRef.current = false;
       }
     }
@@ -241,9 +228,7 @@ function FlowEditorContent({
 
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const type = event.dataTransfer.getData("application/reactflow");
-      const nodeData = JSON.parse(
-        event.dataTransfer.getData("application/nodeData") || "{}",
-      );
+      const nodeData = JSON.parse(event.dataTransfer.getData("application/nodeData") || "{}");
 
       if (typeof type === "undefined" || !type) {
         return;
@@ -314,8 +299,7 @@ function FlowEditorContent({
     (direction = "TB") => {
       if (!nodes.length) return;
 
-      const { nodes: layoutedNodes, edges: layoutedEdges } =
-        getLayoutedElements(nodes, edges, direction);
+      const { nodes: layoutedNodes } = getLayoutedElements(nodes, edges, direction);
 
       setNodes([...layoutedNodes]);
 
@@ -347,45 +331,39 @@ function FlowEditorContent({
 
       // Check if there are any nodes
       if (allNodes.length === 0) {
-        !silent && toast.error("Flow is empty. Please add some nodes.");
+        if (!silent) toast.error("Flow is empty. Please add some nodes.");
         return false;
       }
 
-      const startNodes = allNodes.filter(
-        (node: Node) => node.type === "startNode",
-      );
-      const leadgenNodes = allNodes.filter(
-        (node: Node) => node.type === "leadgenNode",
-      );
+      const startNodes = allNodes.filter((node: Node) => node.type === "startNode");
+      const leadgenNodes = allNodes.filter((node: Node) => node.type === "leadgenNode");
       if (isLeadAutomation) {
         if (leadgenNodes.length > 1) {
-          !silent && toast.error("Only one Lead node is allowed");
+          if (!silent) toast.error("Only one Lead node is allowed");
           return false;
         }
         if (allNodes[0].type !== "leadgenNode") {
-          !silent && toast.error("First node should be a Lead Node.");
+          if (!silent) toast.error("First node should be a Lead Node.");
           return false;
         }
       }
 
       if (!isLeadAutomation) {
         if (startNodes.length === 0) {
-          !silent && toast.error("Flow must have a start node.");
+          if (!silent) toast.error("Flow must have a start node.");
           return false;
         } else if (startNodes.length > 1) {
-          !silent && toast.error("Flow must have exactly one start node.");
+          if (!silent) toast.error("Flow must have exactly one start node.");
           return false;
         }
         if (leadgenNodes.length) {
-          !silent && toast.error("Lead node is only allowed lead automation");
+          if (!silent) toast.error("Lead node is only allowed lead automation");
           return false;
         }
       }
 
       // Check if all nodes (except start) have incoming connections
-      const nodesWithIncomingEdges = new Set(
-        allEdges.map((edge: any) => edge.target),
-      );
+      const nodesWithIncomingEdges = new Set(allEdges.map((edge: any) => edge.target));
 
       const nodesWithoutIncoming = allNodes.filter(
         (node: Node) =>
@@ -395,10 +373,11 @@ function FlowEditorContent({
       );
 
       if (nodesWithoutIncoming.length > 0) {
-        !silent &&
+        if (!silent) {
           toast.error(
             `Some nodes are not connected: ${nodesWithoutIncoming.map((n: Node) => n.data.label).join(", ")}`,
           );
+        }
         return false;
       }
 
@@ -406,73 +385,18 @@ function FlowEditorContent({
       for (const node of allNodes) {
         const validationResult = validateNodeData(node as TypedNode);
         if (!validationResult.valid) {
-          !silent && toast.error(validationResult.message);
+          if (!silent) toast.error(validationResult.message);
           return false;
         }
       }
 
-      !silent && toast.success("Flow validation successful!");
+      if (!silent) toast.success("Flow validation successful!");
       return true;
     },
     [reactFlowInstance],
   );
 
   // Load flow from JSON
-  const loadFlow = useCallback(() => {
-    // TODO: Implement a file upload dialog to load flow from a JSON file
-    const savedFlow = localStorage.getItem("whatsapp-flow");
-    if (savedFlow) {
-      try {
-        const flow = JSON.parse(savedFlow);
-        setNodes(flow.nodes || []);
-        setEdges(flow.edges || []);
-
-        // Fit the view to show all nodes
-        setTimeout(() => {
-          if (reactFlowInstance) {
-            reactFlowInstance.fitView({ padding: 0.2 });
-          }
-        }, 50);
-
-        // Reset history with the loaded flow
-        historyManager.clear();
-        historyManager.saveState({
-          nodes: flow.nodes || [],
-          edges: flow.edges || [],
-        });
-        updateUndoRedoState();
-
-        toast.success("Flow loaded successfully!");
-      } catch (error) {
-        toast.error("Failed to load flow. The saved data might be corrupted.");
-      }
-    }
-  }, [
-    setNodes,
-    setEdges,
-    reactFlowInstance,
-    historyManager,
-    updateUndoRedoState,
-  ]);
-
-  const exportFlow = useCallback(() => {
-    if (!reactFlowInstance) return;
-
-    if (!validateFlow(true)) {
-      return;
-    }
-
-    const flow = reactFlowInstance.toObject();
-    const dataUri =
-      "data:application/json;charset=utf-8," +
-      encodeURIComponent(JSON.stringify(flow));
-    const exportFileDefaultName = "whatsapp-api-format.json";
-
-    const linkElement = document.createElement("a");
-    linkElement.setAttribute("href", dataUri);
-    linkElement.setAttribute("download", exportFileDefaultName);
-    linkElement.click();
-  }, [reactFlowInstance, validateFlow]);
 
   const closeEditor = useCallback(() => {
     setIsEditorOpen(false);
@@ -526,13 +450,7 @@ function FlowEditorContent({
     } else {
       isInitialLoadRef.current = false;
     }
-  }, [
-    historyManager,
-    setEdges,
-    setNodes,
-    updateUndoRedoState,
-    waAutomationData?.matchData?.json,
-  ]);
+  }, [historyManager, setEdges, setNodes, updateUndoRedoState, waAutomationData?.matchData?.json]);
 
   useHotkeys([
     ["mod+z", () => handleUndo()],
@@ -568,8 +486,6 @@ function FlowEditorContent({
           <Panel position="top-center" className={styles.toolbar}>
             <Toolbar
               onSave={saveFlow}
-              onLoad={loadFlow}
-              onExport={exportFlow}
               onAutoLayout={handleAutoLayout}
               onUndo={handleUndo}
               onRedo={handleRedo}
@@ -586,11 +502,7 @@ function FlowEditorContent({
       </div>
       <ComponentSidebar platform={waAutomationData.platform || "whatsapp"} />
       {isEditorOpen && selectedNode && (
-        <NodeEditor
-          node={selectedNode}
-          onChange={handleNodeDataChange}
-          onClose={closeEditor}
-        />
+        <NodeEditor node={selectedNode} onChange={handleNodeDataChange} onClose={closeEditor} />
       )}
     </div>
   );
@@ -608,11 +520,7 @@ export default function FlowEditor({
 }>) {
   return (
     <ReactFlowProvider>
-      <FlowEditorContent
-        flowbotId={flowbotId}
-        waAutomationData={data}
-        refetch={refetch}
-      />
+      <FlowEditorContent flowbotId={flowbotId} waAutomationData={data} refetch={refetch} />
     </ReactFlowProvider>
   );
 }

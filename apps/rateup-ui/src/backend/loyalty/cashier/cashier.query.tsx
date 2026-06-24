@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { ClaimRewardInput, UseRedemptionInput } from "./cashier.api";
@@ -25,7 +23,7 @@ export const useCustomerRewardsByPhone = (phone: string) => {
 /**
  * Hook to claim a reward for a customer
  */
-const useClaimReward = () => {
+const _useClaimReward = () => {
   const queryClient = useQueryClient();
 
   return useMutation({

@@ -1,9 +1,6 @@
-"use client";
-
-import React from "react";
-
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
+import React from "react";
 
 import { imagesPath } from "@/utils/constants.ts";
 

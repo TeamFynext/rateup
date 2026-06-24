@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { buildPageHead } from "@/lib/metadata.ts";
 import AboutUsPage from "@/components/HomePage/pages/AboutUs/index.tsx";
 import Layout from "@/components/RateupHomePage/Layout.tsx";
+import { buildPageHead } from "@/lib/metadata.ts";
 
 import { aboutUsMarkdown } from "../../../markdown/about-us";
 import { createMarkdownMiddleware } from "../../../markdown/serveMarkdown";

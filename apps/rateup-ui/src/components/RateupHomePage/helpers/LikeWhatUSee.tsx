@@ -1,12 +1,9 @@
-"use client";
-
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { Calendar, X } from "lucide-react";
 
 import { RateupStar } from "@/components/integrations/logos";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import styles from "@/styles/commonCssModules/homepagecss.module.css";
 
 type LikeWhatUSeeProps = {
   open: boolean;
@@ -47,8 +44,8 @@ export default function LikeWhatUSee({
 
           {/* SUBTITLE */}
           <p className=" mx-auto max-w-[320px] text-center text-sm mt-2 text-slate-400">
-            Turn one-time buyers into repeat customers on WhatsApp. Let&apos;s
-            find the fastest way to get you started.
+            Turn one-time buyers into repeat customers on WhatsApp. Let&apos;s find the fastest way
+            to get you started.
           </p>
 
           {/* ACTIONS */}
@@ -61,9 +58,7 @@ export default function LikeWhatUSee({
               onClick={() => {
                 onWhatsapp?.();
                 const phone = import.meta.env.VITE_SUPPORT_WHATSAPP;
-                const message = encodeURIComponent(
-                  "Hi, I need help with support",
-                );
+                const message = encodeURIComponent("Hi, I need help with support");
                 window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
               }}
               className={`h-10 bg-green-500 w-full`}

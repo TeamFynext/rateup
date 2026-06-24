@@ -1,19 +1,10 @@
-"use client";
-
-import React, { useRef } from "react";
-
-import {
-  Box,
-  Checkbox,
-  isLightColor,
-  SimpleGrid,
-  Text,
-  useMantineTheme,
-} from "@mantine/core";
+import { Box, Checkbox, isLightColor, SimpleGrid, Text, useMantineTheme } from "@mantine/core";
 import { useHover, useUncontrolled } from "@mantine/hooks";
+import React, { useRef } from "react";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
+
 import classes from "./ImageCheckboxes.module.css";
 
 interface ImageCheckboxProps {
@@ -32,9 +23,7 @@ function ImageCheckbox({
   title,
   checkBoxEnable,
   selectedValue,
-  className,
-}: ImageCheckboxProps &
-  Omit<React.ComponentPropsWithoutRef<"button">, keyof ImageCheckboxProps>) {
+}: ImageCheckboxProps & Omit<React.ComponentPropsWithoutRef<"button">, keyof ImageCheckboxProps>) {
   const [value, handleChange] = useUncontrolled({
     value: checked,
     defaultValue: defaultChecked,
@@ -50,9 +39,7 @@ function ImageCheckbox({
     ? mantineTheme.colors.primaryColor[5]
     : "#1C518E";
 
-  const foregroundColor = isLightColor(themePrimaryColor)
-    ? "#000000"
-    : "#FFFFFF";
+  const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
   const optionStylesObj = {
     height: "auto",
@@ -108,11 +95,7 @@ function ImageCheckbox({
   );
 }
 
-export function MultipleSelectCard({
-  data,
-  selectedValue,
-  checkBoxEnable = false,
-}) {
+export function MultipleSelectCard({ data, selectedValue, checkBoxEnable = false }) {
   const items = data.map((item: string, index: number) => (
     <ImageCheckbox
       title={item}
@@ -125,8 +108,7 @@ export function MultipleSelectCard({
   const colsCount = { base: 1, xs: 2, sm: 3, md: 4 };
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const selectedPreview = useSelectedPreview();
-  const surveyThemeMobilePreview =
-    isSurveyThemePreview && selectedPreview === "mobile";
+  const surveyThemeMobilePreview = isSurveyThemePreview && selectedPreview === "mobile";
 
   const columnsCount = surveyThemeMobilePreview ? 1 : colsCount;
 

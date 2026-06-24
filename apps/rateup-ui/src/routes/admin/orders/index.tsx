@@ -1,40 +1,17 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import {
-  Building2,
-  Calendar,
-  Package,
-  Receipt,
-  ShoppingCart,
-  UserCheck,
-} from "lucide-react";
+import { Building2, Calendar, Package, Receipt, ShoppingCart, UserCheck } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { usePaymentOrders } from "@/backend/payment/payment.query";
 import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
-import {
-  isInLastSevenDays,
-  isThisMonth,
-  isToday,
-  isYesterday,
-} from "@/utils/dateTime.ts";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { isInLastSevenDays, isThisMonth, isToday, isYesterday } from "@/utils/dateTime.ts";
 
 import { DataTableToolbar } from "../../../components/admin/orders/data-table-toolbar.tsx";
 
@@ -57,7 +34,7 @@ function Orders() {
   const { data: allOrders, isFetched, isLoading, isError } = usePaymentOrders();
   const { t: translations } = useTranslation();
 
-  const [orderStats, setOrderStats] = useState({
+  const [, setOrderStats] = useState({
     today: 0,
     yesterday: 0,
     lastWeek: 0,
@@ -95,9 +72,7 @@ function Orders() {
         return (
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-muted-foreground" />
-            <span className={isDeleted ? "text-red-500 italic" : ""}>
-              {orgName}
-            </span>
+            <span className={isDeleted ? "text-red-500 italic" : ""}>{orgName}</span>
           </div>
         );
       },
@@ -109,9 +84,7 @@ function Orders() {
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Package className="h-4 w-4 text-muted-foreground" />
-          <span className="font-mono text-xs max-w-[150px] truncate">
-            {row.getValue("subId")}
-          </span>
+          <span className="font-mono text-xs max-w-[150px] truncate">{row.getValue("subId")}</span>
         </div>
       ),
       meta: { title: "Subscription ID" },
@@ -176,15 +149,10 @@ function Orders() {
 
   useEffect(() => {
     if (allOrders && isFetched) {
-      const today =
-        allOrders.filter((order) => isToday(order.createdAt))?.length || 0;
-      const yesterday =
-        allOrders.filter((order) => isYesterday(order.createdAt))?.length || 0;
-      const lastWeek =
-        allOrders.filter((order) => isInLastSevenDays(order.createdAt))
-          ?.length || 0;
-      const thisMonth =
-        allOrders.filter((order) => isThisMonth(order.createdAt))?.length || 0;
+      const today = allOrders.filter((order) => isToday(order.createdAt))?.length || 0;
+      const yesterday = allOrders.filter((order) => isYesterday(order.createdAt))?.length || 0;
+      const lastWeek = allOrders.filter((order) => isInLastSevenDays(order.createdAt))?.length || 0;
+      const thisMonth = allOrders.filter((order) => isThisMonth(order.createdAt))?.length || 0;
 
       setOrderStats({
         today,
@@ -201,9 +169,7 @@ function Orders() {
         <Card className="w-96">
           <CardHeader>
             <CardTitle className="text-destructive">Error</CardTitle>
-            <CardDescription>
-              An error occurred while loading orders.
-            </CardDescription>
+            <CardDescription>An error occurred while loading orders.</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -219,8 +185,7 @@ function Orders() {
         orgname: order?.org?.name || "DELETED ORG",
         subId: order.subscriptionId,
         status: order?.status,
-        createdBy:
-          order?.createdBy?.name || order?.createdBy?.email || "DELETED",
+        createdBy: order?.createdBy?.name || order?.createdBy?.email || "DELETED",
         createdAt: dayjs(order.createdAt).format("DD/MM/YYYY HH:mm:ss"),
         rawCreatedAt: order.createdAt,
       }))
@@ -246,9 +211,7 @@ function Orders() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <ShoppingCart className="h-5 w-5 text-primary" />
-              <h1 className="text-2xl font-semibold tracking-tight">
-                {translations("Orders")}
-              </h1>
+              <h1 className="text-2xl font-semibold tracking-tight">{translations("Orders")}</h1>
             </div>
             <RefreshButton queryKeys={["paymentorders"]} />
           </div>
@@ -400,11 +363,7 @@ function Orders() {
       <p className="text-sm text-muted-foreground">
         Manage and view all payment orders in your system
       </p>
-      <DataTable
-        columns={columns}
-        data={tableData}
-        DataTableToolbar={DataTableToolbar}
-      />
+      <DataTable columns={columns} data={tableData} DataTableToolbar={DataTableToolbar} />
     </div>
   );
 }

@@ -1,5 +1,3 @@
-"use client";
-
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
 const useTiptopTableBtnHandlersObj = () => {
@@ -7,11 +5,7 @@ const useTiptopTableBtnHandlersObj = () => {
 
   return {
     insertTable: () => {
-      editor
-        .chain()
-        .focus()
-        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-        .run();
+      editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
     },
     deleteTable: () => {
       editor.chain().focus().deleteTable().run();

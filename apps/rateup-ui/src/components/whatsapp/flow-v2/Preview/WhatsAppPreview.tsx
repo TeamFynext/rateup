@@ -1,11 +1,7 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { MoreVertical, Smartphone, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { QuestionType2 } from "@/types/enums.ts";
 import MarkdownToReact from "@/components/RichTextEditor/MarkdownToReact.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Calendar } from "@/components/ui/calendar.tsx";
@@ -21,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import { QuestionType2 } from "@/types/enums.ts";
 
 import useFlowStoreV3 from "../utils/store.ts";
 
@@ -42,38 +39,28 @@ function WhatsAppPreview() {
         <div className="p-4">
           <div className="flex items-center gap-2 mb-0.5">
             <Smartphone className="w-4 h-4" />
-            <h2 className="text-base font-semibold">
-              {translations("Preview")}
-            </h2>
+            <h2 className="text-base font-semibold">{translations("Preview")}</h2>
           </div>
           <p className="text-xs text-muted-foreground">
             {translations("See how your flow looks on mobile")}
           </p>
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">
-            {translations("No screen selected")}
-          </p>
+          <p className="text-sm text-muted-foreground">{translations("No screen selected")}</p>
         </div>
       </div>
     );
   }
 
-  const allElements = (screen.layout.children || []).filter(
-    (el: any) => el.visible !== false,
-  );
+  const allElements = (screen.layout.children || []).filter((el: any) => el.visible !== false);
 
   const footerElement = allElements.find(
     (el: any) =>
-      el.type === QuestionType2.Footer ||
-      el.type === "Footer" ||
-      el.metaType === "Footer",
+      el.type === QuestionType2.Footer || el.type === "Footer" || el.metaType === "Footer",
   );
   const elements = allElements.filter(
     (el: any) =>
-      el.type !== QuestionType2.Footer &&
-      el.type !== "Footer" &&
-      el.metaType !== "Footer",
+      el.type !== QuestionType2.Footer && el.type !== "Footer" && el.metaType !== "Footer",
   );
 
   // Renders only the input control widget, no label/description wrapper
@@ -83,14 +70,10 @@ function WhatsAppPreview() {
       case "TextInput":
         return (
           <Input
-            placeholder={
-              element["helper-text"] || translations("Type your answer")
-            }
+            placeholder={element["helper-text"] || translations("Type your answer")}
             type={element["input-type"] || "text"}
             value={formData[element.id] || ""}
-            onChange={(e) =>
-              setFormData({ ...formData, [element.id]: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, [element.id]: e.target.value })}
           />
         );
 
@@ -98,14 +81,10 @@ function WhatsAppPreview() {
       case "TextArea":
         return (
           <Textarea
-            placeholder={
-              element["helper-text"] || translations("Type your answer")
-            }
+            placeholder={element["helper-text"] || translations("Type your answer")}
             rows={3}
             value={formData[element.id] || ""}
-            onChange={(e) =>
-              setFormData({ ...formData, [element.id]: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, [element.id]: e.target.value })}
           />
         );
 
@@ -114,10 +93,7 @@ function WhatsAppPreview() {
         return (
           <div className="space-y-4">
             {(element["data-source"] || []).map((option: any) => (
-              <div
-                key={option.id}
-                className="flex items-center space-x-2 justify-between"
-              >
+              <div key={option.id} className="flex items-center space-x-2 justify-between">
                 <Label
                   htmlFor={`${element.id}-${option.id}`}
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -137,9 +113,7 @@ function WhatsAppPreview() {
                     } else {
                       setFormData({
                         ...formData,
-                        [element.id]: current.filter(
-                          (id: string) => id !== option.id,
-                        ),
+                        [element.id]: current.filter((id: string) => id !== option.id),
                       });
                     }
                   }}
@@ -156,26 +130,18 @@ function WhatsAppPreview() {
         return (
           <RadioGroup
             value={formData[element.id] || ""}
-            onValueChange={(value) =>
-              setFormData({ ...formData, [element.id]: value })
-            }
+            onValueChange={(value) => setFormData({ ...formData, [element.id]: value })}
           >
             <div className="space-y-4">
               {(element["data-source"] || []).map((option: any) => (
-                <div
-                  key={option.id}
-                  className="flex items-center space-x-2 justify-between"
-                >
+                <div key={option.id} className="flex items-center space-x-2 justify-between">
                   <Label
                     htmlFor={`${element.id}-${option.id}`}
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     {option.title}
                   </Label>
-                  <RadioGroupItem
-                    value={option.id}
-                    id={`${element.id}-${option.id}`}
-                  />
+                  <RadioGroupItem value={option.id} id={`${element.id}-${option.id}`} />
                 </div>
               ))}
             </div>
@@ -187,9 +153,7 @@ function WhatsAppPreview() {
         return (
           <Select
             value={formData[element.id] || ""}
-            onValueChange={(value) =>
-              setFormData({ ...formData, [element.id]: value })
-            }
+            onValueChange={(value) => setFormData({ ...formData, [element.id]: value })}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={translations("Select an option")} />
@@ -210,9 +174,7 @@ function WhatsAppPreview() {
           <Calendar
             mode="single"
             selected={formData[element.id]}
-            onSelect={(date) =>
-              setFormData({ ...formData, [element.id]: date })
-            }
+            onSelect={(date) => setFormData({ ...formData, [element.id]: date })}
             className="rounded-md border"
           />
         );
@@ -227,12 +189,8 @@ function WhatsAppPreview() {
               <Button
                 key={option.id}
                 size="sm"
-                variant={
-                  formData[element.id] === option.id ? "default" : "outline"
-                }
-                onClick={() =>
-                  setFormData({ ...formData, [element.id]: option.id })
-                }
+                variant={formData[element.id] === option.id ? "default" : "outline"}
+                onClick={() => setFormData({ ...formData, [element.id]: option.id })}
               >
                 {option.title}
               </Button>
@@ -254,40 +212,28 @@ function WhatsAppPreview() {
       case QuestionType2.TextHeading:
       case "TextHeading":
         return (
-          <div
-            key={key}
-            className="text-[15px] font-bold text-foreground leading-snug pt-3 pb-1"
-          >
+          <div key={key} className="text-[15px] font-bold text-foreground leading-snug pt-3 pb-1">
             {element.text || translations("Heading")}
           </div>
         );
       case QuestionType2.TextSubheading:
       case "TextSubheading":
         return (
-          <div
-            key={key}
-            className="text-[13px] font-semibold text-foreground leading-snug py-0.5"
-          >
+          <div key={key} className="text-[13px] font-semibold text-foreground leading-snug py-0.5">
             {element.text || translations("Subheading")}
           </div>
         );
       case QuestionType2.TextBody:
       case "TextBody":
         return (
-          <div
-            key={key}
-            className="text-[13px] text-muted-foreground leading-relaxed py-0.5"
-          >
+          <div key={key} className="text-[13px] text-muted-foreground leading-relaxed py-0.5">
             {element.text || translations("Body text")}
           </div>
         );
       case QuestionType2.TextCaption:
       case "TextCaption":
         return (
-          <div
-            key={key}
-            className="text-[11px] text-muted-foreground leading-snug py-0.5"
-          >
+          <div key={key} className="text-[11px] text-muted-foreground leading-snug py-0.5">
             {element.text || translations("Caption")}
           </div>
         );
@@ -320,9 +266,7 @@ function WhatsAppPreview() {
           </p>
         )}
         {element?.label && (
-          <Label className="text-[13px] text-foreground mb-3">
-            {element?.label}
-          </Label>
+          <Label className="text-[13px] text-foreground mb-3">{element?.label}</Label>
         )}
         {element.description && (
           <p className="text-[11px] text-muted-foreground mb-2 leading-tight">
@@ -374,21 +318,13 @@ function WhatsAppPreview() {
 
               {/* Flow Header: × | Title | ⋮ */}
               <div className="flex items-center justify-between px-2 shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground"
-                >
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
                   <X size={18} />
                 </Button>
                 <span className="text-[13px] font-semibold text-foreground flex-1 text-center overflow-hidden text-ellipsis whitespace-nowrap">
                   {screen.title || translations("Screen")}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground"
-                >
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
                   <MoreVertical size={18} />
                 </Button>
               </div>
@@ -397,9 +333,7 @@ function WhatsAppPreview() {
               {/* Content */}
               <div className="flex-1 overflow-y-auto px-3 min-h-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full [&:hover::-webkit-scrollbar-thumb]:bg-muted-foreground/40">
                 <div className="space-y-0">
-                  {elements.map((element, index) =>
-                    renderElement(element, index),
-                  )}
+                  {elements.map((element, index) => renderElement(element, index))}
                 </div>
               </div>
 

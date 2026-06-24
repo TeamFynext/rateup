@@ -36,15 +36,11 @@ export const useLoyaltyRewardById = (rewardId: string) =>
 /**
  * Hook to create a new loyalty reward
  */
-export const useCreateLoyaltyRewardMutation = (
-  onSuccess?: () => void,
-  onError?: () => void,
-) => {
+export const useCreateLoyaltyRewardMutation = (onSuccess?: () => void, onError?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (rewardData: LoyaltyRewardInput) =>
-      createLoyaltyReward(rewardData),
+    mutationFn: (rewardData: LoyaltyRewardInput) => createLoyaltyReward(rewardData),
     onSuccess: () => {
       toast.success("Loyalty reward created successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });
@@ -68,8 +64,7 @@ export const useUpdateLoyaltyRewardMutation = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (rewardData: LoyaltyRewardUpdateInput) =>
-      updateLoyaltyReward(rewardId, rewardData),
+    mutationFn: (rewardData: LoyaltyRewardUpdateInput) => updateLoyaltyReward(rewardId, rewardData),
     onSuccess: (updatedReward) => {
       queryClient.setQueryData(["loyalty-reward", rewardId], updatedReward);
       toast.success("Loyalty reward updated successfully");
@@ -87,10 +82,7 @@ export const useUpdateLoyaltyRewardMutation = (
 /**
  * Hook to delete a loyalty reward
  */
-export const useDeleteLoyaltyRewardMutation = (
-  onSuccess?: () => void,
-  onError?: () => void,
-) => {
+export const useDeleteLoyaltyRewardMutation = (onSuccess?: () => void, onError?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -121,13 +113,8 @@ export const useToggleLoyaltyRewardStatusMutation = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      rewardId,
-      status,
-    }: {
-      rewardId: string;
-      status: LoyaltyRewardStatus;
-    }) => updateLoyaltyReward(rewardId, { status }),
+    mutationFn: ({ rewardId, status }: { rewardId: string; status: LoyaltyRewardStatus }) =>
+      updateLoyaltyReward(rewardId, { status }),
     onSuccess: (_, variables) => {
       toast.success("Reward status updated successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-rewards"] });

@@ -33,10 +33,10 @@ export default function ProductIntro() {
               One inbox. Every channel. Your whole team.
             </h2>
             <p className="text-[15.5px] leading-[1.7] text-white/75 m-0 max-w-[440px]">
-              RateUp Inbox brings your WhatsApp Business, Instagram DMs, and
-              Messenger conversations into a single, organised workspace. Assign
-              conversations, set roles, automate responses, and never let a
-              customer message fall through the cracks — all from one screen.
+              RateUp Inbox brings your WhatsApp Business, Instagram DMs, and Messenger conversations
+              into a single, organised workspace. Assign conversations, set roles, automate
+              responses, and never let a customer message fall through the cracks — all from one
+              screen.
             </p>
           </div>
 
@@ -63,13 +63,7 @@ export default function ProductIntro() {
                   >
                     <rect x="2" y="2" width="20" height="20" rx="5.5" />
                     <circle cx="12" cy="12" r="4.2" />
-                    <circle
-                      cx="17.6"
-                      cy="6.4"
-                      r="1.3"
-                      fill="#fff"
-                      stroke="none"
-                    />
+                    <circle cx="17.6" cy="6.4" r="1.3" fill="#fff" stroke="none" />
                   </svg>
                 ),
                 iconBg: "linear-gradient(45deg,#F58529,#DD2A7B 55%,#8134AF)",
@@ -105,16 +99,13 @@ export default function ProductIntro() {
                   className="w-11 h-11 rounded-[12px] flex items-center justify-center flex-shrink-0"
                   style={{
                     background: iconBg,
-                    boxShadow:
-                      "0 8px 20px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,255,255,0.2)",
+                    boxShadow: "0 8px 20px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,255,255,0.2)",
                   }}
                 >
                   {icon}
                 </div>
                 <div>
-                  <div className="font-display font-bold text-white text-[14.5px]">
-                    {name}
-                  </div>
+                  <div className="font-display font-bold text-white text-[14.5px]">{name}</div>
                   <div className="text-[12px] text-white/50 mt-0.5">{desc}</div>
                 </div>
                 <div className="ml-auto text-right">
@@ -124,9 +115,7 @@ export default function ProductIntro() {
                   >
                     {statN}
                   </div>
-                  <div className="text-[10.5px] text-white/35 mt-0.5">
-                    {statL}
-                  </div>
+                  <div className="text-[10.5px] text-white/35 mt-0.5">{statL}</div>
                 </div>
               </div>
             ))}

@@ -1,8 +1,5 @@
-"use client";
-
-import React, { useContext, useEffect, useState } from "react";
-
 import { Group, Input, Stack, Text, Textarea } from "@mantine/core";
+import React, { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";

@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-
 import { Group, Stack, Text } from "@mantine/core";
 import { IconPlayerPlayFilled } from "@tabler/icons-react";
+import React, { useState } from "react";
 
 import type { IgReceiveMessageBody } from "@/types/global";
 
@@ -80,9 +79,7 @@ const WaInboxAttachments = ({
             >
               Mentioned you in their story
             </Text>
-            {attachment?.content ? (
-              <StoryMentionPreview url={attachment.content} />
-            ) : null}
+            {attachment?.content ? <StoryMentionPreview url={attachment.content} /> : null}
           </Stack>
         );
       case "ephemeral":
@@ -108,9 +105,7 @@ const WaInboxAttachments = ({
   return (
     <Stack>
       {messageContent?.attachments?.map((at, index) => {
-        return (
-          <React.Fragment key={index}>{getMediaComponent(at)}</React.Fragment>
-        );
+        return <React.Fragment key={index}>{getMediaComponent(at)}</React.Fragment>;
       })}
     </Stack>
   );

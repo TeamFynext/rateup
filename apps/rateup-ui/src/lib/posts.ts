@@ -115,19 +115,9 @@ export async function getSinglePost(postSlug: string) {
       slug: postSlug,
       include: "tags,authors",
     })) as Post;
-  } catch (_error) {
+  } catch {
     return null;
   }
-}
-
-async function getPages() {
-  return await api.pages
-    .browse({
-      limit: 15, // default is 15, max is 100
-    })
-    .catch((err) => {
-      console.error(err);
-    });
 }
 
 export type Author = {

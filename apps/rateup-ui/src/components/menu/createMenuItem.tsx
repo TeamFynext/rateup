@@ -1,47 +1,24 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-
 import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { MenuItemPriceType } from "@/types/enums.ts";
 import {
   useCreateMenuItemMutation,
   useUpdateMenuItemMutation,
 } from "@/backend/menu/item/mItem.query";
-import {
-  fallbackImage,
-  MAX_FILE_SIZE_IN_BYTE,
-  MAX_FILE_SIZE_IN_MB,
-} from "@/utils/constants.ts";
-import {
-  deleteUploadedFiles,
-  getImageValue,
-  uploadFile,
-} from "@/utils/file-upload/upload.ts";
+import { MenuItemPriceType } from "@/types/enums.ts";
+import { fallbackImage, MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "@/utils/constants.ts";
+import { deleteUploadedFiles, getImageValue, uploadFile } from "@/utils/file-upload/upload.ts";
 
 import { CreditsCard } from "../Card/CreditsCard.tsx";
 import { ImageCropModal } from "../Modal/ImageCropModal.tsx";
 import { ImageUploadMethodModal } from "../Modal/ImageUploadMethodModal.tsx";
 import { UnsplashModal } from "../Modal/UnsplashModal.tsx";
 import { Button } from "../ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog.tsx";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "../ui/field.tsx";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog.tsx";
+import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { Textarea } from "../ui/textarea.tsx";
@@ -96,9 +73,7 @@ const defaultValues = (categoryId: string): MenuItemFormValues => ({
 });
 
 const getValueByPath = (object: any, path: string) => {
-  return path
-    .split(".")
-    .reduce((acc: any, key: string) => (acc == null ? acc : acc[key]), object);
+  return path.split(".").reduce((acc: any, key: string) => (acc == null ? acc : acc[key]), object);
 };
 
 export function CreateMenuItemModal({
@@ -112,12 +87,11 @@ export function CreateMenuItemModal({
   const [imageLoading, setImageLoading] = useState(false);
   const [openedUnsplashDialog, setOpenedUnsplashDialog] = useState(false);
   const [openedCropDialog, setOpenedCropDialog] = useState(false);
-  const [openedMethodSelectionDialog, setOpenedMethodSelectionDialog] =
-    useState(false);
+  const [openedMethodSelectionDialog, setOpenedMethodSelectionDialog] = useState(false);
 
-  const [deleteImageArray, setDeleteImageArray] = useState<
-    { Key: string | File | undefined }[]
-  >([]);
+  const [deleteImageArray, setDeleteImageArray] = useState<{ Key: string | File | undefined }[]>(
+    [],
+  );
   const [selectedInputImage, setSelectedInputImage] = useState({
     url: "",
     name: "",
@@ -153,9 +127,7 @@ export function CreateMenuItemModal({
   });
 
   const values = form.watch();
-  const [selectedImage, setSelectedImage] = useState<string | File>(
-    values.images?.[0] ?? "",
-  );
+  const [selectedImage, setSelectedImage] = useState<string | File>(values.images?.[0] ?? "");
 
   useEffect(() => {
     if (editingItem) {
@@ -197,23 +169,15 @@ export function CreateMenuItemModal({
     });
   };
 
-  const createMenuItemMutation = useCreateMenuItemMutation(
-    categoryId,
-    menuId,
-    () => {
-      close();
-      form.reset(defaultValues(categoryId));
-    },
-  );
+  const createMenuItemMutation = useCreateMenuItemMutation(categoryId, menuId, () => {
+    close();
+    form.reset(defaultValues(categoryId));
+  });
 
-  const updateMenuItemMutation = useUpdateMenuItemMutation(
-    categoryId,
-    menuId,
-    () => {
-      close();
-      form.reset(defaultValues(categoryId));
-    },
-  );
+  const updateMenuItemMutation = useUpdateMenuItemMutation(categoryId, menuId, () => {
+    close();
+    form.reset(defaultValues(categoryId));
+  });
 
   const buildPayload = (submitValues: MenuItemFormValues) => {
     const payload: any = {
@@ -240,15 +204,10 @@ export function CreateMenuItemModal({
       };
     }
 
-    const response = await Promise.allSettled(
-      files.map((file) => uploadFile(file)),
-    );
+    const response = await Promise.allSettled(files.map((file) => uploadFile(file)));
     const errors = response.filter((result) => result.status === "rejected");
     const successes = response
-      .filter(
-        (result): result is PromiseFulfilledResult<string> =>
-          result.status === "fulfilled",
-      )
+      .filter((result): result is PromiseFulfilledResult<string> => result.status === "fulfilled")
       .map((result) => result.value);
 
     return { errors, successes };
@@ -259,9 +218,7 @@ export function CreateMenuItemModal({
     payload: any,
     imageArray: Array<string | File>,
   ) => {
-    const newImages = imageArray.filter(
-      (image): image is File => typeof image !== "string",
-    );
+    const newImages = imageArray.filter((image): image is File => typeof image !== "string");
 
     let errors: PromiseRejectedResult[] = [];
 
@@ -291,13 +248,8 @@ export function CreateMenuItemModal({
     return errors;
   };
 
-  const handleCreateSubmit = async (
-    payload: any,
-    imageArray: Array<string | File>,
-  ) => {
-    const newImages = imageArray.filter(
-      (image): image is File => typeof image !== "string",
-    );
+  const handleCreateSubmit = async (payload: any, imageArray: Array<string | File>) => {
+    const newImages = imageArray.filter((image): image is File => typeof image !== "string");
 
     let errors: PromiseRejectedResult[] = [];
     if (newImages.length > 0) {
@@ -351,9 +303,7 @@ export function CreateMenuItemModal({
   const onChangePicture = (file: File | null) => {
     if (!file) return;
     if (file.size > MAX_FILE_SIZE_IN_BYTE) {
-      toast.error(
-        `${translations("Max file size is")} ${MAX_FILE_SIZE_IN_MB} MB`,
-      );
+      toast.error(`${translations("Max file size is")} ${MAX_FILE_SIZE_IN_MB} MB`);
       return;
     }
 
@@ -371,18 +321,12 @@ export function CreateMenuItemModal({
   const handleCropImageSave = (cropedImage: File | string) => {
     const currentImages = values.images ?? [];
     if (typeof cropedImage === "string") {
-      setFieldValue("unsplashImage", [
-        ...(values.unsplashImage ?? []),
-        cropedImage,
-      ]);
+      setFieldValue("unsplashImage", [...(values.unsplashImage ?? []), cropedImage]);
     }
     setFieldValue("images", [...currentImages, cropedImage]);
   };
 
-  const handleUnsplashImageSave = (
-    unsplashImage: string,
-    imageName: string,
-  ) => {
+  const handleUnsplashImageSave = (unsplashImage: string, imageName: string) => {
     setSelectedInputImage({
       url: unsplashImage,
       name: imageName,
@@ -418,9 +362,7 @@ export function CreateMenuItemModal({
   };
 
   const isPending =
-    createMenuItemMutation.isPending ||
-    updateMenuItemMutation.isPending ||
-    imageLoading;
+    createMenuItemMutation.isPending || updateMenuItemMutation.isPending || imageLoading;
 
   const formAdapter = {
     values,
@@ -439,9 +381,7 @@ export function CreateMenuItemModal({
       <DialogContent className="sm:max-w-200">
         <DialogHeader>
           <DialogTitle>
-            {editingItem
-              ? translations("Edit Item")
-              : translations("Create Item")}
+            {editingItem ? translations("Edit Item") : translations("Create Item")}
           </DialogTitle>
         </DialogHeader>
 
@@ -473,17 +413,13 @@ export function CreateMenuItemModal({
 
           <div className="flex flex-col gap-6 lg:flex-row -mx-4 max-h-[50vh] overflow-y-auto px-4">
             <div className="flex-1">
-              <div className="mb-3 text-sm font-medium">
-                {translations("Add Images (max 3)")}
-              </div>
+              <div className="mb-3 text-sm font-medium">{translations("Add Images (max 3)")}</div>
 
               {(values.images?.length ?? 0) > 0 ? (
                 <div>
                   <CreditsCard
                     enableCredits={
-                      values.unsplashImage?.find(
-                        (data) => data === selectedImage,
-                      )?.length > 0
+                      values.unsplashImage?.find((data) => data === selectedImage)?.length > 0
                     }
                     url={selectedImage}
                   >
@@ -492,9 +428,7 @@ export function CreateMenuItemModal({
                       src={getImageValue(
                         selectedImage,
                         false,
-                        values.unsplashImage?.find(
-                          (data) => data === selectedImage,
-                        )?.length > 0,
+                        values.unsplashImage?.find((data) => data === selectedImage)?.length > 0,
                       )}
                       alt={translations("menu image")}
                       className="w-full rounded-md object-cover"
@@ -503,11 +437,7 @@ export function CreateMenuItemModal({
                   </CreditsCard>
 
                   <div className="mt-2 flex justify-center">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={handleDeleteImage}
-                    >
+                    <Button type="button" variant="destructive" onClick={handleDeleteImage}>
                       <IconTrash data-icon="inline-start" />
                       {translations("Delete")}
                     </Button>
@@ -530,11 +460,7 @@ export function CreateMenuItemModal({
                   <button
                     type="button"
                     onClick={() => setSelectedImage(image)}
-                    key={
-                      typeof image === "string"
-                        ? image
-                        : `${image.name}-${image.lastModified}`
-                    }
+                    key={typeof image === "string" ? image : `${image.name}-${image.lastModified}`}
                     className="rounded-lg"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -543,8 +469,7 @@ export function CreateMenuItemModal({
                       src={getImageValue(
                         image,
                         false,
-                        values.unsplashImage?.find((data) => data === image)
-                          ?.length > 0,
+                        values.unsplashImage?.find((data) => data === image)?.length > 0,
                       )}
                       alt={translations("menu thumbnail")}
                     />
@@ -558,9 +483,7 @@ export function CreateMenuItemModal({
                       type="file"
                       className="hidden"
                       accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                      onChange={(event) =>
-                        onChangePicture(event.target.files?.[0] ?? null)
-                      }
+                      onChange={(event) => onChangePicture(event.target.files?.[0] ?? null)}
                     />
                     <Button
                       type="button"
@@ -579,9 +502,7 @@ export function CreateMenuItemModal({
               <FieldGroup>
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <Field data-invalid={!!form.formState.errors.name}>
-                    <FieldLabel htmlFor="menu-item-name">
-                      {translations("Name")}
-                    </FieldLabel>
+                    <FieldLabel htmlFor="menu-item-name">{translations("Name")}</FieldLabel>
                     <FieldContent>
                       <Input
                         id="menu-item-name"
@@ -634,9 +555,7 @@ export function CreateMenuItemModal({
               {translations("Cancel")}
             </Button>
             <Button type="submit" disabled={isPending}>
-              {editingItem
-                ? translations("Save Item")
-                : translations("Create Item")}
+              {editingItem ? translations("Save Item") : translations("Create Item")}
             </Button>
           </DialogFooter>
         </form>

@@ -45,18 +45,12 @@ export async function getLoyaltyTierById(id: string) {
   return res.data as LoyaltyTierDetails;
 }
 
-export async function updateLoyaltyTier(
-  id: string,
-  data: Partial<LoyaltyTierInput>,
-) {
+export async function updateLoyaltyTier(id: string, data: Partial<LoyaltyTierInput>) {
   const res = await axiosClient.put(`${LOYALTY_BASE}/tiers/${id}`, data);
   return res.data as LoyaltyTier;
 }
 
-export async function deleteLoyaltyTier(
-  id: string,
-  options?: { downgradeCustomers?: boolean },
-) {
+export async function deleteLoyaltyTier(id: string, options?: { downgradeCustomers?: boolean }) {
   const res = await axiosClient.delete(`${LOYALTY_BASE}/tiers/${id}`, {
     params: {
       downgradeCustomers: options?.downgradeCustomers,

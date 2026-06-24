@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-
 import { IconBrandInstagram } from "@tabler/icons-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -54,9 +51,7 @@ export function InstagramFeatureShell({
     [waSettings],
   );
 
-  const [selectedId, setSelectedId] = useState<string | undefined>(
-    connectedSettings[0]?.id,
-  );
+  const [selectedId, setSelectedId] = useState<string | undefined>(connectedSettings[0]?.id);
 
   useEffect(() => {
     if (!selectedId && connectedSettings[0]?.id) {
@@ -64,9 +59,7 @@ export function InstagramFeatureShell({
     }
   }, [connectedSettings, selectedId]);
 
-  const selectedSetting = connectedSettings.find(
-    (item) => item.id === selectedId,
-  );
+  const selectedSetting = connectedSettings.find((item) => item.id === selectedId);
 
   if (isLoading) {
     return (
@@ -87,9 +80,7 @@ export function InstagramFeatureShell({
           </div>
           <div className="mt-4 space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
-            <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
-              {description}
-            </p>
+            <p className="max-w-2xl text-sm text-muted-foreground md:text-base">{description}</p>
           </div>
         </section>
 
@@ -98,14 +89,10 @@ export function InstagramFeatureShell({
             <div className="space-y-4">
               <div>
                 <p className="font-medium">{fallbackTitle}</p>
-                <p className="text-sm text-muted-foreground">
-                  {fallbackDescription}
-                </p>
+                <p className="text-sm text-muted-foreground">{fallbackDescription}</p>
               </div>
               <Button asChild>
-                <a href="/dashboard/settings/channels/instagram">
-                  Open Instagram channel settings
-                </a>
+                <a href="/dashboard/settings/channels/instagram">Open Instagram channel settings</a>
               </Button>
             </div>
           </AlertDescription>
@@ -124,18 +111,12 @@ export function InstagramFeatureShell({
               {translations(eyebrow)}
             </div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-                {title}
-              </h1>
-              <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
-                {description}
-              </p>
+              <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
+              <p className="max-w-2xl text-sm text-muted-foreground md:text-base">{description}</p>
             </div>
           </div>
 
-          {secondaryAction ? (
-            <div className="flex gap-3">{secondaryAction}</div>
-          ) : null}
+          {secondaryAction ? <div className="flex gap-3">{secondaryAction}</div> : null}
         </div>
       </section>
 

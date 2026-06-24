@@ -1,5 +1,3 @@
-"use client";
-
 import { Info } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 
@@ -62,7 +60,6 @@ export function LoyaltyRewardForm({
   timeRestrictionsEnabled,
   setTimeRestrictionsEnabled,
   loyaltyTiers,
-  loyaltyTemplates,
 }: Readonly<LoyaltyRewardFormProps>) {
   const DAYS_OF_WEEK = [
     { label: "Monday", value: "monday" },
@@ -128,16 +125,10 @@ export function LoyaltyRewardForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="fixed-discount">
-                          💰 Fixed Cashback
-                        </SelectItem>
-                        <SelectItem value="percentage-discount">
-                          📊 Percentage Discount
-                        </SelectItem>
+                        <SelectItem value="fixed-discount">💰 Fixed Cashback</SelectItem>
+                        <SelectItem value="percentage-discount">📊 Percentage Discount</SelectItem>
                         <SelectItem value="free-item">🎁 Free Item</SelectItem>
-                        <SelectItem value="free-service">
-                          🚚 Free Service
-                        </SelectItem>
+                        <SelectItem value="free-service">🚚 Free Service</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -157,9 +148,7 @@ export function LoyaltyRewardForm({
                         placeholder="1000"
                         min="0"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value) || 0)
-                        }
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -181,14 +170,10 @@ export function LoyaltyRewardForm({
                         placeholder="10"
                         min="0"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(Number.parseFloat(e.target.value) || 0)
-                        }
+                        onChange={(e) => field.onChange(Number.parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
-                    <FormDescription>
-                      The amount to return to the customer
-                    </FormDescription>
+                    <FormDescription>The amount to return to the customer</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -209,14 +194,10 @@ export function LoyaltyRewardForm({
                         min="0"
                         max="100"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(Number.parseFloat(e.target.value) || 0)
-                        }
+                        onChange={(e) => field.onChange(Number.parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
-                    <FormDescription>
-                      Percentage to discount from the total
-                    </FormDescription>
+                    <FormDescription>Percentage to discount from the total</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -237,14 +218,10 @@ export function LoyaltyRewardForm({
                         placeholder="25"
                         min="0"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || 0)
-                        }
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
-                    <FormDescription>
-                      Estimated monetary value of this reward
-                    </FormDescription>
+                    <FormDescription>Estimated monetary value of this reward</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -270,9 +247,7 @@ export function LoyaltyRewardForm({
             />
 
             <div className="pt-4 border-t">
-              <h3 className="text-base font-medium mb-3">
-                Redemption Rules (Optional)
-              </h3>
+              <h3 className="text-base font-medium mb-3">Redemption Rules (Optional)</h3>
               <div className="space-y-3">
                 <div className="border rounded-lg p-3 space-y-3">
                   <div className="flex items-center justify-between">
@@ -286,8 +261,7 @@ export function LoyaltyRewardForm({
                       checked={minimumSpendEnabled}
                       onCheckedChange={(checked) => {
                         setMinimumSpendEnabled(checked);
-                        if (!checked)
-                          pointRewardForm.setValue("minimumSpend", undefined);
+                        if (!checked) pointRewardForm.setValue("minimumSpend", undefined);
                       }}
                       className="data-[state=checked]:bg-[#1873E8]"
                     />
@@ -298,9 +272,7 @@ export function LoyaltyRewardForm({
                       name="minimumSpend"
                       render={({ field }) => (
                         <FormItem className="pt-2 border-t">
-                          <FormLabel className="text-xs">
-                            Minimum Amount
-                          </FormLabel>
+                          <FormLabel className="text-xs">Minimum Amount</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -308,9 +280,7 @@ export function LoyaltyRewardForm({
                               min="0"
                               {...field}
                               onChange={(e) =>
-                                field.onChange(
-                                  Number.parseFloat(e.target.value) || 0,
-                                )
+                                field.onChange(Number.parseFloat(e.target.value) || 0)
                               }
                             />
                           </FormControl>
@@ -327,9 +297,7 @@ export function LoyaltyRewardForm({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-sm">Time Restrictions</p>
-                      <p className="text-xs text-muted-foreground">
-                        Limit by day/time
-                      </p>
+                      <p className="text-xs text-muted-foreground">Limit by day/time</p>
                     </div>
                     <Switch
                       checked={timeRestrictionsEnabled}
@@ -351,24 +319,17 @@ export function LoyaltyRewardForm({
                         name="availableDays"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs">
-                              Available Days
-                            </FormLabel>
+                            <FormLabel className="text-xs">Available Days</FormLabel>
                             <div className="grid grid-cols-2 gap-2">
                               {DAYS_OF_WEEK.map((day) => (
-                                <div
-                                  key={day.value}
-                                  className="flex items-center space-x-2"
-                                >
+                                <div key={day.value} className="flex items-center space-x-2">
                                   <Checkbox
                                     id={`day-${day.value}`}
                                     checked={field.value?.includes(day.value)}
                                     onCheckedChange={(checked) => {
                                       const updated = checked
                                         ? [...(field.value || []), day.value]
-                                        : field.value?.filter(
-                                            (d) => d !== day.value,
-                                          ) || [];
+                                        : field.value?.filter((d) => d !== day.value) || [];
                                       field.onChange(updated);
                                     }}
                                   />
@@ -391,9 +352,7 @@ export function LoyaltyRewardForm({
                           name="timeFrom"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-xs">
-                                Start Time
-                              </FormLabel>
+                              <FormLabel className="text-xs">Start Time</FormLabel>
                               <FormControl>
                                 <Input type="time" {...field} />
                               </FormControl>
@@ -406,9 +365,7 @@ export function LoyaltyRewardForm({
                           name="timeTo"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-xs">
-                                End Time
-                              </FormLabel>
+                              <FormLabel className="text-xs">End Time</FormLabel>
                               <FormControl>
                                 <Input type="time" {...field} />
                               </FormControl>
@@ -424,9 +381,7 @@ export function LoyaltyRewardForm({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-sm">Tier Requirements</p>
-                      <p className="text-xs text-muted-foreground">
-                        Restrict to specific tiers
-                      </p>
+                      <p className="text-xs text-muted-foreground">Restrict to specific tiers</p>
                     </div>
                     <Switch
                       checked={rewardTierRestriction}
@@ -441,24 +396,17 @@ export function LoyaltyRewardForm({
                       name="tierIds"
                       render={({ field }) => (
                         <FormItem className="pt-2 border-t">
-                          <FormLabel className="text-xs">
-                            Applicable Tiers
-                          </FormLabel>
+                          <FormLabel className="text-xs">Applicable Tiers</FormLabel>
                           <div className="space-y-2">
                             {loyaltyTiers?.map((tier) => (
-                              <div
-                                key={tier.id}
-                                className="flex items-center space-x-2"
-                              >
+                              <div key={tier.id} className="flex items-center space-x-2">
                                 <Checkbox
                                   id={`tier-${tier.id}`}
                                   checked={field.value?.includes(tier.id)}
                                   onCheckedChange={(checked) => {
                                     const updatedTiers = checked
                                       ? [...(field.value || []), tier.id]
-                                      : field.value?.filter(
-                                          (t) => t !== tier.id,
-                                        ) || [];
+                                      : field.value?.filter((t) => t !== tier.id) || [];
                                     field.onChange(updatedTiers);
                                   }}
                                 />
@@ -476,8 +424,7 @@ export function LoyaltyRewardForm({
                             ))}
                           </div>
                           <FormDescription>
-                            This reward will only be available to customers in
-                            the selected tiers
+                            This reward will only be available to customers in the selected tiers
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -502,11 +449,7 @@ export function LoyaltyRewardForm({
                 <FormItem>
                   <FormLabel>Coupon Code</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="e.g., SAVE20"
-                      className="font-mono"
-                      {...field}
-                    />
+                    <Input placeholder="e.g., SAVE20" className="font-mono" {...field} />
                   </FormControl>
                   <FormDescription>
                     Unique code customers will use to redeem this coupon
@@ -523,10 +466,7 @@ export function LoyaltyRewardForm({
                 <FormItem>
                   <FormLabel>Coupon Name</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="e.g., 20% Off Welcome Coupon"
-                      {...field}
-                    />
+                    <Input placeholder="e.g., 20% Off Welcome Coupon" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -565,9 +505,7 @@ export function LoyaltyRewardForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="percentage">
-                          Percentage (%)
-                        </SelectItem>
+                        <SelectItem value="percentage">Percentage (%)</SelectItem>
                         <SelectItem value="fixed">Fixed Amount</SelectItem>
                       </SelectContent>
                     </Select>
@@ -588,9 +526,7 @@ export function LoyaltyRewardForm({
                         placeholder="20"
                         min="0"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || 0)
-                        }
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -611,14 +547,10 @@ export function LoyaltyRewardForm({
                       placeholder="100"
                       min="0"
                       {...field}
-                      onChange={(e) =>
-                        field.onChange(parseFloat(e.target.value) || 0)
-                      }
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                     />
                   </FormControl>
-                  <FormDescription>
-                    Minimum order value required to use this coupon
-                  </FormDescription>
+                  <FormDescription>Minimum order value required to use this coupon</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -639,9 +571,7 @@ export function LoyaltyRewardForm({
                           placeholder="500"
                           min="1"
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(Number.parseInt(e.target.value) || 0)
-                          }
+                          onChange={(e) => field.onChange(Number.parseInt(e.target.value) || 0)}
                         />
                       </FormControl>
                       <FormDescription>
@@ -664,14 +594,10 @@ export function LoyaltyRewardForm({
                           placeholder="1"
                           min="1"
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(Number.parseInt(e.target.value) || 0)
-                          }
+                          onChange={(e) => field.onChange(Number.parseInt(e.target.value) || 0)}
                         />
                       </FormControl>
-                      <FormDescription>
-                        How many times a single user can redeem
-                      </FormDescription>
+                      <FormDescription>How many times a single user can redeem</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -689,11 +615,7 @@ export function LoyaltyRewardForm({
                     <FormItem>
                       <FormLabel>Valid From</FormLabel>
                       <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          value={field.value || ""}
-                        />
+                        <Input type="date" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -707,11 +629,7 @@ export function LoyaltyRewardForm({
                     <FormItem>
                       <FormLabel>Valid To</FormLabel>
                       <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          value={field.value || ""}
-                        />
+                        <Input type="date" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -739,16 +657,12 @@ export function LoyaltyRewardForm({
             />
 
             <div className="pt-4 border-t">
-              <h3 className="text-base font-medium mb-3">
-                Tier Restrictions (Optional)
-              </h3>
+              <h3 className="text-base font-medium mb-3">Tier Restrictions (Optional)</h3>
               <div className="border rounded-lg p-3 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-sm">Tier Requirements</p>
-                    <p className="text-xs text-muted-foreground">
-                      Restrict to specific tiers
-                    </p>
+                    <p className="text-xs text-muted-foreground">Restrict to specific tiers</p>
                   </div>
                   <Switch
                     checked={rewardTierRestriction}
@@ -763,24 +677,17 @@ export function LoyaltyRewardForm({
                     name="tierIds"
                     render={({ field }) => (
                       <FormItem className="pt-2 border-t">
-                        <FormLabel className="text-xs">
-                          Applicable Tiers
-                        </FormLabel>
+                        <FormLabel className="text-xs">Applicable Tiers</FormLabel>
                         <div className="space-y-2">
                           {loyaltyTiers?.map((tier) => (
-                            <div
-                              key={tier.id}
-                              className="flex items-center space-x-2"
-                            >
+                            <div key={tier.id} className="flex items-center space-x-2">
                               <Checkbox
                                 id={`coupon-create-tier-${tier.id}`}
                                 checked={field.value?.includes(tier.id)}
                                 onCheckedChange={(checked) => {
                                   const updatedTiers = checked
                                     ? [...(field.value || []), tier.id]
-                                    : field.value?.filter(
-                                        (t) => t !== tier.id,
-                                      ) || [];
+                                    : field.value?.filter((t) => t !== tier.id) || [];
                                   field.onChange(updatedTiers);
                                 }}
                               />
@@ -798,8 +705,7 @@ export function LoyaltyRewardForm({
                           ))}
                         </div>
                         <FormDescription>
-                          This coupon will only be available to customers in the
-                          selected tiers
+                          This coupon will only be available to customers in the selected tiers
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -823,10 +729,7 @@ export function LoyaltyRewardForm({
                 <FormItem>
                   <FormLabel>Gift Name</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="e.g., Premium Coffee Mug, Wireless Earbuds"
-                      {...field}
-                    />
+                    <Input placeholder="e.g., Premium Coffee Mug, Wireless Earbuds" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -863,14 +766,10 @@ export function LoyaltyRewardForm({
                       placeholder="100"
                       min="1"
                       {...field}
-                      onChange={(e) =>
-                        field.onChange(parseInt(e.target.value) || 0)
-                      }
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                     />
                   </FormControl>
-                  <FormDescription>
-                    Total number of gifts available for assignment
-                  </FormDescription>
+                  <FormDescription>Total number of gifts available for assignment</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -887,19 +786,14 @@ export function LoyaltyRewardForm({
                         Generate unique codes for each gift automatically
                       </p>
                     </div>
-                    <Switch
-                      defaultChecked
-                      className="data-[state=checked]:bg-[#1873E8]"
-                    />
+                    <Switch defaultChecked className="data-[state=checked]:bg-[#1873E8]" />
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="pt-4 border-t">
-              <h3 className="text-base font-medium mb-3">
-                Delivery Information (Optional)
-              </h3>
+              <h3 className="text-base font-medium mb-3">Delivery Information (Optional)</h3>
               <div className="space-y-3">
                 <div className="space-y-2">
                   <Label className="text-xs">Shipping Required</Label>
@@ -930,16 +824,12 @@ export function LoyaltyRewardForm({
             />
 
             <div className="pt-4 border-t">
-              <h3 className="text-base font-medium mb-3">
-                Tier Restrictions (Optional)
-              </h3>
+              <h3 className="text-base font-medium mb-3">Tier Restrictions (Optional)</h3>
               <div className="border rounded-lg p-3 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-sm">Tier Requirements</p>
-                    <p className="text-xs text-muted-foreground">
-                      Restrict to specific tiers
-                    </p>
+                    <p className="text-xs text-muted-foreground">Restrict to specific tiers</p>
                   </div>
                   <Switch
                     checked={rewardTierRestriction}
@@ -954,24 +844,17 @@ export function LoyaltyRewardForm({
                     name="tierIds"
                     render={({ field }) => (
                       <FormItem className="pt-2 border-t">
-                        <FormLabel className="text-xs">
-                          Applicable Tiers
-                        </FormLabel>
+                        <FormLabel className="text-xs">Applicable Tiers</FormLabel>
                         <div className="space-y-2">
                           {loyaltyTiers?.map((tier) => (
-                            <div
-                              key={tier.id}
-                              className="flex items-center space-x-2"
-                            >
+                            <div key={tier.id} className="flex items-center space-x-2">
                               <Checkbox
                                 id={`gift-create-tier-${tier.id}`}
                                 checked={field.value?.includes(tier.id)}
                                 onCheckedChange={(checked) => {
                                   const updatedTiers = checked
                                     ? [...(field.value || []), tier.id]
-                                    : field.value?.filter(
-                                        (t) => t !== tier.id,
-                                      ) || [];
+                                    : field.value?.filter((t) => t !== tier.id) || [];
                                   field.onChange(updatedTiers);
                                 }}
                               />
@@ -989,8 +872,7 @@ export function LoyaltyRewardForm({
                           ))}
                         </div>
                         <FormDescription>
-                          This gift will only be available to customers in the
-                          selected tiers
+                          This gift will only be available to customers in the selected tiers
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -1014,9 +896,8 @@ export function LoyaltyRewardForm({
                   Referral System is Automated
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  The referral program is managed automatically. Configure the
-                  points in the Referral tab above. You don't need to create
-                  individual referral rewards.
+                  The referral program is managed automatically. Configure the points in the
+                  Referral tab above. You don't need to create individual referral rewards.
                 </p>
               </div>
             </div>

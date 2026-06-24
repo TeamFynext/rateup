@@ -14,7 +14,7 @@ import {
   updateTestimonialCollection,
 } from "./testimonial.api";
 
-function useGetAllTestimonials(surveyId) {
+function _useGetAllTestimonials(surveyId) {
   return useQuery({
     queryKey: ["allTestimonialBySurvey", surveyId],
     queryFn: () => getAllTestimonialBySurvey(surveyId),
@@ -41,7 +41,7 @@ export function useCreateTestimonialCollection() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createTestimonialCollection,
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       toast.success("Collection created", {
         id: "create-collection",
       });
@@ -105,7 +105,7 @@ export function useDeleteTestimonialCollection() {
   });
 }
 
-function useGetAllTestimonialSurveys() {
+function _useGetAllTestimonialSurveys() {
   return useQuery({
     queryKey: ["alltestimonialSurveys"],
     queryFn: getAllTestimonialSurveys,
@@ -134,9 +134,7 @@ export function useAddMultipleTestimonialsToCollection(collectionId: string) {
   });
 }
 
-export function useDeleteMultipleTestimonialsFromCollection(
-  collectionId: string,
-) {
+export function useDeleteMultipleTestimonialsFromCollection(collectionId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (testimonialIds: string[]) =>

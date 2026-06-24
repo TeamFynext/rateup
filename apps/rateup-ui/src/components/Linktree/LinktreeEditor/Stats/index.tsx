@@ -1,5 +1,3 @@
-"use client";
-
 import { Group, Stack } from "@mantine/core";
 import { useSearch } from "@tanstack/react-router";
 
@@ -8,6 +6,7 @@ import RefreshButton from "@/components/Button/RefreshButton.tsx";
 import NothingFound from "../../../NothingFound/NothingFound.tsx";
 import PaperLayout from "../../../styled/Layouts/PaperLayout.tsx";
 import { useLinktreeObj } from "../LinktreeContext/LinktreeContext.tsx";
+
 import styles from "./Stats.module.css";
 
 function Stats() {
@@ -41,9 +40,7 @@ function Stats() {
                     <Group>
                       <p className={styles["no-of-clicks-p"]}>
                         <span>Number of Clicks: </span>
-                        <span className={styles["no-of-clicks-number-span"]}>
-                          {noOfClicks}
-                        </span>
+                        <span className={styles["no-of-clicks-number-span"]}>{noOfClicks}</span>
                       </p>
                     </Group>
                   </Group>

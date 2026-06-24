@@ -1,10 +1,7 @@
-"use client";
-
-import React from "react";
-
 import { Image } from "@unpic/react";
 import type { Variants } from "motion/react";
 import { motion } from "motion/react";
+import React from "react";
 
 import { imagesPath } from "@/utils/constants.ts";
 
@@ -80,12 +77,8 @@ function TextCard({
       <div className="bg-[#C4D7F5] w-14 h-14 rounded-full flex items-center justify-center">
         <h1 className="text-2xl font-bold text-[#004F98]">{num}</h1>
       </div>
-      <h2 className="text-xl sm:text-2xl font-semibold text-[#004F98]">
-        {title}
-      </h2>
-      <p className="text-gray-600 text-sm sm:text-base max-w-xs">
-        {description}
-      </p>
+      <h2 className="text-xl sm:text-2xl font-semibold text-[#004F98]">{title}</h2>
+      <p className="text-gray-600 text-sm sm:text-base max-w-xs">{description}</p>
     </motion.div>
   );
 }

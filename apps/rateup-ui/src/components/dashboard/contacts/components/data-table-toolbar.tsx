@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
 import {
@@ -21,6 +17,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -106,14 +103,8 @@ const SourceSelector = ({ value, onChange }) => {
   );
 };
 
-const LabelSelector = ({
-  value,
-  onChange,
-  includeAll = false,
-  includeStatus = false,
-}) => {
-  const { data: contactLabels = [], isPending: isPendingContactLabels } =
-    useContactLabels();
+const LabelSelector = ({ value, onChange, includeAll = false, includeStatus = false }) => {
+  const { data: contactLabels = [], isPending: isPendingContactLabels } = useContactLabels();
   const labels = contactLabels.map((label) => ({
     id: label.id,
     name: label.name,
@@ -157,9 +148,7 @@ const LabelSelector = ({
   );
 };
 
-export function DataTableToolbar<TData>({
-  table,
-}: Readonly<DataTableToolbarProps<TData>>) {
+export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
   const isFiltered = table.getState().columnFilters.length > 0;
   const { filter, setFilter } = useContactTableStore();
   const { t } = useTranslation();
@@ -169,8 +158,7 @@ export function DataTableToolbar<TData>({
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openAddtoGroupModal, setOpenAddtoGroupModal] = useState(false);
   const [openLabelContactModal, setOpenLabelContactModal] = useState(false);
-  const [openLifecycleContactModal, setOpenLifecycleContactModal] =
-    useState(false);
+  const [openLifecycleContactModal, setOpenLifecycleContactModal] = useState(false);
   const [openImportModal, setOpenImportModal] = useState(false);
   const deleteManyContactsMutation = useDeleteManyContactsMutation();
   function handleDeleteContacts() {
@@ -204,9 +192,7 @@ export function DataTableToolbar<TData>({
                 onChange={(event) =>
                   setFilter({
                     ...filter,
-                    searchTerm: event.currentTarget.value
-                      ?.trimStart()
-                      ?.replaceAll("+", ""),
+                    searchTerm: event.currentTarget.value?.trimStart()?.replaceAll("+", ""),
                   })
                 }
               />
@@ -215,9 +201,7 @@ export function DataTableToolbar<TData>({
               all={true}
               className="border-none w-48 bg-secondary h-full rounded-sm px-2"
               value={filter?.lifecycleId}
-              onChange={(value, lifecycleObj) =>
-                setFilter({ ...filter, lifecycleId: value })
-              }
+              onChange={(value, _lifecycleObj) => setFilter({ ...filter, lifecycleId: value })}
             />
             <LabelSelector
               value={filter.labelId}
@@ -240,24 +224,13 @@ export function DataTableToolbar<TData>({
             </Button>
             <ExportContacts table={table} />
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setOpenImportModal(true)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setOpenImportModal(true)}>
               <Upload className="w-4 h-4 mr-2" />
               <span className="font-medium text-sm">{t("Import")}</span>
             </Button>
-            <ImportContactModal
-              opened={openImportModal}
-              setOpened={setOpenImportModal}
-            />
+            <ImportContactModal opened={openImportModal} setOpened={setOpenImportModal} />
             {isFiltered && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => table.resetColumnFilters()}
-              >
+              <Button variant="ghost" size="sm" onClick={() => table.resetColumnFilters()}>
                 Reset
               </Button>
             )}
@@ -348,10 +321,7 @@ const ExportContacts = ({ table }) => {
   const exportMut = useExportContactsMutation();
   const leafColumns = table
     .getAllLeafColumns()
-    ?.filter(
-      (column) =>
-        column.getIsVisible() && !["select", "action"].includes(column.id),
-    )
+    ?.filter((column) => column.getIsVisible() && !["select", "action"].includes(column.id))
     ?.map((col) => col.id);
 
   const handleExport = (type: string) => {
@@ -374,12 +344,8 @@ const ExportContacts = ({ table }) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => handleExport("csv")}>
-          Download as CSV
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleExport("xlsx")}>
-          Download as Excel
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleExport("csv")}>Download as CSV</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleExport("xlsx")}>Download as Excel</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -455,9 +421,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
         <DialogHeader>
           <DialogTitle className="text-md">{t("Import Contacts")}</DialogTitle>
           <DialogDescription>
-            {t(
-              "Import contacts from a CSV file to add them to your contact list.",
-            )}
+            {t("Import contacts from a CSV file to add them to your contact list.")}
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2 p-6">
@@ -474,9 +438,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
                   className="rounded-xl data-[state=unchecked]:bg-gray-200"
                   onCheckedChange={(checked) => {
                     setFields((prev) =>
-                      checked
-                        ? [...prev, field]
-                        : prev.filter((p) => p.id !== field.id),
+                      checked ? [...prev, field] : prev.filter((p) => p.id !== field.id),
                     );
                   }}
                 />
@@ -497,9 +459,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
 
             <Button variant="secondary" onClick={handleDownloadDemo}>
               <Upload />
-              <span className="font-medium text-sm">
-                {t("Download Demo Csv File")}
-              </span>
+              <span className="font-medium text-sm">{t("Download Demo Csv File")}</span>
             </Button>
           </blockquote>
           <div className="flex items-center space-x-2 mt-4">

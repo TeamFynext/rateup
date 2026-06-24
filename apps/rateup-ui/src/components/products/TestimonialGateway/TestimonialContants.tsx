@@ -23,14 +23,12 @@ export const steps = [
   {
     icon: <Smile size={34} strokeWidth={2.5} />,
     title: "Happy Customers",
-    description:
-      "Satisfied customers are prompted to share their positive experience",
+    description: "Satisfied customers are prompted to share their positive experience",
   },
   {
     icon: <Frown size={34} strokeWidth={2.5} />,
     title: "Unhappy Customers",
-    description:
-      "Collect feedback from unsatisfied customers to improve their experience",
+    description: "Collect feedback from unsatisfied customers to improve their experience",
   },
   {
     icon: <Wrench size={34} strokeWidth={2.5} />,
@@ -93,51 +91,6 @@ export const features = [
     title: "Performance Analytics",
     description:
       "Track conversion rates, response times, and testimonial performance to optimize your collection strategy.",
-  },
-];
-
-const tiers = [
-  {
-    name: "Starter",
-    price: "Free",
-    description:
-      "Essential features for small businesses just getting started.",
-    features: [
-      "Up to 20 testimonials",
-      "Basic embedding options",
-      "Email collection form",
-      "Manual testimonial requests",
-      "Standard templates",
-    ],
-  },
-  {
-    name: "Professional",
-    price: "$29",
-    description: "Everything you need for a growing business.",
-    features: [
-      "Unlimited testimonials",
-      "Advanced embedding options",
-      "Custom branding & styles",
-      "Automated request workflows",
-      "Moderation & approval system",
-      "Analytics & performance tracking",
-      "Priority support",
-    ],
-    popular: true,
-  },
-  {
-    name: "Enterprise",
-    price: "$89",
-    description: "Advanced features for larger organizations.",
-    features: [
-      "Everything in Professional",
-      "Multiple team members",
-      "Advanced analytics",
-      "Enterprise-grade security",
-      "Custom integrations",
-      "Dedicated account manager",
-      "SLA & priority support",
-    ],
   },
 ];
 

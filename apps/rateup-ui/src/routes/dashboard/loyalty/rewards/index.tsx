@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -18,11 +14,11 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 
-import { LoyaltyRewardStatus, TemplateType } from "@/types/enums.ts";
 import {
   useLoyaltyProgram,
   useUpdateLoyaltyProgramMutation,
@@ -46,12 +42,7 @@ import { RewardFormContainer } from "@/components/LoyaltyComponents/RewardFormCo
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import {
   Select,
@@ -60,12 +51,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { LoyaltyRewardStatus, TemplateType } from "@/types/enums.ts";
 import { docsPath } from "@/utils/constants.ts";
 
 import {
@@ -80,24 +67,14 @@ export const Route = createFileRoute("/dashboard/loyalty/rewards/")({
 
 function RewardsPage() {
   // Backend queries
-  const {
-    data: rewards,
-    isLoading: isRewardsLoading,
-    error: rewardsError,
-  } = useLoyaltyRewards();
-  const {
-    data: subscription,
-    isLoading: isSubscriptionLoading,
-    refetch,
-  } = useSubscription();
+  const { data: rewards, isLoading: isRewardsLoading, error: rewardsError } = useLoyaltyRewards();
+  const { data: subscription, isLoading: isSubscriptionLoading, refetch } = useSubscription();
   const { data: loyaltyProgram } = useLoyaltyProgram();
   const { data: loyaltyTiers, isLoading: isTiersLoading } = useLoyaltyTiers();
   const { data: templates } = useWaTemplates();
 
   // Mutations
-  const updateLoyaltyProgramMutation = useUpdateLoyaltyProgramMutation(
-    loyaltyProgram?.id || "",
-  );
+  const updateLoyaltyProgramMutation = useUpdateLoyaltyProgramMutation(loyaltyProgram?.id || "");
   const createRewardMutation = useCreateLoyaltyRewardMutation(() => {
     setRewardsViewMode("list");
     resetForm();
@@ -105,18 +82,14 @@ function RewardsPage() {
   const [editingRewardId, setEditingRewardId] = useState<string | null>(null);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [editingGiftId, setEditingGiftId] = useState<string | null>(null);
-  const activeEditingRewardId =
-    editingRewardId || editingCouponId || editingGiftId || "";
-  const updateRewardMutation = useUpdateLoyaltyRewardMutation(
-    activeEditingRewardId,
-    () => {
-      setRewardsViewMode("list");
-      setEditingRewardId(null);
-      setEditingCouponId(null);
-      setEditingGiftId(null);
-      resetForm();
-    },
-  );
+  const activeEditingRewardId = editingRewardId || editingCouponId || editingGiftId || "";
+  const updateRewardMutation = useUpdateLoyaltyRewardMutation(activeEditingRewardId, () => {
+    setRewardsViewMode("list");
+    setEditingRewardId(null);
+    setEditingCouponId(null);
+    setEditingGiftId(null);
+    resetForm();
+  });
   const deleteRewardMutation = useDeleteLoyaltyRewardMutation();
   const toggleRewardStatusMutation = useToggleLoyaltyRewardStatusMutation();
 
@@ -182,8 +155,7 @@ function RewardsPage() {
   });
 
   const [rewardsViewMode, setRewardsViewMode] = useState("list");
-  const [selectedRewardCategory, setSelectedRewardCategory] =
-    useState("point-rewards");
+  const [selectedRewardCategory, setSelectedRewardCategory] = useState("point-rewards");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pendingDeleteReward, setPendingDeleteReward] = useState<{
     id: string;
@@ -198,35 +170,22 @@ function RewardsPage() {
 
   // Referral settings
   const [referralBonus, setReferralBonus] = useState(0);
-  const [referralBonusType, setReferralBonusType] = useState<"points" | "gift">(
-    "points",
-  );
-  const [referralRewardId, setReferralRewardId] = useState<string | undefined>(
-    undefined,
-  );
+  const [referralBonusType, setReferralBonusType] = useState<"points" | "gift">("points");
+  const [referralRewardId, setReferralRewardId] = useState<string | undefined>(undefined);
   const [refereeBonus, setRefereeBonus] = useState(0);
-  const [refereeBonusType, setRefereeBonusType] = useState<"points" | "gift">(
-    "points",
-  );
-  const [refereeRewardId, setRefereeRewardId] = useState<string | undefined>(
-    undefined,
-  );
+  const [refereeBonusType, setRefereeBonusType] = useState<"points" | "gift">("points");
+  const [refereeRewardId, setRefereeRewardId] = useState<string | undefined>(undefined);
 
   // Form field states
   const { data: editingReward } = useLoyaltyRewardById(activeEditingRewardId);
   const { t: translations } = useTranslation();
-  const startEditingReward = (
-    id: string,
-    category: "point-rewards" | "coupons" | "free-gifts",
-  ) => {
+  const startEditingReward = (id: string, category: "point-rewards" | "coupons" | "free-gifts") => {
     setEditingRewardId(category === "point-rewards" ? id : null);
     setEditingCouponId(category === "coupons" ? id : null);
     setEditingGiftId(category === "free-gifts" ? id : null);
   };
 
-  const cancelEditingReward = (
-    category: "point-rewards" | "coupons" | "free-gifts",
-  ) => {
+  const cancelEditingReward = (category: "point-rewards" | "coupons" | "free-gifts") => {
     if (category === "point-rewards") {
       setEditingRewardId(null);
     }
@@ -245,13 +204,10 @@ function RewardsPage() {
     const discountPercentage = Number(pointRewardValue.discountPercentage || 0);
     const estimatedValue = Number(pointRewardValue.estimatedValue || 0);
     const termsAndConditions =
-      pointRewardValue.termsAndConditions ||
-      pointRewardValue.restrictions ||
-      "";
+      pointRewardValue.termsAndConditions || pointRewardValue.restrictions || "";
 
     const storedRewardType = pointRewardValue.rewardType;
-    let rewardType: z.infer<typeof pointRewardSchema>["rewardType"] =
-      "fixed-discount";
+    let rewardType: z.infer<typeof pointRewardSchema>["rewardType"] = "fixed-discount";
 
     if (
       storedRewardType === "fixed-discount" ||
@@ -310,21 +266,18 @@ function RewardsPage() {
         resetPointRewardForm(editingReward);
       } else if (editingReward.rewardType === "coupon") {
         const couponRewardValue = editingReward.rewardValue || {};
-        const couponTimeRestrictions =
-          editingReward.redemptionRules?.time_restrictions;
+        const couponTimeRestrictions = editingReward.redemptionRules?.time_restrictions;
         couponForm.reset({
           name: editingReward.name || "",
           description: editingReward.description || "",
           couponCode: editingReward.rewardValue?.code || "",
           couponDescription: editingReward.rewardValue?.description || "",
-          discountType:
-            couponRewardValue.discountType === "fixed" ? "fixed" : "percentage",
+          discountType: couponRewardValue.discountType === "fixed" ? "fixed" : "percentage",
           discountValue: Number(couponRewardValue.discountValue || 0),
           stockQuantity: editingReward.stockQuantity || 0,
           perUserLimit:
             Number(
-              editingReward.redemptionRules?.quantity_restrictions
-                ?.max_redemptions_per_customer,
+              editingReward.redemptionRules?.quantity_restrictions?.max_redemptions_per_customer,
             ) || 1,
           validFrom: couponTimeRestrictions?.valid_from
             ? String(couponTimeRestrictions.valid_from).slice(0, 10)
@@ -333,13 +286,9 @@ function RewardsPage() {
             ? String(couponTimeRestrictions.valid_until).slice(0, 10)
             : "",
           termsAndConditions:
-            couponRewardValue.termsAndConditions ||
-            couponRewardValue.restrictions ||
-            "",
+            couponRewardValue.termsAndConditions || couponRewardValue.restrictions || "",
           minimumSpend:
-            Number(
-              editingReward.redemptionRules?.spend_requirements?.minimum_spend,
-            ) || 0,
+            Number(editingReward.redemptionRules?.spend_requirements?.minimum_spend) || 0,
           waTemplateId: editingReward.waTemplateId || undefined,
           tierIds: editingReward.availableForTiers || [],
         });
@@ -355,9 +304,7 @@ function RewardsPage() {
           restrictions: "",
         });
       }
-      setRewardTierRestriction(
-        (editingReward.availableForTiers?.length || 0) > 0,
-      );
+      setRewardTierRestriction((editingReward.availableForTiers?.length || 0) > 0);
     }
   }, [editingReward]);
 
@@ -378,12 +325,10 @@ function RewardsPage() {
       updateLoyaltyProgramMutation.mutate({
         referralBonus: referralBonusType === "points" ? referralBonus : 0,
         referralBonusType,
-        referralRewardId:
-          referralBonusType === "gift" ? referralRewardId : undefined,
+        referralRewardId: referralBonusType === "gift" ? referralRewardId : undefined,
         refereeBonus: refereeBonusType === "points" ? refereeBonus : 0,
         refereeBonusType,
-        refereeRewardId:
-          refereeBonusType === "gift" ? refereeRewardId : undefined,
+        refereeRewardId: refereeBonusType === "gift" ? refereeRewardId : undefined,
       });
     }
   };
@@ -415,15 +360,9 @@ function RewardsPage() {
       };
     }
 
-    if (
-      (data.availableDays && data.availableDays.length > 0) ||
-      data.timeFrom ||
-      data.timeTo
-    ) {
+    if ((data.availableDays && data.availableDays.length > 0) || data.timeFrom || data.timeTo) {
       redemptionRules.time_restrictions = {
-        ...(data.availableDays?.length
-          ? { allowed_days: data.availableDays }
-          : {}),
+        ...(data.availableDays?.length ? { allowed_days: data.availableDays } : {}),
         ...(data.timeFrom || data.timeTo
           ? {
               allowed_time_ranges: [
@@ -452,8 +391,7 @@ function RewardsPage() {
         rewardType: data.rewardType,
       },
       waTemplateId: data.waTemplateId || undefined,
-      availableForTiers:
-        rewardTierRestriction && data.tierIds?.length ? data.tierIds : [],
+      availableForTiers: rewardTierRestriction && data.tierIds?.length ? data.tierIds : [],
       redemptionRules,
     };
 
@@ -481,12 +419,8 @@ function RewardsPage() {
 
     if (data.validFrom || data.validTo) {
       redemptionRules.time_restrictions = {
-        ...(data.validFrom
-          ? { valid_from: new Date(data.validFrom).toISOString() }
-          : {}),
-        ...(data.validTo
-          ? { valid_until: new Date(data.validTo).toISOString() }
-          : {}),
+        ...(data.validFrom ? { valid_from: new Date(data.validFrom).toISOString() } : {}),
+        ...(data.validTo ? { valid_until: new Date(data.validTo).toISOString() } : {}),
       };
     }
 
@@ -505,8 +439,7 @@ function RewardsPage() {
       },
       stockQuantity: data.stockQuantity,
       waTemplateId: data.waTemplateId || undefined,
-      availableForTiers:
-        rewardTierRestriction && data.tierIds?.length ? data.tierIds : [],
+      availableForTiers: rewardTierRestriction && data.tierIds?.length ? data.tierIds : [],
       redemptionRules,
     };
 
@@ -528,8 +461,7 @@ function RewardsPage() {
       },
       stockQuantity: data.giftQuantity,
       waTemplateId: data.waTemplateId || undefined,
-      availableForTiers:
-        rewardTierRestriction && data.tierIds?.length ? data.tierIds : [],
+      availableForTiers: rewardTierRestriction && data.tierIds?.length ? data.tierIds : [],
       redemptionRules: {},
     };
 
@@ -558,17 +490,14 @@ function RewardsPage() {
     }
   };
 
-  const loyaltyTemplates = templates?.filter(
-    (t) => t.templateType === TemplateType.LOYALTY,
-  );
+  const loyaltyTemplates = templates?.filter((t) => t.templateType === TemplateType.LOYALTY);
 
   // Filter rewards by category
   const rewardsList = rewards?.filter((r) => r.rewardType === "point") || [];
 
   const couponsList = rewards?.filter((r) => r.rewardType === "coupon") || [];
 
-  const freeGiftsList =
-    rewards?.filter((r) => r.rewardType === "assigned") || [];
+  const freeGiftsList = rewards?.filter((r) => r.rewardType === "assigned") || [];
 
   if (isRewardsLoading || isSubscriptionLoading || isTiersLoading) {
     return <RateupLoader />;
@@ -594,8 +523,7 @@ function RewardsPage() {
             <div>
               <h1 className="text-2xl mb-1">Rewards</h1>
               <p className="text-sm text-muted-foreground">
-                Manage all types of rewards - point-based, coupons, and referral
-                programs
+                Manage all types of rewards - point-based, coupons, and referral programs
               </p>
             </div>
             <InfoButton docUrl={`${docsPath}/loyality/rewards`} />
@@ -649,8 +577,7 @@ function RewardsPage() {
             <TabsContent value="point-rewards" className="space-y-3 mt-0">
               <div className="flex items-start justify-between">
                 <p className="text-sm text-muted-foreground">
-                  Traditional rewards where customers spend points to get
-                  benefits
+                  Traditional rewards where customers spend points to get benefits
                 </p>
                 <Button
                   size="sm"
@@ -672,13 +599,9 @@ function RewardsPage() {
                     reward={reward}
                     category="point-rewards"
                     isEditing={editingRewardId === reward.id}
-                    onEditStart={() =>
-                      startEditingReward(reward.id, "point-rewards")
-                    }
+                    onEditStart={() => startEditingReward(reward.id, "point-rewards")}
                     onEditCancel={() => cancelEditingReward("point-rewards")}
-                    onEditSave={pointRewardForm.handleSubmit(
-                      onSubmitPointReward,
-                    )}
+                    onEditSave={pointRewardForm.handleSubmit(onSubmitPointReward)}
                     onDelete={() => handleDeleteReward(reward.id, reward.name)}
                     isPending={deleteRewardMutation.isPending}
                     onToggleStatus={(checked) => {
@@ -709,8 +632,7 @@ function RewardsPage() {
             <TabsContent value="coupons" className="space-y-3 mt-0">
               <div className="flex items-start justify-between">
                 <p className="text-sm text-muted-foreground">
-                  Coupons can be used by all users - No points required for
-                  redemption
+                  Coupons can be used by all users - No points required for redemption
                 </p>
                 <Button
                   size="sm"
@@ -765,8 +687,8 @@ function RewardsPage() {
             <TabsContent value="free-gifts" className="space-y-3 mt-0">
               <div className="flex items-start justify-between">
                 <p className="text-sm text-muted-foreground">
-                  Personalized gifts that can be assigned to customers -
-                  Individual codes generated automatically
+                  Personalized gifts that can be assigned to customers - Individual codes generated
+                  automatically
                 </p>
                 <Button
                   size="sm"
@@ -788,9 +710,7 @@ function RewardsPage() {
                     reward={gift}
                     category="free-gifts"
                     isEditing={editingGiftId === gift.id}
-                    onEditStart={() =>
-                      startEditingReward(gift.id, "free-gifts")
-                    }
+                    onEditStart={() => startEditingReward(gift.id, "free-gifts")}
                     onEditCancel={() => cancelEditingReward("free-gifts")}
                     onEditSave={giftForm.handleSubmit(onSubmitGift)}
                     onDelete={() => handleDeleteReward(gift.id, gift.name)}
@@ -829,16 +749,14 @@ function RewardsPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-base font-semibold">
-                        Referral Program
-                      </h2>
+                      <h2 className="text-base font-semibold">Referral Program</h2>
                       <Badge className="bg-green-500/15 text-green-600 border-green-500/20 text-xs px-2">
                         Live
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Turn customers into ambassadors — automatically reward
-                      them for bringing friends
+                      Turn customers into ambassadors — automatically reward them for bringing
+                      friends
                     </p>
                   </div>
                 </div>
@@ -895,9 +813,7 @@ function RewardsPage() {
                       </p>
                       <Select
                         value={referralBonusType}
-                        onValueChange={(v) =>
-                          setReferralBonusType(v as "points" | "gift")
-                        }
+                        onValueChange={(v) => setReferralBonusType(v as "points" | "gift")}
                       >
                         <SelectTrigger className="h-9">
                           <SelectValue />
@@ -918,9 +834,7 @@ function RewardsPage() {
                             type="number"
                             value={referralBonus}
                             onChange={(e) =>
-                              setReferralBonus(
-                                Number.parseFloat(e.target.value) || 0,
-                              )
+                              setReferralBonus(Number.parseFloat(e.target.value) || 0)
                             }
                             className="h-9"
                           />
@@ -934,10 +848,7 @@ function RewardsPage() {
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                           Gift
                         </p>
-                        <Select
-                          value={referralRewardId ?? ""}
-                          onValueChange={setReferralRewardId}
-                        >
+                        <Select value={referralRewardId ?? ""} onValueChange={setReferralRewardId}>
                           <SelectTrigger className="h-9">
                             <SelectValue placeholder="Select a gift" />
                           </SelectTrigger>
@@ -971,9 +882,7 @@ function RewardsPage() {
                         <CardTitle className="text-sm font-semibold leading-none">
                           Referee Reward
                         </CardTitle>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          The friend who joins
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">The friend who joins</p>
                       </div>
                     </div>
                   </CardHeader>
@@ -987,9 +896,7 @@ function RewardsPage() {
                       </p>
                       <Select
                         value={refereeBonusType}
-                        onValueChange={(v) =>
-                          setRefereeBonusType(v as "points" | "gift")
-                        }
+                        onValueChange={(v) => setRefereeBonusType(v as "points" | "gift")}
                       >
                         <SelectTrigger className="h-9">
                           <SelectValue />
@@ -1010,9 +917,7 @@ function RewardsPage() {
                             type="number"
                             value={refereeBonus}
                             onChange={(e) =>
-                              setRefereeBonus(
-                                Number.parseFloat(e.target.value) || 0,
-                              )
+                              setRefereeBonus(Number.parseFloat(e.target.value) || 0)
                             }
                             className="h-9"
                           />
@@ -1026,10 +931,7 @@ function RewardsPage() {
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                           Gift
                         </p>
-                        <Select
-                          value={refereeRewardId ?? ""}
-                          onValueChange={setRefereeRewardId}
-                        >
+                        <Select value={refereeRewardId ?? ""} onValueChange={setRefereeRewardId}>
                           <SelectTrigger className="h-9">
                             <SelectValue placeholder="Select a gift" />
                           </SelectTrigger>
@@ -1074,9 +976,7 @@ function RewardsPage() {
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
                       <MessageCircle className="w-5 h-5 text-primary" />
                     </div>
-                    <p className="text-xs font-medium">
-                      Customer types &quot;refer&quot;
-                    </p>
+                    <p className="text-xs font-medium">Customer types &quot;refer&quot;</p>
                     <p className="text-xs text-muted-foreground">
                       Gets unique referral link via WhatsApp
                     </p>
@@ -1094,9 +994,7 @@ function RewardsPage() {
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
                       <ShoppingBag className="w-5 h-5 text-primary" />
                     </div>
-                    <p className="text-xs font-medium">
-                      Friend makes first purchase
-                    </p>
+                    <p className="text-xs font-medium">Friend makes first purchase</p>
                     <p className="text-xs text-muted-foreground">
                       Referrer gets bonus points automatically
                     </p>
@@ -1120,9 +1018,7 @@ function RewardsPage() {
           onSubmitPointReward={onSubmitPointReward}
           onSubmitCoupon={onSubmitCoupon}
           onSubmitGift={onSubmitGift}
-          isPending={
-            createRewardMutation.isPending || updateRewardMutation.isPending
-          }
+          isPending={createRewardMutation.isPending || updateRewardMutation.isPending}
           editingId={editingRewardId || editingCouponId || editingGiftId}
           rewardTierRestriction={rewardTierRestriction}
           setRewardTierRestriction={setRewardTierRestriction}

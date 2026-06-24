@@ -1,5 +1,3 @@
-import React from "react";
-
 import { Select } from "@mantine/core";
 import {
   IconCalendarEventFilled,
@@ -9,6 +7,7 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import React from "react";
 import {
   Bar,
   CartesianGrid,
@@ -20,17 +19,9 @@ import {
   YAxis,
 } from "recharts";
 
-const OverallResponseGraphWebForm = ({
-  data,
-  timePeriod,
-  setTimePeriod,
-  isLoading,
-  onRefresh,
-}) => {
+const OverallResponseGraphWebForm = ({ data, timePeriod, setTimePeriod, isLoading }) => {
   if (isLoading) {
-    return (
-      <div className="w-full h-[400px] animate-pulse bg-gray-100 rounded-xl" />
-    );
+    return <div className="w-full h-100 animate-pulse bg-gray-100 rounded-xl" />;
   }
 
   return (
@@ -76,10 +67,7 @@ const OverallResponseGraphWebForm = ({
       {/* Chart */}
       <div className="overflow-x-auto">
         <ResponsiveContainer minWidth={600} height={400}>
-          <ComposedChart
-            data={data}
-            margin={{ top: 20, right: 20, bottom: 0, left: 0 }}
-          >
+          <ComposedChart data={data} margin={{ top: 20, right: 20, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="lineColor" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#000" stopOpacity={0.8} />
@@ -88,13 +76,7 @@ const OverallResponseGraphWebForm = ({
             </defs>
 
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="date"
-              fontSize={12}
-              tickLine={false}
-              height={40}
-              interval={0}
-            />
+            <XAxis dataKey="date" fontSize={12} tickLine={false} height={40} interval={0} />
             <YAxis
               yAxisId="left"
               orientation="left"
@@ -110,27 +92,9 @@ const OverallResponseGraphWebForm = ({
               interval={0}
             />
             <Tooltip content={<CustomTooltip timePeriod={timePeriod} />} />
-            <Bar
-              yAxisId="left"
-              dataKey="detractors"
-              stackId="a"
-              fill="#FF6161"
-              barSize={20}
-            />
-            <Bar
-              yAxisId="left"
-              dataKey="passives"
-              stackId="a"
-              fill="#FFC107"
-              barSize={20}
-            />
-            <Bar
-              yAxisId="left"
-              dataKey="promoters"
-              stackId="a"
-              fill="#00BF83"
-              barSize={20}
-            />
+            <Bar yAxisId="left" dataKey="detractors" stackId="a" fill="#FF6161" barSize={20} />
+            <Bar yAxisId="left" dataKey="passives" stackId="a" fill="#FFC107" barSize={20} />
+            <Bar yAxisId="left" dataKey="promoters" stackId="a" fill="#00BF83" barSize={20} />
             <Line
               yAxisId="right"
               type="monotone"
@@ -159,9 +123,7 @@ const CustomTooltip = ({
   timePeriod?: any;
 }) => {
   if (active && payload && payload.length) {
-    const d =
-      payload.find((p: any) => p.dataKey === "date")?.payload ||
-      payload[0].payload;
+    const d = payload.find((p: any) => p.dataKey === "date")?.payload || payload[0].payload;
 
     const labelFormatted =
       timePeriod === "hourly"
@@ -189,11 +151,7 @@ const CustomTooltip = ({
             icon={IconStarFilled}
             value={averageNPSRating.toFixed(1)}
           />
-          <Metric
-            label="Happiness Index"
-            icon={IconMoodSmile}
-            value={happinessIndex.toFixed(1)}
-          />
+          <Metric label="Happiness Index" icon={IconMoodSmile} value={happinessIndex.toFixed(1)} />
           <Metric label="Total Responses" icon={IconUsersGroup} value={total} />
         </div>
 
@@ -239,13 +197,9 @@ const Breakdown = ({ label, value, color }) => {
   };
   return (
     <div className={`flex items-center gap-1 ${colorMap[color].split(" ")[0]}`}>
-      <div
-        className={`w-2 h-2 rounded-full ${colorMap[color].split(" ")[1]}`}
-      />
+      <div className={`w-2 h-2 rounded-full ${colorMap[color].split(" ")[1]}`} />
       <span className="text-gray-700">{label}</span>
-      <span className={`font-semibold ${colorMap[color].split(" ")[0]}`}>
-        {value}%
-      </span>
+      <span className={`font-semibold ${colorMap[color].split(" ")[0]}`}>{value}%</span>
     </div>
   );
 };

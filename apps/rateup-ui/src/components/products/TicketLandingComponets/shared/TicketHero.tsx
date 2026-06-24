@@ -13,13 +13,13 @@ const TicketHero = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="animate-fade-in">
             <h1 className="text-4xl md:text-5xl lg:text-6xl  text-[#1f2937] font-semibold leading-tight">
-              <span className="text-[#1c518e] font-bold">Transform</span>{" "}
-              WhatsApp into Your Complete Support Hub
+              <span className="text-[#1c518e] font-bold">Transform</span> WhatsApp into Your
+              Complete Support Hub
             </h1>
             <p className="pt-6 text-md sm:text-xl text-[#374151] max-w-2xl">
-              Connect with over 2 billion customers where they already are. Our
-              official WhatsApp Business API integration turns everyday
-              conversations into powerful support experiences.
+              Connect with over 2 billion customers where they already are. Our official WhatsApp
+              Business API integration turns everyday conversations into powerful support
+              experiences.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <Link to={"https://rateup.app/login"}>
@@ -56,9 +56,7 @@ const TicketHero = () => {
                   R
                 </div>
               </div>
-              <span className="text-sm text-[#4b5563]">
-                Trusted by 500+ businesses worldwide
-              </span>
+              <span className="text-sm text-[#4b5563]">Trusted by 500+ businesses worldwide</span>
             </div>
           </div>
           <div className="hidden lg:flex justify-center ">

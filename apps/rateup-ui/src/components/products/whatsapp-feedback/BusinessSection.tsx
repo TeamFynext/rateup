@@ -105,8 +105,8 @@ export default function BusinessSection() {
             on Customer Happiness
           </h6>
           <p className="mt-4 text-[17px] leading-[1.55] text-ink-500">
-            RateUp is perfect for any business that values customer feedback and
-            wants a modern, effective way to collect it.
+            RateUp is perfect for any business that values customer feedback and wants a modern,
+            effective way to collect it.
           </p>
         </div>
 
@@ -125,9 +125,7 @@ export default function BusinessSection() {
               <h6 className="font-nunito font-extrabold text-[20px] text-ink-800 mb-2.5">
                 {c.title}
               </h6>
-              <p className="text-sm text-ink-500 leading-[1.55] mb-5">
-                {c.desc}
-              </p>
+              <p className="text-sm text-ink-500 leading-[1.55] mb-5">{c.desc}</p>
               <a
                 href="#"
                 className="inline-flex items-center gap-1.5 text-sm font-bold text-fb-green no-underline [&_svg]:transition-transform hover:[&_svg]:translate-x-0.5"

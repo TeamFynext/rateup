@@ -1,18 +1,14 @@
-"use client";
-
 import { ActionIcon, Box, Image, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
 import FormModalLayout from "../../../Modal/FormModalLayout.tsx";
 import IFrameModal from "../../../Survey/ShareSurvey/IFrameModal.tsx";
 import { getLink, socialMediaLinks } from "./constants.tsx";
+
 import styles from "./ShareLinktree.module.css";
 
 function SocialMediaLinks({ linktreeName, linktreeShareUrl, isPublished }) {
-  const [
-    isIframeModalOpen,
-    { open: openIframeModal, close: closeIframeModal },
-  ] = useDisclosure();
+  const [isIframeModalOpen, { open: openIframeModal, close: closeIframeModal }] = useDisclosure();
 
   return (
     <Box
@@ -25,22 +21,11 @@ function SocialMediaLinks({ linktreeName, linktreeShareUrl, isPublished }) {
           <Tooltip label={tooltipLabel} position="bottom" key={id}>
             {id === "iframe" ? (
               <ActionIcon onClick={openIframeModal} size={"2.5rem"}>
-                <Image
-                  className={styles["social-media-icon"]}
-                  src={iconSrc}
-                  alt={alt}
-                />
+                <Image className={styles["social-media-icon"]} src={iconSrc} alt={alt} />
               </ActionIcon>
             ) : (
-              <a
-                href={getLink(id, link, linktreeName, linktreeShareUrl)}
-                target="_blank"
-              >
-                <Image
-                  className={styles["social-media-icon"]}
-                  src={iconSrc}
-                  alt={alt}
-                />
+              <a href={getLink(id, link, linktreeName, linktreeShareUrl)} target="_blank">
+                <Image className={styles["social-media-icon"]} src={iconSrc} alt={alt} />
               </a>
             )}
           </Tooltip>

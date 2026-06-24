@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import {
   CheckIcon,
   Combobox,
@@ -21,6 +17,7 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -31,13 +28,6 @@ import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput.tsx";
 import FormModalLayout from "../Modal/FormModalLayout.tsx";
 
-interface FormValues {
-  title: string;
-  languages: Array<string>;
-  teamId: string;
-  type: string;
-  getLocation: boolean;
-}
 const Languages = new Set([
   "English",
   "മലയാളം",
@@ -77,12 +67,9 @@ export function CreateSurveyModal({
   const tn = searchParams.tn;
 
   const [templateId, setTemplateId] = useState(template?.id || tmp || null);
-  const [templateName, setTemplateName] = useState(
-    template?.title || tn || null,
-  );
+  const [templateName, setTemplateName] = useState(template?.title || tn || null);
 
-  const { data: allThemesArr, isPending: isAllThemesFetchPending } =
-    useAllThemes();
+  const { data: allThemesArr, isPending: isAllThemesFetchPending } = useAllThemes();
   const selectThemeDropdownData = allThemesArr?.map(({ id, name }) => {
     return {
       value: id,
@@ -105,14 +92,10 @@ export function CreateSurveyModal({
       selectedTheme: "",
     },
     validate: {
-      title: (value) =>
-        templateName || value?.length ? null : "Cannot be empty",
+      title: (value) => (templateName || value?.length ? null : "Cannot be empty"),
       languages: (values) =>
-        values?.length
-          ? null
-          : translations("Must contain at least one language"),
-      teamIds: (values) =>
-        values?.length ? null : translations("Must contain atleast one team"),
+        values?.length ? null : translations("Must contain at least one language"),
+      teamIds: (values) => (values?.length ? null : translations("Must contain atleast one team")),
     },
   });
 
@@ -218,7 +201,7 @@ export function CreateSurveyModal({
             });
           }
         },
-        onError: (error) => {
+        onError: (_error) => {
           toast.dismiss("load-data");
         },
       },
@@ -245,14 +228,8 @@ export function CreateSurveyModal({
     >
       <Stack style={{ minHeight: "300px" }} mt="xl">
         <ContainedTextField
-          placeholder={
-            templateName === null ? translations("Enter title") : templateName
-          }
-          label={
-            templateName === null
-              ? translations("Title")
-              : translations("Template Selected")
-          }
+          placeholder={templateName === null ? translations("Enter title") : templateName}
+          label={templateName === null ? translations("Title") : translations("Template Selected")}
           withAsterisk
           {...form.getInputProps("title")}
           disabled={templateName !== null}
@@ -306,13 +283,7 @@ export function CreateSurveyModal({
                 paddingBottom: "0.23125rem",
               },
             }}
-            rightSection={
-              isAllThemesFetchPending ? (
-                <Loader size={"1rem"} />
-              ) : (
-                <ComboboxChevron />
-              )
-            }
+            rightSection={isAllThemesFetchPending ? <Loader size={"1rem"} /> : <ComboboxChevron />}
           />
         )}
 
@@ -361,9 +332,7 @@ function MultiSelectCreatable({ value, setValue, errors }: iProps) {
       setSearch("");
     } else {
       setValue((current) =>
-        current.includes(val)
-          ? current.filter((v) => v !== val)
-          : [...current, val],
+        current.includes(val) ? current.filter((v) => v !== val) : [...current, val],
       );
     }
   };
@@ -394,11 +363,7 @@ function MultiSelectCreatable({ value, setValue, errors }: iProps) {
     ));
 
   return (
-    <Combobox
-      store={combobox}
-      onOptionSubmit={handleValueSelect}
-      withinPortal={false}
-    >
+    <Combobox store={combobox} onOptionSubmit={handleValueSelect} withinPortal={false}>
       <Combobox.DropdownTarget>
         <PillsInput
           radius="md"
@@ -443,13 +408,9 @@ function MultiSelectCreatable({ value, setValue, errors }: iProps) {
             </Combobox.Option>
           )}
 
-          {exactOptionMatch &&
-            search.trim().length > 0 &&
-            options.length === 0 && (
-              <Combobox.Empty>
-                {translations("Nothing found...")}
-              </Combobox.Empty>
-            )}
+          {exactOptionMatch && search.trim().length > 0 && options.length === 0 && (
+            <Combobox.Empty>{translations("Nothing found...")}</Combobox.Empty>
+          )}
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>

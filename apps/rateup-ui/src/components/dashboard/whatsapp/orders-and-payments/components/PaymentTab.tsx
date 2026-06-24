@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import {
   Banknote,
   Building2,
@@ -17,6 +13,7 @@ import {
   Smartphone,
   Truck,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import {
   useCatalogSettings,
@@ -39,12 +36,15 @@ const SHOPIFY_METHODS = [
     label: "Shopify Checkout URL",
     desc: "Customer receives a Shopify cart link to complete address, delivery, and payment directly on your store.",
     logos: [
-      { src: getFileUrlFromKey("payment-logos/visa.svg"), alt: "Visa" },
+      { src: getFileUrlFromKey("/images/icons/visa.svg", false), alt: "Visa" },
       {
-        src: getFileUrlFromKey("payment-logos/mastercard.svg"),
+        src: getFileUrlFromKey("/images/icons/mastercard.svg", false),
         alt: "Mastercard",
       },
-      { src: getFileUrlFromKey("payment-logos/rupay.svg"), alt: "RuPay" },
+      {
+        src: getFileUrlFromKey("/images/icons/rupay.png", false),
+        alt: "RuPay",
+      },
     ],
     badges: [],
     collectAddressApplicable: false,
@@ -58,9 +58,12 @@ const SHOPIFY_METHODS = [
     label: "WhatsApp Native Payment",
     desc: "Customer submits address and delivery inside WhatsApp, then pays directly via WhatsApp Pay. Orders sync to Shopify.",
     logos: [
-      { src: getFileUrlFromKey("payment-logos/gpay.svg"), alt: "GPay" },
-      { src: getFileUrlFromKey("payment-logos/phonepe.svg"), alt: "PhonePe" },
-      { src: getFileUrlFromKey("payment-logos/upi.svg"), alt: "UPI" },
+      { src: getFileUrlFromKey("/images/icons/gpay.png", false), alt: "GPay" },
+      {
+        src: getFileUrlFromKey("/images/icons/phonepe.svg", false),
+        alt: "PhonePe",
+      },
+      { src: getFileUrlFromKey("/images/icons/upi.svg", false), alt: "UPI" },
     ],
     badges: [],
     collectAddressApplicable: true,
@@ -91,9 +94,12 @@ const STANDARD_METHODS = [
     label: "UPI Payment Link",
     desc: "Customer receives an instant UPI payment link for the total order amount.",
     logos: [
-      { src: getFileUrlFromKey("payment-logos/gpay.svg"), alt: "GPay" },
-      { src: getFileUrlFromKey("payment-logos/phonepe.svg"), alt: "PhonePe" },
-      { src: getFileUrlFromKey("payment-logos/upi.svg"), alt: "UPI" },
+      { src: getFileUrlFromKey("/images/icons/gpay.png", false), alt: "GPay" },
+      {
+        src: getFileUrlFromKey("/images/icons/phonepe.svg", false),
+        alt: "PhonePe",
+      },
+      { src: getFileUrlFromKey("/images/icons/upi.svg", false), alt: "UPI" },
     ],
     badges: [],
     fields: [
@@ -163,9 +169,12 @@ const STANDARD_METHODS = [
     label: "WhatsApp Native Payment",
     desc: "Customer completes checkout and pays directly inside WhatsApp via WhatsApp Pay.",
     logos: [
-      { src: getFileUrlFromKey("payment-logos/gpay.svg"), alt: "GPay" },
-      { src: getFileUrlFromKey("payment-logos/phonepe.svg"), alt: "PhonePe" },
-      { src: getFileUrlFromKey("payment-logos/upi.svg"), alt: "UPI" },
+      { src: getFileUrlFromKey("/images/icons/gpay.png", false), alt: "GPay" },
+      {
+        src: getFileUrlFromKey("/images/icons/phonepe.svg", false),
+        alt: "PhonePe",
+      },
+      { src: getFileUrlFromKey("/images/icons/upi.svg", false), alt: "UPI" },
     ],
     badges: [],
     fields: [],
@@ -216,8 +225,7 @@ function CollectToggles({
                 {!hasApprovedFlow && (
                   <span className="text-amber-500">
                     {" "}
-                    ⚠️ Requires an approved address flow (see Address Fields
-                    tab).
+                    ⚠️ Requires an approved address flow (see Address Fields tab).
                   </span>
                 )}
               </p>
@@ -238,15 +246,11 @@ function CollectToggles({
               <div>
                 <p className="text-sm font-medium">Add Delivery Charge</p>
                 <p className="text-xs text-muted-foreground">
-                  Enable delivery charges for catalog orders. Price is added to
-                  the total.
+                  Enable delivery charges for catalog orders. Price is added to the total.
                 </p>
               </div>
             </div>
-            <Switch
-              checked={collectDelivery}
-              onCheckedChange={onDeliveryChange}
-            />
+            <Switch checked={collectDelivery} onCheckedChange={onDeliveryChange} />
           </div>
 
           {collectDelivery && (
@@ -257,27 +261,20 @@ function CollectToggles({
                     Fixed Delivery Charge (Skip Customer Selection)
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    Automatically apply a fixed delivery charge without asking
-                    the customer to select a delivery partner.
+                    Automatically apply a fixed delivery charge without asking the customer to
+                    select a delivery partner.
                   </p>
                 </div>
-                <Switch
-                  checked={fixedDeliveryCharge}
-                  onCheckedChange={onFixedChargeChange}
-                />
+                <Switch checked={fixedDeliveryCharge} onCheckedChange={onFixedChargeChange} />
               </div>
 
               {fixedDeliveryCharge && (
                 <div className="space-y-1.5 pt-1.5 border-t border-border/40">
-                  <Label className="text-xs font-medium">
-                    Fixed Delivery Amount (₹)
-                  </Label>
+                  <Label className="text-xs font-medium">Fixed Delivery Amount (₹)</Label>
                   <Input
                     type="number"
                     value={fixedDeliveryAmount}
-                    onChange={(e) =>
-                      onFixedAmountChange(Number(e.target.value))
-                    }
+                    onChange={(e) => onFixedAmountChange(Number(e.target.value))}
                     placeholder="40"
                     className="h-8 text-sm w-36"
                   />
@@ -298,17 +295,12 @@ export default function PaymentTab({
   catalogId: string;
   isShopifyConnected: boolean;
 }>) {
-  const { data: settings, isLoading } = useCatalogSettings(catalogId);
-  const { mutateAsync: save, isPending: isSaving } =
-    useUpdateCatalogSettings(catalogId);
+  const { data: settings } = useCatalogSettings(catalogId);
+  const { mutateAsync: save, isPending: isSaving } = useUpdateCatalogSettings(catalogId);
 
-  const [storeType, setStoreType] = useState<"standard" | "shopify">(
-    "standard",
-  );
+  const [storeType, setStoreType] = useState<"standard" | "shopify">("standard");
   const [paymentMethod, setPaymentMethod] = useState("manual");
-  const [paymentConfig, setPaymentConfig] = useState<Record<string, string>>(
-    {},
-  );
+  const [paymentConfig, setPaymentConfig] = useState<Record<string, string>>({});
   const [collectAddress, setCollectAddress] = useState(false);
   const [collectDelivery, setCollectDelivery] = useState(false);
   const [fixedDeliveryCharge, setFixedDeliveryCharge] = useState(false);
@@ -341,15 +333,15 @@ export default function PaymentTab({
     });
   };
 
-  if (isLoading || !catalogId) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 rounded-xl bg-muted/30 animate-pulse" />
-        ))}
-      </div>
-    );
-  }
+  // if (isLoading || !catalogId) {
+  //   return (
+  //     <div className="space-y-4">
+  //       {[1, 2, 3].map((i) => (
+  //         <div key={i} className="h-24 rounded-xl bg-muted/30 animate-pulse" />
+  //       ))}
+  //     </div>
+  //   );
+  // }
 
   const hasApprovedFlow = settings?.addressFlowStatus === "approved";
   const methods = storeType === "shopify" ? SHOPIFY_METHODS : STANDARD_METHODS;
@@ -386,9 +378,7 @@ export default function PaymentTab({
               onClick={() => {
                 if (opt.key === "shopify" && !isShopifyConnected) return;
                 setStoreType(opt.key);
-                setPaymentMethod(
-                  opt.key === "shopify" ? "shopify_checkout" : "manual",
-                );
+                setPaymentMethod(opt.key === "shopify" ? "shopify_checkout" : "manual");
               }}
               className={`relative flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200
                 ${opt.key === "shopify" && !isShopifyConnected ? "opacity-50 cursor-not-allowed" : ""}
@@ -407,10 +397,7 @@ export default function PaymentTab({
                 <p className="text-xs text-muted-foreground">{opt.sub}</p>
               </div>
               {opt.key === "shopify" && !isShopifyConnected && (
-                <Badge
-                  variant="secondary"
-                  className="ml-auto text-[10px] shrink-0"
-                >
+                <Badge variant="secondary" className="ml-auto text-[10px] shrink-0">
                   Requires Shopify
                 </Badge>
               )}
@@ -443,9 +430,7 @@ export default function PaymentTab({
                   <div
                     className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? "border-2 border-primary" : "border-muted-foreground/40"}`}
                   >
-                    {isSelected && (
-                      <div className="h-2 w-2 rounded-full bg-primary" />
-                    )}
+                    {isSelected && <div className="h-2 w-2 rounded-full bg-primary" />}
                   </div>
 
                   {/* Icon */}
@@ -453,9 +438,7 @@ export default function PaymentTab({
 
                   {/* Label & Description */}
                   <div className="flex-1 min-w-0 pr-2">
-                    <p className="text-sm font-semibold text-foreground">
-                      {method.label}
-                    </p>
+                    <p className="text-sm font-semibold text-foreground">{method.label}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 leading-normal">
                       {method.desc}
                     </p>
@@ -494,9 +477,7 @@ export default function PaymentTab({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {fields.map((f: any) => (
                         <div key={f.key} className="space-y-1.5">
-                          <Label className="text-xs font-medium text-foreground">
-                            {f.label}
-                          </Label>
+                          <Label className="text-xs font-medium text-foreground">{f.label}</Label>
                           <Input
                             value={paymentConfig[f.key] ?? ""}
                             onChange={(e) =>
@@ -541,22 +522,14 @@ export default function PaymentTab({
         <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-900 p-3 text-xs text-blue-800 dark:text-blue-300">
           <Info className="h-4 w-4 shrink-0 mt-0.5" />
           <p>
-            Delivery selection is on but address collection is off. The delivery
-            charge will be added to the total but no address will be collected.
+            Delivery selection is on but address collection is off. The delivery charge will be
+            added to the total but no address will be collected.
           </p>
         </div>
       )}
 
-      <Button
-        onClick={handleSave}
-        disabled={isSaving || !catalogId}
-        className="gap-2"
-      >
-        {isSaving ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Save className="h-4 w-4" />
-        )}
+      <Button onClick={handleSave} disabled={isSaving || !catalogId} className="gap-2">
+        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
         Save Settings
       </Button>
     </div>

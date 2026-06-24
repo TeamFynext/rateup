@@ -1,17 +1,10 @@
-"use client";
-
 import { createContext, useContext } from "react";
 
 const LinktreeContext = createContext(null);
 const LinktreeEditorTabContext = createContext(null);
 const LinktreeEditorSetTabContext = createContext(null);
 
-function LinktreeContextProvider({
-  linktreeData,
-  children,
-  activeTab,
-  setActiveTab,
-}) {
+function LinktreeContextProvider({ linktreeData, children, activeTab, setActiveTab }) {
   return (
     <LinktreeContext.Provider value={linktreeData}>
       <LinktreeEditorTabContext.Provider value={activeTab}>
@@ -29,10 +22,6 @@ function useLinktreeObj() {
 
 function useSetLinktreeEditorTab() {
   return useContext(LinktreeEditorSetTabContext);
-}
-
-function useLinktreeEditorTab() {
-  return useContext(LinktreeEditorTabContext);
 }
 
 export { LinktreeContextProvider, useLinktreeObj, useSetLinktreeEditorTab };

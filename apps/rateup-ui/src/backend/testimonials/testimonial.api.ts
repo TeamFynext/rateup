@@ -11,8 +11,7 @@ export async function getAllTestimonialBySurvey(surveyId: string) {
 }
 
 export async function getAllTestimonials() {
-  return (await axiosClient.get(TESTIMONIAL_BASE_URL))
-    .data as Array<Testimonial>;
+  return (await axiosClient.get(TESTIMONIAL_BASE_URL)).data as Array<Testimonial>;
 }
 
 export async function getAllTestimonialSurveys() {
@@ -21,16 +20,12 @@ export async function getAllTestimonialSurveys() {
 }
 
 export async function createTestimonialCollection(data) {
-  const testimonials = await axiosClient.post(
-    `${TESTIMONIAL_COLLECTION_BASE_URL}/create`,
-    data,
-  );
+  const testimonials = await axiosClient.post(`${TESTIMONIAL_COLLECTION_BASE_URL}/create`, data);
   return testimonials.data;
 }
 
 export async function getAllTestimonialCollections() {
-  const collections = (await axiosClient.get(TESTIMONIAL_COLLECTION_BASE_URL))
-    .data;
+  const collections = (await axiosClient.get(TESTIMONIAL_COLLECTION_BASE_URL)).data;
   return collections;
 }
 
@@ -40,15 +35,10 @@ type TestiomonialCollection = {
   name: string;
   teamId: string;
   theme: TestimonialStyleType;
-  testimonials: Omit<
-    Testimonial & { responseId: string },
-    "teamId" | "survey"
-  >[];
+  testimonials: Omit<Testimonial & { responseId: string }, "teamId" | "survey">[];
 };
 export async function getAllTestimonialsByCollection(collectionId: string) {
-  const collection = (
-    await axiosClient.get(`/public/testimonials/${collectionId}`)
-  ).data;
+  const collection = (await axiosClient.get(`/public/testimonials/${collectionId}`)).data;
 
   return collection as TestiomonialCollection;
 }
@@ -61,11 +51,7 @@ export async function updateTestimonialCollection({ data, collectionId }) {
 }
 
 export async function deleteTestimonialCollection(collectionId) {
-  return (
-    await axiosClient.delete(
-      `${TESTIMONIAL_COLLECTION_BASE_URL}/${collectionId}`,
-    )
-  ).data;
+  return (await axiosClient.delete(`${TESTIMONIAL_COLLECTION_BASE_URL}/${collectionId}`)).data;
 }
 
 // all these below listed functions are for managing multiple testimonials in a collection

@@ -1,14 +1,7 @@
-"use client";
-
+import { Badge, Flex, Stack, Tabs, Text } from "@mantine/core";
+import { IconAntennaBars4, IconChartPieFilled, IconChartRadar } from "@tabler/icons-react";
 // import start
 import { useContext, useMemo, useState } from "react";
-
-import { Badge, Divider, Flex, Group, Stack, Tabs, Text } from "@mantine/core";
-import {
-  IconAntennaBars4,
-  IconChartPieFilled,
-  IconChartRadar,
-} from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import {
   Bar,
@@ -26,17 +19,14 @@ import {
   YAxis,
 } from "recharts";
 
-import { QuestionType, QuestionType2 } from "@/types/enums.ts";
 import {
   useResponseCount,
   useResponseForComparison,
 } from "@/backend/surveys/response/response.query";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
-import {
-  getResponseArrayByQuestionType,
-  getResponseObjectByQuestionType,
-} from "@/utils/response.ts";
+import { QuestionType2 } from "@/types/enums.ts";
+import { getResponseArrayByQuestionType } from "@/utils/response.ts";
 
 import RateupLoader from "../../Loaders/RateupLoader.tsx";
 import NothingFound from "../../NothingFound/NothingFound.tsx";
@@ -58,10 +48,8 @@ export default function ResultComparison({
   flowQuestions: any[];
   questions;
 }) {
-  const { filterTeams, filterTags } = useContext(SurveyContext);
-  const { selectedLanguage, defaultLanguage } = useContext(
-    SelectedLanguageContext,
-  );
+  const { filterTeams } = useContext(SurveyContext);
+  const { defaultLanguage } = useContext(SelectedLanguageContext);
   const allQuestions = version === 1 ? questions : flowQuestions;
   const { t: translations } = useTranslation();
   const {
@@ -80,29 +68,22 @@ export default function ResultComparison({
     [responseCountData],
   );
 
-  const { data: teamWiseComparison, isPending } =
-    useResponseForComparison(surveyId);
+  const { data: teamWiseComparison, isPending } = useResponseForComparison(surveyId);
 
   if (isPendingCount || isPending) return <RateupLoader h={"100dvh"} />;
   if (countError) return <div>Error...</div>;
   if (responseCountData?.all === 0)
-    return (
-      <NothingFound text={translations("No responses found for comparison")} />
-    );
+    return <NothingFound text={translations("No responses found for comparison")} />;
   return (
     <PaperLayout p={5} miw={300}>
       <Stack mt={"md"} p={10}>
         <Heading subtitle={translations("Team Response Activity")} />
         <TeamResponseActivitySection data={data} />
         <Heading subtitle={translations("Team Question Activity")} />
-        {teamWiseComparison?.map((q, i) => {
-          const question = allQuestions.find(
-            (ques) => ques.id === q.questionId,
-          );
+        {teamWiseComparison?.map((q, _i) => {
+          const question = allQuestions.find((ques) => ques.id === q.questionId);
           const questionTitle =
-            version === 1
-              ? question.title || question.label
-              : question.header || question.label;
+            version === 1 ? question.title || question.label : question.header || question.label;
           const localizedTitle =
             typeof questionTitle === "object"
               ? getReplacedTitleFromVariable({
@@ -121,9 +102,7 @@ export default function ResultComparison({
                     {localizedTitle}
                   </Text>
                   <Badge variant="dot">
-                    {version === 1
-                      ? question.type
-                      : QuestionType2[question.metaType]}
+                    {version === 1 ? question.type : QuestionType2[question.metaType]}
                   </Badge>
                 </Flex>
                 <ResponsiveContainer height={400}>
@@ -146,9 +125,7 @@ export default function ResultComparison({
                           stackId="a"
                           fill={
                             getResponseArrayByQuestionType(
-                              version === 1
-                                ? question.type
-                                : question?.metaType,
+                              version === 1 ? question.type : question?.metaType,
                             )?.find((j) => j.value.toString() === key).color
                           }
                           maxBarSize={50}
@@ -167,11 +144,7 @@ export default function ResultComparison({
   );
 }
 
-const TeamResponseActivitySection = ({
-  data,
-}: {
-  data: { teamCode: string; count: number }[];
-}) => {
+const TeamResponseActivitySection = ({ data }: { data: { teamCode: string; count: number }[] }) => {
   const { t: translations } = useTranslation();
 
   enum ActivePlot {
@@ -182,10 +155,7 @@ const TeamResponseActivitySection = ({
   const [activePlot, setActivePlot] = useState<ActivePlot>(ActivePlot.Bar);
 
   return (
-    <Tabs
-      defaultValue={activePlot}
-      onChange={(value: ActivePlot) => setActivePlot(value)}
-    >
+    <Tabs defaultValue={activePlot} onChange={(value: ActivePlot) => setActivePlot(value)}>
       <Tabs.List>
         <Tabs.Tab value={ActivePlot.Bar} leftSection={<IconAntennaBars4 />}>
           {translations("Bar")}
@@ -236,107 +206,3 @@ const TeamResponseActivitySection = ({
     </Tabs>
   );
 };
-const questionTypesForComparison = [
-  QuestionType.Rating,
-  QuestionType.Opinion,
-  QuestionType.Smiley,
-  QuestionType.LD,
-  QuestionType.YN,
-  QuestionType.CustomNPS,
-];
-interface CombinedChartProps {
-  questionResponses: Array<{
-    team: { name: string; code: string; id: string };
-    response: any;
-  }>;
-  question: Question;
-  teams: Array<{ name: string; code: string; id: string }>;
-}
-const CombinedChart = ({
-  teams,
-  questionResponses,
-  question,
-}: CombinedChartProps) => {
-  const { t: translations } = useTranslation();
-  const data = teams.map(({ code, id }) => {
-    const responses = getResponseObjectByQuestionType(
-      question.type as QuestionType,
-    );
-    questionResponses
-      ?.filter((response) => response.team.id === id)
-      ?.map(({ response }) =>
-        question?.type === QuestionType.CustomNPS
-          ? (responses[response?.weightage] =
-              responses[response?.weightage] + 1)
-          : (responses[response] = responses[response] + 1),
-      );
-    return {
-      name: code,
-      responses,
-    };
-  });
-  if (data?.every((d) => Object.values(d.responses)?.every((r) => r === 0))) {
-    return (
-      <Stack h={400}>
-        <NothingFound
-          text={translations("No response activity for this question yet")}
-        />
-      </Stack>
-    );
-  } else {
-    return (
-      <ResponsiveContainer width="100%" height={400}>
-        <BarChart
-          data={data}
-          margin={{ top: 20 }}
-          barGap={5}
-          barCategoryGap={20}
-          style={{ stroke: "#fff", strokeWidth: 1.5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          {getResponseArrayByQuestionType(question.type as QuestionType)?.map(
-            ({ color, value }, index) => (
-              <Bar
-                dataKey={`responses['${value}']`}
-                stackId={"a"}
-                fill={color}
-                maxBarSize={50}
-                radius={10}
-                style={{ zIndex: 999, marginTop: 10, gap: 10 }}
-                key={index}
-              />
-            ),
-          )}
-          <Tooltip
-            content={({ active, payload, label }) => (
-              <CustomToolTip active={active} payload={payload} label={label} />
-            )}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    );
-  }
-};
-
-function CustomToolTip({ active, payload, label }) {
-  if (active) {
-    return (
-      <PaperLayout>
-        <Stack gap={2}>
-          <Text fw={900}>{label}</Text>
-          {payload?.map(({ name, value }) => (
-            <>
-              <Group justify="space-between">
-                <Text>{name?.split("'")[1]}:</Text>
-                <Badge miw={50}>{value}</Badge>
-              </Group>
-              <Divider variant="dotted" />
-            </>
-          ))}
-        </Stack>
-      </PaperLayout>
-    );
-  }
-}

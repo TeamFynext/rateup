@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge, Stack } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 
@@ -27,12 +25,8 @@ export const LanguageCompletionView = ({
               id={language}
               ref={ref}
               style={{ cursor: "pointer" }}
-              color={
-                !notCompletedLanguages.includes(language) ? "green" : "red"
-              }
-              variant={
-                selectedLanguage === language || hovered ? "filled" : "light"
-              }
+              color={!notCompletedLanguages.includes(language) ? "green" : "red"}
+              variant={selectedLanguage === language || hovered ? "filled" : "light"}
               onClick={() => setSelectedLanguage(language)}
             >
               {language}

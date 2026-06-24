@@ -1,5 +1,3 @@
-type SodiumInstance = Awaited<ReturnType<typeof initialize>>;
-
 async function initialize() {
   const sodiumModule = await import("libsodium-wrappers");
   const sodium = (sodiumModule as any).default ?? sodiumModule;
@@ -16,10 +14,7 @@ export const generateKeyPair = async () => {
 };
 
 // function to encrypt the survey response
-export const encryptResponse = async (
-  response: Array<QuestionResponse>,
-  publicKey: any,
-) => {
+export const encryptResponse = async (response: Array<QuestionResponse>, publicKey: any) => {
   try {
     publicKey = parsetoUint8Array(publicKey);
     const sodium = await initialize();
@@ -33,21 +28,12 @@ export const encryptResponse = async (
 };
 
 // function to decrypt the survey response
-export const decryptResponse = async (
-  cipherText: any,
-  privateKey: Uint8Array,
-  publicKey: any,
-) => {
+export const decryptResponse = async (cipherText: any, privateKey: Uint8Array, publicKey: any) => {
   try {
     const sodium = await initialize();
     publicKey = parsetoUint8Array(publicKey);
     cipherText = parsetoUint8Array(cipherText);
-    const decrypted = sodium.crypto_box_seal_open(
-      cipherText,
-      publicKey,
-      privateKey,
-      "text",
-    );
+    const decrypted = sodium.crypto_box_seal_open(cipherText, publicKey, privateKey, "text");
     const decryptedResponse: QuestionResponse[] = JSON.parse(decrypted);
     return { decryptedResponse };
   } catch (error) {
@@ -63,26 +49,15 @@ export const passwordToKey = (password: string) => {
 };
 
 // function to encrypt the private key
-export const encryptPrivateKey = async (
-  privateKey: Uint8Array,
-  passkey: Uint8Array,
-) => {
+export const encryptPrivateKey = async (privateKey: Uint8Array, passkey: Uint8Array) => {
   try {
     const sodium = await initialize();
     const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
-    const encryptedPrivateKey = await sodium.crypto_secretbox_easy(
-      privateKey,
-      nonce,
-      passkey,
-    );
-    const nonceWithEncryptedPrivateKey = new Uint8Array(
-      nonce.length + encryptedPrivateKey.length,
-    );
+    const encryptedPrivateKey = await sodium.crypto_secretbox_easy(privateKey, nonce, passkey);
+    const nonceWithEncryptedPrivateKey = new Uint8Array(nonce.length + encryptedPrivateKey.length);
     nonceWithEncryptedPrivateKey.set(nonce);
     nonceWithEncryptedPrivateKey.set(encryptedPrivateKey, nonce.length);
-    const nonceWithEncryptedPrivateKeyString = stringifyUint8Array(
-      nonceWithEncryptedPrivateKey,
-    );
+    const nonceWithEncryptedPrivateKeyString = stringifyUint8Array(nonceWithEncryptedPrivateKey);
     return { nonceWithEncryptedPrivateKey: nonceWithEncryptedPrivateKeyString };
   } catch (error) {
     return { error };
@@ -90,25 +65,17 @@ export const encryptPrivateKey = async (
 };
 
 // function to decrypt the private key
-export const decryptPrivateKey = async (
-  nonceWithEncryptedPrivateKey: any,
-  passkey: string,
-) => {
+export const decryptPrivateKey = async (nonceWithEncryptedPrivateKey: any, passkey: string) => {
   try {
     const sodium = await initialize();
-    nonceWithEncryptedPrivateKey = parsetoUint8Array(
-      nonceWithEncryptedPrivateKey,
-    );
+    nonceWithEncryptedPrivateKey = parsetoUint8Array(nonceWithEncryptedPrivateKey);
     if (
       nonceWithEncryptedPrivateKey.length <
       sodium.crypto_secretbox_NONCEBYTES + sodium.crypto_secretbox_MACBYTES
     ) {
       throw new Error("Nonce and encrypted message must be at least 48 bytes");
     }
-    const nonce = nonceWithEncryptedPrivateKey.slice(
-      0,
-      sodium.crypto_secretbox_NONCEBYTES,
-    );
+    const nonce = nonceWithEncryptedPrivateKey.slice(0, sodium.crypto_secretbox_NONCEBYTES);
     const encryptedPrivateKey = nonceWithEncryptedPrivateKey.slice(
       sodium.crypto_secretbox_NONCEBYTES,
     );

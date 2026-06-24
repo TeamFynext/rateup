@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { Briefcase, Sparkles, UserPlus } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod/v4";
@@ -38,9 +37,7 @@ function AuthTypeSignupForm({
   const signupSchema = z.object({
     name: z.string().min(4, "Name should be at least 4 characters long"),
 
-    orgName: z
-      .string()
-      .min(4, "Organization name should be at least 4 characters long"),
+    orgName: z.string().min(4, "Organization name should be at least 4 characters long"),
 
     email: z.email("Invalid email").optional(),
 
@@ -225,10 +222,7 @@ function AuthTypeSignupForm({
                 const isActive = index === currentStep - 1;
 
                 return (
-                  <div
-                    key={index}
-                    className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden"
-                  >
+                  <div key={index} className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <motion.div
                       className={`h-full bg-primary ${isActive ? "shadow-md" : ""}`}
                       initial={{ scaleX: 0 }}
@@ -246,25 +240,15 @@ function AuthTypeSignupForm({
           </div>
           <Card className="p-6 shadow-sm border border-gray-200 mb-8">
             <div className="flex flex-col">
-              <p className="text-sm font-semibold capitalize text-primary">
-                {getStepShortTitle()}
-              </p>
+              <p className="text-sm font-semibold capitalize text-primary">{getStepShortTitle()}</p>
               <h2 className="text-xl font-bold">{getStepTitle()}</h2>
               <p className="font-normal text-[11px]">{getStepSubtitle()}</p>
             </div>
             {currentStep === 1 && (
-              <Step1
-                formData={signupForm}
-                handleNext={handleNext}
-                authType={authType}
-              />
+              <Step1 formData={signupForm} handleNext={handleNext} authType={authType} />
             )}
             {currentStep === 2 && (
-              <Step2
-                formData={signupForm}
-                handleBack={handleBack}
-                handleNext={handleNext}
-              />
+              <Step2 formData={signupForm} handleBack={handleBack} handleNext={handleNext} />
             )}
             {currentStep === 3 && (
               <Step3

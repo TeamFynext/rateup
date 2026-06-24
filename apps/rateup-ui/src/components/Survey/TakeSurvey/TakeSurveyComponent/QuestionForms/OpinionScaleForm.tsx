@@ -1,16 +1,7 @@
-"use client";
-
-import { useContext, useState } from "react";
-
-import {
-  Button,
-  Flex,
-  Group,
-  isLightColor,
-  useMantineTheme,
-} from "@mantine/core";
+import { Button, Flex, Group, isLightColor, useMantineTheme } from "@mantine/core";
 import classNames from "classnames/bind";
 import { useAnimate } from "motion/react";
+import { useContext, useState } from "react";
 
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
@@ -18,6 +9,7 @@ import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
+
 import styles from "./OpinionScaleForm.module.css";
 
 const cx = classNames.bind(styles);
@@ -33,11 +25,9 @@ export function OpinionScaleForm({ initValue }: iProps) {
   const themePrimaryColor = mantineTheme.colors.primaryColor
     ? mantineTheme.colors.primaryColor[5]
     : "#1C518E";
-  const foregroundColor = isLightColor(themePrimaryColor)
-    ? "#000000"
-    : "#FFFFFF";
+  const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
-  const [scope, animate] = useAnimate();
+  const [, animate] = useAnimate();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
 
   const { webSurveyAutoTransitionToNextQues } = useSurveyContext() || {};
@@ -54,14 +44,10 @@ export function OpinionScaleForm({ initValue }: iProps) {
     const clickedBtn = e.target;
     const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue);
     if (clickedBtnValue) {
-      !initValue && updateResponse(clickedBtnValue);
+      if (!initValue) updateResponse(clickedBtnValue);
       if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
         if (clickedBtn) {
-          await animate(
-            clickedBtn,
-            { opacity: [0, 1, 0, 1] },
-            { duration: 0.75 },
-          );
+          await animate(clickedBtn, { opacity: [0, 1, 0, 1] }, { duration: 0.75 });
         }
         nextFn?.(clickedBtnValue);
       }
@@ -70,8 +56,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
 
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const selectedPreview = useSelectedPreview();
-  const surveyThemeMobilePreview =
-    isSurveyThemePreview && selectedPreview === "mobile";
+  const surveyThemeMobilePreview = isSurveyThemePreview && selectedPreview === "mobile";
 
   const renderButtons = () => {
     const oneToFive = [];
@@ -88,10 +73,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
           radius="xs"
           variant={response === i || initValue == i ? "filled" : "outline"}
           style={{
-            color:
-              response === i || initValue == i
-                ? foregroundColor
-                : themePrimaryColor,
+            color: response === i || initValue == i ? foregroundColor : themePrimaryColor,
           }}
           styles={{
             root: {
@@ -122,14 +104,10 @@ export function OpinionScaleForm({ initValue }: iProps) {
       }
     }
     const firstFiveBtnsContiner = (
-      <Flex className={cx("opinion-scale-first-five-btns-container")}>
-        {oneToFive}
-      </Flex>
+      <Flex className={cx("opinion-scale-first-five-btns-container")}>{oneToFive}</Flex>
     );
     const secondFiveBtnsContainer = (
-      <Flex className={cx("opinion-scale-last-five-btns-container")}>
-        {fiveToTen}
-      </Flex>
+      <Flex className={cx("opinion-scale-last-five-btns-container")}>{fiveToTen}</Flex>
     );
     return (
       <>

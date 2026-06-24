@@ -1,5 +1,3 @@
-"use client";
-
 import { steps } from "../TestimonialContants.tsx";
 
 const TestimonialSteps = () => {
@@ -11,8 +9,8 @@ const TestimonialSteps = () => {
             Collect testimonials in four simple steps
           </h2>
           <p className="text-gray-600 max-w-3xl ">
-            Our streamlined process makes it easy to collect and highlight
-            authentic customer feedback
+            Our streamlined process makes it easy to collect and highlight authentic customer
+            feedback
           </p>
         </div>
 
@@ -29,12 +27,8 @@ const TestimonialSteps = () => {
                 <div className="text-[#0041a8]">{step.icon}</div>
               </div>
 
-              <h3 className="font-semibold text-xl text-gray-800 mb-2">
-                {step.title}
-              </h3>
-              <p className="text-sm text-gray-600 max-w-[250px] mx-auto">
-                {step.description}
-              </p>
+              <h3 className="font-semibold text-xl text-gray-800 mb-2">{step.title}</h3>
+              <p className="text-sm text-gray-600 max-w-[250px] mx-auto">{step.description}</p>
             </div>
           ))}
         </div>

@@ -1,5 +1,3 @@
-"use client";
-
 import { IconBrandAppleFilled } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -12,10 +10,7 @@ type AppleSignInButtonProps = {
   buttonText: string;
 };
 
-export default function AppleSignInButton({
-  buttonText,
-  className,
-}: AppleSignInButtonProps) {
+export default function AppleSignInButton({ buttonText, className }: AppleSignInButtonProps) {
   const { t: translations } = useTranslation();
 
   const handleAppleLogin = async () => {
@@ -36,11 +31,7 @@ export default function AppleSignInButton({
   };
 
   return (
-    <Button
-      onClick={handleAppleLogin}
-      className={`h-10 ${className}`}
-      variant="outline"
-    >
+    <Button onClick={handleAppleLogin} className={`h-10 ${className}`} variant="outline">
       <IconBrandAppleFilled />
       <span className="font-semibold text-xs">{buttonText}</span>
     </Button>

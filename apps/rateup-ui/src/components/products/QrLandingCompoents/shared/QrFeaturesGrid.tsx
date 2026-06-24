@@ -1,5 +1,3 @@
-"use client";
-
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 
@@ -26,12 +24,7 @@ const QrFeaturesGrid = () => {
           </h2>
 
           <div className="bg-white w-10 sm:w-14 p-2 h-10 sm:h-14 rounded-full flex items-center justify-center font-bold text-white text-lg sm:text-3xl shadow-lg">
-            <Image
-              src={`${imagesPath}/rateup-star.svg`}
-              alt="logo"
-              width={80}
-              height={80}
-            />
+            <Image src={`${imagesPath}/rateup-star.svg`} alt="logo" width={80} height={80} />
           </div>
         </motion.div>
       </div>

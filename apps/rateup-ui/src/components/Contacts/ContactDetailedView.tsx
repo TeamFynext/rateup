@@ -1,16 +1,5 @@
+import { CircleCheck, Edit, Folder, Mail, MapPin, Phone, Plus, Send, X } from "lucide-react";
 import React, { useState } from "react";
-
-import {
-  CircleCheck,
-  Edit,
-  Folder,
-  Mail,
-  MapPin,
-  Phone,
-  Plus,
-  Send,
-  X,
-} from "lucide-react";
 import { toast } from "sonner";
 
 import { useRemoveContactsFromGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
@@ -93,16 +82,11 @@ const ContactDetailedView = ({
             </Avatar>
             <div className="flex-1">
               <DialogTitle>{selectedContact.name}</DialogTitle>
-              <DialogDescription>
-                View and manage contact details
-              </DialogDescription>
+              <DialogDescription>View and manage contact details</DialogDescription>
               <div className="flex items-center gap-2 mt-2">
                 {getSourceBadge(selectedContact.source)}
                 {selectedContact.blockedOnWhatsApp && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-red-100 text-red-700"
-                  >
+                  <Badge variant="secondary" className="bg-red-100 text-red-700">
                     Blocked
                   </Badge>
                 )}
@@ -183,8 +167,7 @@ const ContactDetailedView = ({
                 </Button>
               </div>
 
-              {selectedContact.contactGroups &&
-              selectedContact.contactGroups.length > 0 ? (
+              {selectedContact.contactGroups && selectedContact.contactGroups.length > 0 ? (
                 <div className="space-y-2 overflow-auto">
                   {selectedContact.contactGroups.map((contactGroup) => {
                     const group = contactGroup.contactGroup;
@@ -224,11 +207,7 @@ const ContactDetailedView = ({
                 title="Remove Contact from Group"
                 buttonTitle="Remove"
                 description={`Are you sure you want to remove ${selectedContact.name} from group ${selectedGroup?.name}?`}
-                onAction={() =>
-                  handleRemoveContactFromGroup(selectedGroup, [
-                    selectedContact.id,
-                  ])
-                }
+                onAction={() => handleRemoveContactFromGroup(selectedGroup, [selectedContact.id])}
                 opened={openedConfirm}
                 setOpened={setOpenedConfirm}
                 buttonColor="bg-red-500"

@@ -1,5 +1,3 @@
-"use client";
-
 import { useMantineColorScheme } from "@mantine/core";
 import { Moon, Sun } from "lucide-react";
 

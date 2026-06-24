@@ -1,11 +1,7 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { useForm } from "@mantine/form";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { CatalogProductType } from "@/types/enums.ts";
 import {
   useCreateBatchCatalogProducts,
   useCreateShopifyProduct,
@@ -13,18 +9,8 @@ import {
 } from "@/backend/whatsapp/catalog/products/products.query";
 import { ContainedTagInput } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import {
@@ -35,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
+import { CatalogProductType } from "@/types/enums.ts";
 import {
   CATALOG_PRODUCT_AVAILABILITY,
   CATALOG_PRODUCT_CONDITIONS,
@@ -147,9 +134,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
       }
       if (values.type === CatalogProductType.HOTEL_ROOM) {
         return {
-          hotel_retailer_id: !values.hotel_retailer_id.length
-            ? "required"
-            : null,
+          hotel_retailer_id: !values.hotel_retailer_id.length ? "required" : null,
           hotel_room_id: !values.hotel_room_id.length ? "required" : null,
           name: !values.name.length ? "required" : null,
           description: !values.description.length ? "required" : null,
@@ -190,7 +175,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
   const updateProducts = useUpdateCatalogProducts(catalogData?.catalogId);
   const createShopifyMut = useCreateShopifyProduct(catalogData?.catalogId);
 
-  const [addToShopify, setAddToShopify] = useState(false);
+  const [addToShopify] = useState(false);
   const [imageUpload, setImageUpload] = useState("upload");
   const [image, setImage] = useState(null);
   const [videoUpload, setVideoUpload] = useState("upload");
@@ -198,10 +183,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
 
   async function handleSave() {
     // ── Shopify mode ──────────────────────────────────────────────────────
-    if (
-      addToShopify &&
-      form.getValues().type === CatalogProductType.PRODUCT_ITEM
-    ) {
+    if (addToShopify && form.getValues().type === CatalogProductType.PRODUCT_ITEM) {
       const values = form.getValues() as any;
 
       // Minimal validation for Shopify-required fields
@@ -226,7 +208,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
         } else if (values.image?.[0]?.url) {
           imageUrl = values.image[0].url;
         }
-      } catch (e) {}
+      } catch {}
 
       toast.loading("Adding product to Shopify...", {
         id: "catalog-product",
@@ -260,9 +242,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
 
     // ── Meta catalog mode ─────────────────────────────────────────────────
     if (form.validate().hasErrors) return;
-    const loadinggMessage = productData
-      ? "Updating Product"
-      : "Uploading product..";
+    const loadinggMessage = productData ? "Updating Product" : "Uploading product..";
     toast.loading(loadinggMessage, {
       id: "catalog-product",
     });
@@ -277,7 +257,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
         const key = await uploadFile(image);
         rest.video[0].url = getFileUrlFromKey(key);
       }
-    } catch (e) {}
+    } catch {}
     const data = {
       type,
       [type]: [{ ...rest }],
@@ -327,11 +307,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
         <Button
           type="submit"
           onClick={handleSave}
-          disabled={
-            createBatch.isPending ||
-            updateProducts.isPending ||
-            createShopifyMut.isPending
-          }
+          disabled={createBatch.isPending || updateProducts.isPending || createShopifyMut.isPending}
         >
           {addToShopify ? "Add to Shopify" : "Save"}
         </Button>
@@ -341,9 +317,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
         <FieldLabel>Item Type</FieldLabel>
         <Select
           value={form.values.type}
-          onValueChange={(v) =>
-            form.setFieldValue("type", v as CatalogProductType)
-          }
+          onValueChange={(v) => form.setFieldValue("type", v as CatalogProductType)}
           disabled
         >
           <SelectTrigger>
@@ -364,10 +338,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           {!addToShopify && (
             <Field data-invalid={!!form.errors.retailer_id}>
               <FieldLabel>Product Retailer ID *</FieldLabel>
-              <Input
-                {...form.getInputProps("retailer_id")}
-                disabled={!!productData}
-              />
+              <Input {...form.getInputProps("retailer_id")} disabled={!!productData} />
               <FieldError>{form.errors.retailer_id as string}</FieldError>
             </Field>
           )}
@@ -378,11 +349,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           </Field>
           <Field data-invalid={!!form.errors.description}>
             <FieldLabel>Product Description *</FieldLabel>
-            <Textarea
-              {...form.getInputProps("description")}
-              rows={3}
-              maxLength={5000}
-            />
+            <Textarea {...form.getInputProps("description")} rows={3} maxLength={5000} />
             <FieldError>{form.errors.description as string}</FieldError>
           </Field>
           {!addToShopify && (
@@ -456,9 +423,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                 min={0}
                 className="w-37.5"
                 value={form.values.price}
-                onChange={(e) =>
-                  form.setFieldValue("price", Number(e.target.value))
-                }
+                onChange={(e) => form.setFieldValue("price", Number(e.target.value))}
               />
               <FieldError>{form.errors.price as string}</FieldError>
             </Field>
@@ -470,9 +435,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                   min={0}
                   className="w-37.5"
                   value={form.values.sale_price}
-                  onChange={(e) =>
-                    form.setFieldValue("sale_price", Number(e.target.value))
-                  }
+                  onChange={(e) => form.setFieldValue("sale_price", Number(e.target.value))}
                 />
                 <FieldError>{form.errors.sale_price as string}</FieldError>
               </Field>
@@ -500,10 +463,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           <Field>
             <div className="flex items-center gap-3">
               <FieldLabel className="mb-0">
-                Image{" "}
-                <span className="text-[10px] text-destructive">
-                  (Min 500x500)
-                </span>
+                Image <span className="text-[10px] text-destructive">(Min 500x500)</span>
               </FieldLabel>
               <RadioGroup
                 value={imageUpload}
@@ -512,19 +472,13 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               >
                 <div className="flex items-center gap-1.5">
                   <RadioGroupItem value="upload" id="img-upload" />
-                  <FieldLabel
-                    htmlFor="img-upload"
-                    className="font-normal cursor-pointer mb-0"
-                  >
+                  <FieldLabel htmlFor="img-upload" className="font-normal cursor-pointer mb-0">
                     Upload
                   </FieldLabel>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <RadioGroupItem value="url" id="img-url" />
-                  <FieldLabel
-                    htmlFor="img-url"
-                    className="font-normal cursor-pointer mb-0"
-                  >
+                  <FieldLabel htmlFor="img-url" className="font-normal cursor-pointer mb-0">
                     Link
                   </FieldLabel>
                 </div>
@@ -537,19 +491,13 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                 onChange={(e) => setImage(e.target.files?.[0] ?? null)}
               />
             ) : (
-              <Input
-                {...form.getInputProps("image.0.url")}
-                placeholder="Enter link"
-              />
+              <Input {...form.getInputProps("image.0.url")} placeholder="Enter link" />
             )}
           </Field>
           {!addToShopify && (
             <Field>
               <FieldLabel>Image Tags</FieldLabel>
-              <ContainedTagInput
-                {...form.getInputProps("image.0.tag")}
-                label={undefined}
-              />
+              <ContainedTagInput {...form.getInputProps("image.0.tag")} label={undefined} />
             </Field>
           )}
           {!addToShopify && (
@@ -563,19 +511,13 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                 >
                   <div className="flex items-center gap-1.5">
                     <RadioGroupItem value="upload" id="vid-upload" />
-                    <FieldLabel
-                      htmlFor="vid-upload"
-                      className="font-normal cursor-pointer mb-0"
-                    >
+                    <FieldLabel htmlFor="vid-upload" className="font-normal cursor-pointer mb-0">
                       Upload
                     </FieldLabel>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <RadioGroupItem value="url" id="vid-url" />
-                    <FieldLabel
-                      htmlFor="vid-url"
-                      className="font-normal cursor-pointer mb-0"
-                    >
+                    <FieldLabel htmlFor="vid-url" className="font-normal cursor-pointer mb-0">
                       Link
                     </FieldLabel>
                   </div>
@@ -588,20 +530,14 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                   onChange={(e) => setVideo(e.target.files?.[0] ?? null)}
                 />
               ) : (
-                <Input
-                  {...form.getInputProps("video.0.url")}
-                  placeholder="Enter link"
-                />
+                <Input {...form.getInputProps("video.0.url")} placeholder="Enter link" />
               )}
             </Field>
           )}
           {!addToShopify && (
             <Field>
               <FieldLabel>Video Tags</FieldLabel>
-              <ContainedTagInput
-                {...form.getInputProps("video.0.tag")}
-                label={undefined}
-              />
+              <ContainedTagInput {...form.getInputProps("video.0.tag")} label={undefined} />
             </Field>
           )}
         </div>
@@ -621,21 +557,13 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           </Field>
           <Field data-invalid={!!form.errors.description}>
             <FieldLabel>Description *</FieldLabel>
-            <Textarea
-              {...form.getInputProps("description")}
-              rows={7}
-              maxLength={5000}
-            />
+            <Textarea {...form.getInputProps("description")} rows={7} maxLength={5000} />
             <FieldError>{form.errors.description as string}</FieldError>
           </Field>
           <div className="flex flex-col gap-3">
             <Field>
               <FieldLabel>Tags</FieldLabel>
-              <ContainedTagInput
-                {...form.getInputProps("tags")}
-                maxTags={5}
-                label={undefined}
-              />
+              <ContainedTagInput {...form.getInputProps("tags")} maxTags={5} label={undefined} />
             </Field>
             <Field>
               <FieldLabel>Number Tags</FieldLabel>
@@ -644,9 +572,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
                 maxTags={5}
                 label={undefined}
               />
-              <FieldDescription>
-                Decimals only — commas not allowed (e.g. 2024)
-              </FieldDescription>
+              <FieldDescription>Decimals only — commas not allowed (e.g. 2024)</FieldDescription>
             </Field>
           </div>
           <Field>
@@ -663,9 +589,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               type="number"
               min={0}
               value={form.values.base_price}
-              onChange={(e) =>
-                form.setFieldValue("base_price", Number(e.target.value))
-              }
+              onChange={(e) => form.setFieldValue("base_price", Number(e.target.value))}
             />
             <FieldError>{form.errors.base_price as string}</FieldError>
           </Field>
@@ -694,10 +618,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           </Field>
           <Field>
             <FieldLabel>Image Tags</FieldLabel>
-            <ContainedTagInput
-              {...form.getInputProps("image.0.tag")}
-              label={undefined}
-            />
+            <ContainedTagInput {...form.getInputProps("image.0.tag")} label={undefined} />
           </Field>
         </div>
       )}
@@ -720,11 +641,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           </Field>
           <Field data-invalid={!!form.errors.description}>
             <FieldLabel>Description *</FieldLabel>
-            <Textarea
-              {...form.getInputProps("description")}
-              rows={3}
-              maxLength={5000}
-            />
+            <Textarea {...form.getInputProps("description")} rows={3} maxLength={5000} />
             <FieldError>{form.errors.description as string}</FieldError>
           </Field>
           <Field data-invalid={!!form.errors.base_price}>
@@ -733,9 +650,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
               type="number"
               min={0}
               value={form.values.base_price}
-              onChange={(e) =>
-                form.setFieldValue("base_price", Number(e.target.value))
-              }
+              onChange={(e) => form.setFieldValue("base_price", Number(e.target.value))}
             />
             <FieldError>{form.errors.base_price as string}</FieldError>
           </Field>
@@ -764,10 +679,7 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
           </Field>
           <Field>
             <FieldLabel>Image Tags</FieldLabel>
-            <ContainedTagInput
-              {...form.getInputProps("image.0.tag")}
-              label={undefined}
-            />
+            <ContainedTagInput {...form.getInputProps("image.0.tag")} label={undefined} />
           </Field>
         </div>
       )}
@@ -775,23 +687,14 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
   );
 };
 
-export const AddCatalogProductModal = ({
-  catalogData,
-  opened,
-  close,
-  productData = null,
-}) => {
+export const AddCatalogProductModal = ({ catalogData, opened, close, productData = null }) => {
   return (
     <Dialog open={opened} onOpenChange={(val) => !val && close()}>
       <DialogContent className="max-w-175 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Item</DialogTitle>
         </DialogHeader>
-        <AddCatalogProduct
-          catalogData={catalogData}
-          onCancel={close}
-          productData={productData}
-        />
+        <AddCatalogProduct catalogData={catalogData} onCancel={close} productData={productData} />
       </DialogContent>
     </Dialog>
   );

@@ -1,8 +1,5 @@
-"use client";
-
-import React, { useMemo, useState } from "react";
-
 import { Clock, Edit } from "lucide-react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -51,8 +48,7 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
             timezone: editingItem.timezone,
             channels: editingItem.channels,
             description: editingItem.description,
-            schedule:
-              editingItem.schedule as BusinessHoursFormValues["schedule"],
+            schedule: editingItem.schedule as BusinessHoursFormValues["schedule"],
           }
         : {
             name: "",
@@ -129,19 +125,12 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
             <div>
               <h3 className="">{t("Business Hours")}</h3>
               <p className="text-xs text-muted-foreground">
-                {t(
-                  "Manage multiple business hours for different channels and timezones",
-                )}
+                {t("Manage multiple business hours for different channels and timezones")}
               </p>
             </div>
           </div>
           {canManage && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => setListOpen(true)}
-            >
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setListOpen(true)}>
               <Edit className="w-4 h-4" />
               {t("Manage")}
             </Button>
@@ -178,10 +167,7 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                 {Object.entries(bh.schedule).map(([day, schedule]) => (
-                  <div
-                    key={day}
-                    className="flex items-center justify-between py-1"
-                  >
+                  <div key={day} className="flex items-center justify-between py-1">
                     <span className="font-medium text-gray-700 dark:text-gray-400 capitalize min-w-[80px]">
                       {getDayName(day)}
                     </span>
@@ -200,9 +186,7 @@ export function BusinessHoursSection({ canManage }: Readonly<Props>) {
             <div className="text-center py-8 text-gray-500">
               <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p>{t("No business hours set up yet")}</p>
-              <p className="text-xs">
-                {t("Click 'Manage' to add your first business hours")}
-              </p>
+              <p className="text-xs">{t("Click 'Manage' to add your first business hours")}</p>
             </div>
           )}
         </div>

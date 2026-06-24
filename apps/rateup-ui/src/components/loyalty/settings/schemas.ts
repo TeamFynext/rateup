@@ -48,11 +48,7 @@ function getPlainTextFromTemplate(value: unknown): string {
 }
 
 const ReferralMessageTemplateSchema = z
-  .union([
-    z.string(),
-    z.array(z.unknown()),
-    z.object({ content: z.array(z.unknown()) }),
-  ])
+  .union([z.string(), z.array(z.unknown()), z.object({ content: z.array(z.unknown()) })])
   .superRefine((value, ctx) => {
     const plainText = getPlainTextFromTemplate(value);
 

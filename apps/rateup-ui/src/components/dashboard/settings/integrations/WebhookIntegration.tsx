@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Info, Loader2, Trash2, Webhook } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as z from "zod";
@@ -39,9 +38,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 
-const EVENT_OPTIONS: Readonly<
-  { value: WebhookEvent; label: string; description: string }[]
-> = [
+const EVENT_OPTIONS: Readonly<{ value: WebhookEvent; label: string; description: string }[]> = [
   {
     value: "message_status",
     label: "Message Status",
@@ -153,9 +150,7 @@ export default function WebhookIntegration() {
   }, [webhook, form]);
 
   const tokenMasked =
-    !!webhook &&
-    !tokenRevealed &&
-    (!!webhook.verifyToken || webhook.verifyToken === undefined);
+    !!webhook && !tokenRevealed && (!!webhook.verifyToken || webhook.verifyToken === undefined);
 
   const handleEventImmediateSave = (nextEvents: WebhookEvent[]) => {
     if (!webhook) return;
@@ -211,9 +206,7 @@ export default function WebhookIntegration() {
                   )}
                   <br />
                   <code className="mt-1 inline-block rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
-                    GET
-                    https://your-url.com?challenge=abc123&amp;verify_token=your_token
-                    → abc123
+                    GET https://your-url.com?challenge=abc123&amp;verify_token=your_token → abc123
                   </code>
                 </AlertDescription>
               </Alert>
@@ -223,9 +216,7 @@ export default function WebhookIntegration() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>
-                      {t("Endpoint URL")}
-                    </FieldLabel>
+                    <FieldLabel htmlFor={field.name}>{t("Endpoint URL")}</FieldLabel>
                     <Input
                       {...field}
                       id={field.name}
@@ -233,9 +224,7 @@ export default function WebhookIntegration() {
                       aria-invalid={fieldState.invalid}
                       autoComplete="off"
                     />
-                    {fieldState.invalid ? (
-                      <FieldError errors={[fieldState.error]} />
-                    ) : null}
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
                 )}
               />
@@ -245,9 +234,7 @@ export default function WebhookIntegration() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>
-                      {t("Verify Token")}
-                    </FieldLabel>
+                    <FieldLabel htmlFor={field.name}>{t("Verify Token")}</FieldLabel>
                     <Input
                       {...field}
                       id={field.name}
@@ -269,9 +256,7 @@ export default function WebhookIntegration() {
                     />
                     {tokenMasked ? (
                       <FieldDescription>
-                        {t(
-                          "A verify token is saved. Click the field to replace it.",
-                        )}
+                        {t("A verify token is saved. Click the field to replace it.")}
                       </FieldDescription>
                     ) : (
                       <FieldDescription>
@@ -280,9 +265,7 @@ export default function WebhookIntegration() {
                         )}
                       </FieldDescription>
                     )}
-                    {fieldState.invalid ? (
-                      <FieldError errors={[fieldState.error]} />
-                    ) : null}
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
                 )}
               />
@@ -309,17 +292,12 @@ export default function WebhookIntegration() {
 
                 <Button
                   type="submit"
-                  disabled={
-                    saveMutation.isPending ||
-                    (!!webhook && !form.formState.isDirty)
-                  }
+                  disabled={saveMutation.isPending || (!!webhook && !form.formState.isDirty)}
                 >
                   {saveMutation.isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
-                  {saveMutation.isPending
-                    ? t("Verifying URL...")
-                    : t("Verify and Save")}
+                  {saveMutation.isPending ? t("Verifying URL...") : t("Verify and Save")}
                 </Button>
               </div>
 
@@ -334,9 +312,7 @@ export default function WebhookIntegration() {
                     onChange={field.onChange}
                     name={field.name}
                     disabled={!webhook}
-                    onImmediateSave={
-                      webhook ? handleEventImmediateSave : undefined
-                    }
+                    onImmediateSave={webhook ? handleEventImmediateSave : undefined}
                     isSaving={eventsSaving}
                   />
                 )}
@@ -357,10 +333,7 @@ export default function WebhookIntegration() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmDeleteOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setConfirmDeleteOpen(false)}>
               {t("Cancel")}
             </Button>
             <Button
@@ -380,9 +353,7 @@ export default function WebhookIntegration() {
               }}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
+              {deleteMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {t("Delete")}
             </Button>
           </DialogFooter>

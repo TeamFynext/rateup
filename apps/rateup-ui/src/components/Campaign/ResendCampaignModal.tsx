@@ -1,19 +1,9 @@
-"use client";
-
-import { useState } from "react";
-
 import dayjs from "dayjs";
-import {
-  AlertCircle,
-  CalendarIcon,
-  ChevronDownIcon,
-  Clock,
-  Send,
-} from "lucide-react";
+import { AlertCircle, CalendarIcon, ChevronDownIcon, Clock, Send } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { CampaignParticipantStatus } from "@/types/enums.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Calendar } from "@/components/ui/calendar.tsx";
 import {
@@ -26,11 +16,8 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { CampaignParticipantStatus } from "@/types/enums.ts";
 
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group.tsx";
 
@@ -88,7 +75,6 @@ export const ResendCampaignModal = ({
   onClose,
   onSubmit,
   isLoading = false,
-  stats = {},
   isFirstSend = false,
 }: ResendCampaignModalProps) => {
   const { t } = useTranslation("campaign.resend");
@@ -97,21 +83,15 @@ export const ResendCampaignModal = ({
   const [scheduleTime, setScheduleTime] = useState("09:00");
 
   // ✅ For first send: default PENDING, for resend: default FAILED
-  const [selectedStatuses, setSelectedStatuses] = useState<
-    CampaignParticipantStatus[]
-  >(
-    isFirstSend
-      ? [CampaignParticipantStatus.PENDING]
-      : [CampaignParticipantStatus.FAILED],
+  const [selectedStatuses, setSelectedStatuses] = useState<CampaignParticipantStatus[]>(
+    isFirstSend ? [CampaignParticipantStatus.PENDING] : [CampaignParticipantStatus.FAILED],
   );
 
   const [sendMode, setSendMode] = useState<"NOW" | "SCHEDULED">("NOW");
 
   const toggleStatus = (status: CampaignParticipantStatus) => {
     setSelectedStatuses((prev) =>
-      prev.includes(status)
-        ? prev.filter((s) => s !== status)
-        : [...prev, status],
+      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status],
     );
   };
 
@@ -138,9 +118,7 @@ export const ResendCampaignModal = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {isFirstSend ? "Send Campaign" : t("Resend Campaign")}
-          </DialogTitle>
+          <DialogTitle>{isFirstSend ? "Send Campaign" : t("Resend Campaign")}</DialogTitle>
           <DialogDescription>
             {isFirstSend
               ? "Choose when to send to participants"
@@ -187,9 +165,7 @@ export const ResendCampaignModal = ({
                     >
                       <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm font-medium">
-                        {scheduleDate
-                          ? dayjs(scheduleDate).format("MMMM D, YYYY")
-                          : t("Date")}
+                        {scheduleDate ? dayjs(scheduleDate).format("MMMM D, YYYY") : t("Date")}
                       </span>
                       <ChevronDownIcon className="w-4 h-4" />
                     </Button>
@@ -198,16 +174,12 @@ export const ResendCampaignModal = ({
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={
-                        scheduleDate ? new Date(scheduleDate) : undefined
-                      }
+                      selected={scheduleDate ? new Date(scheduleDate) : undefined}
                       onSelect={(date) => {
                         if (!date) return;
                         setScheduleDate(date.toISOString().split("T")[0]);
                       }}
-                      disabled={(date) =>
-                        date < new Date(new Date().setHours(0, 0, 0, 0))
-                      }
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                       captionLayout="dropdown"
                     />
                   </PopoverContent>
@@ -269,15 +241,8 @@ export const ResendCampaignModal = ({
           <Button variant="outline" onClick={onClose}>
             {t("Cancel")}
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isLoading || selectedStatuses.length === 0}
-          >
-            {isLoading
-              ? t("Sending...")
-              : isFirstSend
-                ? "Send Campaign"
-                : t("Resend Campaign")}
+          <Button onClick={handleSubmit} disabled={isLoading || selectedStatuses.length === 0}>
+            {isLoading ? t("Sending...") : isFirstSend ? "Send Campaign" : t("Resend Campaign")}
           </Button>
         </DialogFooter>
       </DialogContent>

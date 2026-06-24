@@ -1,5 +1,3 @@
-"use client";
-
 import { IconRefresh } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
@@ -8,10 +6,7 @@ import {
   useSyncCatalogs,
   useSyncConnectedCatalog,
 } from "@/backend/whatsapp/catalog/catalog.query";
-import {
-  GenericActionCard,
-  GenericCardGrid,
-} from "@/components/common/generic-card.tsx";
+import { GenericActionCard, GenericCardGrid } from "@/components/common/generic-card.tsx";
 import { ListPageLayout } from "@/components/common/list-page-layout.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -77,8 +72,7 @@ function Catalog() {
               })
             }
             footerLeft={
-              catalog.connectedWaPhoneIds &&
-              catalog.connectedWaPhoneIds.length > 0 ? (
+              catalog.connectedWaPhoneIds && catalog.connectedWaPhoneIds.length > 0 ? (
                 <Badge variant="default" className="text-xs">
                   Linked to WhatsApp
                 </Badge>

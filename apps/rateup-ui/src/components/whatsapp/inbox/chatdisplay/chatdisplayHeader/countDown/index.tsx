@@ -1,10 +1,7 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { Clock, TimerIcon } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
@@ -12,13 +9,8 @@ import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 dayjs.extend(utc);
 
-export default function WaInboxCountdownTimer({
-  timeStamp,
-}: {
-  timeStamp: string;
-}) {
-  const calculateTimeLeft = () =>
-    dayjs(dayjs(timeStamp).add(24, "hour")).diff(dayjs(), "second");
+export default function WaInboxCountdownTimer({ timeStamp }: { timeStamp: string }) {
+  const calculateTimeLeft = () => dayjs(dayjs(timeStamp).add(24, "hour")).diff(dayjs(), "second");
 
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
@@ -31,7 +23,7 @@ export default function WaInboxCountdownTimer({
 
   const hours = Math.floor(timeLeft / 3600);
   const minutes = Math.floor((timeLeft % 3600) / 60);
-  const seconds = timeLeft % 60;
+
   const percentageDifference = (timeLeft / (24 * 3600)) * 100;
 
   if (!timeStamp || isInboxSessionExpired(timeStamp)) {

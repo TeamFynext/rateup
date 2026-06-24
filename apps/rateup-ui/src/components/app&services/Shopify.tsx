@@ -1,15 +1,9 @@
-"use client";
-
-import { useState } from "react";
-
 import { IconPlus } from "@tabler/icons-react";
 import { Image } from "@unpic/react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { IntegratedApps } from "@/types/enums.ts";
-import type { ShopifyIntegration } from "@/types/global";
-import { cn } from "@/lib/utils.ts";
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
 import { useTeamsByUser } from "@/backend/team/team.query";
@@ -19,22 +13,16 @@ import ShopifySchedules from "@/components/shopify/ShopifySchedules.tsx";
 import ShopifySettings from "@/components/shopify/ShopifySettings.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { cn } from "@/lib/utils.ts";
+import { IntegratedApps } from "@/types/enums.ts";
+import type { ShopifyIntegration } from "@/types/global";
 
 interface ActiveBadgeProps extends React.ComponentProps<typeof Badge> {
   active: boolean;
 }
 
-export function ActiveStatusBadge({
-  active,
-  className,
-  ...props
-}: ActiveBadgeProps) {
+export function ActiveStatusBadge({ active, className, ...props }: ActiveBadgeProps) {
   const { t: translations } = useTranslation();
   return (
     <Badge
@@ -53,9 +41,10 @@ export function ActiveStatusBadge({
 }
 
 export function Shopify() {
-  const { data: shopifyInfo, isLoading } = useIntegrationByType(
-    IntegratedApps.shopify,
-  ) as { data: ShopifyIntegration; isLoading: boolean };
+  const { data: shopifyInfo, isLoading } = useIntegrationByType(IntegratedApps.shopify) as {
+    data: ShopifyIntegration;
+    isLoading: boolean;
+  };
   const { data: templates } = useWaTemplates();
   const { data: teams } = useTeamsByUser();
   const { t: translations } = useTranslation();
@@ -93,9 +82,7 @@ export function Shopify() {
           />
           <Button
             style={{ backgroundColor: "#5e8e3e" }}
-            onClick={() =>
-              window.open("https://apps.shopify.com/rateup", "_blank")
-            }
+            onClick={() => window.open("https://apps.shopify.com/rateup", "_blank")}
           >
             <IconPlus data-icon="inline-start" />
             {translations("Connect with shopify store")}
@@ -108,9 +95,7 @@ export function Shopify() {
     <Tabs defaultValue="schedules" className="w-full h-full">
       <div className="mb-4 flex items-center justify-between">
         <TabsList>
-          <TabsTrigger value="schedules">
-            {translations("Schedules")}
-          </TabsTrigger>
+          <TabsTrigger value="schedules">{translations("Schedules")}</TabsTrigger>
           <TabsTrigger value="settings">{translations("Settings")}</TabsTrigger>
         </TabsList>
         <Button variant="outline" onClick={handleLoadProducts}>

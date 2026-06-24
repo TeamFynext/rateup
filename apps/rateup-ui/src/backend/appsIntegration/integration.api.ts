@@ -30,10 +30,7 @@ export const createIntegration = async (data: integrationSchemaProps) => {
   return response.data;
 };
 
-export const updateIntegration = async (
-  type: IntegratedApps,
-  data: updateIntegrationSchema,
-) => {
+export const updateIntegration = async (type: IntegratedApps, data: updateIntegrationSchema) => {
   const response = await axiosClient.put(`${ROUTE_URL}${type}`, data);
   return response.data;
 };
@@ -53,13 +50,10 @@ export async function createGoogleSheetAuthToken(data) {
   return res.data;
 }
 
-export const getWaPaymentConfigurations = async (
-  whatsappSettingsId?: string,
-) => {
-  const response = await axiosClient.get(
-    `${ROUTE_URL}wa_payment_configurations`,
-    { params: whatsappSettingsId ? { whatsappSettingsId } : undefined },
-  );
+export const getWaPaymentConfigurations = async (whatsappSettingsId?: string) => {
+  const response = await axiosClient.get(`${ROUTE_URL}wa_payment_configurations`, {
+    params: whatsappSettingsId ? { whatsappSettingsId } : undefined,
+  });
   return response.data;
 };
 export const getWaPaymentConfigurationByName = async ({
@@ -75,23 +69,16 @@ export const getWaPaymentConfigurationByName = async ({
 };
 
 export const createWaPaymentConfiguration = async (data) => {
-  const response = await axiosClient.post(
-    `${ROUTE_URL}wa_payment_configuration`,
-    data,
-  );
+  const response = await axiosClient.post(`${ROUTE_URL}wa_payment_configuration`, data);
   return response.data;
 };
 export const deleteWaPaymentConfiguration = async (name: string) => {
-  const response = await axiosClient.delete(
-    `${ROUTE_URL}wa_payment_configuration/${name}`,
-  );
+  const response = await axiosClient.delete(`${ROUTE_URL}wa_payment_configuration/${name}`);
   return response.data;
 };
 
 export const regenerateWaPaymentConfigurationOauth = async (name: string) => {
-  const response = await axiosClient.get(
-    `${ROUTE_URL}regenerate_wa_payment_config_oauth/${name}`,
-  );
+  const response = await axiosClient.get(`${ROUTE_URL}regenerate_wa_payment_config_oauth/${name}`);
   return response.data;
 };
 

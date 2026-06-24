@@ -7,19 +7,6 @@ function validateLength(input, min, max) {
   return true;
 }
 
-function passwordValidation(value) {
-  if (!value) {
-    return "Password is required";
-  }
-  if (value.length < 5) {
-    return "Password should be at least 5 characters long";
-  }
-  if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
-    return "Password should contain at least one letter and one number";
-  }
-  return null; // Validation passed
-}
-
 function validateWordCount(input, min, max) {
   const words = input.split(" ");
   if (words.length < min || words.length > max) {
@@ -65,10 +52,7 @@ export function validateQuestion(question, input, selectedLanguage) {
                 return rule?.errorMessage;
               }
             } else if (rule?.ruleType === "required") {
-              if (
-                !input?.[field?.fieldKey] ||
-                !input?.[field?.fieldKey]?.trim().length
-              ) {
+              if (!input?.[field?.fieldKey] || !input?.[field?.fieldKey]?.trim().length) {
                 return rule?.errorMessage;
               }
             }
@@ -99,9 +83,7 @@ export function validateQuestion(question, input, selectedLanguage) {
         }
       }
       if (question.validationRules.textType) {
-        if (
-          !validateTextType(input, question?.validationRules?.textType?.type)
-        ) {
+        if (!validateTextType(input, question?.validationRules?.textType?.type)) {
           return question?.validationRules?.textType?.errorMessage;
         }
       }

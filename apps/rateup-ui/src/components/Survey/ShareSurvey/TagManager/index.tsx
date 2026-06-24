@@ -1,16 +1,6 @@
-"use client";
-
-import { useCallback, useRef, useState } from "react";
-
 import { toBlob } from "html-to-image";
-import {
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Copy,
-  Download,
-  Tags,
-} from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Copy, Download, Tags } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetShareSettings } from "@/backend/surveyShareSettings/surveyShareSettings.query";
@@ -21,12 +11,7 @@ import Heading from "../../../styled/Heading/Heading.tsx";
 import { Badge } from "../../../ui/badge.tsx";
 import { Button } from "../../../ui/button.tsx";
 import { Checkbox } from "../../../ui/checkbox.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../../../ui/dialog.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../../ui/dialog.tsx";
 import { Input } from "../../../ui/input.tsx";
 import {
   Table,
@@ -36,11 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "../../../ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../../../ui/tooltip.tsx";
 import Preview from "../Preview/Preview.tsx";
 
 function TagManager({
@@ -49,14 +30,12 @@ function TagManager({
   teamSelectData,
   onSelectTeamDropdownChange,
   nothingFound,
-  getSelectedRowsToExport,
   tagsToMap,
   surveyTitle,
   surveyId,
   shareUrl,
 }) {
-  const [isAllQrDownloadProcessing, setIsAllQrDownloadProcessing] =
-    useState(false);
+  const [isAllQrDownloadProcessing, setIsAllQrDownloadProcessing] = useState(false);
   const [tagManagerOpened, setTagManagerOpened] = useState(false);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
@@ -108,21 +87,16 @@ function TagManager({
     const qrPreviewContainerClassName = `.preview-container`;
     const dataGridCompDomNode = dataGridCompRef.current;
     if (dataGridCompDomNode) {
-      const allQrsPreviewContainerDomNodes =
-        dataGridCompDomNode.querySelectorAll(qrPreviewContainerClassName);
-      setIsAllQrDownloadProcessing(true);
-      const { success, message } = await downloadFiles(
-        allQrsPreviewContainerDomNodes,
+      const allQrsPreviewContainerDomNodes = dataGridCompDomNode.querySelectorAll(
+        qrPreviewContainerClassName,
       );
+      setIsAllQrDownloadProcessing(true);
+      await downloadFiles(allQrsPreviewContainerDomNodes);
       setIsAllQrDownloadProcessing(false);
     }
   }, []);
 
-  const shareSettings = useGetShareSettings(
-    "surveyShareSettings",
-    "survey",
-    surveyId,
-  );
+  const shareSettings = useGetShareSettings("surveyShareSettings", "survey", surveyId);
 
   const settingsData = shareSettings.data
     ? shareSettings.data
@@ -197,10 +171,7 @@ function TagManager({
           </DialogHeader>
 
           <div className="flex-1 overflow-auto space-y-4">
-            <Button
-              onClick={handleDownloadAllQrs}
-              disabled={isAllQrDownloadProcessing}
-            >
+            <Button onClick={handleDownloadAllQrs} disabled={isAllQrDownloadProcessing}>
               {isAllQrDownloadProcessing ? (
                 <>Processing...</>
               ) : (
@@ -245,24 +216,15 @@ function TagManager({
                             />
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge
-                              variant="secondary"
-                              className="text-base px-4 py-2"
-                            >
+                            <Badge variant="secondary" className="text-base px-4 py-2">
                               {tag}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex items-center gap-2 justify-center">
-                              <Input
-                                readOnly
-                                value={url}
-                                className="flex-1 max-w-md"
-                              />
+                              <Input readOnly value={url} className="flex-1 max-w-md" />
                               <Button
-                                variant={
-                                  copiedUrl === url ? "default" : "outline"
-                                }
+                                variant={copiedUrl === url ? "default" : "outline"}
                                 size="icon"
                                 onClick={() => handleCopyUrl(url)}
                               >
@@ -294,9 +256,7 @@ function TagManager({
             {/* Pagination Controls */}
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  Rows per page:
-                </span>
+                <span className="text-sm text-muted-foreground">Rows per page:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => {
@@ -327,9 +287,7 @@ function TagManager({
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                   >
                     <ChevronRight className="h-4 w-4" />

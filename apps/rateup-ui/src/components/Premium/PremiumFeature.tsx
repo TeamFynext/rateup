@@ -1,9 +1,6 @@
-"use client";
-
-import React from "react";
-
 import { Box, Overlay, Tooltip, useMantineColorScheme } from "@mantine/core";
 import { IconLockSquareRounded } from "@tabler/icons-react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 
 const PremiumFeature = ({ isSubscribed, children }) => {

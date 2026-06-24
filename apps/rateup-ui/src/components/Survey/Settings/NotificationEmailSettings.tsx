@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Box, Group, Stack, Text } from "@mantine/core";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
@@ -16,15 +13,12 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
   const [enableNotificationEmail, setEnabledNotificationEmail] = useState(
     survey?.enableNotificationEmail,
   );
-  const [notificationEmail, setNotificationEmail] = useState(
-    survey?.notificationEmail,
-  );
+  const [notificationEmail, setNotificationEmail] = useState(survey?.notificationEmail);
   const { t: translations } = useTranslation();
   const [error, setError] = useState("");
   const editSurvey = useEditSurveyMutation(surveyId);
   useEffect(() => {
-    if (!/^\S+@\S+$/.test(notificationEmail))
-      setError(translations("Invalid Email"));
+    if (!/^\S+@\S+$/.test(notificationEmail)) setError(translations("Invalid Email"));
     else setError("");
   }, [notificationEmail]);
   return (
@@ -34,9 +28,7 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
           offMessage={translations("Click here to enable email notification")}
           onMessage={translations("Click here to disable email notification")}
           checked={enableNotificationEmail}
-          onChange={() =>
-            updateEmailSurvey(setEnabledNotificationEmail, editSurvey)
-          }
+          onChange={() => updateEmailSurvey(setEnabledNotificationEmail, editSurvey)}
         />
         <Box className={"switch-heading-and-desc-container"}>
           <h3>{translations("Enable Email Notification")}</h3>
@@ -53,9 +45,7 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
         />
         {!survey?.notificationEmail?.length && (
           <Text c="var(--tertiary-color)" fz={15}>
-            {translations(
-              "Please Enter Email ID and Save to complete the process.",
-            )}
+            {translations("Please Enter Email ID and Save to complete the process.")}
           </Text>
         )}
         <Group justify="center">

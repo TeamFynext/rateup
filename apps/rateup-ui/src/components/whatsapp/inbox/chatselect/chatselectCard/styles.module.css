@@ -7,16 +7,10 @@
   max-width: 100%;
 }
 .wrapper:hover {
-  background-color: light-dark(
-    var(--mantine-color-gray-1),
-    var(--mantine-color-dark-5)
-  );
+  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
 }
 .highlighted_wrapper {
-  background-color: light-dark(
-    var(--mantine-color-gray-1),
-    var(--mantine-color-dark-5)
-  );
+  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
 }
 .inner {
   gap: 1px;

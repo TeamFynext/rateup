@@ -1,5 +1,3 @@
-"use client";
-
 import {
   CircleCheckIcon,
   InfoIcon,
@@ -9,6 +7,7 @@ import {
 } from "lucide-react";
 import { Toaster as Sonner } from "sonner";
 import type { ToasterProps } from "sonner";
+
 import { useTheme } from "../theme/theme-provider";
 
 const Toaster = ({ ...props }: ToasterProps) => {

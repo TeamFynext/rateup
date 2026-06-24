@@ -1,31 +1,21 @@
-"use client";
-
-import { useContext, useEffect, useState } from "react";
-
-import {
-  ActionIcon,
-  Button,
-  Group,
-  Portal,
-  Progress,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { ActionIcon, Button, Group, Portal, Progress, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { QuestionType } from "@/types/enums.ts";
-import { QuestionType as Q } from "@/types/enums.ts";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
+import type { QuestionType } from "@/types/enums.ts";
+import { QuestionType as Q } from "@/types/enums.ts";
 import { validationSupportedTypes } from "@/utils/data.ts";
 import { validateQuestion } from "@/utils/validation/index.ts";
 
-import styles from "./TakeSurvey.module.css";
 import { getSelectedQPos, validateResponse } from "./util.tsx";
+
+import styles from "./TakeSurvey.module.css";
 
 function NextPrev({
   prev,
@@ -35,7 +25,6 @@ function NextPrev({
   isSavingResponses,
   surveyThemeData,
   errorTextDivRef,
-  isSurveyThemePreview = false,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);
@@ -46,10 +35,8 @@ function NextPrev({
   const { isLastQuestion, isFirstQuestion } = useHandleNextPrevFuncs();
 
   const uiTextTranslations = survey?.uiTextTranslations;
-  let nextBtnLabel =
-    uiTextTranslations["nextBtn"][selectedLanguage.toLowerCase()]?.trim();
-  let submitBtnLabel =
-    uiTextTranslations["submitBtn"][selectedLanguage.toLowerCase()]?.trim();
+  let nextBtnLabel = uiTextTranslations["nextBtn"][selectedLanguage.toLowerCase()]?.trim();
+  let submitBtnLabel = uiTextTranslations["submitBtn"][selectedLanguage.toLowerCase()]?.trim();
   if (!nextBtnLabel) {
     nextBtnLabel = "Next";
   }
@@ -62,7 +49,7 @@ function NextPrev({
   const inputColor = surveyThemeData?.surveyTheme?.input?.primaryColor;
 
   // themeStylesWoBr => themeStyles without border radius, border radius option will be removed from theme settings, for this we are taking themeStyles object without borderRadius, since old theme object will still have borderRadius.
-  const { borderRadius = "initial", ...themeStylesWoBr } = themeStyles;
+  const { ...themeStylesWoBr } = themeStyles;
 
   useEffect(() => {
     const errMsg = validateResponse(response, selectedQ, selectedLanguage);
@@ -123,10 +110,7 @@ function NextPrev({
       {errorTextDivRef.current && (
         <Portal target={errorTextDivRef.current}>
           {selectedQ?.required && !response && response !== 0 && (
-            <Text
-              className={styles["message-p"]}
-              c={themeStyles?.backgroundColor}
-            >
+            <Text className={styles["message-p"]} c={themeStyles?.backgroundColor}>
               {translations("*Choose an option or answer to proceed!")}
             </Text>
           )}
@@ -178,9 +162,7 @@ function NextPrev({
         </Group>
 
         <Progress
-          value={parseInt(
-            getCompletionRate(selectedQuestionPosition, questionsLength),
-          )}
+          value={parseInt(getCompletionRate(selectedQuestionPosition, questionsLength))}
           transitionDuration={300}
           color={inputColor}
           size={isMobile ? "xs" : "sm"}

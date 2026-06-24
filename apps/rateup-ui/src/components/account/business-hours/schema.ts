@@ -19,15 +19,6 @@ export const timeOptions: string[] = Array.from({ length: 48 }, (_, i) => {
   return `${hour}:${minute}`;
 });
 
-const availableChannels = [
-  "Website",
-  "Phone",
-  "Email",
-  "Chat",
-  "Social Media",
-  "In-Store",
-];
-
 const timeSlotSchema = z.object({
   openTime: z.string(),
   closeTime: z.string(),
@@ -89,10 +80,7 @@ const scheduleSchema = z.object(
 );
 
 export const businessHoursFormSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Name is required")
-    .max(64, "Name must be at most 64 characters."),
+  name: z.string().min(1, "Name is required").max(64, "Name must be at most 64 characters."),
   timezone: z.string().min(1, "Timezone is required"),
   channels: z.array(z.string()).optional(),
   description: z.string().max(255).optional(),
@@ -102,7 +90,6 @@ export const businessHoursFormSchema = z.object({
 export type DaySchedule = z.infer<typeof dayScheduleSchema>;
 export type Schedule = z.infer<typeof scheduleSchema>;
 export type BusinessHoursFormValues = z.infer<typeof businessHoursFormSchema>;
-type BusinessHoursItem = BusinessHoursFormValues & { id: string };
 
 export const buildDefaultSchedule = (): Schedule => ({
   sunday: {

@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 
@@ -22,8 +20,8 @@ const TestimonialCTASection = () => {
               Start collecting powerful testimonials today
             </h2>
             <p className="text-lg md:text-xl pb-10 text-[#013553]">
-              Join thousands of businesses that use Testimonique to build trust
-              and drive conversions
+              Join thousands of businesses that use Testimonique to build trust and drive
+              conversions
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link to="https://rateup.app/login">

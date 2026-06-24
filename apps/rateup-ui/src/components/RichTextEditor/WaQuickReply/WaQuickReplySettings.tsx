@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
-
 import { Plus, RefreshCcw } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import z from "zod";
@@ -10,18 +9,12 @@ import {
   useGetWaQuickReplies,
 } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
 import { Button } from "@/components/ui/button.tsx";
-import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
 
 import CreateOrEditQuickReply from "./CreateOrEditQuickReply.tsx";
 import QuickReplyItem from "./QuickReplyItem.tsx";
 
 const WaQuickReplySettings = () => {
-  const {
-    data: quickReplies,
-    isLoading,
-    refetch,
-    isRefetching,
-  } = useGetWaQuickReplies();
+  const { data: quickReplies, isLoading, refetch, isRefetching } = useGetWaQuickReplies();
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const deleteReply = useDeleteReply();
@@ -54,9 +47,7 @@ const WaQuickReplySettings = () => {
       {/* Sub-header row */}
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold text-foreground">
-            {t("Quick Replies")}
-          </h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("Quick Replies")}</h2>
           <span className="bg-muted text-muted-foreground px-2 py-0.5 rounded-full text-xs font-semibold">
             {quickReplies?.length || 0}
           </span>
@@ -98,9 +89,7 @@ const WaQuickReplySettings = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center p-12 border border-dashed border-border rounded-2xl text-center bg-white dark:bg-card">
-          <p className="text-muted-foreground text-sm">
-            {t("No quick replies found")}
-          </p>
+          <p className="text-muted-foreground text-sm">{t("No quick replies found")}</p>
         </div>
       )}
 

@@ -28,8 +28,7 @@ export function BlogHero({ searchQuery, onSearchChange }: BlogHeroProps) {
 
           {/* Subtitle */}
           <p className="text-[15.5px] text-[#64666A] m-0 max-w-[420px] leading-[1.55]">
-            Actionable guides, case studies and strategies to grow your business
-            on WhatsApp.
+            Actionable guides, case studies and strategies to grow your business on WhatsApp.
           </p>
 
           {/* Search */}
@@ -39,9 +38,7 @@ export function BlogHero({ searchQuery, onSearchChange }: BlogHeroProps) {
               placeholder="Search articles…"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              onInput={(e) =>
-                onSearchChange((e.target as HTMLInputElement).value)
-              }
+              onInput={(e) => onSearchChange((e.target as HTMLInputElement).value)}
               className="w-full py-[11px] pr-[44px] pl-[18px] bg-[#F4F5F2] border border-[#DCDEDD] rounded-full text-[#0E1E3A] text-[14px] outline-none transition-all duration-200 focus:bg-white focus:border-[#1C518E] focus:shadow-[0_0_0_3px_rgba(28,81,142,0.12)]"
             />
             <svg

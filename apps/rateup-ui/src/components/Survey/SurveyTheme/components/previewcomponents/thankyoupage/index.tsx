@@ -1,32 +1,27 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { BackgroundImage, Flex } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
+import { useCallback } from "react";
 import Confetti from "react-confetti";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 
 import { CreditsCard } from "../../../../../Card/CreditsCard.tsx";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils.ts";
-import classes from "../../../SurveyTheme.module.css";
 import {
   useEditSurveySelectedQuestion,
   useSelectedPreview,
-  useSetOpenEditors,
   useSurveyThemeContextValue,
-  useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext.tsx";
 import ThemeTitle from "../../ThemeTitle.tsx";
 import { getInlineStyleFromStyleObj } from "../welcomepage/index.tsx";
 
+import classes from "../../../SurveyTheme.module.css";
+
 export default function ThankyouPageThemeView({ survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
-  const surveyThemeDispatch = useSurveyThemeStateDispatch();
+
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
   const selectedPreview = useSelectedPreview();
-  const setOpenEditors = useSetOpenEditors();
 
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId: survey.id,
@@ -36,11 +31,9 @@ export default function ThankyouPageThemeView({ survey }) {
 
   const { ref, width, height } = useElementSize();
 
-  const { titleText: title, subtitleText: subtitle } =
-    editSurveySelectedQuestion || {};
+  const { titleText: title, subtitleText: subtitle } = editSurveySelectedQuestion || {};
 
-  const shouldUseSurveyTheme =
-    webSurveyPagesTheme["thankyouTheme"]?.useSurveyTheme;
+  const shouldUseSurveyTheme = webSurveyPagesTheme["thankyouTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
     ? surveyThemeObj["surveyTheme"]
     : webSurveyPagesTheme["thankyouTheme"];
@@ -69,8 +62,7 @@ export default function ThankyouPageThemeView({ survey }) {
       switch (name) {
         case "title": {
           data["titleText"] = value;
-          if (editSurveySelectedQuestion["subtitleText"])
-            data["subtitleText"] = null;
+          if (editSurveySelectedQuestion["subtitleText"]) data["subtitleText"] = null;
           break;
         }
         case "subtitle": {
@@ -98,9 +90,7 @@ export default function ThankyouPageThemeView({ survey }) {
   return (
     <Flex align={"center"} h="100%" style={{ backgroundColor }}>
       <CreditsCard
-        enableCredits={backgroundImageSrc?.startsWith(
-          "https://images.unsplash.com",
-        )}
+        enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
         url={backgroundImageSrc}
       >
         <BackgroundImage
@@ -112,17 +102,10 @@ export default function ThankyouPageThemeView({ survey }) {
           {confettiEnabled && <Confetti width={width} height={height} />}
 
           <form style={{ width: "100%", height: "100%" }}>
-            <Flex
-              justify={"center"}
-              align={"center"}
-              h={"100%"}
-              direction={"column"}
-            >
+            <Flex justify={"center"} align={"center"} h={"100%"} direction={"column"}>
               <ThemeTitle
                 value={newTitle}
-                onChange={(value) =>
-                  handleSaveTitleSubtitleStartTextSave(value, "title")
-                }
+                onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
                 styles={{ color: titleStyles?.color }}
               />
             </Flex>

@@ -1,21 +1,14 @@
-"use client";
-
 import { AlertTriangle, Info, Loader2, Save } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { TemplateType } from "@/types/enums.ts";
 import { LoyaltyEventType } from "@/backend/loyalty/eventTriggers.api";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { FormField } from "@/components/ui/form.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { TemplateType } from "@/types/enums.ts";
 
 import { getLoyaltyTemplateLabel, LoyaltyTemplateTypes } from "./utils.ts";
 
@@ -45,14 +38,8 @@ export function PointsExpirySettings({
   disabled = false,
 }: Readonly<PointsExpirySettingsProps>) {
   const { t } = useTranslation();
-  const alertInfo = getLoyaltyTemplateLabel(
-    LoyaltyTemplateTypes.PointsExpiryAlert,
-    t,
-  );
-  const expiredInfo = getLoyaltyTemplateLabel(
-    LoyaltyTemplateTypes.PointsExpired,
-    t,
-  );
+  const alertInfo = getLoyaltyTemplateLabel(LoyaltyTemplateTypes.PointsExpiryAlert, t);
+  const expiredInfo = getLoyaltyTemplateLabel(LoyaltyTemplateTypes.PointsExpired, t);
 
   return (
     <Card>
@@ -71,9 +58,7 @@ export function PointsExpirySettings({
             render={({ field }) => (
               <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
                 <div>
-                  <p className="text-sm font-medium">
-                    {t("Enable Expiry Alert")}
-                  </p>
+                  <p className="text-sm font-medium">{t("Enable Expiry Alert")}</p>
                   <p className="text-xs text-muted-foreground">
                     {t("Notify customers 14 days before their points expire")}
                   </p>
@@ -125,11 +110,7 @@ export function PointsExpirySettings({
               </div>
 
               {isAlertModified && (
-                <Button
-                  size="sm"
-                  onClick={onSaveAlert}
-                  disabled={isPending || disabled}
-                >
+                <Button size="sm" onClick={onSaveAlert} disabled={isPending || disabled}>
                   {isPending ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
@@ -149,9 +130,7 @@ export function PointsExpirySettings({
             render={({ field }) => (
               <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
                 <div>
-                  <p className="text-sm font-medium">
-                    {t("Enable Points Expired Notification")}
-                  </p>
+                  <p className="text-sm font-medium">{t("Enable Points Expired Notification")}</p>
                   <p className="text-xs text-muted-foreground">
                     {t("Notify customers when their points have expired")}
                   </p>
@@ -203,11 +182,7 @@ export function PointsExpirySettings({
               </div>
 
               {isExpiredModified && (
-                <Button
-                  size="sm"
-                  onClick={onSaveExpired}
-                  disabled={isPending || disabled}
-                >
+                <Button size="sm" onClick={onSaveExpired} disabled={isPending || disabled}>
                   {isPending ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (

@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
-
 import { Box, Button, Group, LoadingOverlay, NumberInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCropperJS } from "@/hooks/useCropperJS.ts";
@@ -12,8 +9,7 @@ import { mimeTypesForImage } from "@/utils/constants.ts";
 import styles from "./ImageCropModal.module.css";
 
 function ImageCropModal({ context, id: thisModalId, innerProps }) {
-  const { imageUrl, imageName, onSaveClick, onCancelClick, aspectRatio } =
-    innerProps;
+  const { imageUrl, imageName, onSaveClick, onCancelClick, aspectRatio } = innerProps;
 
   const [scale, setScale] = useState(0.4);
 
@@ -51,8 +47,7 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
     const focalPointX = (x + width / 2) / naturalWidth;
     const focalPointY = (y + height / 2) / naturalHeight;
 
-    const [urlStringWithoutQueryParams, queryParamsString] =
-      imageUrl.split("?");
+    const [urlStringWithoutQueryParams, queryParamsString] = imageUrl.split("?");
 
     const queryParams = new URLSearchParams(queryParamsString);
 
@@ -106,14 +101,7 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
         }, mimeTypesForImage[fileExtension]);
       });
     }
-  }, [
-    imageName,
-    fileExtension,
-    imageUrl,
-    isUnsplashImage,
-    onSaveClick,
-    getCroppedCanvas,
-  ]);
+  }, [imageName, fileExtension, imageUrl, isUnsplashImage, onSaveClick, getCroppedCanvas]);
 
   return (
     <>
@@ -136,19 +124,8 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
           loaderProps={{ type: "bars" }}
         />
 
-        <cropper-canvas
-          ref={canvasRef}
-          style={{ height: "100%", width: "100%" }}
-          background
-        >
-          <cropper-image
-            ref={imageRef}
-            src={imageUrl}
-            alt="crop"
-            rotatable
-            scalable
-            translatable
-          />
+        <cropper-canvas ref={canvasRef} style={{ height: "100%", width: "100%" }} background>
+          <cropper-image ref={imageRef} src={imageUrl} alt="crop" rotatable scalable translatable />
           <cropper-selection
             ref={selectionRef}
             initial-aspect-ratio={aspectRatio}
@@ -161,10 +138,7 @@ function ImageCropModal({ context, id: thisModalId, innerProps }) {
           >
             <cropper-grid role="grid" covered />
             <cropper-crosshair centered />
-            <cropper-handle
-              action="move"
-              theme-color="rgba(255, 255, 255, 0.35)"
-            />
+            <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
             <cropper-handle action="n-resize" />
             <cropper-handle action="e-resize" />
             <cropper-handle action="s-resize" />

@@ -4,6 +4,13 @@ import timezone from "dayjs/plugin/timezone.js";
 import utc from "dayjs/plugin/utc.js";
 
 import {
+  WA_FLOW_BODY_CHAR_LIMIT,
+  WA_FLOW_CAPTION_CHAR_LIMIT,
+  WA_FLOW_EMBEDDED_LINK_LIMIT,
+  WA_FLOW_HEADING_CHAR_LIMIT,
+  WA_FLOW_SUBHEADING_CHAR_LIMIT,
+} from "@/components/whatsapp/whatsappConfig.tsx";
+import {
   LDResponse,
   QuestionType as qt,
   QuestionType,
@@ -20,20 +27,9 @@ import type {
   WaFlowMap,
   WaFlowScreen,
 } from "@/types/global";
-import {
-  WA_FLOW_BODY_CHAR_LIMIT,
-  WA_FLOW_CAPTION_CHAR_LIMIT,
-  WA_FLOW_EMBEDDED_LINK_LIMIT,
-  WA_FLOW_HEADING_CHAR_LIMIT,
-  WA_FLOW_SUBHEADING_CHAR_LIMIT,
-} from "@/components/whatsapp/whatsappConfig.tsx";
 
 import { getNestedProperty } from "../misc/obj.utils";
-import {
-  OpinionResponses,
-  ratingEmoji,
-  RatingResponses,
-} from "../questions.ts";
+import { OpinionResponses, ratingEmoji, RatingResponses } from "../questions.ts";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -46,14 +42,7 @@ const lang = "en";
 export const waFlowFormToQuestionTypeMaps = {
   [wft.textInput]: [qt.Text, qt.Email, qt.Phone, qt.Number],
   [wft.textArea]: [qt.TextArea],
-  [wft.radioButtonsGroup]: [
-    qt.YN,
-    qt.LD,
-    qt.MCQ,
-    qt.Rating,
-    qt.Smiley,
-    qt.Opinion,
-  ],
+  [wft.radioButtonsGroup]: [qt.YN, qt.LD, qt.MCQ, qt.Rating, qt.Smiley, qt.Opinion],
   [wft.dropDown]: [qt.YN, qt.LD, qt.MCQ, qt.Rating, qt.Smiley, qt.Opinion],
   [wft.checkboxGroup]: [qt.MSQ],
   [wft.datePicker]: [qt.Date],
@@ -61,9 +50,7 @@ export const waFlowFormToQuestionTypeMaps = {
 };
 
 // TODO: remove either this or the above
-export function getQuestionTypesFromFlowElement(
-  formElement: WaFlowFormElement,
-): string[] {
+export function getQuestionTypesFromFlowElement(formElement: WaFlowFormElement): string[] {
   switch (formElement.type) {
     case wft.textInput:
       return [qt.Text, qt.Email, qt.Phone, qt.Number];
@@ -74,8 +61,7 @@ export function getQuestionTypesFromFlowElement(
       const choices = formElement["data-source"];
       const types = [qt.MCQ, qt.CustomNPS];
       if (choices.length === 2) return types.concat([qt.YN, qt.LD]);
-      else if (choices.length === 5)
-        return types.concat([qt.Rating, qt.Smiley]);
+      else if (choices.length === 5) return types.concat([qt.Rating, qt.Smiley]);
       else if (choices.length === 10) return types.concat([qt.Opinion]);
       return types;
     }
@@ -111,13 +97,7 @@ export function getQuestionResponses(qType: qt) {
  * eg: waFlowForm => type: radioButtons, with choices: [absolutely, never]
  * In this case, we need to ask the user to map the choices to the question type. (absolutely -> Yes, never -> No)
  */
-export const qTypesWithAmbiguousChoices = [
-  qt.YN,
-  qt.LD,
-  qt.Rating,
-  qt.Smiley,
-  qt.Opinion,
-];
+export const qTypesWithAmbiguousChoices = [qt.YN, qt.LD, qt.Rating, qt.Smiley, qt.Opinion];
 
 interface validateOptionsProps {
   form: UseFormReturnType<any>;
@@ -146,30 +126,6 @@ export function validateOptions({ form, path }: validateOptionsProps) {
   return true;
 }
 
-/**
- *
- * @param flowJson
- * @param onlyInteractive set to false to include all form elements, including
- * those that are not interactive (e.g. TextBody, TextHeading, etc..)
- */
-function* waFlowFormElementIterator(
-  flowJson: WaFlowJson,
-  onlyInteractive = true,
-) {
-  for (const screen of flowJson.screens) {
-    for (const screenElement of screen.layout.children) {
-      if (screenElement.type === "Form") {
-        for (const formElement of screenElement.children) {
-          if (!onlyInteractive || formElement.name !== undefined) {
-            console.log("yeild");
-            yield formElement;
-          }
-        }
-      }
-    }
-  }
-}
-
 export function getFlowFormElementsFromScreen(
   screen: WaFlowScreen,
   onlyInteractive = false,
@@ -190,10 +146,7 @@ export function getFlowFormElementsFromScreen(
   }
 }
 
-export function getFlowFooterElementsFromScreen(
-  screen: WaFlowScreen,
-  version = 1,
-) {
+export function getFlowFooterElementsFromScreen(screen: WaFlowScreen, version = 1) {
   const children = screen?.layout?.children;
   const elementsWithoutFooter =
     version === 1
@@ -204,11 +157,7 @@ export function getFlowFooterElementsFromScreen(
   return elementsWithoutFooter;
 }
 
-export function getQuestionsFromScreen(
-  screen: WaFlowScreen,
-  survey: Survey,
-  map: any,
-) {
+export function getQuestionsFromScreen(screen: WaFlowScreen, survey: Survey, map: any) {
   const formElementIds = screen.layout.children
     .find((se) => se.type === "Form")
     ?.children?.map((q) => q.name);
@@ -220,10 +169,7 @@ export function getQuestionsFromScreen(
   return questions;
 }
 
-export function getQuestionIdFromFlowFormElementName(
-  name: string,
-  map: any,
-): string {
+export function getQuestionIdFromFlowFormElementName(name: string, map: any): string {
   return map[name]?.questionId;
 }
 export function getQuestionFromFlowFormElementName(
@@ -272,11 +218,7 @@ export function getFlowTextLimit(type: WaFlowFormElementType) {
  * @param map
  * @returns
  */
-export function getFlowElementText(
-  fe: WaFlowFormElement,
-  questions: Question[],
-  map: any,
-) {
+export function getFlowElementText(fe: WaFlowFormElement, questions: Question[], map: any) {
   if (fe.type === WaFlowFormElementType.image) {
     return "IMAGE";
   } else if (fe.type === WaFlowFormElementType.optIn) {
@@ -287,7 +229,7 @@ export function getFlowElementText(
     try {
       const q = getQuestionFromFlowFormElementName(fe.name, questions, map);
       return q.title[lang] || q.description[lang] || q.label[lang];
-    } catch (e) {
+    } catch {
       return "";
     }
   }
@@ -352,10 +294,7 @@ export const getNewScreenObj = ({
 };
 // We need to pass the draft of immer(used useImmer as state in EditFlow).
 
-export const updateFlowJsonNavigationAndDataPassing = (
-  draft: WaFlowJson,
-  dbFlow: DbFlow,
-) => {
+export const updateFlowJsonNavigationAndDataPassing = (draft: WaFlowJson, dbFlow: DbFlow) => {
   let screenData = null;
   let previousPayloadData = null;
 
@@ -376,9 +315,7 @@ export const updateFlowJsonNavigationAndDataPassing = (
     return false;
   });
   screens.forEach((screen, currentIndex) => {
-    routing_model[screen.id] = draft.screens
-      .slice(currentIndex + 1)
-      .map((s) => s.id);
+    routing_model[screen.id] = draft.screens.slice(currentIndex + 1).map((s) => s.id);
 
     delete screen["terminal"];
     delete screen["success"];
@@ -389,13 +326,8 @@ export const updateFlowJsonNavigationAndDataPassing = (
     }
 
     const layoutForm = screen.layout.children.find((c) => c.type === "Form");
-    const footerObject = layoutForm?.children?.find(
-      (c) => c.type === WaFlowFormElementType.footer,
-    );
-    const formElements = getFlowFormElementsFromScreen(
-      screen,
-      true,
-    ) as WaFlowFormElement[];
+    const footerObject = layoutForm?.children?.find((c) => c.type === WaFlowFormElementType.footer);
+    const formElements = getFlowFormElementsFromScreen(screen, true) as WaFlowFormElement[];
     if (!formElements) return;
     const currentScreenIsNotLast = currentIndex !== screens.length - 1;
 
@@ -465,18 +397,15 @@ export const updateFlowJsonNavigationAndDataPassing = (
       !datePickerDynamicFlag &&
       formElements.some(
         (formElement) =>
-          formElement.type === WaFlowFormElementType.datePicker &&
-          formElement["on-select-action"],
+          formElement.type === WaFlowFormElementType.datePicker && formElement["on-select-action"],
       )
     ) {
       datePickerDynamicFlag = true;
     }
   });
 
-  draft.routing_model =
-    flowHasLogic || datePickerDynamicFlag ? routing_model : undefined;
-  draft.data_api_version =
-    flowHasLogic || datePickerDynamicFlag ? "3.0" : undefined;
+  draft.routing_model = flowHasLogic || datePickerDynamicFlag ? routing_model : undefined;
+  draft.data_api_version = flowHasLogic || datePickerDynamicFlag ? "3.0" : undefined;
 };
 function getScreenDataForFormElement(fe: WaFlowFormElement): {
   type: string;
@@ -516,10 +445,7 @@ export function getFlowJsonWithTitleAndDescription(
       if (screenElement.type === "Form") {
         for (let i = 0; i < screenElement.children.length; i++) {
           const formElement = screenElement.children[i];
-          if (
-            formElement.name !== undefined &&
-            formElement.type !== WaFlowFormElementType.footer
-          ) {
+          if (formElement.name !== undefined && formElement.type !== WaFlowFormElementType.footer) {
             const question = getQuestionFromFlowFormElementName(
               formElement.name,
               survey.questions,
@@ -553,13 +479,8 @@ export function getFlowJsonWithTitleAndDescription(
 export const getScreenObjById = (screens: WaFlowScreen[], screenId: string) => {
   return screens.find((screen) => screen.id === screenId);
 };
-export const getFormObjFromScreenId = (
-  screens: WaFlowScreen[],
-  screenId: string,
-) => {
-  return getScreenObjById(screens, screenId)?.layout.children.find(
-    (c) => c.type === "Form",
-  );
+export const getFormObjFromScreenId = (screens: WaFlowScreen[], screenId: string) => {
+  return getScreenObjById(screens, screenId)?.layout.children.find((c) => c.type === "Form");
 };
 
 export function getFlowElementJsonFromQuestion(question: Question) {
@@ -628,10 +549,9 @@ export function getFlowElementJsonFromQuestion(question: Question) {
       QuestionType.Phone,
     ].includes(question.type as QuestionType)
   ) {
-    questionElement.required = ![
-      QuestionType.PhotoPicker,
-      QuestionType.DocumentPicker,
-    ].includes(question.type as QuestionType)
+    questionElement.required = ![QuestionType.PhotoPicker, QuestionType.DocumentPicker].includes(
+      question.type as QuestionType,
+    )
       ? question.required
       : undefined;
     Object.entries(question?.extraConfig ?? {}).forEach(([key, value]) => {
@@ -653,24 +573,7 @@ export function getFlowElementJsonFromQuestion(question: Question) {
   };
 }
 
-const flow_supported_questions = [
-  qt.Text,
-  qt.Email,
-  qt.Phone,
-  qt.Number,
-  qt.TextArea,
-  qt.Date,
-  qt.DDSS,
-  qt.MCQ,
-  qt.YN,
-  qt.LD,
-  qt.Rating,
-  qt.Opinion,
-  qt.MSQ,
-];
-export function questionTypeToFlowFormElementType(
-  qtype: qt,
-): WaFlowFormElementType {
+export function questionTypeToFlowFormElementType(qtype: qt): WaFlowFormElementType {
   switch (qtype) {
     case qt.Text:
     case qt.Email:
@@ -760,35 +663,5 @@ function generateDataSourceFromQuestion(q: Question) {
     );
 
     return { dataSource, mapData };
-  }
-}
-
-function getWaFlowElementIdFromQuestionId(qId: string, map: WaFlowMap) {
-  try {
-    for (const [elementId, { questionId }] of Object.entries(map)) {
-      if (questionId === qId) return elementId;
-    }
-  } catch (error) {
-    console.log(error);
-    return undefined;
-  }
-}
-
-/**
- * Moves a screen element to a new position.
- * @param screenId id of the screen to be moved
- * @param position index of where the screen is to be inserted.
- * @param draft UseImmer draft object to save the updated flowJson
- * */
-function moveFlowScreen(screenId: string, position: number, draft: WaFlowJson) {
-  const currentIndex = draft.screens.findIndex((s) => s.id === screenId);
-  const currentScreen = draft.screens[currentIndex];
-
-  draft.screens.splice(position, 0, currentScreen);
-
-  if (position < currentIndex) {
-    draft.screens.splice(currentIndex + 1, 1);
-  } else {
-    draft.screens.splice(currentIndex, 1);
   }
 }

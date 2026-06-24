@@ -1,31 +1,16 @@
-"use client";
-
-import { useState } from "react";
-
 import { IconEye } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import type {
-  ShopifyIntegration,
-  ShopifySchedule,
-  ShopifySurvey,
-} from "@/types/global";
 import type { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
 import { ActiveStatusBadge } from "@/components/app&services/Shopify.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
+import type { ShopifyIntegration, ShopifySchedule, ShopifySurvey } from "@/types/global";
 import { shopifyEventData } from "@/utils/constants.ts";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime.ts";
 
@@ -44,25 +29,13 @@ type ScheduleRowData = {
   event_details: ShopifySurvey;
 };
 
-type HistoryRowData = {
-  id: string;
-  createdAt: string;
-  scheduledAt: string;
-  sentAt: string;
-  status: string;
-};
-
 interface EventDetailsCellProps {
   eventDetails: ShopifySurvey | undefined;
   onOpen: (event: ShopifySurvey) => void;
   translations: any;
 }
 
-const EventDetailsCell = ({
-  eventDetails,
-  onOpen,
-  translations,
-}: EventDetailsCellProps) => (
+const EventDetailsCell = ({ eventDetails, onOpen, translations }: EventDetailsCellProps) => (
   <Button
     variant="secondary"
     size="xs"
@@ -107,27 +80,20 @@ const ShopifySchedules = ({
   waTemplates: WaTemplate[];
   teams: TeamData[];
 }) => {
-  const schedules = shopifyInfo.credential.shopifySurveys.flatMap(
-    (s) => s.schedules,
-  );
-  const [selectedShopifySurveyEvent, setSelectedShopifySurveyEvent] =
-    useState<ShopifySurvey>(null);
+  const schedules = shopifyInfo.credential.shopifySurveys.flatMap((s) => s.schedules);
+  const [selectedShopifySurveyEvent, setSelectedShopifySurveyEvent] = useState<ShopifySurvey>(null);
   const [opened, setOpened] = useState(false);
   const [historyOpened, setHistoryOpened] = useState(false);
-  const [selectedSchedule, setSelectedSchedule] =
-    useState<ShopifySchedule>(null);
+  const [selectedSchedule, setSelectedSchedule] = useState<ShopifySchedule>(null);
   const { t: translations } = useTranslation();
 
   const templateAndteam = {
-    templateName: waTemplates?.find(
-      (t) => t.id === selectedShopifySurveyEvent?.waTemplateId,
-    )?.data?.name,
-    teamName: teams?.find((t) => t.id === selectedShopifySurveyEvent?.teamId)
+    templateName: waTemplates?.find((t) => t.id === selectedShopifySurveyEvent?.waTemplateId)?.data
       ?.name,
+    teamName: teams?.find((t) => t.id === selectedShopifySurveyEvent?.teamId)?.name,
     product: selectedShopifySurveyEvent?.isProductSpecific
       ? shopifyProducts?.find(
-          (product) =>
-            product.id.toString() === selectedShopifySurveyEvent.productId,
+          (product) => product.id.toString() === selectedShopifySurveyEvent.productId,
         )?.title
       : undefined,
   };
@@ -139,9 +105,7 @@ const ShopifySchedules = ({
     id: schedule.webhookId || schedule.phone + schedule.createdAt,
     phone: schedule.phone,
     scheduleTime: formatIsoDateStringWithTime(schedule.scheduledAt),
-    sentAt: schedule.sentAt
-      ? formatIsoDateStringWithTime(schedule.sentAt)
-      : "----",
+    sentAt: schedule.sentAt ? formatIsoDateStringWithTime(schedule.sentAt) : "----",
     status: schedule.status ?? "----",
     actionStatus: schedule.actionStatus,
     apiStatus: schedule.apiStatus ?? "----",
@@ -227,12 +191,7 @@ const ShopifySchedules = ({
   );
 };
 
-const EventDetailsModal = ({
-  opened,
-  close,
-  shopifySurvey,
-  templateAndTeam,
-}) => {
+const EventDetailsModal = ({ opened, close, shopifySurvey, templateAndTeam }) => {
   const { t: translations } = useTranslation();
   return (
     <Dialog open={opened} onOpenChange={(open) => !open && close()}>
@@ -240,11 +199,7 @@ const EventDetailsModal = ({
         <DialogHeader>
           <DialogTitle>
             {translations("Event :")}{" "}
-            {
-              shopifyEventData.find(
-                (event) => event.value == shopifySurvey?.event,
-              )?.label
-            }
+            {shopifyEventData.find((event) => event.value == shopifySurvey?.event)?.label}
           </DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-3 text-sm">
@@ -258,9 +213,8 @@ const EventDetailsModal = ({
             </Link>
           </p>
           <p>
-            {translations("Scheduled To Send")} :{" "}
-            {translations("After a delay of")} {shopifySurvey?.timeDelay}{" "}
-            {translations("minutes")}
+            {translations("Scheduled To Send")} : {translations("After a delay of")}{" "}
+            {shopifySurvey?.timeDelay} {translations("minutes")}
           </p>
           <p>
             {translations("Team : ")}
@@ -268,8 +222,7 @@ const EventDetailsModal = ({
           </p>
           {shopifySurvey?.isProductSpecific && (
             <p>
-              {translations("Sent Only if")} {templateAndTeam?.product}{" "}
-              {translations("found")}
+              {translations("Sent Only if")} {templateAndTeam?.product} {translations("found")}
             </p>
           )}
           <p>

@@ -1,8 +1,5 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
+import React, { useEffect, useState } from "react";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import OrdersTable from "@/components/dashboard/whatsapp/orders-and-payments/components/OrdersTable";
@@ -32,8 +29,7 @@ function OrdersPage() {
     }
   }, [waSettings, currentSettingId]);
 
-  const currentSetting =
-    waSettings?.find((s) => s.id === currentSettingId) ?? waSettings?.[0];
+  const currentSetting = waSettings?.find((s) => s.id === currentSettingId) ?? waSettings?.[0];
 
   if (isLoadingSettings) {
     return (
@@ -69,10 +65,7 @@ function OrdersPage() {
             <Label htmlFor="wa-selector" className="text-sm whitespace-nowrap">
               WhatsApp Number
             </Label>
-            <Select
-              value={currentSettingId}
-              onValueChange={setCurrentSettingId}
-            >
+            <Select value={currentSettingId} onValueChange={setCurrentSettingId}>
               <SelectTrigger id="wa-selector" className="w-[220px]">
                 <SelectValue placeholder="Select number" />
               </SelectTrigger>

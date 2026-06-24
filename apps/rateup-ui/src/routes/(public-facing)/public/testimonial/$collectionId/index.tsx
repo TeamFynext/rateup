@@ -1,20 +1,12 @@
-"use client";
-
 import { Flex, Loader, SimpleGrid } from "@mantine/core";
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 
 import { getAllTestimonialsByCollection } from "@/backend/testimonials/testimonial.api";
 import TestimonialCard from "@/components/testimonial/TestimonialCard.tsx";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel.tsx";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel.tsx";
 import { rateupLogoStackedWhiteTransparent } from "@/utils/constants.ts";
 
-export const Route = createFileRoute(
-  "/(public-facing)/public/testimonial/$collectionId/",
-)({
+export const Route = createFileRoute("/(public-facing)/public/testimonial/$collectionId/")({
   component: Collections,
   loader: ({ params }) => getAllTestimonialsByCollection(params.collectionId),
   head: ({ params, loaderData }) => {
@@ -102,14 +94,8 @@ function Collections() {
         >
           <CarouselContent>
             {collection.testimonials.map((testimonial) => (
-              <CarouselItem
-                key={testimonial.id}
-                className="basis-67.5 xs:basis-80 pl-4 py-2"
-              >
-                <TestimonialCard
-                  testimonial={testimonial}
-                  currentStyle={collection.theme}
-                />
+              <CarouselItem key={testimonial.id} className="basis-67.5 xs:basis-80 pl-4 py-2">
+                <TestimonialCard testimonial={testimonial} currentStyle={collection.theme} />
               </CarouselItem>
             ))}
           </CarouselContent>

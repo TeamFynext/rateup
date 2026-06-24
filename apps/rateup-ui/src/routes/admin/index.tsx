@@ -1,5 +1,3 @@
-"use client";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   BarChart3,
@@ -77,8 +75,7 @@ function Page() {
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Manage your platform settings, users, and integrations from a
-          centralized dashboard
+          Manage your platform settings, users, and integrations from a centralized dashboard
         </p>
       </div>
       {/* Organization & User Management */}
@@ -242,16 +239,13 @@ function Page() {
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-blue-600" />
-            <CardTitle className="text-sm text-blue-800 dark:text-blue-200">
-              Quick Access
-            </CardTitle>
+            <CardTitle className="text-sm text-blue-800 dark:text-blue-200">Quick Access</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            Welcome to the admin dashboard. Use the cards above to navigate to
-            different management sections. Each section provides comprehensive
-            tools for managing your platform.
+            Welcome to the admin dashboard. Use the cards above to navigate to different management
+            sections. Each section provides comprehensive tools for managing your platform.
           </p>
         </CardContent>
       </Card>

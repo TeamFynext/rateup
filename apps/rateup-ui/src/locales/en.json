@@ -60,6 +60,7 @@
     "Add checklist": "Add checklist",
     "Add choice": "Add choice",
     "Add Column": "Add Column",
+    "Add Command": "Add Command",
     "Add Components": "Add Components",
     "Add Condition": "Add Condition",
     "Add Contact": "Add Contact",
@@ -69,6 +70,7 @@
     "Add Else Component": "Add Else Component",
     "Add Existing Contacts": "Add Existing Contacts",
     "Add Field": "Add Field",
+    "Add Ice Breaker": "Add Ice Breaker",
     "Add If Block": "Add If Block",
     "Add Images (max 3)": "Add Images (max 3)",
     "Add job title": "Add job title",
@@ -514,6 +516,7 @@
     "Continue to Payment": "Continue to Payment",
     "Contrast color": "Contrast color",
     "Conversation Trends": "Conversation Trends",
+    "Conversational": "Conversational",
     "Conversations": "Conversations",
     "copied": "copied",
     "Copied": "Copied",
@@ -1326,6 +1329,7 @@
     "Max size 2MB": "Max size 2MB",
     "max uploaded documents": "max uploaded documents",
     "max uploaded photos": "max uploaded photos",
+    "Maximum 4 ice breakers allowed": "Maximum 4 ice breakers allowed",
     "maximum file size (in kilobytes) that can be uploaded": "maximum file size (in kilobytes) that can be uploaded",
     "maximum number of documents that can be uploaded": "maximum number of documents that can be uploaded",
     "maximum number of photos that can be uploaded": "maximum number of photos that can be uploaded",
@@ -1652,6 +1656,7 @@
     "Please retry loading the application. If the problem continues, you may need to logout and login again": "Please retry loading the application. If the problem continues, you may need to logout and login again",
     "Please select a CSV file to import.": "Please select a CSV file to import.",
     "Please select a page": "Please select a page",
+    "Please select a phone account to configure conversational settings.": "Please select a phone account to configure conversational settings.",
     "Please select a redemption": "Please select a redemption",
     "Please select a reward": "Please select a reward",
     "Please select a screen first": "Please select a screen first",
@@ -2099,6 +2104,7 @@
     "Skip approval flow": "Skip approval flow",
     "Skip Preview Screen": "Skip Preview Screen",
     "Skips Responses preview screen on survey completion": "Skips Responses preview screen on survey completion",
+    "Slash commands users can access by typing '/' in chat. Maximum 30 commands. Name up to 32 chars, description up to 256 chars.": "Slash commands users can access by typing '/' in chat. Maximum 30 commands. Name up to 32 chars, description up to 256 chars.",
     "Sliding banners to be shown in top of menu. You can add upto 4 banners.": "Sliding banners to be shown in top of menu. You can add upto 4 banners.",
     "slower vs last week": "slower vs last week",
     "Slug is required": "Slug is required",
@@ -2169,6 +2175,7 @@
     "Swap the order of flow screens": "Swap the order of flow screens",
     "Sync": "Sync",
     "Sync FB pages": "Sync FB pages",
+    "Sync from WhatsApp": "Sync from WhatsApp",
     "Sync Google Account": "Sync Google Account",
     "Sync Google Sheet": "Sync Google Sheet",
     "Sync products": "Sync products",
@@ -2183,10 +2190,12 @@
     "Syncing Shopify products": "Syncing Shopify products",
     "Syncing Zoho contacts to Rateup...": "Syncing Zoho contacts to Rateup...",
     "Syncing Zoho leads to Rateup...": "Syncing Zoho leads to Rateup...",
+    "Syncing...": "Syncing...",
     "System Settings": "System Settings",
     "tags": "tags",
     "Tags": "Tags",
     "Tags/ Groups/ Campaigns": "Tags/ Groups/ Campaigns",
+    "Tappable text prompts shown to users the first time they message you. Maximum 4, up to 80 characters each.": "Tappable text prompts shown to users the first time they message you. Maximum 4, up to 80 characters each.",
     "Target URL for redirection": "Target URL for redirection",
     "tax": "tax",
     "Tax": "Tax",
@@ -2562,13 +2571,6 @@
   "Example": {
     " /points": "Example: /points"
   },
-  "Eg": {
-    "https://www": {
-      "example": {
-        "com": "Eg:https://www.example.com"
-      }
-    }
-  },
   "campaign.resend": {
     "Cancel": "Cancel",
     "Choose when to send and which participants to resend to": "Choose when to send and which participants to resend to",
@@ -2696,8 +2698,12 @@
     "Selected": "Selected",
     "You have not selected any participant": "You have not selected any participant"
   },
-  "Important": {
-    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
+  "Eg": {
+    "https://www": {
+      "example": {
+        "com": "Eg:https://www.example.com"
+      }
+    }
   },
   "apianalytics": {
     "All": "All",
@@ -2724,6 +2730,9 @@
     "Total Messages Sent": "Total Messages Sent",
     "WhatsApp Messages Analytics": "WhatsApp Messages Analytics",
     "WhatsApp Template Analytics": "WhatsApp Template Analytics"
+  },
+  "Important": {
+    " Select only stages that belong to the selected pipeline and sub pipeline configuration.": "Important: Select only stages that belong to the selected pipeline and sub pipeline configuration."
   },
   "campaign.list": {
     "Active": "Active",

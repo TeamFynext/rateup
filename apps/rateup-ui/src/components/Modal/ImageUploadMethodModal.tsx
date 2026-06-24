@@ -1,9 +1,6 @@
-"use client";
-
-import React from "react";
-
 import { Center, Group, Image, Text } from "@mantine/core";
 import { IconUpload } from "@tabler/icons-react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";

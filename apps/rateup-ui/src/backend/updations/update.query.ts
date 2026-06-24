@@ -16,9 +16,7 @@ export const useMigrateWaTemplateToWhatsappPhoneId = () => {
       toast.success("WA template migration completed successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message || "Failed to migrate WA template to WhatsApp phone ID",
-      );
+      toast.error(error?.message || "Failed to migrate WA template to WhatsApp phone ID");
     },
   });
 };
@@ -42,9 +40,7 @@ export const useMigrateLoyaltyTierPriority = () => {
       toast.success("Loyalty tier priorities migrated successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message || "Failed to migrate loyalty tier priorities",
-      );
+      toast.error(error?.message || "Failed to migrate loyalty tier priorities");
     },
   });
 };

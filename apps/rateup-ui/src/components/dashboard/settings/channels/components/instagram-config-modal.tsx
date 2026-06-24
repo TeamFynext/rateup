@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -13,12 +10,7 @@ import {
   useUpsertWaSettingsMutation,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import {
   Select,
@@ -28,11 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 type WaSetting = WaSettings[number];
 
@@ -73,7 +61,7 @@ export function InstagramConfigModal({
 
   if (!selectedWaSettings) return null;
 
-  const { id, ...rest } = selectedWaSettings;
+  const { ...rest } = selectedWaSettings;
 
   const fbPages =
     metaAssets?.pages.map((page) => ({
@@ -85,9 +73,7 @@ export function InstagramConfigModal({
     <Dialog open={opened} onOpenChange={(value) => !value && close()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {translations("Connected Instagram account - FB Page")}
-          </DialogTitle>
+          <DialogTitle>{translations("Connected Instagram account - FB Page")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -98,9 +84,7 @@ export function InstagramConfigModal({
           {!isLoading && (
             <div className="flex items-end gap-2">
               <div className="flex-1 space-y-2">
-                <Label>
-                  {translations("Instagram Connected Facebook Page")}
-                </Label>
+                <Label>{translations("Instagram Connected Facebook Page")}</Label>
 
                 <Select
                   value={config.fbPageId ?? ""}
@@ -110,9 +94,7 @@ export function InstagramConfigModal({
                       return;
                     }
 
-                    const page = metaAssets?.pages.find(
-                      (item) => item.id === value,
-                    );
+                    const page = metaAssets?.pages.find((item) => item.id === value);
 
                     if (!page?.instagram_business_account) {
                       toast.error(
@@ -158,9 +140,7 @@ export function InstagramConfigModal({
                     disabled={syncfbpageMut.isPending}
                   >
                     <RefreshCw
-                      className={`h-4 w-4 ${
-                        syncfbpageMut.isPending ? "animate-spin" : ""
-                      }`}
+                      className={`h-4 w-4 ${syncfbpageMut.isPending ? "animate-spin" : ""}`}
                     />
                     {translations("Sync FB pages")}
                   </Button>
@@ -183,10 +163,7 @@ export function InstagramConfigModal({
                   teams: undefined,
                 };
 
-                if (
-                  !selectedWaSettings.fbPageId?.length &&
-                  !data.fbPageId?.length
-                ) {
+                if (!selectedWaSettings.fbPageId?.length && !data.fbPageId?.length) {
                   toast.warning(translations("Please select a page"));
                   return;
                 }

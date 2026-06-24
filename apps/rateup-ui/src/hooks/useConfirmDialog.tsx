@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useRef, useState } from "react";
 
 import {
@@ -28,8 +26,7 @@ export function useConfirmDialog() {
   const resolveRef = useRef<((value: boolean) => void) | null>(null);
 
   const confirm = useCallback((opts: ConfirmOptions | string) => {
-    const normalized: ConfirmOptions =
-      typeof opts === "string" ? { description: opts } : opts;
+    const normalized: ConfirmOptions = typeof opts === "string" ? { description: opts } : opts;
     setOptions(normalized);
     setOpen(true);
     return new Promise<boolean>((resolve) => {
@@ -53,9 +50,7 @@ export function useConfirmDialog() {
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            {options.title ?? "Are you sure?"}
-          </AlertDialogTitle>
+          <AlertDialogTitle>{options.title ?? "Are you sure?"}</AlertDialogTitle>
           <AlertDialogDescription>{options.description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

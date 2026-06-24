@@ -7,8 +7,8 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { MessagePlatform } from "@/types/enums.ts";
 import useContactStore from "@/components/dashboard/inbox/store.ts";
+import { MessagePlatform } from "@/types/enums.ts";
 
 import {
   assignInboxToUser,
@@ -40,10 +40,8 @@ export const useGetMessagesByContactId = (
     queryKey: ["wa-messages", contactId, selectedPhone],
     initialPageParam: "",
     placeholderData: { pages: [], pageParams: [] },
-    queryFn: ({ pageParam }) =>
-      getMessagesByContactId(contactId, pageParam, selectedPhone),
-    getNextPageParam: (lastPage) =>
-      lastPage.hasNextPage ? lastPage.nextCursor : undefined,
+    queryFn: ({ pageParam }) => getMessagesByContactId(contactId, pageParam, selectedPhone),
+    getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.nextCursor : undefined),
     // select: (data) => ({
     //   pages: [...data.pages].reverse(),
     //   pageParams: [...data.pageParams].reverse(),
@@ -186,12 +184,11 @@ export const useGetInboxUserCount = (enabled: boolean) => {
   });
 };
 
-const useMarkWaMessagesAsRead = (contactId: string, filterData) => {
-  const qc = useQueryClient();
+const _useMarkWaMessagesAsRead = (contactId: string, _filterData) => {
   return useMutation({
     mutationFn: () => markWaMessagesAsRead(contactId),
     onSuccess: () => {},
-    onError: (e) => {},
+    onError: (_e) => {},
   });
 };
 
@@ -243,7 +240,7 @@ interface InboxAnalytics {
   assignedUserCounts: AssignedUserCount[];
 }
 
-const useGetInboxAnalytics = () => {
+const _useGetInboxAnalytics = () => {
   return useQuery<InboxAnalytics>({
     queryKey: ["inboxAnalytics"],
     queryFn: getInboxAnalytics,
@@ -255,7 +252,7 @@ export function useGenerateInboxResponse() {
 
   return useMutation({
     mutationFn: generateInboxResponse,
-    onSuccess: (response) => {
+    onSuccess: (_response) => {
       queryClient.invalidateQueries({
         queryKey: ["wa-messages"],
         exact: false,
@@ -282,8 +279,7 @@ type CreatePrivateMessageVariables = {
 
 export function useCreatePrivateMessage(contactId) {
   return useMutation({
-    mutationFn: ({ data }: CreatePrivateMessageVariables) =>
-      createPrivateMessage(contactId, data),
+    mutationFn: ({ data }: CreatePrivateMessageVariables) => createPrivateMessage(contactId, data),
   });
 }
 

@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-
 import { Box, Group, Select, Stack } from "@mantine/core";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useEditSurveyMutation } from "@/backend/surveys/surveys.query";
@@ -18,15 +15,12 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
   const [enableTickets, setEnableTickets] = useState(survey?.enableTickets);
   const [ticketBoardId, setTicketBoardId] = useState(survey?.ticketBoardId);
   const [ticketColumnId, setTicketColumnId] = useState(survey?.ticketColumnId);
-  const [enableTicketEmailAlerts, setEnableTicketEmailAlerts] = useState(
-    survey?.enableTicketEmailAlerts,
-  );
+  const [, setEnableTicketEmailAlerts] = useState(survey?.enableTicketEmailAlerts);
   // ticket on every response
   const [enableAutoGenerateTicket, setEnableAutoGenerateTicket] = useState(
     survey?.enableAutoGenerateTicket,
   );
-  const [enableTicketWaMessageAlerts, setEnableTicketWaMessageAlerts] =
-    useState(survey?.enableTicketWaMessageAlerts);
+  const [, setEnableTicketWaMessageAlerts] = useState(survey?.enableTicketWaMessageAlerts);
   const { t: translations } = useTranslation();
   const editSurvey = useEditSurveyMutation(surveyId);
 
@@ -38,9 +32,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
     setTicketBoardId(survey?.ticketBoardId);
     setTicketColumnId(survey?.ticketColumnId);
   }, [survey]);
-  const { data: options, isPending } = useBoardsQueries(
-    enabledModules.includes("tickets"),
-  );
+  const { data: options, isPending } = useBoardsQueries(enabledModules.includes("tickets"));
   // Transform boards for Select component
   const boards = useMemo(
     () => options?.map((board) => ({ value: board.id, label: board.title })),
@@ -58,9 +50,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
   }, [options, ticketBoardId]);
   useEffect(() => {
     if (
-      (ticketBoardId &&
-        ticketColumnId &&
-        survey?.ticketBoardId !== ticketBoardId) ||
+      (ticketBoardId && ticketColumnId && survey?.ticketBoardId !== ticketBoardId) ||
       survey?.ticketColumnId !== ticketColumnId
     ) {
       editSurvey.mutate({
@@ -93,12 +83,8 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
           </Group>
           <Group>
             <RateupSwitch
-              offMessage={translations(
-                "Click here to enable auto-generate Tickets on response",
-              )}
-              onMessage={translations(
-                "Click here to disable auto-generate Tickets on response",
-              )}
+              offMessage={translations("Click here to enable auto-generate Tickets on response")}
+              onMessage={translations("Click here to disable auto-generate Tickets on response")}
               checked={enableAutoGenerateTicket}
               onChange={() => {
                 editSurvey.mutate({
@@ -133,7 +119,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
               />
             </Group>
           )}
-          {/* 
+          {/*
           {enabledModules.includes("flow") && (
             <Group>
               <RateupSwitch
@@ -174,9 +160,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
           </Group> */}
         </PremiumFeature>
 
-        <PremiumFeature
-          isSubscribed={enabledModules.includes("enableNotificationEmail")}
-        >
+        <PremiumFeature isSubscribed={enabledModules.includes("enableNotificationEmail")}>
           <NotificationEmailSettings surveyId={surveyId} survey={survey} />
         </PremiumFeature>
       </Stack>

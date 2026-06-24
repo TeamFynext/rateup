@@ -21,7 +21,7 @@ export const useGetLoyaltyActions = (enabled = true) => {
   });
 };
 
-const useGetLoyaltyActionById = (actionId) => {
+const _useGetLoyaltyActionById = (actionId) => {
   return useQuery({
     queryKey: ["loyaltyActions", actionId],
     queryFn: () => getLoyaltyActionById(actionId),
@@ -29,7 +29,7 @@ const useGetLoyaltyActionById = (actionId) => {
   });
 };
 
-const useCreateLoyaltyAction = () => {
+const _useCreateLoyaltyAction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createLoyaltyAction,
@@ -39,10 +39,7 @@ const useCreateLoyaltyAction = () => {
       toast.success("Loyalty Action created successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          "Error in creating loyalty action. " + (error?.message ?? ""),
-      );
+      toast.error(error?.message || "Error in creating loyalty action. " + (error?.message ?? ""));
     },
   });
 };
@@ -65,26 +62,22 @@ type LoyaltyAction = {
   description?: string;
 };
 
-const useUpdateLoyaltyAction = (actionId) => {
+const _useUpdateLoyaltyAction = (actionId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<LoyaltyAction, "type">) =>
-      updateLoyaltyAction(data, actionId),
+    mutationFn: (data: Omit<LoyaltyAction, "type">) => updateLoyaltyAction(data, actionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions", actionId] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions"] });
       toast.success("Loyalty Action updated successfully");
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          "Error in updating loyalty action. " + (error?.message ?? ""),
-      );
+      toast.error(error?.message || "Error in updating loyalty action. " + (error?.message ?? ""));
     },
   });
 };
 
-const useDeleteLoyaltyAction = (actionId) => {
+const _useDeleteLoyaltyAction = (actionId) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => deleteLoyaltyActionById(actionId),
@@ -99,7 +92,7 @@ const useDeleteLoyaltyAction = (actionId) => {
   });
 };
 
-const useReferralLoyaltyAction = () => {
+const _useReferralLoyaltyAction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: referralLoyaltyAction,
@@ -114,11 +107,11 @@ const useReferralLoyaltyAction = () => {
   });
 };
 
-const useBulkLoyaltyAction = () => {
+const _useBulkLoyaltyAction = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: bulkLoyaltyAction,
-    onSuccess: (res: any) => {
+    onSuccess: (_res: any) => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyRedeems"] });
     },

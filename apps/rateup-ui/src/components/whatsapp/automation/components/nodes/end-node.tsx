@@ -1,10 +1,10 @@
-import { memo } from "react";
-
 import { IconX } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
+import { memo } from "react";
 
 import type { EndNodeData } from "../../types/node-types.ts";
 import BaseNode from "./base-node.tsx";
+
 import styles from "./node-styles.module.css";
 
 function EndNode(props: NodeProps & { data: EndNodeData }) {

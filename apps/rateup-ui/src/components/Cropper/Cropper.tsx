@@ -31,16 +31,7 @@ export interface CropperProps {
 
 export const Cropper = forwardRef<CropperRef, CropperProps>(
   (
-    {
-      src,
-      alt = "crop",
-      crossOrigin,
-      aspectRatio,
-      freeMode = false,
-      onReady,
-      onChange,
-      className,
-    },
+    { src, alt = "crop", crossOrigin, aspectRatio, freeMode = false, onReady, onChange, className },
     ref,
   ) => {
     const {
@@ -62,35 +53,19 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
         getCroppedCanvas,
         scaleImage,
         reset: () => {
-          if (
-            imageRef.current &&
-            typeof imageRef.current.$resetTransform === "function"
-          ) {
+          if (imageRef.current && typeof imageRef.current.$resetTransform === "function") {
             imageRef.current.$resetTransform();
-          } else if (
-            imageRef.current &&
-            typeof imageRef.current.$setTransform === "function"
-          ) {
+          } else if (imageRef.current && typeof imageRef.current.$setTransform === "function") {
             // fallback if $resetTransform doesn't exist
             imageRef.current.$setTransform([1, 0, 0, 1, 0, 0]);
           }
 
-          if (
-            selectionRef.current &&
-            typeof selectionRef.current.$center === "function"
-          ) {
+          if (selectionRef.current && typeof selectionRef.current.$center === "function") {
             selectionRef.current.$center();
           }
         },
       }),
-      [
-        getBounds,
-        getImageDimensions,
-        getCroppedCanvas,
-        scaleImage,
-        imageRef,
-        selectionRef,
-      ],
+      [getBounds, getImageDimensions, getCroppedCanvas, scaleImage, imageRef, selectionRef],
     );
 
     useEffect(() => {
@@ -141,10 +116,7 @@ export const Cropper = forwardRef<CropperRef, CropperProps>(
         >
           <cropper-grid role="grid" covered />
           <cropper-crosshair centered />
-          <cropper-handle
-            action="move"
-            theme-color="rgba(255, 255, 255, 0.35)"
-          />
+          <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
           <cropper-handle action="n-resize" />
           <cropper-handle action="e-resize" />
           <cropper-handle action="s-resize" />

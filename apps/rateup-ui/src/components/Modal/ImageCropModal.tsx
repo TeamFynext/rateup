@@ -1,15 +1,5 @@
-"use client";
-
+import { Box, Button, Group, LoadingOverlay, Modal, NumberInput } from "@mantine/core";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-import {
-  Box,
-  Button,
-  Group,
-  LoadingOverlay,
-  Modal,
-  NumberInput,
-} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import { Cropper, type CropperRef } from "@/components/Cropper/Cropper.tsx";

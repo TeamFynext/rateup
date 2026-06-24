@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-
 import { CircleCheck, Users } from "lucide-react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -19,12 +18,7 @@ import { Label } from "../ui/label.tsx";
 import { Spinner } from "../ui/spinner.tsx";
 import { LifecycleSelector } from "./LifecycleSelector.tsx";
 
-const ApplyLifecycletoContactsModal = ({
-  opened,
-  setOpened,
-  contactIds,
-  onSuccess = null,
-}) => {
+const ApplyLifecycletoContactsModal = ({ opened, setOpened, contactIds, onSuccess = null }) => {
   const { t } = useTranslation();
   const [lifecycleId, setLifecycleId] = useState("");
   const update = useUpdateLifecycleofMultipleContacts();
@@ -54,9 +48,7 @@ const ApplyLifecycletoContactsModal = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("Update Lifecycle Stage")}</DialogTitle>
-          <DialogDescription>
-            {t("Update Lifecycle Stage of Contacts")}
-          </DialogDescription>
+          <DialogDescription>{t("Update Lifecycle Stage of Contacts")}</DialogDescription>
         </DialogHeader>
         <div className="flex gap-2 text-muted-foreground">
           <Users className="w-5 h-5" />{" "}
@@ -66,11 +58,7 @@ const ApplyLifecycletoContactsModal = ({
         </div>
         <div className="flex flex-col gap-2">
           <Label>{t("Lifecycle Stage")}</Label>
-          <LifecycleSelector
-            value={lifecycleId}
-            onChange={setLifecycleId}
-            className="w-full"
-          />
+          <LifecycleSelector value={lifecycleId} onChange={setLifecycleId} className="w-full" />
         </div>
         <DialogFooter>
           <Button onClick={handleCancel} variant={"secondary"}>

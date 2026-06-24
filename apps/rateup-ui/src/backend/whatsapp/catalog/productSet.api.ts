@@ -9,8 +9,7 @@ export const syncProductSets = async (catalogId: string) => {
 };
 
 export const getProductSetsByCatalog = async (catalogId: string) => {
-  return (await axiosClient.get(`${waProductSetUrl}/catalog/${catalogId}`))
-    .data;
+  return (await axiosClient.get(`${waProductSetUrl}/catalog/${catalogId}`)).data;
 };
 
 export const getProductSetById = async (productSetId: string) => {

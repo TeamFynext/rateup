@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useRef } from "react";
-
 import {
   alpha,
   Checkbox,
@@ -16,11 +12,13 @@ import {
 } from "@mantine/core";
 import { useHover, useUncontrolled } from "@mantine/hooks";
 import cx from "clsx";
+import React, { useRef } from "react";
 
 import { getImageValue } from "@/utils/file-upload/upload.ts";
 
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import { useSelectedPreview } from "../../../SurveyTheme/SurveyThemeContext.tsx";
+
 import classes from "./ImageCheckboxes.module.css";
 
 interface ImageCheckboxProps {
@@ -44,11 +42,9 @@ function ImageCheckbox({
   selectedValue,
   fallbackEnable,
   sizeTrim,
-  className,
   dataValue,
   ...others
-}: ImageCheckboxProps &
-  Omit<React.ComponentPropsWithoutRef<"button">, keyof ImageCheckboxProps>) {
+}: ImageCheckboxProps & Omit<React.ComponentPropsWithoutRef<"button">, keyof ImageCheckboxProps>) {
   const [value, handleChange] = useUncontrolled({
     value: checked,
     defaultValue: defaultChecked,
@@ -65,21 +61,15 @@ function ImageCheckbox({
     ? mantineTheme.colors.primaryColor[5]
     : "#1C518E";
 
-  const foregroundColor = isLightColor(themePrimaryColor)
-    ? "#000000"
-    : "#FFFFFF";
+  const foregroundColor = isLightColor(themePrimaryColor) ? "#000000" : "#FFFFFF";
 
   const optionStylesObj = {
     border: `1px solid ${themePrimaryColor}`,
-    backgroundColor: !hovered
-      ? "transparent"
-      : `${alpha(themePrimaryColor, 0.15)}`,
+    backgroundColor: !hovered ? "transparent" : `${alpha(themePrimaryColor, 0.15)}`,
     color: themePrimaryColor,
   };
 
-  const isSelected = titleTypeString
-    ? selectedValue === title
-    : selectedValue === title.value;
+  const isSelected = titleTypeString ? selectedValue === title : selectedValue === title.value;
   const selectedOptionStylesObj = isSelected
     ? {
         backgroundColor: themePrimaryColor,
@@ -100,14 +90,9 @@ function ImageCheckbox({
         radioButtonRef?.current?.click();
       }}
       data-checked={
-        (titleTypeString
-          ? selectedValue === title
-          : selectedValue === title?.value) || undefined
+        (titleTypeString ? selectedValue === title : selectedValue === title?.value) || undefined
       }
-      className={cx(
-        classes.button,
-        titleTypeString && classes.buttonWithOutImage,
-      )}
+      className={cx(classes.button, titleTypeString && classes.buttonWithOutImage)}
       data-value={dataValue}
     >
       <Checkbox
@@ -173,18 +158,13 @@ export function SingleSelectCard({
 
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const selectedPreview = useSelectedPreview();
-  const surveyThemeMobilePreview =
-    isSurveyThemePreview && selectedPreview === "mobile";
+  const surveyThemeMobilePreview = isSurveyThemePreview && selectedPreview === "mobile";
 
   const colsCount = includeImage
     ? { base: 2, xs: 3, sm: 4, md: 5 }
     : { base: 1, xs: 2, sm: 3, md: 4 };
 
-  const columnsCount = surveyThemeMobilePreview
-    ? includeImage
-      ? 2
-      : 1
-    : colsCount;
+  const columnsCount = surveyThemeMobilePreview ? (includeImage ? 2 : 1) : colsCount;
 
   return (
     <SimpleGrid cols={sizeTrim ? 1 : columnsCount} spacing={16}>

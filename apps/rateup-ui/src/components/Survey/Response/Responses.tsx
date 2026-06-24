@@ -1,28 +1,12 @@
-"use client";
-
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
 import { useDebouncedState } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  IntegratedApps,
-  PageType,
-  QuestionType,
-  SubscriptionFeaturePathName,
-  SurveyType,
-} from "@/types/enums.ts";
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import { useCampaignFilterForFlows } from "@/backend/campaign/campaign.query";
 import {
@@ -35,6 +19,13 @@ import {
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
+import {
+  IntegratedApps,
+  PageType,
+  QuestionType,
+  SubscriptionFeaturePathName,
+  SurveyType,
+} from "@/types/enums.ts";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
@@ -48,19 +39,12 @@ import { useSurveyResponseColumns } from "./Columns.tsx";
 import { ResponseTableToolbar } from "./ResponseTableToolbar.tsx";
 import { useResponseFilterStore } from "./store.ts";
 
-const Responses = ({
-  survey,
-  defaultLanguage,
-  subscription,
-  questions,
-}: any) => {
+const Responses = ({ survey, defaultLanguage, subscription, questions }: any) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "createdAt", desc: true },
-  ]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
   const surveyId = survey?.id;
   const { filterTeams } = useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
@@ -69,18 +53,14 @@ const Responses = ({
   const close = () => setOpened(false);
 
   const { user } = useUser();
-  const [isDeleting, setIsDeleting] = useState(false);
   const [createTicketOpened, setCreateTicketOpened] = useState(false);
   const openTicketModal = () => setCreateTicketOpened(true);
   const closeTicketModal = () => setCreateTicketOpened(false);
 
   const [selectedResponseId, setSelectedResponseId] = useState("");
-  const [responseTeamId, setResponseTeamId] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
-  const { data: googleAccessToken } = useIntegrationByType(
-    IntegratedApps.googlesheet,
-  );
+  const { data: googleAccessToken } = useIntegrationByType(IntegratedApps.googlesheet);
   const [alertModalOpened, setAlertModalOpened] = useState(false);
   const alertModalOpen = () => setAlertModalOpened(true);
   const alertModalClose = () => setAlertModalOpened(false);
@@ -95,8 +75,7 @@ const Responses = ({
       key: "selection",
     },
   ]);
-  const [columnFilters, setColumnFilters] =
-    useDebouncedState<ColumnFiltersState>([], 200);
+  const [columnFilters, setColumnFilters] = useDebouncedState<ColumnFiltersState>([], 200);
   const navigate = useNavigate();
   const [campaignIds, setSelectedCampaignIds] = useState([]);
 
@@ -137,15 +116,13 @@ const Responses = ({
     // @ts-ignore
     filterTeams, // Assuming surveyTeamMapId was used but context only provides filterTeams now? Checking original code: it used surveyTeamMapId. But context destructuring gave surveyTeamMapId. I will keep using it if I can access it.
     close,
-    setIsDeleting,
   );
   const { t: translations } = useTranslation();
   if (Array.isArray(surveyId)) {
     throw new TypeError(translations("surveyId is an array"));
   }
 
-  const { data: CFData, isLoading: CFLoading } =
-    useCampaignFilterForFlows(surveyId);
+  const { data: CFData, isLoading: CFLoading } = useCampaignFilterForFlows(surveyId);
   const hasContactQuestion = useMemo(
     () => questions.find((q: any) => q.type === QuestionType.Contact),
     [questions],
@@ -185,11 +162,13 @@ const Responses = ({
   );
 
   useEffect(() => {
-    selectedResponseId && responseTeamId && openTicketModal();
-  }, [selectedResponseId, responseTeamId]);
+    if (selectedResponseId) {
+      openTicketModal();
+    }
+  }, [selectedResponseId]);
 
   useEffect(() => {
-    !createTicketOpened && setSelectedResponseId("");
+    if (!createTicketOpened) setSelectedResponseId("");
   }, [createTicketOpened]);
 
   const confirmDelete = (verifyEmail: string) => {
@@ -197,7 +176,6 @@ const Responses = ({
       toast.loading(translations("Hold on, response is getting deleted..."), {
         id: "load-data",
       });
-      setIsDeleting(true);
       deleteResponse.mutate(selectedRowId);
     } else {
       toast.error(translations("Incorrect email"), {
@@ -207,10 +185,7 @@ const Responses = ({
   };
   const filteredQuestions = useMemo(
     () =>
-      questions.filter(
-        (q: any) =>
-          q.type !== QuestionType.InfoMessage && !(q.type in PageType),
-      ),
+      questions.filter((q: any) => q.type !== QuestionType.InfoMessage && !(q.type in PageType)),
     [questions],
   );
 
@@ -220,14 +195,10 @@ const Responses = ({
     setSelectedRowId,
     open,
     setSelectedResponseId,
-    setResponseTeamId,
     enableTicket:
-      survey?.enableTickets &&
-      hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+      survey?.enableTickets && hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     surveyId: survey?.id,
-    typeWa:
-      survey?.type === SurveyType.WhatsApp ||
-      survey?.type === SurveyType.WaFlow,
+    typeWa: survey?.type === SurveyType.WhatsApp || survey?.type === SurveyType.WaFlow,
   });
 
   const handleSyncGoogleSheet = () => {
@@ -238,12 +209,9 @@ const Responses = ({
         {
           onSuccess: () => {
             setIsSyncing(false);
-            toast.success(
-              translations("Response synced to Google sheet successfully"),
-              {
-                id: "success",
-              },
-            );
+            toast.success(translations("Response synced to Google sheet successfully"), {
+              id: "success",
+            });
           },
           onError: (error: any) => {
             setIsSyncing(false);
@@ -256,9 +224,7 @@ const Responses = ({
               );
               redirectModalOpen();
             } else {
-              toast.error(
-                error?.message || translations("Error in syncing response"),
-              );
+              toast.error(error?.message || translations("Error in syncing response"));
             }
           },
         },
@@ -267,9 +233,7 @@ const Responses = ({
     }
 
     setIsSyncing(false);
-    setAlertMsg(
-      translations("Please sync your Google account in the App & Services."),
-    );
+    setAlertMsg(translations("Please sync your Google account in the App & Services."));
     redirectModalOpen();
   };
   const isPending = isLoading || CFLoading || isRefetching;
@@ -311,17 +275,13 @@ const Responses = ({
     ],
   );
 
-  if (error)
-    return (
-      <ErrorComponent refetch={refetchResponse} isRefetching={isRefetching} />
-    );
+  if (error) return <ErrorComponent refetch={refetchResponse} isRefetching={isRefetching} />;
 
   return (
     <>
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
         closeTicketModal={closeTicketModal}
-        selectedTeamId={responseTeamId}
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
       />
@@ -366,11 +326,7 @@ const Responses = ({
         isPending={isPending}
         DataTableToolbar={Toolbar}
       />
-      <DeleteModal
-        confirmDelete={confirmDelete}
-        opened={opened}
-        close={close}
-      />
+      <DeleteModal confirmDelete={confirmDelete} opened={opened} close={close} />
     </>
   );
 };

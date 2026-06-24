@@ -1,7 +1,4 @@
-"use client";
-
 import { useState } from "react";
-
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
@@ -113,8 +110,8 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
           </h2>
 
           <p className="mx-auto mt-1 max-w-[340px] text-center text-xs leading-[1.6] text-slate-600">
-            See how RateUp turns WhatsApp into your loyalty engine. We'll reach
-            out to schedule a quick walkthrough.
+            See how RateUp turns WhatsApp into your loyalty engine. We'll reach out to schedule a
+            quick walkthrough.
           </p>
 
           <form className="mt-2 flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -127,9 +124,7 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
               />
-              {errors.name && (
-                <p className="text-red-500 text-xs">{errors.name}</p>
-              )}
+              {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
             </div>
 
             <div className="space-y-2">
@@ -141,9 +136,7 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
               />
-              {errors.email && (
-                <p className="text-red-500 text-xs">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
@@ -153,13 +146,9 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
                 placeholder="Your company"
                 className="rounded-sm px-4 text-sm"
                 value={formData.businessName}
-                onChange={(e) =>
-                  handleInputChange("businessName", e.target.value)
-                }
+                onChange={(e) => handleInputChange("businessName", e.target.value)}
               />
-              {errors.businessName && (
-                <p className="text-red-500 text-xs">{errors.businessName}</p>
-              )}
+              {errors.businessName && <p className="text-red-500 text-xs">{errors.businessName}</p>}
             </div>
 
             <div className="space-y-2">
@@ -174,17 +163,13 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
                 value={formData.phone}
                 onChange={(value) => handleInputChange("phone", value ?? "")}
               />
-              {errors.phone && (
-                <p className="text-red-500 text-xs">{errors.phone}</p>
-              )}
+              {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-bold">
                 Message
-                <span className="ml-1 text-[12px] font-medium text-slate-400">
-                  (Optional)
-                </span>
+                <span className="ml-1 text-[12px] font-medium text-slate-400">(Optional)</span>
               </label>
 
               <Textarea
@@ -205,8 +190,7 @@ export default function DemoModal({ open, onClose }: DemoModalProps) {
             </Button>
 
             <p className="text-center text-[11px] text-slate-400">
-              No credit card required · We'll only use your details to schedule
-              the demo.
+              No credit card required · We'll only use your details to schedule the demo.
             </p>
           </form>
         </div>

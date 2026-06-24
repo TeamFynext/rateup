@@ -1,18 +1,16 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Box, Center, Loader } from "@mantine/core";
 import { useParams, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useGetLandingPageWithShortId } from "@/backend/landingPage/landingPage.query";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 
 import { LandingPageContextProvider } from "./LandingPageContext/LandingPageContext.tsx";
-import styles from "./LandingPageEditor.module.css";
 import TabPanelsComp from "./TabPanels.tsx";
 import TabsListComp from "./TabsList.tsx";
+
+import styles from "./LandingPageEditor.module.css";
 
 function LandingPageEditor() {
   const searchParams = useSearch({ strict: false });
@@ -70,9 +68,7 @@ function LandingPageEditor() {
   }
 
   return (
-    <Box className={`${styles["landingPage-editor-page-root-div"]}`}>
-      {componentToBeRendered}
-    </Box>
+    <Box className={`${styles["landingPage-editor-page-root-div"]}`}>{componentToBeRendered}</Box>
   );
 }
 

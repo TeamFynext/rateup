@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect } from "react";
-
 import {
   Center,
   Container,
@@ -16,12 +12,8 @@ import {
 } from "@mantine/core";
 import { IconArrowAutofitLeft } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  createFileRoute,
-  Link,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { signOut } from "supertokens-auth-react/recipe/session";
@@ -77,7 +69,7 @@ function Invite() {
         id: "load-data",
       });
       setTimeout(() => {
-        !updateInviteMutation.data && updateInviteMutation.mutate();
+        if (!updateInviteMutation.data) updateInviteMutation.mutate();
       }, 2000);
     }
     // TODO : improve with org invite
@@ -87,13 +79,7 @@ function Invite() {
 
   return (
     <Stack align="center">
-      <Image
-        src="/images/bg-shape.svg"
-        w={"100%"}
-        pos={"fixed"}
-        bottom={0}
-        alt="bg of a shape"
-      />
+      <Image src="/images/bg-shape.svg" w={"100%"} pos={"fixed"} bottom={0} alt="bg of a shape" />
       <Paper
         shadow="md"
         p={30}
@@ -112,20 +98,9 @@ function Invite() {
             <Image src={rateupLogoUrl} alt="RateUp Logo" w={140} />
           </Link>
         </Center>
-        <Flex
-          gap="md"
-          justify="center"
-          align="center"
-          direction="column"
-          wrap="wrap"
-        >
+        <Flex gap="md" justify="center" align="center" direction="column" wrap="wrap">
           <Space h="lg" />
-          <Text
-            mb="lg"
-            fz={24}
-            style={{ color: "var(--tertiary-color)" }}
-            fw={600}
-          >
+          <Text mb="lg" fz={24} style={{ color: "var(--tertiary-color)" }} fw={600}>
             {title} {translations("Invitation")}
           </Text>
 
@@ -140,17 +115,8 @@ function Invite() {
                   "Error"
                 )
               ) : (
-                <Flex
-                  gap="md"
-                  justify="center"
-                  align="center"
-                  direction="column"
-                  wrap="wrap"
-                >
-                  <Text c="green">
-                    {" "}
-                    {updateInviteMutation.data?.data.message}
-                  </Text>
+                <Flex gap="md" justify="center" align="center" direction="column" wrap="wrap">
+                  <Text c="green"> {updateInviteMutation.data?.data.message}</Text>
                   <div className="wrapper">
                     <svg
                       className={styles.checkmark}
@@ -217,18 +183,11 @@ function Invite() {
               <Space h="xl" />
 
               <Center>
-                <Text
-                  inline
-                  c="blue.6"
-                  style={{ textDecoration: "none" }}
-                  className={styles.txt}
-                >
+                <Text inline c="blue.6" style={{ textDecoration: "none" }} className={styles.txt}>
                   <Link to="/login" style={{ textDecoration: "none" }}>
                     <NavLink
                       label={translations("Go to Login")}
-                      leftSection={
-                        <IconArrowAutofitLeft size="1rem" stroke={1.5} />
-                      }
+                      leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
                       variant="subtle"
                     />
                   </Link>

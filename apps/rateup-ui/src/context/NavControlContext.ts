@@ -1,10 +1,8 @@
-"use client";
-
 import { createContext, useContext } from "react";
 
 const NavControlContext = createContext({
   navOpened: true,
-  setNavOpened: (navOpened: boolean) => {},
+  setNavOpened: (_navOpened: boolean) => {},
 });
 
 export const useNavControlContext = () => {

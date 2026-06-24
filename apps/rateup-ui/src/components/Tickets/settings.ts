@@ -1,5 +1,3 @@
-"use client";
-
 export type TSelectField<T = string> = {
   type: "select";
   title: string;
@@ -29,8 +27,7 @@ export const fields = {
   isCPUBurnEnabled: {
     type: "boolean",
     title: "Drop FPS 🔥",
-    description:
-      "Start heavy process that will cause the frame rate on the page to drop",
+    description: "Start heavy process that will cause the frame rate on the page to drop",
   },
   isOverElementAutoScrollEnabled: {
     type: "boolean",
@@ -58,9 +55,7 @@ export const fields = {
 
 type TupleToUnion<T extends any[]> = T[number];
 
-type GetFieldValues<
-  TRecord extends Record<string, TBooleanField | TSelectField>,
-> = {
+type GetFieldValues<TRecord extends Record<string, TBooleanField | TSelectField>> = {
   // [TKey in keyof TRecord]: TRecord[TKey] extends TBooleanField ? boolean : TRecord[TKey] extends TSelectField ? 'fast' | 'standard' : never
   [TKey in keyof TRecord]: TRecord[TKey] extends TBooleanField
     ? boolean

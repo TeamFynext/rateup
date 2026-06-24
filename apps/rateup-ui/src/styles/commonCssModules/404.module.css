@@ -106,12 +106,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background: radial-gradient(
-    ellipse 90% 60% at 50% 0%,
-    #0d2e5c 0%,
-    #081c3f 55%,
-    #050f28 100%
-  );
+  background: radial-gradient(ellipse 90% 60% at 50% 0%, #0d2e5c 0%, #081c3f 55%, #050f28 100%);
 }
 
 .bgGlowCyan {
@@ -147,16 +142,8 @@
     linear-gradient(rgba(47, 163, 255, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(47, 163, 255, 0.035) 1px, transparent 1px);
   background-size: 48px 48px;
-  mask-image: radial-gradient(
-    ellipse 80% 70% at 50% 50%,
-    black 30%,
-    transparent 80%
-  );
-  -webkit-mask-image: radial-gradient(
-    ellipse 80% 70% at 50% 50%,
-    black 30%,
-    transparent 80%
-  );
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 80%);
 }
 
 /* ── Particles ── */

@@ -1,7 +1,3 @@
-"use client";
-
-import { useContext, useState } from "react";
-
 import {
   ActionIcon,
   Blockquote,
@@ -14,6 +10,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { IconInfoCircle, IconPlus, IconTrash } from "@tabler/icons-react";
+import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -22,10 +19,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
 import { emailPattern } from "@/utils/constants.ts";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../../../Button/RateupButtons.tsx";
 import {
   ContainedFileInput,
   ContainedSelection,
@@ -54,21 +48,14 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
   const [emailMethod, setEmailMethod] = useState(EmailAddMethod.Manual);
   const [newEmail, setNewEmail] = useState("");
   const [inputError, setInputError] = useState("");
-  const allChecked = allowedEmailIDs?.every((email) =>
-    selectedEmailIds.includes(email),
-  );
+  const allChecked = allowedEmailIDs?.every((email) => selectedEmailIds.includes(email));
   const { t: translations } = useTranslation();
   const indeterminate =
-    allowedEmailIDs?.some((email) => selectedEmailIds.includes(email)) &&
-    !allChecked;
+    allowedEmailIDs?.some((email) => selectedEmailIds.includes(email)) && !allChecked;
   const rows = allowedEmailIDs?.map((email) => (
     <Table.Tr
       key={email}
-      bg={
-        selectedEmailIds.includes(email)
-          ? "var(--mantine-color-blue-light)"
-          : undefined
-      }
+      bg={selectedEmailIds.includes(email) ? "var(--mantine-color-blue-light)" : undefined}
     >
       <Table.Td>
         <Checkbox
@@ -90,9 +77,7 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
 
   const handleDelete = () => {
     if (!selectedEmailIds.length) return;
-    const remainingIds = allowedEmailIDs?.filter(
-      (email) => !selectedEmailIds.includes(email),
-    );
+    const remainingIds = allowedEmailIDs?.filter((email) => !selectedEmailIds.includes(email));
     const featuresObj = { ...form.values?.features };
     for (const lang of surveyLanguages) {
       featuresObj[lang] = {
@@ -135,9 +120,7 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
         <SegmentedControl
           data={Object.values(AllowEmailForOTP)}
           value={
-            features?.isRestricted
-              ? AllowEmailForOTP.emailFromList
-              : AllowEmailForOTP.allEmail
+            features?.isRestricted ? AllowEmailForOTP.emailFromList : AllowEmailForOTP.allEmail
           }
           onChange={(value) =>
             form.setFieldValue("features", {
@@ -159,12 +142,7 @@ const EmailOtpExtraProps = ({ form, qId, surveyLanguages }) => {
           <PaperLayout display={!allowedEmailIDs?.length ? "none" : "block"}>
             <Group p={6}>
               {selectedEmailIds.length && (
-                <ActionIcon
-                  size={"sm"}
-                  variant="subtle"
-                  color="gray"
-                  onClick={handleDelete}
-                >
+                <ActionIcon size={"sm"} variant="subtle" color="gray" onClick={handleDelete}>
                   <IconTrash />
                 </ActionIcon>
               )}
@@ -248,9 +226,7 @@ const ImportAllowedEmailIDs = ({ qId }) => {
           setFile(null);
         },
         onError: (error) => {
-          toast.error(
-            error?.message || translations("Error in importing emailIds"),
-          );
+          toast.error(error?.message || translations("Error in importing emailIds"));
           setFile(null);
         },
       },
@@ -259,14 +235,7 @@ const ImportAllowedEmailIDs = ({ qId }) => {
 
   return (
     <Group justify="space-between" w={"100%"}>
-      <Blockquote
-        color="blue"
-        icon={<IconInfoCircle />}
-        p={"sm"}
-        iconSize={40}
-        w={350}
-        ml={10}
-      >
+      <Blockquote color="blue" icon={<IconInfoCircle />} p={"sm"} iconSize={40} w={350} ml={10}>
         {translations(
           "Upload CSV/XLSX file to generate allowed email Ids. required field in the file: email",
         )}

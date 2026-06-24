@@ -1,8 +1,5 @@
-"use client";
-
+import { Box, Flex, Transition } from "@mantine/core";
 import { useContext, useEffect, useState } from "react";
-
-import { Box, Flex, Transition, useMantineTheme } from "@mantine/core";
 
 import type { WaFlowScreen } from "@/types/global";
 import { getFlowJsonWithTitleAndDescription } from "@/utils/whatsapp/flow.utils";
@@ -17,30 +14,24 @@ interface PreviewProps {
 }
 export function PreviewPanel({ previewOpened, version = 1 }: PreviewProps) {
   const { survey, map, flowJson, screenNumber } = useContext(EditFlowContext);
-  const theme = useMantineTheme();
+
   const [currentScreen, setCurrentScreen] = useState<WaFlowScreen>();
   const { getCurrentScreen, currentScreenId, screens } = useFlowStore();
   useEffect(() => {
     if (version === 2) {
       setCurrentScreen(getCurrentScreen() as any);
     } else {
-      if (!flowJson || !flowJson.screens || flowJson.screens?.length === 0)
-        return;
+      if (!flowJson || !flowJson.screens || flowJson.screens?.length === 0) return;
 
       const json = getFlowJsonWithTitleAndDescription(flowJson, map, survey);
-      if (typeof screenNumber === "number")
-        setCurrentScreen(json.screens?.[screenNumber ?? 0]);
+      if (typeof screenNumber === "number") setCurrentScreen(json.screens?.[screenNumber ?? 0]);
     }
   }, [flowJson, map, screenNumber, survey, currentScreenId, screens]);
 
   if (!currentScreen) return null;
 
   return (
-    <Transition
-      mounted={previewOpened}
-      transition={"slide-left"}
-      duration={100}
-    >
+    <Transition mounted={previewOpened} transition={"slide-left"} duration={100}>
       {(ts) => (
         <Box
           style={{
@@ -69,10 +60,7 @@ export function PreviewPanel({ previewOpened, version = 1 }: PreviewProps) {
               }}
               className="border border-primary"
             >
-              <FlowChatPreview
-                currentScreen={currentScreen}
-                version={version}
-              />
+              <FlowChatPreview currentScreen={currentScreen} version={version} />
             </Box>
           </Flex>
         </Box>

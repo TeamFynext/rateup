@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useEffect, useMemo, useRef, useState } from "react";
-
 import {
   Alert,
   Box,
@@ -20,23 +16,13 @@ import {
 } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { getHotkeyHandler, useToggle } from "@mantine/hooks";
-import {
-  IconAsterisk,
-  IconImageInPicture,
-  IconInfoCircle,
-} from "@tabler/icons-react";
+import { IconAsterisk, IconImageInPicture, IconInfoCircle } from "@tabler/icons-react";
 import { useNavigate, useParams } from "@tanstack/react-router";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { z } from "zod/v4";
 
-import {
-  OrderType,
-  SubscriptionFeaturePathName,
-  TemplateType,
-  WaTemplateCategory,
-  WaTemplateStatus,
-} from "@/types/enums.ts";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { uploadTemplateMedia } from "@/backend/whatsapp/whatsapp.api";
@@ -47,7 +33,6 @@ import {
   useWaTemplateById,
 } from "@/backend/whatsapp/whatsapp.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
-import styles from "@/components/dashboard/whatsapp/templates/templateId.module.css";
 import { AccountSelector } from "@/components/input/AccountSelector.tsx";
 import {
   ContainedNumberInput,
@@ -63,7 +48,6 @@ import {
   ResponseMessageContainer,
 } from "@/components/whatsapp/MessageComponents.tsx";
 import { BroadCastTypeValue } from "@/components/whatsapp/templates/Details/BroadCastTypeValue.tsx";
-import buttonInputStyles from "@/components/whatsapp/templates/Details/ButtonInput.module.css";
 import ButtonInput from "@/components/whatsapp/templates/Details/ButtonInput.tsx";
 import { ButtonSelection } from "@/components/whatsapp/templates/Details/ButtonSelectionMenu.tsx";
 import CardCarousel, {
@@ -81,6 +65,13 @@ import WaChatPreview from "@/components/whatsapp/templates/WaChatPreview.tsx";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge.tsx";
 import { useRouteParams } from "@/context/RouteParamsContext.tsx";
 import {
+  OrderType,
+  SubscriptionFeaturePathName,
+  TemplateType,
+  WaTemplateCategory,
+  WaTemplateStatus,
+} from "@/types/enums.ts";
+import {
   SAVE_HOTKEY,
   WHATSAPP_BUTTON_TYPE,
   WHATSAPP_TEMPLATE_BROADCAST_TYPE,
@@ -89,10 +80,10 @@ import {
 } from "@/utils/constants.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
-import {
-  parseStringWithVariables,
-  parseTemplate,
-} from "@/utils/whatsapp/templates.tsx";
+import { parseStringWithVariables, parseTemplate } from "@/utils/whatsapp/templates.tsx";
+
+import styles from "@/components/dashboard/whatsapp/templates/templateId.module.css";
+import buttonInputStyles from "@/components/whatsapp/templates/Details/ButtonInput.module.css";
 
 export function WhatsappTemplateById({
   forceTemplateType,
@@ -169,10 +160,7 @@ export function WhatsappTemplateById({
         editingItem?.defaultValues?.whatsappSettingsPhoneId ||
         "";
       form.setFieldValue("whatsappSettingsPhoneId", selectedPhoneId);
-      form.setFieldValue(
-        "defaultValues.whatsappSettingsPhoneId",
-        selectedPhoneId,
-      );
+      form.setFieldValue("defaultValues.whatsappSettingsPhoneId", selectedPhoneId);
       configForm.setValues(editingItem?.config);
       update({ templateId: editingItem?.data?.name });
     }
@@ -180,8 +168,7 @@ export function WhatsappTemplateById({
 
   useEffect(() => {
     if (
-      form.values.whatsappSettingsPhoneId !==
-      form.values.defaultValues?.whatsappSettingsPhoneId
+      form.values.whatsappSettingsPhoneId !== form.values.defaultValues?.whatsappSettingsPhoneId
     ) {
       form.setFieldValue(
         "defaultValues.whatsappSettingsPhoneId",
@@ -190,23 +177,18 @@ export function WhatsappTemplateById({
     }
   }, [form.values.whatsappSettingsPhoneId]);
 
-  const { data: subscription, isLoading } = useSubscription();
+  const { data: subscription } = useSubscription();
   const templateTypes = useMemo(
     () =>
-      Object.values(forceTemplateType ? [forceTemplateType] : TemplateType).map(
-        (type) => ({
-          value: type,
-          label: type,
-          disabled:
-            type === TemplateType.CAROUSEL
-              ? !subscription ||
-                !hasFeature(
-                  subscription,
-                  SubscriptionFeaturePathName.CarouselTemplate,
-                )
-              : false,
-        }),
-      ),
+      Object.values(forceTemplateType ? [forceTemplateType] : TemplateType).map((type) => ({
+        value: type,
+        label: type,
+        disabled:
+          type === TemplateType.CAROUSEL
+            ? !subscription ||
+              !hasFeature(subscription, SubscriptionFeaturePathName.CarouselTemplate)
+            : false,
+      })),
     [subscription],
   );
 
@@ -297,19 +279,14 @@ export function WhatsappTemplateById({
     },
   );
 
-  const { data: catalog } = useConnectedWaCatalog(
-    form.values.whatsappSettingsPhoneId,
-  );
+  const { data: catalog } = useConnectedWaCatalog(form.values.whatsappSettingsPhoneId);
   const productRetailerIds = useMemo(
     () => (catalog ? catalog.products?.map((p) => p.retailer_id) : []),
     [catalog],
   );
   useEffect(() => {
     const selectedCatalogId = form.values.defaultValues?.catalog?.catalogId;
-    if (
-      catalog &&
-      (!selectedCatalogId.length || selectedCatalogId !== catalog.catalogId)
-    )
+    if (catalog && (!selectedCatalogId.length || selectedCatalogId !== catalog.catalogId))
       form.setFieldValue("defaultValues.catalog.catalogId", catalog.catalogId);
   }, [catalog]);
   useEffect(() => {
@@ -342,10 +319,11 @@ export function WhatsappTemplateById({
     templateId,
     () => {
       setIsSubmittingDraft(false);
-      templateId?.length === 0 &&
+      if (templateId?.length === 0) {
         navigate({
           to: "/dashboard/whatsapp/templates/",
         });
+      }
     },
     () => {
       setIsSubmittingDraft(false);
@@ -356,38 +334,24 @@ export function WhatsappTemplateById({
   async function handleSubmit(saveAsDraft: boolean = false) {
     const { hasErrors, errors } = form.validate();
     if (hasErrors) {
-      toast.error(
-        (Object.values(errors)?.[0] as string) ?? "Error in Template",
-      );
+      toast.error((Object.values(errors)?.[0] as string) ?? "Error in Template");
       return;
     }
     if (isOrderCreate) {
-      const { hasErrors: configHasErrors, errors: configErrors } =
-        configForm.validate();
+      const { hasErrors: configHasErrors, errors: configErrors } = configForm.validate();
       if (configHasErrors) {
-        toast.error(
-          (Object.values(configErrors)?.[0] as string) ?? "Error in Template",
-        );
+        toast.error((Object.values(configErrors)?.[0] as string) ?? "Error in Template");
         return;
       }
     }
-    const dynamicVariableArray = parseStringWithVariables(
-      form.values.body || "",
-    );
-    const hasEmptyExamples = (form.values.example || []).some(
-      (val) => !val || val.trim() === "",
-    );
+    const dynamicVariableArray = parseStringWithVariables(form.values.body || "");
+    const hasEmptyExamples = (form.values.example || []).some((val) => !val || val.trim() === "");
 
     if (dynamicVariableArray?.length > 0) {
       if (!isArrayInCorrectOrder(dynamicVariableArray)) {
-        toast.error(
-          "Dynamic variables name should is sequential numeric order",
-        );
+        toast.error("Dynamic variables name should is sequential numeric order");
         return;
-      } else if (
-        form.values.example.length !== dynamicVariableArray.length ||
-        hasEmptyExamples
-      ) {
+      } else if (form.values.example.length !== dynamicVariableArray.length || hasEmptyExamples) {
         toast.error("Please provide example values for all dynamic variables");
         return;
       }
@@ -401,9 +365,7 @@ export function WhatsappTemplateById({
     if (values?.buttons?.length > 2) {
       const buttons = values.buttons;
       const quickReplyIndexes = buttons
-        .map((btn, idx) =>
-          btn.type === WHATSAPP_BUTTON_TYPE.QUICK_REPLY ? idx : -1,
-        )
+        .map((btn, idx) => (btn.type === WHATSAPP_BUTTON_TYPE.QUICK_REPLY ? idx : -1))
         .filter((idx) => idx !== -1);
 
       if (quickReplyIndexes.length > 0) {
@@ -414,11 +376,9 @@ export function WhatsappTemplateById({
         // Check if they are at the start or end
         const atStart =
           quickReplyIndexes[0] === 0 &&
-          quickReplyIndexes[quickReplyIndexes.length - 1] ===
-            quickReplyIndexes.length - 1;
+          quickReplyIndexes[quickReplyIndexes.length - 1] === quickReplyIndexes.length - 1;
         const atEnd =
-          quickReplyIndexes[quickReplyIndexes.length - 1] ===
-            buttons.length - 1 &&
+          quickReplyIndexes[quickReplyIndexes.length - 1] === buttons.length - 1 &&
           quickReplyIndexes[0] === buttons.length - quickReplyIndexes.length;
 
         if (!(isContiguous && (atStart || atEnd))) {
@@ -436,26 +396,19 @@ export function WhatsappTemplateById({
         const dynamicVariableArr = parseStringWithVariables(card.body);
         if (dynamicVariableArr.length > 0) {
           if (!isArrayInCorrectOrder(dynamicVariableArr)) {
-            toast.error(
-              translations("Dynamic variables name should is numberic order"),
-            );
+            toast.error(translations("Dynamic variables name should is numberic order"));
             return;
           } else if (card.example?.length !== dynamicVariableArr?.length) {
-            toast.error(
-              translations("Dynamic variables example values should be given"),
-            );
+            toast.error(translations("Dynamic variables example values should be given"));
             return;
           }
         }
       }
       const defaultValueCards = values.defaultValues.productCarousel ?? [];
       values.productCarousel.map((card, index) => {
-        const cardIndex = defaultValueCards.findIndex(
-          (c) => c.cardIndex === index,
-        );
+        const cardIndex = defaultValueCards.findIndex((c) => c.cardIndex === index);
         if (cardIndex !== -1) {
-          defaultValueCards[cardIndex].product_retailer_id =
-            card.product_retailer_id;
+          defaultValueCards[cardIndex].product_retailer_id = card.product_retailer_id;
         } else {
           defaultValueCards.push({
             cardIndex: index,
@@ -472,9 +425,7 @@ export function WhatsappTemplateById({
       if (saveAsDraft) setIsSubmittingDraft(true);
       else setIsSubmitting(true);
       const selectedWhatsappPhoneId =
-        values.whatsappSettingsPhoneId ||
-        values.defaultValues?.whatsappSettingsPhoneId ||
-        "";
+        values.whatsappSettingsPhoneId || values.defaultValues?.whatsappSettingsPhoneId || "";
       values.whatsappSettingsPhoneId = selectedWhatsappPhoneId;
       values.defaultValues = {
         ...values.defaultValues,
@@ -505,9 +456,7 @@ export function WhatsappTemplateById({
               const publicImageLink = await uploadFile(card.header);
               values.mediaCarousel[index].header = file?.id ?? "";
               const defValues = values.defaultValues.mediaCarousel ?? [];
-              const defCardIndex = defValues.findIndex(
-                (v) => v.cardIndex === index,
-              );
+              const defCardIndex = defValues.findIndex((v) => v.cardIndex === index);
               const obj = {
                 cardIndex: index,
                 headerLink: publicImageLink,
@@ -525,30 +474,28 @@ export function WhatsappTemplateById({
           }),
         );
       }
-      const templateData = isOrderCreate
-        ? { ...values, config: configForm.getValues() }
-        : values;
+      const templateData = isOrderCreate ? { ...values, config: configForm.getValues() } : values;
       if (editingItem?.data?.id) {
         if (editingItem.data.status === WaTemplateStatus.PENDING) {
-          toast.warning(
-            translations(
-              "Cannot edit pending template. Please wait for approval",
-            ),
-          );
+          toast.warning(translations("Cannot edit pending template. Please wait for approval"));
           setIsSubmitting(false);
           return;
         }
         const mutationData = saveAsDraft
           ? { ...values, id: editingItem.id }
           : { templateId: editingItem.id, templateData };
-        saveAsDraft
-          ? saveTemplateAsDraftMutation.mutate(mutationData)
-          : updateTemplateMutation.mutate(mutationData);
+        if (saveAsDraft) {
+          saveTemplateAsDraftMutation.mutate(mutationData);
+        } else {
+          updateTemplateMutation.mutate(mutationData);
+        }
       } else {
         const mutationData = { ...templateData, id: editingItem?.id };
-        saveAsDraft
-          ? saveTemplateAsDraftMutation.mutate(mutationData)
-          : createTemplateMutation.mutate(mutationData);
+        if (saveAsDraft) {
+          saveTemplateAsDraftMutation.mutate(mutationData);
+        } else {
+          createTemplateMutation.mutate(mutationData);
+        }
       }
     } catch (error) {
       if (saveAsDraft) setIsSubmittingDraft(false);
@@ -624,9 +571,7 @@ export function WhatsappTemplateById({
       newObject = { type: e, text };
     }
     if (e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
-      const btn = form.values?.buttons?.filter(
-        (data) => data.type === (e as WHATSAPP_BUTTON_TYPE),
-      );
+      const btn = form.values?.buttons?.filter((data) => data.type === (e as WHATSAPP_BUTTON_TYPE));
       if (btn?.length > 0) {
         toast.error(`Only one button allowed for this type`);
         return;
@@ -634,9 +579,7 @@ export function WhatsappTemplateById({
     }
     const newData = form.values.buttons ?? [];
     if (e === WHATSAPP_BUTTON_TYPE.ORDER_DETAILS) {
-      const otherBtns = newData.find(
-        (b) => b.type !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY,
-      );
+      const otherBtns = newData.find((b) => b.type !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY);
       if (otherBtns) {
         toast.error(
           `Only quick reply buttons are allowed along with checkout button. Remove others to add checkout button`,
@@ -723,10 +666,7 @@ export function WhatsappTemplateById({
     <form>
       <Box
         onKeyDown={getHotkeyHandler([
-          [
-            SAVE_HOTKEY,
-            (event: any) => form.onSubmit((e) => handleSubmit(true))(event),
-          ],
+          [SAVE_HOTKEY, (event: any) => form.onSubmit((_e) => handleSubmit(true))(event)],
         ])}
       >
         <Flex
@@ -739,23 +679,11 @@ export function WhatsappTemplateById({
           mb={"1rem"}
         >
           <Title order={2} c={"var(--grey-color)"}>
-            {editingItem
-              ? editingItem?.data?.name
-              : translations("Create Template")}
+            {editingItem ? editingItem?.data?.name : translations("Create Template")}
           </Title>
-          <Flex
-            mih={50}
-            gap="xs"
-            justify="flex-start"
-            align="center"
-            direction="row"
-            wrap="wrap"
-          >
+          <Flex mih={50} gap="xs" justify="flex-start" align="center" direction="row" wrap="wrap">
             {editingItem?.data?.id && value ? (
-              <RateupButtonPrimary
-                title={translations("Edit")}
-                onClick={toggle}
-              />
+              <RateupButtonPrimary title={translations("Edit")} onClick={toggle} />
             ) : (
               <React.Fragment>
                 {!isOrderCreate && (
@@ -778,10 +706,7 @@ export function WhatsappTemplateById({
         </Flex>
         <Grid>
           <Grid.Col span={{ xs: 12, sm: 7, xl: 9 }} pos={"relative"}>
-            <PaperLayout
-              className={styles["template-content-container"]}
-              h={"85dvh"}
-            >
+            <PaperLayout className={styles["template-content-container"]} h={"85dvh"}>
               <Stack gap={"xs"}>
                 <Alert
                   variant="filled"
@@ -824,22 +749,14 @@ export function WhatsappTemplateById({
                         </Text>
                         {requiredIcon}
                         <Text c="blue" size="xs">
-                          (
-                          {translations(
-                            "Lower-case letters and underscores only",
-                          )}
-                          )
+                          ({translations("Lower-case letters and underscores only")})
                         </Text>
                       </Group>
                     }
                     placeholder={translations("Name")}
                     {...form.getInputProps("name")}
                     rightSection={
-                      <LengthTracker
-                        length={form?.values?.name?.length}
-                        maxValue={512}
-                        atStart
-                      />
+                      <LengthTracker length={form?.values?.name?.length} maxValue={512} atStart />
                     }
                     disabled={!!editingItem?.data?.id}
                   />
@@ -857,8 +774,7 @@ export function WhatsappTemplateById({
                     data={templateTypes}
                     allowDeselect={false}
                   />
-                  {form.getValues().templateType !==
-                    TemplateType.PAYMENT_CONFIRMATION &&
+                  {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
                     form.getValues().templateType !== TemplateType.CAROUSEL && (
                       <ContainedSelection
                         label={
@@ -873,13 +789,7 @@ export function WhatsappTemplateById({
                         {...form.getInputProps("category")}
                         data={WHATSAPP_TEMPLATE_CATEGORY}
                         allowDeselect={false}
-                        disabled={
-                          isOrderCreate ||
-                          catalogBtn ||
-                          spmBtn ||
-                          mpmBtn ||
-                          checkoutBtn
-                        }
+                        disabled={isOrderCreate || catalogBtn || spmBtn || mpmBtn || checkoutBtn}
                       />
                     )}
 
@@ -902,14 +812,8 @@ export function WhatsappTemplateById({
                     <AccountSelector
                       value={form.values.whatsappSettingsPhoneId}
                       onChange={(value) => {
-                        form.setFieldValue(
-                          "whatsappSettingsPhoneId",
-                          value ?? "",
-                        );
-                        form.setFieldValue(
-                          "defaultValues.whatsappSettingsPhoneId",
-                          value ?? "",
-                        );
+                        form.setFieldValue("whatsappSettingsPhoneId", value ?? "");
+                        form.setFieldValue("defaultValues.whatsappSettingsPhoneId", value ?? "");
                       }}
                       label={translations("Account")}
                       className="h-10"
@@ -917,8 +821,7 @@ export function WhatsappTemplateById({
                   </div>
                 </SimpleGrid>
                 {form.values?.category !== WaTemplateCategory.AUTHENTICATION &&
-                  form.getValues().templateType !==
-                    TemplateType.PAYMENT_CONFIRMATION &&
+                  form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
                   form.getValues().templateType !== TemplateType.CAROUSEL && (
                     <Grid pos={"relative"}>
                       <ReadonlyOverlay />
@@ -944,10 +847,7 @@ export function WhatsappTemplateById({
                             const currentHeader = form.values.header;
                             if (currentHeader) {
                               const isFile = currentHeader instanceof File;
-                              if (
-                                e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT ||
-                                isFile
-                              ) {
+                              if (e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT || isFile) {
                                 form.setFieldValue("header", null);
                               }
                             }
@@ -965,9 +865,7 @@ export function WhatsappTemplateById({
                                     WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
                                     WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO,
                                   ]
-                                : Object.values(
-                                    WHATSAPP_TEMPLATE_BROADCAST_TYPE,
-                                  )
+                                : Object.values(WHATSAPP_TEMPLATE_BROADCAST_TYPE)
                           }
                           allowDeselect={false}
                           disabled={spmBtn || catalogBtn || mpmBtn}
@@ -979,10 +877,7 @@ export function WhatsappTemplateById({
                           justify="center"
                           w={form.values?.format === "TEXT" ? "100%" : 300}
                         >
-                          <BroadCastTypeValue
-                            form={form}
-                            type={form.values?.format}
-                          />
+                          <BroadCastTypeValue form={form} type={form.values?.format} />
                         </Stack>
                       </Grid.Col>
                     </Grid>
@@ -990,8 +885,7 @@ export function WhatsappTemplateById({
 
                 <Stack gap={0} pos={"relative"}>
                   <ReadonlyOverlay />
-                  {form.values?.category !==
-                    WaTemplateCategory.AUTHENTICATION && (
+                  {form.values?.category !== WaTemplateCategory.AUTHENTICATION && (
                     <>
                       <Group gap={4} wrap="nowrap">
                         <Text fz={14} fw={500}>
@@ -1039,8 +933,7 @@ export function WhatsappTemplateById({
                 </Stack>
                 <Stack gap={0} pos={"relative"}>
                   <ReadonlyOverlay />
-                  {form.values?.category !==
-                    WaTemplateCategory.AUTHENTICATION &&
+                  {form.values?.category !== WaTemplateCategory.AUTHENTICATION &&
                     dynamicVariables?.map((data, index) => (
                       <ContainedTextField
                         key={data}
@@ -1049,12 +942,10 @@ export function WhatsappTemplateById({
                       />
                     ))}
 
-                  {form.getValues().templateType !==
-                    TemplateType.PAYMENT_CONFIRMATION &&
+                  {form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION &&
                     form.getValues().templateType !== TemplateType.CAROUSEL && (
                       <>
-                        {form.values?.category !==
-                        WaTemplateCategory.AUTHENTICATION ? (
+                        {form.values?.category !== WaTemplateCategory.AUTHENTICATION ? (
                           <ContainedTextField
                             label={
                               <>
@@ -1106,10 +997,7 @@ export function WhatsappTemplateById({
                         {form.values?.buttons?.length > 0 && (
                           <>
                             {form.values?.buttons?.map((data, index) => (
-                              <Group
-                                className={buttonInputStyles.buttonBox}
-                                key={index}
-                              >
+                              <Group className={buttonInputStyles.buttonBox} key={index}>
                                 <ButtonInput
                                   form={form}
                                   deleteButton={deleteButton}
@@ -1229,10 +1117,7 @@ export function WhatsappTemplateById({
                           <Text fz={"xs"}>${"{{}}"}</Text>
                         </Group>
                       </Box>
-                      {HeaderWithFormatting(
-                        form.values?.header,
-                        form.values?.format,
-                      )}
+                      {HeaderWithFormatting(form.values?.header, form.values?.format)}
                       <Text
                         fz={"0.95rem"}
                         style={{
@@ -1255,14 +1140,12 @@ export function WhatsappTemplateById({
                           wordBreak: "break-all",
                         }}
                         display={
-                          form.getValues().templateType !==
-                          TemplateType.PAYMENT_CONFIRMATION
+                          form.getValues().templateType !== TemplateType.PAYMENT_CONFIRMATION
                             ? "block"
                             : "none"
                         }
                       >
-                        {form.values?.category ===
-                        WaTemplateCategory.AUTHENTICATION
+                        {form.values?.category === WaTemplateCategory.AUTHENTICATION
                           ? form.values?.code_expiration_minutes
                             ? `Expires in ${form.values?.code_expiration_minutes} minutes.`
                             : ""
@@ -1270,16 +1153,10 @@ export function WhatsappTemplateById({
                       </Text>
                     </ResponseMessageContainer>
                     {form.values?.buttons?.slice(0, 2).map((data) => (
-                      <QuickReplyButton
-                        text={data?.text}
-                        key={data?.text}
-                        type={data.type}
-                      />
+                      <QuickReplyButton text={data?.text} key={data?.text} type={data.type} />
                     ))}
                     {form.values?.buttons?.length > 2 && (
-                      <QuickReplyButton
-                        text={translations("See all options")}
-                      />
+                      <QuickReplyButton text={translations("See all options")} />
                     )}
                     <ScrollAreaAutosize maw={"220px"}>
                       <Box
@@ -1325,10 +1202,7 @@ export function WhatsappTemplateById({
                             ))}
                           </Stack>
                         ))}
-                        <ProductCardCarouselPreview
-                          form={form}
-                          catalog={catalog}
-                        />
+                        <ProductCardCarouselPreview form={form} catalog={catalog} />
                       </Box>
                     </ScrollAreaAutosize>
                   </Stack>

@@ -1,9 +1,6 @@
-"use client";
-
-import { useState } from "react";
-
 import { Badge, Card, Group, Loader, Radio, Stack, Title } from "@mantine/core";
 import { IconSend } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {

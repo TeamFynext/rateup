@@ -1,10 +1,7 @@
-import { QuestionType, SurveyVariableType } from "@/types/enums.ts";
 import { getPropValueFromQuestionCustomComponent } from "@/components/Survey/TakeSurvey/TakeSurveyComponent/util.tsx";
+import { QuestionType, SurveyVariableType } from "@/types/enums.ts";
 
-export function getQuestionLabel(
-  question: Question,
-  selectedLanguage?: string,
-) {
+export function getQuestionLabel(question: Question, selectedLanguage?: string) {
   if (!selectedLanguage) {
     selectedLanguage = Object.keys(question.title)[0];
   }
@@ -23,9 +20,9 @@ export const getFormattedTitleFromVariable = (title, variables) => {
   const doc = parser.parseFromString(title, "text/html");
   variablesInQuestion.forEach((value) => {
     if (variables.map((variable) => variable.name).includes(value)) return;
-    const component = Array.from(
-      doc.querySelectorAll("variable-component"),
-    ).find((el) => el.getAttribute("label") === value);
+    const component = Array.from(doc.querySelectorAll("variable-component")).find(
+      (el) => el.getAttribute("label") === value,
+    );
     if (component) {
       const parent = component.parentNode;
       const replacementNode = doc.createTextNode("");
@@ -42,9 +39,7 @@ export const getFilteredVariablesForQuestion = (
   question: Question,
 ) => {
   const questionIndex = questions.findIndex((q) => q.id == question.id);
-  const previousQuestionIds = questions
-    .slice(0, questionIndex)
-    .map((q) => q.id);
+  const previousQuestionIds = questions.slice(0, questionIndex).map((q) => q.id);
   return variables?.filter((val) => {
     if (val?.type === SurveyVariableType.DEFAULT) {
       const questionObj = questions?.find((q) => q?.id == val?.value);
@@ -70,8 +65,7 @@ export const getFilteredVariablesForQuestion = (
             if (
               (val.name.includes("jobTitle") &&
                 questionObj?.features?.[selectedLanguage]?.jobTitle) ||
-              (val.name.includes("rating") &&
-                questionObj?.features?.[selectedLanguage]?.rating)
+              (val.name.includes("rating") && questionObj?.features?.[selectedLanguage]?.rating)
             )
               flag = true;
             break;

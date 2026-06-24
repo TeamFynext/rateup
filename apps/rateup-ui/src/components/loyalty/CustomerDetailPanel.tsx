@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
@@ -18,10 +14,10 @@ import {
   Trophy,
   X,
 } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { cn } from "@/lib/utils.ts";
 import {
   useCustomerRewardsByPhone,
   useUseRedemption,
@@ -38,12 +34,7 @@ import { useLoyaltyTiers } from "@/backend/loyalty/tier.query";
 import { DataTable } from "@/components/Table/data-table.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import {
   Dialog,
   DialogContent,
@@ -56,11 +47,8 @@ import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { PremiumAvatar } from "@/components/ui/premium-avatar.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { cn } from "@/lib/utils.ts";
 import { formatDate } from "@/utils/dateTime.ts";
 
 export interface CustomerPanelCustomer {
@@ -117,7 +105,7 @@ export function CustomerDetailPanel({
 
   const availableRewards = rewardData?.availableRewards || [];
   const issuableRewards = rewardData?.issuableRewards || [];
-  const activeCoupons = rewardData?.activeCoupons || [];
+
   const redeemedRewards = rewardData?.redeemedRewards || [];
   const unusedRedemptions = redeemedRewards.filter(
     (r) => r.status === "approved" || r.status === "pending",
@@ -231,9 +219,7 @@ export function CustomerDetailPanel({
     try {
       const result = await redeemRewardByShortCode.mutateAsync(couponCode);
       const redeemedCode = result?.shortCode || couponCode;
-      toast.success(
-        `${t("Reward redeemed successfully")}. ${t("Code:")} ${redeemedCode}`,
-      );
+      toast.success(`${t("Reward redeemed successfully")}. ${t("Code:")} ${redeemedCode}`);
       setRedeemCouponOpen(false);
       setCouponCode("");
     } catch (error) {
@@ -260,9 +246,7 @@ export function CustomerDetailPanel({
     {
       accessorKey: "createdAt",
       header: t("Date"),
-      cell: ({ row }) => (
-        <p className="text-sm">{formatDate(row.getValue("createdAt"))}</p>
-      ),
+      cell: ({ row }) => <p className="text-sm">{formatDate(row.getValue("createdAt"))}</p>,
     },
     {
       accessorKey: "transactionType",
@@ -282,9 +266,7 @@ export function CustomerDetailPanel({
     {
       accessorKey: "description",
       header: t("Description"),
-      cell: ({ row }) => (
-        <p className="text-sm">{row.getValue("description")}</p>
-      ),
+      cell: ({ row }) => <p className="text-sm">{row.getValue("description")}</p>,
     },
     {
       accessorKey: "points",
@@ -334,8 +316,7 @@ export function CustomerDetailPanel({
                   <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
                     <span>
-                      {t("Joined")}{" "}
-                      {dayjs(customer.createdAt).format("MMMM D, YYYY")}
+                      {t("Joined")} {dayjs(customer.createdAt).format("MMMM D, YYYY")}
                     </span>
                   </div>
                 )}
@@ -350,12 +331,8 @@ export function CustomerDetailPanel({
                       className="h-7 w-7 p-0 hover:bg-primary/10"
                       onClick={async () => {
                         try {
-                          await navigator.clipboard.writeText(
-                            customer.referralCode,
-                          );
-                          toast.success(
-                            t("Referral code copied to clipboard!"),
-                          );
+                          await navigator.clipboard.writeText(customer.referralCode);
+                          toast.success(t("Referral code copied to clipboard!"));
                         } catch {
                           toast.error(t("Failed to copy referral code"));
                         }
@@ -372,9 +349,7 @@ export function CustomerDetailPanel({
                         try {
                           const link = `${import.meta.env.VITE_FRONTEND_URL}/loyalty/${orgId}/register?refer_code=${customer.referralCode}`;
                           await navigator.clipboard.writeText(link);
-                          toast.success(
-                            t("Referral link copied to clipboard!"),
-                          );
+                          toast.success(t("Referral link copied to clipboard!"));
                         } catch {
                           toast.error(t("Failed to copy referral link"));
                         }
@@ -390,11 +365,7 @@ export function CustomerDetailPanel({
             {onClose && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    size="icon-sm"
-                    onClick={onClose}
-                  >
+                  <Button variant="destructive" size="icon-sm" onClick={onClose}>
                     <X className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
@@ -408,39 +379,22 @@ export function CustomerDetailPanel({
           {/* Stats Grid */}
           <div className="grid grid-cols-4 gap-4">
             <div className="border rounded-lg p-4">
-              <p className="text-xs text-muted-foreground mb-1">
-                {t("Available Points")}
-              </p>
-              <p className="text-2xl font-bold text-primary">
-                {customer.currentPoints || 0}
-              </p>
+              <p className="text-xs text-muted-foreground mb-1">{t("Available Points")}</p>
+              <p className="text-2xl font-bold text-primary">{customer.currentPoints || 0}</p>
             </div>
             <div className="border rounded-lg p-4">
-              <p className="text-xs text-muted-foreground mb-1">
-                {t("Lifetime Points")}
-              </p>
-              <p className="text-2xl font-bold">
-                {customer.lifetimePoints || 0}
-              </p>
+              <p className="text-xs text-muted-foreground mb-1">{t("Lifetime Points")}</p>
+              <p className="text-2xl font-bold">{customer.lifetimePoints || 0}</p>
             </div>
             <div className="border rounded-lg p-4">
-              <p className="text-xs text-muted-foreground mb-1">
-                {t("Current Tier")}
-              </p>
+              <p className="text-xs text-muted-foreground mb-1">{t("Current Tier")}</p>
               <div className="flex items-center gap-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: tierColor }}
-                />
-                <p className="text-lg font-semibold">
-                  {customer.currentTier?.name || "N/A"}
-                </p>
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: tierColor }} />
+                <p className="text-lg font-semibold">{customer.currentTier?.name || "N/A"}</p>
               </div>
             </div>
             <div className="border rounded-lg p-4">
-              <p className="text-xs text-muted-foreground mb-1">
-                {t("Status")}
-              </p>
+              <p className="text-xs text-muted-foreground mb-1">{t("Status")}</p>
               <Badge
                 variant={
                   customer.status === "closed"
@@ -484,9 +438,7 @@ export function CustomerDetailPanel({
                   <Plus className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-blue-900">
-                    {t("Issue Points")}
-                  </p>
+                  <p className="text-sm font-semibold text-blue-900">{t("Issue Points")}</p>
                   <p className="text-xs text-blue-600">{t("Add points")}</p>
                 </div>
               </div>
@@ -505,9 +457,7 @@ export function CustomerDetailPanel({
                   <Gift className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-purple-900">
-                    {t("Issue Reward")}
-                  </p>
+                  <p className="text-sm font-semibold text-purple-900">{t("Issue Reward")}</p>
                   <p className="text-xs text-purple-600">{t("Grant reward")}</p>
                 </div>
               </div>
@@ -525,9 +475,7 @@ export function CustomerDetailPanel({
                   <Ticket className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-amber-900">
-                    {t("Redeem Coupon")}
-                  </p>
+                  <p className="text-sm font-semibold text-amber-900">{t("Redeem Coupon")}</p>
                   <p className="text-xs text-amber-600">{t("Select Reward")}</p>
                 </div>
               </div>
@@ -545,9 +493,7 @@ export function CustomerDetailPanel({
                   <Ticket className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-orange-900">
-                    {t("Use coupon")}
-                  </p>
+                  <p className="text-sm font-semibold text-orange-900">{t("Use coupon")}</p>
                   <p className="text-xs text-orange-600">{t("Mark as Used")}</p>
                 </div>
               </div>
@@ -565,9 +511,7 @@ export function CustomerDetailPanel({
                   <Trophy className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-indigo-900">
-                    {t("Redeem Reward")}
-                  </p>
+                  <p className="text-sm font-semibold text-indigo-900">{t("Redeem Reward")}</p>
                   <p className="text-xs text-indigo-600">{t("Use points")}</p>
                 </div>
               </div>
@@ -579,9 +523,7 @@ export function CustomerDetailPanel({
       {/* Available Rewards */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
-            {t("Available Rewards for Customer")}
-          </CardTitle>
+          <CardTitle className="text-base">{t("Available Rewards for Customer")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -609,9 +551,7 @@ export function CustomerDetailPanel({
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-primary">
-                      {reward.pointsCost} pts
-                    </p>
+                    <p className="text-sm font-semibold text-primary">{reward.pointsCost} pts</p>
                     <Badge variant="secondary" className="text-xs mt-1">
                       {reward.pointsCost > (customer.currentPoints || 0)
                         ? t("Not enough points")
@@ -620,13 +560,10 @@ export function CustomerDetailPanel({
                   </div>
                 </div>
               ))}
-            {availableRewards.filter((r) => r.status === "ACTIVE").length ===
-              0 && (
+            {availableRewards.filter((r) => r.status === "ACTIVE").length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <Gift className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                <p className="text-sm">
-                  {t("No rewards available with current points")}
-                </p>
+                <p className="text-sm">{t("No rewards available with current points")}</p>
               </div>
             )}
           </div>
@@ -637,9 +574,7 @@ export function CustomerDetailPanel({
       {unusedRedemptions.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              {t("Pending Redemptions")}
-            </CardTitle>
+            <CardTitle className="text-base">{t("Pending Redemptions")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -653,12 +588,9 @@ export function CustomerDetailPanel({
                       <Ticket className="w-5 h-5 text-foreground" />
                     </div>
                     <div>
-                      <p className="font-medium text-sm">
-                        {redemption.reward?.name}
-                      </p>
+                      <p className="font-medium text-sm">{redemption.reward?.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {t("Redeemed:")}{" "}
-                        {new Date(redemption.createdAt).toLocaleDateString()}
+                        {t("Redeemed:")} {new Date(redemption.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -722,10 +654,7 @@ export function CustomerDetailPanel({
             <Button variant="outline" onClick={() => setIssuePointsOpen(false)}>
               {t("Cancel")}
             </Button>
-            <Button
-              onClick={handleIssuePoints}
-              disabled={!pointsAmount || awardPoints.isPending}
-            >
+            <Button onClick={handleIssuePoints} disabled={!pointsAmount || awardPoints.isPending}>
               {awardPoints.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -772,13 +701,9 @@ export function CustomerDetailPanel({
                     >
                       <div>
                         <p className="font-medium text-sm">{reward.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {reward.description}
-                        </p>
+                        <p className="text-xs text-muted-foreground">{reward.description}</p>
                       </div>
-                      <p className="text-sm font-semibold text-primary">
-                        {reward.pointsCost} pts
-                      </p>
+                      <p className="text-sm font-semibold text-primary">{reward.pointsCost} pts</p>
                     </button>
                   ))}
               </div>
@@ -810,9 +735,7 @@ export function CustomerDetailPanel({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("Issue Reward")}</DialogTitle>
-            <DialogDescription>
-              Directly assign a reward to {customer.name}.
-            </DialogDescription>
+            <DialogDescription>Directly assign a reward to {customer.name}.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -850,10 +773,7 @@ export function CustomerDetailPanel({
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setAssignRewardOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setAssignRewardOpen(false)}>
               {t("Cancel")}
             </Button>
             <Button
@@ -885,11 +805,7 @@ export function CustomerDetailPanel({
               <Label>{t("Select Reward")}</Label>
               <div className="space-y-2 max-h-75 overflow-y-auto">
                 {availableRewards
-                  .filter(
-                    (coupon) =>
-                      coupon.rewardType === "coupon" &&
-                      coupon.status === "ACTIVE",
-                  )
+                  .filter((coupon) => coupon.rewardType === "coupon" && coupon.status === "ACTIVE")
                   .map((coupon) => (
                     <button
                       key={coupon.id}
@@ -913,9 +829,7 @@ export function CustomerDetailPanel({
                     </button>
                   ))}
                 {availableRewards.filter(
-                  (coupon) =>
-                    coupon.rewardType === "coupon" &&
-                    coupon.status === "ACTIVE",
+                  (coupon) => coupon.rewardType === "coupon" && coupon.status === "ACTIVE",
                 ).length === 0 && (
                   <div className="text-center py-8 text-muted-foreground text-sm">
                     {t("No rewards available with current points")}
@@ -930,9 +844,7 @@ export function CustomerDetailPanel({
             </Button>
             <Button
               onClick={handleClaimCoupon}
-              disabled={
-                !selectedCouponRewardId || redeemRewardMutation.isPending
-              }
+              disabled={!selectedCouponRewardId || redeemRewardMutation.isPending}
             >
               {redeemRewardMutation.isPending ? (
                 <>
@@ -952,9 +864,7 @@ export function CustomerDetailPanel({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("Use coupon")}</DialogTitle>
-            <DialogDescription>
-              Enter a coupon code for {customer.name}.
-            </DialogDescription>
+            <DialogDescription>Enter a coupon code for {customer.name}.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -972,10 +882,7 @@ export function CustomerDetailPanel({
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setRedeemCouponOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setRedeemCouponOpen(false)}>
               {t("Cancel")}
             </Button>
             <Button onClick={handleRedeemCoupon} disabled={!couponCode}>
@@ -990,9 +897,7 @@ export function CustomerDetailPanel({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("Use Redemption")}</DialogTitle>
-            <DialogDescription>
-              Mark a pending redemption as used.
-            </DialogDescription>
+            <DialogDescription>Mark a pending redemption as used.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -1010,9 +915,7 @@ export function CustomerDetailPanel({
                     )}
                   >
                     <div>
-                      <p className="font-medium text-sm">
-                        {redemption.reward?.name}
-                      </p>
+                      <p className="font-medium text-sm">{redemption.reward?.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(redemption.createdAt).toLocaleDateString()}
                       </p>
@@ -1026,10 +929,7 @@ export function CustomerDetailPanel({
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setUseRedemptionOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setUseRedemptionOpen(false)}>
               {t("Cancel")}
             </Button>
             <Button

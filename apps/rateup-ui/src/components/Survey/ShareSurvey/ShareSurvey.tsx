@@ -1,7 +1,3 @@
-"use client";
-
-import React, { useCallback, useEffect, useState } from "react";
-
 import {
   ActionIcon,
   Box,
@@ -29,23 +25,18 @@ import {
   IconPlayerPlay,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { SurveyType } from "@/types/enums.ts";
 import { updateSurvey } from "@/backend/surveys/survey.api";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupSwitch from "@/components/Switch/RateupSwitch.tsx";
-import {
-  formatIsoDateStringWithTime,
-  roundOffMinutesAndSeconds,
-} from "@/utils/dateTime.ts";
+import { SurveyType } from "@/types/enums.ts";
+import { formatIsoDateStringWithTime, roundOffMinutesAndSeconds } from "@/utils/dateTime.ts";
 import { getContent } from "@/utils/index.ts";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
 import {
   ContainedDateTimePickerInput,
   ContainedSelection,
@@ -80,9 +71,7 @@ const ShareSurvey = ({
   const surveyId = survey?.id;
   const [shareUrl, setShareUrl] = useState("");
   const [tag, setTag] = useState([]);
-  const [surveyTeamMapId, setSurveyTeamMapId] = useState(
-    survey?.teams[0]?.mapId,
-  );
+  const [surveyTeamMapId, setSurveyTeamMapId] = useState(survey?.teams[0]?.mapId);
 
   const [shortUrlId, setShortUrlId] = useState(survey?.teams[0]?.shortUrlId);
   const [isPublished, setIsPublished] = useState(survey?.isPublished);
@@ -91,48 +80,33 @@ const ShareSurvey = ({
   );
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure(false);
-  const [openedIframe, { open: openIframe, close: closeIframe }] =
+  const [openedIframe, { open: openIframe, close: closeIframe }] = useDisclosure(false);
+  const [publishSettings, { open: openPublishSettings, close: closePublishSettings }] =
     useDisclosure(false);
-  const [
-    publishSettings,
-    { open: openPublishSettings, close: closePublishSettings },
-  ] = useDisclosure(false);
 
-  const [errors, setErrors] = useState<Array<any> | { error: string } | null>(
-    null,
-  );
+  const [errors, setErrors] = useState<Array<any> | { error: string } | null>(null);
   const { t: translations } = useTranslation();
   const [selectTeamDropdownState, setSelectTeamDropdownState] = useState("0");
   const [editPublish, setEditPublish] = useState(null);
 
   // TODO: since flow has a different share page (ShareFlow.tsx), remove the whatsapp related code
-  const isWhatsapp =
-    survey?.type === SurveyType.WhatsApp || survey?.type === SurveyType.WaFlow;
+  const isWhatsapp = survey?.type === SurveyType.WhatsApp || survey?.type === SurveyType.WaFlow;
   const { data: waSettings } = useWaSettings(isWhatsapp);
 
   useEffect(() => {
-    setIsScheduled(
-      !survey?.isPublished && survey?.surveyPublishAt ? true : false,
-    );
+    setIsScheduled(!survey?.isPublished && survey?.surveyPublishAt ? true : false);
   }, [survey]);
 
   useEffect(() => {
     if (!surveyId || !surveyTeamMapId) return;
     const tagString = tag?.length > 0 ? `?tag=${tag.join(",")}` : "";
-    if (
-      survey.type === SurveyType.WhatsApp ||
-      survey.type === SurveyType.WaFlow
-    ) {
+    if (survey.type === SurveyType.WhatsApp || survey.type === SurveyType.WaFlow) {
       if (!waSettings) return;
-      const phone = waSettings?.[0]?.phone
-        ?.replace("+", "")
-        .replaceAll(" ", "");
+      const phone = waSettings?.[0]?.phone?.replace("+", "").replaceAll(" ", "");
       if (!phone) setShareUrl("Configure WhatsApp settings to get share link");
       if (shortUrlId) {
         // TODO: get phone number from phone id (add phone number field)
-        setShareUrl(
-          `${import.meta.env.VITE_FRONTEND_URL}/was/${shortUrlId}${tagString}`,
-        );
+        setShareUrl(`${import.meta.env.VITE_FRONTEND_URL}/was/${shortUrlId}${tagString}`);
       } else {
         // TODO: get phone number from phone id (add phone number field)
         if (survey.getLocation) {
@@ -144,9 +118,7 @@ const ShareSurvey = ({
       }
     } else {
       if (shortUrlId) {
-        setShareUrl(
-          `${import.meta.env.VITE_FRONTEND_URL}/ws/${shortUrlId}${tagString}`,
-        );
+        setShareUrl(`${import.meta.env.VITE_FRONTEND_URL}/ws/${shortUrlId}${tagString}`);
       } else {
         setShareUrl(
           `${import.meta.env.VITE_FRONTEND_URL}/public/survey/${surveyTeamMapId}${tagString}`,
@@ -162,9 +134,7 @@ const ShareSurvey = ({
         setIsPublished(false);
 
         toast.error(
-          data?.data?.error
-            ? data?.data?.error
-            : translations("Your survey is incomplete"),
+          data?.data?.error ? data?.data?.error : translations("Your survey is incomplete"),
           {
             id: "load-data",
           },
@@ -172,8 +142,8 @@ const ShareSurvey = ({
         setErrors(data?.data?.data);
         open();
       } else {
-        data?.data?.action === "unpublish" && setIsPublished(false);
-        data?.data?.action === "publish" && setIsPublished(true);
+        if (data?.data?.action === "unpublish") setIsPublished(false);
+        if (data?.data?.action === "publish") setIsPublished(true);
 
         toast.success(
           data?.data?.action === "unpublish"
@@ -248,12 +218,9 @@ const ShareSurvey = ({
               onMessage={translations("Click here to unschedule the survey")}
               checked={isScheduled}
               onChange={(event) => {
-                toast.loading(
-                  translations("Hold.. your survey is getting unpublished..."),
-                  {
-                    id: "load-data",
-                  },
-                );
+                toast.loading(translations("Hold.. your survey is getting unpublished..."), {
+                  id: "load-data",
+                });
                 surveyUpdateMutation.mutate({
                   isPublished: event.currentTarget.checked,
                   surveyPublishAt: null,
@@ -276,14 +243,9 @@ const ShareSurvey = ({
                   setEditPublish(null);
                   openPublishSettings();
                 } else {
-                  toast.loading(
-                    translations(
-                      "Hold.. your survey is getting UnPublished...",
-                    ),
-                    {
-                      id: "load-data",
-                    },
-                  );
+                  toast.loading(translations("Hold.. your survey is getting UnPublished..."), {
+                    id: "load-data",
+                  });
                   surveyUpdateMutation.mutate({
                     isPublished: event.currentTarget.checked,
                     surveyPublishAt: null,
@@ -293,9 +255,7 @@ const ShareSurvey = ({
               }}
               label={
                 <Text fw={700} fz={"lg"}>
-                  {isPublished
-                    ? translations("Published")
-                    : translations("Publish Survey")}
+                  {isPublished ? translations("Published") : translations("Publish Survey")}
                 </Text>
               }
             />
@@ -313,9 +273,7 @@ const ShareSurvey = ({
             {(isPublished || survey?.surveyPublishAt) && (
               <Group>
                 <Text w={150}>
-                  {isScheduled
-                    ? translations("To be Published On")
-                    : translations("Published On")}
+                  {isScheduled ? translations("To be Published On") : translations("Published On")}
                   :{" "}
                 </Text>
                 <Text c={isScheduled ? "orange.6" : "dark.1"}>
@@ -345,9 +303,7 @@ const ShareSurvey = ({
                 {/* <Text>{(survey?.surveyEndAt && !isPublished && !isScheduled) ? 'Ended at:' : 'End at' }</Text> */}
 
                 <Text c="dark.1">
-                  {survey?.surveyEndAt
-                    ? formatIsoDateStringWithTime(survey?.surveyEndAt)
-                    : "Nil"}
+                  {survey?.surveyEndAt ? formatIsoDateStringWithTime(survey?.surveyEndAt) : "Nil"}
                 </Text>
                 <ActionIcon
                   size={"sm"}
@@ -362,21 +318,20 @@ const ShareSurvey = ({
               </Group>
             )}
           </Stack>
-          {!survey.surveyEndAt &&
-            (survey.isPublished || survey.surveyPublishAt) && (
-              <Tooltip label={translations("Schedule survey expiry")}>
-                <ActionIcon
-                  size={"sm"}
-                  variant="subtle"
-                  onClick={() => {
-                    setEditPublish("Expiry");
-                    openPublishSettings();
-                  }}
-                >
-                  <IconClockPlus />
-                </ActionIcon>
-              </Tooltip>
-            )}
+          {!survey.surveyEndAt && (survey.isPublished || survey.surveyPublishAt) && (
+            <Tooltip label={translations("Schedule survey expiry")}>
+              <ActionIcon
+                size={"sm"}
+                variant="subtle"
+                onClick={() => {
+                  setEditPublish("Expiry");
+                  openPublishSettings();
+                }}
+              >
+                <IconClockPlus />
+              </ActionIcon>
+            </Tooltip>
+          )}
           <PubliShSettingsModal
             opened={publishSettings}
             close={closePublishSettings}
@@ -387,13 +342,9 @@ const ShareSurvey = ({
 
           <RateupButtonSecondary
             disabled={disableShare}
-            title={
-              survey?.active ? translations("Pause") : translations("Resume")
-            }
+            title={survey?.active ? translations("Pause") : translations("Resume")}
             leftIcon={survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />}
-            onClick={() =>
-              surveyStatusUpdateMutation.mutate({ active: !survey?.active })
-            }
+            onClick={() => surveyStatusUpdateMutation.mutate({ active: !survey?.active })}
           />
         </Group>
       </PaperLayout>
@@ -406,7 +357,7 @@ const ShareSurvey = ({
         <ScrollArea.Autosize mah={400} mb="xl">
           <Box my="xl">
             {Array.isArray(errors) ? (
-              errors?.map((item, index) => (
+              errors?.map((item, _index) => (
                 <Paper
                   radius="lg"
                   shadow="md"
@@ -669,32 +620,21 @@ export const CopyLinkComponent = ({
   );
 };
 
-const PubliShSettingsModal = ({
-  opened,
-  close,
-  editPublish,
-  surveyUpdateMutation,
-  survey,
-}) => {
+const PubliShSettingsModal = ({ opened, close, editPublish, surveyUpdateMutation, survey }) => {
   const { t: translations } = useTranslation();
   const [publishChoice, setPublishChoice] = useState(PublishEnum.NOW);
   const [surveyExpiry, setSurveyExpiry] = useState(ExpiryEnum.NO_EXPIRY);
   const form = useForm({
     initialValues: {
       surveyPublishAt: new Date(
-        new Date(new Date().setMinutes(0, 0, 0)).setDate(
-          new Date().getDate() + 1,
-        ),
+        new Date(new Date().setMinutes(0, 0, 0)).setDate(new Date().getDate() + 1),
       ),
       surveyEndAt: new Date(
-        new Date(new Date().setMinutes(0, 0, 0)).setDate(
-          new Date().getDate() + 5,
-        ),
+        new Date(new Date().setMinutes(0, 0, 0)).setDate(new Date().getDate() + 5),
       ),
     },
     validate: {
       surveyPublishAt: (value) => {
-        const minPublishDate = new Date(new Date().getTime() + 60 * 60 * 1000);
         const publishDate = form.values.surveyPublishAt;
         return value < publishDate
           ? translations("End date must be after the publish date.")
@@ -703,14 +643,12 @@ const PubliShSettingsModal = ({
       surveyEndAt: (value) => {
         const minEndDate = new Date(new Date().getTime() + 2 * 60 * 60 * 1000);
         return surveyExpiry === ExpiryEnum.CUSTOM_DATE && value < minEndDate
-          ? translations(
-              "End date must be at least 2 hours ahead of current time.",
-            )
+          ? translations("End date must be at least 2 hours ahead of current time.")
           : null;
       },
     },
   });
-  const handlePublish = (event) => {
+  const handlePublish = (_event) => {
     toast.loading(translations("Please hold on while publishing your survey"), {
       id: "load-data",
     });
@@ -721,33 +659,25 @@ const PubliShSettingsModal = ({
             surveyPublishAt:
               publishChoice === PublishEnum.NOW
                 ? new Date()
-                : new Date(
-                    roundOffMinutesAndSeconds(form.values.surveyPublishAt),
-                  ),
+                : new Date(roundOffMinutesAndSeconds(form.values.surveyPublishAt)),
           }
         : editPublish === "Expiry"
           ? {
               surveyEndAt:
                 surveyExpiry === ExpiryEnum.NO_EXPIRY
                   ? null
-                  : new Date(
-                      roundOffMinutesAndSeconds(form.values.surveyEndAt),
-                    ),
+                  : new Date(roundOffMinutesAndSeconds(form.values.surveyEndAt)),
             }
           : {
               isPublished: publishChoice === PublishEnum.NOW,
               surveyPublishAt:
                 publishChoice === PublishEnum.NOW
                   ? new Date()
-                  : new Date(
-                      roundOffMinutesAndSeconds(form.values.surveyPublishAt),
-                    ),
+                  : new Date(roundOffMinutesAndSeconds(form.values.surveyPublishAt)),
               surveyEndAt:
                 surveyExpiry === ExpiryEnum.NO_EXPIRY
                   ? null
-                  : new Date(
-                      roundOffMinutesAndSeconds(form.values.surveyEndAt),
-                    ),
+                  : new Date(roundOffMinutesAndSeconds(form.values.surveyEndAt)),
             };
 
     surveyUpdateMutation.mutate(data, {
@@ -805,10 +735,7 @@ const PubliShSettingsModal = ({
             >
               <Group mt="xs">
                 <Radio checked label="Now" value={PublishEnum.NOW} />
-                <Radio
-                  label={translations("Schedule Later")}
-                  value={PublishEnum.LATER}
-                />
+                <Radio label={translations("Schedule Later")} value={PublishEnum.LATER} />
               </Group>
             </Radio.Group>
             {publishChoice === PublishEnum.LATER && (
@@ -820,18 +747,12 @@ const PubliShSettingsModal = ({
                   label={translations("Publish Survey At")}
                   withAsterisk
                   {...form.getInputProps("surveyPublishAt")}
-                  minDate={
-                    new Date(
-                      new Date().setMinutes(new Date().getMinutes() + 60),
-                    )
-                  }
+                  minDate={new Date(new Date().setMinutes(new Date().getMinutes() + 60))}
                 />
                 <Text c="red" size="xs">
                   * {translations("*Time will be rounded to nearest hours ")}
                   <br />*{" "}
-                  {translations(
-                    "Publish time must be at least 1 hour ahead of current time.",
-                  )}
+                  {translations("Publish time must be at least 1 hour ahead of current time.")}
                 </Text>
               </Stack>
             )}
@@ -848,15 +769,8 @@ const PubliShSettingsModal = ({
               withAsterisk
             >
               <Group mt="xs">
-                <Radio
-                  checked
-                  label={translations("No Expiry")}
-                  value={ExpiryEnum.NO_EXPIRY}
-                />
-                <Radio
-                  label={translations("Custom Date")}
-                  value={ExpiryEnum.CUSTOM_DATE}
-                />
+                <Radio checked label={translations("No Expiry")} value={ExpiryEnum.NO_EXPIRY} />
+                <Radio label={translations("Custom Date")} value={ExpiryEnum.CUSTOM_DATE} />
               </Group>
             </Radio.Group>
 
@@ -870,13 +784,8 @@ const PubliShSettingsModal = ({
                   {...form.getInputProps("surveyEndAt")}
                   minDate={
                     publishChoice === PublishEnum.LATER
-                      ? new Date(
-                          new Date(form.values.surveyPublishAt).getTime() +
-                            60 * 60 * 1000,
-                        )
-                      : new Date(
-                          new Date().setMinutes(new Date().getMinutes() + 120),
-                        )
+                      ? new Date(new Date(form.values.surveyPublishAt).getTime() + 60 * 60 * 1000)
+                      : new Date(new Date().setMinutes(new Date().getMinutes() + 120))
                   }
                 />
                 <Text c="red" size="xs">

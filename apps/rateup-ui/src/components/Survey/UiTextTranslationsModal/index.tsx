@@ -1,13 +1,11 @@
-"use client";
-
 import { Modal } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import modalStyles from "@/styles/commonCssModules/modal.module.css";
-
 import { elementsToBeTranslated } from "./constants.ts";
 import EditTranslations from "./EditTranslations/index.tsx";
+
 import styles from "./UiTextTranslationsModal.module.css";
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 function UiTextTranslationsModal({ opened, onClose, survey }) {
   const lanugages = survey?.languages;

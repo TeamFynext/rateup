@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { ContactGroupType } from "@/types/enums.ts";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils.tsx";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
+import { ContactGroupType } from "@/types/enums.ts";
 
 import {
   assignContactLabelsToContactId,
@@ -30,21 +30,14 @@ import {
   updateLifecycleofMultipleContacts,
 } from "./contacts.api";
 
-export const useContacts = (
-  pagination,
-  searchData?,
-  sorting?,
-  columnFilters?,
-  type?,
-) => {
+export const useContacts = (pagination, searchData?, sorting?, columnFilters?, type?) => {
   const sort = sorting ?? CONTACT_SORT;
   const filters = columnFilters ?? [];
   const search = searchData ?? "";
   const groupType = type ?? ContactGroupType.NORMAL;
   return useQuery({
     queryKey: ["contacts", pagination, search, sort, filters, groupType],
-    queryFn: () =>
-      getContactsList(pagination, search, sort, filters, groupType),
+    queryFn: () => getContactsList(pagination, search, sort, filters, groupType),
   });
 };
 
@@ -66,11 +59,11 @@ export const useCreateContactMutation = () => {
         queryKey: ["contacts", "filtered"],
       });
     },
-    onError: (error) => {},
+    onError: (_error) => {},
   });
 };
 
-const useImportContactMutation = () => {
+const _useImportContactMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: importContacts,
@@ -103,7 +96,7 @@ export const useImportCSVContactMutation = () => {
       //   <IconCheck />,
       // );
     },
-    onError: (error) => {
+    onError: (_error) => {
       // showErrorToast(
       //   `Error creating the contact: ${error?.message}`,
       //   "contact-create",
@@ -163,11 +156,11 @@ export const useEditContactMutation = (groupId?: string) => {
   });
 };
 
-const useEditContactLabelsMutation = (contactId: string) => {
+const _useEditContactLabelsMutation = (_contactId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: editContactLabels,
-    onSuccess: (data: any) => {
+    onSuccess: (_data: any) => {
       queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
       toast.success("Contact updated successfully.", {
         id: "contact-update",
@@ -365,15 +358,10 @@ export const useAssignContactLabelsToMultipleContacts = () => {
 export const useAssignContactLabelsToContactId = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      contactId,
-      labelIds,
-    }: {
-      contactId: string;
-      labelIds: string[];
-    }) => assignContactLabelsToContactId(contactId, { labelIds }),
+    mutationFn: ({ contactId, labelIds }: { contactId: string; labelIds: string[] }) =>
+      assignContactLabelsToContactId(contactId, { labelIds }),
 
-    onSuccess: (_data, variables) => {
+    onSuccess: (_data, _variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
     },
   });

@@ -1,14 +1,9 @@
-"use client";
-
+import { Box, Slider } from "@mantine/core";
 import { useCallback } from "react";
 
-import { Box, Slider } from "@mantine/core";
-
 import CustomColorPicker from "../../../../../../../Survey/ShareSurvey/components/CustomColorPicker/index.tsx";
-import {
-  useThemeDispatch,
-  useThemeObj,
-} from "../../../../ThemeContext/ThemeContext.tsx";
+import { useThemeDispatch, useThemeObj } from "../../../../ThemeContext/ThemeContext.tsx";
+
 import styles from "./SubtitleEditor.module.css";
 
 function SubtitleEditor() {

@@ -1,7 +1,4 @@
-"use client";
-
 import React from "react";
-
 import SuperTokensReact, { SuperTokensWrapper } from "supertokens-auth-react";
 
 import { frontendConfig } from "../../config/frontend.tsx";
@@ -11,8 +8,6 @@ if (globalThis.window !== undefined) {
   SuperTokensReact.init(frontendConfig());
 }
 
-export const SuperTokensProvider: React.FC<React.PropsWithChildren<{}>> = ({
-  children,
-}) => {
+export const SuperTokensProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
   return <SuperTokensWrapper>{children}</SuperTokensWrapper>;
 };

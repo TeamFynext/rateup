@@ -1,6 +1,5 @@
-import { useContext } from "react";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useContext } from "react";
 import { toast } from "sonner";
 
 import SurveyContext from "@/context/SurveyContext.ts";
@@ -81,13 +80,10 @@ export function useResetResponsesStats(
       queryClient.invalidateQueries({ queryKey: ["responses"] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
 
-      toast.success(
-        response?.success ? "Cleaned up responses & Stats" : "Please try again",
-        {
-          id: "load-data",
-        },
-      );
-      response?.success && close();
+      toast.success(response?.success ? "Cleaned up responses & Stats" : "Please try again", {
+        id: "load-data",
+      });
+      if (response?.success) close();
       setIsLoading(false);
     },
     onError: (error) => {
@@ -100,12 +96,7 @@ export function useResetResponsesStats(
   });
 }
 
-export function useDeleteResponse(
-  surveyId: string,
-  surveyTeamMapId: string,
-  close: () => void,
-  setIsDeleting: React.Dispatch<React.SetStateAction<boolean>>,
-) {
+export function useDeleteResponse(surveyId: string, surveyTeamMapId: string, close: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -115,23 +106,16 @@ export function useDeleteResponse(
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["allresponses", surveyId] });
 
-      toast.success(
-        response?.success
-          ? "Deleted Response successfully"
-          : "Please try again",
-        {
-          id: "load-data",
-        },
-      );
-      response?.success && close();
-      setIsDeleting(false);
+      toast.success(response?.success ? "Deleted Response successfully" : "Please try again", {
+        id: "load-data",
+      });
+      if (response?.success) close();
     },
     onError: (error) => {
       console.error("Error Deleting", error.message);
       toast.error(error.message, {
         id: "load-data",
       });
-      setIsDeleting(false);
     },
   });
 }
@@ -140,9 +124,8 @@ export function useGenerateResponse(surveyId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { surveyTeamMapId: string; batchSize: number }) =>
-      generateResponse(data),
-    onSuccess: (response) => {
+    mutationFn: (data: { surveyTeamMapId: string; batchSize: number }) => generateResponse(data),
+    onSuccess: (_response) => {
       queryClient.invalidateQueries({ queryKey: ["responses"] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
       queryClient.invalidateQueries({ queryKey: ["allresponses", surveyId] });
@@ -171,9 +154,8 @@ export function useSyncResponseToGoogleSheet(surveyId: string) {
 
 export function useDownloadExcelResponse() {
   return useMutation({
-    mutationFn: (data: downloadExcelResponseType) =>
-      downloadExcelResponse(data),
-    onSuccess: (response) => {
+    mutationFn: (data: downloadExcelResponseType) => downloadExcelResponse(data),
+    onSuccess: (_response) => {
       toast.success("Downloaded Response successfully", {
         id: "downloadExcel",
       });
@@ -249,15 +231,10 @@ export const useResponseForComparison = (surveyId) => {
   });
 };
 
-function useSurveyHappyResponseAnalytics(
-  surveyId: string,
-  timeFilter?: string,
-  enabled = true,
-) {
+function _useSurveyHappyResponseAnalytics(surveyId: string, timeFilter?: string, enabled = true) {
   return useQuery({
     queryKey: ["survey-happy-response-analytics", surveyId, timeFilter],
-    queryFn: () =>
-      getSurveyHappyResponseAnalytics(surveyId, `timeFilter=${timeFilter}`),
+    queryFn: () => getSurveyHappyResponseAnalytics(surveyId, `timeFilter=${timeFilter}`),
     enabled: !!surveyId && enabled,
   });
 }

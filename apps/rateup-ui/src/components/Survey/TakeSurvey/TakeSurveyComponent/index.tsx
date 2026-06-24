@@ -1,15 +1,10 @@
-"use client";
-
-import { useContext, useEffect, useRef, useState } from "react";
-
 import { Box, Center, Container, ScrollArea, Stack, Text } from "@mantine/core";
 import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import type { QuestionType } from "@/types/enums.ts";
-import { LogicAction, PageType } from "@/types/enums.ts";
 import { useUpdateCompletedMutation } from "@/backend/surveys/surveys.query";
 import { NextPrevFuncsAndLastQuestionContextProvider } from "@/context/NextPrevFuncsContext.tsx";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
@@ -17,21 +12,19 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import { SelectedQContext } from "@/context/SelectedQ.ts";
 import { SurveyContextProvider } from "@/context/SurveyObjContext.tsx";
 import { SurveyThemeContextProvider } from "@/context/SurveyThemeContext.tsx";
+import type { QuestionType } from "@/types/enums.ts";
+import { LogicAction, PageType } from "@/types/enums.ts";
 import { encryptResponse } from "@/utils/encryption/index.ts";
 import { isHtml } from "@/utils/index.ts";
 import { parseLogicAction } from "@/utils/survey/logic/logic.utils";
 
 import CustomHTML from "../../Page/Previews/CustomHTML.tsx";
-import {
-  useIsSurveyThemeEditView,
-  useIsSurveyThemePreview,
-} from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
+import { useIsSurveyThemePreview } from "../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext.tsx";
 import ConfirmResponsesModal from "./ConfirmResponsesModal.tsx";
 import NextPrev from "./NextPrev.tsx";
 import QuestionDesc from "./QuestionDesc.tsx";
 import QuestionForm from "./QuestionForm.tsx";
 import QuestionTitle from "./QuestionTitle.tsx";
-import styles from "./TakeSurvey.module.css";
 import {
   checkGoogleReviewForQuestion,
   checkRaiseTicketIssueQuestion,
@@ -41,6 +34,8 @@ import {
   submitSurvey,
 } from "./util.tsx";
 
+import styles from "./TakeSurvey.module.css";
+
 function TakeSurvey({
   survey,
   setIsReviewPage,
@@ -49,10 +44,9 @@ function TakeSurvey({
   setIsDefaultThankyouPage = null,
 }) {
   const isSurveyThemePreview = useIsSurveyThemePreview();
-  const isSurveyThemeEditView = useIsSurveyThemeEditView();
 
   const largeScreen = useMediaQuery("(min-width: 60em)");
-  const smallScreen = useMediaQuery("(max-width: 30em)");
+
   const searchParams = useSearch({ strict: false });
   const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -71,7 +65,7 @@ function TakeSurvey({
     };
   }, []);
 
-  const { theme: surveyThemeData } = survey?.webSurveyTheme;
+  const { theme: surveyThemeData } = survey?.webSurveyTheme ?? {};
 
   const [isThankYouPageEnabled, setIsThankYouPageEnabled] = useState(
     survey?.questions?.some((q) => q.type === PageType.ThankYou) || false,
@@ -111,9 +105,7 @@ function TakeSurvey({
   });
 
   useEffect(() => {
-    setIsThankYouPageEnabled(
-      survey?.questions?.some((q) => q.type === PageType.ThankYou) || false,
-    );
+    setIsThankYouPageEnabled(survey?.questions?.some((q) => q.type === PageType.ThankYou) || false);
   }, [survey?.questions]);
 
   useEffect(() => {
@@ -156,19 +148,15 @@ function TakeSurvey({
       const takeSurveyRootDiv = takeSurveyRootDivRef.current;
       const nextPrevBtnDiv = document.getElementById("next-prev-btn-div");
       if (takeSurveyRootDiv && nextPrevBtnDiv) {
-        const nextPrevBtnDivHeight =
-          nextPrevBtnDiv.getBoundingClientRect().height;
+        const nextPrevBtnDivHeight = nextPrevBtnDiv.getBoundingClientRect().height;
         const nextPrevBtnOffsetTop = nextPrevBtnDiv.offsetTop;
 
         const visualViewport = event.target;
         const offsetLeft = visualViewport.offsetLeft;
 
         const nextPrevBtnDivTranslateY =
-          -(
-            nextPrevBtnOffsetTop -
-            visualViewport.height +
-            nextPrevBtnDivHeight
-          ) + visualViewport.offsetTop;
+          -(nextPrevBtnOffsetTop - visualViewport.height + nextPrevBtnDivHeight) +
+          visualViewport.offsetTop;
         if (!isSurveyThemePreview)
           nextPrevBtnDiv.style.transform = `translate(${offsetLeft}px, ${nextPrevBtnDivTranslateY}px)`;
       }
@@ -220,19 +208,13 @@ function TakeSurvey({
     const lastQuestion = getLastQuestion(survey);
     const isLastQuestion = selectedQ?.id === lastQuestion?.id;
 
-    const selectedQuestionIndex = survey.questions.findIndex(
-      (Q) => selectedQ.id === Q.id,
-    );
+    const selectedQuestionIndex = survey.questions.findIndex((Q) => selectedQ.id === Q.id);
     if (selectedQuestionIndex === -1) throw new Error("Question not found"); // this should never happen
 
     if (!isLastQuestion) {
       // Not last question
       // Checking for logic jump
-      const action = parseLogicAction(
-        selectedQ,
-        currentResponse_,
-        selectedLanguage,
-      );
+      const action = parseLogicAction(selectedQ, currentResponse_, selectedLanguage);
       if (action) {
         // Performing logic jump
         if (action === LogicAction.NextQ) {
@@ -245,24 +227,18 @@ function TakeSurvey({
           // Action is a question id
           const nextQ = survey.questions.find((q) => q.id === action);
           if (nextQ) {
-            if (
-              nextQ.type === PageType.GoogleReview ||
-              nextQ.type === PageType.ThankYou
-            ) {
+            if (nextQ.type === PageType.GoogleReview || nextQ.type === PageType.ThankYou) {
               try {
                 finishSurvey(nextQ.type);
               } catch (error) {
                 toast.error(error?.message?.toString());
-              } finally {
-                return;
               }
+              return;
             }
             goTo(nextQ);
             return;
           } else {
-            console.error(
-              "Question not found. Invalid logic jump. Going to next question",
-            );
+            console.error("Question not found. Invalid logic jump. Going to next question");
           }
         }
       }
@@ -301,25 +277,20 @@ function TakeSurvey({
       checkGoogleReviewForQuestion(survey?.questions, responsesRef.current);
     const shouldRaiseTicket =
       survey?.enableAutoGenerateTicket ||
-      checkRaiseTicketIssueQuestion(
-        survey?.questions,
-        responsesRef.current,
-        selectedLanguage,
-      );
+      checkRaiseTicketIssueQuestion(survey?.questions, responsesRef.current, selectedLanguage);
     let selectedColumnId = survey?.ticketColumnId;
     if (shouldRaiseTicket && !survey?.enableAutoGenerateTicket) {
-      selectedColumnId = getColumnIdFromTickets(
-        survey?.questions,
-        responsesRef.current,
-      );
+      selectedColumnId = getColumnIdFromTickets(survey?.questions, responsesRef.current);
     }
     // This If Condition is for survey preview in survey editor.
     if (isSurveyThemePreview) {
-      shouldShowGoogleReview && !(pageType === PageType.ThankYou)
-        ? setIsReviewPage(selectedLanguage)
-        : isThankYouPageEnabled
-          ? setIsThankyouPage?.(true)
-          : setIsDefaultThankyouPage?.(true);
+      if (shouldShowGoogleReview && !(pageType === PageType.ThankYou)) {
+        setIsReviewPage(selectedLanguage);
+      } else if (isThankYouPageEnabled) {
+        setIsThankyouPage?.(true);
+      } else {
+        setIsDefaultThankyouPage?.(true);
+      }
       return;
     }
 
@@ -331,10 +302,7 @@ function TakeSurvey({
     let defaultResponses = responsesRef.current;
     let encryptedResponses = "";
     if (survey?.isEncrypted || survey?.publicKey) {
-      const { encryptedResponse } = await encryptResponse(
-        responsesRef.current,
-        survey?.publicKey,
-      );
+      const { encryptedResponse } = await encryptResponse(responsesRef.current, survey?.publicKey);
       encryptedResponses = encryptedResponse;
       defaultResponses = [];
     }
@@ -356,29 +324,35 @@ function TakeSurvey({
         let kioskMode = survey?.kioskMode ? "y" : "n";
         kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
 
-        shouldShowGoogleReview && !(pageType === PageType.ThankYou)
-          ? setIsReviewPage(selectedLanguage)
-          : isThankYouPageEnabled
-            ? fromShortUrl
-              ? navigate({
-                  to: `/ws/${shortId}/end`,
-                })
-              : navigate({
-                  to: `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}&language=${selectedLanguage}`,
-                })
-            : navigate({
-                to: `/ws/${shortId}/response-submitted`,
-              });
+        if (shouldShowGoogleReview && !(pageType === PageType.ThankYou)) {
+          setIsReviewPage(selectedLanguage);
+        } else if (isThankYouPageEnabled) {
+          if (fromShortUrl) {
+            navigate({
+              to: `/ws/${shortId}/end`,
+            });
+          } else {
+            navigate({
+              to: `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}&language=${selectedLanguage}`,
+            });
+          }
+        } else {
+          navigate({
+            to: `/ws/${shortId}/response-submitted`,
+          });
+        }
       })
       .catch((e) => {
         if (e?.message === "ALREADY_RESPONDED") {
-          fromShortUrl
-            ? navigate({
-                to: `/ws/${shortId}/end?err=oops`,
-              })
-            : navigate({
-                to: `${surveyTeamMapId}/end?k=${false}&sid=${survey.id}&language=${selectedLanguage}&err=oops`,
-              });
+          if (fromShortUrl) {
+            navigate({
+              to: `/ws/${shortId}/end?err=oops`,
+            });
+          } else {
+            navigate({
+              to: `${surveyTeamMapId}/end?k=${false}&sid=${survey.id}&language=${selectedLanguage}&err=oops`,
+            });
+          }
         }
       });
   };
@@ -388,9 +362,7 @@ function TakeSurvey({
   };
 
   const updateResponse = (response: object) => {
-    const index = responsesRef.current.findIndex(
-      (r) => r.questionId === selectedQ.id,
-    );
+    const index = responsesRef.current.findIndex((r) => r.questionId === selectedQ.id);
     // Converting response to QuestionResponse
     const formattedResponse: QuestionResponse = {
       response: {
@@ -407,9 +379,7 @@ function TakeSurvey({
   };
 
   return (
-    <CurrentResponsesContext.Provider
-      value={{ response: currentResponse, updateResponse }}
-    >
+    <CurrentResponsesContext.Provider value={{ response: currentResponse, updateResponse }}>
       <SurveyContextProvider survey={survey}>
         <SelectedQContext.Provider value={{ selectedQ, alignment }}>
           <SurveyThemeContextProvider surveyThemeObj={surveyThemeData}>
@@ -439,13 +409,9 @@ function TakeSurvey({
                   />
 
                   <AnimatePresence initial={false}>
-                    <Box
-                      className={`${styles["question-form-title-desc-container"]}`}
-                    >
+                    <Box className={`${styles["question-form-title-desc-container"]}`}>
                       <motion.div
-                        className={
-                          styles["question-form-title-desc-motion-div"]
-                        }
+                        className={styles["question-form-title-desc-motion-div"]}
                         key={selectedQ.id}
                         transition={{
                           type: "tween",
@@ -469,41 +435,23 @@ function TakeSurvey({
                             duration: 0.2,
                           }}
                         >
-                          <ScrollArea.Autosize
-                            type="never"
-                            className={styles["question-div"]}
-                          >
+                          <ScrollArea.Autosize type="never" className={styles["question-div"]}>
                             {selectedQ.type in PageType ? (
-                              <CustomHTML
-                                content={
-                                  selectedQ?.description[selectedLanguage]
-                                }
-                              />
+                              <CustomHTML content={selectedQ?.description[selectedLanguage]} />
                             ) : (
                               <>
-                                <Box
-                                  className={`${styles["title-desc-container"]}`}
-                                >
+                                <Box className={`${styles["title-desc-container"]}`}>
                                   <QuestionTitle
                                     largeScreen={largeScreen}
-                                    themeStyles={
-                                      surveyThemeData?.surveyTheme?.title
-                                        ?.styles
-                                    }
-                                    smallScreen={smallScreen}
+                                    themeStyles={surveyThemeData?.surveyTheme?.title?.styles}
                                     responses={responsesRef.current}
                                     surveyId={survey?.id}
                                     setAlignment={setAlignment}
                                   />
-                                  {!isHtml(
-                                    selectedQ?.title[selectedLanguage],
-                                  ) && (
+                                  {!isHtml(selectedQ?.title[selectedLanguage]) && (
                                     <QuestionDesc
                                       largeScreen={largeScreen}
-                                      themeStyles={
-                                        surveyThemeData?.surveyTheme?.subtitle
-                                          ?.styles
-                                      }
+                                      themeStyles={surveyThemeData?.surveyTheme?.subtitle?.styles}
                                     />
                                   )}
                                 </Box>
@@ -513,10 +461,7 @@ function TakeSurvey({
                             )}
                           </ScrollArea.Autosize>
 
-                          <Box
-                            className={styles["error-text-div"]}
-                            ref={errorTextDivRef}
-                          >
+                          <Box className={styles["error-text-div"]} ref={errorTextDivRef}>
                             {/* required, response error messages will be rendered here */}
                           </Box>
                         </motion.div>
@@ -532,7 +477,6 @@ function TakeSurvey({
                     surveyThemeData={surveyThemeData}
                     isSavingResponses={isSavingResponses}
                     errorTextDivRef={errorTextDivRef}
-                    isSurveyThemePreview={isSurveyThemePreview}
                   />
                 </Stack>
               </Container>

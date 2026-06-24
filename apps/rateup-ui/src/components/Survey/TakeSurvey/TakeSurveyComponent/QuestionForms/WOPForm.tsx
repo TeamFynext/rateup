@@ -1,30 +1,17 @@
-"use client";
-
+import { Group } from "@mantine/core";
 import { useContext, useState } from "react";
 
-import { Group } from "@mantine/core";
-
-import type { Wop } from "@/types/global";
 import { CurrentResponsesContext } from "@/context/ResponseContext.ts";
+import type { Wop } from "@/types/global";
 
 import { DEFAULT_WOP } from "../util.tsx";
 import WheelComponent from "../WheelComponent.tsx";
 
-const WOPForm = ({
-  isPreview = false,
-  wop,
-}: {
-  isPreview: boolean;
-  wop: Wop;
-}) => {
+const WOPForm = ({ isPreview = false, wop }: { isPreview: boolean; wop: Wop }) => {
   const [price, setPrice] = useState("");
   const { response, updateResponse } = useContext(CurrentResponsesContext);
 
-  const wopData = wop
-    ? wop?.segments?.length === 0
-      ? DEFAULT_WOP
-      : wop
-    : DEFAULT_WOP;
+  const wopData = wop ? (wop?.segments?.length === 0 ? DEFAULT_WOP : wop) : DEFAULT_WOP;
   return (
     <Group>
       <WheelComponent

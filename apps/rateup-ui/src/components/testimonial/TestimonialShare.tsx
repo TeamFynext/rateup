@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import {
   ActionIcon,
   Center,
@@ -18,12 +14,10 @@ import {
   Title,
 } from "@mantine/core";
 import { IconChevronLeft, IconCopy, IconX } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../Button/RateupButtons.tsx";
 import NothingFound from "../NothingFound/NothingFound.tsx";
 import TestimonialCard from "./TestimonialCard.tsx";
 
@@ -41,7 +35,7 @@ const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
     <ScrollAreaAutosize h={"100%"}>
       <Stack>
         <Group p={"sm"}>
-          {filteredTestimonials?.map((testimonial, index) => (
+          {filteredTestimonials?.map((testimonial, _index) => (
             <TestimonialCard
               testimonial={testimonial}
               currentStyle={currentStyle}
@@ -89,9 +83,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
             </Flex>
             <Group gap={"xs"} justify="center" align="center">
               <Stack gap={0}>
-                <Title fw={400}>
-                  {translations("Share Your Testimonials")}
-                </Title>
+                <Title fw={400}>{translations("Share Your Testimonials")}</Title>
                 <Title order={5} fw={400}>
                   {translations(
                     "Follow the instruction to share your testimonials on your website",
@@ -114,11 +106,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
               <CopyButton value={iframe}>
                 {({ copied, copy }) => (
                   <RateupButtonSecondary
-                    title={
-                      copied
-                        ? translations("Copied code")
-                        : translations("Copy code")
-                    }
+                    title={copied ? translations("Copied code") : translations("Copy code")}
                     onClick={copy}
                     rightIcon={<IconCopy />}
                     styles={{ root: { width: "fit-content" } }}

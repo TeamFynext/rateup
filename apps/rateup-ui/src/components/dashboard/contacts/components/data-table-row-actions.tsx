@@ -1,10 +1,7 @@
-"use client";
-
-import { useState } from "react";
-
 import { ActionIcon, Menu, rem, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useDeleteCustomFieldMutation } from "@/backend/campaign/contacts/contacts.query";
@@ -23,9 +20,7 @@ interface DataTableRowActionsProps<TData> {
   };
 }
 
-export function DataTableRowActions<TData>({
-  row,
-}: Readonly<DataTableRowActionsProps<TData>>) {
+export function DataTableRowActions<TData>({ row }: Readonly<DataTableRowActionsProps<TData>>) {
   const deleteCustomFieldMutation = useDeleteCustomFieldMutation();
   const { t } = useTranslation();
   const [editOpen, setEditOpen] = useState(false);
@@ -34,9 +29,7 @@ export function DataTableRowActions<TData>({
     modals.openConfirmModal({
       title: t("Are you sure you want to delete this label?"),
       children: (
-        <Text size="sm">
-          {t("This action is irreversible. Please confirm your action.")}
-        </Text>
+        <Text size="sm">{t("This action is irreversible. Please confirm your action.")}</Text>
       ),
       labels: { confirm: t("Confirm"), cancel: t("Cancel") },
       onConfirm: handleDelete,
@@ -65,9 +58,7 @@ export function DataTableRowActions<TData>({
 
         <Menu.Dropdown>
           <Menu.Item
-            leftSection={
-              <IconEdit style={{ width: rem(14), height: rem(14) }} />
-            }
+            leftSection={<IconEdit style={{ width: rem(14), height: rem(14) }} />}
             onClick={handleEdit}
           >
             {t("Edit")}
@@ -77,20 +68,14 @@ export function DataTableRowActions<TData>({
 
           <Menu.Item
             color="red"
-            leftSection={
-              <IconTrash style={{ width: rem(14), height: rem(14) }} />
-            }
+            leftSection={<IconTrash style={{ width: rem(14), height: rem(14) }} />}
             onClick={openDeleteModal}
           >
             {t("Delete")}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
-      <EditCustomFieldModal
-        opened={editOpen}
-        setOpened={setEditOpen}
-        customField={row.original}
-      />
+      <EditCustomFieldModal opened={editOpen} setOpened={setEditOpen} customField={row.original} />
     </>
   );
 }
@@ -104,15 +89,10 @@ const EditCustomFieldModal = ({ opened, setOpened, customField }) => {
         <DialogHeader>
           <DialogTitle>{t("Edit Custom Field")}</DialogTitle>
           <DialogDescription>
-            {t(
-              "Edit custom field to store additional information about your contacts.",
-            )}
+            {t("Edit custom field to store additional information about your contacts.")}
           </DialogDescription>
         </DialogHeader>
-        <CustomFieldForm
-          onSubmitCallback={() => setOpened(false)}
-          data={customField}
-        />
+        <CustomFieldForm onSubmitCallback={() => setOpened(false)} data={customField} />
       </DialogContent>
     </Dialog>
   );

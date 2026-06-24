@@ -1,19 +1,12 @@
-import { Suspense } from "react";
-
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
-import {
-  createRootRoute,
-  HeadContent,
-  Outlet,
-  Scripts,
-} from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { Suspense } from "react";
+import { useTranslation } from "react-i18next";
 
-import { theme } from "@/config/mantineTheme.ts";
+import ErrorPage from "@/components/error.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
+import Error from "@/components/not-found.tsx";
 import { ThemeProvider } from "@/components/theme/theme-provider.tsx";
-import { isProduction, rateupUrl } from "@/utils/constants.ts";
-
-import appCss from "../globals.css?url";
 
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
@@ -22,12 +15,10 @@ import "@mantine/tiptap/styles.css";
 import "keen-slider/keen-slider.min.css";
 import "react-phone-number-input/style.css";
 
-import { useTranslation } from "react-i18next";
-
-import { cn } from "@/lib/utils.ts";
-import ErrorPage from "@/components/error.tsx";
-import Error from "@/components/not-found.tsx";
 import { Toaster } from "@/components/ui/sonner.tsx";
+import { theme } from "@/config/mantineTheme.ts";
+import { cn } from "@/lib/utils.ts";
+import { isProduction, rateupUrl } from "@/utils/constants.ts";
 import {
   FB_DOMAIN_VERIFICATION,
   FB_PIXEL_ID,
@@ -37,9 +28,9 @@ import {
 
 import Providers from "../components/providers.tsx";
 
-function LocaleProviders({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+import appCss from "../globals.css?url";
+
+function LocaleProviders({ children }: Readonly<{ children: React.ReactNode }>) {
   return <Providers>{children}</Providers>;
 }
 
@@ -65,8 +56,7 @@ export const Route = createRootRoute({
       { property: "og:url", content: rateupUrl },
       {
         property: "og:title",
-        content:
-          "RateUp #1 AI Powered Omnichannel Customer Engagement Platform",
+        content: "RateUp #1 AI Powered Omnichannel Customer Engagement Platform",
       },
       {
         property: "og:description",
@@ -80,8 +70,7 @@ export const Route = createRootRoute({
       { name: "twitter:url", content: rateupUrl },
       {
         name: "twitter:title",
-        content:
-          "RateUp #1 AI Powered Omnichannel Customer Engagement Platform",
+        content: "RateUp #1 AI Powered Omnichannel Customer Engagement Platform",
       },
       {
         name: "twitter:description",
@@ -145,11 +134,7 @@ export const Route = createRootRoute({
 function RootLayout() {
   const { i18n } = useTranslation();
   return (
-    <html
-      lang={i18n.language}
-      suppressHydrationWarning
-      className={cn("h-full antialiased")}
-    >
+    <html lang={i18n.language} suppressHydrationWarning className={cn("h-full antialiased")}>
       <head>
         <HeadContent />
         <ColorSchemeScript />

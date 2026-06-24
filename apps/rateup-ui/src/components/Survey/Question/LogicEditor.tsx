@@ -1,8 +1,3 @@
-"use client";
-
-// Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
-import { useContext, useEffect, useState } from "react";
-
 import {
   ActionIcon,
   Button,
@@ -19,28 +14,23 @@ import {
 import { useListState } from "@mantine/hooks";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useParams } from "@tanstack/react-router";
+// Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import type { QuestionType } from "@/types/enums.ts";
-import {
-  LogicAction,
-  LogicCondition,
-  QuestionType as Q,
-} from "@/types/enums.ts";
 import {
   useQuestions,
   useQuestionUpdateMutation,
 } from "@/backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
+import type { QuestionType } from "@/types/enums.ts";
+import { LogicAction, LogicCondition, QuestionType as Q } from "@/types/enums.ts";
 import { logicSupportedTypes } from "@/utils/data.ts";
 import { getContent } from "@/utils/index.ts";
 import { getConditions, getResponses } from "@/utils/survey/logic/logic.utils";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../../Button/RateupButtons.tsx";
 import { QuestionTabsEnum } from "../EditSurvey.tsx";
 
 interface LogicEditorProps {
@@ -115,9 +105,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
               selectedQ={selectedQ}
               questions={questions}
               currentLogicJump={currentLogic}
-              setCurrentLogicJump={(newLogicJump) =>
-                handlers.setItem(index, newLogicJump)
-              }
+              setCurrentLogicJump={(newLogicJump) => handlers.setItem(index, newLogicJump)}
               handleDelete={() => handlers.remove(index)}
             />
           ))}
@@ -178,7 +166,7 @@ function ConditionBlock({
   const possibleActions = [
     { label: "Next Question", value: LogicAction.NextQ },
     { label: "End Survey", value: LogicAction.EndSurvey },
-    ...possibleQuestions?.map((q) => ({
+    ...possibleQuestions.map((q) => ({
       label: `JUMP TO => ${questions.findIndex((q1) => q1.id === q.id) + 1}) ${
         getContent(q.title[selectedLanguage]) || q.description[selectedLanguage]
       }`, // TODO: truncate
@@ -186,9 +174,7 @@ function ConditionBlock({
     })),
   ];
 
-  const [selectedCondition, setSelectedCondition] = useState(
-    currentLogicJump.condition,
-  );
+  const [selectedCondition, setSelectedCondition] = useState(currentLogicJump.condition);
   const [selectedAction, setSelectedAction] = useState(currentLogicJump.action);
   const [matchData, setMatchData] = useState(currentLogicJump.response);
   const { t: translations } = useTranslation();

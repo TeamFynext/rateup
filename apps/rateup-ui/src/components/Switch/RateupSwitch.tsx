@@ -1,22 +1,13 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-
 import type { SwitchProps } from "@mantine/core";
 import { Switch, Tooltip } from "@mantine/core";
+import React, { useEffect, useState } from "react";
 
 interface RateupSwitchProps extends SwitchProps {
   offMessage: string;
   onMessage: string;
 }
 
-const RateupSwitch = ({
-  offMessage,
-  onMessage,
-  onChange,
-  checked,
-  ...rest
-}: RateupSwitchProps) => {
+const RateupSwitch = ({ offMessage, onMessage, onChange, checked, ...rest }: RateupSwitchProps) => {
   const [isOn, setIsOn] = useState(checked);
 
   const handleToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,12 +30,7 @@ const RateupSwitch = ({
       refProp="rootRef"
       disabled={isOn ? !onMessage : !offMessage}
     >
-      <Switch
-        checked={isOn}
-        onChange={handleToggle}
-        w={"fit-content"}
-        {...rest}
-      />
+      <Switch checked={isOn} onChange={handleToggle} w={"fit-content"} {...rest} />
     </Tooltip>
   );
 };

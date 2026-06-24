@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -28,30 +26,23 @@ export const useCreateLoyaltyTierMutation = (onSuccess?: () => void) => {
     },
     onError: (error) => {
       toast.error(
-        error?.message ||
-          `${error.message || "Error creating loyalty tier: Unknown error"}`,
+        error?.message || `${error.message || "Error creating loyalty tier: Unknown error"}`,
       );
     },
   });
 };
 
-export const useUpdateLoyaltyTierMutation = (
-  id: string,
-  onSuccess?: () => void,
-) => {
+export const useUpdateLoyaltyTierMutation = (id: string, onSuccess?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Partial<LoyaltyTierInput>) =>
-      updateLoyaltyTier(id, data),
+    mutationFn: (data: Partial<LoyaltyTierInput>) => updateLoyaltyTier(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
       onSuccess?.();
     },
     onError: (error) => {
-      toast.error(
-        error?.message || `Error updating loyalty tier: Unknown error`,
-      );
+      toast.error(error?.message || `Error updating loyalty tier: Unknown error`);
     },
   });
 };
@@ -68,9 +59,7 @@ export const useDeleteLoyaltyTierMutation = () => {
       queryClient.invalidateQueries({ queryKey: ["loyalty-tiers"] });
     },
     onError: (error) => {
-      toast.error(
-        error?.message || `Error deleting loyalty tier: Unknown error`,
-      );
+      toast.error(error?.message || `Error deleting loyalty tier: Unknown error`);
     },
   });
 };

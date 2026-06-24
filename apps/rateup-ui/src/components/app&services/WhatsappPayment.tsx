@@ -1,26 +1,13 @@
-"use client";
-
-import {
-  ActionIcon,
-  Badge,
-  Box,
-  Flex,
-  Group,
-  Menu,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Badge, Box, Flex, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDots, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
-import { IntegratedApps } from "@/types/enums.ts";
 import {
   useDeleteWaPaymentConfigurationMutation,
   useGetWaPaymentConfigurationByNameMutation,
@@ -34,10 +21,10 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { MCC, PROVIDER_NAMES } from "@/components/integrations/utils.ts";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
+import { IntegratedApps } from "@/types/enums.ts";
 
 // TODO: re add create and get all wa payment config list
 enum Providers {
@@ -48,21 +35,16 @@ enum Providers {
 
 export function WhatsappPayment() {
   const [opened, { close, open }] = useDisclosure(false);
-  const {
-    data,
-    isPending,
-    refetch: integrationListRefetch,
-  } = useIntegrationByType(IntegratedApps.waPayment);
+  const { data, isPending } = useIntegrationByType(IntegratedApps.waPayment);
   // const { refetch } = useWaPaymentConfigurations();
   // const createWaPaymentConfigurationMutation =
   //   useCreateWaPaymentConfigurationMutation(IntegratedApps.waPayment);
-  const getWaPaymentConfigurationByNameMutation =
-    useGetWaPaymentConfigurationByNameMutation(IntegratedApps.waPayment);
-  const regenerateWaPaymentConfigurationOauthMutation =
-    useRegenerateWaPaymentConfigurationOauthMutation(IntegratedApps.waPayment);
-  const deleteMutation = useDeleteWaPaymentConfigurationMutation(
+  const getWaPaymentConfigurationByNameMutation = useGetWaPaymentConfigurationByNameMutation(
     IntegratedApps.waPayment,
   );
+  const regenerateWaPaymentConfigurationOauthMutation =
+    useRegenerateWaPaymentConfigurationOauthMutation(IntegratedApps.waPayment);
+  const deleteMutation = useDeleteWaPaymentConfigurationMutation(IntegratedApps.waPayment);
   const schema = z.object({
     configuration_name: z
       .string()
@@ -220,11 +202,10 @@ export function WhatsappPayment() {
 
 function WhatsappPaymentList({
   data,
-  deleteMutation,
+  deleteMutation: _deleteMutation,
   regenerateWaPaymentConfigurationOauthMutation,
 }) {
-  if (!data?.credential || data?.credential?.length === 0)
-    return <NothingFound text="" />;
+  if (!data?.credential || data?.credential?.length === 0) return <NothingFound text="" />;
   return (
     <Box className={clsx("cards-grid-global-class")}>
       {data?.credential?.map((credential) => (
@@ -240,9 +221,7 @@ function WhatsappPaymentList({
               /> */}
             </Flex>
             <Box>
-              <Text>
-                MCC: {credential?.merchant_category_code?.description}
-              </Text>
+              <Text>MCC: {credential?.merchant_category_code?.description}</Text>
               <Text>PC: {credential?.purpose_code?.description}</Text>
             </Box>
             <Group>
@@ -250,11 +229,7 @@ function WhatsappPaymentList({
                 credential?.expiration &&
                 (dayjs.unix(credential?.expiration).isBefore(dayjs()) ? (
                   <>
-                    <Tooltip
-                      label={
-                        "Click to refresh button to regenerate verification link"
-                      }
-                    >
+                    <Tooltip label={"Click to refresh button to regenerate verification link"}>
                       <Link to={credential?.oauth_url} target="_blank">
                         <RateupButtonPrimary
                           title="Click to verify"
@@ -298,46 +273,46 @@ function WhatsappPaymentList({
   );
 }
 
-function WhatsappPaymentCardMenu({ name, deleteMutation }) {
-  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+// function WhatsappPaymentCardMenu({ name, deleteMutation }) {
+//   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
 
-  return (
-    <Menu offset={0} withArrow>
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={dialogOpened}
-        onClose={closeDialog}
-        headerLabel="Are you sure to delete this config?"
-        headerTitle="Delete whatsapp payment config?"
-        confirmLabel="Delete"
-        onConfirm={(e) => {
-          toast.loading("Deleting config..", {
-            id: "waPaymentConfigurations-delete",
-          });
-          deleteMutation.mutate(name);
-          closeDialog();
-        }}
-      />
-      <Menu.Target>
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <IconDots />
-        </ActionIcon>
-      </Menu.Target>
-      <Menu.Dropdown
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-      >
-        <Menu.Item leftSection={<IconTrash size={16} />} onClick={toggle}>
-          Delete
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
-  );
-}
+//   return (
+//     <Menu offset={0} withArrow>
+//       <ConfirmationModal
+//         forDeleteFunctionality
+//         opened={dialogOpened}
+//         onClose={closeDialog}
+//         headerLabel="Are you sure to delete this config?"
+//         headerTitle="Delete whatsapp payment config?"
+//         confirmLabel="Delete"
+//         onConfirm={(_e) => {
+//           toast.loading("Deleting config..", {
+//             id: "waPaymentConfigurations-delete",
+//           });
+//           deleteMutation.mutate(name);
+//           closeDialog();
+//         }}
+//       />
+//       <Menu.Target>
+//         <ActionIcon
+//           variant="subtle"
+//           color="gray"
+//           onClick={(e) => {
+//             e.stopPropagation();
+//           }}
+//         >
+//           <IconDots />
+//         </ActionIcon>
+//       </Menu.Target>
+//       <Menu.Dropdown
+//         onClick={(e) => {
+//           e.stopPropagation();
+//         }}
+//       >
+//         <Menu.Item leftSection={<IconTrash size={16} />} onClick={toggle}>
+//           Delete
+//         </Menu.Item>
+//       </Menu.Dropdown>
+//     </Menu>
+//   );
+// }

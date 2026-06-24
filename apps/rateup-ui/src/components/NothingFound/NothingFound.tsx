@@ -1,5 +1,3 @@
-"use client";
-
 import { Image } from "@unpic/react";
 import { useTranslation } from "react-i18next";
 
@@ -8,10 +6,7 @@ interface NothingFoundProps {
   className?: string;
 }
 
-export default function NothingFound({
-  className,
-  text,
-}: Readonly<NothingFoundProps>) {
+export default function NothingFound({ className, text }: Readonly<NothingFoundProps>) {
   const { t: translations } = useTranslation();
 
   return (

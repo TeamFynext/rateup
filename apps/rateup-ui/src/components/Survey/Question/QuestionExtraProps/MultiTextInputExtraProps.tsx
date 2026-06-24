@@ -1,19 +1,13 @@
-"use client";
-
-import { useContext, useEffect, useState } from "react";
-
 import { Group, Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../../Button/RateupButtons.tsx";
+import { RateupButtonBlue, RateupButtonSecondary } from "../../../Button/RateupButtons.tsx";
 import {
   ContainedTextArea,
   ContainedTextField,
@@ -29,8 +23,7 @@ const MultiTextInputExtraProps = ({ form }) => {
     { headerKey: "fieldKey", headerValue: "Field Key" },
     { headerKey: "placeholderText", headerValue: "Display Text" },
   ];
-  const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
-    useDisclosure(false);
+  const [openedEditModal, { open: openEditModal, close: closeEditModal }] = useDisclosure(false);
   const [displayText, setDisplayText] = useState("");
   const [selectedField, setSelectedField] = useState(null);
 
@@ -59,10 +52,8 @@ const MultiTextInputExtraProps = ({ form }) => {
   const addField = async () => {
     const validationRes = await fieldForm.validate();
     if (validationRes.hasErrors) return;
-    const existingFields =
-      form.values.features?.[selectedLanguage]?.fields ?? [];
-    if (existingFields?.find((f) => f.fieldKey === fieldForm.values.fieldKey))
-      return;
+    const existingFields = form.values.features?.[selectedLanguage]?.fields ?? [];
+    if (existingFields?.find((f) => f.fieldKey === fieldForm.values.fieldKey)) return;
     existingFields.push(fieldForm.values);
     form.setFieldValue("features", {
       ...form.values.features,

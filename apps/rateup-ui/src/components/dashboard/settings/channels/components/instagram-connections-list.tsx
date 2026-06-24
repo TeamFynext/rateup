@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import { IconBrandInstagram } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
@@ -27,8 +24,7 @@ export function InstagramConnectionsList({
   waSettings: WaSettings | undefined;
 }>) {
   const { t: translations } = useTranslation();
-  const [selectedWaSettings, setSelectedWaSettings] =
-    useState<WaSetting | null>(null);
+  const [selectedWaSettings, setSelectedWaSettings] = useState<WaSetting | null>(null);
   const [openedInstaConfigModal, setOpenedInstaConfigModal] = useState(false);
   const upsertMutation = useUpsertWaSettingsMutation();
 
@@ -38,7 +34,7 @@ export function InstagramConnectionsList({
   };
 
   const disconnectInstagram = (setting: WaSetting) => {
-    const { id, ...rest } = setting;
+    const { ...rest } = setting;
     upsertMutation.mutate({
       ...rest,
       ibaId: "",
@@ -54,9 +50,7 @@ export function InstagramConnectionsList({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold">
-          {translations("Instagram Connections")}
-        </h3>
+        <h3 className="text-lg font-semibold">{translations("Instagram Connections")}</h3>
         <p className="text-xs text-muted-foreground mt-1">
           {translations("Connect Instagram accounts to your WhatsApp channels")}
         </p>
@@ -125,17 +119,13 @@ export function InstagramConnectionsList({
                           <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wide mb-1">
                             {translations("Instagram Username")}
                           </p>
-                          <p className="text-sm font-medium">
-                            @{setting.igUserName}
-                          </p>
+                          <p className="text-sm font-medium">@{setting.igUserName}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wide mb-1">
                             {translations("Instagram Display Name")}
                           </p>
-                          <p className="text-sm font-medium">
-                            {setting.igDisplayName}
-                          </p>
+                          <p className="text-sm font-medium">{setting.igDisplayName}</p>
                         </div>
                       </div>
                     </>

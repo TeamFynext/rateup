@@ -1,7 +1,3 @@
-"use client";
-
-import { useContext, useEffect, useState } from "react";
-
 import {
   Badge,
   Button,
@@ -15,15 +11,13 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconDeviceSdCard } from "@tabler/icons-react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { getWaFlowFormElementTypeLabel } from "@/utils/enums/index.ts";
 import { fileToBase64 } from "@/utils/misc/base64.utils";
-import {
-  getFlowFormElementById,
-  getFormObjFromScreenId,
-} from "@/utils/whatsapp/flow.utils";
+import { getFlowFormElementById, getFormObjFromScreenId } from "@/utils/whatsapp/flow.utils";
 
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons.tsx";
 import { EditFlowContext } from "./EditFlowContext.ts";
@@ -31,10 +25,7 @@ import { EditFlowContext } from "./EditFlowContext.ts";
 export function FlowImageDetailedView() {
   const { selectedFormElementId, flowJson, updateFlowJson, selectedScreenId } =
     useContext(EditFlowContext);
-  const selectedFormElement = getFlowFormElementById(
-    selectedFormElementId,
-    flowJson,
-  );
+  const selectedFormElement = getFlowFormElementById(selectedFormElementId, flowJson);
 
   const form = useForm({
     initialValues: {
@@ -70,9 +61,7 @@ export function FlowImageDetailedView() {
     const { hasErrors } = form.validate();
     if (hasErrors) return toast.error(translations("Unable to Save Image"));
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
-    const index = flowForm.children.findIndex(
-      (fe) => fe === selectedFormElement,
-    );
+    const index = flowForm.children.findIndex((fe) => fe === selectedFormElement);
     updateFlowJson((draft) => {
       const formEl = getFormObjFromScreenId(draft.screens, selectedScreenId);
       formEl.children[index] = form.values as any;

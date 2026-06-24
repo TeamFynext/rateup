@@ -1,8 +1,6 @@
-import { useState } from "react";
-
 import type { Table } from "@tanstack/react-table";
 import { Plus, Search, Trash2, X } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -24,7 +22,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 
-interface DataTableToolbarProps<TData, TValue> {
+interface DataTableToolbarProps<TData, _TValue> {
   table: Table<TData>;
 }
 
@@ -32,7 +30,7 @@ export function DataTableToolbar<TData, TValue>({
   table,
 }: Readonly<DataTableToolbarProps<TData, TValue>>) {
   const [isOpenedAddModal, setIsOpenedAddModal] = useState(false);
-  const { t } = useTranslation();
+
   const { groupDetails, filter, setFilter } = useGroupTableStore();
   const removeContactsMutation = useRemoveContactsFromGroup(groupDetails?.id);
   const selectedMembers = Object.keys(table.getState().rowSelection);
@@ -73,9 +71,7 @@ export function DataTableToolbar<TData, TValue>({
                   className="gap-2 h-8 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span className="text-sm">
-                    Remove ({selectedMembers.length})
-                  </span>
+                  <span className="text-sm">Remove ({selectedMembers.length})</span>
                 </Button>
                 {removeContactsMutation.isPending && <Spinner />}
                 <Button
@@ -103,9 +99,7 @@ export function DataTableToolbar<TData, TValue>({
                 type="text"
                 placeholder="Search by name or phone..."
                 value={filter.searchTerm}
-                onChange={(e) =>
-                  setFilter({ searchTerm: e.currentTarget.value })
-                }
+                onChange={(e) => setFilter({ searchTerm: e.currentTarget.value })}
                 className="pl-10 h-8 border-gray-200 focus:ring-2 focus:ring-rateup-blue/20 placeholder:text-sm"
               />
               {filter.searchTerm && (
@@ -142,9 +136,7 @@ const AddContactToGroupDialog = ({ opened, setOpened, group }) => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Members</DialogTitle>
-          <DialogDescription>
-            Select contacts to add to this group
-          </DialogDescription>
+          <DialogDescription>Select contacts to add to this group</DialogDescription>
         </DialogHeader>
         <AddCustomerModal
           close={close}

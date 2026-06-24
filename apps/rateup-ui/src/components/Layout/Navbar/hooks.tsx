@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-
 import {
   IconActivity,
   IconAward,
@@ -53,12 +51,10 @@ import {
   Webhook,
   Zap,
 } from "lucide-react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import {
-  SubscriptionFeaturePathName as sfpn,
-  TeamFeature,
-} from "@/types/enums.ts";
+import { SubscriptionFeaturePathName as sfpn, TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
 
@@ -76,9 +72,7 @@ export function useNavMain({
 }: any) {
   const { t } = useTranslation();
 
-  const LifecycleIcon = () => (
-    <IconActivity className="h-3 w-3 text-amber-400" />
-  );
+  const LifecycleIcon = () => <IconActivity className="h-3 w-3 text-amber-400" />;
   const LabelIcon = () => <Tag className="h-3 w-3 text-blue-400" />;
   const UserIcon = () => <User className="h-3 w-3 text-green-400" />;
   const TeamIcon = () => <Users className="h-3 w-3 text-purple-400" />;
@@ -94,8 +88,7 @@ export function useNavMain({
       //   items: [],
       // },
 
-      ...(hasFeature(subscription, sfpn.Whatsapp) &&
-      hasTeamFeature(TeamFeature.Inbox)
+      ...(hasFeature(subscription, sfpn.Whatsapp) && hasTeamFeature(TeamFeature.Inbox)
         ? [
             {
               title: t("Inbox"),
@@ -144,16 +137,13 @@ export function useNavMain({
                                 lifecycle: "",
                               }),
                             items: lifecycles.map((lbl) => ({
-                              icon: (props) => (
-                                <div {...props}>{lbl.emoji}</div>
-                              ),
+                              icon: (props) => <div {...props}>{lbl.emoji}</div>,
                               title: lbl.name,
                               url: "#",
                               handleClick: () => {
                                 handleFilter("lifecycle", lbl.id);
                               },
-                              isActive:
-                                chatFilterStore.filter.lifecycle === lbl.id,
+                              isActive: chatFilterStore.filter.lifecycle === lbl.id,
                             })),
                           },
                         ]
@@ -164,8 +154,7 @@ export function useNavMain({
                             title: "Labels",
                             isSectionHeader: true,
                             icon: LabelIcon,
-                            showClearButton:
-                              chatFilterStore.filter.labels?.length > 0,
+                            showClearButton: chatFilterStore.filter.labels?.length > 0,
                             clearFilter: () =>
                               chatFilterStore.setFilter({
                                 ...chatFilterStore.filter,
@@ -186,9 +175,7 @@ export function useNavMain({
                               handleClick: () => {
                                 handleFilter("label", lbl.id);
                               },
-                              isActive: chatFilterStore.filter.labels?.includes(
-                                lbl.id,
-                              ),
+                              isActive: chatFilterStore.filter.labels?.includes(lbl.id),
                             })),
                           },
                         ]
@@ -199,9 +186,7 @@ export function useNavMain({
                             title: "Users",
                             isSectionHeader: true,
                             icon: UserIcon,
-                            showClearButton:
-                              chatFilterStore.filter.assignedUserIds?.length >
-                              0,
+                            showClearButton: chatFilterStore.filter.assignedUserIds?.length > 0,
                             clearFilter: () =>
                               chatFilterStore.setFilter({
                                 ...chatFilterStore.filter,
@@ -210,12 +195,8 @@ export function useNavMain({
                             items: staff.map((member) => ({
                               title: member.name,
                               url: "#",
-                              handleClick: () =>
-                                handleFilter("assignedStaff", member.id),
-                              isActive:
-                                chatFilterStore.filter.assignedUserIds?.includes(
-                                  member.id,
-                                ),
+                              handleClick: () => handleFilter("assignedStaff", member.id),
+                              isActive: chatFilterStore.filter.assignedUserIds?.includes(member.id),
                             })),
                           },
                         ]
@@ -226,8 +207,7 @@ export function useNavMain({
                             title: "Teams",
                             isSectionHeader: true,
                             icon: TeamIcon,
-                            showClearButton:
-                              chatFilterStore.filter.assignedTeams?.length > 0,
+                            showClearButton: chatFilterStore.filter.assignedTeams?.length > 0,
                             clearFilter: () =>
                               chatFilterStore.setFilter({
                                 ...chatFilterStore.filter,
@@ -236,12 +216,8 @@ export function useNavMain({
                             items: teams.map((team) => ({
                               title: team.name,
                               url: "#",
-                              handleClick: () =>
-                                handleFilter("assignedTeams", team.id),
-                              isActive:
-                                chatFilterStore.filter.assignedTeams?.includes(
-                                  team.id,
-                                ),
+                              handleClick: () => handleFilter("assignedTeams", team.id),
+                              isActive: chatFilterStore.filter.assignedTeams?.includes(team.id),
                             })),
                           },
                         ]
@@ -298,8 +274,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.WhatsAppCampaign) &&
-      hasTeamFeature(TeamFeature.Contacts)
+      ...(hasFeature(subscription, sfpn.WhatsAppCampaign) && hasTeamFeature(TeamFeature.Contacts)
         ? [
             {
               title: t("Contacts"),
@@ -335,8 +310,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.WhatsAppCampaign) &&
-      hasTeamFeature(TeamFeature.Campaigns)
+      ...(hasFeature(subscription, sfpn.WhatsAppCampaign) && hasTeamFeature(TeamFeature.Campaigns)
         ? [
             {
               title: t("Campaign"),
@@ -356,8 +330,7 @@ export function useNavMain({
               url: "/dashboard/whatsapp/flows",
               icon: IconBrandWhatsapp,
               items: [
-                ...(hasFeature(subscription, sfpn.WhatsAppFlow) &&
-                hasTeamFeature(TeamFeature.Flows)
+                ...(hasFeature(subscription, sfpn.WhatsAppFlow) && hasTeamFeature(TeamFeature.Flows)
                   ? [
                       {
                         title: t("Flow"),
@@ -458,8 +431,7 @@ export function useNavMain({
           ]
         : []),
 
-      ...(hasFeature(subscription, sfpn.Loyalty) &&
-      hasTeamFeature(TeamFeature.Loyalty)
+      ...(hasFeature(subscription, sfpn.Loyalty) && hasTeamFeature(TeamFeature.Loyalty)
         ? [
             {
               title: t("Loyalty"),
@@ -520,8 +492,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.WebSurvey) &&
-      hasTeamFeature(TeamFeature.WebForms)
+      ...(hasFeature(subscription, sfpn.WebSurvey) && hasTeamFeature(TeamFeature.WebForms)
         ? [
             {
               title: t("Web Forms"),
@@ -551,8 +522,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.Ticket) &&
-      hasTeamFeature(TeamFeature.Tickets)
+      ...(hasFeature(subscription, sfpn.Ticket) && hasTeamFeature(TeamFeature.Tickets)
         ? [
             {
               title: t("Tickets"),
@@ -588,8 +558,7 @@ export function useNavMain({
             },
           ]
         : []),
-      ...(hasFeature(subscription, sfpn.AI) &&
-      hasTeamFeature(TeamFeature.AiChatbot)
+      ...(hasFeature(subscription, sfpn.AI) && hasTeamFeature(TeamFeature.AiChatbot)
         ? [
             {
               title: "ChatBot",

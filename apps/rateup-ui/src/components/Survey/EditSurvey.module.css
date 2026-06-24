@@ -72,9 +72,7 @@
 }
 
 .edit-survey-div
-  :global(
-    .survey-theme-root-div .selected-page-tab-panels-and-styles-div-container
-  ) {
+  :global(.survey-theme-root-div .selected-page-tab-panels-and-styles-div-container) {
   height: 100%;
   flex: initial;
 }

@@ -9,30 +9,17 @@ dayjs.extend(advancedFormat);
 dayjs.extend(isBetween);
 dayjs.extend(relativeTime);
 
-function findPreviousMonday(date: Date): Date {
-  const day = date.getDay();
-  const difference = day === 0 ? 6 : day - 1; // if Sunday, go back 6 days to last Monday, else go back to last Monday
-  const previousMonday = new Date(date);
-  previousMonday.setDate(date.getDate() - difference);
-  return previousMonday;
-}
-
 export const formatedTime = (category) => {
   const currentTime = dayjs().format("HH:mm");
   const formattedStartTime = dayjs(category?.startTime).format("HH:mm");
-  const formattedStartTimeWithAmPm = dayjs(category?.startTime).format(
-    "hh:mm A",
-  );
+  const formattedStartTimeWithAmPm = dayjs(category?.startTime).format("hh:mm A");
   const formattedEndTime = dayjs(category?.endTime).format("HH:mm");
   const formattedEndTimeWithAmPm = dayjs(category?.endTime).format("hh:mm A");
   let withinTimeRange;
-  formattedStartTime <= currentTime && formattedEndTime >= currentTime;
   if (formattedStartTime > formattedEndTime) {
-    withinTimeRange =
-      formattedStartTime <= currentTime || formattedEndTime >= currentTime;
+    withinTimeRange = formattedStartTime <= currentTime || formattedEndTime >= currentTime;
   } else {
-    withinTimeRange =
-      formattedStartTime <= currentTime && formattedEndTime >= currentTime;
+    withinTimeRange = formattedStartTime <= currentTime && formattedEndTime >= currentTime;
   }
   const categoryDisabled = category?.scheduleEnabled && !withinTimeRange;
   return {
@@ -45,10 +32,6 @@ export const formatedTime = (category) => {
 export const formatToCustomTime = (timestamp) => {
   if (!timestamp) return "-- : --";
   return dayjs(timestamp).format("hh:mm a");
-};
-
-const formatUnixTimeStamp = (timestamp: number) => {
-  return dayjs.unix(timestamp).format("HH:mm");
 };
 
 export const createCustomTimestamp = (customTime) => {
@@ -77,8 +60,7 @@ export const isCategoryActive = (item) => {
   }
   const startTime = dayjs(item.startTime).format("HH:mm");
   const endTime = dayjs(item.endTime).format("HH:mm");
-  if (startTime > endTime)
-    return currentTime >= startTime || currentTime <= endTime;
+  if (startTime > endTime) return currentTime >= startTime || currentTime <= endTime;
   else return startTime <= currentTime && endTime >= currentTime;
 };
 
@@ -116,39 +98,6 @@ export function roundOffMinutesAndSeconds(dateString) {
   date.setSeconds(roundedSeconds);
 
   return date;
-}
-
-// 11-12-2024 11:20 PM
-function formatDateWithTime(date: string | Date) {
-  return dayjs(date).format("DD-MM-YYYY hh:mm A");
-}
-
-// Jan 2024
-function formateDate2(date) {
-  return dayjs(date).format("MMM, YYYY");
-}
-function getTimeRemaining(targetDate) {
-  const now = dayjs().startOf("day");
-  const target = dayjs(targetDate).endOf("day");
-
-  if (now.isAfter(target)) {
-    return "overdue by " + now.diff(target, "day") + " days";
-  }
-
-  const diffInDays = target.diff(now, "day");
-  const diffInWeeks = Math.floor(diffInDays / 7);
-  const diffInMonths = target.diff(now, "month");
-  const diffInYears = target.diff(now, "year");
-
-  if (diffInYears >= 1) {
-    return `${diffInYears} ${diffInYears === 1 ? "year" : "years"} left`;
-  } else if (diffInMonths >= 1) {
-    return `${diffInMonths} ${diffInMonths === 1 ? "month" : "months"} left`;
-  } else if (diffInWeeks >= 1) {
-    return `${diffInWeeks} ${diffInWeeks === 1 ? "week" : "weeks"} left`;
-  } else {
-    return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} left`;
-  }
 }
 
 export function formatDateWithRelativeTime(date) {

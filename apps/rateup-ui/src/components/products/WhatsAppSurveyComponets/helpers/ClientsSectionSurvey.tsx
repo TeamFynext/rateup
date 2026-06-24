@@ -1,5 +1,3 @@
-"use client";
-
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 
@@ -10,13 +8,7 @@ const scrollingIcons = [...clientIcons, ...clientIcons];
 
 const Client = ({ icon }: { icon: string }) => (
   <div className="flex items-center justify-center h-28 w-40 rounded-xl border border-gray-200 bg-white shadow-sm mx-4 p-4">
-    <Image
-      src={icon}
-      alt="Client logo"
-      width={160}
-      height={80}
-      className="object-contain mx-9"
-    />
+    <Image src={icon} alt="Client logo" width={160} height={80} className="object-contain mx-9" />
   </div>
 );
 

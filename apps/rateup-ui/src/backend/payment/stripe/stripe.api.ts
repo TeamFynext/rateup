@@ -8,11 +8,7 @@ export async function createStripeCheckoutSession(data: any) {
 }
 
 export async function getCheckoutSession(sessionId: string) {
-  return (
-    await axiosClient.get(
-      `${STRIPE_URL}/session-status?session_id=${sessionId}`,
-    )
-  ).data;
+  return (await axiosClient.get(`${STRIPE_URL}/session-status?session_id=${sessionId}`)).data;
 }
 
 export async function syncStripeProducts() {
@@ -28,13 +24,11 @@ export async function deleteStripeProduct(productId: string) {
 }
 
 export async function getStripeProducts() {
-  return (await axiosClient.get(`${STRIPE_URL}/products`))
-    .data as Array<StripeProduct>;
+  return (await axiosClient.get(`${STRIPE_URL}/products`)).data as Array<StripeProduct>;
 }
 
 export async function getAllStripeSubscriptions() {
-  return (await axiosClient.get(`${STRIPE_SUBSCRIPTIONS}`))
-    .data as Array<StripeSubscription>;
+  return (await axiosClient.get(`${STRIPE_SUBSCRIPTIONS}`)).data as Array<StripeSubscription>;
 }
 
 export async function cancelStripeSubscription() {

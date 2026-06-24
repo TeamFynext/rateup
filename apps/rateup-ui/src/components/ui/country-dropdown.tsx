@@ -1,15 +1,10 @@
-"use client";
-
-import React, { forwardRef, useCallback, useEffect, useState } from "react";
-
 // data
 import { countries } from "country-data-list";
 // assets
 import { CheckIcon, ChevronDown, Globe } from "lucide-react";
+import React, { forwardRef, useCallback, useEffect, useState } from "react";
 import { CircleFlag } from "react-circle-flags";
 
-// utils
-import { cn } from "@/lib/utils.ts";
 // shadcn
 import {
   Command,
@@ -19,11 +14,9 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+// utils
+import { cn } from "@/lib/utils.ts";
 
 // Country interface
 export interface Country {
@@ -51,8 +44,7 @@ interface CountryDropdownProps {
 const CountryDropdownComponent = (
   {
     options = countries.all.filter(
-      (country: Country) =>
-        country.emoji && country.status !== "deleted" && country.ioc !== "PRK",
+      (country: Country) => country.emoji && country.status !== "deleted" && country.ioc !== "PRK",
     ),
     onChange,
     defaultValue,
@@ -64,15 +56,12 @@ const CountryDropdownComponent = (
   ref: React.ForwardedRef<HTMLButtonElement>,
 ) => {
   const [open, setOpen] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(
-    undefined,
-  );
+  const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined);
 
   useEffect(() => {
     if (defaultValue) {
       const initialCountry = options.find(
-        (country) =>
-          country.alpha3 === defaultValue || country.alpha2 === defaultValue,
+        (country) => country.alpha3 === defaultValue || country.alpha2 === defaultValue,
       );
       if (initialCountry) {
         setSelectedCountry(initialCountry);
@@ -103,19 +92,11 @@ const CountryDropdownComponent = (
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        ref={ref}
-        className={triggerClasses}
-        disabled={disabled}
-        {...props}
-      >
+      <PopoverTrigger ref={ref} className={triggerClasses} disabled={disabled} {...props}>
         {selectedCountry ? (
           <div className="flex items-center grow w-0 gap-2 overflow-hidden">
             <div className="inline-flex items-center justify-center w-5 h-5 shrink-0 overflow-hidden rounded-full">
-              <CircleFlag
-                countryCode={selectedCountry.alpha2.toLowerCase()}
-                height={20}
-              />
+              <CircleFlag countryCode={selectedCountry.alpha2.toLowerCase()} height={20} />
             </div>
             {slim === false && (
               <span className="overflow-hidden text-ellipsis whitespace-nowrap">
@@ -125,11 +106,7 @@ const CountryDropdownComponent = (
           </div>
         ) : (
           <span>
-            {slim === false ? (
-              placeholder || setSelectedCountry.name
-            ) : (
-              <Globe size={20} />
-            )}
+            {slim === false ? placeholder || setSelectedCountry.name : <Globe size={20} />}
           </span>
         )}
         <ChevronDown size={16} />
@@ -158,10 +135,7 @@ const CountryDropdownComponent = (
                     >
                       <div className="flex grow w-0 space-x-2 overflow-hidden">
                         <div className="inline-flex items-center justify-center w-5 h-5 shrink-0 overflow-hidden rounded-full">
-                          <CircleFlag
-                            countryCode={option.alpha2.toLowerCase()}
-                            height={20}
-                          />
+                          <CircleFlag countryCode={option.alpha2.toLowerCase()} height={20} />
                         </div>
                         <span className="overflow-hidden text-ellipsis whitespace-nowrap">
                           {option.name}
@@ -170,9 +144,7 @@ const CountryDropdownComponent = (
                       <CheckIcon
                         className={cn(
                           "ml-auto h-4 w-4 shrink-0",
-                          option.name === selectedCountry?.name
-                            ? "opacity-100"
-                            : "opacity-0",
+                          option.name === selectedCountry?.name ? "opacity-100" : "opacity-0",
                         )}
                       />
                     </CommandItem>

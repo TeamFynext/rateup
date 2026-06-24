@@ -1,13 +1,7 @@
-import { ThemeIcon } from "@mantine/core";
-import {
-  IconBrandFacebook,
-  IconBrandInstagram,
-  IconBrandWhatsapp,
-} from "@tabler/icons-react";
+import { IconBrandFacebook, IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
 import { MessageCircle } from "lucide-react";
 
 import { MessagePlatform } from "@/types/enums.ts";
-import { useChatContactCountStore } from "@/components/dashboard/inbox/store.ts";
 
 export function getSoucePlatformIconAndColor(sourcePlatform) {
   switch (sourcePlatform) {
@@ -34,25 +28,6 @@ export function getSoucePlatformIconAndColor(sourcePlatform) {
   }
 }
 
-function getInboxNavContactCount(tab) {
-  const totalCount = useChatContactCountStore.getState().totalCount;
-  let count = 0;
-  if (tab === "mine") count = totalCount?.assignedToMe;
-  return count;
-}
-
-const InstagramIcon = ({ size = "xs" }: { size?: string | number }) => {
-  return (
-    <ThemeIcon
-      variant="gradient"
-      size={size}
-      gradient={{ from: "#f09433", to: "#bc1888", deg: 45 }}
-    >
-      <IconBrandInstagram />
-    </ThemeIcon>
-  );
-};
-
 function getRandomHex(size: number): string {
   const bytes = new Uint8Array(size);
 
@@ -64,9 +39,7 @@ function getRandomHex(size: number): string {
     }
   }
 
-  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join(
-    "",
-  );
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
 }
 
 export function generateInternalMessageId() {

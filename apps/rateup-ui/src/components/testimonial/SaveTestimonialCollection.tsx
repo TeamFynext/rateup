@@ -1,5 +1,3 @@
-"use client";
-
 import { Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
@@ -10,19 +8,11 @@ import { useTeamsByUser } from "@/backend/team/team.query";
 import { useCreateTestimonialCollection } from "@/backend/testimonials/testimonial.query";
 import { defaultTestimonialStyle } from "@/utils/testimonial.ts";
 
-import {
-  ContainedSelection,
-  ContainedTextField,
-} from "../input/ContainedInput/ContainedInput.tsx";
+import { ContainedSelection, ContainedTextField } from "../input/ContainedInput/ContainedInput.tsx";
 import FormModalLayout from "../Modal/FormModalLayout.tsx";
 
 const SaveTestimonialCollection = ({ opened, close }) => {
-  const {
-    data: teamRes,
-    isLoading: teamsLoading,
-    isError,
-    error,
-  } = useTeamsByUser();
+  const { data: teamRes } = useTeamsByUser();
   const teamOptions = teamRes?.data?.map((team) => ({
     value: team?.id,
     label: team?.name,
@@ -49,12 +39,9 @@ const SaveTestimonialCollection = ({ opened, close }) => {
   const onSubmit = async () => {
     const validationRes = await form.validate();
     if (validationRes.hasErrors) return;
-    toast.loading(
-      translations("Hold on, your collection is getting created..."),
-      {
-        id: "create-collection",
-      },
-    );
+    toast.loading(translations("Hold on, your collection is getting created..."), {
+      id: "create-collection",
+    });
     saveCollection.mutate(form.values, {
       onSuccess: (data) => {
         close();

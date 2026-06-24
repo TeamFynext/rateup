@@ -15,21 +15,21 @@ import {
 
 // TODO: update tanstack querykeys. (use teamId & create a proper hierarchy)
 
-const useMenu = (menuId: string) =>
+const _useMenu = (menuId: string) =>
   useQuery({
     enabled: !!menuId,
     queryKey: ["menu", menuId],
     queryFn: () => getMenuById(menuId),
   });
 
-const useFullMenu = (menuId: string) =>
+const _useFullMenu = (menuId: string) =>
   useQuery({
     enabled: !!menuId,
     queryKey: ["menu", "full", menuId],
     queryFn: () => getFullMenuById(menuId),
   });
 
-const usePublicMenuById = (menuid: string) => {
+const _usePublicMenuById = (menuid: string) => {
   return useQuery({
     enabled: !!menuid,
     queryKey: ["menu", "public", menuid],
@@ -37,7 +37,7 @@ const usePublicMenuById = (menuid: string) => {
   });
 };
 
-const useMenusByTeamId = (teamId: string) =>
+const _useMenusByTeamId = (teamId: string) =>
   useQuery({
     enabled: !!teamId,
     queryKey: ["menus", teamId],
@@ -111,7 +111,7 @@ export const useDeleteMenuMutation = (teamId, onSuccess, onError) => {
   return deleteMutation;
 };
 
-function useUpdateMenuVisitedMutation() {
+function _useUpdateMenuVisitedMutation() {
   return useMutation({
     mutationFn: (id: string) => updateMenuVisitedMutation(id),
   });

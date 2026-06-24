@@ -1,25 +1,16 @@
-"use client";
-
-import { useCallback } from "react";
-
-import {
-  ActionIcon,
-  Menu,
-  MenuDropdown,
-  MenuItem,
-  MenuTarget,
-  Text,
-} from "@mantine/core";
+import { ActionIcon, Menu, MenuDropdown, MenuItem, MenuTarget, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
+import { useCallback } from "react";
 
 import { useDeleteLinktreeMutation } from "@/backend/linktree/linktree.query";
-import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 import CreateLinktreeModal from "../CreateLinktreeModal/index.tsx";
+
 import styles from "./LinktreeCard.module.css";
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 function MoreOptionsMenu({ shortUrlId, id, name }) {
   const navigate = useNavigate();
@@ -55,7 +46,7 @@ function MoreOptionsMenu({ shortUrlId, id, name }) {
     });
   }, [deleteLinktreeMutation]);
 
-  const handleRenameClick = useCallback((e) => {
+  const handleRenameClick = useCallback((_e) => {
     editLinktreeModalHandlers.open();
   }, []);
 
@@ -63,10 +54,7 @@ function MoreOptionsMenu({ shortUrlId, id, name }) {
     <>
       <Menu width={150}>
         <MenuTarget>
-          <ActionIcon
-            onClick={(e) => e.stopPropagation()}
-            className={styles["more-options-btn"]}
-          >
+          <ActionIcon onClick={(e) => e.stopPropagation()} className={styles["more-options-btn"]}>
             <IconDots />
           </ActionIcon>
         </MenuTarget>

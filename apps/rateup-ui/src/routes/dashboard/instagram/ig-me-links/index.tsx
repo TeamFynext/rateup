@@ -1,16 +1,7 @@
-"use client";
-
+import { IconCheck, IconCopy, IconExternalLink, IconQrcode } from "@tabler/icons-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
-import {
-  IconCheck,
-  IconCopy,
-  IconExternalLink,
-  IconQrcode,
-} from "@tabler/icons-react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-
-import { useSubscribeFieldToPage } from "@/backend/whatsapp/settings/waSettings.query";
 import { InstagramFeatureShell } from "@/components/dashboard/instagram/instagram-feature-shell.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -38,28 +29,16 @@ function InstagramIgMeLinksPage() {
       }
     >
       {(waSetting) => (
-        <IgMeLinkBuilder
-          waSettingId={waSetting.id}
-          fbPageId={waSetting.fbPageId}
-          pageAccessToken={waSetting.pageAccessToken}
-          username={waSetting.igUserName}
-          displayName={waSetting.igDisplayName}
-        />
+        <IgMeLinkBuilder username={waSetting.igUserName} displayName={waSetting.igDisplayName} />
       )}
     </InstagramFeatureShell>
   );
 }
 
 function IgMeLinkBuilder({
-  waSettingId,
-  fbPageId,
-  pageAccessToken,
   username,
   displayName,
 }: Readonly<{
-  waSettingId: string;
-  fbPageId?: string | null;
-  pageAccessToken?: string | null;
   username?: string | null;
   displayName?: string | null;
 }>) {
@@ -71,9 +50,7 @@ function IgMeLinkBuilder({
     if (!handle) return "";
 
     const base = `https://ig.me/m/${handle}`;
-    return refParam.trim()
-      ? `${base}?ref=${encodeURIComponent(refParam.trim())}`
-      : base;
+    return refParam.trim() ? `${base}?ref=${encodeURIComponent(refParam.trim())}` : base;
   }, [refParam, username]);
 
   const copy = async () => {
@@ -88,17 +65,12 @@ function IgMeLinkBuilder({
       <CardHeader className="border-b">
         <CardTitle className="text-base">Shareable link</CardTitle>
         <CardDescription>
-          Use this to send people directly into the selected Instagram account’s
-          DM thread.
+          Use this to send people directly into the selected Instagram account’s DM thread.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         <div className="grid gap-3 md:grid-cols-2">
-          <Input
-            value={displayName || username || ""}
-            readOnly
-            placeholder="Instagram account"
-          />
+          <Input value={displayName || username || ""} readOnly placeholder="Instagram account" />
           <Input
             value={refParam}
             onChange={(event) => setRefParam(event.target.value)}

@@ -1,5 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -17,14 +15,11 @@ import {
   Users,
   UserX,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import {
-  SubscriptionFeaturePathName as sfpn,
-  TeamFeature,
-} from "@/types/enums.ts";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import {
   useAddUsertoTeams,
@@ -36,11 +31,7 @@ import {
   useTeamMembersFromInvitation,
   useUpdateTeamFeatures,
 } from "@/backend/team/team.query";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -57,6 +48,7 @@ import { ScrollArea } from "@/components/ui/scroll-area.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
+import { SubscriptionFeaturePathName as sfpn, TeamFeature } from "@/types/enums.ts";
 import { UserRole } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { hasFeature } from "@/utils/subscription/subscription.ts";
@@ -128,14 +120,11 @@ export function EditTeam({ selectedTeam }) {
           control={form.control}
           rules={{
             validate: (value) =>
-              value.length >= 3 ||
-              translations("Team Name should be at least 3 characters long"),
+              value.length >= 3 || translations("Team Name should be at least 3 characters long"),
           }}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="team-name">
-                {translations("Team Name")}
-              </FieldLabel>
+              <FieldLabel htmlFor="team-name">{translations("Team Name")}</FieldLabel>
               <Input
                 {...field}
                 id="team-name"
@@ -155,9 +144,7 @@ export function EditTeam({ selectedTeam }) {
           rules={{
             validate: (value) => {
               if (value.length < 2) {
-                return translations(
-                  "Team Code should be at least 2 characters long",
-                );
+                return translations("Team Code should be at least 2 characters long");
               }
 
               if (/\s/.test(value)) {
@@ -166,9 +153,7 @@ export function EditTeam({ selectedTeam }) {
               }
 
               if (!/^[A-Za-z0-9-]+$/.test(value)) {
-                return translations(
-                  "Team Code can contain only alphabets, numbers, and hyphens",
-                );
+                return translations("Team Code can contain only alphabets, numbers, and hyphens");
               }
 
               return true;
@@ -176,9 +161,7 @@ export function EditTeam({ selectedTeam }) {
           }}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="team-code">
-                {translations("Team Code")}
-              </FieldLabel>
+              <FieldLabel htmlFor="team-code">{translations("Team Code")}</FieldLabel>
               <Input
                 {...field}
                 id="team-code"
@@ -223,8 +206,7 @@ export function EditTeam({ selectedTeam }) {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
               <span>
-                {translations("Created on")}{" "}
-                {dayjs(selectedTeam.createdAt).format("MMM D, YYYY")}
+                {translations("Created on")} {dayjs(selectedTeam.createdAt).format("MMM D, YYYY")}
               </span>
             </div>
           </div>
@@ -246,8 +228,7 @@ export function AddMembers({ selectedTeam }) {
   const { t: translations } = useTranslation();
   const teamID = selectedTeam;
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-  const { isLoading: isLoadingNotTeamsUser, data: notTeamMembersData } =
-    useNotTeamMembers(teamID);
+  const { isLoading: isLoadingNotTeamsUser, data: notTeamMembersData } = useNotTeamMembers(teamID);
   const queryClient = useQueryClient();
   const removeteam = useRemoveUserFromTeam(selectedTeam);
 
@@ -371,7 +352,7 @@ export function AddMembers({ selectedTeam }) {
       </Card>
     ));
   } else if (teamMembersObjArr?.length) {
-    membersGridContent = teamMembersObjArr.map((member, i) => {
+    membersGridContent = teamMembersObjArr.map((member, _i) => {
       const isMemberActive = Boolean(member?.active);
       let memberStatusClassName = "text-muted-foreground";
       let memberStatusLabel = translations("Inactive");
@@ -413,10 +394,7 @@ export function AddMembers({ selectedTeam }) {
               </div>
             </div>
             {member?.role !== UserRole.SUPADM && (
-              <Button
-                variant="destructive"
-                onClick={() => setMemberToDelete(member)}
-              >
+              <Button variant="destructive" onClick={() => setMemberToDelete(member)}>
                 <UserX />
               </Button>
             )}
@@ -441,8 +419,7 @@ export function AddMembers({ selectedTeam }) {
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="w-4 h-4" />
                 <span>
-                  {translations("Joined")}{" "}
-                  {dayjs(member.createdAt).format("MMM D, YYYY")}
+                  {translations("Joined")} {dayjs(member.createdAt).format("MMM D, YYYY")}
                 </span>
               </div>
             )}
@@ -450,9 +427,7 @@ export function AddMembers({ selectedTeam }) {
 
           <div className="mt-4 pt-4 border-t border-border">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">
-                {translations("Status")}
-              </span>
+              <span className="text-muted-foreground">{translations("Status")}</span>
 
               {/* Active boolean handling */}
               <span className={memberStatusClassName}>{memberStatusLabel}</span>
@@ -617,9 +592,7 @@ export function DeleteTeam({ selectedTeam }) {
           }}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="google-link">
-                {translations("Google review link")}
-              </FieldLabel>
+              <FieldLabel htmlFor="google-link">{translations("Google review link")}</FieldLabel>
               <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
                 <Input
                   {...field}
@@ -633,11 +606,7 @@ export function DeleteTeam({ selectedTeam }) {
                   className="bg-primary min-w-full sm:min-w-18"
                   disabled={editTeamMutation.isPending}
                 >
-                  {editTeamMutation.isPending ? (
-                    <Clock />
-                  ) : (
-                    translations("Save")
-                  )}
+                  {editTeamMutation.isPending ? <Clock /> : translations("Save")}
                 </Button>
               </div>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -663,11 +632,7 @@ export function DeleteTeam({ selectedTeam }) {
               </p>
             </div>
 
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setIsDialogOpen(true)}
-            >
+            <Button variant="destructive" size="sm" onClick={() => setIsDialogOpen(true)}>
               {translations("Delete Team")}
             </Button>
           </div>
@@ -683,21 +648,13 @@ export function DeleteTeam({ selectedTeam }) {
               {translations("Confirm Deletion")}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              {translations("This action")}{" "}
-              <strong>{translations("cannot be undone")}.</strong>{" "}
-              {translations(
-                "Are you sure you want to permanently delete this team",
-              )}
-              ?
+              {translations("This action")} <strong>{translations("cannot be undone")}.</strong>{" "}
+              {translations("Are you sure you want to permanently delete this team")}?
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsDialogOpen(false)}
-              disabled={isDeleting}
-            >
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isDeleting}>
               {translations("Cancel")}
             </Button>
 
@@ -796,17 +753,14 @@ export function TeamFeatureAccess({ selectedTeam }) {
 
   const availableFeatures = FEATURES_WITH_SUBSCRIPTION.filter(
     ({ requiredSubscriptions }) =>
-      !requiredSubscriptions ||
-      requiredSubscriptions.every((sfp) => hasFeature(subscription, sfp)),
+      !requiredSubscriptions || requiredSubscriptions.every((sfp) => hasFeature(subscription, sfp)),
   );
 
   const serverChecked = useMemo(
     () => new Set((data?.features || []).map((f) => f.feature)),
     [data],
   );
-  const [pendingToggles, setPendingToggles] = useState<Record<string, boolean>>(
-    {},
-  );
+  const [pendingToggles, setPendingToggles] = useState<Record<string, boolean>>({});
   const checked = useMemo(() => {
     const next = new Set(serverChecked);
 
@@ -854,14 +808,8 @@ export function TeamFeatureAccess({ selectedTeam }) {
             )}
           </p>
         </div>
-        <Button
-          size="sm"
-          onClick={handleSave}
-          disabled={updateMutation.isPending}
-        >
-          {updateMutation.isPending
-            ? translations("Saving")
-            : translations("Save Changes")}
+        <Button size="sm" onClick={handleSave} disabled={updateMutation.isPending}>
+          {updateMutation.isPending ? translations("Saving") : translations("Save Changes")}
         </Button>
       </div>
 

@@ -31,16 +31,8 @@ export const useAllSubscriptions = () =>
 export const useUpdateSubscriptionMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
-      orgId: string;
-      updatedData: object;
-      isMenuPlanChange?: boolean;
-    }) =>
-      updateSubscription(
-        data?.orgId,
-        data?.updatedData,
-        data?.isMenuPlanChange,
-      ),
+    mutationFn: (data: { orgId: string; updatedData: object; isMenuPlanChange?: boolean }) =>
+      updateSubscription(data?.orgId, data?.updatedData, data?.isMenuPlanChange),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
@@ -48,9 +40,7 @@ export const useUpdateSubscriptionMutation = () => {
     },
     onError: (error) => {
       console.error(error);
-      toast.error(
-        error?.message || `Error updating subscription ${error?.message ?? ""}`,
-      );
+      toast.error(error?.message || `Error updating subscription ${error?.message ?? ""}`);
     },
   });
 };

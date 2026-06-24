@@ -1,17 +1,4 @@
-"use client";
-
-import { useState } from "react";
-
-import {
-  Badge,
-  Button,
-  Flex,
-  Grid,
-  Group,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Badge, Button, Flex, Grid, Group, Stack, Text, Title } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import {
   IconAddressBook,
@@ -44,6 +31,7 @@ import {
   IconThumbUpFilled,
   IconWheel,
 } from "@tabler/icons-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { QuestionType, WaFlowFormNonInputElementType } from "@/types/enums.ts";
@@ -51,6 +39,7 @@ import { googleReviewSupportedTypes } from "@/utils/data.ts";
 import { getQuestionTypeLabel } from "@/utils/enums/index.ts";
 
 import { GoogleIcon } from "../../Button/GoogleIcon.tsx";
+
 import classes from "./QuestionDetailedView.module.css";
 
 interface QuestionTypeSelectionProps {
@@ -72,7 +61,7 @@ export function QuestionTypeSelection({
   };
   const { t: translations } = useTranslation();
   const QuestionButton = ({ type }) => {
-    const { hovered, ref } = useHover();
+    const { ref } = useHover();
     const Icon = questionIcons[type];
     return (
       <div ref={ref}>
@@ -85,8 +74,7 @@ export function QuestionTypeSelection({
           p={15}
           onClick={() => handleQuestionTypeClick(type as QuestionType)}
           onMouseOver={() => {
-            if (googleReviewSupportedTypes.includes(type))
-              setIsGoogleReviewSupported(true);
+            if (googleReviewSupportedTypes.includes(type)) setIsGoogleReviewSupported(true);
             else setIsGoogleReviewSupported(false);
           }}
           onMouseLeave={() => {

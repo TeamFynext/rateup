@@ -46,12 +46,7 @@
   /* WhatsApp green — product-channel accent only */
   --channel-whatsapp: #25d366;
   --channel-whatsapp-dark: #128c7e;
-  --channel-instagram: linear-gradient(
-    45deg,
-    #f58529 0%,
-    #dd2a7b 50%,
-    #8134af 100%
-  );
+  --channel-instagram: linear-gradient(45deg, #f58529 0%, #dd2a7b 50%, #8134af 100%);
 
   /* Neutrals — warm off-white + cool greys */
   --ink-0: #ffffff;
@@ -101,8 +96,7 @@
   /* ==========================================================
      TYPOGRAPHY
      ========================================================== */
-  --font-display:
-    "Nunito Variable", ui-rounded, system-ui, -apple-system, sans-serif;
+  --font-display: "Nunito Variable", ui-rounded, system-ui, -apple-system, sans-serif;
   --font-body: "Inter Variable", system-ui, -apple-system, sans-serif;
 
   /* Type scale (desktop). Use fluid clamp()s where responsive.  */
@@ -166,10 +160,8 @@
      SHADOWS / ELEVATION
      ========================================================== */
   --shadow-xs: 0 1px 2px rgba(11, 31, 72, 0.06);
-  --shadow-sm:
-    0 1px 2px rgba(11, 31, 72, 0.06), 0 2px 6px rgba(11, 31, 72, 0.05);
-  --shadow-md:
-    0 1px 2px rgba(11, 31, 72, 0.06), 0 8px 24px rgba(11, 31, 72, 0.06);
+  --shadow-sm: 0 1px 2px rgba(11, 31, 72, 0.06), 0 2px 6px rgba(11, 31, 72, 0.05);
+  --shadow-md: 0 1px 2px rgba(11, 31, 72, 0.06), 0 8px 24px rgba(11, 31, 72, 0.06);
   --shadow-lg: 0 12px 48px rgba(11, 31, 72, 0.12);
   --shadow-xl: 0 24px 72px rgba(11, 31, 72, 0.18);
 

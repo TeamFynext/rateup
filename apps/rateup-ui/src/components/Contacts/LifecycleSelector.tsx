@@ -1,8 +1,5 @@
-"use client";
-
+import { Activity, Infinity as InfinityIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
-
-import { Activity, Infinity } from "lucide-react";
 
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
 
@@ -101,17 +98,12 @@ export const LifecycleSelector = ({
           className={`w-5 h-5 p-1 rounded-full bg-blue-50 flex items-center justify-center ${className}`}
         >
           <span role="img" className="text-[15px]">
-            <Infinity className="w-3 h-3" />
+            <InfinityIcon className="w-3 h-3" />
           </span>
         </div>
       ),
     });
   }
-
-  const isLostCategory = React.useMemo(() => {
-    const currentTag = tags?.find((tag) => tag.id === value);
-    return currentTag?.category === "lost";
-  }, [value, tags]);
 
   const handleSubmit = (newValue: string) => {
     if (newValue === value) return;
@@ -121,25 +113,11 @@ export const LifecycleSelector = ({
     onChange(newValue, lifecycle);
   };
 
-  const handleNextStage = () => {
-    if (isLostCategory) return;
-
-    const currentIndex = allItems.findIndex((item) => item.value === value);
-    const nextIndex = (currentIndex + 1) % allItems.length;
-    const nextItem = allItems[nextIndex];
-
-    if (nextItem) {
-      handleSubmit(nextItem.value);
-    }
-  };
-
   const TriggerComponent = () => {
     if (customTrigger) {
       if (value) return customTrigger;
       return (
-        <span className="text-foreground text-sm">
-          {placeholder ?? "Select a lifecycle stage"}
-        </span>
+        <span className="text-foreground text-sm">{placeholder ?? "Select a lifecycle stage"}</span>
       );
     }
     if (selectedLifeCycle) {
@@ -151,9 +129,7 @@ export const LifecycleSelector = ({
       );
     }
     return (
-      <span className="text-foreground text-sm">
-        {placeholder ?? "Select a lifecycle stage"}
-      </span>
+      <span className="text-foreground text-sm">{placeholder ?? "Select a lifecycle stage"}</span>
     );
   };
 
@@ -202,10 +178,7 @@ export const LifecycleSelector = ({
             <DropdownMenuLabel>{group.group}</DropdownMenuLabel>
 
             {group.items.map((label) => (
-              <DropdownMenuItem
-                key={label.value}
-                onClick={() => handleSubmit(label.value)}
-              >
+              <DropdownMenuItem key={label.value} onClick={() => handleSubmit(label.value)}>
                 <label.icon />
                 <span className="ml-1">{label.label}</span>
               </DropdownMenuItem>

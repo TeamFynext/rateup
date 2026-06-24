@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -27,14 +23,12 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
-import {
-  useAllTeamsMembersOfOrg,
-  useUpdateRoleMutation,
-} from "@/backend/org/org.query";
+import { useAllTeamsMembersOfOrg, useUpdateRoleMutation } from "@/backend/org/org.query";
 import { inviteTeamMember } from "@/backend/team/team.api";
 import {
   useAddUsertoTeams,
@@ -49,11 +43,7 @@ import {
   useUpdateProfileMutation,
   useUpdateUserPause,
 } from "@/backend/user/user.query";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
@@ -80,17 +70,8 @@ import {
 } from "@/components/ui/select.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.tsx";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { UserRole } from "@/utils/enums/index.ts";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload.ts";
 import { getOrgIdRole, getUserID } from "@/utils/userInfo.ts";
@@ -130,14 +111,11 @@ function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUserRole, setCurrentUserRole] = useState<string>("");
   const [currentUserId, setCurrentUserId] = useState<string>("");
-  const [newUserProfileImage, setNewUserProfileImage] = useState<string | null>(
-    null,
-  );
+  const [newUserProfileImage, setNewUserProfileImage] = useState<string | null>(null);
   const [newUserPhone, setNewUserPhone] = useState("");
 
   // Fetch Teams
-  const { isLoading: isLoadingTeamsUser, data: teamsDataUser } =
-    useTeamsByUser();
+  const { isLoading: isLoadingTeamsUser, data: teamsDataUser } = useTeamsByUser();
 
   // Form setup
   const userForm = useForm({
@@ -154,8 +132,7 @@ function UsersPage() {
       },
       email: (value) => {
         if (!value.trim()) return translations("Email is required");
-        if (!/^\S+@\S+$/.test(value))
-          return translations("Please enter a valid email address");
+        if (!/^\S+@\S+$/.test(value)) return translations("Please enter a valid email address");
         return null;
       },
     },
@@ -173,12 +150,9 @@ function UsersPage() {
 
     resendInviteMutation.mutate(inviteId, {
       onSuccess: () => {
-        toast.success(
-          translations("The team invitation has been resent successfully."),
-          {
-            id: "load-data-invitation",
-          },
-        );
+        toast.success(translations("The team invitation has been resent successfully."), {
+          id: "load-data-invitation",
+        });
       },
       onError: () => {
         toast.error(translations("Team Invitation Resend Failed"), {
@@ -195,12 +169,9 @@ function UsersPage() {
 
     deleteInviteMutation.mutate(inviteId, {
       onSuccess: () => {
-        toast.success(
-          translations("The staff invite has been deleted successfully."),
-          {
-            id: "load-data-deleting",
-          },
-        );
+        toast.success(translations("The staff invite has been deleted successfully."), {
+          id: "load-data-deleting",
+        });
       },
       onError: () => {
         toast.error(translations("Team Invitation Deletion Failed"), {
@@ -212,10 +183,7 @@ function UsersPage() {
 
   useEffect(() => {
     const loadViewerInfo = async () => {
-      const [{ role }, { userId }] = await Promise.all([
-        getOrgIdRole(),
-        getUserID(),
-      ]);
+      const [{ role }, { userId }] = await Promise.all([getOrgIdRole(), getUserID()]);
       setCurrentUserRole(role || "");
       setCurrentUserId(userId || "");
     };
@@ -261,24 +229,18 @@ function UsersPage() {
     },
     onError: (error: any) => {
       console.error("Error creating invite:", error?.message);
-      toast.error(error?.message || error.message);
+      toast.error(error?.message || "An error occurred");
     },
   });
 
   const filteredMembers = data?.data?.members?.filter((member) => {
     const q = searchQuery.toLowerCase();
-    return (
-      member.name?.toLowerCase().includes(q) ||
-      member.email?.toLowerCase().includes(q)
-    );
+    return member.name?.toLowerCase().includes(q) || member.email?.toLowerCase().includes(q);
   });
 
   const filteredInvitations = data?.data?.invitations?.filter((invite) => {
     const q = searchQuery.toLowerCase();
-    return (
-      invite.name?.toLowerCase().includes(q) ||
-      invite.email?.toLowerCase().includes(q)
-    );
+    return invite.name?.toLowerCase().includes(q) || invite.email?.toLowerCase().includes(q);
   });
 
   const handleCopy = async (id: string) => {
@@ -325,10 +287,7 @@ function UsersPage() {
                   {translations("Add New User")}
                 </DialogTitle>
                 <DialogDescription>
-                  {translations(
-                    "Create a new user account and assign roles and team membership",
-                  )}
-                  .
+                  {translations("Create a new user account and assign roles and team membership")}.
                 </DialogDescription>
               </DialogHeader>
 
@@ -363,9 +322,7 @@ function UsersPage() {
                           if (!file) return;
                           const reader = new FileReader();
                           reader.onload = (loadEvent) => {
-                            setNewUserProfileImage(
-                              loadEvent.target?.result as string,
-                            );
+                            setNewUserProfileImage(loadEvent.target?.result as string);
                           };
                           reader.readAsDataURL(file);
                         };
@@ -382,8 +339,7 @@ function UsersPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <Label htmlFor="new-name" className="text-xs">
-                          {translations("Full Name")}{" "}
-                          <span className="text-red-500">*</span>
+                          {translations("Full Name")} <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="new-name"
@@ -392,9 +348,7 @@ function UsersPage() {
                           {...userForm.getInputProps("name")}
                         />
                         {userForm.errors.name && (
-                          <p className="text-xs text-red-500 mt-1">
-                            {userForm.errors.name}
-                          </p>
+                          <p className="text-xs text-red-500 mt-1">{userForm.errors.name}</p>
                         )}
                       </div>
 
@@ -415,8 +369,7 @@ function UsersPage() {
 
                     <div className="space-y-1.5">
                       <Label htmlFor="new-email" className="text-xs">
-                        {translations("Email Address")}{" "}
-                        <span className="text-red-500">*</span>
+                        {translations("Email Address")} <span className="text-red-500">*</span>
                       </Label>
                       <div className="relative">
                         <Mail className="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
@@ -429,17 +382,14 @@ function UsersPage() {
                         />
                       </div>
                       {userForm.errors.email && (
-                        <p className="text-xs text-red-500 mt-1">
-                          {userForm.errors.email}
-                        </p>
+                        <p className="text-xs text-red-500 mt-1">{userForm.errors.email}</p>
                       )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <Label htmlFor="new-role" className="text-xs">
-                          {translations("User Role")}{" "}
-                          <span className="text-red-500">*</span>
+                          {translations("User Role")} <span className="text-red-500">*</span>
                         </Label>
                         <Select defaultValue={UserRole.MEMBER}>
                           <SelectTrigger id="new-role" className="h-9">
@@ -486,14 +436,10 @@ function UsersPage() {
                         ) : (
                           <Select
                             value={userForm.values.team}
-                            onValueChange={(value) =>
-                              userForm.setFieldValue("team", value)
-                            }
+                            onValueChange={(value) => userForm.setFieldValue("team", value)}
                           >
                             <SelectTrigger id="new-team" className="h-9 w-full">
-                              <SelectValue
-                                placeholder={translations("Select team")}
-                              />
+                              <SelectValue placeholder={translations("Select team")} />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">
@@ -520,9 +466,7 @@ function UsersPage() {
 
                     <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <div className="flex items-center justify-between">
-                        <Label className="text-xs mb-0">
-                          {translations("Send welcome email")}
-                        </Label>
+                        <Label className="text-xs mb-0">{translations("Send welcome email")}</Label>
                         <Switch defaultChecked disabled />
                       </div>
                       <div className="flex items-center justify-between">
@@ -582,16 +526,11 @@ function UsersPage() {
             </h3>
             <div className="flex flex-col items-center gap-2 md:flex-row md:gap-4 p-4 flex-wrap">
               {filteredMembers?.map((member: any) => (
-                <Card
-                  key={member.id}
-                  className="p-3  group relative min-w-[15vw] lg:max-w-[15vw]"
-                >
+                <Card key={member.id} className="p-3  group relative min-w-[15vw] lg:max-w-[15vw]">
                   <div className="flex flex-col items-center text-center justify-center gap-1">
                     <div className="relative mb-2">
                       <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
-                        <AvatarImage
-                          src={getFileUrlFromKey(member.profilePhoto)}
-                        />
+                        <AvatarImage src={getFileUrlFromKey(member.profilePhoto)} />
                         <AvatarFallback className="bg-primary text-white">
                           {member.name?.toUpperCase().slice(0, 2)}
                         </AvatarFallback>
@@ -609,9 +548,7 @@ function UsersPage() {
                       {member.email}
                     </p>
 
-                    <Badge className="text-[10px] h-5 px-2 mb-2">
-                      {member.role}
-                    </Badge>
+                    <Badge className="text-[10px] h-5 px-2 mb-2">{member.role}</Badge>
 
                     <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-2">
                       <Users className="w-3 h-3" />
@@ -634,10 +571,7 @@ function UsersPage() {
                         <TooltipContent className="border shadow-md rounded-lg p-2 text-xs max-w-52">
                           <div className="flex flex-col gap-1">
                             {member.teams.map((t: any) => (
-                              <div
-                                key={t.id}
-                                className="flex items-center gap-2"
-                              >
+                              <div key={t.id} className="flex items-center gap-2">
                                 <span
                                   className="w-2 h-2 rounded-full"
                                   style={{
@@ -656,10 +590,7 @@ function UsersPage() {
                       variant="outline"
                       size="sm"
                       className="w-full h-7 text-xs mt-1"
-                      disabled={
-                        currentUserRole !== UserRole.SUPADM &&
-                        member?.id !== currentUserId
-                      }
+                      disabled={currentUserRole !== UserRole.SUPADM && member?.id !== currentUserId}
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedUser(member);
@@ -692,15 +623,9 @@ function UsersPage() {
                     className="absolute top-2 right-2 border rounded-sm p-1 hover:text-primary cursor-pointer"
                     onClick={() => handleCopy(invite?.id)}
                     aria-label={translations("Copy")}
-                    title={
-                      copied ? translations("Copied") : translations("Copy")
-                    }
+                    title={copied ? translations("Copied") : translations("Copy")}
                   >
-                    {copied ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
 
                   <div className="flex flex-col items-center text-center justify-center gap-1">
@@ -710,9 +635,7 @@ function UsersPage() {
                       </AvatarFallback>
                     </Avatar>
 
-                    <h4 className="text-sm mb-1 text-rateup-orange line-clamp-1">
-                      {invite.name}
-                    </h4>
+                    <h4 className="text-sm mb-1 text-rateup-orange line-clamp-1">{invite.name}</h4>
 
                     <p className="text-xs text-muted-foreground mb-2 line-clamp-1 w-full">
                       {invite.email}
@@ -774,17 +697,6 @@ function UsersPage() {
   );
 }
 
-type EditMemberProps = Readonly<{
-  isEditUserDialogOpen: boolean;
-  setIsEditUserDialogOpen: (value: boolean) => void;
-  selectedUser: SelectedUser | null;
-  setSelectedUser: (user: SelectedUser | null) => void;
-  teams: TeamOption[];
-  currentUserRole: string;
-  currentUserId: string;
-  translations: (key: string) => string;
-}>;
-
 function EditMember({
   isEditUserDialogOpen,
   setIsEditUserDialogOpen,
@@ -803,9 +715,7 @@ function EditMember({
   const updateProfile = useUpdateProfileMutation();
   const updateMemberProfile = useUpdateMemberProfileMutation();
   const updateActiveStatus = useUpdateActiveStatusMutation();
-  const [role, setRole] = useState<string>(
-    selectedUser?.role || UserRole.MEMBER,
-  );
+  const [role, setRole] = useState<string>(selectedUser?.role || UserRole.MEMBER);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [editableName, setEditableName] = useState("");
   const [editablePhone, setEditablePhone] = useState("");
@@ -819,9 +729,7 @@ function EditMember({
 
     setRole(selectedUser.role || UserRole.MEMBER);
     setProfileImage(
-      selectedUser.profilePhoto
-        ? getFileUrlFromKey(selectedUser.profilePhoto)
-        : null,
+      selectedUser.profilePhoto ? getFileUrlFromKey(selectedUser.profilePhoto) : null,
     );
     setEditableName(selectedUser.name || "");
     setEditablePhone(selectedUser.phone || "");
@@ -964,12 +872,8 @@ function EditMember({
     if (!canEditAll) return;
 
     const previousTeamIds = selectedTeamIds;
-    const teamIdsToAdd = nextTeamIds.filter(
-      (teamId) => !previousTeamIds.includes(teamId),
-    );
-    const teamIdsToRemove = previousTeamIds.filter(
-      (teamId) => !nextTeamIds.includes(teamId),
-    );
+    const teamIdsToAdd = nextTeamIds.filter((teamId) => !previousTeamIds.includes(teamId));
+    const teamIdsToRemove = previousTeamIds.filter((teamId) => !nextTeamIds.includes(teamId));
 
     setSelectedTeamIds(nextTeamIds);
 
@@ -1056,25 +960,16 @@ function EditMember({
             {translations("Edit User")}
           </DialogTitle>
           <DialogDescription>
-            {translations(
-              "Update user information, role, and account settings",
-            )}
-            .
+            {translations("Update user information, role, and account settings")}.
           </DialogDescription>
         </DialogHeader>
 
         {selectedUser && (
           <Tabs defaultValue="details" className="w-full">
             <TabsList className="w-full">
-              <TabsTrigger value="details">
-                {translations("User Details")}
-              </TabsTrigger>
-              <TabsTrigger value="permissions">
-                {translations("Permissions")}
-              </TabsTrigger>
-              <TabsTrigger value="settings">
-                {translations("Settings")}
-              </TabsTrigger>
+              <TabsTrigger value="details">{translations("User Details")}</TabsTrigger>
+              <TabsTrigger value="permissions">{translations("Permissions")}</TabsTrigger>
+              <TabsTrigger value="settings">{translations("Settings")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="space-y-4">
@@ -1118,9 +1013,7 @@ function EditMember({
                   <div className="flex items-center gap-2 mt-2">
                     <div
                       className={`w-2 h-2 rounded-full ${
-                        selectedUser.status === "online"
-                          ? "bg-green-500"
-                          : "bg-gray-400"
+                        selectedUser.status === "online" ? "bg-green-500" : "bg-gray-400"
                       }`}
                     />
                     <span className="text-xs text-muted-foreground capitalize">
@@ -1132,8 +1025,7 @@ function EditMember({
                 <div className="space-y-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="edit-gender" className="text-xs">
-                      {translations("Title")}{" "}
-                      <span className="text-red-500">*</span>
+                      {translations("Title")} <span className="text-red-500">*</span>
                     </Label>
                     <Select
                       value={editableGender}
@@ -1141,9 +1033,7 @@ function EditMember({
                       disabled={!canEditNameAndPhone}
                     >
                       <SelectTrigger id="edit-gender" className="h-9">
-                        <SelectValue
-                          placeholder={translations("Select title")}
-                        />
+                        <SelectValue placeholder={translations("Select title")} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="MALE">Mr</SelectItem>
@@ -1156,15 +1046,12 @@ function EditMember({
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label htmlFor="edit-name" className="text-xs">
-                        {translations("Full Name")}{" "}
-                        <span className="text-red-500">*</span>
+                        {translations("Full Name")} <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="edit-name"
                         value={editableName}
-                        onChange={(event) =>
-                          setEditableName(event.target.value)
-                        }
+                        onChange={(event) => setEditableName(event.target.value)}
                         className="h-9"
                         disabled={!canEditNameAndPhone}
                       />
@@ -1188,8 +1075,7 @@ function EditMember({
 
                   <div className="space-y-1.5">
                     <Label htmlFor="edit-email" className="text-xs">
-                      {translations("Email Address")}{" "}
-                      <span className="text-red-500">*</span>
+                      {translations("Email Address")} <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
                       <Mail className="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
@@ -1210,23 +1096,18 @@ function EditMember({
                     <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border">
                       <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">
-                        {selectedUser.lastActive ||
-                          translations("Not available")}
+                        {selectedUser.lastActive || translations("Not available")}
                       </span>
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs">
-                      {translations("Account Status")}
-                    </Label>
+                    <Label className="text-xs">{translations("Account Status")}</Label>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
                       <div className="flex items-center gap-2">
                         <div
                           className={`w-2 h-2 rounded-full ${
-                            selectedUser.isPaused
-                              ? "bg-gray-400"
-                              : "bg-green-500"
+                            selectedUser.isPaused ? "bg-gray-400" : "bg-green-500"
                           }`}
                         />
                         <span className="text-sm">
@@ -1235,10 +1116,7 @@ function EditMember({
                             : translations("Active Account")}
                         </span>
                       </div>
-                      <Switch
-                        checked={!selectedUser.isPaused}
-                        onCheckedChange={handleUserStatus}
-                      />
+                      <Switch checked={!selectedUser.isPaused} onCheckedChange={handleUserStatus} />
                     </div>
                   </div>
                 </div>
@@ -1249,8 +1127,7 @@ function EditMember({
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="edit-role" className="text-xs">
-                    {translations("User Role")}{" "}
-                    <span className="text-red-500">*</span>
+                    {translations("User Role")} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={role}
@@ -1315,21 +1192,15 @@ function EditMember({
                 <Separator className="my-4" />
 
                 <div className="space-y-3">
-                  <Label className="text-xs">
-                    {translations("Additional Permissions")}
-                  </Label>
+                  <Label className="text-xs">{translations("Additional Permissions")}</Label>
                   <div className="space-y-2 p-3 bg-gray-50 rounded-lg border">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <MessageSquare className="w-4 h-4 text-rateup-blue" />
                         <div>
-                          <p className="text-sm">
-                            {translations("Access to Inbox")}
-                          </p>
+                          <p className="text-sm">{translations("Access to Inbox")}</p>
                           <p className="text-xs text-muted-foreground">
-                            {translations(
-                              "View and respond to customer messages",
-                            )}
+                            {translations("View and respond to customer messages")}
                           </p>
                         </div>
                       </div>
@@ -1340,13 +1211,9 @@ function EditMember({
                       <div className="flex items-center gap-2">
                         <Zap className="w-4 h-4 text-rateup-orange" />
                         <div>
-                          <p className="text-sm">
-                            {translations("Manage Automations")}
-                          </p>
+                          <p className="text-sm">{translations("Manage Automations")}</p>
                           <p className="text-xs text-muted-foreground">
-                            {translations(
-                              "Create and edit workflow automation",
-                            )}
+                            {translations("Create and edit workflow automation")}
                           </p>
                         </div>
                       </div>
@@ -1357,9 +1224,7 @@ function EditMember({
                       <div className="flex items-center gap-2">
                         <Database className="w-4 h-4 text-green-600" />
                         <div>
-                          <p className="text-sm">
-                            {translations("View Analytics")}
-                          </p>
+                          <p className="text-sm">{translations("View Analytics")}</p>
                           <p className="text-xs text-muted-foreground">
                             {translations("Access reports and data insights")}
                           </p>
@@ -1389,9 +1254,7 @@ function EditMember({
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs mb-0">
-                    {translations("Allow mobile app access")}
-                  </Label>
+                  <Label className="text-xs mb-0">{translations("Allow mobile app access")}</Label>
                   <Switch defaultChecked disabled />
                 </div>
               </div>

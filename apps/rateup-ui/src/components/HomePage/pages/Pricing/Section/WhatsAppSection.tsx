@@ -1,17 +1,10 @@
-import React from "react";
-
 import { Box, Flex, Stack, Text } from "@mantine/core";
+import React from "react";
 
 import PlanCard from "../Card/PlanCard.tsx";
 import { PlanCardWidth } from "../Utils/constants.ts";
 
-export const WhatsAppSection = ({
-  largeScreen,
-  handlePlanSelection,
-  plans,
-  freePlan,
-  currencySymbol,
-}) => {
+export const WhatsAppSection = ({ largeScreen, handlePlanSelection, freePlan, currencySymbol }) => {
   const whatsAppPlan = [] // plans, removing for now
     ?.filter((item) => item?.name?.includes("WhatsApp"))
     ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
@@ -25,17 +18,11 @@ export const WhatsAppSection = ({
     },
   });
 
-  const inversePeriod =
-    whatsAppPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
-
   if (freePlan?.length > 0) {
     freePlan[0].paymentPlan = {
       amount: 0,
       currency: "",
-      period:
-        whatsAppPlan?.[0]?.paymentPlan?.period === "yearly"
-          ? "yearly"
-          : "monthly",
+      period: whatsAppPlan?.[0]?.paymentPlan?.period === "yearly" ? "yearly" : "monthly",
     };
   }
 
@@ -46,9 +33,7 @@ export const WhatsAppSection = ({
       <Flex justify={"center"} gap={"xl"} wrap={"wrap"}>
         {whatsAppPlans?.map((data, index) => {
           let isPopular = false;
-          isPopular =
-            data?.displayName &&
-            data?.displayName.toLowerCase().includes("plus");
+          isPopular = data?.displayName && data?.displayName.toLowerCase().includes("plus");
 
           return (
             <Stack align="center" gap={0} pos={"relative"} key={data?.id}>
@@ -77,7 +62,6 @@ export const WhatsAppSection = ({
                 handlePlanSelection={handlePlanSelection}
                 index={index}
                 totalItems={whatsAppPlans.length}
-                inversePeriod={inversePeriod}
                 largeScreen={largeScreen}
                 key={data.id}
                 isPopular={isPopular}

@@ -1,11 +1,11 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useRef } from "react";
 
-import { useNavigate } from "@tanstack/react-router";
-
-import styles from "@/styles/commonCssModules/404.module.css";
 import { rateupLogoHorizontalTransparent } from "@/utils/constants";
 
 import { RateupStar } from "../integrations/logos";
+
+import styles from "@/styles/commonCssModules/404.module.css";
 
 // Individual floating particle
 function Particle({ style }) {
@@ -51,11 +51,7 @@ export default function NotFoundPage() {
       {/* ── Nav ── */}
       <nav className={styles.nav}>
         <a href="https://rateup.app">
-          <img
-            className={styles.navLogo}
-            src={rateupLogoHorizontalTransparent}
-            alt="RateUp"
-          />
+          <img className={styles.navLogo} src={rateupLogoHorizontalTransparent} alt="RateUp" />
         </a>
       </nav>
 
@@ -68,10 +64,7 @@ export default function NotFoundPage() {
         </div>
 
         {/* 4 ★ 4 */}
-        <div
-          className={`${styles.numRow} ${styles.animFadeUp2}`}
-          aria-label="404"
-        >
+        <div className={`${styles.numRow} ${styles.animFadeUp2}`} aria-label="404">
           <span className={styles.num4} aria-hidden="true">
             4
           </span>
@@ -84,14 +77,12 @@ export default function NotFoundPage() {
         </div>
 
         {/* Heading */}
-        <h1 className={`${styles.heading} ${styles.animFadeUp3}`}>
-          Page Not Found
-        </h1>
+        <h1 className={`${styles.heading} ${styles.animFadeUp3}`}>Page Not Found</h1>
 
         {/* Body copy */}
         <p className={`${styles.bodyCopy} ${styles.animFadeUp4}`}>
-          The page you're looking for doesn't exist or has been moved. Let's get
-          you somewhere useful.
+          The page you're looking for doesn't exist or has been moved. Let's get you somewhere
+          useful.
         </p>
 
         {/* CTAs */}
@@ -106,9 +97,7 @@ export default function NotFoundPage() {
           <button
             onClick={() => {
               const phone = import.meta.env.VITE_SUPPORT_WHATSAPP;
-              const message = encodeURIComponent(
-                "Hi, I need help with support",
-              );
+              const message = encodeURIComponent("Hi, I need help with support");
               window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
             }}
             className={`${styles.btn} ${styles.btnGhost}`}
@@ -119,9 +108,7 @@ export default function NotFoundPage() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className={`${styles.footer} ${styles.animFadeInFooter}`}>
-        www.rateup.app
-      </footer>
+      <footer className={`${styles.footer} ${styles.animFadeInFooter}`}>www.rateup.app</footer>
     </div>
   );
 }

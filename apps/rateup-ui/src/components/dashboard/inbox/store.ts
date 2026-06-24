@@ -3,7 +3,6 @@ import { isEqual } from "lodash";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { WaMessageAssignStatus } from "@/types/enums.ts";
 import type {
   ContactsWithLastMessage,
   WaGetMessagesBody,
@@ -11,6 +10,7 @@ import type {
 import { markWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import type { ChatFilter } from "@/components/whatsapp/inbox/chatselect/chatFilter/index.tsx";
 import type { User } from "@/context/UserContext.tsx";
+import { WaMessageAssignStatus } from "@/types/enums.ts";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox.ts";
 
 import {
@@ -52,8 +52,8 @@ interface ChatContactCountStore {
 
 const useContactStore = create<ContactStore>((set) => ({
   opened: false,
-  open: () => set((state) => ({ opened: true })),
-  close: () => set((state) => ({ opened: false })),
+  open: () => set((_state) => ({ opened: true })),
+  close: () => set((_state) => ({ opened: false })),
   selectedTicket: null,
   setSelectedTicket: (ticket) => set({ selectedTicket: ticket }),
   setTicketAndOpen: (ticket) => set({ selectedTicket: ticket, opened: true }),
@@ -61,21 +61,19 @@ const useContactStore = create<ContactStore>((set) => ({
   setFilterData: (value) => set({ filterData: value }),
 }));
 
-export const useChatContactCountStore = create<ChatContactCountStore>(
-  (set) => ({
-    totalCount: {
-      new: 0,
-      closed: 0,
-      assigned: 0,
-      assignedToMe: 0,
-      blocked: 0,
-      newAssigned: 0,
-      newUnassigned: 0,
-      newAssignedTome: 0,
-    },
-    setTotalCount: (value) => set({ totalCount: value }),
-  }),
-);
+export const useChatContactCountStore = create<ChatContactCountStore>((set) => ({
+  totalCount: {
+    new: 0,
+    closed: 0,
+    assigned: 0,
+    assignedToMe: 0,
+    blocked: 0,
+    newAssigned: 0,
+    newUnassigned: 0,
+    newAssignedTome: 0,
+  },
+  setTotalCount: (value) => set({ totalCount: value }),
+}));
 
 export default useContactStore;
 
@@ -110,10 +108,7 @@ interface ContactsStoreState {
     updater: (c: ContactWithUpdatedAt) => ContactWithUpdatedAt,
     markUnread?: boolean,
   ) => void;
-  resetUnreadForContact: (
-    contactId: string,
-    contact?: ContactWithUpdatedAt,
-  ) => void;
+  resetUnreadForContact: (contactId: string, contact?: ContactWithUpdatedAt) => void;
   setSelectedContact: (contact) => void;
   getContactsByIds: (ids: string[]) => Promise<ContactWithUpdatedAt[]>;
   clearAllContacts: () => Promise<void>;
@@ -124,7 +119,7 @@ interface ContactsStoreState {
 
 enableMapSet();
 // for messages
-const MAX_CONTACTS_IN_MEMORY = 30;
+
 let currentLoadToken = 0;
 export const useContactsStore = create<ContactsStoreState>()(
   persist(
@@ -162,29 +157,20 @@ export const useContactsStore = create<ContactsStoreState>()(
             const contactsByIdMap = new Map(state.contactsById);
             contacts.forEach((c) => {
               const existing = contactsByIdMap.get(c.id);
-              if (
-                !existing ||
-                new Date(c.updatedAt) > new Date(existing.updatedAt)
-              ) {
+              if (!existing || new Date(c.updatedAt) > new Date(existing.updatedAt)) {
                 contactsByIdMap.set(c.id, c);
               }
             });
             state.contactsById = contactsByIdMap;
 
-            const existingIds = new Set(
-              state.contactsByFilter[filterKey] || [],
-            );
+            const existingIds = new Set(state.contactsByFilter[filterKey] || []);
             ids.forEach((id) => existingIds.add(id));
             state.contactsByFilter[filterKey] = Array.from(existingIds);
           }),
         );
       },
 
-      addContactsForFilter: async (
-        filterKey,
-        contacts,
-        updateOtherTabs = false,
-      ) => {
+      addContactsForFilter: async (filterKey, contacts, updateOtherTabs = false) => {
         const { currentFilterKey } = get();
         if (!filterKey || currentFilterKey !== filterKey) return;
         let sortedList = [];
@@ -195,45 +181,29 @@ export const useContactsStore = create<ContactsStoreState>()(
             const contactIdsSet = new Set(existingIds);
             const contactsByIdMap = new Map(state.contactsById);
             contacts.forEach((c) => {
-              const { messages, ...rest } = c;
+              const { ...rest } = c;
               const existing = contactsByIdMap.get(c.id);
-              if (
-                !existing ||
-                new Date(c.updatedAt) > new Date(existing.updatedAt)
-              ) {
+              if (!existing || new Date(c.updatedAt) > new Date(existing.updatedAt)) {
                 contactsByIdMap.set(c.id, {
                   ...rest,
-                  unReadMessageCount:
-                    state.selectedContact?.id === c.id
-                      ? 0
-                      : c.unReadMessageCount,
+                  unReadMessageCount: state.selectedContact?.id === c.id ? 0 : c.unReadMessageCount,
                 });
               }
               const updatedContact = contactsByIdMap.get(c.id);
 
               const isUnAssigned =
-                updatedContact.waMessageAssignStatus ===
-                WaMessageAssignStatus.UNASSIGNED;
+                updatedContact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED;
               const isAssigned =
-                updatedContact.waMessageAssignStatus ===
-                WaMessageAssignStatus.ASSIGNED;
+                updatedContact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED;
               if (
                 !isUnAssigned &&
-                (currentFilterKey?.includes(
-                  "waMessageAssignStatus:UnAssigned",
-                ) ||
+                (currentFilterKey?.includes("waMessageAssignStatus:UnAssigned") ||
                   currentFilterKey?.includes("waMessageAssignStatus:New"))
               )
                 return false;
-              if (
-                !isAssigned &&
-                currentFilterKey?.includes("waMessageAssignStatus:Assigned")
-              )
+              if (!isAssigned && currentFilterKey?.includes("waMessageAssignStatus:Assigned"))
                 return false;
-              if (
-                !isAssigned &&
-                currentFilterKey?.includes("waMessageAssignStatus:mine")
-              )
+              if (!isAssigned && currentFilterKey?.includes("waMessageAssignStatus:mine"))
                 return false;
               contactIdsSet.add(c.id);
             });
@@ -266,21 +236,14 @@ export const useContactsStore = create<ContactsStoreState>()(
             state.isLoading = false;
           }),
         );
-        Promise.all([
-          saveContactsToDB(contacts),
-          saveContactIdsForFilter(filterKey, sortedList),
-        ]);
+        Promise.all([saveContactsToDB(contacts), saveContactIdsForFilter(filterKey, sortedList)]);
         const state = get();
         if (updateOtherTabs && contacts.length === 1) {
           const contactId = contacts[0].id;
           if (!state.currentFilterKey?.includes("waMessageAssignStatus:New")) {
             state.updateContactList("New", contactId, true);
           }
-          if (
-            !state.currentFilterKey?.includes(
-              "waMessageAssignStatus:UnAssigned",
-            )
-          ) {
+          if (!state.currentFilterKey?.includes("waMessageAssignStatus:UnAssigned")) {
             state.updateContactList("UnAssigned", contactId, true);
           }
           if (!state.currentFilterKey?.includes("waMessageAssignStatus:mine")) {
@@ -317,11 +280,9 @@ export const useContactsStore = create<ContactsStoreState>()(
             const currentList = contactsByFilter[currentFilterKey] || [];
             let contactIncluded = currentList.includes(contactId);
             const isUnassigned =
-              updatedContact.waMessageAssignStatus ===
-              WaMessageAssignStatus.UNASSIGNED;
+              updatedContact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED;
             assignStatusChanged =
-              updatedContact.waMessageAssignStatus !==
-              contact.waMessageAssignStatus;
+              updatedContact.waMessageAssignStatus !== contact.waMessageAssignStatus;
             const status = currentFilterKey?.match(/status:[^|]*\|/) || [];
             const filterExcludesAll =
               (!currentFilterKey?.includes("messageType:all") ||
@@ -329,16 +290,13 @@ export const useContactsStore = create<ContactsStoreState>()(
                   status.length &&
                   !status[0].includes(updatedContact.waMessageAssignStatus))) &&
               (!currentFilterKey?.includes("waMessageAssignStatus:New") ||
-                (currentFilterKey?.includes("waMessageAssignStatus:New") &&
-                  !isUnassigned));
+                (currentFilterKey?.includes("waMessageAssignStatus:New") && !isUnassigned));
             const shouldFilterOut = assignStatusChanged && filterExcludesAll;
             const prevWaCreated = contact.lastMessage?.waCreatedAt ?? 0;
             const newWaCreated = updatedContact.lastMessage?.waCreatedAt ?? 0;
             messageUpdated = newWaCreated > prevWaCreated;
             if (!contactIncluded) {
-              const isNewFilter = currentFilterKey?.includes(
-                "waMessageAssignStatus:New",
-              );
+              const isNewFilter = currentFilterKey?.includes("waMessageAssignStatus:New");
 
               if (isNewFilter && isUnassigned) {
                 currentList.push(contactId);
@@ -389,9 +347,7 @@ export const useContactsStore = create<ContactsStoreState>()(
           state.updateContactList("New", contactId, messageUpdated);
         }
         if (
-          !state.currentFilterKey?.includes(
-            "waMessageAssignStatus:UnAssigned",
-          ) &&
+          !state.currentFilterKey?.includes("waMessageAssignStatus:UnAssigned") &&
           (messageUpdated || assignStatusChanged)
         ) {
           state.updateContactList("UnAssigned", contactId, messageUpdated);
@@ -433,11 +389,9 @@ export const useContactsStore = create<ContactsStoreState>()(
                 const state = get();
                 const contact = state.contactsById.get(contactId);
 
-                const isNew = !isInboxSessionExpired(
-                  contact.lastReceivedMessageTimeStamp,
-                );
-                const filterList = Object.keys(draft.contactsByFilter).filter(
-                  (key) => key.includes("messageType:all"),
+                const isNew = !isInboxSessionExpired(contact.lastReceivedMessageTimeStamp);
+                const filterList = Object.keys(draft.contactsByFilter).filter((key) =>
+                  key.includes("messageType:all"),
                 );
                 filterList.forEach((filterKey) => {
                   const contactIds = draft.contactsByFilter[filterKey] || [];
@@ -448,8 +402,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                   if (isNew) {
                     if (
                       !isInFilter &&
-                      (!status.length ||
-                        status[0].includes(contact.waMessageAssignStatus))
+                      (!status.length || status[0].includes(contact.waMessageAssignStatus))
                     ) {
                       newList.push(contactId);
                       changed = true;
@@ -498,11 +451,10 @@ export const useContactsStore = create<ContactsStoreState>()(
                 const state = get();
                 const contact = state.contactsById.get(contactId);
                 const isUnassigned =
-                  contact.waMessageAssignStatus ===
-                  WaMessageAssignStatus.UNASSIGNED;
+                  contact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED;
 
-                const filterList = Object.keys(draft.contactsByFilter).filter(
-                  (key) => key.includes("waMessageAssignStatus:UnAssigned"),
+                const filterList = Object.keys(draft.contactsByFilter).filter((key) =>
+                  key.includes("waMessageAssignStatus:UnAssigned"),
                 );
                 filterList.forEach((filterKey) => {
                   const contactIds = draft.contactsByFilter[filterKey] || [];
@@ -556,11 +508,9 @@ export const useContactsStore = create<ContactsStoreState>()(
 
                 const contact = state.contactsById.get(contactId);
 
-                const isAssigned =
-                  contact.waMessageAssignStatus ===
-                  WaMessageAssignStatus.ASSIGNED;
-                const filterList = Object.keys(draft.contactsByFilter).filter(
-                  (key) => key.includes("waMessageAssignStatus:mine"),
+                const isAssigned = contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED;
+                const filterList = Object.keys(draft.contactsByFilter).filter((key) =>
+                  key.includes("waMessageAssignStatus:mine"),
                 );
                 filterList.forEach((filterKey) => {
                   const contactIds = draft.contactsByFilter[filterKey] || [];
@@ -569,9 +519,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                   let changed = false;
                   if (
                     isAssigned &&
-                    contact.assignedUsers.some(
-                      (a) => a.id === state.currentUser.userId,
-                    )
+                    contact.assignedUsers.some((a) => a.id === state.currentUser.userId)
                   ) {
                     if (!isInFilter) {
                       newList.push(contactId);
@@ -619,13 +567,10 @@ export const useContactsStore = create<ContactsStoreState>()(
                 const state = get();
                 const contact = state.contactsById.get(contactId);
                 const isUnassigned =
-                  contact.waMessageAssignStatus ===
-                  WaMessageAssignStatus.UNASSIGNED;
-                const isNew = isInboxSessionExpired(
-                  contact.lastReceivedMessageTimeStamp,
-                );
-                const filterList = Object.keys(draft.contactsByFilter).filter(
-                  (key) => key.includes("waMessageAssignStatus:New"),
+                  contact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED;
+                const isNew = isInboxSessionExpired(contact.lastReceivedMessageTimeStamp);
+                const filterList = Object.keys(draft.contactsByFilter).filter((key) =>
+                  key.includes("waMessageAssignStatus:New"),
                 );
                 filterList.forEach((filterKey) => {
                   const contactIds = draft.contactsByFilter[filterKey] || [];
@@ -696,7 +641,7 @@ export const useContactsStore = create<ContactsStoreState>()(
       resetUnreadForContact(contactId, contact) {
         if (!contact) contact = get().contactsById.get(contactId);
         if (contact && contact.unReadMessageCount !== 0) {
-          get().updateContactById(contactId, (c) => ({
+          get().updateContactById(contactId, (_c) => ({
             ...contact,
             unReadMessageCount: 0,
           }));
@@ -785,11 +730,7 @@ interface MessagesStore {
   selectedKey: string | null;
   accessTimestamps: Map<string, number>;
   setSelected: (contactId: string, account: string) => void;
-  mergeMessages: (
-    key: string,
-    messages: WaGetMessagesBody[],
-    evictInactive?: boolean,
-  ) => void;
+  mergeMessages: (key: string, messages: WaGetMessagesBody[], evictInactive?: boolean) => void;
   addMessage: (key: string, message: WaGetMessagesBody) => void;
   removeMessage: (key: string, messageId: string) => void;
   getMessages: (key: string) => WaGetMessagesBody[];
@@ -820,14 +761,12 @@ export const useMessagesStore = create<MessagesStore>()(
         set({ selectedKey: key });
       },
 
-      mergeMessages: (key, messages, evictInactive = true) => {
+      mergeMessages: (key, messages, _evictInactive = true) => {
         const state = get();
         const m = new Map(state.messagesByKey);
         const entry = m.get(key) ?? { messages: [] };
 
-        const existing = new Map(
-          entry.messages.map((x) => [x.messageId ?? x.id, x]),
-        );
+        const existing = new Map(entry.messages.map((x) => [x.messageId ?? x.id, x]));
 
         const changedOrNew: any[] = [];
 
@@ -840,18 +779,12 @@ export const useMessagesStore = create<MessagesStore>()(
               ...existingMsg,
               ...msg,
               stats: {
-                read: msg.stats.read.length
-                  ? msg.stats.read
-                  : existingMsg.stats.read,
-                sent: msg.stats.sent.length
-                  ? msg.stats.sent
-                  : existingMsg.stats.sent,
+                read: msg.stats.read.length ? msg.stats.read : existingMsg.stats.read,
+                sent: msg.stats.sent.length ? msg.stats.sent : existingMsg.stats.sent,
                 delivered: msg.stats.delivered.length
                   ? msg.stats.delivered
                   : existingMsg.stats.delivered,
-                failed: msg.stats.failed.length
-                  ? msg.stats.failed
-                  : existingMsg.stats.failed,
+                failed: msg.stats.failed.length ? msg.stats.failed : existingMsg.stats.failed,
               },
             };
 
@@ -866,9 +799,7 @@ export const useMessagesStore = create<MessagesStore>()(
         }
 
         const sortedMessages = Array.from(existing.values()).sort(
-          (a, b) =>
-            new Date(b.waCreatedAt).getTime() -
-            new Date(a.waCreatedAt).getTime(),
+          (a, b) => new Date(b.waCreatedAt).getTime() - new Date(a.waCreatedAt).getTime(),
         );
 
         entry.messages = sortedMessages;
@@ -887,9 +818,7 @@ export const useMessagesStore = create<MessagesStore>()(
 
         // Add new message and sort
         const updatedMessages = [...entry.messages, message].sort(
-          (a, b) =>
-            new Date(b.waCreatedAt).getTime() -
-            new Date(a.waCreatedAt).getTime(),
+          (a, b) => new Date(b.waCreatedAt).getTime() - new Date(a.waCreatedAt).getTime(),
         );
 
         entry.messages = updatedMessages;
@@ -920,9 +849,7 @@ export const useMessagesStore = create<MessagesStore>()(
           const entry = state.messagesByKey.get(key);
           if (!entry?.messages?.length) return state;
 
-          const idx = entry.messages.findIndex(
-            (m) => (m.messageId ?? m.id) === messageId,
-          );
+          const idx = entry.messages.findIndex((m) => (m.messageId ?? m.id) === messageId);
           if (idx === -1) return state;
 
           const updatedMessages = [...entry.messages];
@@ -930,9 +857,7 @@ export const useMessagesStore = create<MessagesStore>()(
           updatedMessages[idx] = updatedMessage;
           const sorted = data.waCreatedAt
             ? updatedMessages.sort(
-                (a, b) =>
-                  new Date(b.waCreatedAt).getTime() -
-                  new Date(a.waCreatedAt).getTime(),
+                (a, b) => new Date(b.waCreatedAt).getTime() - new Date(a.waCreatedAt).getTime(),
               )
             : updatedMessages;
           const newMap = new Map(state.messagesByKey);

@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Rating, Text, useMantineTheme } from "@mantine/core";
 import {
   IconMoodAngry,
@@ -11,8 +7,8 @@ import {
   IconMoodSad,
 } from "@tabler/icons-react";
 import { useAnimate } from "motion/react";
+import { useEffect, useState } from "react";
 
-import { SmileyResponse } from "@/types/enums.ts";
 import {
   generateGradient,
   SmileyColorType,
@@ -20,6 +16,7 @@ import {
 } from "@/components/Survey/Question/QuestionExtraProps/SmileyExtraProps.tsx";
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext.tsx";
 import { useSurveyContext } from "@/context/SurveyObjContext.tsx";
+import { SmileyResponse } from "@/types/enums.ts";
 
 import {
   getEmptyIcon,
@@ -67,21 +64,11 @@ const SmileyRating = ({ updateResponse, response, features }) => {
     colorType: SmileyColorType.Default,
   };
 
-  const {
-    variant,
-    colorType,
-    color,
-    gradientStartColor,
-    gradientEndColor,
-    emojies,
-  } = iconStyle;
+  const { variant, colorType, color, gradientStartColor, gradientEndColor } = iconStyle;
   useEffect(() => {
     if (features?.iconStyle) {
       if (!variant) return;
-      if (
-        ![SmileyVariantStyle.Custom].includes(variant) &&
-        colorType !== SmileyColorType.Default
-      ) {
+      if (![SmileyVariantStyle.Custom].includes(variant) && colorType !== SmileyColorType.Default) {
         setIsCustomColor(true);
         const newColor = {};
         const colorArray = generateGradient(
@@ -93,8 +80,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
         Object.values(SmileyResponse)
           .reverse()
           .map((s, i) => {
-            if (colorType === SmileyColorType.Gradient)
-              newColor[i + 1] = colorArray[i];
+            if (colorType === SmileyColorType.Gradient) newColor[i + 1] = colorArray[i];
             else newColor[i + 1] = color?.[i + 1] ?? theme.primaryColor;
           });
         setIconColor(newColor);
@@ -119,11 +105,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
         )
       }
       fullSymbol={(number) =>
-        getFullIcon(
-          number,
-          customColor ? iconColor?.[number] : theme.primaryColor,
-          iconStyle,
-        )
+        getFullIcon(number, customColor ? iconColor?.[number] : theme.primaryColor, iconStyle)
       }
       highlightSelectedOnly
       onChange={async (value) => {
@@ -133,11 +115,7 @@ const SmileyRating = ({ updateResponse, response, features }) => {
         );
         if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
           if (selectedValueEle) {
-            await animate(
-              selectedValueEle,
-              { opacity: [0, 1, 0, 1] },
-              { duration: 0.7 },
-            );
+            await animate(selectedValueEle, { opacity: [0, 1, 0, 1] }, { duration: 0.7 });
           }
           nextFn?.(updateStringResponse(value));
         }
@@ -205,7 +183,7 @@ export function getSmileyIcon(value: SmileyResponse, color = "black") {
     case SmileyResponse.VeryHappy:
       return <IconMoodCrazyHappy color={color} />;
     default:
-      null;
+      return null;
   }
 }
 
@@ -215,34 +193,24 @@ export function getCustomSmileyIcon(response: SmileyResponse, question) {
   let emoji;
   switch (response) {
     case SmileyResponse.VerySad:
-      if (iconStyle?.variant === SmileyVariantStyle.Custom)
-        emoji = iconStyle?.emojies?.[1];
-      if (iconStyle?.variant === SmileyVariantStyle.Emojis)
-        emoji = getSmileyEmojies(1);
+      if (iconStyle?.variant === SmileyVariantStyle.Custom) emoji = iconStyle?.emojies?.[1];
+      if (iconStyle?.variant === SmileyVariantStyle.Emojis) emoji = getSmileyEmojies(1);
       break;
     case SmileyResponse.Sad:
-      if (iconStyle?.variant === SmileyVariantStyle.Custom)
-        emoji = iconStyle?.emojies?.[2];
-      if (iconStyle?.variant === SmileyVariantStyle.Emojis)
-        emoji = getSmileyEmojies(2);
+      if (iconStyle?.variant === SmileyVariantStyle.Custom) emoji = iconStyle?.emojies?.[2];
+      if (iconStyle?.variant === SmileyVariantStyle.Emojis) emoji = getSmileyEmojies(2);
       break;
     case SmileyResponse.Neutral:
-      if (iconStyle?.variant === SmileyVariantStyle.Custom)
-        emoji = iconStyle?.emojies?.[3];
-      if (iconStyle?.variant === SmileyVariantStyle.Emojis)
-        emoji = getSmileyEmojies(3);
+      if (iconStyle?.variant === SmileyVariantStyle.Custom) emoji = iconStyle?.emojies?.[3];
+      if (iconStyle?.variant === SmileyVariantStyle.Emojis) emoji = getSmileyEmojies(3);
       break;
     case SmileyResponse.Happy:
-      if (iconStyle?.variant === SmileyVariantStyle.Custom)
-        emoji = iconStyle?.emojies?.[4];
-      if (iconStyle?.variant === SmileyVariantStyle.Emojis)
-        emoji = getSmileyEmojies(4);
+      if (iconStyle?.variant === SmileyVariantStyle.Custom) emoji = iconStyle?.emojies?.[4];
+      if (iconStyle?.variant === SmileyVariantStyle.Emojis) emoji = getSmileyEmojies(4);
       break;
     case SmileyResponse.VeryHappy:
-      if (iconStyle?.variant === SmileyVariantStyle.Custom)
-        emoji = iconStyle?.emojies?.[5];
-      if (iconStyle?.variant === SmileyVariantStyle.Emojis)
-        emoji = getSmileyEmojies(5);
+      if (iconStyle?.variant === SmileyVariantStyle.Custom) emoji = iconStyle?.emojies?.[5];
+      if (iconStyle?.variant === SmileyVariantStyle.Emojis) emoji = getSmileyEmojies(5);
       break;
     default:
       break;

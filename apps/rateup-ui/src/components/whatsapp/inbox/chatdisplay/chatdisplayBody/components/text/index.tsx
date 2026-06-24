@@ -6,8 +6,7 @@ interface Props {
 export default function WaInboxText(props: Props) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
 
-  const message =
-    typeof props?.messageContent === "string" ? props.messageContent : "";
+  const message = typeof props?.messageContent === "string" ? props.messageContent : "";
   const parts = message.split(urlRegex).filter(Boolean);
 
   return (
@@ -23,10 +22,7 @@ export default function WaInboxText(props: Props) {
             {text}
           </a>
         ) : (
-          <div
-            key={index}
-            dangerouslySetInnerHTML={{ __html: whatsappToHTML(text) }}
-          />
+          <div key={index} dangerouslySetInnerHTML={{ __html: whatsappToHTML(text) }} />
         ),
       )}
     </div>

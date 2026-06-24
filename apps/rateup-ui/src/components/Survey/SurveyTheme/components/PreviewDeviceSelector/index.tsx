@@ -2,14 +2,10 @@ import { Group, Tabs } from "@mantine/core";
 import { IconDeviceDesktop, IconDeviceMobile } from "@tabler/icons-react";
 
 import { PreviewTypeEnum } from "../../SurveyTheme.enums";
+
 import styles from "./PreviewDeviceSelector.module.css";
 
-function PreviewDeviceSelector({
-  onChange,
-  value,
-  withLabel = true,
-  className = "",
-}) {
+function PreviewDeviceSelector({ onChange, value, withLabel = true, className = "" }) {
   return (
     <Group className={`${styles["preview-device-selector-div"]} ${className}`}>
       {withLabel && <p className={styles["label"]}>Preview:</p>}

@@ -5,8 +5,7 @@ export const Route = createFileRoute("/robots.txt")({
   server: {
     handlers: {
       GET: async () => {
-        const baseUrl =
-          import.meta.env.VITE_FRONTEND_URL || "https://rateup.app";
+        const baseUrl = import.meta.env.VITE_FRONTEND_URL || "https://rateup.app";
         const robots = `User-agent: *
 Allow: /
 Disallow: /admin/

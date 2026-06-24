@@ -1,16 +1,5 @@
-"use client";
-
 import type { MenuProps } from "@mantine/core";
-import {
-  Box,
-  Button,
-  Group,
-  Menu,
-  rem,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { Box, Button, Group, Menu, rem, Stack, Text, Tooltip } from "@mantine/core";
 import {
   IconAdjustments,
   IconBuildingStore,
@@ -70,9 +59,7 @@ export const ButtonSelection = ({
           <Tooltip
             label={
               category === "AUTHENTICATION"
-                ? translations(
-                    "Only authentication buttons are allowed for this template",
-                  )
+                ? translations("Only authentication buttons are allowed for this template")
                 : translations(
                     "Only one button is supported for this type of template. The button text is not editable.",
                   )
@@ -97,22 +84,14 @@ export const ButtonSelection = ({
             <>
               <Menu.Label>{translations("Authentication Buttons")}</Menu.Label>
               <Tooltip
-                label={
-                  btnLen > 0
-                    ? translations("Only one authentication button allowed")
-                    : ""
-                }
+                label={btnLen > 0 ? translations("Only one authentication button allowed") : ""}
                 display={btnLen === 0 ? "none" : "block"}
               >
                 <Box>
                   <Menu.Item
                     disabled={btnLen > 0}
-                    leftSection={
-                      <IconCopy style={{ width: rem(14), height: rem(14) }} />
-                    }
-                    onClick={() =>
-                      handleMenuSelection(WHATSAPP_BUTTON_TYPE.OTP)
-                    }
+                    leftSection={<IconCopy style={{ width: rem(14), height: rem(14) }} />}
+                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.OTP)}
                   >
                     {translations("OTP (One-Time Password)")}
                   </Menu.Item>
@@ -122,9 +101,7 @@ export const ButtonSelection = ({
             </>
           ) : (
             <>
-              <Menu.Label>
-                {translations("Rateup Interactive Buttons")}
-              </Menu.Label>
+              <Menu.Label>{translations("Rateup Interactive Buttons")}</Menu.Label>
               <Tooltip
                 label={(btnLen > 0 || flowBtn) && "Already added"}
                 display={btnLen === 0 ? "none" : "block"}
@@ -132,14 +109,8 @@ export const ButtonSelection = ({
                 <Box>
                   <Menu.Item
                     disabled={btnLen > 0 || flowBtn}
-                    leftSection={
-                      <IconWaveSine
-                        style={{ width: rem(14), height: rem(14) }}
-                      />
-                    }
-                    onClick={() =>
-                      handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW)
-                    }
+                    leftSection={<IconWaveSine style={{ width: rem(14), height: rem(14) }} />}
+                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW)}
                   >
                     {translations("Whatsapp Flow")}
                   </Menu.Item>
@@ -147,29 +118,18 @@ export const ButtonSelection = ({
               </Tooltip>
               <Tooltip
                 label={
-                  (mpmBtn &&
-                    translations("Remove MPM button to add other buttons")) ||
-                  (checkoutBtn &&
-                    "Remove Checkout button to add other buttons") ||
-                  (catalogBtn &&
-                    "Remove View Catalog button to add other buttons") ||
+                  (mpmBtn && translations("Remove MPM button to add other buttons")) ||
+                  (checkoutBtn && "Remove Checkout button to add other buttons") ||
+                  (catalogBtn && "Remove View Catalog button to add other buttons") ||
                   (spmBtn && "Remove SPM button to add other buttons")
                 }
-                display={
-                  !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
-                    ? "none"
-                    : "block"
-                }
+                display={!mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn ? "none" : "block"}
               >
                 <Box>
                   <Menu.Item
                     disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
-                    leftSection={
-                      <IconWorld style={{ width: rem(14), height: rem(14) }} />
-                    }
-                    onClick={() =>
-                      handleMenuSelection(WHATSAPP_BUTTON_TYPE.WEBSURVEY)
-                    }
+                    leftSection={<IconWorld style={{ width: rem(14), height: rem(14) }} />}
+                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.WEBSURVEY)}
                   >
                     {translations("Rateup Web Survey")}
                   </Menu.Item>
@@ -179,10 +139,8 @@ export const ButtonSelection = ({
               <Menu.Label>{translations("Quick Reply Buttons")}</Menu.Label>
               <Tooltip
                 label={
-                  (mpmBtn &&
-                    translations("Remove MPM button to add other buttons")) ||
-                  (catalogBtn &&
-                    "Remove View Catalog button to add other buttons") ||
+                  (mpmBtn && translations("Remove MPM button to add other buttons")) ||
+                  (catalogBtn && "Remove View Catalog button to add other buttons") ||
                   (spmBtn && "Remove SPM button to add other buttons")
                 }
                 display={!mpmBtn && !catalogBtn && !spmBtn ? "none" : "block"}
@@ -190,14 +148,8 @@ export const ButtonSelection = ({
                 <Box>
                   <Menu.Item
                     disabled={mpmBtn || catalogBtn || spmBtn}
-                    leftSection={
-                      <IconAdjustments
-                        style={{ width: rem(14), height: rem(14) }}
-                      />
-                    }
-                    onClick={() =>
-                      handleMenuSelection(WHATSAPP_BUTTON_TYPE.QUICK_REPLY)
-                    }
+                    leftSection={<IconAdjustments style={{ width: rem(14), height: rem(14) }} />}
+                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.QUICK_REPLY)}
                   >
                     {translations("Custom")}
                   </Menu.Item>
@@ -208,31 +160,18 @@ export const ButtonSelection = ({
               <Menu.Label>{translations("Call-To-Action Buttons")}</Menu.Label>
               <Tooltip
                 label={
-                  (mpmBtn &&
-                    translations("Remove MPM button to add other buttons")) ||
-                  (checkoutBtn &&
-                    "Remove Checkout button to add other buttons") ||
-                  (catalogBtn &&
-                    "Remove View Catalog button to add other buttons") ||
+                  (mpmBtn && translations("Remove MPM button to add other buttons")) ||
+                  (checkoutBtn && "Remove Checkout button to add other buttons") ||
+                  (catalogBtn && "Remove View Catalog button to add other buttons") ||
                   (spmBtn && "Remove SPM button to add other buttons")
                 }
-                display={
-                  !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
-                    ? "none"
-                    : "block"
-                }
+                display={!mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn ? "none" : "block"}
               >
                 <Box>
                   <Menu.Item
                     disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
-                    leftSection={
-                      <IconPhone style={{ width: rem(14), height: rem(14) }} />
-                    }
-                    onClick={() =>
-                      handleMenuSelection(
-                        WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER,
-                      )
-                    }
+                    leftSection={<IconPhone style={{ width: rem(14), height: rem(14) }} />}
+                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER)}
                   >
                     {translations("Call phone number")}
                   </Menu.Item>
@@ -240,29 +179,18 @@ export const ButtonSelection = ({
               </Tooltip>
               <Tooltip
                 label={
-                  (mpmBtn &&
-                    translations("Remove MPM button to add other buttons")) ||
-                  (checkoutBtn &&
-                    "Remove Checkout button to add other buttons") ||
-                  (catalogBtn &&
-                    "Remove View Catalog button to add other buttons") ||
+                  (mpmBtn && translations("Remove MPM button to add other buttons")) ||
+                  (checkoutBtn && "Remove Checkout button to add other buttons") ||
+                  (catalogBtn && "Remove View Catalog button to add other buttons") ||
                   (spmBtn && "Remove SPM button to add other buttons")
                 }
-                display={
-                  !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
-                    ? "none"
-                    : "block"
-                }
+                display={!mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn ? "none" : "block"}
               >
                 <Box>
                   <Menu.Item
                     disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
-                    leftSection={
-                      <IconCopy style={{ width: rem(14), height: rem(14) }} />
-                    }
-                    onClick={() =>
-                      handleMenuSelection(WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE)
-                    }
+                    leftSection={<IconCopy style={{ width: rem(14), height: rem(14) }} />}
+                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE)}
                   >
                     {translations("Copy offer code")}
                   </Menu.Item>
@@ -270,29 +198,18 @@ export const ButtonSelection = ({
               </Tooltip>
               <Tooltip
                 label={
-                  (mpmBtn &&
-                    translations("Remove MPM button to add other buttons")) ||
-                  (checkoutBtn &&
-                    "Remove Checkout button to add other buttons") ||
-                  (catalogBtn &&
-                    "Remove View Catalog button to add other buttons") ||
+                  (mpmBtn && translations("Remove MPM button to add other buttons")) ||
+                  (checkoutBtn && "Remove Checkout button to add other buttons") ||
+                  (catalogBtn && "Remove View Catalog button to add other buttons") ||
                   (spmBtn && "Remove SPM button to add other buttons")
                 }
-                display={
-                  !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
-                    ? "none"
-                    : "block"
-                }
+                display={!mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn ? "none" : "block"}
               >
                 <Box>
                   <Menu.Item
                     disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
-                    leftSection={
-                      <IconLink style={{ width: rem(14), height: rem(14) }} />
-                    }
-                    onClick={() =>
-                      handleMenuSelection(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)
-                    }
+                    leftSection={<IconLink style={{ width: rem(14), height: rem(14) }} />}
+                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)}
                   >
                     {translations("Visit website")}
                   </Menu.Item>
@@ -302,24 +219,15 @@ export const ButtonSelection = ({
 
               <Menu.Label>{translations("Catalog Buttons")}</Menu.Label>
               <Tooltip
-                label={
-                  btnLen > 0 && "Remove all buttons to add View catalog button"
-                }
+                label={btnLen > 0 && "Remove all buttons to add View catalog button"}
                 display={!btnLen ? "none" : "block"}
               >
                 <Box>
                   <Menu.Item
                     disabled={btnLen > 0}
-                    leftSection={
-                      <IconBuildingStore
-                        style={{ width: rem(14), height: rem(14) }}
-                      />
-                    }
+                    leftSection={<IconBuildingStore style={{ width: rem(14), height: rem(14) }} />}
                     onClick={() =>
-                      handleMenuSelection(
-                        WHATSAPP_BUTTON_TYPE.CATALOG,
-                        "View catalog",
-                      )
+                      handleMenuSelection(WHATSAPP_BUTTON_TYPE.CATALOG, "View catalog")
                     }
                   >
                     View Catalog
@@ -327,25 +235,14 @@ export const ButtonSelection = ({
                 </Box>
               </Tooltip>
               <Tooltip
-                label={
-                  btnLen > 0 ? "Remove all button to add a MPM button" : ""
-                }
+                label={btnLen > 0 ? "Remove all button to add a MPM button" : ""}
                 display={btnLen === 0 ? "none" : "block"}
               >
                 <Box>
                   <Menu.Item
                     disabled={btnLen > 0}
-                    leftSection={
-                      <IconShoppingCart
-                        style={{ width: rem(14), height: rem(14) }}
-                      />
-                    }
-                    onClick={() =>
-                      handleMenuSelection(
-                        WHATSAPP_BUTTON_TYPE.MPM,
-                        "View items",
-                      )
-                    }
+                    leftSection={<IconShoppingCart style={{ width: rem(14), height: rem(14) }} />}
+                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.MPM, "View items")}
                   >
                     MPM (Multi-Product)
                   </Menu.Item>
@@ -358,14 +255,8 @@ export const ButtonSelection = ({
                 <Box>
                   <Menu.Item
                     disabled={btnLen > 0}
-                    leftSection={
-                      <IconShoppingBag
-                        style={{ width: rem(14), height: rem(14) }}
-                      />
-                    }
-                    onClick={() =>
-                      handleMenuSelection(WHATSAPP_BUTTON_TYPE.SPM, "View")
-                    }
+                    leftSection={<IconShoppingBag style={{ width: rem(14), height: rem(14) }} />}
+                    onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.SPM, "View")}
                   >
                     SPM (Single-Product)
                   </Menu.Item>
@@ -383,25 +274,14 @@ export const ButtonSelection = ({
                           ? "Remove SPM button to add other buttons"
                           : ""
                 }
-                display={
-                  !flowBtn && !mpmBtn && !catalogBtn && !spmBtn
-                    ? "none"
-                    : "block"
-                }
+                display={!flowBtn && !mpmBtn && !catalogBtn && !spmBtn ? "none" : "block"}
               >
                 <Box>
                   <Menu.Item
                     disabled={flowBtn || mpmBtn || catalogBtn || spmBtn}
-                    leftSection={
-                      <IconCreditCardPay
-                        style={{ width: rem(14), height: rem(14) }}
-                      />
-                    }
+                    leftSection={<IconCreditCardPay style={{ width: rem(14), height: rem(14) }} />}
                     onClick={() =>
-                      handleMenuSelection(
-                        WHATSAPP_BUTTON_TYPE.ORDER_DETAILS,
-                        "Buy now",
-                      )
+                      handleMenuSelection(WHATSAPP_BUTTON_TYPE.ORDER_DETAILS, "Buy now")
                     }
                   >
                     Checkout Button
@@ -414,9 +294,7 @@ export const ButtonSelection = ({
       </Menu>
       <Group fz={14} gap={"xs"} wrap="nowrap">
         <IconBulb size={16} />
-        {translations(
-          "If you add more than three buttons, they will appear in a list.",
-        )}
+        {translations("If you add more than three buttons, they will appear in a list.")}
       </Group>
       <Group fz={14} gap={"xs"} wrap="nowrap" c="blue">
         <IconInfoCircle size={16} />

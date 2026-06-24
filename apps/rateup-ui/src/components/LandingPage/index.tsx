@@ -1,11 +1,8 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { Plus, RefreshCw, Search } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLandingPages } from "@/backend/landingPage/landingPage.query";
@@ -25,8 +22,9 @@ function LandingPageDashboard() {
   const baseURL = "/dashboard/landingPages";
   const shareUrl = `${import.meta.env.VITE_FRONTEND_URL}/lp`;
 
-  const [isCreateLandingPageModalOpen, createLandingPageModalHandlers] =
-    useDisclosure(action === "create");
+  const [isCreateLandingPageModalOpen, createLandingPageModalHandlers] = useDisclosure(
+    action === "create",
+  );
   const { data, isPending, isError } = useLandingPages();
   const queryClient = useQueryClient();
 
@@ -95,20 +93,13 @@ function LandingPageDashboard() {
       <div className="border-b px-6 py-4 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">
-              {translations("Landing Pages")}
-            </h1>
+            <h1 className="text-xl font-semibold">{translations("Landing Pages")}</h1>
             <p className="text-sm text-gray-600">
               {translations("Create and manage your landing pages")}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleRefresh}
-              className="h-9 w-9"
-            >
+            <Button variant="outline" size="icon" onClick={handleRefresh} className="h-9 w-9">
               <RefreshCw className="w-4 h-4" />
             </Button>
           </div>
@@ -116,10 +107,7 @@ function LandingPageDashboard() {
 
         {/* Search and Actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
-          <Button
-            onClick={createLandingPageModalHandlers.open}
-            className="bg-primary h-10 px-4"
-          >
+          <Button onClick={createLandingPageModalHandlers.open} className="bg-primary h-10 px-4">
             <Plus className="w-4 h-4 mr-2" />
             {translations("New Landing Page")}
           </Button>
@@ -134,10 +122,7 @@ function LandingPageDashboard() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <SortDropdown
-              onSortChange={handleSortChange}
-              defaultSortOption={sortOption}
-            />
+            <SortDropdown onSortChange={handleSortChange} defaultSortOption={sortOption} />
           </div>
         </div>
       </div>

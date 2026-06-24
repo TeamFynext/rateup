@@ -1,10 +1,6 @@
-"use client";
-
-import React from "react";
-
 import type { IndicatorProps } from "@mantine/core";
 import { ActionIcon, CopyButton, Tooltip } from "@mantine/core";
-import { IconCopy, IconRobot } from "@tabler/icons-react";
+import { IconCopy } from "@tabler/icons-react";
 import type { EmojiClickData } from "emoji-picker-react";
 import {
   AlertCircle,
@@ -19,27 +15,21 @@ import {
   Terminal,
   UserCog,
 } from "lucide-react";
+import React from "react";
 import { toast } from "sonner";
 
-import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
-import type { WaReceiveMessageBody } from "@/types/global";
 import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useContactsStore } from "@/components/dashboard/inbox/store.ts";
 import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip.tsx";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover.tsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore.ts";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar.tsx";
 import { useUser } from "@/context/UserContext.tsx";
-import {
-  formatDateWithRelativeTime,
-  formatToCustomTime,
-} from "@/utils/dateTime.ts";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums.ts";
+import type { WaReceiveMessageBody } from "@/types/global";
+import { formatDateWithRelativeTime, formatToCustomTime } from "@/utils/dateTime.ts";
 
 interface Props {
   exchangeProcess: "send" | "receive" | "internal" | "privateNote";
@@ -55,8 +45,7 @@ interface Props {
   };
 }
 
-const TIMESTAMP_CLASS =
-  "text-[10px] font-medium text-slate-400 dark:text-slate-500";
+const TIMESTAMP_CLASS = "text-[10px] font-medium text-slate-400 dark:text-slate-500";
 
 const SEND_BACKGROUND_CLASS: Record<string, string> = {
   [MessagePlatform.INSTAGRAM]: "bg-pink-50 dark:bg-pink-950/20",
@@ -81,35 +70,21 @@ const INTERNAL_BACKGROUND_CLASS: Record<string, string> = {
 };
 
 const INTERNAL_BORDER_CLASS: Record<string, string> = {
-  [WaMessageAssignStatus.RESOLVED]:
-    "rounded-xl border border-green-200 dark:border-green-900/30",
+  [WaMessageAssignStatus.RESOLVED]: "rounded-xl border border-green-200 dark:border-green-900/30",
   [WaMessageAssignStatus.UNRESOLVED]:
     "rounded-xl border border-orange-200 dark:border-orange-900/30",
-  [WaMessageAssignStatus.CLOSED]:
-    "rounded-xl border border-blue-200 dark:border-blue-900/30",
-  [WaMessageAssignStatus.SPAM]:
-    "rounded-xl border border-red-200 dark:border-red-900/30",
+  [WaMessageAssignStatus.CLOSED]: "rounded-xl border border-blue-200 dark:border-blue-900/30",
+  [WaMessageAssignStatus.SPAM]: "rounded-xl border border-red-200 dark:border-red-900/30",
 };
 
-const MessageStats = ({
-  status,
-}: Readonly<{ status: WaGetMessagesBody["stats"] }>) => {
+const MessageStats = ({ status }: Readonly<{ status: WaGetMessagesBody["stats"] }>) => {
   if (status?.failed?.length) return null;
 
   return (
     <div className="flex min-w-36 flex-col gap-1 text-xs text-slate-600 dark:text-slate-300">
-      <p>
-        Read: {status?.read ? formatDateWithRelativeTime(status?.read) : "..."}
-      </p>
-      <p>
-        Delivered:{" "}
-        {status?.delivered
-          ? formatDateWithRelativeTime(status?.delivered)
-          : "..."}
-      </p>
-      <p>
-        Sent: {status?.sent ? formatDateWithRelativeTime(status?.sent) : "..."}
-      </p>
+      <p>Read: {status?.read ? formatDateWithRelativeTime(status?.read) : "..."}</p>
+      <p>Delivered: {status?.delivered ? formatDateWithRelativeTime(status?.delivered) : "..."}</p>
+      <p>Sent: {status?.sent ? formatDateWithRelativeTime(status?.sent) : "..."}</p>
     </div>
   );
 };
@@ -313,17 +288,13 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   const { exchangeProcess, messageObject, reaction } = props;
   const { user } = useUser();
   const { selectedContact } = useContactsStore();
-  const currentUser = selectedContact.assignedUsers?.find(
-    (c) => c.id === user?.userId,
-  );
+  const currentUser = selectedContact.assignedUsers?.find((c) => c.id === user?.userId);
 
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const messageContentRef = React.useRef<HTMLDivElement | null>(null);
-  const platform =
-    selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const platform = selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const isAutomatedSend = exchangeProcess === "send" && !messageObject?.sender;
-  const shouldShowSenderAvatar =
-    exchangeProcess === "send" && Boolean(messageObject?.sender);
+  const shouldShowSenderAvatar = exchangeProcess === "send" && Boolean(messageObject?.sender);
   const senderName = messageObject?.sender?.name ?? "Automation";
   const senderColor = messageObject?.sender
     ? getColorForUser(messageObject.sender.name)
@@ -356,10 +327,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
       return;
     }
     let reactionText;
-    if (
-      platform === MessagePlatform.INSTAGRAM ||
-      platform === MessagePlatform.FACEBOOK
-    ) {
+    if (platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK) {
       reactionText = emojiReactionMap(emojiData.unified);
       if (!reactionText) {
         toast.error(`${emoji} not supported`);
@@ -372,15 +340,13 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
       platform !== MessagePlatform.INSTAGRAM &&
       platform !== MessagePlatform.FACEBOOK
     ) {
-      messageId = (
-        props?.messageObject?.messageBody?.receive as WaReceiveMessageBody
-      )?.messages[0]?.id;
+      messageId = (props?.messageObject?.messageBody?.receive as WaReceiveMessageBody)?.messages[0]
+        ?.id;
     }
     const reactionPayload = {
       reaction: reactionText,
       emoji:
-        platform === MessagePlatform.INSTAGRAM ||
-        platform === MessagePlatform.FACEBOOK
+        platform === MessagePlatform.INSTAGRAM || platform === MessagePlatform.FACEBOOK
           ? undefined
           : emoji,
       toWaMessageId: messageId,
@@ -392,19 +358,12 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
   const timestampNode = <span className={TIMESTAMP_CLASS}>{timestamp}</span>;
 
   return (
-    <div
-      key={messageObject.id}
-      className={`group flex w-full items-end gap-2 ${rootAlignment}`}
-    >
+    <div key={messageObject.id} className={`group flex w-full items-end gap-2 ${rootAlignment}`}>
       {exchangeProcess === "send" && (
         <div className="pointer-events-none mt-auto opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
           <CopyButton value={messageContentRef?.current?.innerText ?? ""}>
             {({ copied, copy }) => (
-              <Tooltip
-                label={copied ? "Copied" : "Copy"}
-                withArrow
-                position="right"
-              >
+              <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="right">
                 <ActionIcon
                   color={copied ? "teal" : "gray"}
                   variant="subtle"
@@ -457,10 +416,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
                     </span>
                   </div>
                 ) : (
-                  <span
-                    style={{ color: senderColor }}
-                    className="mb-1 block text-xs font-semibold"
-                  >
+                  <span style={{ color: senderColor }} className="mb-1 block text-xs font-semibold">
                     {senderName}
                   </span>
                 ))}
@@ -474,9 +430,7 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
               )}
 
               {exchangeProcess === "internal" && (
-                <span className="mb-1 block text-sm">
-                  {renderInternalStatus(assignStatus)}
-                </span>
+                <span className="mb-1 block text-sm">{renderInternalStatus(assignStatus)}</span>
               )}
               <div
                 ref={messageContentRef}
@@ -490,12 +444,9 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
                 <ReactionPopOver reaction={reaction} />
               </div>
             </div>
-            <div
-              className={`mt-1 flex items-center gap-1.5 px-2 ${metaAlignment}`}
-            >
+            <div className={`mt-1 flex items-center gap-1.5 px-2 ${metaAlignment}`}>
               {!messageObject?.stats?.failed &&
-              (exchangeProcess === "send" ||
-                exchangeProcess === "privateNote") ? (
+              (exchangeProcess === "send" || exchangeProcess === "privateNote") ? (
                 <CustomTooltip
                   trigger={timestampNode}
                   content={<MessageStats status={messageObject?.stats} />}
@@ -527,16 +478,8 @@ export default function WaInboxSingleMessageLayout(props: Readonly<Props>) {
           <PopoverEmojiPicker onEmojiClick={sendReaction} />
           <CopyButton value={messageContentRef?.current?.innerText}>
             {({ copied, copy }) => (
-              <Tooltip
-                label={copied ? "Copied" : "Copy"}
-                withArrow
-                position="right"
-              >
-                <ActionIcon
-                  color={copied ? "teal" : "gray"}
-                  variant="subtle"
-                  onClick={copy}
-                >
+              <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="right">
+                <ActionIcon color={copied ? "teal" : "gray"} variant="subtle" onClick={copy}>
                   {copied ? <Check size={16} /> : <IconCopy size={16} />}
                 </ActionIcon>
               </Tooltip>
@@ -556,9 +499,7 @@ export function reactionEmojiMap(reaction) {
   return "�";
 }
 
-const ReactionPopOver = ({
-  reaction,
-}: Readonly<{ reaction?: Props["reaction"] }>) => {
+const ReactionPopOver = ({ reaction }: Readonly<{ reaction?: Props["reaction"] }>) => {
   if (!reaction) return null;
   return (
     <Popover>
@@ -575,9 +516,7 @@ const ReactionPopOver = ({
           <CreativeAvatar name={reaction.from} size="xs" />
           <p className="text-sm font-medium">{reaction.from}</p>
         </div>
-        <p className="text-xl">
-          {reaction?.emoji || reactionEmojiMap(reaction?.reaction)}
-        </p>
+        <p className="text-xl">{reaction?.emoji || reactionEmojiMap(reaction?.reaction)}</p>
       </PopoverContent>
     </Popover>
   );

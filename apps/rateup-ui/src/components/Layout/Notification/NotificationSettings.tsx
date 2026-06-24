@@ -1,5 +1,3 @@
-"use client";
-
 import { IconBrandWhatsappFilled, IconTicket } from "@tabler/icons-react";
 
 import {
@@ -66,9 +64,7 @@ const TicketNotificationSettings = () => {
   return (
     <div className="pt-1">
       <div className="flex items-center justify-between rounded-md border border-border p-3">
-        <Label htmlFor="ticket-assigned">
-          Allow notification on ticket assigned
-        </Label>
+        <Label htmlFor="ticket-assigned">Allow notification on ticket assigned</Label>
         {isLoading ? (
           <Skeleton className="h-5 w-10" />
         ) : (
@@ -103,11 +99,7 @@ const notificationFeatures = [
 const NotificationSettings = () => {
   return (
     <div className="px-4">
-      <Accordion
-        type="single"
-        collapsible
-        defaultValue={notificationFeatures[0].value}
-      >
+      <Accordion type="single" collapsible defaultValue={notificationFeatures[0].value}>
         {notificationFeatures.map((item) => (
           <AccordionItem key={item.value} value={item.value}>
             <AccordionTrigger className="py-3 hover:no-underline">

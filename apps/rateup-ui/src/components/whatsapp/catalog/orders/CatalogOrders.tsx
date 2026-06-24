@@ -1,24 +1,13 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { ExternalLink, ShoppingBag } from "lucide-react";
+import { useMemo, useState } from "react";
 
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons.tsx";
-import {
-  createSortableHeader,
-  DataTable,
-} from "@/components/Table/data-table.tsx";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog.tsx";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { PAGE_SIZE } from "@/utils/constants.ts";
 
@@ -52,8 +41,7 @@ const CatalogOrders = ({ catalogId }) => {
       header: () => "Created At",
       accessorKey: "createdAt",
       id: "createdAt",
-      cell: (info) =>
-        dayjs(info.getValue() as string).format("DD/MM/YYYY hh:mm A"),
+      cell: (info) => dayjs(info.getValue() as string).format("DD/MM/YYYY hh:mm A"),
     },
     {
       header: () => "Phone Number",
@@ -172,8 +160,7 @@ const CatalogOrders = ({ catalogId }) => {
     },
   ];
 
-  if (error)
-    return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
+  if (error) return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
 
   return (
     <div className="flex flex-col gap-4 relative">
@@ -198,9 +185,7 @@ const CatalogOrders = ({ catalogId }) => {
           <div className="flex flex-col gap-4 py-4">
             <div className="space-y-1">
               <p className="text-sm text-gray-500">
-                <span className="font-semibold text-gray-900">
-                  Order placed:{" "}
-                </span>
+                <span className="font-semibold text-gray-900">Order placed: </span>
                 {dayjs(selectedOrder?.createdAt).format("DD/MM/YYYY hh:mm A")}
               </p>
               <p className="text-sm text-gray-500">
@@ -209,9 +194,7 @@ const CatalogOrders = ({ catalogId }) => {
               </p>
               {selectedOrder?.shopifyInvoiceUrl && (
                 <p className="text-sm text-gray-500">
-                  <span className="font-semibold text-gray-900">
-                    Shopify Checkout:{" "}
-                  </span>
+                  <span className="font-semibold text-gray-900">Shopify Checkout: </span>
                   <a
                     href={selectedOrder.shopifyInvoiceUrl}
                     target="_blank"
@@ -227,8 +210,7 @@ const CatalogOrders = ({ catalogId }) => {
             <p className="font-medium">Items Ordered</p>
             <DataTable columns={productColumns} data={productItems} />
             <p className="font-semibold text-lg mt-2">
-              Grand Total: {selectedOrder?.products?.[0]?.currency}{" "}
-              {totalPrice.toFixed(2)}
+              Grand Total: {selectedOrder?.products?.[0]?.currency} {totalPrice.toFixed(2)}
             </p>
           </div>
         </DialogContent>

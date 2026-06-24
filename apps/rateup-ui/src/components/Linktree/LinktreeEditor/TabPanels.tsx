@@ -1,10 +1,11 @@
 import { Tabs, TabsPanel } from "@mantine/core";
 
 import LinksEditor from "./LinksEditor/index.tsx";
-import styles from "./LinktreeEditor.module.css";
 import SharePage from "./SharePage/index.tsx";
 import Stats from "./Stats/index.tsx";
 import ThemeEditor from "./ThemeEditor/index.tsx";
+
+import styles from "./LinktreeEditor.module.css";
 
 function TabPanelsComp({ value }) {
   return (

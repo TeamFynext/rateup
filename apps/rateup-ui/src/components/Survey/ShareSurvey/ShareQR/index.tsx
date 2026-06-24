@@ -1,8 +1,5 @@
-"use client";
-
-import { useCallback, useEffect } from "react";
-
 import { Loader2, Save } from "lucide-react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useImmerReducer } from "use-immer";
@@ -30,15 +27,7 @@ interface ShareQRProps {
   resourceName?: string;
 }
 
-const ShareQR = ({
-  url,
-  sx,
-  title,
-  isPublished,
-  id,
-  queryKey,
-  resourceName,
-}: ShareQRProps) => {
+const ShareQR = ({ url, title, isPublished, id, queryKey, resourceName }: ShareQRProps) => {
   const [logoTabPanelState, logoTabPanelDispatch] = useImmerReducer(
     logoTabPanelReducer,
     initialLogoTabPanelState,
@@ -47,11 +36,7 @@ const ShareQR = ({
   // currently we are using only two resources(first arg below) survey, menu.
   const shareSettings = useGetShareSettings(queryKey, resourceName, id);
   // useUpdateShareSettingsMutation can return null.
-  const shareSettingsMutation = useUpdateShareSettingsMutation(
-    queryKey,
-    resourceName,
-    id,
-  );
+  const shareSettingsMutation = useUpdateShareSettingsMutation(queryKey, resourceName, id);
   const { t: translations } = useTranslation();
   useEffect(() => {
     const qrSettingsFromApi = shareSettings?.data;
@@ -87,10 +72,8 @@ const ShareQR = ({
           },
           body: formData,
         });
-      } catch (err) {
-        toast.error(
-          translations("Unable to save settings, Please try again later"),
-        );
+      } catch {
+        toast.error(translations("Unable to save settings, Please try again later"));
       }
     }
   }, [logoTabPanelState]);
@@ -99,10 +82,7 @@ const ShareQR = ({
     <div className="bg-white dark:bg-[#121212] rounded-lg border dark:border-gray-700 p-6">
       <h2 className="text-base font-semibold mb-6 dark:text-white">QR Code</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <LogoTabpanel
-          state={logoTabPanelState}
-          dispatch={logoTabPanelDispatch}
-        />
+        <LogoTabpanel state={logoTabPanelState} dispatch={logoTabPanelDispatch} />
         <div className="flex flex-col gap-4">
           <div className="border dark:border-gray-700 rounded-lg flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-[#1a1a1a] gap-2">
             <Preview
@@ -114,9 +94,7 @@ const ShareQR = ({
             <Button
               className="w-full flex items-center justify-center gap-2"
               onClick={handleSaveOfSurveyShareSettings}
-              disabled={
-                shareSettingsMutation ? shareSettingsMutation.isPending : false
-              }
+              disabled={shareSettingsMutation ? shareSettingsMutation.isPending : false}
             >
               {shareSettingsMutation?.isPending ? (
                 <>

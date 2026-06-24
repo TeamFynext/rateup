@@ -1,12 +1,7 @@
-"use client";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type {
-  EventTriggerInput,
-  EventTriggerUpdateInput,
-} from "./eventTriggers.api";
+import type { EventTriggerInput, EventTriggerUpdateInput } from "./eventTriggers.api";
 import {
   createEventTrigger,
   deleteEventTrigger,
@@ -22,7 +17,7 @@ export const useEventTriggers = (programId: string) =>
     enabled: !!programId,
   });
 
-const useEventTrigger = (id: string) =>
+const _useEventTrigger = (id: string) =>
   useQuery({
     queryKey: ["event-trigger", id],
     queryFn: () => getEventTrigger(id),
@@ -41,21 +36,12 @@ export const useCreateEventTriggerMutation = (onSuccess?: () => void) => {
       onSuccess?.();
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          error?.message ||
-          error.message ||
-          "Error creating event trigger",
-      );
+      toast.error(error?.message || "Error creating event trigger");
     },
   });
 };
 
-const useUpdateEventTriggerMutation = (
-  id: string,
-  programId: string,
-  onSuccess?: () => void,
-) => {
+const _useUpdateEventTriggerMutation = (id: string, programId: string, onSuccess?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -68,20 +54,12 @@ const useUpdateEventTriggerMutation = (
       onSuccess?.();
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          error?.message ||
-          error.message ||
-          "Error updating event trigger",
-      );
+      toast.error(error?.message || "Error updating event trigger");
     },
   });
 };
 
-const useDeleteEventTriggerMutation = (
-  programId: string,
-  onSuccess?: () => void,
-) => {
+const _useDeleteEventTriggerMutation = (programId: string, onSuccess?: () => void) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -93,12 +71,7 @@ const useDeleteEventTriggerMutation = (
       onSuccess?.();
     },
     onError: (error) => {
-      toast.error(
-        error?.message ||
-          error?.message ||
-          error.message ||
-          "Error deleting event trigger",
-      );
+      toast.error(error?.message || "Error deleting event trigger");
     },
   });
 };

@@ -24,9 +24,7 @@ export async function getAllCustomers(
   },
   columnFilters: { id: string; value: string }[],
 ) {
-  const filter = columnFilters
-    .map((data) => `&${data.id}=${data.value}`)
-    .join("&");
+  const filter = columnFilters.map((data) => `&${data.id}=${data.value}`).join("&");
   const desc = sort.desc ? "desc" : "asc";
   const customerUrl = `${base}?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&sort=${sort.id}&desc=${desc}${filter}`;
 
@@ -109,8 +107,7 @@ interface LoyaltyCustomerDetail extends LoyaltyCustomer {
 }
 
 export async function getLoyaltyCustomerById(customerId: string) {
-  return (await axiosClient.get(`${base}/${customerId}`))
-    .data as LoyaltyCustomerDetail;
+  return (await axiosClient.get(`${base}/${customerId}`)).data as LoyaltyCustomerDetail;
 }
 
 export async function getLoyaltyCustomerByContactId(contactId: string) {

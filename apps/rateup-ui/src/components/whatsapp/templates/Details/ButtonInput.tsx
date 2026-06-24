@@ -1,23 +1,6 @@
-"use client";
-
-import {
-  ActionIcon,
-  Box,
-  Divider,
-  Group,
-  SimpleGrid,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Box, Divider, Group, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
 import type { UseFormReturnType } from "@mantine/form";
-import {
-  IconChevronDown,
-  IconPlus,
-  IconTrash,
-  IconVariable,
-  IconX,
-} from "@tabler/icons-react";
+import { IconChevronDown, IconPlus, IconTrash, IconVariable, IconX } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 import type { z } from "zod/v4";
@@ -38,29 +21,20 @@ import { LengthTracker } from "../../../input/LengthTracker.tsx";
 import { FlowSelector } from "../../flows/FlowSelector/FlowSelector.tsx";
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector.tsx";
 import type { templateSchema } from "../Schema/templateSchema.ts";
-import styles from "./ButtonInput.module.css";
 import { useButtonState } from "./useButtonState.ts";
 
-const ButtonInput = ({
-  form,
-  index,
-  deleteButton,
-  data,
-  catalog,
-  productRetailerIds,
-}) => {
+import styles from "./ButtonInput.module.css";
+
+const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailerIds }) => {
   const { t: translations } = useTranslation();
-  const { data: flows } = useWaFlowsFromDb(
-    data.type === WHATSAPP_BUTTON_TYPE.FLOW,
-  );
+  const { data: flows } = useWaFlowsFromDb(data.type === WHATSAPP_BUTTON_TYPE.FLOW);
   const buttonState = useButtonState({
     url: form.values?.buttons?.[index]?.url,
     example: form.values?.buttons?.[index]?.example,
   });
   if (data.type === WHATSAPP_BUTTON_TYPE.FLOW) {
-    const screeenId = flows?.find(
-      (data) => data.flowId === form?.values?.buttons?.[index]?.flow_id,
-    )?.json?.screens?.[0]?.id;
+    const screeenId = flows?.find((data) => data.flowId === form?.values?.buttons?.[index]?.flow_id)
+      ?.json?.screens?.[0]?.id;
     if (screeenId) {
       data["navigate_screen"] = screeenId;
     }
@@ -74,7 +48,7 @@ const ButtonInput = ({
     const mpm = catalog?.mpm
       ? {
           ...catalog?.mpm,
-          sections: [...catalog?.mpm?.sections, { title: "", products: [] }],
+          sections: [...(catalog?.mpm?.sections ?? []), { title: "", products: [] }],
         }
       : {
           sections: [{ title: "", products: [] }],
@@ -109,11 +83,7 @@ const ButtonInput = ({
             flex={1}
             {...form.getInputProps(`buttons.${index}.text`)}
           />
-          <ActionIcon
-            mt={24}
-            variant="transparent"
-            onClick={() => deleteButton(index)}
-          >
+          <ActionIcon mt={24} variant="transparent" onClick={() => deleteButton(index)}>
             <IconX />
           </ActionIcon>
         </>
@@ -178,23 +148,15 @@ const ButtonInput = ({
                           size="sm"
                           variant="subtle"
                           onClick={() => {
-                            const currentUrl =
-                              form.values?.buttons?.[index]?.url || "";
-                            form.setFieldValue(
-                              `buttons.${index}.url`,
-                              currentUrl + "{{1}}",
-                            );
+                            const currentUrl = form.values?.buttons?.[index]?.url || "";
+                            form.setFieldValue(`buttons.${index}.url`, currentUrl + "{{1}}");
                           }}
                         >
                           <IconVariable size={16} />
                         </ActionIcon>
                       </Tooltip>
                     )}
-                    <LengthTracker
-                      length={buttonState.combinedLength}
-                      maxValue={2000}
-                      atStart
-                    />
+                    <LengthTracker length={buttonState.combinedLength} maxValue={2000} atStart />
                   </Group>
                 }
                 flex={1}
@@ -210,11 +172,7 @@ const ButtonInput = ({
                   }
                   placeholder={translations("Enter example for {{1}}")}
                   rightSection={
-                    <LengthTracker
-                      length={buttonState.combinedLength}
-                      maxValue={2000}
-                      atStart
-                    />
+                    <LengthTracker length={buttonState.combinedLength} maxValue={2000} atStart />
                   }
                   flex={1}
                   {...form.getInputProps(`buttons.${index}.example`)}
@@ -229,10 +187,7 @@ const ButtonInput = ({
               paddingBottom: "8px",
             }}
           >
-            <ActionIcon
-              variant="transparent"
-              onClick={() => deleteButton(index)}
-            >
+            <ActionIcon variant="transparent" onClick={() => deleteButton(index)}>
               <IconX />
             </ActionIcon>
           </Box>
@@ -284,11 +239,7 @@ const ButtonInput = ({
               {form?.errors?.[`buttons.${index}.phone_number`]}
             </Text>
           </Box>
-          <ActionIcon
-            mt={24}
-            variant="transparent"
-            onClick={() => deleteButton(index)}
-          >
+          <ActionIcon mt={24} variant="transparent" onClick={() => deleteButton(index)}>
             <IconX />
           </ActionIcon>
         </>
@@ -310,11 +261,7 @@ const ButtonInput = ({
             {...form.getInputProps(`buttons.${index}.text`)}
             placeholder="Copy code"
           />
-          <ActionIcon
-            mt={24}
-            variant="transparent"
-            onClick={() => deleteButton(index)}
-          >
+          <ActionIcon mt={24} variant="transparent" onClick={() => deleteButton(index)}>
             <IconX />
           </ActionIcon>
         </>
@@ -359,11 +306,7 @@ const ButtonInput = ({
             flex={1}
             {...form.getInputProps(`buttons.${index}.example`)}
           />
-          <ActionIcon
-            mt={24}
-            variant="transparent"
-            onClick={() => deleteButton(index)}
-          >
+          <ActionIcon mt={24} variant="transparent" onClick={() => deleteButton(index)}>
             <IconX />
           </ActionIcon>
         </>
@@ -407,11 +350,7 @@ const ButtonInput = ({
             }
             comboboxProps={{ position: "top" }}
           />
-          <ActionIcon
-            mt={24}
-            variant="transparent"
-            onClick={() => deleteButton(index)}
-          >
+          <ActionIcon mt={24} variant="transparent" onClick={() => deleteButton(index)}>
             <IconX />
           </ActionIcon>
         </>
@@ -457,9 +396,7 @@ const ButtonInput = ({
               </ActionIcon>
             )}
           </Group>
-          {form.values.category === "MARKETING" && (
-            <OrderDetailsButtonForm form={form} />
-          )}
+          {form.values.category === "MARKETING" && <OrderDetailsButtonForm form={form} />}
         </Stack>
       );
     case WHATSAPP_BUTTON_TYPE.CATALOG:
@@ -501,18 +438,13 @@ const ButtonInput = ({
                 {"Thumbnail product retailer id"}
               </Text>
             }
-            {...form.getInputProps(
-              "defaultValues.catalog.thumbnail_product_retailer_id",
-            )}
+            {...form.getInputProps("defaultValues.catalog.thumbnail_product_retailer_id")}
           />
           <ActionIcon
             mt={24}
             variant="transparent"
             onClick={() => {
-              form.setFieldValue(
-                "defaultValues.catalog.thumbnail_product_retailer_id",
-                "",
-              );
+              form.setFieldValue("defaultValues.catalog.thumbnail_product_retailer_id", "");
               deleteButton(index);
             }}
           >
@@ -561,9 +493,7 @@ const ButtonInput = ({
                   {"Thumbnail product retailer id"}
                 </Text>
               }
-              {...form.getInputProps(
-                "defaultValues.catalog.thumbnail_product_retailer_id",
-              )}
+              {...form.getInputProps("defaultValues.catalog.thumbnail_product_retailer_id")}
             />
             <ActionIcon
               mt={24}
@@ -592,54 +522,41 @@ const ButtonInput = ({
             title="Add Sections"
             onClick={handleAddMPMSections}
           />
-          {form.values.defaultValues?.catalog?.mpm?.sections?.map(
-            (sec, index) => (
-              <Group
-                bg={"var(--light-grey-color-4)"}
-                p={"md"}
-                key={index}
-                style={{ borderRadius: "10px" }}
+          {form.values.defaultValues?.catalog?.mpm?.sections?.map((sec, index) => (
+            <Group
+              bg={"var(--light-grey-color-4)"}
+              p={"md"}
+              key={index}
+              style={{ borderRadius: "10px" }}
+            >
+              <ContainedTextField
+                label={
+                  <Text fz={14} fw={500}>
+                    Section Title
+                  </Text>
+                }
+                key={form.key(`defaultValues.catalog.mpm.sections.${index}.title`)}
+                {...form.getInputProps(`defaultValues.catalog.mpm.sections.${index}.title`)}
+              />
+              <ContainedMultiSelect
+                data={productRetailerIds}
+                label={
+                  <Text fz={14} fw={500}>
+                    {"Product Retailer Ids"}
+                  </Text>
+                }
+                {...form.getInputProps(`defaultValues.catalog.mpm.sections.${index}.products`)}
+                nothingFoundMessage={"products not found"}
+              />
+              <ActionIcon
+                mt={24}
+                variant="transparent"
+                onClick={() => form.removeListItem("defaultValues.catalog.mpm.sections", index)}
               >
-                <ContainedTextField
-                  label={
-                    <Text fz={14} fw={500}>
-                      Section Title
-                    </Text>
-                  }
-                  key={form.key(
-                    `defaultValues.catalog.mpm.sections.${index}.title`,
-                  )}
-                  {...form.getInputProps(
-                    `defaultValues.catalog.mpm.sections.${index}.title`,
-                  )}
-                />
-                <ContainedMultiSelect
-                  data={productRetailerIds}
-                  label={
-                    <Text fz={14} fw={500}>
-                      {"Product Retailer Ids"}
-                    </Text>
-                  }
-                  {...form.getInputProps(
-                    `defaultValues.catalog.mpm.sections.${index}.products`,
-                  )}
-                  nothingFoundMessage={"products not found"}
-                />
-                <ActionIcon
-                  mt={24}
-                  variant="transparent"
-                  onClick={() =>
-                    form.removeListItem(
-                      "defaultValues.catalog.mpm.sections",
-                      index,
-                    )
-                  }
-                >
-                  <IconTrash color="red" size={15} />
-                </ActionIcon>
-              </Group>
-            ),
-          )}
+                <IconTrash color="red" size={15} />
+              </ActionIcon>
+            </Group>
+          ))}
         </Stack>
       );
     case WHATSAPP_BUTTON_TYPE.SPM:
@@ -681,18 +598,13 @@ const ButtonInput = ({
                 {"Product retailer id"}
               </Text>
             }
-            {...form.getInputProps(
-              "defaultValues.catalog.spm.product_retailer_id",
-            )}
+            {...form.getInputProps("defaultValues.catalog.spm.product_retailer_id")}
           />
           <ActionIcon
             mt={24}
             variant="transparent"
             onClick={() => {
-              form.setFieldValue(
-                "defaultValues.catalog.spm.product_retailer_id",
-                "",
-              );
+              form.setFieldValue("defaultValues.catalog.spm.product_retailer_id", "");
               deleteButton(index);
             }}
           >
@@ -746,33 +658,23 @@ const OrderDetailsButtonForm = ({
       <Divider label={"Product Importer Info"} />
       <Group>
         <ContainedTextField
-          {...form.getInputProps(
-            "defaultValues.orderDetails.item.importerName",
-          )}
+          {...form.getInputProps("defaultValues.orderDetails.item.importerName")}
           label={"Importer Name"}
         />
         <ContainedTextField
-          {...form.getInputProps(
-            "defaultValues.orderDetails.item.importerAddress1",
-          )}
+          {...form.getInputProps("defaultValues.orderDetails.item.importerAddress1")}
           label={"Importer Address"}
         />
         <ContainedTextField
-          {...form.getInputProps(
-            "defaultValues.orderDetails.item.importerCity",
-          )}
+          {...form.getInputProps("defaultValues.orderDetails.item.importerCity")}
           label={"City"}
         />
         <ContainedTextField
-          {...form.getInputProps(
-            "defaultValues.orderDetails.item.importerPostalCode",
-          )}
+          {...form.getInputProps("defaultValues.orderDetails.item.importerPostalCode")}
           label={"Postal Code"}
         />
         <ContainedTextField
-          {...form.getInputProps(
-            "defaultValues.orderDetails.item.importerZoneCode",
-          )}
+          {...form.getInputProps("defaultValues.orderDetails.item.importerZoneCode")}
           label={"Zone Code"}
         />
       </Group>
@@ -799,9 +701,7 @@ const OrderDetailsButtonForm = ({
           label={"Discount Amount"}
         />
         <ContainedTextField
-          {...form.getInputProps(
-            "defaultValues.orderDetails.discountDescription",
-          )}
+          {...form.getInputProps("defaultValues.orderDetails.discountDescription")}
           label={"Discount Description"}
         />
         <ContainedDateTimePickerInput
@@ -821,9 +721,7 @@ const OrderDetailsButtonForm = ({
           }
         />
         <ContainedTextField
-          {...form.getInputProps(
-            "defaultValues.orderDetails.paymentConfigName",
-          )}
+          {...form.getInputProps("defaultValues.orderDetails.paymentConfigName")}
           label={"Payment gateway configuration name"}
           description={
             "Configuration name of payment gateway you have configured on your WhatsApp Business Account"

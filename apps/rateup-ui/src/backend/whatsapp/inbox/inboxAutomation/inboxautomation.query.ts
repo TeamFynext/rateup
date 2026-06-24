@@ -64,9 +64,7 @@ export const useUpdateInboxAutomationMutation = () => {
     },
     onError: (error: any) => {
       if (!shouldSkipLocalErrorToast(error)) {
-        toast.error(
-          error?.message || "Error updating inbox automation settings",
-        );
+        toast.error(error?.message || "Error updating inbox automation settings");
       }
     },
   });

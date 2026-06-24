@@ -2,11 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { ArrowRight, WaIcon } from "./icons";
 
-interface Props {
-  onAccess: () => void;
-}
-
-export default function CTABand({ onAccess }: Props) {
+export default function CTABand() {
   const navigate = useNavigate();
   return (
     <section className="py-[52px]">
@@ -22,15 +18,13 @@ export default function CTABand({ onAccess }: Props) {
           <div
             className="absolute -top-20 -right-10 w-80 h-80 rounded-full pointer-events-none"
             style={{
-              background:
-                "radial-gradient(circle,rgba(47,163,255,0.4),transparent 70%)",
+              background: "radial-gradient(circle,rgba(47,163,255,0.4),transparent 70%)",
             }}
           />
           <div
             className="absolute -bottom-16 -left-10 w-60 h-60 rounded-full pointer-events-none"
             style={{
-              background:
-                "radial-gradient(circle,rgba(248,149,29,0.12),transparent 70%)",
+              background: "radial-gradient(circle,rgba(248,149,29,0.12),transparent 70%)",
             }}
           />
 
@@ -59,9 +53,8 @@ export default function CTABand({ onAccess }: Props) {
             className="relative text-white/75 text-[17px] mx-auto mb-7"
             style={{ maxWidth: "480px" }}
           >
-            RateUp Inbox is live and ready for your team. Set up your unified
-            WhatsApp, Instagram, and Messenger inbox in minutes — no complicated
-            onboarding, no long contracts.
+            RateUp Inbox is live and ready for your team. Set up your unified WhatsApp, Instagram,
+            and Messenger inbox in minutes — no complicated onboarding, no long contracts.
           </p>
 
           <div className="relative flex gap-3.5 justify-center flex-wrap">
@@ -70,8 +63,7 @@ export default function CTABand({ onAccess }: Props) {
               className="inline-flex items-center gap-2 font-bold text-[15px] text-white px-6 py-3.5 rounded-[11px] transition-all duration-200 hover:-translate-y-0.5"
               style={{
                 background: "linear-gradient(180deg,#3D8BEE,#2360C8)",
-                boxShadow:
-                  "0 10px 30px rgba(45,111,214,0.45),inset 0 1px 0 rgba(255,255,255,0.25)",
+                boxShadow: "0 10px 30px rgba(45,111,214,0.45),inset 0 1px 0 rgba(255,255,255,0.25)",
               }}
             >
               Sign Up for Free <ArrowRight />
@@ -83,8 +75,7 @@ export default function CTABand({ onAccess }: Props) {
               className="inline-flex items-center gap-2 font-bold text-[15px] text-white px-6 py-3.5 rounded-[11px] transition-all duration-200 hover:-translate-y-0.5 no-underline"
               style={{
                 background: "linear-gradient(180deg,#2BD367,#1FB855)",
-                boxShadow:
-                  "0 10px 28px rgba(37,211,102,0.35),inset 0 1px 0 rgba(255,255,255,0.25)",
+                boxShadow: "0 10px 28px rgba(37,211,102,0.35),inset 0 1px 0 rgba(255,255,255,0.25)",
               }}
             >
               <WaIcon size={18} /> Talk to the team on WhatsApp

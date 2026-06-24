@@ -1,21 +1,13 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { Badge, Group, SegmentedControl, Stack, Text } from "@mantine/core";
-import { isNotEmpty, useForm } from "@mantine/form";
-import { IconArrowRight } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
+import { useMemo, useState } from "react";
 
-import { useCheckSession } from "@/hooks/checkSession.tsx";
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { currencyLabel } from "@/components/menu/util/currencyData.ts";
-import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import { BookDemoModal1 } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
+import { useCheckSession } from "@/hooks/checkSession.tsx";
 
 import PlanCardNew from "./Card/PlanCardNew.tsx";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore.ts";
@@ -27,12 +19,9 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
   const currencySymbol = timeZone === "Asia/Calcutta" ? "₹" : "$";
   const currency = timeZone === "Asia/Calcutta" ? "INR" : "USD";
 
-  const isMiddleEast = [
-    "Asia/Dubai",
-    "Asia/Qatar",
-    "Asia/Riyadh",
-    "Asia/Muscat",
-  ].includes(timeZone);
+  const isMiddleEast = ["Asia/Dubai", "Asia/Qatar", "Asia/Riyadh", "Asia/Muscat"].includes(
+    timeZone,
+  );
 
   const rateupPlans = useMemo(
     () =>
@@ -73,8 +62,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
       amount: plan.paymentPlan.amount,
       currency: plan.paymentPlan.currency,
       currencySymbol:
-        currencyLabel.find((c) => c.label === plan.paymentPlan.currency)
-          ?.symbol ?? currencySymbol,
+        currencyLabel.find((c) => c.label === plan.paymentPlan.currency)?.symbol ?? currencySymbol,
       description: plan.description,
       period: plan?.paymentPlan?.period,
       planId: plan?.paymentPlan?.planId,
@@ -132,17 +120,10 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
         <h4 className="text-[#1c518e] text-sm uppercase font-medium tracking-wider">
           Our Pricing Plans
         </h4>
-        <h1 className="text-4xl md:text-5xl font-bold text-[#00397b] mt-3">
-          Choose What You Need
-        </h1>
+        <h1 className="text-4xl md:text-5xl font-bold text-[#00397b] mt-3">Choose What You Need</h1>
       </div>
       <Stack justify={"center"} align="center" gap={0}>
-        <Image
-          src={"/images/subscriptionArrow.png"}
-          height={32}
-          width={67}
-          alt="image of arrow"
-        />
+        <Image src={"/images/subscriptionArrow.png"} height={32} width={67} alt="image of arrow" />
         <SegmentedControl
           transitionDuration={500}
           transitionTimingFunction="linear"
@@ -162,12 +143,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
         transition={{ duration: 0.4 }}
       >
         {rateupPlans.map((plan) => (
-          <PlanCardNew
-            key={plan.id}
-            plan={plan}
-            onButtonClick={() => handlePlanSelection(plan)}
-            currencySymbol={currencySymbol}
-          />
+          <PlanCardNew key={plan.id} plan={plan} onButtonClick={() => handlePlanSelection(plan)} />
         ))}
       </motion.div>
       <div
@@ -186,9 +162,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
         <p className="mt-3 text-gray-600 text-sm">Customized Plan & Pricing</p>
         <div className="w-12 h-1 bg-[#1c518e] self-center rounded-full my-6"></div>
 
-        <div className="text-lg font-medium text-gray-700 mb-4">
-          Let&apos;s Talk!
-        </div>
+        <div className="text-lg font-medium text-gray-700 mb-4">Let&apos;s Talk!</div>
 
         <BookDemoModal1 />
       </div>
@@ -199,109 +173,6 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
         currencySymbol={currencySymbol}
       /> */}
     </section>
-  );
-};
-
-const MailForm = ({ opened, close, plan, currencySymbol }) => {
-  const sendMail = useSendMailPlanSelectDetails();
-  const { updateRouteAndCart } = useRouteAndCartStore();
-  const session = useCheckSession();
-  const navigate = useNavigate();
-  const form = useForm({
-    initialValues: {
-      name: "",
-      email: "",
-      orgName: "",
-    },
-    validate: {
-      name: isNotEmpty("Name is required"),
-      email: isNotEmpty("Email is required"),
-      orgName: isNotEmpty("Organization name is required"),
-    },
-  });
-
-  async function handleSubmit() {
-    const validationRes = await form.validate();
-    if (validationRes.hasErrors) return;
-
-    const data = {
-      ...form.values,
-      planName: plan?.displayName,
-      planId: plan?.id,
-    };
-    sendMail.mutate(data, {
-      onSettled: () => {
-        const route = "/dashboard/settings/billing";
-        const cartData = {
-          id: plan.id,
-          amount: plan.paymentPlan.amount,
-          currency: plan.paymentPlan.currency,
-          currencySymbol:
-            currencyLabel.find((c) => c.label === plan.paymentPlan.currency)
-              ?.symbol ?? currencySymbol,
-          description: plan.description,
-          period: plan?.paymentPlan?.period,
-          planId: plan?.paymentPlan?.planId,
-          name: plan?.displayName,
-          gateway: "RAZORPAY",
-          priceId: "",
-        };
-        if (!session) {
-          localStorage.setItem("newUserFromPricingPage", JSON.stringify(data));
-          localStorage.setItem(
-            "subscriptionRoutAndCart",
-            JSON.stringify({
-              route,
-              cartData,
-            }),
-          );
-        }
-        updateRouteAndCart(route, cartData);
-        close();
-        navigate({
-          to: route,
-        });
-      },
-    });
-  }
-  function onClose() {
-    form.reset();
-    close();
-  }
-  return (
-    <FormModalLayout
-      zIndex={1001}
-      title="About You"
-      centered
-      opened={opened}
-      onSubmit={handleSubmit}
-      onClose={onClose}
-    >
-      <Stack>
-        <ContainedTextField
-          label={"Name"}
-          {...form.getInputProps("name")}
-          withAsterisk
-        />
-        <ContainedTextField
-          label={"Email"}
-          {...form.getInputProps("email")}
-          withAsterisk
-        />
-        <ContainedTextField
-          label={"Organization Name"}
-          {...form.getInputProps("orgName")}
-          withAsterisk
-        />
-        <RateupButtonBlue
-          title="Next"
-          loading={sendMail.isPending}
-          rightIcon={<IconArrowRight size={16} />}
-          type={"submit"}
-          radius={"md"}
-        />
-      </Stack>
-    </FormModalLayout>
   );
 };
 

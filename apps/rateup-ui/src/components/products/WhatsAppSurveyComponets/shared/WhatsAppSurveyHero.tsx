@@ -1,7 +1,6 @@
-import React from "react";
-
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
+import React from "react";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { imagesPath } from "@/utils/constants.ts";
@@ -19,9 +18,9 @@ export default function WhatsAppSurveyHero() {
           <span className="text-[#009987]">WhatsApp Customer Feedback</span>
         </h1>
         <p className="text-base sm:text-lg text-gray-500 pb-8">
-          WTraditional feedback methods yield only 2% response rates. RateUp
-          uses WhatsApp Flows to connect with customers where they are, boosting
-          feedback by up to 35% and turning insights into growth.
+          WTraditional feedback methods yield only 2% response rates. RateUp uses WhatsApp Flows to
+          connect with customers where they are, boosting feedback by up to 35% and turning insights
+          into growth.
         </p>
         <div className="flex flex-col sm:flex-row sm:justify-center md:justify-start gap-4">
           <Link to={"https://rateup.app/login"}>

@@ -1,14 +1,8 @@
-"use client";
-
+import { Stack, useMantineColorScheme } from "@mantine/core";
+import { useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import { Stack, useMantineColorScheme } from "@mantine/core";
-import { useNavigate, useSearch } from "@tanstack/react-router";
-
-import {
-  useCreateAppleUserMutation,
-  useCreateUserMutation,
-} from "@/backend/user/user.query";
+import { useCreateAppleUserMutation, useCreateUserMutation } from "@/backend/user/user.query";
 import {
   useConsumeVerificationCode,
   useEmailSend,
@@ -17,20 +11,15 @@ import {
 } from "@/utils/auth/index.tsx";
 import { AuthMode } from "@/utils/enums/index.ts";
 
-import styles from "./AuthForm.module.css";
 import AuthTypeSignupForm from "./AuthTypeSignupFormNew.tsx";
 import SignInFlow from "./LoginFormNew.tsx";
 import { SignUpFlow } from "./SignupFormNew.tsx";
 import VerifyEmailPage from "./VerifyEmailPage.tsx";
 import VerifyPhoneNumberPage from "./VerifyPhoneNumberPage.tsx";
 
-const AuthForm = ({
-  mode,
-  authType,
-}: {
-  mode: string;
-  authType?: string | string[];
-}) => {
+import styles from "./AuthForm.module.css";
+
+const AuthForm = ({ mode, authType }: { mode: string; authType?: string | string[] }) => {
   const searchParams = useSearch({ strict: false });
   const token = searchParams.token;
   const rid = searchParams.rid;
@@ -66,11 +55,7 @@ const AuthForm = ({
   } else {
     if (isLogin) {
       jsxToReturn = (
-        <SignInFlow
-          setIsLoading={setIsLoading}
-          signIn={signIn}
-          isLoading={isLoading}
-        />
+        <SignInFlow setIsLoading={setIsLoading} signIn={signIn} isLoading={isLoading} />
       );
     } else {
       if (authType)
@@ -85,11 +70,7 @@ const AuthForm = ({
         );
       else
         jsxToReturn = (
-          <SignUpFlow
-            setIsLoading={setIsLoading}
-            signUp={signUp}
-            isLoading={isLoading}
-          />
+          <SignUpFlow setIsLoading={setIsLoading} signUp={signUp} isLoading={isLoading} />
         );
     }
   }

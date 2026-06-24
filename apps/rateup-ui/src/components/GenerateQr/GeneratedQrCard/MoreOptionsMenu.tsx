@@ -1,29 +1,19 @@
-"use client";
-
-import { useCallback } from "react";
-
-import {
-  ActionIcon,
-  Menu,
-  MenuDropdown,
-  MenuItem,
-  MenuTarget,
-  Text,
-} from "@mantine/core";
+import { ActionIcon, Menu, MenuDropdown, MenuItem, MenuTarget, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useDeleteQrMutation } from "@/backend/generateQr/generateQr.query";
-import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 import CreateShortUrlModal from "../CreateQrModal/index.tsx";
+
 import styles from "./GeneratedQrCard.module.css";
+import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 function MoreOptionsMenu({ shortUrlId, name }) {
-  const [isEditLandingPageModalOpen, editLandingPageModalHandlers] =
-    useDisclosure();
+  const [isEditLandingPageModalOpen, editLandingPageModalHandlers] = useDisclosure();
 
   const deleteQrMutation = useDeleteQrMutation();
   const { t: translations } = useTranslation();
@@ -51,7 +41,7 @@ function MoreOptionsMenu({ shortUrlId, name }) {
     });
   }, [deleteQrMutation]);
 
-  const handleRenameClick = useCallback((e) => {
+  const handleRenameClick = useCallback((_e) => {
     editLandingPageModalHandlers.open();
   }, []);
 
@@ -59,10 +49,7 @@ function MoreOptionsMenu({ shortUrlId, name }) {
     <>
       <Menu width={150}>
         <MenuTarget>
-          <ActionIcon
-            onClick={(e) => e.stopPropagation()}
-            className={styles["more-options-btn"]}
-          >
+          <ActionIcon onClick={(e) => e.stopPropagation()} className={styles["more-options-btn"]}>
             <IconDots />
           </ActionIcon>
         </MenuTarget>

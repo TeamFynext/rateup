@@ -1,15 +1,8 @@
-"use client";
-
-import React from "react";
-
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandMeta, IconPlus, IconRefresh } from "@tabler/icons-react";
 import { toast } from "sonner";
 
-import {
-  useSyncCatalogProducts,
-  useSyncShopifyWithCatalog,
-} from "@/backend/whatsapp/catalog/products/products.query";
+import { useSyncCatalogProducts } from "@/backend/whatsapp/catalog/products/products.query";
 import { Button } from "@/components/ui/button.tsx";
 import {
   DropdownMenu,
@@ -24,7 +17,6 @@ import ProductItems from "./ProductItems.tsx";
 const CatalogProducts = ({ catalogData }) => {
   const [addOpened, { open: openAdd, close: closeAdd }] = useDisclosure(false);
   const syncFromMetaMut = useSyncCatalogProducts(catalogData?.catalogId);
-  const syncFromShopifyMut = useSyncShopifyWithCatalog(catalogData?.catalogId);
 
   function handleSyncFromMeta(data = null) {
     toast.loading("Syncing products from Meta...", {
@@ -42,27 +34,6 @@ const CatalogProducts = ({ catalogData }) => {
       onError: (error) => {
         toast.error(error?.message || "Sync from Meta failed", {
           id: "sync-catalog-products-meta",
-        });
-      },
-    });
-  }
-
-  function handleSyncFromShopify() {
-    toast.loading("Syncing products from Shopify...", {
-      id: "sync-catalog-products-shopify",
-    });
-    syncFromShopifyMut.mutate(undefined, {
-      onSuccess: (data) => {
-        toast.success(
-          `Sync complete — ${data.updated} updated, ${data.unchanged} unchanged`,
-          {
-            id: "sync-catalog-products-shopify",
-          },
-        );
-      },
-      onError: (error) => {
-        toast.error(error?.message || "Shopify sync failed", {
-          id: "sync-catalog-products-shopify",
         });
       },
     });
@@ -108,14 +79,8 @@ const CatalogProducts = ({ catalogData }) => {
           </DropdownMenu>
         </div>
       </div>
-      {catalogData?.vertical === "commerce" && (
-        <ProductItems catalogId={catalogData?.catalogId} />
-      )}
-      <AddCatalogProductModal
-        catalogData={catalogData}
-        opened={addOpened}
-        close={closeAdd}
-      />
+      {catalogData?.vertical === "commerce" && <ProductItems catalogId={catalogData?.catalogId} />}
+      <AddCatalogProductModal catalogData={catalogData} opened={addOpened} close={closeAdd} />
     </div>
   );
 };

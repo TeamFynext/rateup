@@ -1,8 +1,7 @@
-import { memo } from "react";
-
 import { Box, Group, Stack, Text } from "@mantine/core";
 import { IconTicket } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
+import { memo } from "react";
 
 import type { TicketNodeData } from "../../types/node-types.ts";
 import BaseNode from "./base-node.tsx";

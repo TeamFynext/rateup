@@ -7,11 +7,7 @@ import { Badge } from "../ui/badge.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.tsx";
 import { Skeleton } from "../ui/skeleton.tsx";
 
-function TemplateOverview({
-  categoryOverview,
-  templatePerformance,
-  isLoading,
-}) {
+function TemplateOverview({ categoryOverview, templatePerformance, isLoading }) {
   const { t } = useTranslation("apianalytics");
   return (
     <Card>
@@ -44,9 +40,7 @@ function TemplateOverview({
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <Layers className={`w-4 h-4 ${color.icon}`} />
-                      <p className="text-xs text-muted-foreground">
-                        {category.category}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{category.category}</p>
                     </div>
                     <p className="text-xl mb-1">{category.count}</p>
                     <div className={`text-xs ${color.text}`}>
@@ -75,9 +69,7 @@ function TemplateOverview({
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-medium">
-                                {template.templateName}
-                              </h4>
+                              <h4 className="font-medium">{template.templateName}</h4>
                               <Badge
                                 variant="outline"
                                 className={`text-xs border ${color.icon} ${color.bg} ${color.border}`}
@@ -86,8 +78,7 @@ function TemplateOverview({
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              {t("Last used")}:{" "}
-                              {formatToRelativeTime(template?.lastUsed)}
+                              {t("Last used")}: {formatToRelativeTime(template?.lastUsed)}
                             </p>
                           </div>
                         </div>
@@ -96,15 +87,11 @@ function TemplateOverview({
                       {/* Template Metrics */}
                       <div className="flex items-center gap-4 lg:gap-6">
                         <div className="text-center">
-                          <p className="text-xs text-muted-foreground mb-1">
-                            {t("Messages Sent")}
-                          </p>
+                          <p className="text-xs text-muted-foreground mb-1">{t("Messages Sent")}</p>
                           <p className="text-sm">{template?.totalSent}</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-xs text-muted-foreground mb-1">
-                            {t("Success Rate")}
-                          </p>
+                          <p className="text-xs text-muted-foreground mb-1">{t("Success Rate")}</p>
                           <div className="flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3 text-green-600" />
                             <p className="text-sm text-green-600">
@@ -113,9 +100,7 @@ function TemplateOverview({
                           </div>
                         </div>
                         <div className="text-center">
-                          <p className="text-xs text-muted-foreground mb-1">
-                            {t("Failure Rate")}
-                          </p>
+                          <p className="text-xs text-muted-foreground mb-1">{t("Failure Rate")}</p>
                           <div className="flex items-center gap-1">
                             <XCircle className="w-3 h-3 text-red-600" />
                             <p className="text-sm text-red-600">
@@ -124,9 +109,7 @@ function TemplateOverview({
                           </div>
                         </div>
                         <div className="text-center">
-                          <p className="text-xs text-muted-foreground mb-1">
-                            {t("Avg Response")}
-                          </p>
+                          <p className="text-xs text-muted-foreground mb-1">{t("Avg Response")}</p>
                           <div className="flex items-center gap-1">
                             <Zap className="w-3 h-3 text-purple-600" />
                             <p className="text-sm">
@@ -161,10 +144,7 @@ function TemplateOverview({
 export default TemplateOverview;
 
 const getCategoryColor = (category: string) => {
-  const map: Record<
-    string,
-    { bg: string; text: string; icon: string; border: string }
-  > = {
+  const map: Record<string, { bg: string; text: string; icon: string; border: string }> = {
     MARKETING: {
       bg: "bg-blue-50",
       text: "text-blue-700",

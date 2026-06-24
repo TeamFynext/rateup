@@ -1,5 +1,3 @@
-"use client";
-
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 
@@ -23,7 +21,7 @@ export function NavProjects({
     select: (s) => s.location.pathname,
   });
   return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+    <SidebarGroup>
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>

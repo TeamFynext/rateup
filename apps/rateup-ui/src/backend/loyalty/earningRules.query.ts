@@ -1,10 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type {
-  LoyaltyEarningRuleInput,
-  LoyaltyEarningRuleUpdateInput,
-} from "./earningRules.api";
+import type { LoyaltyEarningRuleInput, LoyaltyEarningRuleUpdateInput } from "./earningRules.api";
 import {
   createLoyaltyEarningRule,
   deleteLoyaltyEarningRule,
@@ -25,7 +22,7 @@ export const useLoyaltyEarningRules = () =>
 /**
  * Hook to fetch a single loyalty earning rule by ID
  */
-const useLoyaltyEarningRuleById = (ruleId: string) =>
+const _useLoyaltyEarningRuleById = (ruleId: string) =>
   useQuery({
     enabled: !!ruleId,
     queryKey: ["loyalty-earning-rule", ruleId],
@@ -42,8 +39,7 @@ export const useCreateLoyaltyEarningRuleMutation = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (ruleData: LoyaltyEarningRuleInput) =>
-      createLoyaltyEarningRule(ruleData),
+    mutationFn: (ruleData: LoyaltyEarningRuleInput) => createLoyaltyEarningRule(ruleData),
     onSuccess: () => {
       toast.success("Earning rule created successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-earning-rules"] });
@@ -122,11 +118,8 @@ export const useToggleLoyaltyEarningRuleStatusMutation = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      status,
-    }: {
-      status: "active" | "inactive" | "scheduled" | "expired";
-    }) => updateLoyaltyEarningRule(ruleId, { status }),
+    mutationFn: ({ status }: { status: "active" | "inactive" | "scheduled" | "expired" }) =>
+      updateLoyaltyEarningRule(ruleId, { status }),
     onSuccess: () => {
       toast.success("Earning rule status updated successfully");
       queryClient.invalidateQueries({ queryKey: ["loyalty-earning-rules"] });

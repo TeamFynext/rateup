@@ -1,13 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  createFileRoute,
-  Link,
-  useParams,
-  useRouter,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, useRouter } from "@tanstack/react-router";
 import parse from "html-react-parser";
 import {
   AlertCircle,
@@ -29,10 +22,10 @@ import {
   X,
   ZoomIn,
 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { QuestionType2 } from "@/types/enums.ts";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import { deleteCard, moveCard } from "@/backend/tickets/tickets.api";
 import {
@@ -48,26 +41,13 @@ import TicketTextEditor from "@/components/RichTextEditor/TicketTextEditor.tsx";
 import { getCellData } from "@/components/Survey/Response/WaResponses.tsx";
 import { PRIORITY_CONFIG } from "@/components/Tickets/card.tsx";
 import SurveyResponsesView from "@/components/Tickets/SingleTicket/SurveyResponsesView.tsx";
-import type {
-  Activity,
-  Card,
-  TicketComment,
-} from "@/components/Tickets/types.ts";
+import type { Activity, Card, TicketComment } from "@/components/Tickets/types.ts";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -78,21 +58,13 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem.tsx";
 import { useUser } from "@/context/UserContext.tsx";
+import { QuestionType2 } from "@/types/enums.ts";
 import { formatToRelativeTime } from "@/utils/dateTime.ts";
 import { TicketType } from "@/utils/enums/ticket.ts";
-import {
-  deleteUploadedFiles,
-  getFileUrlFromKey,
-  uploadFile,
-} from "@/utils/file-upload/upload.ts";
+import { deleteUploadedFiles, getFileUrlFromKey, uploadFile } from "@/utils/file-upload/upload.ts";
 
 export const Route = createFileRoute("/dashboard/tickets/$ticketId/")({
   component: CardDetailPage,
@@ -175,23 +147,14 @@ function CardDetailPage() {
       (screen: any) =>
         screen.layout.children
           .filter((child: any) => child.type !== QuestionType2.Footer)
-          .map(
-            ({
-              id,
-              label,
-              metaType,
-              name,
-              "data-source": dataSource,
-              header,
-            }: any) => ({
-              id,
-              label,
-              metaType,
-              dataSource,
-              name,
-              header,
-            }),
-          )
+          .map(({ id, label, metaType, name, "data-source": dataSource, header }: any) => ({
+            id,
+            label,
+            metaType,
+            dataSource,
+            name,
+            header,
+          }))
           .filter(({ name }: any) => name),
     );
   }, [card]);
@@ -221,20 +184,12 @@ function CardDetailPage() {
           {t("View and edit ticket details.")}
         </DialogDescription>
 
-        <TicketTopHeader
-          ticket={card}
-          ticketId={ticketId}
-          onClose={() => history.back()}
-        />
+        <TicketTopHeader ticket={card} ticketId={ticketId} onClose={() => history.back()} />
 
         <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden min-h-0 bg-background">
           <div className="w-full md:w-72 shrink-0 bg-slate-50 dark:bg-muted/20 md:overflow-y-auto md:order-2 border-b md:border-b-0 md:border-l border-border">
             <div className="p-4 md:p-5 bg-ink-25 dark:bg-muted/20 ">
-              <RightSidebar
-                ticket={card}
-                ticketId={ticketId}
-                onClose={() => history.back()}
-              />
+              <RightSidebar ticket={card} ticketId={ticketId} onClose={() => history.back()} />
             </div>
           </div>
           {/* Main Left Content */}
@@ -298,10 +253,7 @@ function CardDetailPage() {
                   </TabsContent>
 
                   <TabsContent value="comments" className="mt-0">
-                    <TicketComments
-                      data={card?.ticketComments || []}
-                      ticketCardId={ticketId}
-                    />
+                    <TicketComments data={card?.ticketComments || []} ticketCardId={ticketId} />
                   </TabsContent>
 
                   {card.surveyResponseId && (
@@ -316,9 +268,7 @@ function CardDetailPage() {
 
                   {card.waAutomatedReplyMessageId && (
                     <TabsContent value="automation" className="mt-0">
-                      <TicketAutomationResponse
-                        response={card.waAutomatedReplyMessage}
-                      />
+                      <TicketAutomationResponse response={card.waAutomatedReplyMessage} />
                     </TabsContent>
                   )}
                 </div>
@@ -335,10 +285,7 @@ function AssignContact({ ticketId }: Readonly<{ ticketId: string }>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const { data, isLoading } = useContacts(
-    { pageIndex: 0, pageSize: 20 },
-    search,
-  );
+  const { data, isLoading } = useContacts({ pageIndex: 0, pageSize: 20 }, search);
   const { mutate, isPending } = useUpdateCardMutation();
 
   const handleAssign = (contactId: string) => {
@@ -373,9 +320,7 @@ function AssignContact({ ticketId }: Readonly<{ ticketId: string }>) {
             onTouchMove={(e) => e.stopPropagation()}
           >
             {isLoading ? (
-              <div className="p-4 text-xs text-center text-muted-foreground">
-                {t("Loading...")}
-              </div>
+              <div className="p-4 text-xs text-center text-muted-foreground">{t("Loading...")}</div>
             ) : data?.users?.length === 0 ? (
               <div className="p-4 text-xs text-center text-muted-foreground">
                 {t("No contacts found.")}
@@ -395,9 +340,7 @@ function AssignContact({ ticketId }: Readonly<{ ticketId: string }>) {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col overflow-hidden">
-                      <span className="text-xs font-medium truncate">
-                        {contact.name}
-                      </span>
+                      <span className="text-xs font-medium truncate">{contact.name}</span>
                       <span className="text-[10px] text-muted-foreground truncate">
                         +{contact.phone}
                       </span>
@@ -428,11 +371,8 @@ function useDeleteCardMutation(onSuccess?: () => void) {
 function useMoveCardColumnMutation(ticketId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: {
-      cardId: string;
-      sourceColumnId: string;
-      targetColumnId: string;
-    }) => moveCard(params),
+    mutationFn: (params: { cardId: string; sourceColumnId: string; targetColumnId: string }) =>
+      moveCard(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["card", ticketId] });
       queryClient.invalidateQueries({ queryKey: ["boards"] });
@@ -459,15 +399,13 @@ function RightSidebar({
   const { t } = useTranslation();
   const { mutate } = useUpdateCardMutation();
   const { data: members = [] } = useCardTeamMembersById(ticketId);
-  const { user } = useUser();
+
   const [confirmDelete, setConfirmDelete] = useState(false);
   const deleteCardMutation = useDeleteCardMutation(onClose);
   const moveColMutation = useMoveCardColumnMutation(ticketId);
   const { data: boards } = useBoardsQueries();
   const [isUploadingFile, setIsUploadingFile] = useState(false);
-  const [attachmentToDelete, setAttachmentToDelete] = useState<string | null>(
-    null,
-  );
+  const [attachmentToDelete, setAttachmentToDelete] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const isImage = (key: string) => /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(key);
@@ -574,11 +512,7 @@ function RightSidebar({
     isCloseToDueDate = !isOverdue && dueDateObj.getTime() <= twoDaysFromNow;
   }
 
-  const dueDateColor = isOverdue
-    ? "#DC2626"
-    : isCloseToDueDate
-      ? "#D97706"
-      : undefined;
+  const dueDateColor = isOverdue ? "#DC2626" : isCloseToDueDate ? "#D97706" : undefined;
 
   const handlePriorityChange = (priority: string) => {
     mutate({ id: ticketId, priority });
@@ -604,15 +538,11 @@ function RightSidebar({
   // Get creator from first ADDED_CARD activity
   const creatorActivity = (ticket.ticketActivities || [])
     .filter((a) => a.type === "ADDED_CARD")
-    .sort(
-      (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-    )[0];
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())[0];
   const creator = creatorActivity?.user;
 
   const handleColumnChange = (targetColumnId: string) => {
-    if (!ticket.ticketColumnId || targetColumnId === ticket.ticketColumnId)
-      return;
+    if (!ticket.ticketColumnId || targetColumnId === ticket.ticketColumnId) return;
     moveColMutation.mutate({
       cardId: ticketId,
       sourceColumnId: ticket.ticketColumnId,
@@ -638,11 +568,7 @@ function RightSidebar({
                 </SelectTrigger>
                 <SelectContent>
                   {boardColumns.map((col: any) => (
-                    <SelectItem
-                      key={col.id}
-                      value={col.id}
-                      className="text-[13px] font-body"
-                    >
+                    <SelectItem key={col.id} value={col.id} className="text-[13px] font-body">
                       {col.title}
                     </SelectItem>
                   ))}
@@ -657,8 +583,7 @@ function RightSidebar({
               {Object.entries(PRIORITY_CONFIG)
                 .filter(([k]) => k !== "na")
                 .map(([k, v]) => {
-                  const priorityKey =
-                    ticket.priority?.toLowerCase() || "medium";
+                  const priorityKey = ticket.priority?.toLowerCase() || "medium";
                   const isSelected = priorityKey === k;
                   return (
                     <button
@@ -667,9 +592,7 @@ function RightSidebar({
                       className="rounded-full font-body text-[11.5px] font-semibold cursor-pointer transition-all duration-150"
                       style={{
                         padding: "4px 10px",
-                        border: isSelected
-                          ? `2px solid ${v.dot}`
-                          : `2px solid ${v.bg}`,
+                        border: isSelected ? `2px solid ${v.dot}` : `2px solid ${v.bg}`,
                         background: v.bg,
                         color: v.color,
                         boxShadow: isSelected ? `0 0 0 2px ${v.dot}22` : "none",
@@ -695,12 +618,8 @@ function RightSidebar({
                         className="h-8 w-8 border hover:opacity-80 transition cursor-pointer"
                         onClick={() => handleToggleMember(user.id)}
                       >
-                        <AvatarImage
-                          src={getFileUrlFromKey(user.profilePhoto)}
-                        />
-                        <AvatarFallback>
-                          {user.name?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
+                        <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} />
+                        <AvatarFallback>{user.name?.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
                     </TooltipTrigger>
                     <TooltipContent>{user.name}</TooltipContent>
@@ -735,18 +654,12 @@ function RightSidebar({
                           >
                             <div className="flex items-center gap-2">
                               <Avatar className="h-6 w-6">
-                                <AvatarImage
-                                  src={getFileUrlFromKey(user.profilePhoto)}
-                                />
-                                <AvatarFallback>
-                                  {user.name?.charAt(0)}
-                                </AvatarFallback>
+                                <AvatarImage src={getFileUrlFromKey(user.profilePhoto)} />
+                                <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
                               </Avatar>
                               <span>{user.name}</span>
                             </div>
-                            {isSelected && (
-                              <Check className="h-4 w-4 text-primary" />
-                            )}
+                            {isSelected && <Check className="h-4 w-4 text-primary" />}
                           </button>
                         );
                       })
@@ -756,9 +669,7 @@ function RightSidebar({
               </Popover>
             </div>
             {assignedMembers.length === 0 && (
-              <div className="text-sm text-muted-foreground mt-2">
-                {t("Unassigned")}
-              </div>
+              <div className="text-sm text-muted-foreground mt-2">{t("Unassigned")}</div>
             )}
           </div>
           {linkedContact ? (
@@ -781,18 +692,13 @@ function RightSidebar({
                 <div className="flex items-center gap-3 relative">
                   <Avatar className="h-12 w-12 border bg-muted flex items-center justify-center">
                     <span className="font-semibold text-muted-foreground">
-                      {linkedContact.name?.substring(0, 2).toUpperCase() ||
-                        "CN"}
+                      {linkedContact.name?.substring(0, 2).toUpperCase() || "CN"}
                     </span>
                   </Avatar>
                   <div className="absolute left-8 bottom-0 h-3.5 w-3.5 bg-green-500 border-2 border-white rounded-full"></div>
                   <div className="flex flex-col">
-                    <span className="font-bold text-sm text-foreground">
-                      {linkedContact.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      +{linkedContact.phone}
-                    </span>
+                    <span className="font-bold text-sm text-foreground">{linkedContact.name}</span>
+                    <span className="text-xs text-muted-foreground">+{linkedContact.phone}</span>
                   </div>
                 </div>
                 <Link
@@ -871,8 +777,7 @@ function RightSidebar({
                           alt={key}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).style.display =
-                              "none";
+                            (e.target as HTMLImageElement).style.display = "none";
                           }}
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
@@ -953,20 +858,12 @@ function RightSidebar({
             className="bg-background rounded-xl p-6 shadow-2xl max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-semibold text-base mb-1">
-              {t("Delete Ticket")}
-            </h3>
+            <h3 className="font-semibold text-base mb-1">{t("Delete Ticket")}</h3>
             <p className="text-sm text-muted-foreground mb-5">
-              {t(
-                "Are you sure you want to delete this ticket? This action cannot be undone.",
-              )}
+              {t("Are you sure you want to delete this ticket? This action cannot be undone.")}
             </p>
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmDelete(false)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)}>
                 {t("Cancel")}
               </Button>
               <Button
@@ -1013,9 +910,7 @@ function RightSidebar({
             className="bg-background rounded-xl p-6 shadow-2xl max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-semibold text-base mb-1">
-              {t("Delete Attachment")}
-            </h3>
+            <h3 className="font-semibold text-base mb-1">{t("Delete Attachment")}</h3>
             <p className="text-sm text-muted-foreground mb-5">
               Are you sure you want to delete{" "}
               <span className="font-medium text-foreground">
@@ -1024,11 +919,7 @@ function RightSidebar({
               ? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setAttachmentToDelete(null)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setAttachmentToDelete(null)}>
                 {t("Cancel")}
               </Button>
               <Button
@@ -1067,17 +958,13 @@ function TicketTopHeader({
   const currentCol = useMemo(() => {
     if (!boards || !ticket.ticketColumnId) return null;
     for (const b of boards) {
-      const col = b.ticketColumns?.find(
-        (c: any) => c.id === ticket.ticketColumnId,
-      );
+      const col = b.ticketColumns?.find((c: any) => c.id === ticket.ticketColumnId);
       if (col) return col;
     }
     return null;
   }, [boards, ticket.ticketColumnId]);
 
-  const isOverdue = !!(
-    ticket.deadline && new Date(ticket.deadline) < new Date()
-  );
+  const isOverdue = !!(ticket.deadline && new Date(ticket.deadline) < new Date());
   const priorityKey = ticket.priority?.toLowerCase() || "na";
   const priorityInfo = PRIORITY_CONFIG[priorityKey] || PRIORITY_CONFIG.na;
 
@@ -1094,9 +981,7 @@ function TicketTopHeader({
     }
   };
 
-  const allItems = (ticket.checklists || []).flatMap(
-    (cl: any) => cl.items || [],
-  );
+  const allItems = (ticket.checklists || []).flatMap((cl: any) => cl.items || []);
   const doneItems = allItems.filter((i: any) => i.done).length;
   const totalItems = allItems.length;
 
@@ -1129,10 +1014,7 @@ function TicketTopHeader({
               border: `1px solid ${priorityInfo.border}`,
             }}
           >
-            <span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: priorityInfo.dot }}
-            />
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: priorityInfo.dot }} />
             {t(priorityInfo.label)}
           </span>
           {isOverdue && (
@@ -1140,8 +1022,7 @@ function TicketTopHeader({
               className="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-700 font-body text-[11px] font-bold border border-red-200"
               style={{ padding: "2px 9px" }}
             >
-              <AlertCircle size={11} className="text-red-700" strokeWidth={2} />{" "}
-              {t("Overdue")}
+              <AlertCircle size={11} className="text-red-700" strokeWidth={2} /> {t("Overdue")}
             </span>
           )}
           {totalItems > 0 && (
@@ -1212,18 +1093,10 @@ function TicketTopHeader({
 type ChecklistItem = { id: string; text: string; done: boolean };
 type Checklist = { id: string; name: string; items: ChecklistItem[] };
 
-function SectionLabel({
-  label,
-  icon: Icon,
-}: {
-  label: string;
-  icon?: React.ElementType;
-}) {
+function SectionLabel({ label, icon: Icon }: { label: string; icon?: React.ElementType }) {
   return (
     <div className="flex items-center gap-1.5 mb-3.5">
-      {Icon && (
-        <Icon size={14} className="text-muted-foreground" strokeWidth={2} />
-      )}
+      {Icon && <Icon size={14} className="text-muted-foreground" strokeWidth={2} />}
       <span className="font-body text-[11px] font-bold text-muted-foreground tracking-wider uppercase">
         {label}
       </span>
@@ -1255,10 +1128,7 @@ function AddItemRow({ onAdd }: { onAdd: (text: string) => void }) {
   }
 
   return (
-    <div
-      className="flex gap-2 items-center mt-2"
-      style={{ padding: "4px 8px" }}
-    >
+    <div className="flex gap-2 items-center mt-2" style={{ padding: "4px 8px" }}>
       <div className="w-[17px] h-[17px] rounded-[5px] border-2 border-muted-foreground/30 shrink-0" />
       <input
         autoFocus={active}
@@ -1295,10 +1165,7 @@ function AddItemRow({ onAdd }: { onAdd: (text: string) => void }) {
   );
 }
 
-function EditTicket({
-  ticket,
-  ticketId,
-}: Readonly<{ ticket: Card; ticketId: string }>) {
+function EditTicket({ ticket, ticketId }: Readonly<{ ticket: Card; ticketId: string }>) {
   const { t } = useTranslation();
   const { mutate } = useUpdateCardMutation();
   const [description, setDescription] = useState(ticket.description || "");
@@ -1306,17 +1173,12 @@ function EditTicket({
   const [debouncedDescription] = useDebounce(description, 1000);
 
   useEffect(() => {
-    if (
-      debouncedDescription !== ticket.description &&
-      debouncedDescription !== ""
-    ) {
+    if (debouncedDescription !== ticket.description && debouncedDescription !== "") {
       mutate({ id: ticketId, description: debouncedDescription });
     }
   }, [debouncedDescription, ticketId, mutate, ticket.description]);
 
-  const [localChecklists, setLocalChecklists] = useState<Checklist[]>(
-    ticket.checklists || [],
-  );
+  const [localChecklists, setLocalChecklists] = useState<Checklist[]>(ticket.checklists || []);
   const [addingChecklist, setAddingChecklist] = useState(false);
   const [newClName, setNewClName] = useState("");
 
@@ -1352,10 +1214,7 @@ function EditTicket({
           ? cl
           : {
               ...cl,
-              items: [
-                ...cl.items,
-                { id: crypto.randomUUID(), text, done: false },
-              ],
+              items: [...cl.items, { id: crypto.randomUUID(), text, done: false }],
             },
       ),
     );
@@ -1368,9 +1227,7 @@ function EditTicket({
           ? cl
           : {
               ...cl,
-              items: cl.items.map((i) =>
-                i.id === itemId ? { ...i, done: !i.done } : i,
-              ),
+              items: cl.items.map((i) => (i.id === itemId ? { ...i, done: !i.done } : i)),
             },
       ),
     );
@@ -1379,9 +1236,7 @@ function EditTicket({
   const deleteItem = (clId: string, itemId: string) => {
     updateChecklists(
       localChecklists.map((cl) =>
-        cl.id !== clId
-          ? cl
-          : { ...cl, items: cl.items.filter((i) => i.id !== itemId) },
+        cl.id !== clId ? cl : { ...cl, items: cl.items.filter((i) => i.id !== itemId) },
       ),
     );
   };
@@ -1440,11 +1295,7 @@ function EditTicket({
                 className="flex items-center gap-2"
                 style={{ marginBottom: clTotal > 0 ? 8 : 10 }}
               >
-                <CheckSquare
-                  size={14}
-                  className="text-muted-foreground"
-                  strokeWidth={2}
-                />
+                <CheckSquare size={14} className="text-muted-foreground" strokeWidth={2} />
                 <span className="font-body font-bold text-[13px] text-foreground flex-1">
                   {cl.name}
                 </span>
@@ -1483,21 +1334,13 @@ function EditTicket({
                       onClick={() => toggleItem(cl.id, item.id)}
                       className={`w-[17px] h-[17px] rounded-[5px] shrink-0 flex items-center justify-center cursor-pointer transition-all duration-150 ${item.done ? "bg-green-600 border-none" : "bg-transparent border-2 border-border"}`}
                     >
-                      {item.done && (
-                        <Check
-                          size={10}
-                          className="text-white"
-                          strokeWidth={3}
-                        />
-                      )}
+                      {item.done && <Check size={10} className="text-white" strokeWidth={3} />}
                     </div>
                     <span
                       onClick={() => toggleItem(cl.id, item.id)}
                       className="font-body text-[13px] flex-1 cursor-pointer transition-all duration-150"
                       style={{
-                        color: item.done
-                          ? "var(--muted-foreground)"
-                          : "var(--foreground)",
+                        color: item.done ? "var(--muted-foreground)" : "var(--foreground)",
                         textDecoration: item.done ? "line-through" : "none",
                       }}
                     >
@@ -1613,9 +1456,7 @@ function Comment(data: TicketComment & { cardId: string }) {
       </Avatar>
       <div className="flex-1">
         <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-sm font-semibold capitalize">
-            {data.createdBy?.name}
-          </span>
+          <span className="text-sm font-semibold capitalize">{data.createdBy?.name}</span>
           <span className="text-xs text-muted-foreground">
             {formatToRelativeTime(data.createdAt)}
           </span>
@@ -1639,16 +1480,10 @@ function Comment(data: TicketComment & { cardId: string }) {
   );
 }
 
-function TicketActivity({
-  activities,
-}: Readonly<{ activities: Array<Activity> }>) {
+function TicketActivity({ activities }: Readonly<{ activities: Array<Activity> }>) {
   const { t } = useTranslation();
   if (!activities || activities.length === 0)
-    return (
-      <div className="text-sm text-muted-foreground p-4">
-        {t("No activity yet.")}
-      </div>
-    );
+    return <div className="text-sm text-muted-foreground p-4">{t("No activity yet.")}</div>;
 
   return (
     <div className="flex flex-col gap-4 mt-1 relative before:absolute before:inset-y-0 before:left-3.75 before:w-0.5 before:bg-border">
@@ -1750,10 +1585,9 @@ function TicketResponse({ surveyResponse, questions, type }: any) {
         {type === TicketType.SURVEY_RESPONSE ? (
           <div className="flex flex-col gap-4">
             {surveyResponse?.responses?.map((response: any, index: number) => {
-              const question =
-                surveyResponse?.surveyTeamMap?.survey?.questions?.find(
-                  (q: any) => q.id === response.questionId,
-                );
+              const question = surveyResponse?.surveyTeamMap?.survey?.questions?.find(
+                (q: any) => q.id === response.questionId,
+              );
               if (!question) return null;
               return (
                 <SurveyResponsesView
@@ -1778,9 +1612,8 @@ function TicketResponse({ surveyResponse, questions, type }: any) {
               </div>
               <div className="text-sm bg-muted/40 p-2 rounded-md">
                 {getCellData(
-                  surveyResponse?.responses?.find(
-                    (res: any) => res.questionId === question.id,
-                  )?.response,
+                  surveyResponse?.responses?.find((res: any) => res.questionId === question.id)
+                    ?.response,
                   question,
                 )}
               </div>
@@ -1807,12 +1640,8 @@ function TicketAutomationResponse({ response }: any) {
           <div className="flex items-start gap-3">
             <User className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="flex flex-col">
-              <span className="text-sm font-semibold">
-                {response?.contact?.name}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {response?.contact?.phone}
-              </span>
+              <span className="text-sm font-semibold">{response?.contact?.name}</span>
+              <span className="text-xs text-muted-foreground">{response?.contact?.phone}</span>
             </div>
           </div>
           <div className="bg-muted/40 p-3 rounded-lg border text-sm mt-2 whitespace-pre-wrap">

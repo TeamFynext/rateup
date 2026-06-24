@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Button as MantineButton } from "@mantine/core";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -57,11 +54,7 @@ export function MetaLoginButton({
       try {
         const data = JSON.parse(event.data);
         if (data.type === "WA_EMBEDDED_SIGNUP") {
-          if (
-            ["FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING", "FINISH"].includes(
-              data.event,
-            )
-          ) {
+          if (["FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING", "FINISH"].includes(data.event)) {
             setWaData({
               phone_number_id: data.data?.phone_number_id ?? "",
               waba_id: data?.data?.waba_id,

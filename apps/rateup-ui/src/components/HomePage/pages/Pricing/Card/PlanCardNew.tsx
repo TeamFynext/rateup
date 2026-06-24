@@ -1,17 +1,8 @@
-import React from "react";
-
 import { Spoiler, Stack } from "@mantine/core";
 import { IconFlame } from "@tabler/icons-react";
 import { CheckCircle2 } from "lucide-react";
 
-import { currencyLabel } from "@/components/menu/util/currencyData.ts";
-
-const PlanCardNew = ({ plan, currencySymbol, onButtonClick }) => {
-  function getCurrenySymbol(label) {
-    const currency = currencyLabel.find((c) => c.label === label);
-    return currency ? currency.symbol : null;
-  }
-
+const PlanCardNew = ({ plan, onButtonClick }) => {
   const sharedStyles =
     "relative bg-white border border-gray-200 rounded-2xl shadow-lg p-8 flex flex-col justify-between transition-all hover:shadow-2xl hover:scale-[1.03] duration-300";
   return (
@@ -47,9 +38,7 @@ const PlanCardNew = ({ plan, currencySymbol, onButtonClick }) => {
             {plan?.paymentPlan?.amount} Billed yearly
           </p>
         )} */}
-        {plan.useCase && (
-          <p className="text-gray-600 mt-3 mb-5 text-sm">{plan.useCase}</p>
-        )}
+        {plan.useCase && <p className="text-gray-600 mt-3 mb-5 text-sm">{plan.useCase}</p>}
         <Spoiler
           maxHeight={310}
           pb={"xs"}
@@ -69,9 +58,7 @@ const PlanCardNew = ({ plan, currencySymbol, onButtonClick }) => {
       </div>
       <Stack gap={1}>
         {plan.name === "FREE PLAN" && (
-          <span className="text-sm font-medium text-[#1c518e] mt-5">
-            *No credit card needed
-          </span>
+          <span className="text-sm font-medium text-[#1c518e] mt-5">*No credit card needed</span>
         )}
         <button
           onClick={onButtonClick}

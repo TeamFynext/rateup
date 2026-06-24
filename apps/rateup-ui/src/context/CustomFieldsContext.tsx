@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
@@ -24,26 +22,18 @@ interface CustomFieldsContextType {
   resetCustomFields: () => void;
 }
 
-const CustomFieldsContext = createContext<CustomFieldsContextType | undefined>(
-  undefined,
-);
+const CustomFieldsContext = createContext<CustomFieldsContextType | undefined>(undefined);
 
 interface CustomFieldsProviderProps {
   children: ReactNode;
   initialFields?: CustomField[];
 }
 
-export function CustomFieldsProvider({
-  children,
-  initialFields = [],
-}: CustomFieldsProviderProps) {
-  const [customFields, setCustomFields] =
-    useState<CustomField[]>(initialFields);
+export function CustomFieldsProvider({ children, initialFields = [] }: CustomFieldsProviderProps) {
+  const [customFields, setCustomFields] = useState<CustomField[]>(initialFields);
 
   const updateCustomField = (id: string, value: any) => {
-    setCustomFields((prev) =>
-      prev.map((field) => (field.id === id ? { ...field, value } : field)),
-    );
+    setCustomFields((prev) => prev.map((field) => (field.id === id ? { ...field, value } : field)));
   };
 
   const getCustomFieldValue = (id: string) => {
@@ -52,9 +42,7 @@ export function CustomFieldsProvider({
   };
 
   const resetCustomFields = () => {
-    setCustomFields((prev) =>
-      prev.map((field) => ({ ...field, value: undefined })),
-    );
+    setCustomFields((prev) => prev.map((field) => ({ ...field, value: undefined })));
   };
 
   useEffect(() => {
@@ -79,9 +67,7 @@ export function CustomFieldsProvider({
 export function useCustomFieldsContext() {
   const context = useContext(CustomFieldsContext);
   if (context === undefined) {
-    throw new Error(
-      "useCustomFieldsContext must be used within a CustomFieldsProvider",
-    );
+    throw new Error("useCustomFieldsContext must be used within a CustomFieldsProvider");
   }
   return context;
 }

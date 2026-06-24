@@ -155,10 +155,7 @@ export default function HowItWorks() {
         <div className={`${style.flow} reveal d1`}>
           {/* Track line */}
           <div className={style["flow-line"]} />
-          <div
-            className={style["flow-line-fill"]}
-            style={{ width: `${fillPct}%` }}
-          />
+          <div className={style["flow-line-fill"]} style={{ width: `${fillPct}%` }} />
 
           <div className={style["flow-steps"]}>
             {steps.map((s, i) => {

@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
@@ -17,6 +13,7 @@ import {
   Phone,
   Search,
 } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
@@ -115,18 +112,15 @@ type CustomerDetails = {
 function CustomerPage() {
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<"list" | "details">("list");
-  const [selectedCustomer, setSelectedCustomer] =
-    useState<CustomerDetails | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetails | null>(null);
 
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
-    null,
-  );
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [pagination, setPagination] = useState({
+  const [pagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   });
-  const [sorting, setSorting] = useState({
+  const [sorting] = useState({
     id: "name",
     desc: false,
   });
@@ -138,8 +132,7 @@ function CustomerPage() {
     sorting,
     [],
   );
-  const { data: customerDetails } =
-    useGetLoyaltyCustomerById(selectedCustomerId);
+  const { data: customerDetails } = useGetLoyaltyCustomerById(selectedCustomerId);
   const exportMutation = useExportCustomersMutation();
   const user = useUser();
 
@@ -165,9 +158,7 @@ function CustomerPage() {
         <div className="flex items-center gap-3">
           <PremiumAvatar name={row.getValue("customerName") ?? ""} size="sm" />
           <div>
-            <p className="font-semibold text-sm">
-              {row.getValue("customerName")}
-            </p>
+            <p className="font-semibold text-sm">{row.getValue("customerName")}</p>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <Phone className="w-3 h-3" />
               {row.original.contact?.phone}
@@ -181,11 +172,7 @@ function CustomerPage() {
       id: "tier",
       header: "Tier",
       cell: ({ row }) => (
-        <Badge
-          className={getTierBadgeClassName(
-            row.original.currentTier?.color || "",
-          )}
-        >
+        <Badge className={getTierBadgeClassName(row.original.currentTier?.color || "")}>
           {row.getValue("tier")}
         </Badge>
       ),
@@ -214,9 +201,7 @@ function CustomerPage() {
       header: "Date of Birth",
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
-          {row.getValue("dob")
-            ? new Date(row.getValue("dob")).toLocaleDateString()
-            : ""}
+          {row.getValue("dob") ? new Date(row.getValue("dob")).toLocaleDateString() : ""}
         </span>
       ),
     },
@@ -243,9 +228,7 @@ function CustomerPage() {
             className="h-7 w-7 p-0 hover:bg-primary/10"
             onClick={async () => {
               try {
-                await navigator.clipboard.writeText(
-                  row.getValue("referralCode"),
-                );
+                await navigator.clipboard.writeText(row.getValue("referralCode"));
                 toast.success(t("Referral code copied to clipboard!"));
               } catch (err) {
                 console.error("Failed to copy referral code:", err);
@@ -301,8 +284,7 @@ function CustomerPage() {
     setViewMode("details");
   };
 
-  if (isLoading)
-    return <div className="flex items-center justify-center py-8">loading</div>;
+  if (isLoading) return <div className="flex items-center justify-center py-8">loading</div>;
   return (
     <>
       {viewMode === "list" ? (
@@ -328,15 +310,11 @@ function CustomerPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => exportMutation.mutate("csv")}
-                  >
+                  <DropdownMenuItem onClick={() => exportMutation.mutate("csv")}>
                     <FileText className="w-4 h-4 mr-2" />
                     {t("Export as CSV")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => exportMutation.mutate("excel")}
-                  >
+                  <DropdownMenuItem onClick={() => exportMutation.mutate("excel")}>
                     <FileSpreadsheet className="w-4 h-4 mr-2" />
                     {t("Export as Excel")}
                   </DropdownMenuItem>

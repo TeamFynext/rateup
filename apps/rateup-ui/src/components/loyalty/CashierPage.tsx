@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-
 import { useNavigate, useRouterState, useSearch } from "@tanstack/react-router";
 import { AlertTriangle, Loader2, Plus, Search, User } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import {
   useCustomerRewardsByPhone,
@@ -39,8 +38,7 @@ export function CashierPage() {
   } = useUser();
 
   // Search
-  const { data: searchResults, isLoading: isSearchLoading } =
-    useSearchCustomers(debouncedSearch);
+  const { data: searchResults, isLoading: isSearchLoading } = useSearchCustomers(debouncedSearch);
   const showResultsDropdown = !selectedPhone && debouncedSearch.length >= 2;
 
   const customer = customerData?.customer;
@@ -83,9 +81,7 @@ export function CashierPage() {
     updatePhoneQueryParam(searchInput);
   };
 
-  const handleSelectCustomer = (result: {
-    contact: { name: string; phone: string };
-  }) => {
+  const handleSelectCustomer = (result: { contact: { name: string; phone: string } }) => {
     setSelectedPhone(normalizePhone(result.contact.phone));
     setSearchInput(result.contact.name || result.contact.phone);
     updatePhoneQueryParam(result.contact.phone);
@@ -143,9 +139,7 @@ export function CashierPage() {
       <Card>
         <CardContent>
           <div className="space-y-2">
-            <Label htmlFor="cashier-search">
-              Search Customer by Name or Phone
-            </Label>
+            <Label htmlFor="cashier-search">Search Customer by Name or Phone</Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10 pointer-events-none" />
               <Input
@@ -176,15 +170,13 @@ export function CashierPage() {
                       <span className="text-sm">Searching...</span>
                     </div>
                   )}
-                  {!isSearchLoading &&
-                    debouncedSearch &&
-                    searchResults?.length === 0 && (
-                      <div className="px-4 py-3">
-                        <p className="text-sm text-muted-foreground">
-                          No customers found for &quot;{debouncedSearch}&quot;
-                        </p>
-                      </div>
-                    )}
+                  {!isSearchLoading && debouncedSearch && searchResults?.length === 0 && (
+                    <div className="px-4 py-3">
+                      <p className="text-sm text-muted-foreground">
+                        No customers found for &quot;{debouncedSearch}&quot;
+                      </p>
+                    </div>
+                  )}
                   {!isSearchLoading &&
                     searchResults?.map((result) => (
                       <button
@@ -200,9 +192,7 @@ export function CashierPage() {
                           <p className="text-sm font-medium truncate">
                             {result.contact.name || "No name"}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {result.contact.phone}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{result.contact.phone}</p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-xs font-semibold text-primary">
@@ -240,9 +230,7 @@ export function CashierPage() {
               </Button>
             )}
             {searchInput.length > 0 && searchInput.length < 2 && (
-              <p className="text-xs text-muted-foreground">
-                Please enter at least 2 characters
-              </p>
+              <p className="text-xs text-muted-foreground">Please enter at least 2 characters</p>
             )}
           </div>
         </CardContent>

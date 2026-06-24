@@ -1,11 +1,10 @@
-import React from "react";
-
 import { ChevronDownIcon } from "lucide-react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
-import { ContactGroupType } from "@/types/enums.ts";
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
+import { ContactGroupType } from "@/types/enums.ts";
 
 import { Button } from "../ui/button.tsx";
 import { Calendar } from "../ui/calendar.tsx";
@@ -13,13 +12,7 @@ import { Field, FieldError, FieldLabel } from "../ui/field.tsx";
 import { Input } from "../ui/input.tsx";
 import { MultiSelect } from "../ui/multi-select.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 import ContactGroupSelector from "./ContactGroupSelector.tsx";
 import { UserSelector } from "./CreateContactModal.tsx";
@@ -30,17 +23,13 @@ const ContactForm = ({ form, customFields, type }) => {
   const { data: labels = [], isPending } = useContactLabels();
 
   const getCustomFieldValue = (fieldId) => {
-    const customField = form
-      .getValues()
-      .customFields?.find((cf) => cf.slug === fieldId);
+    const customField = form.getValues().customFields?.find((cf) => cf.slug === fieldId);
     return customField?.value || "";
   };
 
   const updateCustomField = (fieldId, value, customFieldData) => {
     const currentCustomFields = form.getValues().customFields;
-    const existingIndex = currentCustomFields.findIndex(
-      (cf) => cf.fieldId === fieldId,
-    );
+    const existingIndex = currentCustomFields.findIndex((cf) => cf.fieldId === fieldId);
 
     if (existingIndex >= 0) {
       currentCustomFields[existingIndex].value = value;
@@ -85,11 +74,7 @@ const ContactForm = ({ form, customFields, type }) => {
               type="email"
               defaultValue={fieldValue}
               onChange={(event) => {
-                updateCustomField(
-                  fieldId,
-                  event.currentTarget.value,
-                  customField,
-                );
+                updateCustomField(fieldId, event.currentTarget.value, customField);
               }}
               className="bg-accent border-none"
             />
@@ -106,11 +91,7 @@ const ContactForm = ({ form, customFields, type }) => {
               type="number"
               defaultValue={fieldValue ? Number(fieldValue) : ""}
               onChange={(value) => {
-                updateCustomField(
-                  fieldId,
-                  value?.toString() || "",
-                  customField,
-                );
+                updateCustomField(fieldId, value?.toString() || "", customField);
               }}
               className="bg-accent border-none"
             />
@@ -159,11 +140,7 @@ const ContactForm = ({ form, customFields, type }) => {
               {...commonProps}
               defaultValue={fieldValue}
               onChange={(event) => {
-                updateCustomField(
-                  fieldId,
-                  event.currentTarget.value,
-                  customField,
-                );
+                updateCustomField(fieldId, event.currentTarget.value, customField);
               }}
               className="bg-accent border-none placeholder:text-sm"
             />
@@ -262,10 +239,7 @@ const ContactForm = ({ form, customFields, type }) => {
                   <ChevronDownIcon />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent
-                className="w-auto overflow-hidden p-0"
-                align="start"
-              >
+              <PopoverContent className="w-auto overflow-hidden p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={form.values.dob}
@@ -287,9 +261,7 @@ const ContactForm = ({ form, customFields, type }) => {
           </Field>
         </>
       )}
-      {form
-        .getValues()
-        .contactType?.map((fieldId) => renderCustomField(fieldId))}
+      {form.getValues().contactType?.map((fieldId) => renderCustomField(fieldId))}
       {type !== ContactGroupType.LOYALTY && (
         <Field className="col-span-2 flex flex-col gap-1">
           <FieldLabel>{translations("notes")}</FieldLabel>

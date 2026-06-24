@@ -1,4 +1,4 @@
-import { PageType, QuestionType } from "@/types/enums.ts";
+import { PageType } from "@/types/enums.ts";
 
 import BackgroundStyles from "./components/BackgroundStyles.tsx";
 import ButtonStyles from "./components/ButtonStyles.tsx";
@@ -6,8 +6,6 @@ import HeaderStyles from "./components/HeaderStyles.tsx";
 import InputStyles from "./components/InputStyles.tsx";
 import LogoStyles from "./components/LogoStyles.tsx";
 import { ThemeTabEnum } from "./SurveyTheme.enums";
-
-const dummyImage = "https://www.freeiconspng.com/uploads/no-image-icon-4.png";
 
 export const swatches = [
   "#2e2e2e",
@@ -24,21 +22,6 @@ export const swatches = [
   "#82c91e",
   "#fab005",
   "#fd7e14",
-];
-
-const swatchesNamesArray = [
-  "blue",
-  "cyan",
-  "gray",
-  "green",
-  "indigo",
-  "lime",
-  "orange",
-  "pink",
-  "red",
-  "teal",
-  "violet",
-  "yellow",
 ];
 
 export const FontWeights = [
@@ -78,32 +61,6 @@ export const FontWeights = [
     label: "Thin",
     value: "100",
   },
-];
-
-const questionTypeEnumArray = [
-  QuestionType.Rating,
-  QuestionType.Smiley,
-  QuestionType.LD,
-  QuestionType.YN,
-  QuestionType.Opinion,
-  QuestionType.Email,
-  QuestionType.Contact,
-  QuestionType.MCQ,
-  QuestionType.MSQ,
-  QuestionType.DDSS,
-  QuestionType.DDMS,
-  QuestionType.Phone,
-  QuestionType.Photo,
-  QuestionType.Testimonial,
-  QuestionType.EmailPhone,
-  QuestionType.Text,
-  QuestionType.TextArea,
-  QuestionType.Number,
-  QuestionType.Date,
-  QuestionType.CustomNPS,
-  QuestionType.PCQ,
-  QuestionType.TnC,
-  QuestionType.InfoMessage,
 ];
 
 const commonSupportedPageEditors = [

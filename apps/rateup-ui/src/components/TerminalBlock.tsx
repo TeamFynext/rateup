@@ -1,7 +1,4 @@
-"use client";
-
 import React, { useState } from "react";
-
 import { FaCheck, FaClipboard } from "react-icons/fa";
 
 interface TerminalBlockProps {

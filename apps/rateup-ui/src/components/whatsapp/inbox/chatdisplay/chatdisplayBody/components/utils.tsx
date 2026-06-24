@@ -5,6 +5,12 @@ import { Image } from "@unpic/react";
 import { Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
+import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { useUser } from "@/context/UserContext.tsx";
 import { MessagePlatform } from "@/types/enums.ts";
 import type {
   IgReceiveMessageBody,
@@ -12,20 +18,10 @@ import type {
   WaReceiveMessageBody,
   WaSendMessageBody,
 } from "@/types/global";
-import type { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { CreativeAvatar } from "@/components/ui/creative-avatar.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { useUser } from "@/context/UserContext.tsx";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime.ts";
 import { parseWaMessage } from "@/utils/whatsapp/inbox.ts";
 
-import {
-  getColorForUser,
-  reactionEmojiMap,
-} from "../layout/singleMessageLayout/index.tsx";
-import classes from "../styles.module.css";
+import { getColorForUser, reactionEmojiMap } from "../layout/singleMessageLayout/index.tsx";
 import WaInboxAttachments from "./attachments/index.tsx";
 import WaInboxAudio from "./audio/index.tsx";
 import WaInboxContact from "./contact/index.tsx";
@@ -36,6 +32,8 @@ import WaInboxLocation from "./location/index.tsx";
 import WaInboxTemplate from "./template/index.tsx";
 import WaInboxText from "./text/index.tsx";
 import WaInboxVideo from "./video/index.tsx";
+
+import classes from "../styles.module.css";
 
 const IgCommentBubble = ({
   messageContent,
@@ -53,17 +51,14 @@ const IgCommentBubble = ({
       >
         Commented on your post
       </Text>
-      {messageContent.text ? (
-        <WaInboxText messageContent={messageContent.text} />
-      ) : null}
+      {messageContent.text ? <WaInboxText messageContent={messageContent.text} /> : null}
     </Stack>
   );
 };
 
 export const SingleMessage = ({ message }) => {
   const { t: translations } = useTranslation();
-  const { messageContent, messageType, template, interactive } =
-    parseWaMessage(message);
+  const { messageContent, messageType, template, interactive } = parseWaMessage(message);
   switch (messageType) {
     case "text":
     case "quickreply":
@@ -76,18 +71,10 @@ export const SingleMessage = ({ message }) => {
       return <WaInboxText messageContent={messageContent} />;
     case "template":
       return (
-        <WaInboxTemplate
-          templateBody={template}
-          parameters={message.templateComponentParams}
-        />
+        <WaInboxTemplate templateBody={template} parameters={message.templateComponentParams} />
       );
     case "interactive":
-      return (
-        <WaInboxInteractive
-          interactiveBody={interactive}
-          messageContent={messageContent}
-        />
-      );
+      return <WaInboxInteractive interactiveBody={interactive} messageContent={messageContent} />;
     case "audio":
       return <WaInboxAudio messageContent={messageContent} />;
     case "video":
@@ -104,8 +91,7 @@ export const SingleMessage = ({ message }) => {
     default:
       return (
         <Text fz={"xs"} c={"red"}>
-          {messageType}{" "}
-          {translations("message type display is not supported yet")}
+          {messageType} {translations("message type display is not supported yet")}
         </Text>
       );
   }
@@ -136,8 +122,7 @@ export function getReactionMessage({
       const reactedMessageId =
         msg.messageBody.exchangeProcess === "receive"
           ? !isInsta
-            ? (msg.messageBody.receive as WaReceiveMessageBody).messages[0]
-                .reaction?.message_id
+            ? (msg.messageBody.receive as WaReceiveMessageBody).messages[0].reaction?.message_id
             : (msg.messageBody.receive as IgReceiveMessageBody).reaction.mid
           : !isInsta
             ? (msg.messageBody.send as WaSendMessageBody).reaction?.message_id
@@ -147,27 +132,19 @@ export function getReactionMessage({
     return false;
   });
 
-  const isSendReactionMsg =
-    reactionMsg && reactionMsg.messageBody.exchangeProcess === "send";
+  const isSendReactionMsg = reactionMsg && reactionMsg.messageBody.exchangeProcess === "send";
   if (reactionMsg)
     return {
       emoji: isSendReactionMsg
         ? !isInsta
           ? (reactionMsg.messageBody.send as WaSendMessageBody).reaction.emoji
-          : ((reactionMsg.messageBody.send as IgSendMessageBody).payload
-              .emoji ??
-            reactionEmojiMap(
-              (reactionMsg.messageBody.send as IgSendMessageBody).payload
-                .reaction,
-            ))
+          : ((reactionMsg.messageBody.send as IgSendMessageBody).payload.emoji ??
+            reactionEmojiMap((reactionMsg.messageBody.send as IgSendMessageBody).payload.reaction))
         : !isInsta
-          ? (reactionMsg.messageBody.receive as WaReceiveMessageBody)
-              .messages[0].reaction.emoji
-          : ((reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction
-              .emoji ??
+          ? (reactionMsg.messageBody.receive as WaReceiveMessageBody).messages[0].reaction.emoji
+          : ((reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction.emoji ??
             reactionEmojiMap(
-              (reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction
-                .reaction,
+              (reactionMsg.messageBody.receive as IgReceiveMessageBody).reaction.reaction,
             )),
       from: isSendReactionMsg
         ? reactionMsg.sender?.name
@@ -193,12 +170,7 @@ export const TempMessageBody = ({ body, timestamp }) => {
             {user?.userName}
           </p>
           {body.url && body.urlType === "image" && (
-            <Image
-              src={body.url}
-              height={150}
-              width={150}
-              alt="image of text messaage"
-            />
+            <Image src={body.url} height={150} width={150} alt="image of text messaage" />
           )}
           {body.url && body.urlType === "video" && (
             <video src={body.url} height={"150px"} width={"150px"} />
@@ -216,9 +188,7 @@ export const TempMessageBody = ({ body, timestamp }) => {
           <div>{body.text ? parseJsonToReact(body?.text) : null}</div>
         </div>
         <div className="flex gap-2 justify-end">
-          <span className="text-xs text-muted-foreground">
-            {formatToCustomTime(timestamp)}
-          </span>
+          <span className="text-xs text-muted-foreground">{formatToCustomTime(timestamp)}</span>
           <Clock className="w-3 h-3 text-muted-foreground" />
         </div>
       </div>
@@ -245,10 +215,7 @@ const SeparatorWithText = ({ text }: { text: string }) => {
   return (
     <div className="flex items-center my-4 w-full">
       <Separator className="flex-1" />
-      <Badge
-        variant="secondary"
-        className="mx-2 px-3 py-1 font-medium text-gray-500 bg-gray-200"
-      >
+      <Badge variant="secondary" className="mx-2 px-3 py-1 font-medium text-gray-500 bg-gray-200">
         {text}
       </Badge>
       <Separator className="flex-1" />

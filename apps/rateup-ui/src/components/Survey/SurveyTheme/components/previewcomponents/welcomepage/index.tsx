@@ -1,9 +1,6 @@
-"use client";
-
-import { useCallback } from "react";
-
 import { BackgroundImage, Box, Flex, Image } from "@mantine/core";
 import { isNumber } from "@tiptap/react";
+import { useCallback } from "react";
 
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
 import AutosaveInput from "@/components/input/AutosaveInput/index.tsx";
@@ -11,26 +8,23 @@ import { cordinateStyle } from "@/utils/index.ts";
 
 import { CreditsCard } from "../../../../../Card/CreditsCard.tsx";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils.ts";
-import classes from "../../../SurveyTheme.module.css";
 import {
   useEditSurveySelectedQuestion,
   useSelectedPreview,
-  useSetOpenEditors,
   useSurveyThemeContextValue,
-  useSurveyThemeStateDispatch,
 } from "../../../SurveyThemeContext.tsx";
 import ThemeTitle from "../../ThemeTitle.tsx";
 
+import classes from "../../../SurveyTheme.module.css";
+
 export default function WelcomePageThemeView({ survey }) {
   const webSurveyPagesTheme = useSurveyThemeContextValue();
-  const surveyThemeDispatch = useSurveyThemeStateDispatch();
+
   const editSurveySelectedQuestion = useEditSurveySelectedQuestion();
   const selectedPreview = useSelectedPreview();
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId: survey.id,
   });
-  const isWelcomePageEnabled = survey?.welcomePageEnabled;
-  const setOpenEditors = useSetOpenEditors();
 
   const surveyThemeObj = survey?.webSurveyTheme?.theme;
   const {
@@ -39,8 +33,7 @@ export default function WelcomePageThemeView({ survey }) {
     },
   } = surveyThemeObj;
 
-  const shouldUseSurveyTheme =
-    webSurveyPagesTheme["welcomeTheme"]?.useSurveyTheme;
+  const shouldUseSurveyTheme = webSurveyPagesTheme["welcomeTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
     ? surveyThemeObj["surveyTheme"]
     : webSurveyPagesTheme["welcomeTheme"];
@@ -76,8 +69,7 @@ export default function WelcomePageThemeView({ survey }) {
       switch (name) {
         case "title": {
           data["titleText"] = value;
-          if (editSurveySelectedQuestion["subtitleText"])
-            data["subtitleText"] = null;
+          if (editSurveySelectedQuestion["subtitleText"]) data["subtitleText"] = null;
           break;
         }
         case "subtitle": {
@@ -115,9 +107,7 @@ export default function WelcomePageThemeView({ survey }) {
   return (
     <Flex align={"center"} h="100%" style={{ backgroundColor }}>
       <CreditsCard
-        enableCredits={backgroundImageSrc?.startsWith(
-          "https://images.unsplash.com",
-        )}
+        enableCredits={backgroundImageSrc?.startsWith("https://images.unsplash.com")}
         url={backgroundImageSrc}
       >
         <BackgroundImage
@@ -143,9 +133,7 @@ export default function WelcomePageThemeView({ survey }) {
 
             <ThemeTitle
               value={newTitle}
-              onChange={(value) =>
-                handleSaveTitleSubtitleStartTextSave(value, "title")
-              }
+              onChange={(value) => handleSaveTitleSubtitleStartTextSave(value, "title")}
               styles={{ color: titleStyles?.color }}
             />
             <Box
