@@ -278,24 +278,6 @@ function ConfirmDiscardDialog({ open, onConfirm, onCancel }: Readonly<ConfirmDis
   );
 }
 
-// ─── Main Page ─────────────────────────────────────────────────────────────────
-
-function CreateAutomatedReplyPage() {
-  const { t } = useTranslation();
-
-  return (
-    <div className="space-y-6 p-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">{t("Create Chatbot")}</h1>
-        <p className="text-muted-foreground">
-          {t("Set up automated replies for your WhatsApp or Instagram conversations.")}
-        </p>
-      </div>
-      <AutomatedReplyForm />
-    </div>
-  );
-}
-
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function getInitialValues(initialValues?: WaAutomatedReply, forcedPlatform?: AutomationPlatform) {

@@ -173,12 +173,14 @@ export function SurveyMenu({ survey, selectedTeamId, teamsData, refetchSurveys }
           toast.loading(translations("Hold on, survey is getting deleted..."), {
             id: "delete-data",
           });
-          selectedTeamId && selectedTeamId !== "all"
-            ? await surveyDeleteMutation.mutateAsync({
-                id: survey?.id,
-                teamId: selectedTeamId,
-              })
-            : await surveyDeleteMutation.mutateAsync({ id: survey?.id });
+          if (selectedTeamId && selectedTeamId !== "all") {
+            await surveyDeleteMutation.mutateAsync({
+              id: survey?.id,
+              teamId: selectedTeamId,
+            });
+          } else {
+            await surveyDeleteMutation.mutateAsync({ id: survey?.id });
+          }
           refetchSurveys();
         }}
       />

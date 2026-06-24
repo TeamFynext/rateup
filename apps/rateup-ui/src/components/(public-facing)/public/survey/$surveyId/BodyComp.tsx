@@ -8,7 +8,7 @@ import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview/index.tsx"
 
 function BodyComp({
   enableGoogleReview,
-  googleLink,
+  googleLink: _googleLink,
   reviews,
   orgLogoSrc,
   surveyId,

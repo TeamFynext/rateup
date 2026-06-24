@@ -5,7 +5,7 @@ import React from "react";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons.tsx";
 
 const CommonError = ({
-  error,
+  error: _error,
   reset,
   className = "",
 }: {

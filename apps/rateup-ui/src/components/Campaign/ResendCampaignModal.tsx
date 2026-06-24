@@ -75,7 +75,6 @@ export const ResendCampaignModal = ({
   onClose,
   onSubmit,
   isLoading = false,
-  stats = {},
   isFirstSend = false,
 }: ResendCampaignModalProps) => {
   const { t } = useTranslation("campaign.resend");

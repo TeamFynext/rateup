@@ -12,11 +12,6 @@ type RouterAdapter = {
 
 const routerInfo: { router?: RouterAdapter; pathName?: string } = {};
 
-function setRouter(router: RouterAdapter, pathName: string) {
-  routerInfo.router = router;
-  routerInfo.pathName = pathName;
-}
-
 export const frontendConfig = (): SuperTokensConfig => {
   return {
     appInfo,

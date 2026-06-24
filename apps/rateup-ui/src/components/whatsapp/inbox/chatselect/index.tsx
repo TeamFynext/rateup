@@ -1,5 +1,4 @@
-import { Card, Divider, Group, Indicator, Text } from "@mantine/core";
-import { IconForbid2, IconMessageCheck, IconUserCheck, IconUserCircle } from "@tabler/icons-react";
+import { Card, Divider, Group, Text } from "@mantine/core";
 import { useSearch } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { CheckCircle, Loader, Loader2, UserCheck } from "lucide-react";
@@ -11,7 +10,6 @@ import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import useContactStore, {
   makeFilterKey,
-  useChatContactCountStore,
   useContactsStore,
   useMessagesStore,
 } from "@/components/dashboard/inbox/store.ts";
@@ -596,54 +594,6 @@ const WaInboxChatSelect = () => {
           />
         </DialogContent>
       </Dialog>
-    </div>
-  );
-};
-
-const AssignedInboxIcon = (props) => {
-  const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.assigned) return <IconUserCheck {...props} />;
-  return (
-    <div className="flex">
-      <Indicator label={totalCount.assigned} inline size={16} color="black">
-        <IconUserCheck {...props} />
-      </Indicator>
-    </div>
-  );
-};
-
-const AssignedToMeInboxIcon = (props) => {
-  const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.assignedToMe) return <IconUserCircle {...props} />;
-  return (
-    <div className="flex">
-      <Indicator label={totalCount.assignedToMe} inline size={16} color="black">
-        <IconUserCircle {...props} />
-      </Indicator>
-    </div>
-  );
-};
-
-const ClosedInboxIcon = (props) => {
-  const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.closed) return <IconMessageCheck {...props} />;
-  return (
-    <div className="flex">
-      <Indicator label={totalCount.closed} inline size={16} color="black">
-        <IconMessageCheck {...props} />
-      </Indicator>
-    </div>
-  );
-};
-
-const BlockedInboxIcon = (props) => {
-  const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.blocked) return <IconForbid2 {...props} />;
-  return (
-    <div className="flex">
-      <Indicator label={totalCount.blocked} inline size={16} color="black">
-        <IconForbid2 {...props} />
-      </Indicator>
     </div>
   );
 };

@@ -11,7 +11,7 @@ import { editorsList } from "./constants.tsx";
 
 import styles from "./ThemeStylesEditor.module.css";
 
-function RenderOption({ option, checked }) {
+function RenderOption({ option }) {
   return <Box>{option.label}</Box>;
 }
 

@@ -78,7 +78,7 @@ export async function getSurveysSummary() {
   return allSurveysSummary;
 }
 
-const getSurveysList = () =>
+const _getSurveysList = () =>
   axiosClient({
     url: `/survey`,
     method: "GET",
@@ -95,7 +95,7 @@ export async function getSurveyLandings() {
     return { error: "Error Occured!" };
   }
 }
-async function getSurveysLandingPage() {
+async function _getSurveysLandingPage() {
   try {
     const surveys: Array<Survey> = (await axiosClient.get(`${SURVEYURL}/createlanding`)).data;
     return surveys;

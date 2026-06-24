@@ -99,7 +99,7 @@ export function DataSourceInput(props) {
         id: generateId(),
         ...Object.fromEntries(
           Object.entries(choiceForm.getValues()).filter(
-            ([key, value]) => typeof value === "string" && value.trim() !== "",
+            ([_key, value]) => typeof value === "string" && value.trim() !== "",
           ),
         ),
       };
@@ -186,7 +186,6 @@ export function DataSourceInput(props) {
                   onEmojiClick={(e) =>
                     choiceForm.setFieldValue("title", choiceForm.getValues().title + e)
                   }
-                  size="lg"
                 />
               </Box>
             </Group>
@@ -339,7 +338,7 @@ function Choice({
 
     const choiceObj = Object.fromEntries(
       Object.entries(choiceForm.getValues()).filter(
-        ([key, value]) => typeof value === "string" && value.trim() !== "",
+        ([_key, value]) => typeof value === "string" && value.trim() !== "",
       ),
     );
     const updatedChoices = choices.map((c, i) => (i === index ? { ...c, ...choiceObj } : c));

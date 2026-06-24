@@ -14,28 +14,3 @@ export async function getUserID() {
   const userId: string = await Session.getUserId();
   return { userId };
 }
-
-async function getUserEmail() {
-  let email: string;
-  if (await Session.doesSessionExist()) {
-    const accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
-    email = accessTokenPayload.email;
-  }
-  return { email };
-}
-
-async function fetchUserData(): Promise<{
-  email: string;
-  role: string;
-  userId: string;
-}> {
-  const emailResponse = await getUserEmail();
-  const roleResponse = await getOrgIdRole();
-  const userIdResponse = await getUserID();
-
-  return {
-    email: emailResponse.email,
-    role: roleResponse.role,
-    userId: userIdResponse.userId,
-  };
-}

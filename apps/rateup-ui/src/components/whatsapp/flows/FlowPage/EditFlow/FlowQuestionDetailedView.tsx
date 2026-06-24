@@ -264,7 +264,7 @@ function ElementEditor({
     }
   }, [question.extraConfig]);
 
-  form.watch("choices", ({ previousValue, value, touched, dirty }) => {
+  form.watch("choices", () => {
     handleSave();
   });
 
@@ -486,7 +486,6 @@ function ElementEditor({
             <FlowQuestionExtraProps
               form={form}
               question={question}
-              handleSave={handleSave}
               nextScreens={nextScreens}
               extraConfigForm={extraConfigForm}
             />
@@ -530,7 +529,9 @@ function ElementEditor({
                 size="sm"
                 onClick={() => {
                   const save = handleSave();
-                  save === "saved" && setActiveTab(EditorType.LogicEditor);
+                  if (save === "saved") {
+                    setActiveTab(EditorType.LogicEditor);
+                  }
                 }}
               />
             )}
@@ -542,7 +543,9 @@ function ElementEditor({
                 size="sm"
                 onClick={() => {
                   const save = handleSave();
-                  save === "saved" && setActiveTab(EditorType.GoogleReviewEditor);
+                  if (save === "saved") {
+                    setActiveTab(EditorType.GoogleReviewEditor);
+                  }
                 }}
               />
             )}
@@ -594,7 +597,6 @@ function LabelTextInput(props: TextInputProps & { maxLength: number }) {
 interface ExtraPropsProps {
   form: UseFormReturnType<any>;
   question: Question;
-  handleSave: () => void;
   nextScreens?: WaFlowScreen[];
   extraConfigForm: UseFormReturnType<any>;
 }
@@ -602,9 +604,8 @@ function FlowQuestionExtraProps({
   form,
   question,
   nextScreens,
-  handleSave,
   extraConfigForm,
-}: ExtraPropsProps) {
+}: Readonly<ExtraPropsProps>) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { t: translations } = useTranslation();
   switch (question.type) {

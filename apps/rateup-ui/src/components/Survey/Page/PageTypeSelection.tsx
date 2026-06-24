@@ -1,5 +1,4 @@
 import { Button, Flex, Grid, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
-import React from "react";
 import { useTranslation } from "react-i18next";
 
 import { PageType, SubscriptionFeaturePathName } from "@/types/enums.ts";
@@ -11,10 +10,6 @@ import { pageIcons } from "./PageIcons.ts";
 
 import classes from "../Question/QuestionDetailedView.module.css";
 
-interface iProps {
-  questions: Question[];
-  handleTypeSelection: (type: PageType) => void;
-}
 const PageTypeSelection = ({ handleTypeSelection, questions, subscription }) => {
   const handleQuestionTypeClick = (type) => {
     handleTypeSelection(type);

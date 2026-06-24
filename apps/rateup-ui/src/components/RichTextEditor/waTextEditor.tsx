@@ -82,7 +82,6 @@ const CustomEnter = Extension.create({
 function WaTextEditor({
   handleInputChange,
   content = "",
-  className = "",
   mah = 200,
   placeholder = "Enter your text",
   label = "",
@@ -94,11 +93,9 @@ function WaTextEditor({
   customEnter,
   editable = true,
   sendMessageButton = null,
-  otherHeaders = null,
   isQuickReplyEditor = false,
   border,
   allowFiles = false,
-  ...props
 }: Readonly<WaTextEditorProps>) {
   const [opened, { open, close }] = useDisclosure(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);

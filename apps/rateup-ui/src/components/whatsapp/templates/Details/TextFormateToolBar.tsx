@@ -93,11 +93,9 @@ export const TextFormateToolBar = ({
 export const PopoverEmojiPicker = ({
   onEmojiClick,
   showIcon,
-  size = "xs",
 }: {
   onEmojiClick: (emoji: string, emojiData?: EmojiClickData) => void;
   showIcon?: React.ReactNode;
-  size?: "xs" | "sm" | "md" | "lg";
 }) => {
   const { t: translations } = useTranslation();
   return (

@@ -69,7 +69,7 @@ function Invite() {
         id: "load-data",
       });
       setTimeout(() => {
-        !updateInviteMutation.data && updateInviteMutation.mutate();
+        if (!updateInviteMutation.data) updateInviteMutation.mutate();
       }, 2000);
     }
     // TODO : improve with org invite

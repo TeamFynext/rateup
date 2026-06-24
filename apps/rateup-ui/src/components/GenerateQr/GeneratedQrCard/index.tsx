@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card.tsx";
 import CreatedSinceText from "../../DateAndTime/CreatedSinceText/index.tsx";
 import MoreOptionsMenu from "./MoreOptionsMenu.tsx";
 
-function GeneratedQrCard({ name, shortUrlId, id, createdAt, isPublished, scans }) {
+function GeneratedQrCard({ name, shortUrlId, id, createdAt, scans }) {
   const navigate = useNavigate();
   const qrUrl = `${import.meta.env.VITE_FRONTEND_URL}/qr/${shortUrlId}`;
   const handleCardClick = useCallback(() => {

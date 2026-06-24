@@ -45,7 +45,7 @@ export const useSurveyResponseColumns = ({
         cell: (info) => dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
       },
       ...(questions?.length > 0
-        ? questions?.map((q: any) => {
+        ? questions.map((q: any) => {
             const content =
               getReplacedTitleFromVariable({
                 title: q?.title[selectedLanguage ? selectedLanguage : defaultLanguage],

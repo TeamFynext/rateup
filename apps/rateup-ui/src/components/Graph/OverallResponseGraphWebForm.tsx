@@ -19,9 +19,9 @@ import {
   YAxis,
 } from "recharts";
 
-const OverallResponseGraphWebForm = ({ data, timePeriod, setTimePeriod, isLoading, onRefresh }) => {
+const OverallResponseGraphWebForm = ({ data, timePeriod, setTimePeriod, isLoading }) => {
   if (isLoading) {
-    return <div className="w-full h-[400px] animate-pulse bg-gray-100 rounded-xl" />;
+    return <div className="w-full h-100 animate-pulse bg-gray-100 rounded-xl" />;
   }
 
   return (

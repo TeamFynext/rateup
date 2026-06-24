@@ -78,7 +78,7 @@ export default function SurveyID() {
   const [addQnTrigger] = useState(0);
   const [teamOptions, setTeamOptions] = useState([]);
   const [filterTeams, setFilterTeams] = useState([]);
-  const [filterTags, setFilterTags] = useState([]);
+  const [filterTags] = useState([]);
   const [encryptionpassword, setEncryptionPassword] = useState("");
   const [variables, setVariables] = useState([]);
   const { t: translations } = useTranslation();
@@ -160,7 +160,7 @@ export default function SurveyID() {
   }, [survey, activeTab]);
 
   useEffect(() => {
-    teamOptions && setSelectedTeamId(teamOptions[0]?.value);
+    if (teamOptions) setSelectedTeamId(teamOptions[0]?.value);
   }, [teamOptions]);
 
   useEffect(() => {
@@ -247,7 +247,6 @@ export default function SurveyID() {
               questions={questions}
               addQnTrigger={addQnTrigger}
               setSelectedLanguage={setSelectedLanguage}
-              setFilterTags={setFilterTags}
               encryptionpassword={encryptionpassword}
               setEncryptionPassword={setEncryptionPassword}
               setActiveTab={setActiveTab}

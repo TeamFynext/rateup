@@ -8,14 +8,7 @@ import { getReplacedTitleFromVariable } from "./util.tsx";
 
 import classes from "./TakeSurvey.module.css";
 
-function QuestionTitle({
-  largeScreen,
-  themeStyles,
-  smallScreen,
-  responses,
-  surveyId,
-  setAlignment,
-}) {
+function QuestionTitle({ largeScreen, themeStyles, responses, surveyId, setAlignment }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const data = {

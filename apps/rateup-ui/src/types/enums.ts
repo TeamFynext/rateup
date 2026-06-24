@@ -202,13 +202,6 @@ export enum WaFlowStatus {
   THROTTLED = "THROTTLED",
 }
 
-enum SurveyTypeFilters {
-  All = "All",
-  Web = "Web",
-  WhatsApp = "WhatsApp",
-  WhatsAppFlow = "WhatsAppFlow",
-}
-
 export enum CampaignStatus {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
@@ -256,14 +249,7 @@ export enum SentimentClass {
   NEGATIVE = "negative",
   NEUTRAL = "neutral",
 }
-enum ReviewPlatform {
-  GOOGLE = "gb",
-  FACEBOOK = "fp",
-}
-enum SortType {
-  ASC = "asc",
-  DESC = "desc",
-}
+
 export enum SubscriptionFeaturePathName {
   WebSurvey = "webSurvey",
   EmailNotification = "webSurvey.emailNotification",
@@ -384,14 +370,7 @@ export enum LoyaltyCampaignType {
   ReferralTransaction = "ReferralTransaction",
   Transaction = "Transaction",
 }
-enum CampaignRewardType {
-  Fixed = "Fixed",
-  Percentage = "Percentage",
-}
-enum LoyaltyCustomerRewardType {
-  Referrer = "Referrer", // the one who referred
-  Customer = "Customer", // the one who was referred or made the transaction
-}
+
 export enum WhatsappFlowFontWeight {
   bold = "bold",
   italic = "italic",
@@ -468,15 +447,6 @@ export enum ShopifyEvents {
   // VARIANTS_IN_STOCK
   // VARIANTS_OUT_OF_STOCK
   // FULFILLMENT_ORDERS_CANCELLATION_REQUEST_SUBMITTED
-}
-
-enum ShopifySendAfter {
-  OneHour = "1 Hour",
-  TwoHour = "2 Hour",
-  FiveHour = "5 Hour",
-  TenHour = "10 hour",
-  OneDay = "1 day",
-  TwoDays = "2 Days",
 }
 
 export enum IntegratedApps {
@@ -579,11 +549,6 @@ export enum WaMessageAssignStatusTab {
   SPAM = "Spam",
 }
 
-enum LoyaltyApiFeature {
-  action = "action",
-  reward = "reward",
-}
-
 export enum CatalogProductType {
   PRODUCT_ITEM = "PRODUCT_ITEM",
   HOTEL = "HOTEL",
@@ -639,11 +604,6 @@ export enum SentCampaignChoice {
 export enum WhatsappSettingsStatus {
   ACTIVE = "ACTIVE",
   DISCONNECTED = "DISCONNECTED",
-}
-enum LoyaltyRewardType {
-  POINT = "point",
-  COUPON = "coupon",
-  ASSIGNED = "assigned",
 }
 
 export enum LoyaltyPointRewardSubType {

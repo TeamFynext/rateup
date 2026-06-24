@@ -30,7 +30,7 @@ const reverseScroll = (e) => {
   e.currentTarget.scrollTop -= e.deltaY;
 };
 
-const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
+const WaInboxChatDisplayBody = ({ isContactDetailsOpened }) => {
   const parentRef = useRef(null);
   const { selectedContact } = useContactsStore();
   const { filter } = useChatFilterStore();

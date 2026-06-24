@@ -67,14 +67,11 @@ type FormValues = {
   [ruleType: string]: RuleValue;
 };
 
-type ChangeHandler = (value: string | RuleValue) => void;
-
 const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTab }: IProps) => {
   const params = useParams({
     strict: false,
   });
   const surveyId = params.surveyId as string;
-  const [] = useState(false);
   const { colors } = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [selectedFieldKey, setSelectedFieldKey] = useState("");
@@ -154,7 +151,7 @@ const ValidationRulesEditor = ({ selectedQ, setSelectedQ, setActiveTab, activeTa
   }, [activeTab]);
 
   const updateValidationRules = (validationRules: any) => {
-    selectedQ && setSelectedQ({ ...selectedQ, validationRules });
+    if (selectedQ) setSelectedQ({ ...selectedQ, validationRules });
   };
 
   useEffect(() => {

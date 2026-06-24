@@ -164,7 +164,7 @@ export default function RateupNavbar() {
           />
         </MobileNavHeader>
 
-        <MobileNavMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)}>
+        <MobileNavMenu isOpen={isMobileMenuOpen}>
           <div
             className={`fixed top-0 left-0 w-full rounded-xl bg-white z-50 flex flex-col p-6 transform transition-transform duration-300 ease-in-out ${
               isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"

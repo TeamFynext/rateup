@@ -34,15 +34,6 @@ import PaperLayout from "../styled/Layouts/PaperLayout.tsx";
 import ContactPagination from "./ContactPagination.tsx";
 import CreateContactModal from "./CreateContactModal.tsx";
 
-interface IAddCustomer {
-  name: string;
-  email?: string;
-  phone?: string;
-  source?: string;
-  dob?: Date;
-  type?: ContactGroupType;
-}
-
 const AddCustomerModal = ({
   groupId,
   close,

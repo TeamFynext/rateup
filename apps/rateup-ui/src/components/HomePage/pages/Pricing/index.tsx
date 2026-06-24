@@ -167,7 +167,6 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
           <SurveySection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
-            plans={updatedPlans}
             freePlan={freePlan}
             currencySymbol={currencySymbol}
           />
@@ -176,7 +175,6 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
           <MenuSection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
-            plans={updatedPlans}
             freePlan={freePlan}
             currencySymbol={currencySymbol}
           />
@@ -186,7 +184,6 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
           <WhatsAppSection
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
-            plans={updatedPlans}
             freePlan={freePlan}
             currencySymbol={currencySymbol}
           />
@@ -197,7 +194,6 @@ const Pricing = ({ isAccount = false, handleSelection = () => {}, source = "WebS
             largeScreen={largeScreen}
             handlePlanSelection={handlePlanSelection}
             plans={updatedPlans}
-            freePlan={freePlan}
             currencySymbol={currencySymbol}
           />
         )}

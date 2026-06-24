@@ -1,6 +1,5 @@
 import { Box, Select } from "@mantine/core";
 import { IconBrandInstagram } from "@tabler/icons-react";
-import { rankItem } from "@tanstack/match-sorter-utils";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
@@ -23,7 +22,6 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { getInitials } from "@/components/ui/utils.ts";
-import { CampaignParticipantStatus } from "@/types/enums.ts";
 
 const selectCheckBox: ColumnDef<any>[] = [
   {
@@ -197,8 +195,8 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
       : []),
     ...(contactTags?.length > 0
       ? contactTags
-          ?.filter((tag) => tag?.visibility)
-          ?.map((data) => ({
+          .filter((tag) => tag?.visibility)
+          .map((data) => ({
             header: data?.name,
             accessorFn: (row) => row?.customFields?.find((f) => f?.fieldId === data?.id)?.value,
             id: data?.name,
@@ -265,52 +263,5 @@ export const contactColumn = (contactTags: CustomFieldData[] = [], showLifecycle
     },
   ];
 };
-
-const getStatusData = (info) => {
-  let statusData: string = (info?.waStatus || "").toUpperCase();
-  const FlowId = info?.campaign?.flowId;
-  const participantStatus = info.status?.toUpperCase();
-  const errorMessage = info.errorMessage;
-  if (FlowId && participantStatus === CampaignParticipantStatus.COMPLETED) {
-    statusData = CampaignParticipantStatus.COMPLETED;
-  } else if (!statusData || errorMessage) {
-    statusData = participantStatus;
-  }
-  return statusData ?? "";
-};
-const customStatusSort = (rowA: any, rowB: any) => {
-  const statusA = getStatusData(rowA?.original);
-  const statusB = getStatusData(rowB?.original);
-
-  // Define the order of statuses based on your requirements
-  const statusOrder = {
-    [CampaignParticipantStatus.COMPLETED]: 1,
-    [CampaignParticipantStatus.DELIVERED]: 2,
-    [CampaignParticipantStatus.FAILED]: 3,
-    [CampaignParticipantStatus.PENDING]: 4,
-    [CampaignParticipantStatus.READ]: 5,
-    [CampaignParticipantStatus.SENT]: 6,
-  };
-
-  // Compare the statuses based on the custom order
-  return statusOrder[statusA] - statusOrder[statusB];
-};
-const fuzzyFilter = (row, columnId, value, addMeta) => {
-  const itemRank = rankItem(getStatusData(row?.original), value);
-  addMeta(itemRank);
-  return itemRank.passed;
-};
-
-// export function IndeterminateCheckbox(props: CheckboxProps) {
-//   const ref = React.useRef<HTMLInputElement>(null!);
-//   return <Checkbox ref={ref} {...props} />;
-// }
-
-enum WhatsappTableType {
-  CONTACTS = "contacts",
-  GROUPS = "groups",
-  MEMBERS = "members",
-  PARTICIPANTS = "participants",
-}
 
 export const CONTACT_SORT = { id: "createdAt", desc: true };

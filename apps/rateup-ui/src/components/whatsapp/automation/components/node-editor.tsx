@@ -115,7 +115,6 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
 
   const [nodeData, setNodeData] = useState<NodeData>(node.data);
   const { data: allChatbots } = useAllChatbots(hasAIFeature);
-  const [] = useState<string | null>(null);
 
   // Update local state when node changes
   useEffect(() => {
@@ -199,13 +198,6 @@ export default function NodeEditor({ node, onChange, onClose }: Readonly<NodeEdi
         return (
           <StartNodeEditor
             nodeData={nodeData as NodeTypeMap["startNode"]}
-            handleInputChange={handleInputChange}
-          />
-        );
-      case "endNode":
-        return (
-          <EndNodeEditor
-            nodeData={nodeData as NodeTypeMap["endNode"]}
             handleInputChange={handleInputChange}
           />
         );
@@ -698,31 +690,10 @@ const MediaNodeEditor: React.FC<
 };
 
 // StartNode Component
-const StartNodeEditor: React.FC<NodeComponentProps<"startNode">> = ({
-  nodeData,
-  handleInputChange,
-}) => {
+const StartNodeEditor: React.FC<NodeComponentProps<"startNode">> = () => {
   return (
     <div className={styles.editorSection}>
       <ContainedTextField label="Start Message" disabled />
-    </div>
-  );
-};
-
-// EndNode Component
-const EndNodeEditor: React.FC<NodeComponentProps<"endNode">> = ({
-  nodeData,
-  handleInputChange,
-}) => {
-  return (
-    <div className={styles.editorSection}>
-      {/* <ContainedTextField
-        id="endMessage"
-        value={typedData.endMessage || ""}
-        onChange={(e) => handleInputChange("endMessage", e.target.value)}
-        label="End Message (optional)"
-        placeholder="Enter an optional end message..."
-      /> */}
     </div>
   );
 };

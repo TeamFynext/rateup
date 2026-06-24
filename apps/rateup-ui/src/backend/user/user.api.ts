@@ -29,7 +29,7 @@ export interface IUpdateProfilePhoto {
   profilePhoto: string;
 }
 
-interface IUserData {
+interface _IUserData {
   orgId: string;
   role: string;
   userId: string;
@@ -190,7 +190,7 @@ export interface AuditLogData {
   createdAt: string;
   rawCreatedAt: Date;
 }
-export interface IPaginatedResponse<T> {
+export interface IPaginatedResponse<_T> {
   data: AuditLogData[];
   pagination: IPagination;
 }

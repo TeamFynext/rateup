@@ -53,13 +53,11 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
   const close = () => setOpened(false);
 
   const { user } = useUser();
-  const [, setIsDeleting] = useState(false);
   const [createTicketOpened, setCreateTicketOpened] = useState(false);
   const openTicketModal = () => setCreateTicketOpened(true);
   const closeTicketModal = () => setCreateTicketOpened(false);
 
   const [selectedResponseId, setSelectedResponseId] = useState("");
-  const [responseTeamId, setResponseTeamId] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const syncResponseToGoogleSheet = useSyncResponseToGoogleSheet(surveyId);
   const { data: googleAccessToken } = useIntegrationByType(IntegratedApps.googlesheet);
@@ -118,7 +116,6 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
     // @ts-ignore
     filterTeams, // Assuming surveyTeamMapId was used but context only provides filterTeams now? Checking original code: it used surveyTeamMapId. But context destructuring gave surveyTeamMapId. I will keep using it if I can access it.
     close,
-    setIsDeleting,
   );
   const { t: translations } = useTranslation();
   if (Array.isArray(surveyId)) {
@@ -165,11 +162,13 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
   );
 
   useEffect(() => {
-    selectedResponseId && openTicketModal();
-  }, [selectedResponseId, responseTeamId]);
+    if (selectedResponseId) {
+      openTicketModal();
+    }
+  }, [selectedResponseId]);
 
   useEffect(() => {
-    !createTicketOpened && setSelectedResponseId("");
+    if (!createTicketOpened) setSelectedResponseId("");
   }, [createTicketOpened]);
 
   const confirmDelete = (verifyEmail: string) => {
@@ -177,7 +176,6 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
       toast.loading(translations("Hold on, response is getting deleted..."), {
         id: "load-data",
       });
-      setIsDeleting(true);
       deleteResponse.mutate(selectedRowId);
     } else {
       toast.error(translations("Incorrect email"), {
@@ -197,7 +195,6 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
     setSelectedRowId,
     open,
     setSelectedResponseId,
-    setResponseTeamId,
     enableTicket:
       survey?.enableTickets && hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     surveyId: survey?.id,
@@ -285,10 +282,8 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }: any) =>
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
         closeTicketModal={closeTicketModal}
-        selectedTeamId={responseTeamId}
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
-        selectedResponse={responseData?.responses?.find((r: any) => r.id === selectedResponseId)}
       />
       <ConfirmationModal
         opened={alertModalOpened}

@@ -114,11 +114,6 @@ export const getImageValue = (image, fallback = false, unsplashImage = false) =>
   }
 };
 
-const getFileNameFromFile = (data: File | string, label: string) => {
-  if (data instanceof File) return data.name;
-  else if (data?.length > 0) return data;
-  else return label;
-};
 export const getLabel = (data: File | string, label: string) => {
   if (data instanceof File) return `${data?.name}`;
   else if (data && typeof data === "string" && data.length > 0) return `Update ${label}`;

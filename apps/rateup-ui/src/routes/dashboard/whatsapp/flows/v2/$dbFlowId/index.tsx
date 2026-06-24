@@ -78,7 +78,7 @@ function Flow() {
   }, [selectedTeamId]);
 
   useEffect(() => {
-    teamOptions && setSelectedTeamId(teamOptions?.[0]?.value);
+    if (teamOptions) setSelectedTeamId(teamOptions?.[0]?.value);
   }, [teamOptions]);
 
   useEffect(() => {
@@ -146,7 +146,7 @@ function Flow() {
               className={styles["flow-page-panels-container"]}
             >
               <TabsContent value={FlowTabEnum.Edit} className="h-full mt-0">
-                <EditFlow previewOpened={previewOpened} setPreviewOpened={setPreviewOpened} />
+                <EditFlow previewOpened={previewOpened} />
               </TabsContent>
               <TabsContent value={FlowTabEnum.Settings} className="h-full overflow-y-auto mt-0">
                 <FlowSettings
@@ -162,7 +162,6 @@ function Flow() {
                   encryptionpassword={""}
                   setEncryptionPassword={() => {}}
                   survey={survey}
-                  flowId={flow.flowId}
                   version={flow.version}
                   flow={flow}
                 />
@@ -182,7 +181,6 @@ function Flow() {
                   <ResultsOverviewWebForm
                     surveyId={survey?.id}
                     aiResponseSummary={(survey as any)?.aiResponseSummary}
-                    survey={survey}
                     flowId={flow?.flowId}
                     version={flow?.version}
                     flowQuestions={flowQuestions}

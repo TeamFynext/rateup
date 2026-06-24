@@ -38,9 +38,7 @@ export function SurveysPage({
   const [createSurveyOpened, { open: openCreateSurvey, close: closeCreateSurvey }] = useDisclosure(
     action === "create",
   );
-  const [surveyTemplatesOpened, { open: openSurveyTemplates, close: closeSurveyTemplates }] =
-    useDisclosure(false);
-  const [, { open: openMergeSurvey, close: closeMergeSurveyModal }] = useDisclosure(false);
+  const [surveyTemplatesOpened, { close: closeSurveyTemplates }] = useDisclosure(false);
   const [sortOption, setSortOption] = useState("latest");
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
@@ -53,13 +51,15 @@ export function SurveysPage({
 
   useEffect(() => {
     if (createSurveyOpened === false) {
-      surveyType === "web"
-        ? navigate({
-            to: `/dashboard/surveys`,
-          })
-        : navigate({
-            to: `/dashboard/whatsapp`,
-          });
+      if (surveyType === "web") {
+        navigate({
+          to: `/dashboard/surveys`,
+        });
+      } else {
+        navigate({
+          to: `/dashboard/whatsapp`,
+        });
+      }
     }
   }, [createSurveyOpened]);
 
@@ -107,12 +107,8 @@ export function SurveysPage({
         filterParam={filterParam}
         setFilterParam={setFilterParam}
         openCreateSurvey={openCreateSurvey}
-        openMergeSurvey={openMergeSurvey}
         onSortChange={setSortOption}
         sortOption={sortOption} //
-        surveyCount={surveyidArray.length}
-        surveyType={surveyType}
-        refetch={refetch}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />

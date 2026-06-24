@@ -126,27 +126,6 @@ export function validateOptions({ form, path }: validateOptionsProps) {
   return true;
 }
 
-/**
- *
- * @param flowJson
- * @param onlyInteractive set to false to include all form elements, including
- * those that are not interactive (e.g. TextBody, TextHeading, etc..)
- */
-function* waFlowFormElementIterator(flowJson: WaFlowJson, onlyInteractive = true) {
-  for (const screen of flowJson.screens) {
-    for (const screenElement of screen.layout.children) {
-      if (screenElement.type === "Form") {
-        for (const formElement of screenElement.children) {
-          if (!onlyInteractive || formElement.name !== undefined) {
-            console.log("yeild");
-            yield formElement;
-          }
-        }
-      }
-    }
-  }
-}
-
 export function getFlowFormElementsFromScreen(
   screen: WaFlowScreen,
   onlyInteractive = false,
@@ -684,35 +663,5 @@ function generateDataSourceFromQuestion(q: Question) {
     );
 
     return { dataSource, mapData };
-  }
-}
-
-function getWaFlowElementIdFromQuestionId(qId: string, map: WaFlowMap) {
-  try {
-    for (const [elementId, { questionId }] of Object.entries(map)) {
-      if (questionId === qId) return elementId;
-    }
-  } catch (error) {
-    console.log(error);
-    return undefined;
-  }
-}
-
-/**
- * Moves a screen element to a new position.
- * @param screenId id of the screen to be moved
- * @param position index of where the screen is to be inserted.
- * @param draft UseImmer draft object to save the updated flowJson
- * */
-function moveFlowScreen(screenId: string, position: number, draft: WaFlowJson) {
-  const currentIndex = draft.screens.findIndex((s) => s.id === screenId);
-  const currentScreen = draft.screens[currentIndex];
-
-  draft.screens.splice(position, 0, currentScreen);
-
-  if (position < currentIndex) {
-    draft.screens.splice(currentIndex + 1, 1);
-  } else {
-    draft.screens.splice(currentIndex, 1);
   }
 }

@@ -65,12 +65,11 @@ interface ChoicesCreatorProps {
 }
 export function ChoicesCreator({
   form,
-  qId,
   maxCharCount,
   maxChoiceCount,
   image = false,
   surveyType,
-}: ChoicesCreatorProps) {
+}: Readonly<ChoicesCreatorProps>) {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const [choiceWeightage, setChoiceWeightage] = useState<NPSWeightage>(NPSWeightage.PROMOTER);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>();
@@ -149,7 +148,7 @@ export function ChoicesCreator({
           surveyType !== SurveyType.Web
             ? Object.fromEntries(
                 Object.entries(choiceForm.getValues()).filter(
-                  ([key, value]) => value?.trim() !== "",
+                  ([_key, value]) => value?.trim() !== "",
                 ),
               )
             : choiceForm.getValues().title,
@@ -593,7 +592,7 @@ function Choice({
           surveyType !== SurveyType.Web
             ? Object.fromEntries(
                 Object.entries(choiceForm.getValues()).filter(
-                  ([key, value]) => value?.trim() !== "",
+                  ([_key, value]) => value?.trim() !== "",
                 ),
               )
             : choiceForm.getValues().title,

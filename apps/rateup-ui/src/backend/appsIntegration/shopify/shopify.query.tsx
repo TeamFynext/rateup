@@ -14,7 +14,7 @@ import {
   updateShopifySession,
 } from "./shopify.api";
 
-const useGetProductsFromShopify = (enabled) => {
+const _useGetProductsFromShopify = (enabled) => {
   return useQuery({
     queryKey: ["shopifyProducts"],
     queryFn: getProductsFromShopify,

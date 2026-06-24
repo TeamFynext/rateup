@@ -127,7 +127,7 @@ function FlowPage() {
           }
         }
         if (!draft.screens) draft.screens = [];
-        for (const screen of draft?.screens) {
+        for (const screen of draft.screens) {
           const form = screen.layout.children.find((se) => se.type === "Form");
           for (let i = 0; i < form?.children?.length; i++) {
             const fe = form.children[i];
@@ -171,7 +171,7 @@ function FlowPage() {
   }, [tabView]);
 
   useEffect(() => {
-    teamOptions && setSelectedTeamId(teamOptions[0]?.value);
+    if (teamOptions) setSelectedTeamId(teamOptions[0]?.value);
   }, [teamOptions]);
   useEffect(() => {
     if (survey) {
@@ -265,7 +265,6 @@ function FlowPage() {
                     encryptionpassword={""}
                     setEncryptionPassword={() => {}}
                     survey={survey}
-                    flowId={flow.flowId}
                   />
                 </Tabs.Panel>
                 <Tabs.Panel value={FlowTabEnum.Share}>

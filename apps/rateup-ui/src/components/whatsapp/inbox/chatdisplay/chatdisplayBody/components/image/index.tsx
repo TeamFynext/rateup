@@ -7,8 +7,8 @@ interface Props {
   messageContent: string;
 }
 export default function WaInboxImage(props: Props) {
-  const [link, caption] = props?.messageContent?.split("_caption_");
-  const imageUrl = link.startsWith("http") ? link : `${getFileUrlFromKey(link)}`;
+  const [link, caption] = props?.messageContent?.split("_caption_") ?? ["", ""];
+  const imageUrl = link ? (link.startsWith("http") ? link : `${getFileUrlFromKey(link)}`) : "";
   const [opened, { open, close }] = useDisclosure(false);
   return (
     <>

@@ -28,13 +28,6 @@ import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput.tsx";
 import FormModalLayout from "../Modal/FormModalLayout.tsx";
 
-interface FormValues {
-  title: string;
-  languages: Array<string>;
-  teamId: string;
-  type: string;
-  getLocation: boolean;
-}
 const Languages = new Set([
   "English",
   "മലയാളം",

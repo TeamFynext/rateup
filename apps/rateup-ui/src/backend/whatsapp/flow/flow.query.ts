@@ -30,7 +30,7 @@ export const useWaFlowsFromDb = (enabled = true) =>
     enabled,
   });
 
-const useWaFlowsFromWa = () =>
+const _useWaFlowsFromWa = () =>
   useQuery({
     queryKey: ["flow", "wa"],
     queryFn: getWaFlowsFromWa,
@@ -57,14 +57,14 @@ export const useWaFlowJson = (flowId: string) =>
     enabled: !!flowId,
   });
 
-const useWaFlowPreview = (dbFlowId: string) =>
+const _useWaFlowPreview = (dbFlowId: string) =>
   useQuery({
     queryKey: ["flow", "preview", dbFlowId],
     queryFn: () => getFlowPreview(dbFlowId),
     enabled: !!dbFlowId,
   });
 
-const useWaFlowMetrics = (dbFlowId: string, enabled: boolean) =>
+const _useWaFlowMetrics = (dbFlowId: string, enabled: boolean) =>
   useQuery({
     queryKey: ["flow-metrics", dbFlowId],
     queryFn: () => getWaFlowMetrics(dbFlowId),
@@ -180,7 +180,7 @@ export const useDeleteFlowMutation = () => {
   });
 };
 
-const usePublishFlowMutation = () => {
+const _usePublishFlowMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: publishFlow,

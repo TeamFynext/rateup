@@ -1,4 +1,4 @@
-import { Activity, Infinity } from "lucide-react";
+import { Activity, Infinity as InfinityIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 import { useLifecycleContext } from "@/context/LifecycleContext.ts";
@@ -98,7 +98,7 @@ export const LifecycleSelector = ({
           className={`w-5 h-5 p-1 rounded-full bg-blue-50 flex items-center justify-center ${className}`}
         >
           <span role="img" className="text-[15px]">
-            <Infinity className="w-3 h-3" />
+            <InfinityIcon className="w-3 h-3" />
           </span>
         </div>
       ),

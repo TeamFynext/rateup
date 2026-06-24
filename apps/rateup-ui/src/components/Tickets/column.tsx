@@ -81,7 +81,6 @@ export function Column({
   onDelete,
   onUpdate,
   onMoveToBoard,
-  availableBoards,
   currentBoardId,
 }: Readonly<{
   column: ColumnType;

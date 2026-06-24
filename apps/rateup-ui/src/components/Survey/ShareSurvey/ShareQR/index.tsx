@@ -27,7 +27,7 @@ interface ShareQRProps {
   resourceName?: string;
 }
 
-const ShareQR = ({ url, sx, title, isPublished, id, queryKey, resourceName }: ShareQRProps) => {
+const ShareQR = ({ url, title, isPublished, id, queryKey, resourceName }: ShareQRProps) => {
   const [logoTabPanelState, logoTabPanelDispatch] = useImmerReducer(
     logoTabPanelReducer,
     initialLogoTabPanelState,

@@ -1,15 +1,4 @@
-import {
-  AlertCircle,
-  Archive,
-  BadgeCheck,
-  CheckCircle,
-  CheckCircle2,
-  Circle,
-  CircleCheckBig,
-  CircleHelp,
-  CircleSlash,
-  UserX,
-} from "lucide-react";
+import { AlertCircle, Archive, BadgeCheck, CheckCircle, Circle, UserX } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -277,7 +266,6 @@ export function getContactClosedIcon(status) {
         icon: CheckCircle,
         color: "text-green-500 dark:text-green-600",
       };
-      break;
     case WaMessageAssignStatus.UNRESOLVED:
       return {
         icon: Circle,
@@ -290,22 +278,3 @@ export function getContactClosedIcon(status) {
       };
   }
 }
-
-const ContactClosedIcon = ({ status, className = "" }) => {
-  let closedIcon = null;
-  switch (status) {
-    case WaMessageAssignStatus.CLOSED:
-      closedIcon = <CircleCheckBig className={`${className} text-blue-500 dark:text-blue-600`} />;
-      break;
-    case WaMessageAssignStatus.RESOLVED:
-      closedIcon = <CheckCircle2 className={`${className} text-green-500 dark:text-green-600`} />;
-      break;
-    case WaMessageAssignStatus.UNRESOLVED:
-      closedIcon = <CircleHelp className={`${className} text-orange-500 dark:text-orange-600`} />;
-      break;
-    case WaMessageAssignStatus.SPAM:
-      closedIcon = <CircleSlash className={`${className} text-red-500 dark:text-red-600`} />;
-      break;
-  }
-  return closedIcon;
-};

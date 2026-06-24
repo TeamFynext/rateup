@@ -93,6 +93,7 @@ const ComponentLogicEditor = ({ blocks, setBlocks }: ComponentLogicEditorProps) 
       type,
       conditions:
         type === "If" ? [{ field: "", operator: "", value: "", logic: "", isNumber: false }] : [],
+      // eslint-disable-next-line unicorn/no-thenable
       then: type === "If" ? [] : undefined,
       else: type === "If" ? [] : undefined,
       value: type === "Switch" ? "" : undefined,

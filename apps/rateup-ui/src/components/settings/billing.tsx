@@ -46,18 +46,13 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { formatIsoDateString } from "@/utils/dateTime.ts";
 
 export function UsageCard({ subscription }) {
-  const { data: stats, refetch, isRefetching } = useUsageStats();
+  const { data: stats } = useUsageStats();
 
   return (
     <Card className="p-6 ">
       <h3 className="">Usage Stats</h3>
       <div className="flex flex-col justify-center gap-4">
-        <TeamStats
-          stats={stats}
-          subscription={subscription}
-          isRefetching={isRefetching}
-          refetch={refetch}
-        />
+        <TeamStats stats={stats} subscription={subscription} />
         <SurveyStats stats={stats} subscription={subscription} />
         <MenuStats stats={stats} subscription={subscription} />
         <WhatsappStats stats={stats} subscription={subscription} />
@@ -627,7 +622,7 @@ export const Billing = ({
   );
 };
 
-const TeamStats = ({ stats, refetch, isRefetching, subscription }) => {
+const TeamStats = ({ stats, subscription }) => {
   const { t: translations } = useTranslation();
   const statsArray = [
     {

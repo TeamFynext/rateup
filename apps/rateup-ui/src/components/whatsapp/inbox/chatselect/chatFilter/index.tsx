@@ -40,11 +40,8 @@ export type ChatFilter = {
   lifecycle?: string;
   assignedUserIds: string[];
 };
-interface Props {
-  setFilterCount: (value: number) => void;
-}
 
-export default function WaInboxChatFilter({ setFilterCount }: Props) {
+export default function WaInboxChatFilter() {
   const { data, isLoading, error } = useChatFilterData();
 
   const { filter, setFilter, clearFilter, setPreviousFilterForTab, previousFilterForTab } =
@@ -55,7 +52,11 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
   const tab = (searchParams.tab as string) ?? "New";
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
 
-  const allMultiSelectFilters = [...filter?.contactGroups, ...filter?.campaigns, ...filter?.tags];
+  const allMultiSelectFilters = [
+    ...(filter?.contactGroups ?? []),
+    ...(filter?.campaigns ?? []),
+    ...(filter?.tags ?? []),
+  ];
 
   const teamOptions = teamRes
     ? teamRes.data?.map((team) => ({

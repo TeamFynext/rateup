@@ -50,7 +50,7 @@ export const Route = createFileRoute("/dashboard/surveylandinglist/")({
 });
 
 function SurveyLandingList() {
-  const [createSurveyOpened, { open, close }] = useDisclosure(false);
+  const [createSurveyOpened, { close }] = useDisclosure(false);
   const [sort, setSort] = useState(false);
   const [options, setOptions] = useState([
     {
@@ -208,13 +208,15 @@ function SurveyCard({
       radius="lg"
       style={{ cursor: "pointer" }}
       onClick={() => {
-        user?.role === "MEMBER"
-          ? navigate({
-              to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`,
-            })
-          : navigate({
-              to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/${survey?.id}`,
-            });
+        if (user?.role === "MEMBER") {
+          navigate({
+            to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`,
+          });
+        } else {
+          navigate({
+            to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/${survey?.id}`,
+          });
+        }
       }}
     >
       <Flex justify={"space-between"} align={"center"}>

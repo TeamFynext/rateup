@@ -29,28 +29,16 @@ function InstagramIgMeLinksPage() {
       }
     >
       {(waSetting) => (
-        <IgMeLinkBuilder
-          waSettingId={waSetting.id}
-          fbPageId={waSetting.fbPageId}
-          pageAccessToken={waSetting.pageAccessToken}
-          username={waSetting.igUserName}
-          displayName={waSetting.igDisplayName}
-        />
+        <IgMeLinkBuilder username={waSetting.igUserName} displayName={waSetting.igDisplayName} />
       )}
     </InstagramFeatureShell>
   );
 }
 
 function IgMeLinkBuilder({
-  waSettingId,
-  fbPageId,
-  pageAccessToken,
   username,
   displayName,
 }: Readonly<{
-  waSettingId: string;
-  fbPageId?: string | null;
-  pageAccessToken?: string | null;
   username?: string | null;
   displayName?: string | null;
 }>) {

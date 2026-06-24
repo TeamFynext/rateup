@@ -85,11 +85,11 @@ export function QuestionsSideBar({
     handlers.setState(questions);
 
     const newOrder = reOrderPages(questions);
-    surveyId && questionsReorderMutation.mutate(newOrder); // TODO-SE optimize: do api call only when new qn count changes
+    if (surveyId) questionsReorderMutation.mutate(newOrder); // TODO-SE optimize: do api call only when new qn count changes
   }, [questions]);
 
   useEffect(() => {
-    addQnTrigger > 0 && handleAddQn();
+    if (addQnTrigger > 0) handleAddQn();
   }, [addQnTrigger]);
 
   const openQuestion = (question) => {

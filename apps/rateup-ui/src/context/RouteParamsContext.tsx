@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import React, { createContext, useCallback, useContext, useMemo, useReducer } from "react";
+import { createContext, useContext } from "react";
 
 interface RouteParamsState {
   team_code: string;
@@ -44,26 +43,5 @@ const RouteParamsContext = createContext<RouteParamsContextData>({
   state: initialState,
   update: () => {},
 });
-
-const reducer = (state: RouteParamsState, values: Partial<RouteParamsState>): RouteParamsState => ({
-  ...state,
-  ...values,
-});
-
-interface RouteParamsProviderProps {
-  children: ReactNode;
-}
-
-const RouteParamsProvider: React.FC<RouteParamsProviderProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(reducer, initialState);
-
-  const update = useCallback((values: Partial<RouteParamsState>) => {
-    dispatch(values);
-  }, []);
-
-  const value = useMemo(() => ({ state, update }), [state, update]);
-
-  return <RouteParamsContext.Provider value={value}>{children}</RouteParamsContext.Provider>;
-};
 
 export const useRouteParams = () => useContext(RouteParamsContext);

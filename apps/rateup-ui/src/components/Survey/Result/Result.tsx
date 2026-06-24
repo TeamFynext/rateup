@@ -8,7 +8,6 @@ import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import ErrorComponent from "@/components/404/ErrorComponent.tsx";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
-import SurveyContext from "@/context/SurveyContext.ts";
 import { useUser } from "@/context/UserContext.tsx";
 import { QuestionType2 } from "@/types/enums.ts";
 import { decryptPrivateKey } from "@/utils/encryption/index.ts";
@@ -25,11 +24,9 @@ const Result = ({
   encryptionpassword,
   setEncryptionPassword,
   subscription = null,
-  flowId = null,
   flow = null,
   version = 1,
 }) => {
-  const { selectedTeamId } = useContext(SurveyContext);
   const { defaultLanguage } = useContext(SelectedLanguageContext);
   // end to end encryption logic for result page begins here
   const passwordModalOpenedCondition =
@@ -78,7 +75,6 @@ const Result = ({
         <WaResponses
           survey={survey}
           defaultLanguage={defaultLanguage}
-          selectedTeamId={selectedTeamId}
           subscription={subscription}
           questions={flowQuestions}
         />

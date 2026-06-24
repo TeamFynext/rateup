@@ -1,4 +1,4 @@
-import { Badge, Divider, Flex, Group, Stack, Tabs, Text } from "@mantine/core";
+import { Badge, Flex, Stack, Tabs, Text } from "@mantine/core";
 import { IconAntennaBars4, IconChartPieFilled, IconChartRadar } from "@tabler/icons-react";
 // import start
 import { useContext, useMemo, useState } from "react";
@@ -25,11 +25,8 @@ import {
 } from "@/backend/surveys/response/response.query";
 import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 import SurveyContext from "@/context/SurveyContext.ts";
-import { QuestionType, QuestionType2 } from "@/types/enums.ts";
-import {
-  getResponseArrayByQuestionType,
-  getResponseObjectByQuestionType,
-} from "@/utils/response.ts";
+import { QuestionType2 } from "@/types/enums.ts";
+import { getResponseArrayByQuestionType } from "@/utils/response.ts";
 
 import RateupLoader from "../../Loaders/RateupLoader.tsx";
 import NothingFound from "../../NothingFound/NothingFound.tsx";
@@ -209,91 +206,3 @@ const TeamResponseActivitySection = ({ data }: { data: { teamCode: string; count
     </Tabs>
   );
 };
-
-interface CombinedChartProps {
-  questionResponses: Array<{
-    team: { name: string; code: string; id: string };
-    response: any;
-  }>;
-  question: Question;
-  teams: Array<{ name: string; code: string; id: string }>;
-}
-const CombinedChart = ({ teams, questionResponses, question }: CombinedChartProps) => {
-  const { t: translations } = useTranslation();
-  const data = teams.map(({ code, id }) => {
-    const responses = getResponseObjectByQuestionType(question.type as QuestionType);
-    questionResponses
-      ?.filter((response) => response.team.id === id)
-      ?.map(({ response }) =>
-        question?.type === QuestionType.CustomNPS
-          ? (responses[response?.weightage] = responses[response?.weightage] + 1)
-          : (responses[response] = responses[response] + 1),
-      );
-    return {
-      name: code,
-      responses,
-    };
-  });
-  if (data?.every((d) => Object.values(d.responses)?.every((r) => r === 0))) {
-    return (
-      <Stack h={400}>
-        <NothingFound text={translations("No response activity for this question yet")} />
-      </Stack>
-    );
-  } else {
-    return (
-      <ResponsiveContainer width="100%" height={400}>
-        <BarChart
-          data={data}
-          margin={{ top: 20 }}
-          barGap={5}
-          barCategoryGap={20}
-          style={{ stroke: "#fff", strokeWidth: 1.5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          {getResponseArrayByQuestionType(question.type as QuestionType)?.map(
-            ({ color, value }, index) => (
-              <Bar
-                dataKey={`responses['${value}']`}
-                stackId={"a"}
-                fill={color}
-                maxBarSize={50}
-                radius={10}
-                style={{ zIndex: 999, marginTop: 10, gap: 10 }}
-                key={index}
-              />
-            ),
-          )}
-          <Tooltip
-            content={({ active, payload, label }) => (
-              <CustomToolTip active={active} payload={payload} label={label} />
-            )}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    );
-  }
-};
-
-function CustomToolTip({ active, payload, label }) {
-  if (active) {
-    return (
-      <PaperLayout>
-        <Stack gap={2}>
-          <Text fw={900}>{label}</Text>
-          {payload?.map(({ name, value }) => (
-            <>
-              <Group justify="space-between">
-                <Text>{name?.split("'")[1]}:</Text>
-                <Badge miw={50}>{value}</Badge>
-              </Group>
-              <Divider variant="dotted" />
-            </>
-          ))}
-        </Stack>
-      </PaperLayout>
-    );
-  }
-}

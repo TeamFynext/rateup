@@ -5,17 +5,3 @@ export enum TicketType {
   FLOW_RESPONSE = "FLOW_RESPONSE",
   AUTOMATION = "AUTOMATION",
 }
-
-enum TicketPriority {
-  LOW = "LOW",
-  MEDIUM = "MEDIUM",
-  HIGH = "HIGH",
-  CRITICAL = "CRITICAL",
-}
-
-enum TicketStatus {
-  OPEN = "OPEN",
-  IN_PROGRESS = "IN_PROGRESS",
-  RESOLVED = "RESOLVED",
-  CLOSED = "CLOSED",
-}

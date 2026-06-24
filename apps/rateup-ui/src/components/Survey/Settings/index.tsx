@@ -70,15 +70,6 @@ const SurveySettings = ({
       ),
     );
   }, [survey]);
-  function validateUrl(url: string) {
-    try {
-      if (url === "/") return false;
-      new URL(url);
-      return false;
-    } catch {
-      return true;
-    }
-  }
 
   return (
     <Box className={`${styles["survey-settings-root-div"]}`}>

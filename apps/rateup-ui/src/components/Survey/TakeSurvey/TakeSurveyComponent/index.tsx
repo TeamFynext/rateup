@@ -46,7 +46,7 @@ function TakeSurvey({
   const isSurveyThemePreview = useIsSurveyThemePreview();
 
   const largeScreen = useMediaQuery("(min-width: 60em)");
-  const smallScreen = useMediaQuery("(max-width: 30em)");
+
   const searchParams = useSearch({ strict: false });
   const [isSavingResponses, setIsSavingResponses] = useState(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -65,7 +65,7 @@ function TakeSurvey({
     };
   }, []);
 
-  const { theme: surveyThemeData } = survey?.webSurveyTheme;
+  const { theme: surveyThemeData } = survey?.webSurveyTheme ?? {};
 
   const [isThankYouPageEnabled, setIsThankYouPageEnabled] = useState(
     survey?.questions?.some((q) => q.type === PageType.ThankYou) || false,
@@ -232,9 +232,8 @@ function TakeSurvey({
                 finishSurvey(nextQ.type);
               } catch (error) {
                 toast.error(error?.message?.toString());
-              } finally {
-                return;
               }
+              return;
             }
             goTo(nextQ);
             return;
@@ -285,11 +284,13 @@ function TakeSurvey({
     }
     // This If Condition is for survey preview in survey editor.
     if (isSurveyThemePreview) {
-      shouldShowGoogleReview && !(pageType === PageType.ThankYou)
-        ? setIsReviewPage(selectedLanguage)
-        : isThankYouPageEnabled
-          ? setIsThankyouPage?.(true)
-          : setIsDefaultThankyouPage?.(true);
+      if (shouldShowGoogleReview && !(pageType === PageType.ThankYou)) {
+        setIsReviewPage(selectedLanguage);
+      } else if (isThankYouPageEnabled) {
+        setIsThankyouPage?.(true);
+      } else {
+        setIsDefaultThankyouPage?.(true);
+      }
       return;
     }
 
@@ -323,29 +324,35 @@ function TakeSurvey({
         let kioskMode = survey?.kioskMode ? "y" : "n";
         kioskMode = start === "true" ? "cs" : kioskMode; // temp for static cs demo (TODO)
 
-        shouldShowGoogleReview && !(pageType === PageType.ThankYou)
-          ? setIsReviewPage(selectedLanguage)
-          : isThankYouPageEnabled
-            ? fromShortUrl
-              ? navigate({
-                  to: `/ws/${shortId}/end`,
-                })
-              : navigate({
-                  to: `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}&language=${selectedLanguage}`,
-                })
-            : navigate({
-                to: `/ws/${shortId}/response-submitted`,
-              });
+        if (shouldShowGoogleReview && !(pageType === PageType.ThankYou)) {
+          setIsReviewPage(selectedLanguage);
+        } else if (isThankYouPageEnabled) {
+          if (fromShortUrl) {
+            navigate({
+              to: `/ws/${shortId}/end`,
+            });
+          } else {
+            navigate({
+              to: `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}&language=${selectedLanguage}`,
+            });
+          }
+        } else {
+          navigate({
+            to: `/ws/${shortId}/response-submitted`,
+          });
+        }
       })
       .catch((e) => {
         if (e?.message === "ALREADY_RESPONDED") {
-          fromShortUrl
-            ? navigate({
-                to: `/ws/${shortId}/end?err=oops`,
-              })
-            : navigate({
-                to: `${surveyTeamMapId}/end?k=${false}&sid=${survey.id}&language=${selectedLanguage}&err=oops`,
-              });
+          if (fromShortUrl) {
+            navigate({
+              to: `/ws/${shortId}/end?err=oops`,
+            });
+          } else {
+            navigate({
+              to: `${surveyTeamMapId}/end?k=${false}&sid=${survey.id}&language=${selectedLanguage}&err=oops`,
+            });
+          }
         }
       });
   };
@@ -437,7 +444,6 @@ function TakeSurvey({
                                   <QuestionTitle
                                     largeScreen={largeScreen}
                                     themeStyles={surveyThemeData?.surveyTheme?.title?.styles}
-                                    smallScreen={smallScreen}
                                     responses={responsesRef.current}
                                     surveyId={survey?.id}
                                     setAlignment={setAlignment}
@@ -471,7 +477,6 @@ function TakeSurvey({
                     surveyThemeData={surveyThemeData}
                     isSavingResponses={isSavingResponses}
                     errorTextDivRef={errorTextDivRef}
-                    isSurveyThemePreview={isSurveyThemePreview}
                   />
                 </Stack>
               </Container>

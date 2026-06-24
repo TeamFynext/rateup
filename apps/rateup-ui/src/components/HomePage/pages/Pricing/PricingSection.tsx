@@ -1,16 +1,11 @@
 import { Badge, Group, SegmentedControl, Stack, Text } from "@mantine/core";
-import { isNotEmpty, useForm } from "@mantine/form";
-import { IconArrowRight } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons.tsx";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { currencyLabel } from "@/components/menu/util/currencyData.ts";
-import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import { BookDemoModal1 } from "@/components/RateupHomePage/helper/BookDemoModal.tsx";
 import { useCheckSession } from "@/hooks/checkSession.tsx";
 
@@ -148,12 +143,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
         transition={{ duration: 0.4 }}
       >
         {rateupPlans.map((plan) => (
-          <PlanCardNew
-            key={plan.id}
-            plan={plan}
-            onButtonClick={() => handlePlanSelection(plan)}
-            currencySymbol={currencySymbol}
-          />
+          <PlanCardNew key={plan.id} plan={plan} onButtonClick={() => handlePlanSelection(plan)} />
         ))}
       </motion.div>
       <div
@@ -183,101 +173,6 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
         currencySymbol={currencySymbol}
       /> */}
     </section>
-  );
-};
-
-const MailForm = ({ opened, close, plan, currencySymbol }) => {
-  const sendMail = useSendMailPlanSelectDetails();
-  const { updateRouteAndCart } = useRouteAndCartStore();
-  const session = useCheckSession();
-  const navigate = useNavigate();
-  const form = useForm({
-    initialValues: {
-      name: "",
-      email: "",
-      orgName: "",
-    },
-    validate: {
-      name: isNotEmpty("Name is required"),
-      email: isNotEmpty("Email is required"),
-      orgName: isNotEmpty("Organization name is required"),
-    },
-  });
-
-  async function handleSubmit() {
-    const validationRes = await form.validate();
-    if (validationRes.hasErrors) return;
-
-    const data = {
-      ...form.values,
-      planName: plan?.displayName,
-      planId: plan?.id,
-    };
-    sendMail.mutate(data, {
-      onSettled: () => {
-        const route = "/dashboard/settings/billing";
-        const cartData = {
-          id: plan.id,
-          amount: plan.paymentPlan.amount,
-          currency: plan.paymentPlan.currency,
-          currencySymbol:
-            currencyLabel.find((c) => c.label === plan.paymentPlan.currency)?.symbol ??
-            currencySymbol,
-          description: plan.description,
-          period: plan?.paymentPlan?.period,
-          planId: plan?.paymentPlan?.planId,
-          name: plan?.displayName,
-          gateway: "RAZORPAY",
-          priceId: "",
-        };
-        if (!session) {
-          localStorage.setItem("newUserFromPricingPage", JSON.stringify(data));
-          localStorage.setItem(
-            "subscriptionRoutAndCart",
-            JSON.stringify({
-              route,
-              cartData,
-            }),
-          );
-        }
-        updateRouteAndCart(route, cartData);
-        close();
-        navigate({
-          to: route,
-        });
-      },
-    });
-  }
-  function onClose() {
-    form.reset();
-    close();
-  }
-  return (
-    <FormModalLayout
-      zIndex={1001}
-      title="About You"
-      centered
-      opened={opened}
-      onSubmit={handleSubmit}
-      onClose={onClose}
-    >
-      <Stack>
-        <ContainedTextField label={"Name"} {...form.getInputProps("name")} withAsterisk />
-        <ContainedTextField label={"Email"} {...form.getInputProps("email")} withAsterisk />
-        <ContainedTextField
-          label={"Organization Name"}
-          {...form.getInputProps("orgName")}
-          withAsterisk
-        />
-        <RateupButtonBlue
-          title="Next"
-          loading={sendMail.isPending}
-          rightIcon={<IconArrowRight size={16} />}
-          type={"submit"}
-          radius={"md"}
-        />
-      </Stack>
-    </FormModalLayout>
   );
 };
 

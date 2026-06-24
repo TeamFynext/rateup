@@ -28,10 +28,8 @@ import styles from "./Modal.module.css";
 const PlanCard = ({
   index,
   totalItems,
-  mainColor = null,
   currencySymbol,
   data,
-  inversePeriod,
   largeScreen,
   handlePlanSelection,
   isPopular = false,

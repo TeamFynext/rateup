@@ -4,13 +4,7 @@ import React from "react";
 import PlanCard from "../Card/PlanCard.tsx";
 import { PlanCardWidth } from "../Utils/constants.ts";
 
-export const MenuSection = ({
-  largeScreen,
-  handlePlanSelection,
-  plans,
-  freePlan,
-  currencySymbol,
-}) => {
+export const MenuSection = ({ largeScreen, handlePlanSelection, freePlan, currencySymbol }) => {
   const menuPlan = [] // plans, removing for now
     ?.filter((item) => item?.name?.includes("Menu"))
     ?.sort((a, b) => a?.paymentPlan?.amount - b?.paymentPlan?.amount);
@@ -23,8 +17,6 @@ export const MenuSection = ({
       period: "",
     },
   });
-
-  const inversePeriod = menuPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
 
   if (freePlan?.length > 0) {
     freePlan[0].paymentPlan = {
@@ -70,7 +62,6 @@ export const MenuSection = ({
                 handlePlanSelection={handlePlanSelection}
                 index={index}
                 totalItems={menuPlans.length}
-                inversePeriod={inversePeriod}
                 largeScreen={largeScreen}
                 key={data.id}
                 isPopular={isPopular}

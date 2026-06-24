@@ -44,7 +44,7 @@ export function OpinionScaleForm({ initValue }: iProps) {
     const clickedBtn = e.target;
     const clickedBtnValue = parseInt(clickedBtn.dataset.btnValue);
     if (clickedBtnValue) {
-      !initValue && updateResponse(clickedBtnValue);
+      if (!initValue) updateResponse(clickedBtnValue);
       if (!isLastQuestion && webSurveyAutoTransitionToNextQues) {
         if (clickedBtn) {
           await animate(clickedBtn, { opacity: [0, 1, 0, 1] }, { duration: 0.75 });

@@ -182,7 +182,6 @@ function StylesComponent({
             className={styles["page-theme-save-btn"]}
             disabled={shouldUseSurveyTheme}
             survey={survey}
-            selectedPageTab={selectedPageTab}
           />
         )}
       </Group>

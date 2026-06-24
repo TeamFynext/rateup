@@ -360,7 +360,6 @@ export function BoardContent({
 
       {isManageColumnsOpen && (
         <ManageColumnsDialog
-          boardId={selectedBoardId}
           columns={selectedBoard?.ticketColumns || []}
           onClose={() => setIsManageColumnsOpen(false)}
           onSave={handleSaveColumns}

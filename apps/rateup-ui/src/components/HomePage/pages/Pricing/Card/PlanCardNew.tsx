@@ -1,16 +1,8 @@
 import { Spoiler, Stack } from "@mantine/core";
 import { IconFlame } from "@tabler/icons-react";
 import { CheckCircle2 } from "lucide-react";
-import React from "react";
 
-import { currencyLabel } from "@/components/menu/util/currencyData.ts";
-
-const PlanCardNew = ({ plan, currencySymbol, onButtonClick }) => {
-  function getCurrenySymbol(label) {
-    const currency = currencyLabel.find((c) => c.label === label);
-    return currency ? currency.symbol : null;
-  }
-
+const PlanCardNew = ({ plan, onButtonClick }) => {
   const sharedStyles =
     "relative bg-white border border-gray-200 rounded-2xl shadow-lg p-8 flex flex-col justify-between transition-all hover:shadow-2xl hover:scale-[1.03] duration-300";
   return (

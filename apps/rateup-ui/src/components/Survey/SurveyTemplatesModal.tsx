@@ -33,7 +33,7 @@ const SurveyTemplatesModal = ({ opened, close, openCreateSurvey, setTemplate, su
   const { data: allTemplates } = useSurveyTemplates(surveyType);
 
   useEffect(() => {
-    allTemplates && setCategorires(Object?.keys(allTemplates));
+    if (allTemplates) setCategorires(Object?.keys(allTemplates));
   }, [allTemplates]);
 
   useEffect(() => {

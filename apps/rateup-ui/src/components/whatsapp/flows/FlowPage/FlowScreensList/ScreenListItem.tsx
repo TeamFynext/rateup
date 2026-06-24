@@ -204,7 +204,7 @@ function ScreenListItem({
   }
   const handleSaveJsonToWa = () => {
     const errorMessages = [];
-    for (const flScreen of flowJson?.screens) {
+    for (const flScreen of flowJson?.screens ?? []) {
       const questions = getQuestionsFromScreen(flScreen, survey, map);
       for (const qs of questions) {
         if (FlowChoiceQuestions.includes(qs.type as QuestionType)) {

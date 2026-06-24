@@ -9,7 +9,7 @@ import { mmImageCropModalClassnames } from "@/utils/constants.ts";
 import commonStyles from "../mmCommonStyles.module.css";
 import styles from "./ImageSourceSelectorModal.module.css";
 
-function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
+function ImageSourceSelectorModal({ context: _context, id: _thisModalId, innerProps }) {
   const { onImageSelected, forDevice } = innerProps;
   const aspectRatio = forDevice === "desktop" ? 16 / 9 : 9 / 16;
   const { t: translations } = useTranslation();

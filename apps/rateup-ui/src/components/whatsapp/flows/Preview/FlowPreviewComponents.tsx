@@ -201,7 +201,7 @@ function FlowChipsSelectorPreview({
   );
 }
 
-function DropDownPreview({ label = "Label", options }: { label?: string; options: string[] }) {
+function DropDownPreview({ label = "Label" }: Readonly<{ label?: string }>) {
   return (
     <TextInput
       variant="unstyled"
@@ -226,7 +226,7 @@ function DropDownPreview({ label = "Label", options }: { label?: string; options
     />
   );
 }
-function FlowOptInPreview({ label = "Label" }: { label?: string }) {
+function FlowOptInPreview({ label = "Label" }: Readonly<{ label?: string }>) {
   return (
     <Checkbox
       label={label}
@@ -390,9 +390,9 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
       return (
         <DropDownPreview
           label={label}
-          options={
-            typeof fe["data-source"] !== "string" && fe["data-source"]?.map((ds) => ds.title)
-          }
+          // options={
+          //   typeof fe["data-source"] !== "string" && fe["data-source"]?.map((ds) => ds.title)
+          // }
         />
       );
     case WaFlowFormElementType.optIn:

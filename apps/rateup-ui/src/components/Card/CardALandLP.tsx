@@ -75,7 +75,7 @@ function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
                   className="h-8 w-8 shrink-0 hover:text-primary border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-auto"
                   onClick={(e) => {
                     e.stopPropagation();
-                    !v?.isPublished && e.preventDefault();
+                    if (!v?.isPublished) e.preventDefault();
                     handleCopy(v?.id, `${shareURL}/${v?.shortUrlId}`);
                   }}
                 >

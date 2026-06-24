@@ -319,10 +319,11 @@ export function WhatsappTemplateById({
     templateId,
     () => {
       setIsSubmittingDraft(false);
-      templateId?.length === 0 &&
+      if (templateId?.length === 0) {
         navigate({
           to: "/dashboard/whatsapp/templates/",
         });
+      }
     },
     () => {
       setIsSubmittingDraft(false);
@@ -483,14 +484,18 @@ export function WhatsappTemplateById({
         const mutationData = saveAsDraft
           ? { ...values, id: editingItem.id }
           : { templateId: editingItem.id, templateData };
-        saveAsDraft
-          ? saveTemplateAsDraftMutation.mutate(mutationData)
-          : updateTemplateMutation.mutate(mutationData);
+        if (saveAsDraft) {
+          saveTemplateAsDraftMutation.mutate(mutationData);
+        } else {
+          updateTemplateMutation.mutate(mutationData);
+        }
       } else {
         const mutationData = { ...templateData, id: editingItem?.id };
-        saveAsDraft
-          ? saveTemplateAsDraftMutation.mutate(mutationData)
-          : createTemplateMutation.mutate(mutationData);
+        if (saveAsDraft) {
+          saveTemplateAsDraftMutation.mutate(mutationData);
+        } else {
+          createTemplateMutation.mutate(mutationData);
+        }
       }
     } catch (error) {
       if (saveAsDraft) setIsSubmittingDraft(false);

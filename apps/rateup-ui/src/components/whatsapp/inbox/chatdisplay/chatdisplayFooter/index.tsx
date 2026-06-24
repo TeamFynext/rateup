@@ -52,7 +52,7 @@ export default function WaInboxChatDisplayFooter({
   contact: ContactWithUpdatedAt;
 }>) {
   const [activeTab, setActiveTab] = useState<"message" | "private">("message");
-  const inputRef = useRef(null);
+
   const submiRef = useRef(null);
   const { t: translations } = useTranslation();
   const { user } = useUser();
@@ -285,22 +285,6 @@ export default function WaInboxChatDisplayFooter({
         },
       },
     );
-  }
-
-  function insertEmoji(value: string) {
-    const { selectionStart, selectionEnd } = inputRef.current;
-    const text = form.values.text.body;
-    const before = text.substring(0, selectionStart);
-    const after = text.substring(selectionEnd);
-    const updatedText = before + value + after;
-    form.setValues({
-      text: { ...form.values.text, body: updatedText },
-    });
-    setTimeout(() => {
-      const newPosition = before.length + value.length;
-      inputRef.current.selectionStart = newPosition;
-      inputRef.current.selectionEnd = newPosition;
-    }, 0);
   }
 
   const isSessionExpired =

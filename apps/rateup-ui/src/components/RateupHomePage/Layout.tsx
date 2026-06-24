@@ -23,7 +23,6 @@ interface LayoutProps {
 
 export default function Layout({
   children,
-  isBlog,
   contentClassName,
   navbarClassName,
   footer = <HomePageFooter />,

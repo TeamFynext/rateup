@@ -1,7 +1,7 @@
 import { Flex, ScrollAreaAutosize, Stack, Title } from "@mantine/core";
 import { useMediaQuery, useViewportSize } from "@mantine/hooks";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Confetti from "react-confetti";
 import { useTranslation } from "react-i18next";
 
@@ -26,9 +26,6 @@ export default function ThankYou({
   isSurveyPreview = false,
   reviewPageLinks = null,
 }) {
-  const [] = useState(true);
-  const [] = useState(true);
-
   const isMobile = useMediaQuery("(max-width: 480px)");
   const navigate = useNavigate();
   const { t: translations } = useTranslation();
@@ -54,17 +51,19 @@ export default function ThankYou({
     // kioskMode redirect
     if ((k === "y" || k === "cs") && !enableGoogleReview) {
       const timeoutId = setTimeout(() => {
-        k === "cs"
-          ? navigate({
-              to: `/public/survey/cs`,
-            })
-          : fromShortUrl
-            ? navigate({
-                to: `/ws/${shortId}/`,
-              })
-            : navigate({
-                to: `/public/survey/${surveyId}`,
-              });
+        if (k === "cs") {
+          navigate({
+            to: `/public/survey/cs`,
+          });
+        } else if (fromShortUrl) {
+          navigate({
+            to: `/ws/${shortId}/`,
+          });
+        } else {
+          navigate({
+            to: `/public/survey/${surveyId}`,
+          });
+        }
       }, 5000);
 
       return () => {

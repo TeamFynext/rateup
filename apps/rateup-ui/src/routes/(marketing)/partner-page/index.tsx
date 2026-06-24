@@ -30,12 +30,7 @@ export const Route = createFileRoute("/(marketing)/partner-page/")({
   head: () => buildPageHead("/contact-us"),
 });
 
-interface PartnershipPageProps {
-  onGetStarted?: () => void;
-  onBackToHome?: () => void;
-}
-
-function PartnershipPage({ onGetStarted, onBackToHome }: PartnershipPageProps) {
+function PartnershipPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   const toggleFaq = (index: number) => {

@@ -44,22 +44,6 @@ type Props = {
   editing?: boolean;
 };
 
-type TimeSlotRowProps = {
-  slot: any;
-  slotIndex: number;
-  day: DayKey;
-  daySchedule: any;
-  slotError: any;
-  handleTimeSlotChange: (
-    day: DayKey,
-    slotIndex: number,
-    field: "openTime" | "closeTime",
-    value: string,
-  ) => void;
-  removeTimeSlot: (day: DayKey, slotIndex: number) => void;
-  t: ReturnType<typeof useTranslation>;
-};
-
 function TimeSlotRow({
   slot,
   slotIndex,

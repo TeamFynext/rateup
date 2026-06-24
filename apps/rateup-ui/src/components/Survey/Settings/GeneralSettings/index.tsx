@@ -51,7 +51,7 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
     editSurvey.mutate(values, {
       onSettled: () => {
         setIsLoading(false);
-        setSelectedLanguage && setSelectedLanguage(values.languages[0]);
+        if (setSelectedLanguage) setSelectedLanguage(values.languages[0]);
       },
     });
   };

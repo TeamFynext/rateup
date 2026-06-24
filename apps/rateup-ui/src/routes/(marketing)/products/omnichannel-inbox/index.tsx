@@ -92,11 +92,9 @@ export const Route = createFileRoute("/(marketing)/products/omnichannel-inbox/")
 });
 
 function RouteComponent() {
-  const openAccess = () => {};
-
   return (
     <Layout contentClassName={styles.themeOmnichannel}>
-      <Hero onAccess={openAccess} />
+      <Hero />
       <SocialProof />
       <Problem />
       <ProductIntro />
@@ -105,7 +103,7 @@ function RouteComponent() {
       <HowItWorks />
       <UseCases />
       <Comparison />
-      <CTABand onAccess={openAccess} />
+      <CTABand />
     </Layout>
   );
 }

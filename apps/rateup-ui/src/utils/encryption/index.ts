@@ -1,5 +1,3 @@
-type SodiumInstance = Awaited<ReturnType<typeof initialize>>;
-
 async function initialize() {
   const sodiumModule = await import("libsodium-wrappers");
   const sodium = (sodiumModule as any).default ?? sodiumModule;

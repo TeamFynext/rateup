@@ -1,4 +1,3 @@
-import { useDebouncedState } from "@mantine/hooks";
 import type { Table } from "@tanstack/react-table";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
@@ -23,7 +22,6 @@ interface DataTableToolbarProps<TData> {
 
 export function DataTableToolbar<TData>({ table }: Readonly<DataTableToolbarProps<TData>>) {
   const [isOpenedAddModal, setIsOpenedAddModal] = useState(false);
-  const [] = useDebouncedState("", 200);
   const { t } = useTranslation();
   return (
     <Card className="p-2 mb-4">

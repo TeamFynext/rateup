@@ -22,7 +22,6 @@ function TabPanelsComp({
   questions,
   addQnTrigger,
   setSelectedLanguage,
-  setFilterTags,
   encryptionpassword,
   setEncryptionPassword,
   setActiveTab,
@@ -96,7 +95,6 @@ function TabPanelsComp({
               <ResultsOverviewWebForm
                 surveyId={surveyId}
                 aiResponseSummary={survey?.aiResponseSummary}
-                survey={survey}
                 flowId={null}
                 version={1}
                 flowQuestions={[]}

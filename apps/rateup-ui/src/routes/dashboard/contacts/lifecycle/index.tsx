@@ -177,15 +177,6 @@ interface AddStageFormProps {
   readonly isCreating: boolean;
 }
 
-interface EmojiColorPickerProps {
-  readonly addColor: string;
-  readonly setAddColor: (color: string) => void;
-  readonly addEmoji: string;
-  readonly setAddEmoji: (emoji: string) => void;
-  readonly onDone: () => void;
-  readonly isLost: boolean;
-}
-
 const sortStages = (stages: BackendLifecycleStage[]) =>
   [...stages].sort((a, b) => a.ordering - b.ordering);
 
@@ -1262,7 +1253,6 @@ function StageListItem({
   onRename,
   onDeleteStage,
   onUpdateDescription,
-  onUpdateStageCategory,
   onMoveStage,
   visibleDescription,
   onToggleDescription,
@@ -1391,7 +1381,6 @@ function AddStageForm({
   addEmoji,
   setAddEmoji,
   addColor,
-  setAddColor,
   showEmojiPicker,
   setShowEmojiPicker,
   onCancel,

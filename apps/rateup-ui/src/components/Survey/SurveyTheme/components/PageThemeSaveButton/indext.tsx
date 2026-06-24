@@ -6,7 +6,7 @@ import { useSurveyUpdateMutation } from "@/backend/surveys/surveys.query";
 import { destructureThemeAndUploadImagesIfAny } from "../../SurveyTheme.utils";
 import { useSurveyThemeContextValue } from "../../SurveyThemeContext.tsx";
 
-function PageThemeSaveBtn({ className = "", disabled = false, survey, selectedPageTab }) {
+function PageThemeSaveBtn({ className = "", disabled = false, survey }) {
   const [isSaving, setIsSaving] = useState(false);
   const surveyUpdateMutation = useSurveyUpdateMutation(survey?.id);
 

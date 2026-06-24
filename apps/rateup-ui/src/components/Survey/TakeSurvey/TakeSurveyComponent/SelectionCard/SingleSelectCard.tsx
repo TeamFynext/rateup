@@ -42,7 +42,6 @@ function ImageCheckbox({
   selectedValue,
   fallbackEnable,
   sizeTrim,
-  className,
   dataValue,
   ...others
 }: ImageCheckboxProps & Omit<React.ComponentPropsWithoutRef<"button">, keyof ImageCheckboxProps>) {

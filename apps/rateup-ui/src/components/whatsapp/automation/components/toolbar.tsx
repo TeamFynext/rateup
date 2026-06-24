@@ -24,8 +24,6 @@ import styles from "./toolbar.module.css";
 
 interface ToolbarProps {
   onSave: () => void;
-  onLoad: () => void;
-  onExport: () => void;
   onAutoLayout: (direction: string) => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -40,8 +38,6 @@ interface ToolbarProps {
 
 export default function Toolbar({
   onSave,
-  onLoad,
-  onExport,
   onAutoLayout,
   onUndo,
   onRedo,
