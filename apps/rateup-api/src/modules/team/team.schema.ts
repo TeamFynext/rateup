@@ -134,9 +134,7 @@ export type EditTeamInput = z.infer<typeof editTeamSchema>;
 export type IdParamInput = z.infer<typeof idParamRequestSchema>;
 export type ByTeamIdParams = z.infer<typeof byTeamIdParamsSchema>;
 export type tagQuerySchema = z.infer<typeof tagQuerySchema>;
-export type BySurveyTeamMapIdParams = z.infer<
-  typeof bySurveyTeamMapIdParamsSchema
->;
+export type BySurveyTeamMapIdParams = z.infer<typeof bySurveyTeamMapIdParamsSchema>;
 export type SetTeamFeaturesInput = z.infer<typeof setTeamFeaturesSchema>;
 
 // Auto-exported after fastify-zod migration

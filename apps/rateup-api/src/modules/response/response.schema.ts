@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-import {
-  QuestionType,
-  ResponseSummaryType,
-  SurveyType,
-} from "../../types/enums.js";
+import { QuestionType, ResponseSummaryType, SurveyType } from "../../types/enums.js";
 import { ResponsePlatform } from "../../../generated/prisma/client.js";
 
 // Individual question response
@@ -134,9 +130,7 @@ const responseFilterQuery = z
 export type CreateResponseInput = z.infer<typeof createResponseInputSchema>;
 export type GetResponsesParams = z.infer<typeof getResponsesParamsSchema>;
 export type IdInputParams = z.infer<typeof idInputParamsSchema>;
-export type DeleteResponseParamsSchema = z.infer<
-  typeof deleteResponseParamsSchema
->;
+export type DeleteResponseParamsSchema = z.infer<typeof deleteResponseParamsSchema>;
 export type GenerateBodyInput = z.infer<typeof generateBodySchema>;
 export type getResponsesBody = z.infer<typeof getResponsesBodySchema>;
 export type generateXlsxBody = z.infer<typeof generateXlsxSchema>;

@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { externalCampaignParticipantRoutes } from "./campaign_participants.external.route.js";
 import {
   createCampaignInputSchema,
   campaignResponseByIdSchema,

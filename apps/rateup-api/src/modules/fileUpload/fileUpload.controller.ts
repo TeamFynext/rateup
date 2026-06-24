@@ -11,10 +11,7 @@ import { validateFile } from "../../utils/upload/validate.js";
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
-export async function uploadController(
-  req: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function uploadController(req: FastifyRequest, reply: FastifyReply) {
   const data = await req.file();
   const metadata = data?.fields?.metadata
     ? JSON.parse(data?.fields?.metadata?.["value"])
@@ -28,10 +25,7 @@ export async function uploadController(
     return reply.code(400).send({ message: validation.message });
   }
   const { filename, file } = data;
-  const uniqueFilename = `${Date.now()}-${filename.replace(
-    /[^a-zA-Z0-9-.]/g,
-    "",
-  )}`;
+  const uniqueFilename = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9-.]/g, "")}`;
 
   let params;
   params = {
@@ -91,10 +85,7 @@ export async function uploadController(
   }
 }
 
-function pumpToFile(
-  source: NodeJS.ReadableStream,
-  filePath: string,
-): Promise<void> {
+function pumpToFile(source: NodeJS.ReadableStream, filePath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const dest = fs.createWriteStream(filePath);
     source.pipe(dest);
@@ -127,21 +118,15 @@ function convertToWhatsAppCompatibleOGG(inputPath, outputPath) {
   });
 }
 
-export async function uploadWithThumbnailsController(
-  req: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function uploadWithThumbnailsController(req: FastifyRequest, reply: FastifyReply) {
   const data = await req.file();
   const validation = validateFile({ data });
   if (!validation.valid) {
     data.file.resume();
     return reply.code(400).send({ message: validation.message });
   }
-  const { filename, file } = data;
-  const uniqueFilename = `${Date.now()}-${filename.replace(
-    /[^a-zA-Z0-9-.]/g,
-    "",
-  )}`;
+  const { filename } = data;
+  const uniqueFilename = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9-.]/g, "")}`;
   const thumbnailFilename = "thumb300x200-" + uniqueFilename;
 
   const buffer = await data.toBuffer();

@@ -1,9 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import {
-  addToken,
-  deleteTokenByUserId,
-  getTokensByOrgId,
-} from "./mobile.service.js";
+import { addToken, deleteTokenByUserId, getTokensByOrgId } from "./mobile.service.js";
 import { AddExpoTokenSchema, DeleteExpoTokenSchema } from "./mobile.schema.js";
 
 export async function addExpoToken(
@@ -21,15 +17,12 @@ export async function addExpoToken(
   return response;
 }
 
-export async function getExpoTokens(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getExpoTokens(request: FastifyRequest, reply: FastifyReply) {
   const { orgId } = request.user;
   try {
     const tokens = await getTokensByOrgId(orgId);
     return tokens;
-  } catch (err) {
+  } catch {
     reply.status(500).send({ error: "Failed to fetch tokens" });
   }
 }
@@ -43,7 +36,7 @@ export async function deleteToken(
   try {
     const token = await deleteTokenByUserId(userId, expoToken);
     reply.status(200).send({ ok: "Token deleted", token: token });
-  } catch (error) {
+  } catch {
     reply.status(500).send({ error: "Failed to delete tokens" });
   }
 }

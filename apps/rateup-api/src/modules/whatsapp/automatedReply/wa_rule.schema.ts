@@ -63,31 +63,27 @@ const createRuleBaseSchema = z.object({
   options: ruleOptionsSchema.optional(),
 });
 
-export const createRuleSchema = createRuleBaseSchema.superRefine(
-  (data, ctx) => {
-    if (data.triggerEvent === "SHOPIFY_EVENT" && !data.options?.shopifyEvent) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["options", "shopifyEvent"],
-        message: "Select a Shopify event",
-      });
-    }
-  },
-);
+export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => {
+  if (data.triggerEvent === "SHOPIFY_EVENT" && !data.options?.shopifyEvent) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "shopifyEvent"],
+      message: "Select a Shopify event",
+    });
+  }
+});
 
 export type CreateRuleInput = z.infer<typeof createRuleSchema>;
 
-export const updateRuleSchema = createRuleBaseSchema
-  .partial()
-  .superRefine((data, ctx) => {
-    if (data.triggerEvent === "SHOPIFY_EVENT" && !data.options?.shopifyEvent) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["options", "shopifyEvent"],
-        message: "Select a Shopify event",
-      });
-    }
-  });
+export const updateRuleSchema = createRuleBaseSchema.partial().superRefine((data, ctx) => {
+  if (data.triggerEvent === "SHOPIFY_EVENT" && !data.options?.shopifyEvent) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["options", "shopifyEvent"],
+      message: "Select a Shopify event",
+    });
+  }
+});
 
 export type UpdateRuleInput = z.infer<typeof updateRuleSchema>;
 

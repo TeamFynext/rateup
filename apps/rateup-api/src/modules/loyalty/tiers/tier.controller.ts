@@ -32,10 +32,7 @@ export async function createLoyaltyTierHandler(
   }
 }
 
-export async function getLoyaltyTiersHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getLoyaltyTiersHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const program = await getLoyaltyProgramByOrg(request.user.orgId);
     if (!program) {
@@ -79,9 +76,7 @@ export async function updateLoyaltyTierHandler(
   } catch (e) {
     log.error(e);
     if (e.code === "P2002") {
-      return reply
-        .code(400)
-        .send({ error: "Tier with this priority name already exists" });
+      return reply.code(400).send({ error: "Tier with this priority name already exists" });
     }
     reply.code(500).send({ error: e.message });
   }
@@ -96,8 +91,7 @@ export async function deleteLoyaltyTierHandler(
 ) {
   try {
     const downgradeCustomers =
-      request.query?.downgradeCustomers === true ||
-      request.query?.downgradeCustomers === "true";
+      request.query?.downgradeCustomers === true || request.query?.downgradeCustomers === "true";
 
     await deleteLoyaltyTier(request.params.tierId, {
       downgradeCustomers,

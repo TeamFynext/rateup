@@ -11,11 +11,7 @@ import {
   syncZohoLeadsHandler,
   zohoAuthenticationHandler,
 } from "./zoho.controller.js";
-import {
-  successSchema,
-  zohoAuthSchema,
-  zohoQuerySchema,
-} from "./zoho.schema.js";
+import { successSchema, zohoAuthSchema, zohoQuerySchema } from "./zoho.schema.js";
 
 export async function zohoRoutes(server: FastifyInstance) {
   // Authentication endpoint

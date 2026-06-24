@@ -111,23 +111,15 @@ const assignLabelsToContactSchema = z.object({
 export type ContactCore = z.infer<typeof contactCoreSchema>;
 export type ByContactIdParams = z.infer<typeof byContactIdSchema>;
 export type updateContactSchema = z.infer<typeof updateContactSchema>;
-export type createMultipleContactInput = z.infer<
-  typeof createMultipleContactSchema
->;
+export type createMultipleContactInput = z.infer<typeof createMultipleContactSchema>;
 export type deleteManyContactsInput = z.infer<typeof deleteManyContactSchema>;
 export type PaginationQuery = z.infer<typeof paginationQuery>;
-export type UpdateContactLabelsSchema = z.infer<
-  typeof updateContactLabelsSchema
->;
+export type UpdateContactLabelsSchema = z.infer<typeof updateContactLabelsSchema>;
 export type CustomFieldSchema = z.infer<typeof customFieldSchema>;
-export type BulkUpdateContactStatusSchema = z.infer<
-  typeof bulkUpdateContactStatusSchema
->;
+export type BulkUpdateContactStatusSchema = z.infer<typeof bulkUpdateContactStatusSchema>;
 
 export type ByFieldIdSchema = z.infer<typeof byFieldIdSchema>;
-export type AssignLabelsToContactSchema = z.infer<
-  typeof assignLabelsToContactSchema
->;
+export type AssignLabelsToContactSchema = z.infer<typeof assignLabelsToContactSchema>;
 
 // Auto-exported after fastify-zod migration
 export {

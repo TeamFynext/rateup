@@ -5,24 +5,19 @@ import { PaymentPlanType } from "./payment.service.js";
 
 const createCheckoutRequestSchema = z.object({
   orgId: z.string({
-    error: (issue) =>
-      issue.input === undefined ? "Org Id is required" : undefined,
+    error: (issue) => (issue.input === undefined ? "Org Id is required" : undefined),
   }),
   planId: z.string({
-    error: (issue) =>
-      issue.input === undefined ? "Plan Id is required" : undefined,
+    error: (issue) => (issue.input === undefined ? "Plan Id is required" : undefined),
   }),
   planName: z.string({
-    error: (issue) =>
-      issue.input === undefined ? "Plan name is required" : undefined,
+    error: (issue) => (issue.input === undefined ? "Plan name is required" : undefined),
   }),
   period: z.string({
-    error: (issue) =>
-      issue.input === undefined ? "Plan Period is required" : undefined,
+    error: (issue) => (issue.input === undefined ? "Plan Period is required" : undefined),
   }),
   rateupPlanId: z.string({
-    error: (issue) =>
-      issue.input === undefined ? "Rateup Plan Id is required" : undefined,
+    error: (issue) => (issue.input === undefined ? "Rateup Plan Id is required" : undefined),
   }),
   isAnnualMessageLimit: z.boolean(),
   trialDays: z.number().optional(),

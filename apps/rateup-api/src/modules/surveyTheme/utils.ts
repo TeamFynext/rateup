@@ -13,10 +13,7 @@ const addSurveyThemeLogoObjIfNotPresent = (payloadCopy) => {
     };
   }
   const logo = payloadCopy.surveyTheme.logo.logo;
-  if (
-    logo.length > 0 &&
-    (!logo.startsWith("http://") || !logo.startsWith("https://"))
-  ) {
+  if (logo.length > 0 && (!logo.startsWith("http://") || !logo.startsWith("https://"))) {
     payloadCopy.surveyTheme.logo.logo = `http://d2uj946b0i8y27.cloudfront.net/${logo}`;
   }
 };
@@ -82,14 +79,12 @@ export const verifyAndConvertSurveyThemeObj = (surveyTheme) => {
   ) {
     const desktopBg = surveyTheme["surveyTheme"].bg.desktopbg;
     const mobileBg = surveyTheme["surveyTheme"].bg.mobilebg;
-    const isBgObjInReqStructure =
-      typeof desktopBg === "object" && typeof mobileBg === "object";
+    const isBgObjInReqStructure = typeof desktopBg === "object" && typeof mobileBg === "object";
     const surveyThemeLogoKeyPresent = surveyTheme["surveyTheme"].logo;
 
     if (!isBgObjInReqStructure || !surveyThemeLogoKeyPresent) {
       if (!isBgObjInReqStructure) convertBgObjToReqStructure(surveyThemeCopy);
-      if (!surveyThemeLogoKeyPresent)
-        addSurveyThemeLogoObjIfNotPresent(surveyThemeCopy);
+      if (!surveyThemeLogoKeyPresent) addSurveyThemeLogoObjIfNotPresent(surveyThemeCopy);
     }
   }
 

@@ -27,9 +27,7 @@ export async function syncProductSetsHandler(
     // Get access token from connected WhatsApp settings
     const connectedPhone = catalog.connectedWaPhoneIds[0];
     if (!connectedPhone) {
-      return reply
-        .code(400)
-        .send({ error: "No WhatsApp account connected to this catalog" });
+      return reply.code(400).send({ error: "No WhatsApp account connected to this catalog" });
     }
 
     const waSettings = await prisma.whatsappSettings.findUnique({
@@ -40,16 +38,10 @@ export async function syncProductSetsHandler(
       return reply.code(404).send({ error: "WhatsApp settings not found" });
     }
 
-    const { accessToken } = getWaSettingsWithAccessTokenDecrypted(
-      waSettings as any,
-    );
+    const { accessToken } = getWaSettingsWithAccessTokenDecrypted(waSettings as any);
 
     // Sync product sets
-    const productSets = await syncProductSetsForCatalog(
-      catalogId,
-      orgId,
-      accessToken,
-    );
+    const productSets = await syncProductSetsForCatalog(catalogId, orgId, accessToken);
 
     reply.code(200).send(productSets);
   } catch (error) {

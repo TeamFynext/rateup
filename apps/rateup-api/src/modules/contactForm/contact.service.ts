@@ -3,12 +3,7 @@ import { emailBodyContactForm } from "../../utils/email/emailBodyContactForm.js"
 import prisma from "../../utils/prisma.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
 
-export async function createMsg({
-  name,
-  email,
-  message,
-  address,
-}: CreateContactMessageInput) {
+export async function createMsg({ name, email, message, address }: CreateContactMessageInput) {
   if (address?.length > 0) {
     return "Error";
   }

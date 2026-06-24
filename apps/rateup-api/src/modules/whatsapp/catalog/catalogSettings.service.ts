@@ -10,7 +10,6 @@ import {
   CatalogPaymentMethod,
   CatalogAddressFlowStatus,
   CatalogOrderStage,
-  CatalogStoreType,
 } from "../../../types/enums.js";
 
 async function getWaSettingsForCatalog(catalogId: string, orgId: string) {
@@ -18,10 +17,7 @@ async function getWaSettingsForCatalog(catalogId: string, orgId: string) {
     where: { catalogId },
     select: { whatsappSettingsPhoneId: true },
   });
-  return await getWaSettings(
-    orgId,
-    phoneMap?.whatsappSettingsPhoneId ?? undefined,
-  );
+  return await getWaSettings(orgId, phoneMap?.whatsappSettingsPhoneId ?? undefined);
 }
 
 // ─── Default address fields (Shopify shipping_address keys) ────────────────────
@@ -124,17 +120,12 @@ async function checkFlowStatusFromMeta(
     const waSettings = await getWaSettingsForCatalog(catalogId, orgId);
     if (!waSettings?.accessToken) return null;
 
-    const res = await callMetaApi(
-      `/${flowId}?fields=status,name`,
-      "GET",
-      waSettings.accessToken,
-    );
+    const res = await callMetaApi(`/${flowId}?fields=status,name`, "GET", waSettings.accessToken);
 
     const metaStatus: string = res?.data?.status;
     if (!metaStatus) return null;
 
-    const ourStatus =
-      META_STATUS_MAP[metaStatus] ?? CatalogAddressFlowStatus.REVIEW;
+    const ourStatus = META_STATUS_MAP[metaStatus] ?? CatalogAddressFlowStatus.REVIEW;
     log.info(
       "Meta flow %s status: %s → our status: %s (catalog %s)",
       flowId,
@@ -185,11 +176,7 @@ export async function getCatalogSettings(catalogId: string) {
     (catalog.addressFlowStatus === CatalogAddressFlowStatus.REVIEW ||
       catalog.addressFlowStatus === CatalogAddressFlowStatus.SUBMITTING)
   ) {
-    const updated = await checkFlowStatusFromMeta(
-      catalogId,
-      catalog.orgId,
-      catalog.addressFlowId,
-    );
+    const updated = await checkFlowStatusFromMeta(catalogId, catalog.orgId, catalog.addressFlowId);
     if (updated) liveFlowStatus = updated;
   }
 
@@ -202,10 +189,7 @@ export async function getCatalogSettings(catalogId: string) {
 }
 
 // Update catalog settings
-export async function updateCatalogSettings(
-  catalogId: string,
-  data: UpdateCatalogSettingsSchema,
-) {
+export async function updateCatalogSettings(catalogId: string, data: UpdateCatalogSettingsSchema) {
   return await prisma.whatsappCatalog.update({
     where: { catalogId },
     data: {
@@ -260,11 +244,8 @@ export async function createAddressFlow(
 
   try {
     const fields =
-      (catalog.addressFlowFields as typeof DEFAULT_ADDRESS_FIELDS) ??
-      DEFAULT_ADDRESS_FIELDS;
-    const enabledFields = fields.filter(
-      (f) => f.enabled && f.shopifyKey !== "country_code",
-    );
+      (catalog.addressFlowFields as typeof DEFAULT_ADDRESS_FIELDS) ?? DEFAULT_ADDRESS_FIELDS;
+    const enabledFields = fields.filter((f) => f.enabled && f.shopifyKey !== "country_code");
 
     const uniqueSuffix = Math.floor(Math.random() * 10000)
       .toString()
@@ -346,18 +327,16 @@ export async function createAddressFlow(
     const firstUser = await prisma.user.findFirst({
       where: { org: { some: { id: orgId } } },
     });
-    if (!firstUser)
-      throw new Error("No user found in org to own the flow survey.");
+    if (!firstUser) throw new Error("No user found in org to own the flow survey.");
 
-    const { survey, flowMap: flowMapWithQuestionId } =
-      await createSurveyFromFlow({
-        flowJson: finalFlowJson as any,
-        flowMap: finalFlowMap,
-        req,
-        teamIds: team ? [team.id] : [],
-        title: uniqueFlowName,
-        orgId,
-      });
+    const { survey, flowMap: flowMapWithQuestionId } = await createSurveyFromFlow({
+      flowJson: finalFlowJson as any,
+      flowMap: finalFlowMap,
+      req,
+      teamIds: team ? [team.id] : [],
+      title: uniqueFlowName,
+      orgId,
+    });
 
     // 4. Create internal DB flow abstraction
     const dbFlow = await createFlowCopyInDb({
@@ -632,10 +611,8 @@ export async function dispatchPaymentMessage(
           } as any,
         });
       }
-      const { getWaSettingsByPhoneId } =
-        await import("../settings/wa_settings.service.js");
-      const { handleWaOrderNativePayment } =
-        await import("./catalog.service.js");
+      const { getWaSettingsByPhoneId } = await import("../settings/wa_settings.service.js");
+      const { handleWaOrderNativePayment } = await import("./catalog.service.js");
       const waSettings = await getWaSettingsByPhoneId(whatsappSettingsPhoneId);
       if (waSettings) {
         await handleWaOrderNativePayment(
@@ -654,11 +631,7 @@ export async function dispatchPaymentMessage(
         );
       }
     } catch (e) {
-      log.error(
-        "Shopify native payment dispatch failed for order %s: %o",
-        order.id,
-        e,
-      );
+      log.error("Shopify native payment dispatch failed for order %s: %o", order.id, e);
     }
     return;
   }
@@ -724,13 +697,9 @@ export async function dispatchPaymentMessage(
         } as any,
       });
       try {
-        const { getWaSettingsByPhoneId } =
-          await import("../settings/wa_settings.service.js");
-        const { handleWaOrderNativePayment } =
-          await import("./catalog.service.js");
-        const waSettings = await getWaSettingsByPhoneId(
-          whatsappSettingsPhoneId,
-        );
+        const { getWaSettingsByPhoneId } = await import("../settings/wa_settings.service.js");
+        const { handleWaOrderNativePayment } = await import("./catalog.service.js");
+        const waSettings = await getWaSettingsByPhoneId(whatsappSettingsPhoneId);
         if (waSettings) {
           await handleWaOrderNativePayment(
             catalog.orgId,
@@ -748,11 +717,7 @@ export async function dispatchPaymentMessage(
           );
         }
       } catch (e) {
-        log.error(
-          "Standard native payment dispatch failed for order %s: %o",
-          order.id,
-          e,
-        );
+        log.error("Standard native payment dispatch failed for order %s: %o", order.id, e);
       }
       break;
     }
@@ -807,8 +772,7 @@ export async function handleAddressFlowResponse({
   contactPhone: string;
   whatsappSettingsPhoneId?: string;
 }) {
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(orderId)) {
     log.warn("Invalid orderId format (not a UUID): %s", orderId);
     return false;
@@ -952,17 +916,12 @@ export async function handleDeliveryListReply({
         deliveryOptions = shopifyRates;
       }
     } catch (e) {
-      log.error(
-        "Failed to fetch Shopify shipping rates dynamically on reply: %o",
-        e,
-      );
+      log.error("Failed to fetch Shopify shipping rates dynamically on reply: %o", e);
     }
   }
 
   const optionId = listReplyId.replace("delivery_", "");
-  const selectedOption = deliveryOptions.find(
-    (o: any) => String(o.id) === optionId && o.enabled,
-  );
+  const selectedOption = deliveryOptions.find((o: any) => String(o.id) === optionId && o.enabled);
   if (!selectedOption) return false;
 
   const updatedOrder = await prisma.waCatalogOrder.update({
@@ -973,11 +932,7 @@ export async function handleDeliveryListReply({
     } as any,
   });
 
-  log.info(
-    "Delivery '%s' selected for order %s",
-    selectedOption.name,
-    order.id,
-  );
+  log.info("Delivery '%s' selected for order %s", selectedOption.name, order.id);
 
   await dispatchPaymentMessage(
     {

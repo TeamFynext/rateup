@@ -43,12 +43,8 @@ const contactLabelResponseSchema = z.object({
 export type CreateContactLabelSchema = z.infer<typeof createContactLabelSchema>;
 export type UpdateContactLabelSchema = z.infer<typeof updateContactLabelSchema>;
 export type ByLabelIdSchema = z.infer<typeof byLabelIdSchema>;
-export type AssignLabelsToContactSchema = z.infer<
-  typeof assignLabelsToContactSchema
->;
-export type AssignLabelsToContactsSchema = z.infer<
-  typeof assignLabelsToContactsSchema
->;
+export type AssignLabelsToContactSchema = z.infer<typeof assignLabelsToContactSchema>;
+export type AssignLabelsToContactsSchema = z.infer<typeof assignLabelsToContactsSchema>;
 
 // Auto-exported after fastify-zod migration
 export {

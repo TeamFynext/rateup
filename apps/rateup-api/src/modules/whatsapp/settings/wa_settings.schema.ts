@@ -157,19 +157,11 @@ export type createWaSettingsInput = z.infer<typeof createWaSettingsInputSchema>;
 export type updateWaSettingsInput = z.infer<typeof updateWaSettingsInputSchema>;
 export type ContactTagSchema = z.infer<typeof contactTagSchema>;
 export type PaginationQuery = z.infer<typeof paginationQuery>;
-export type ByWaSettingsIdParamsSchema = z.infer<
-  typeof byWaSettingsIdParamsSchema
->;
-export type ByLeadGenFormIdParamsSchema = z.infer<
-  typeof byLeadGenFormIdParamsSchema
->;
+export type ByWaSettingsIdParamsSchema = z.infer<typeof byWaSettingsIdParamsSchema>;
+export type ByLeadGenFormIdParamsSchema = z.infer<typeof byLeadGenFormIdParamsSchema>;
 export type ByFbPageQuerySchema = z.infer<typeof byFbPageQuerySchema>;
-export type ByAdAccountIdParamsSchema = z.infer<
-  typeof byAdAccountIdParamsSchema
->;
-export type whatsappSettingsIdParamSchema = z.infer<
-  typeof whatsappSettingsIdParamSchema
->;
+export type ByAdAccountIdParamsSchema = z.infer<typeof byAdAccountIdParamsSchema>;
+export type whatsappSettingsIdParamSchema = z.infer<typeof whatsappSettingsIdParamSchema>;
 
 const conversationalAutomationCommandSchema = z.object({
   command_name: z.string().max(32),
@@ -181,9 +173,7 @@ const conversationalAutomationSchema = z.object({
   prompts: z.array(z.string().max(80)).max(4).optional(),
 });
 
-export type ConversationalAutomationInput = z.infer<
-  typeof conversationalAutomationSchema
->;
+export type ConversationalAutomationInput = z.infer<typeof conversationalAutomationSchema>;
 
 // Auto-exported after fastify-zod migration
 export {

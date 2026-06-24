@@ -3,10 +3,7 @@ import { getIp } from "../../../utils/http.js";
 import { tokenizeIp } from "./wa_redirect.service.js";
 import prisma from "../../../utils/prisma.js";
 
-export async function tokenizeIpHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function tokenizeIpHandler(request: FastifyRequest, reply: FastifyReply) {
   const ip = getIp(request);
   const token = await tokenizeIp(ip);
   reply.send({ token });

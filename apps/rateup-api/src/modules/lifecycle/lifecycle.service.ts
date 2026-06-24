@@ -1,8 +1,5 @@
 import prisma from "../../utils/prisma.js";
-import {
-  LifecycleBodySchema,
-  LifecycleReorderSchema,
-} from "./lifecycle.schema.js";
+import { LifecycleBodySchema, LifecycleReorderSchema } from "./lifecycle.schema.js";
 
 export async function getLifecycles(orgId: string) {
   return await prisma.lifecycle.findMany({
@@ -33,10 +30,7 @@ export async function getLifeCyclesWithContactCount(orgId: string) {
   });
 }
 
-export async function updateLifecycle(
-  lifecycleId: string,
-  data: LifecycleBodySchema,
-) {
+export async function updateLifecycle(lifecycleId: string, data: LifecycleBodySchema) {
   await prisma.lifecycle.update({
     where: {
       id: lifecycleId,
@@ -45,10 +39,7 @@ export async function updateLifecycle(
   });
 }
 
-export async function createLifecycle(
-  orgId: string,
-  data: LifecycleBodySchema,
-) {
+export async function createLifecycle(orgId: string, data: LifecycleBodySchema) {
   await prisma.lifecycle.create({
     data: {
       orgId,
@@ -65,10 +56,7 @@ export async function deleteLifecycleById(id: string) {
   });
 }
 
-export async function reorderLabels(
-  orgId: string,
-  data: LifecycleReorderSchema,
-) {
+export async function reorderLabels(orgId: string, data: LifecycleReorderSchema) {
   return await prisma.$transaction(
     data.lifecycles.map((lifecycle) =>
       prisma.lifecycle.update({
@@ -80,12 +68,7 @@ export async function reorderLabels(
           ordering: lifecycle.ordering,
           isDefault: lifecycle.ordering === 0 && lifecycle.category !== "lost",
           isWon: lifecycle.isWon,
-          category:
-            lifecycle.category === "lost"
-              ? "lost"
-              : lifecycle.isWon
-                ? "won"
-                : "active",
+          category: lifecycle.category === "lost" ? "lost" : lifecycle.isWon ? "won" : "active",
         },
       }),
     ),

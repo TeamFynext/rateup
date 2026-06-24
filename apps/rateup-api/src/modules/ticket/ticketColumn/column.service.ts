@@ -18,8 +18,7 @@ export async function createColumn(data: ColumnInput) {
     select: { order: true },
   });
 
-  const order =
-    data.order ?? (highestOrderColumn ? highestOrderColumn.order + 1 : 0);
+  const order = data.order ?? (highestOrderColumn ? highestOrderColumn.order + 1 : 0);
 
   return prisma.ticketColumn.create({
     data: {

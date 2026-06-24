@@ -9,9 +9,7 @@ import {
   getCampaignParticipantsByCampaignIdExternalController,
 } from "./campaigns.external.controller.js";
 
-export async function externalCampaignParticipantRoutes(
-  server: FastifyInstance,
-) {
+export async function externalCampaignParticipantRoutes(server: FastifyInstance) {
   server.post(
     "/contacts",
     {

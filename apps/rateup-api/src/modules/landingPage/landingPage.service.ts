@@ -3,9 +3,7 @@ import prisma from "../../utils/prisma.js";
 import { getShortUrlId } from "../../utils/commonUtils.js";
 import { CreateLandingPageReqBody } from "./landingPage.schema.js";
 
-async function createLandingPageInDB(
-  req: FastifyRequest<{ Body: CreateLandingPageReqBody }>,
-) {
+async function createLandingPageInDB(req: FastifyRequest<{ Body: CreateLandingPageReqBody }>) {
   const {
     body: { name },
     user: { orgId, userId },
@@ -107,7 +105,7 @@ async function updatePageVisitInDB(req) {
   const {
     params: { shortUrlId },
   } = req;
-  const updatedRecord = await prisma.landingPage.update({
+  await prisma.landingPage.update({
     where: {
       shortUrlId,
     },

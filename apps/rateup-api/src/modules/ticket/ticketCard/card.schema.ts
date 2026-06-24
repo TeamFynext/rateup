@@ -1,9 +1,6 @@
 import { z } from "zod";
 
-import {
-  TicketPriority,
-  TicketType,
-} from "../../../../generated/prisma/client.js";
+import { TicketPriority, TicketType } from "../../../../generated/prisma/client.js";
 
 // Base schema for card
 const cardCore = {
@@ -13,6 +10,8 @@ const cardCore = {
   order: z.number().optional(),
   type: z.enum(TicketType).optional(),
   contactId: z.string().uuid().optional(),
+  surveyResponseId: z.string().optional(),
+  reviewId: z.string().optional(),
   priority: z.enum(TicketPriority).optional(),
   deadline: z.coerce.date().optional().nullable(),
 };

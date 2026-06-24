@@ -68,10 +68,7 @@ export async function getLoyaltyTemplateHandler(
   }
 }
 
-export async function getAllLoyaltyTemplateHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllLoyaltyTemplateHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const res = await getAllLoyaltyWaCommands(orgId);
@@ -90,10 +87,7 @@ export async function checkIfCommandExistInAutomation(
     const { orgId } = request.user;
     const { requestMessage } = request.body;
     const res = await getAutomatedRepliesByKeyWeords(orgId, requestMessage);
-    if (res)
-      return reply
-        .code(403)
-        .send("The request message already used in automation");
+    if (res) return reply.code(403).send("The request message already used in automation");
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

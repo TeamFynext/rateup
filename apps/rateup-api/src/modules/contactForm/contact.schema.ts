@@ -7,9 +7,7 @@ const createContactMessageInputSchema = z.object({
   address: z.string().optional(),
 });
 
-export type CreateContactMessageInput = z.infer<
-  typeof createContactMessageInputSchema
->;
+export type CreateContactMessageInput = z.infer<typeof createContactMessageInputSchema>;
 
 // Auto-exported after fastify-zod migration
 export { createContactMessageInputSchema };

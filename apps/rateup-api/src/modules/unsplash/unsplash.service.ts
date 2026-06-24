@@ -1,7 +1,4 @@
-import {
-  getUnsplashImageQueryString,
-  triggerDownloadUnsplashBody,
-} from "./unsplash.schema.js";
+import { getUnsplashImageQueryString, triggerDownloadUnsplashBody } from "./unsplash.schema.js";
 
 export async function getUnsplashImageList({
   page = 1,
@@ -21,8 +18,6 @@ export async function getUnsplashImageList({
 export async function triggerDownloadUnsplashImage({
   downloadLocation,
 }: triggerDownloadUnsplashBody) {
-  const response = await fetch(
-    `${downloadLocation}&client_id=${process.env.UNSPLASH_ACCESS_KEY}`,
-  );
+  const response = await fetch(`${downloadLocation}&client_id=${process.env.UNSPLASH_ACCESS_KEY}`);
   return response?.json();
 }

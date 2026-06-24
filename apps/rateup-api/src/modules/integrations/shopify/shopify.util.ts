@@ -37,7 +37,7 @@ export function getScheduledTime(sendAfter) {
     case ShopifySendAfter.OneDay:
       scheduledTime = currentTime.add(1, "day");
       break;
-    case ShopifySendAfter.OneDay:
+    case ShopifySendAfter.TwoDays:
       scheduledTime = currentTime.add(2, "days");
       break;
   }

@@ -10,10 +10,7 @@ export { TeamFeature } from "../../generated/prisma/client.js";
  *
  * Cache this on req.features — one DB round-trip per request.
  */
-export async function getUserFeatures(
-  userId: string,
-  orgId: string,
-): Promise<Set<TeamFeature>> {
+export async function getUserFeatures(userId: string, orgId: string): Promise<Set<TeamFeature>> {
   const orgMember = await prisma.orgMember.findUnique({
     where: { userId_orgId: { userId, orgId } },
     select: { role: true },
@@ -42,10 +39,7 @@ export async function getUserFeatures(
  * Fastify preHandler that attaches req.features and req.can to every request.
  * Call once after checkSession.
  */
-export async function attachUserFeatures(
-  request: FastifyRequest,
-  _reply: FastifyReply,
-) {
+export async function attachUserFeatures(request: FastifyRequest, _reply: FastifyReply) {
   const { userId, orgId } = request.user;
   request.features = await getUserFeatures(userId, orgId);
   request.can = (feature: TeamFeature) => request.features.has(feature);
@@ -74,8 +68,7 @@ export function requireFeature(feature: TeamFeature) {
     }
 
     if (!request.features.has(requiredFeature)) {
-      const fallbackEmpty = (request.routeOptions.config as any)
-        ?.fallbackEmptyArray;
+      const fallbackEmpty = (request.routeOptions.config as any)?.fallbackEmptyArray;
 
       if (fallbackEmpty) {
         return reply.code(200).send([]);

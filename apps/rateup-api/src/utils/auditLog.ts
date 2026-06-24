@@ -8,10 +8,7 @@ const actionMap = {
   DELETE: "Delete",
 };
 
-export async function auditLogHook(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function auditLogHook(request: FastifyRequest, _reply: FastifyReply) {
   // Skip GET requests
   if (request.method === "GET") return;
 

@@ -12,9 +12,7 @@ export async function verifyMenuCategoryAccess(
   const categoryId = request.params.categoryId;
   const hasAccess = await hasAccessToCategory(categoryId, request.userId);
   if (!hasAccess) {
-    reply
-      .code(403)
-      .send({ message: "You don't have access to this menu item" });
+    reply.code(403).send({ message: "You don't have access to this menu item" });
   }
 }
 

@@ -44,9 +44,8 @@ export const shopifySurveyQueue = new Queue("shopifySurveyQueue", {
   connection,
 });
 
-export const notificationQueue = new Queue<NotificationJobData>(
-  "notificationQueue",
-  { connection },
-);
+export const notificationQueue = new Queue<NotificationJobData>("notificationQueue", {
+  connection,
+});
 
 export default connection;

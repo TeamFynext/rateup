@@ -77,12 +77,8 @@ const searchQuerySchema = z.object({
   name: z.string().optional(),
 });
 
-export type CustomerLoyaltyAccountInput = z.infer<
-  typeof customerLoyaltyAccountSchema
->;
-export type CustomerLoyaltyAccountUpdateInput = z.infer<
-  typeof customerLoyaltyAccountUpdateSchema
->;
+export type CustomerLoyaltyAccountInput = z.infer<typeof customerLoyaltyAccountSchema>;
+export type CustomerLoyaltyAccountUpdateInput = z.infer<typeof customerLoyaltyAccountUpdateSchema>;
 export type CustomerIdParam = z.infer<typeof customerIdParamSchema>;
 export type ContactIdParam = z.infer<typeof contactIdParamSchema>;
 export type PhoneNumberParam = z.infer<typeof phoneNumberParamSchema>;

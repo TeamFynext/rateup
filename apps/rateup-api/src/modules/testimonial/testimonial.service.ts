@@ -2,10 +2,7 @@ import { QuestionType } from "../../types/enums.js";
 import prisma from "../../utils/prisma.js";
 import { CreateResponseInput } from "../response/response.schema.js";
 
-export async function createTestimonial(
-  responseData: CreateResponseInput,
-  responseId,
-) {
+export async function createTestimonial(responseData: CreateResponseInput, responseId) {
   const hasTestimonialResponse = responseData.responses.some(
     (res) => res?.type === QuestionType.Testimonial,
   );
@@ -13,7 +10,7 @@ export async function createTestimonial(
   const testimonialRes = responseData.responses.filter(
     (res) => res.type == QuestionType.Testimonial,
   );
-  let testimonial = await prisma.testimonial.createMany({
+  await prisma.testimonial.createMany({
     data: testimonialRes.map((tr) => {
       return {
         responseId,

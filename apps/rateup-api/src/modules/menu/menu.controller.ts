@@ -1,9 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import {
-  CreateMenuInput,
-  ByMenuIdParams,
-  UpdateMenuInput,
-} from "./menu.schema.js";
+import { CreateMenuInput, ByMenuIdParams, UpdateMenuInput } from "./menu.schema.js";
 import {
   createMenu,
   deleteMenu,
@@ -31,10 +27,7 @@ export async function createMenuHandler(
   reply.send(menu);
 }
 
-export async function getAllMenusHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllMenusHandler(request: FastifyRequest, reply: FastifyReply) {
   const userData = await getLoggedUserInfo(request, reply);
 
   const menus = await getAllMenus(userData);

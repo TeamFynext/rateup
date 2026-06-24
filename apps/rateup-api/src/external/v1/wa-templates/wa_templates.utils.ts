@@ -12,14 +12,9 @@ import {
   WHATSAPP_BUTTON_TYPE,
 } from "../../../types/whatsapp.types.js";
 import { parseStringWithVariables } from "../../../utils/template.js";
-import {
-  CreateWaTemplateFormattedInput,
-  CreateWaTemplateInput,
-} from "./wa_templates.schema.js";
+import { CreateWaTemplateFormattedInput, CreateWaTemplateInput } from "./wa_templates.schema.js";
 
-export function generateTemplate(
-  input: CreateWaTemplateInput,
-): CreateWaTemplateFormattedInput {
+export function generateTemplate(input: CreateWaTemplateInput): CreateWaTemplateFormattedInput {
   // TODO: remove 'any' type
   let components: any = [];
   if (parseStringWithVariables(input.body)?.length > 0) {
@@ -76,22 +71,13 @@ export function generateTemplate(
     name: input.name,
     components,
     language: input.language,
-    category:
-      (input.category as WaTemplateCategory) ?? WaTemplateCategory.MARKETING,
+    category: (input.category as WaTemplateCategory) ?? WaTemplateCategory.MARKETING,
   };
 }
 
-export const waAllowedMimeTypes = [
-  "image/jpeg",
-  "image/png",
-  "video/mp4",
-  "application/pdf",
-];
+export const waAllowedMimeTypes = ["image/jpeg", "image/png", "video/mp4", "application/pdf"];
 
-export function getTemplateInMessageFormat(
-  messageBody: WaSendMessageBody,
-  parameterData: any,
-) {
+export function getTemplateInMessageFormat(messageBody: WaSendMessageBody, parameterData: any) {
   function getHeaderObject(header: WaTemplateFetchComponents) {
     const commonHeader = {
       type: "header",
@@ -172,11 +158,7 @@ export function getTemplateInMessageFormat(
   };
 }
 
-export async function getTemplateQuery(
-  templateId: string,
-  orgId: string,
-  paramerterData: any,
-) {
+export async function getTemplateQuery(templateId: string, orgId: string, paramerterData: any) {
   const dbTemplate = await getTemplateByIdAndOrgId(templateId, orgId);
   const { data } = dbTemplate;
   const commonQuery = {
@@ -287,9 +269,7 @@ export const templateFileUploadSchema = z
   .superRefine((file, ctx) => {
     const config = allowedMimeTypes[file.type];
     // Check if mimeType is allowed for any type
-    const allAllowedMimeTypes = Object.values(allowedMimeTypes).flatMap(
-      (c) => c.mimeTypes,
-    );
+    const allAllowedMimeTypes = Object.values(allowedMimeTypes).flatMap((c) => c.mimeTypes);
     const isMimeTypeKnown = allAllowedMimeTypes.includes(file.mimeType);
     if (!isMimeTypeKnown) {
       ctx.addIssue({

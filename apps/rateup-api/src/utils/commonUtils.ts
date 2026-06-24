@@ -7,10 +7,7 @@ const getShortUrlId = () => {
   return customAlphabet(nolookalikesSafe, 8)();
 };
 
-const shortIdUniqueConstraintErrHandler = async (
-  functionToBeHandled,
-  ...args
-) => {
+const shortIdUniqueConstraintErrHandler = async (functionToBeHandled, ...args) => {
   try {
     return await functionToBeHandled(...args);
   } catch (err) {
@@ -44,12 +41,6 @@ const asyncErrHandler = (
   };
 };
 
-const isEmptyString = (str: string): string | null =>
-  !str || !str.trim().length ? null : str;
+const isEmptyString = (str: string): string | null => (!str || !str.trim().length ? null : str);
 
-export {
-  asyncErrHandler,
-  getShortUrlId,
-  shortIdUniqueConstraintErrHandler,
-  isEmptyString,
-};
+export { asyncErrHandler, getShortUrlId, shortIdUniqueConstraintErrHandler, isEmptyString };

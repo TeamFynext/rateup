@@ -1,16 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import {
-  createNewTestSession,
-  createTestUser,
-  initTestSupertokens,
-} from "../../utils/test/test.setup.utils.js";
-import prisma from "../../utils/prisma.js";
-import { deleteUser, getOrgIdAndRole } from "../user/user.service.js";
-import { getSubscription } from "./subscription.service.js";
-import dayjs from "dayjs";
+import { initTestSupertokens } from "../../utils/test/test.setup.utils.js";
+import { deleteUser } from "../user/user.service.js";
+
 import build from "../../app.js";
 
-const timeout = 30 * 1000;
 const fastifyInstance = await build();
 
 beforeAll(() => {
@@ -28,11 +21,11 @@ afterAll(async () => {
 });
 afterAll(async () => await fastifyInstance.close());
 
-const createTemporaryTestUser = async () => {
-  const user = await createTestUser(fastifyInstance);
-  testUsers.push(user.id);
-  return user;
-};
+// const createTemporaryTestUser = async () => {
+//   const user = await createTestUser(fastifyInstance);
+//   testUsers.push(user.id);
+//   return user;
+// };
 describe("Subscription", () => {
   test("test", () => {
     expect(1 + 1).toBe(2);

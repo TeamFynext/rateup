@@ -18,11 +18,7 @@ import {
   syncZohoLeads,
 } from "./zoho.service.js";
 import axios from "axios";
-import {
-  getZohoRecordById,
-  registerZohoWebhook,
-  unsubscribeZohoWebhook,
-} from "./zoho.client.js";
+import { getZohoRecordById, registerZohoWebhook, unsubscribeZohoWebhook } from "./zoho.client.js";
 import { generateRandomAlphaId } from "../../../../utils/misc/random.utils.js";
 import { ZohoProduct } from "./zoho.client.js";
 
@@ -55,10 +51,7 @@ export async function zohoAuthenticationHandler(
     log.info("Starting Zoho OAuth authentication for orgId=%s", orgId);
 
     // Prevent duplicate active integrations
-    const existingIntegration = await getIntegrationByName(
-      orgId,
-      IntegratedApps.zoho,
-    );
+    const existingIntegration = await getIntegrationByName(orgId, IntegratedApps.zoho);
 
     if (existingIntegration?.active) {
       return reply.code(200).send({
@@ -70,22 +63,17 @@ export async function zohoAuthenticationHandler(
     const redirect_uri = `${process.env.FRONTEND_URL}/dashboard/settings/integrations/zoho/callback`;
 
     // Exchange authorization code for tokens
-    const response = await axios.post(
-      "https://accounts.zoho.in/oauth/v2/token",
-      null,
-      {
-        params: {
-          grant_type: "authorization_code",
-          client_id: process.env.ZOHO_CLIENT_ID,
-          client_secret: process.env.ZOHO_CLIENT_SECRET,
-          redirect_uri,
-          code,
-        },
+    const response = await axios.post("https://accounts.zoho.in/oauth/v2/token", null, {
+      params: {
+        grant_type: "authorization_code",
+        client_id: process.env.ZOHO_CLIENT_ID,
+        client_secret: process.env.ZOHO_CLIENT_SECRET,
+        redirect_uri,
+        code,
       },
-    );
+    });
 
-    const { access_token, refresh_token, expires_in, api_domain, scope } =
-      response.data;
+    const { access_token, refresh_token, expires_in, api_domain, scope } = response.data;
 
     if (!access_token) {
       log.error("Zoho OAuth exchange failed => %o", response.data);
@@ -173,10 +161,7 @@ export async function zohoAuthenticationHandler(
 
       credential.isWebhookRegistered = true;
     } catch (err: any) {
-      log.error(
-        "Failed to register Zoho webhook => %o",
-        err?.response?.data || err,
-      );
+      log.error("Failed to register Zoho webhook => %o", err?.response?.data || err);
       credential.isWebhookRegistered = false;
     }
 
@@ -205,10 +190,7 @@ export async function zohoAuthenticationHandler(
       message: "Zoho connected successfully",
     });
   } catch (error: any) {
-    log.error(
-      "Zoho authentication error => %o",
-      error?.response?.data || error,
-    );
+    log.error("Zoho authentication error => %o", error?.response?.data || error);
 
     return reply.code(500).send({
       success: false,
@@ -249,10 +231,7 @@ export async function syncZohoContactsHandler(
   }
 }
 
-export async function syncZohoLeadsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function syncZohoLeadsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const orgId = request.user.orgId;
 
@@ -411,10 +390,7 @@ export async function getZohoPipelinesHandler(
   }
 }
 
-export const handleZohoWebhook = async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
+export const handleZohoWebhook = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const { product } = request.params as {
       product: ZohoProduct;

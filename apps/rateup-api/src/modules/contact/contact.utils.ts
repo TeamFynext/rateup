@@ -18,9 +18,7 @@ export async function verifyLCustomerMaxCountRestrictionHandler(
   try {
     if (request.body.source !== ContactGroupType.LOYALTY) return;
     const orgId = request.body.orgId ?? request.user.orgId;
-    if (
-      !(await verifyLCustomerMaxCountRestriction(orgId, request.subscription))
-    ) {
+    if (!(await verifyLCustomerMaxCountRestriction(orgId, request.subscription))) {
       return reply.code(403).send({
         message: "Registration limit reached",
         displayMessageInClient: true,
@@ -130,10 +128,7 @@ export async function createLCustomer(input: any) {
       skipDuplicates: true,
     });
   }
-  await updateMonthlyStat(
-    SubscriptionFeaturePathName.LoyaltyCustomer,
-    input.orgId,
-  );
+  await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyCustomer, input.orgId);
 
   // const customer = contact.loyaltyCustomer;
   return {
@@ -146,7 +141,7 @@ export async function createLCustomer(input: any) {
   };
 }
 
-export async function handlePostRegisterAction(orgId, customerId) {
+export async function handlePostRegisterAction(_orgId, _customerId) {
   // for (const action of registerActions) {
   //   const { success, data, message } = await handleLCustomerAction({
   //     action,
@@ -165,12 +160,7 @@ export async function handlePostRegisterAction(orgId, customerId) {
   // }
 }
 
-export async function handleSendTemplate(
-  waTemplateId,
-  orgId,
-  phone,
-  dynamicVariables,
-) {
+export async function handleSendTemplate(waTemplateId, orgId, phone, dynamicVariables) {
   if (!waTemplateId) {
     log.trace("No template Id found");
     return;

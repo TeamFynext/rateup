@@ -9,43 +9,25 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
         orgId,
       },
       update: {
-        monthlySurveyResponses:
-          stat === "survey" ? { increment: 1 } : undefined,
+        monthlySurveyResponses: stat === "survey" ? { increment: 1 } : undefined,
         monthlyMenuViews: stat === "menu" ? { increment: 1 } : undefined,
         surveyResponsesCount: stat === "survey" ? { increment: 1 } : undefined,
         menuViewsCount: stat === "menu" ? { increment: 1 } : undefined,
         monthlyMessagesCount:
-          stat === SubscriptionFeaturePathName.Whatsapp
-            ? { increment: 1 }
-            : undefined,
-        messagesCount:
-          stat === SubscriptionFeaturePathName.Whatsapp
-            ? { increment: 1 }
-            : undefined,
+          stat === SubscriptionFeaturePathName.Whatsapp ? { increment: 1 } : undefined,
+        messagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? { increment: 1 } : undefined,
         waSurveysCount:
-          stat === SubscriptionFeaturePathName.WhatsAppSurvey
-            ? { increment: 1 }
-            : undefined,
+          stat === SubscriptionFeaturePathName.WhatsAppSurvey ? { increment: 1 } : undefined,
         waSurveyResponsesCount:
-          stat === SubscriptionFeaturePathName.WhatsAppSurvey
-            ? { increment: 1 }
-            : undefined,
+          stat === SubscriptionFeaturePathName.WhatsAppSurvey ? { increment: 1 } : undefined,
         loyaltyActionCount:
-          stat === SubscriptionFeaturePathName.LoyaltyAction
-            ? { increment: 1 }
-            : undefined,
+          stat === SubscriptionFeaturePathName.LoyaltyAction ? { increment: 1 } : undefined,
         loyaltyRewardCount:
-          stat === SubscriptionFeaturePathName.LoyaltyReward
-            ? { increment: 1 }
-            : undefined,
+          stat === SubscriptionFeaturePathName.LoyaltyReward ? { increment: 1 } : undefined,
         loyaltyCustomerCount:
-          stat === SubscriptionFeaturePathName.LoyaltyCustomer
-            ? { increment: 1 }
-            : undefined,
+          stat === SubscriptionFeaturePathName.LoyaltyCustomer ? { increment: 1 } : undefined,
         annualMessageCount:
-          stat === SubscriptionFeaturePathName.Whatsapp
-            ? { increment: 1 }
-            : undefined,
+          stat === SubscriptionFeaturePathName.Whatsapp ? { increment: 1 } : undefined,
         ...(stat === SubscriptionFeaturePathName.WhatsAppTemplate
           ? {
               templateMessagesCount: { increment: 1 },
@@ -65,21 +47,14 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
 
         surveyResponsesCount: stat === "survey" ? 1 : 0,
         menuViewsCount: stat === "menu" ? 1 : 0,
-        monthlyMessagesCount:
-          stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
+        monthlyMessagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
         messagesCount: stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
-        waSurveysCount:
-          stat === SubscriptionFeaturePathName.WhatsAppSurvey ? 1 : 0,
-        waSurveyResponsesCount:
-          stat === SubscriptionFeaturePathName.WhatsAppSurvey ? 1 : 0,
-        loyaltyActionCount:
-          stat === SubscriptionFeaturePathName.LoyaltyAction ? 1 : 0,
-        loyaltyRewardCount:
-          stat === SubscriptionFeaturePathName.LoyaltyReward ? 1 : 0,
-        loyaltyCustomerCount:
-          stat === SubscriptionFeaturePathName.LoyaltyCustomer ? 1 : 0,
-        annualMessageCount:
-          stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
+        waSurveysCount: stat === SubscriptionFeaturePathName.WhatsAppSurvey ? 1 : 0,
+        waSurveyResponsesCount: stat === SubscriptionFeaturePathName.WhatsAppSurvey ? 1 : 0,
+        loyaltyActionCount: stat === SubscriptionFeaturePathName.LoyaltyAction ? 1 : 0,
+        loyaltyRewardCount: stat === SubscriptionFeaturePathName.LoyaltyReward ? 1 : 0,
+        loyaltyCustomerCount: stat === SubscriptionFeaturePathName.LoyaltyCustomer ? 1 : 0,
+        annualMessageCount: stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
         ...(stat === SubscriptionFeaturePathName.WhatsAppTemplate
           ? {
               templateMessagesCount: 1,
@@ -92,16 +67,14 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
               annualTemplateMessageCount: 0,
             }),
         monthlyAutomationTriggerCount:
-          stat === SubscriptionFeaturePathName.WhatsAppAutomationTrigger
-            ? 1
-            : 0,
+          stat === SubscriptionFeaturePathName.WhatsAppAutomationTrigger ? 1 : 0,
         //TODO: improve
         // Add other fields with default values as needed
       },
     });
 
     return statUpdate;
-  } catch (error) {
+  } catch {
     throw new Error("Failed to update Stat");
   }
 }
@@ -111,10 +84,7 @@ export async function resetMonthlyCounts() {
   try {
     const resetMonthlyStats = await prisma.usageStats.updateMany({
       where: {
-        lastMonthlyResettedDate: dayjs()
-          .startOf("D")
-          .subtract(30, "D")
-          .toDate(),
+        lastMonthlyResettedDate: dayjs().startOf("D").subtract(30, "D").toDate(),
         org: {
           Subscription: {
             basePlan: {
@@ -140,7 +110,7 @@ export async function resetMonthlyCounts() {
       },
     });
     return resetMonthlyStats;
-  } catch (error) {
+  } catch {
     throw new Error("Error reseting monthly counts.");
   }
 }
@@ -173,7 +143,7 @@ export async function getUsageStat(orgId: string) {
     });
 
     return statRes;
-  } catch (error) {
+  } catch {
     throw new Error("Failed to fetch stats");
   }
 }
@@ -221,11 +191,7 @@ export async function createStats(orgId: string) {
     });
 
     const currentDate = new Date();
-    const startOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1,
-    );
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 
     const surveyResponsesCountCurrentMonth = await prisma.surveyResponse.count({
       where: {

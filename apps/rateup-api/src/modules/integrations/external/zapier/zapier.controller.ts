@@ -1,17 +1,10 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../../utils/logger.js";
-import {
-  getIntegrationByName,
-  updateIntegrationByName,
-} from "../../integrations.service.js";
-import {
-  IntegratedApps,
-  WaMessageAssignStatus,
-} from "../../../../types/enums.js";
+import { getIntegrationByName, updateIntegrationByName } from "../../integrations.service.js";
+import { IntegratedApps, WaMessageAssignStatus } from "../../../../types/enums.js";
 import { ByOrgIdParams } from "../../../org/org.schema.js";
 import bcrypt from "bcrypt";
 import { Role } from "../../../org/org.services.js";
-import { ContactCore } from "../../../contact/contact.schema.js";
 import {
   deleteContactById,
   getContactById,
@@ -20,7 +13,6 @@ import {
 } from "../../../contact/contact.service.js";
 import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import {
-  addZapierTriggerToQueue,
   deleteContactByPhoneNumberAndOrgId,
   getContactsByPhoneNumberAndOrgId,
   getLifecyclesByOrgId,
@@ -30,20 +22,13 @@ import {
   getUserIdByEmailAndOrgId,
   ZapierTriggers,
 } from "./zapier.service.js";
-import { TicketPriority } from "../../../../../generated/prisma/enums.js";
-import {
-  CardInput,
-  createCard,
-} from "../../../ticket/ticketCard/card.service.js";
+import { CardInput, createCard } from "../../../ticket/ticketCard/card.service.js";
 import {
   addNewContactsToGroup,
   getContactGroupsByOrgId,
   getContactGroupsByTeamId,
 } from "../../../contact/contactGroup/contactGroup.service.js";
-import {
-  getTeamsByOrgId,
-  inviteTeamMember,
-} from "../../../team/team.service.js";
+import { getTeamsByOrgId, inviteTeamMember } from "../../../team/team.service.js";
 import { InviteType } from "../../../team/team.schema.js";
 import {
   BoardQueryInput,
@@ -93,33 +78,20 @@ export async function zapierAuthenticationHandler(
       IntegratedApps.zapier,
     )) as unknown as ZapierIntegration;
 
-    if (
-      !integration ||
-      !integration.active ||
-      !integration.credential?.accessToken
-    ) {
-      log.error(
-        "Active Zapier integration or access token not found for orgId => %s",
-        orgId,
-      );
+    if (!integration || !integration.active || !integration.credential?.accessToken) {
+      log.error("Active Zapier integration or access token not found for orgId => %s", orgId);
       reply.code(401).send({
         message: "Not authorized",
-        error:
-          "Zapier integration or access token not found for the organization",
+        error: "Zapier integration or access token not found for the organization",
       });
       return;
     }
 
-    const isValid = await bcrypt.compare(
-      apiKey,
-      integration.credential?.accessToken,
-    );
+    const isValid = await bcrypt.compare(apiKey, integration.credential?.accessToken);
 
     if (!isValid) {
       log.error("Invalid access token\n%o", request.headers);
-      reply
-        .code(401)
-        .send({ message: "Not authorized", error: "Invalid access token" });
+      reply.code(401).send({ message: "Not authorized", error: "Invalid access token" });
       return;
     }
 
@@ -158,10 +130,7 @@ export async function subscribeTriggerHandler(
   reply: FastifyReply,
 ) {
   try {
-    log.info(
-      "zapier trigger subscription received with body => %o",
-      request.body,
-    );
+    log.info("zapier trigger subscription received with body => %o", request.body);
     const { orgId } = request.query;
     const { hookUrl, subscribed_field, zapId } = request.body;
     const integration = (await getIntegrationByName(
@@ -217,10 +186,7 @@ export async function unsubscribeTriggerHandler(
   reply: FastifyReply,
 ) {
   try {
-    log.info(
-      "zapier trigger subscription removal received with body => %o",
-      request.body,
-    );
+    log.info("zapier trigger subscription removal received with body => %o", request.body);
     const { orgId } = request.query;
     const integration = (await getIntegrationByName(
       orgId,
@@ -390,10 +356,7 @@ export async function getTicketBoardsByTeamIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const data = await getTicketBoardsByTeamId(
-      request.query.teamId,
-      request.query.page,
-    );
+    const data = await getTicketBoardsByTeamId(request.query.teamId, request.query.page);
     reply.send(data);
   } catch (e) {
     log.error(e);
@@ -446,11 +409,7 @@ export async function addContactToGroupHandler(
 ) {
   try {
     const { orgId } = request.query;
-    const res = await addNewContactsToGroup(
-      request.body.groupId,
-      request.body.contacts as any,
-      orgId,
-    );
+    await addNewContactsToGroup(request.body.groupId, request.body.contacts as any, orgId);
     reply.send({ success: true });
   } catch (e) {
     log.error(e);
@@ -469,7 +428,7 @@ export async function inviteMemberHandler(
     const { orgId } = request.query;
     const { invitedByEmail, ...rest } = request.body;
     const invitedBy = await getUserIdByEmailAndOrgId(invitedByEmail, orgId);
-    const res = await inviteTeamMember({
+    await inviteTeamMember({
       orgId,
       type: InviteType.TEAM,
       invitedBy: invitedBy.userId,

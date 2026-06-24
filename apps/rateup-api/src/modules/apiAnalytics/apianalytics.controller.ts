@@ -21,12 +21,7 @@ export async function getApiAnalyticsHandler(
   const teamId = request.query?.teamId;
   const apiType = request.query?.apiType ?? "all";
   try {
-    const res = await getWaMessageOverviewByTeamAndOrg(
-      teamId,
-      orgId,
-      dateRange,
-      apiType,
-    );
+    const res = await getWaMessageOverviewByTeamAndOrg(teamId, orgId, dateRange, apiType);
     reply.send(res);
   } catch (e) {
     log.error("Error fetching api analytics :%o", e);

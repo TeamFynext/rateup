@@ -29,16 +29,15 @@ const getLandingPagesRouteOptions: RouteShorthandOptionsWithHandler = {
   handler: asyncErrHandler(getLandingPages),
 };
 
-const getLandingPageWithShortIdRouteOptions: RouteShorthandOptionsWithHandler =
-  {
-    schema: {
-      params: getLandingPageWithShortIdParams,
-      response: {
-        "2xx": landingPageBaseSchema,
-      },
+const getLandingPageWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = {
+  schema: {
+    params: getLandingPageWithShortIdParams,
+    response: {
+      "2xx": landingPageBaseSchema,
     },
-    handler: asyncErrHandler(getLandingPageWithShortId),
-  };
+  },
+  handler: asyncErrHandler(getLandingPageWithShortId),
+};
 
 const createLandingPageRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {
@@ -50,16 +49,15 @@ const createLandingPageRouteOptions: RouteShorthandOptionsWithHandler = {
   handler: asyncErrHandler(createLandingPage),
 };
 
-const updateLandingPageWithShortIdRouteOptions: RouteShorthandOptionsWithHandler =
-  {
-    schema: {
-      body: updateLandingPageReqBody,
-      response: {
-        "2xx": landingPageBaseSchema,
-      },
+const updateLandingPageWithShortIdRouteOptions: RouteShorthandOptionsWithHandler = {
+  schema: {
+    body: updateLandingPageReqBody,
+    response: {
+      "2xx": landingPageBaseSchema,
     },
-    handler: asyncErrHandler(updateLandingPageWithShortId),
-  };
+  },
+  handler: asyncErrHandler(updateLandingPageWithShortId),
+};
 
 const deleteLandingPageByIdRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {
@@ -68,21 +66,19 @@ const deleteLandingPageByIdRouteOptions: RouteShorthandOptionsWithHandler = {
   handler: asyncErrHandler(deleteLandingPageById),
 };
 
-const getPublicLandingPageWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler =
-  {
-    schema: {},
-    config: { isPublic: true },
-    handler: asyncErrHandler(getPublicLandingPageWithShortId),
-  };
+const getPublicLandingPageWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler = {
+  schema: {},
+  config: { isPublic: true },
+  handler: asyncErrHandler(getPublicLandingPageWithShortId),
+};
 
-const updatePageVisitsWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler =
-  {
-    schema: {
-      params: updatePageVisitsReqParams,
-    },
-    config: { isPublic: true },
-    handler: asyncErrHandler(updatePageVisits),
-  };
+const updatePageVisitsWithShortIdRouteOptions: CustomRouteShortHandOptionsWithHandler = {
+  schema: {
+    params: updatePageVisitsReqParams,
+  },
+  config: { isPublic: true },
+  handler: asyncErrHandler(updatePageVisits),
+};
 
 export {
   createLandingPageRouteOptions,

@@ -80,10 +80,9 @@ export const SuperTokensConfig: TypeInput = {
         functions: (originalImplementation) => ({
           ...originalImplementation,
           signUp: async function (input) {
-            const existingUsers = await supertokens.listUsersByAccountInfo(
-              input.tenantId,
-              { email: input.email },
-            );
+            const existingUsers = await supertokens.listUsersByAccountInfo(input.tenantId, {
+              email: input.email,
+            });
 
             if (existingUsers.length === 0) {
               const response = await originalImplementation.signUp(input);
@@ -134,10 +133,7 @@ export const SuperTokensConfig: TypeInput = {
               const website = getValueByKey(formFields, "website");
               const industry = getValueByKey(formFields, "industry");
               const goals = getValueByKey(formFields, "goals");
-              const integrationsSelected = getValueByKey(
-                formFields,
-                "integrationsSelected",
-              );
+              const integrationsSelected = getValueByKey(formFields, "integrationsSelected");
               const teamSize = getValueByKey(formFields, "teamSize");
               const referralCode = getValueByKey(formFields, "referralCode");
 
@@ -212,10 +208,7 @@ export const SuperTokensConfig: TypeInput = {
                   clientType: "web",
                   additionalConfig: {
                     keyId: appConfig.supertokens.appleKeyId,
-                    privateKey: appConfig.supertokens.applePrivateKey.replace(
-                      /\\n/g,
-                      "\n",
-                    ),
+                    privateKey: appConfig.supertokens.applePrivateKey.replace(/\\n/g, "\n"),
                     teamId: appConfig.supertokens.appleTeamId,
                   },
                 },
@@ -224,10 +217,7 @@ export const SuperTokensConfig: TypeInput = {
                   clientType: "mobile",
                   additionalConfig: {
                     keyId: appConfig.supertokens.appleKeyId,
-                    privateKey: appConfig.supertokens.applePrivateKey.replace(
-                      /\\n/g,
-                      "\n",
-                    ),
+                    privateKey: appConfig.supertokens.applePrivateKey.replace(/\\n/g, "\n"),
                     teamId: appConfig.supertokens.appleTeamId,
                   },
                 },
@@ -241,10 +231,7 @@ export const SuperTokensConfig: TypeInput = {
           ...originalImplementation,
           signInUp: async function (input) {
             const clientType = input.userContext.clientType;
-            const existingUsers = await getUserInfo(
-              input.email,
-              input.tenantId,
-            );
+            const existingUsers = await getUserInfo(input.email, input.tenantId);
 
             if (clientType === "mobile" && existingUsers.length === 0) {
               throw new Error(
@@ -356,8 +343,7 @@ export const SuperTokensConfig: TypeInput = {
             }
             // First we call the original implementation
 
-            const response =
-              await originalImplementation.verifyEmailPOST(input);
+            const response = await originalImplementation.verifyEmailPOST(input);
 
             if (response.status === "OK") {
               log.trace("Verifying email\n%o", JSON.stringify(response.user));
@@ -375,32 +361,6 @@ export const SuperTokensConfig: TypeInput = {
 };
 
 // Swagger tags
-const loyaltyTags = [
-  {
-    name: "Loyalty/Campaign",
-    description: "Loyalty Campaign related endpoints",
-  },
-  {
-    name: "Loyalty/Campaign Reward",
-    description: "Loyalty Campaign Reward related endpoints",
-  },
-  {
-    name: "Loyalty/Customer",
-    description: "Loyalty Customer related endpoints",
-  },
-  {
-    name: "Loyalty/Campaign -> RewardEvent",
-    description: "RewardEvent of a campaign related endpoints",
-  },
-  {
-    name: "Loyalty/Customer -> RewardEvent",
-    description: "RewardEvent of a customer related endpoints",
-  },
-  {
-    name: "Loyalty/ReferralCode",
-    description: "ReferralCode related endpoints",
-  },
-];
 
 const publicTags = [
   { name: "Contacts", description: "Contact related endpoints" },

@@ -4,16 +4,9 @@ import prisma from "../../../utils/prisma.js";
 import { getWaSettings } from "../settings/wa_settings.service.js";
 import { callMetaApi } from "../wa_axios.js";
 import { CreateWaTemplateInput } from "./wa_templates.schema.js";
-import {
-  generateTemplate,
-  getFlowIdFromTemplateComponents,
-} from "./wa_templates.utils.js";
+import { generateTemplate, getFlowIdFromTemplateComponents } from "./wa_templates.utils.js";
 import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
-import {
-  createSession,
-  deleteSession,
-  sendMessage,
-} from "../whatsappSurvey/wasurvey.service.js";
+import { createSession, deleteSession, sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 import {
   WaTemplateComponentType,
   WaTemplateStatus,
@@ -29,10 +22,7 @@ import { SendTemplateHeaderComponent } from "../../../external/v1/wa-templates/w
  * fetches templates from WhatsApp Business API
  * @returns
  */
-export async function fetchTemplates(
-  orgId: string,
-  whatsappSettingsPhoneId?: string,
-) {
+export async function fetchTemplates(orgId: string, whatsappSettingsPhoneId?: string) {
   try {
     const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
     if (!waSettings) {
@@ -221,11 +211,7 @@ export async function createTemplate(
     log.trace("Template Created in whatsapp %o", res.data);
   } else {
     // TODO: Parse error and send status to client
-    log.error(
-      "Error creating template in whatsapp res => %o,\ntemplate => %o",
-      res.data,
-      template,
-    );
+    log.error("Error creating template in whatsapp res => %o,\ntemplate => %o", res.data, template);
     throw new Error("Error creating template in whatsapp");
   }
   return { ...template, ...res.data };
@@ -273,11 +259,7 @@ export async function saveTemplate(
  * @param templateName
  * @returns
  */
-export async function deleteTemplate(
-  orgId: string,
-  templateId: string,
-  templateName: string,
-) {
+export async function deleteTemplate(orgId: string, templateId: string, templateName: string) {
   log.trace("Sending Delete req %o", { templateId, templateName });
   try {
     const waSettings = await getWaSettings(orgId);
@@ -356,12 +338,10 @@ export async function editTemplate(
   log.trace(`Updating template %o`, { templateId: hsm_id, components });
   try {
     const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
-    const res = await callMetaApi(
-      `/${hsm_id}`,
-      "POST",
-      waSettings.accessToken,
-      { category, components },
-    );
+    const res = await callMetaApi(`/${hsm_id}`, "POST", waSettings.accessToken, {
+      category,
+      components,
+    });
     if (res.status === 200) {
       log.trace("Template updated in whatsapp");
       return true;
@@ -383,10 +363,7 @@ export async function editTemplate(
 /**
  * First updates template in WhatsApp Business API then updates in db
  */
-export async function updateTemplate(
-  templateId: string,
-  data: CreateWaTemplateInput,
-) {
+export async function updateTemplate(templateId: string, data: CreateWaTemplateInput) {
   const template = await getDbTemplate(templateId);
   const formattedTemplate = generateTemplate(data);
   let res;
@@ -462,9 +439,7 @@ export async function updateTemplate(
  */
 function inferTemplateType(template: any): TemplateType {
   // Check if it's a carousel template
-  const hasCarousel = template.components?.some(
-    (c: any) => c.type?.toLowerCase() === "carousel",
-  );
+  const hasCarousel = template.components?.some((c: any) => c.type?.toLowerCase() === "carousel");
   if (hasCarousel) {
     return TemplateType.CAROUSEL;
   }
@@ -519,16 +494,11 @@ function extractDefaultValues(template: any): WaTemplateDefaultValues {
   return defaultValues;
 }
 
-export async function syncTemplates(
-  orgId: string,
-  whatsappSettingsPhoneIds: string[] = [],
-) {
+export async function syncTemplates(orgId: string, whatsappSettingsPhoneIds: string[] = []) {
   try {
     log.trace("Syncing templates for orgId %s", orgId);
 
-    const phoneIdsToSync = whatsappSettingsPhoneIds.length
-      ? whatsappSettingsPhoneIds
-      : [undefined];
+    const phoneIdsToSync = whatsappSettingsPhoneIds.length ? whatsappSettingsPhoneIds : [undefined];
     const dbTemplates = await getTemplatesByOrgId(orgId);
 
     const templateByWaId = new Map<string, any>();
@@ -553,8 +523,7 @@ export async function syncTemplates(
       for (const wt of waTemplates) {
         const existingByWaId = wt?.id ? templateByWaId.get(wt.id) : null;
         const nameAndPhoneKey = `${wt?.name ?? ""}|${whatsappSettingsPhoneId ?? ""}`;
-        const existingByNameAndPhone =
-          templateByNameAndPhone.get(nameAndPhoneKey);
+        const existingByNameAndPhone = templateByNameAndPhone.get(nameAndPhoneKey);
         const existingTemplate = existingByWaId ?? existingByNameAndPhone;
 
         if (existingTemplate) {
@@ -572,11 +541,7 @@ export async function syncTemplates(
 
         const templateType = inferTemplateType(wt);
         const defaultValues = extractDefaultValues(wt);
-        log.trace(
-          "Creating new template in DB: %s (type: %s)",
-          wt.name,
-          templateType,
-        );
+        log.trace("Creating new template in DB: %s (type: %s)", wt.name, templateType);
         const createdTemplate = await saveTemplate(
           wt,
           orgId,
@@ -612,16 +577,12 @@ export async function getUnregisteredTemplates(orgId: string) {
   const unregisteredTemplates = waTemplates.filter(
     (wt: any) =>
       !registeredTemplateIds.includes(wt.id) && // Filtering out already registered templates
-      wt.components.find((c) => c.type.toLowerCase() === "buttons")?.buttons
-        .length === 2, // Selecting templates with only 2 buttons. Filtering out the rest since it cant be used as template message.
+      wt.components.find((c) => c.type.toLowerCase() === "buttons")?.buttons.length === 2, // Selecting templates with only 2 buttons. Filtering out the rest since it cant be used as template message.
   );
   return unregisteredTemplates;
 }
 
-export async function registerTemplatesInDb(
-  dbTemplates: Array<any>,
-  orgId: string,
-) {
+export async function registerTemplatesInDb(dbTemplates: Array<any>, orgId: string) {
   await prisma.waTemplate.createMany({
     data: dbTemplates.map((dt: any) => {
       return {
@@ -633,11 +594,7 @@ export async function registerTemplatesInDb(
   });
 }
 
-export async function uploadFileToWaTemplate(
-  file: MultipartFile,
-  size: number,
-  orgId: string,
-) {
+export async function uploadFileToWaTemplate(file: MultipartFile, size: number, orgId: string) {
   const waSettings = await getWaSettings(orgId);
   const { accessToken } = waSettings;
   const appId = process.env.wa_app_id;
@@ -742,9 +699,7 @@ export async function sendTemplateToPhone({
       log.error("Team id not found in request");
       throw new Error("Team id not found in request");
     }
-    const surveyTeamMap = dbFlow?.survey?.teams.find(
-      (t) => t.teamId === teamId,
-    )?.id;
+    const surveyTeamMap = dbFlow?.survey?.teams.find((t) => t.teamId === teamId)?.id;
     if (!surveyTeamMap) {
       log.error("Team not found in survey;\nteam => %s", teamId);
       throw new Error("Team not found in survey");
@@ -761,12 +716,9 @@ export async function sendTemplateToPhone({
   }
 
   const containsImageComponent =
-    dbTemplate.data.components.find(
-      (c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER,
-    )?.format === `IMAGE`;
-  const containsImageOverrideInRequest = header?.parameters?.some(
-    (p) => p.type === "image",
-  );
+    dbTemplate.data.components.find((c) => c.type.toLowerCase() === WaTemplateComponentType.HEADER)
+      ?.format === `IMAGE`;
+  const containsImageOverrideInRequest = header?.parameters?.some((p) => p.type === "image");
   if (
     containsImageComponent &&
     !containsImageOverrideInRequest // if the request has image then don't add default image
@@ -785,9 +737,7 @@ export async function sendTemplateToPhone({
           ],
         });
       } else {
-        throw new Error(
-          "Image not found in template. Please upload an image and try again",
-        );
+        throw new Error("Image not found in template. Please upload an image and try again");
       }
     } else {
       log.warn("A header component is already present in template");

@@ -14,9 +14,7 @@ const registerWebhookbyTopicSchema = z.object({
 
 export type IdParamInput = z.infer<typeof byIdParamsSchema>;
 export type ShopParamInput = z.infer<typeof byShopParamsSchema>;
-export type registerWebhookbyTopicInput = z.infer<
-  typeof registerWebhookbyTopicSchema
->;
+export type registerWebhookbyTopicInput = z.infer<typeof registerWebhookbyTopicSchema>;
 
 // Auto-exported after fastify-zod migration
 export { byIdParamsSchema, byShopParamsSchema, registerWebhookbyTopicSchema };

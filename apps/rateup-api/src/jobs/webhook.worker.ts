@@ -25,10 +25,7 @@ export const shopifyWebhookWorker = new Worker(
     try {
       await handleWebhook(webhook);
     } catch (error) {
-      log.error(
-        { error },
-        `Error processing webhook ${webhook.webhookId}: ${error.message}`,
-      );
+      log.error({ error }, `Error processing webhook ${webhook.webhookId}: ${error.message}`);
       throw error; // Trigger a BullMQ retry
     }
   },

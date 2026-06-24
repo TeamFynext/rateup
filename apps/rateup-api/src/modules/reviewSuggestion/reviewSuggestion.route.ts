@@ -14,10 +14,7 @@ import {
 } from "./reviewSuggestion.controller.js";
 import { checkSession } from "../../utils/checkSession.js";
 import { verifyTeamAccess } from "../team/team.auth.js";
-import {
-  bySurveyTeamMapIdParamsSchema,
-  byTeamIdParamsSchema,
-} from "../team/team.schema.js";
+import { bySurveyTeamMapIdParamsSchema, byTeamIdParamsSchema } from "../team/team.schema.js";
 
 export async function reviewSuggestionRoutes(server: FastifyInstance) {
   server.setErrorHandler(errorHandler);

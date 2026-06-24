@@ -16,15 +16,9 @@ export const verifyApiAccessTokenHook = async (
   reply: FastifyReply,
 ) => {
   try {
-    const orgId = request.params.orgId
-      ? request.params.orgId
-      : request.query?.orgId;
+    const orgId = request.params.orgId ? request.params.orgId : request.query?.orgId;
     if (!orgId) {
-      log.warn(
-        "No orgId found in request\n%s\n%o",
-        request.url,
-        request.headers,
-      );
+      log.warn("No orgId found in request\n%s\n%o", request.url, request.headers);
       reply.code(404).send({ message: "Not found" });
       return;
     }
@@ -38,7 +32,7 @@ export const verifyApiAccessTokenHook = async (
         });
         return;
       }
-    } catch (err) {
+    } catch {
       log.warn("Invalid orgId\n%o", request.headers);
       reply.code(404).send({
         message: "Not found",
@@ -69,9 +63,7 @@ export const verifyApiAccessTokenHook = async (
 
     if (!isValid) {
       log.error("Invalid access token\n%o", request.headers);
-      reply
-        .code(401)
-        .send({ message: "Not authorized", error: "Invalid access token" });
+      reply.code(401).send({ message: "Not authorized", error: "Invalid access token" });
       return;
     }
 

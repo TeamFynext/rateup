@@ -8,10 +8,7 @@ import {
   getNotificationsHandler,
   updateNotificationSettingHandler,
 } from "./notification.controller.js";
-import {
-  notificationSettingSchema,
-  notificationIdParamSchema,
-} from "./notification.schema.js";
+import { notificationSettingSchema, notificationIdParamSchema } from "./notification.schema.js";
 
 export async function notificationRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

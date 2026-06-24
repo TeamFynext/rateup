@@ -49,10 +49,7 @@ const updateCampaignInputSchema = z.object({
   status: z.enum(CampaignStatus).optional(),
   startedAt: z.coerce.date().optional(),
   campaignSentAt: z.date().optional().nullable(),
-  scheduledStatuses: z
-    .array(z.enum(CampaignParticipantStatus))
-    .optional()
-    .nullable(),
+  scheduledStatuses: z.array(z.enum(CampaignParticipantStatus)).optional().nullable(),
   errorMessage: z.string().optional(),
   dynamicTags: z.array(z.string().nullable()).optional(),
   useUserConsent: z.boolean().optional(),
@@ -125,9 +122,7 @@ export type CreateCampaignInput = z.infer<typeof createCampaignInputSchema>;
 export type ByCampaignIdParams = z.infer<typeof byCampaignIdParamsSchema>;
 export type SendCampaignInput = z.infer<typeof sendCampaignInputSchema>;
 export type ByFlowIdParams = z.infer<typeof byFlowIdParamsSchema>;
-export type CampaignResponseByIdSchema = z.infer<
-  typeof campaignResponseByIdSchema
->;
+export type CampaignResponseByIdSchema = z.infer<typeof campaignResponseByIdSchema>;
 
 // Auto-exported after fastify-zod migration
 export {

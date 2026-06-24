@@ -1,12 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import {
-  getUnsplashImageList,
-  triggerDownloadUnsplashImage,
-} from "./unsplash.service.js";
-import {
-  getUnsplashImageQueryString,
-  triggerDownloadUnsplashBody,
-} from "./unsplash.schema.js";
+import { getUnsplashImageList, triggerDownloadUnsplashImage } from "./unsplash.service.js";
+import { getUnsplashImageQueryString, triggerDownloadUnsplashBody } from "./unsplash.schema.js";
 
 export async function getUnsplashImageListHandler(
   request: FastifyRequest<{ Querystring: getUnsplashImageQueryString }>,

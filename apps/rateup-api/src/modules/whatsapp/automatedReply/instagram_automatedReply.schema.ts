@@ -27,15 +27,7 @@ export const initiateInstagramAutomationBodySchema = z.object({
 });
 
 // Type exports
-export type InstagramAutomationIdParam = z.infer<
-  typeof instagramAutomationIdParamSchema
->;
-export type CreateInstagramAutomationBody = z.infer<
-  typeof createInstagramAutomationBodySchema
->;
-export type UpdateInstagramAutomationBody = z.infer<
-  typeof updateInstagramAutomationBodySchema
->;
-export type InitiateInstagramAutomationBody = z.infer<
-  typeof initiateInstagramAutomationBodySchema
->;
+export type InstagramAutomationIdParam = z.infer<typeof instagramAutomationIdParamSchema>;
+export type CreateInstagramAutomationBody = z.infer<typeof createInstagramAutomationBodySchema>;
+export type UpdateInstagramAutomationBody = z.infer<typeof updateInstagramAutomationBodySchema>;
+export type InitiateInstagramAutomationBody = z.infer<typeof initiateInstagramAutomationBodySchema>;

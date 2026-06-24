@@ -22,8 +22,6 @@ export function getChoiceIndex(
     return choices.findIndex((c) => c.value === choice);
   }
   return choices.findIndex((c) =>
-    typeof c.value == "object"
-      ? c.value.title === choice.value
-      : c.value === choice.value,
+    typeof c.value == "object" ? c.value.title === choice.value : c.value === choice.value,
   );
 }

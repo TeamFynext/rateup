@@ -50,10 +50,7 @@ export async function createOrgHandler(
   }
 }
 
-export async function getAllTeamsAndMembers(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllTeamsAndMembers(request: FastifyRequest, reply: FastifyReply) {
   try {
     let session = await Session.getSession(request, reply);
 
@@ -73,10 +70,7 @@ export async function getAllTeamsAndMembers(
   }
 }
 
-export async function getAllMembersWithTeamsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllMembersWithTeamsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     let session = await Session.getSession(request, reply);
 
@@ -132,12 +126,7 @@ export async function updateRoleController(
   }
 
   try {
-    roleUpdate = await updateOrgUserRole(
-      body as { role: string },
-      id,
-      request,
-      reply,
-    );
+    roleUpdate = await updateOrgUserRole(body as { role: string }, id, request, reply);
 
     // Check if the roleUpdate is an error message
     if (typeof roleUpdate === "string") {
@@ -160,10 +149,10 @@ export async function updateLogoHandler(
   reply: FastifyReply,
 ) {
   const body = request.body;
-  let user;
+  let _user;
 
   try {
-    user = await updateOrgLogo(body, request, reply);
+    _user = await updateOrgLogo(body, request, reply);
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
@@ -181,7 +170,7 @@ export async function updateOrgDetailsHandler(
 ) {
   const body = request.body;
   try {
-    let user = await updateOrgDetails(body, request, reply);
+    await updateOrgDetails(body, request, reply);
   } catch (e: any) {
     console.error(e);
     reply.code(500).send({ success: false, message: e.message });
@@ -191,10 +180,7 @@ export async function updateOrgDetailsHandler(
   reply.code(201).send({ success: true, data: "Logo Updated..!" });
 }
 
-export async function getAllOrgsHandler(
-  _: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllOrgsHandler(_: FastifyRequest, reply: FastifyReply) {
   const orgs = await getAllOrgs();
   reply.send(orgs);
 }
@@ -238,10 +224,7 @@ export async function pauseOrgHandler(
   }
 }
 
-export async function getWebhookClientSecretHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getWebhookClientSecretHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const secret = await getWebhookSecret(request.user.orgId);
     reply.code(200).send(secret);
@@ -309,10 +292,7 @@ Onboarding Questionnaire:
   }
 }
 
-export async function orgNameAndPhoneNumber(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function orgNameAndPhoneNumber(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userId = request.user.userId;
     const updates = await getOrgNameAndUserPhone(userId);
@@ -322,10 +302,7 @@ export async function orgNameAndPhoneNumber(
   }
 }
 
-export async function getOnboardingChecklistHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getOnboardingChecklistHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     let session = await Session.getSession(request, reply);
     const accessTokenPayload = session.getAccessTokenPayload();

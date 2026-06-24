@@ -3,10 +3,7 @@ import { SubscriptionFeaturePathName } from "../../types/enums.js";
 import { getNestedProperty } from "../../utils/misc/obj.utils.js";
 import prisma from "../../utils/prisma.js";
 
-export async function verifyCampaignMaxLimit(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function verifyCampaignMaxLimit(request: FastifyRequest, reply: FastifyReply) {
   try {
     let orgId = request.user.orgId;
     const subscription = request.subscription;

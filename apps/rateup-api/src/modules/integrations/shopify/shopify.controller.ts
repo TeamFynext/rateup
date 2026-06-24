@@ -1,7 +1,4 @@
-import {
-  registerWebhookbyTopicInput,
-  ShopParamInput,
-} from "./shopify.schema.js";
+import { registerWebhookbyTopicInput, ShopParamInput } from "./shopify.schema.js";
 import {
   deleteAllWebhooks,
   deleteShopifyIntegrationByShop,
@@ -25,10 +22,8 @@ import shopify from "./shopify.config.js";
 import webhookHandlers, {
   defaultWebhookHandlers,
   mandatoryWebhookHandlers,
-  WEBHOOK_API_ROUTE,
 } from "./shopify.handler.js";
-import { ShopifyOrderWebhookTopicEventMap } from "./shopify.util.js";
-import { API_URL, FRONTEND_URL } from "../../../utils/constants/constants.js";
+import { FRONTEND_URL } from "../../../utils/constants/constants.js";
 import { log } from "../../../utils/logger.js";
 import {
   createIntegration,
@@ -59,9 +54,7 @@ export async function getShopifyAuthHandler(
     if (e.response && e.response.code === 401)
       await getShopifyAuthUrl(request.raw, reply.raw, request.query.shop);
     else {
-      reply.redirect(
-        `${FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`,
-      );
+      reply.redirect(`${FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`);
     }
   }
 }
@@ -95,7 +88,7 @@ export async function getShopifyAuthCallbackHandler(
         active: true,
       });
     else await createIntegration(data);
-    const res = await Promise.all(
+    await Promise.all(
       ["APP_UNINSTALLED", "APP_SUBSCRIPTIONS_UPDATE"].map(async (topic) => {
         await registerWebhookByTopic(topic, session);
       }),
@@ -103,9 +96,7 @@ export async function getShopifyAuthCallbackHandler(
     reply.redirect(`${FRONTEND_URL}/auth/shopify?shop=${session.shop}`);
   } catch (e) {
     console.error(e);
-    reply.redirect(
-      `${FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`,
-    );
+    reply.redirect(`${FRONTEND_URL}/auth/shopify/retry?shop=${request.query.shop}`);
   }
 }
 
@@ -118,8 +109,7 @@ export async function updateShopifyIntegrationByShopHandler(
     const orgId = request.user.orgId;
     const integration = await getShopifyInfo(orgId);
     if (integration) {
-      if (integration.credential.session.shop === shop)
-        return reply.code(200).send("success");
+      if (integration.credential.session.shop === shop) return reply.code(200).send("success");
       else await deleteIntegrationByName(IntegratedApps.shopify, orgId);
     }
     await updateShopifyIntegrationByShop(shop, { orgId });
@@ -130,10 +120,7 @@ export async function updateShopifyIntegrationByShopHandler(
   }
 }
 
-export async function registerWebhookHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function registerWebhookHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const shopifyInfo = await getShopifyInfo(orgId);
@@ -186,10 +173,7 @@ export async function deleteWebhookByTopicHandler(
   }
 }
 
-export async function deleteAllWebhookHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function deleteAllWebhookHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
@@ -209,17 +193,10 @@ export async function deleteAllWebhookHandler(
   }
 }
 
-export async function shopifyWebhooksHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function shopifyWebhooksHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const allTopics = Object.keys(webhookHandlers);
-    if (
-      !allTopics.every((topic) =>
-        shopify.webhooks.getTopicsAdded().includes(topic),
-      )
-    )
+    if (!allTopics.every((topic) => shopify.webhooks.getTopicsAdded().includes(topic)))
       shopify.webhooks.addHandlers(webhookHandlers);
     log.info("Processing webhook");
     await shopify.webhooks.process({
@@ -232,10 +209,7 @@ export async function shopifyWebhooksHandler(
   }
 }
 
-export async function getRegisteredWebhooksHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getRegisteredWebhooksHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
     const session = shopifyInfo.credential.session;
@@ -249,10 +223,7 @@ export async function getRegisteredWebhooksHandler(
   }
 }
 
-export async function getProductsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getProductsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const shopifyInfo = await getShopifyInfo(request.user.orgId);
     const session = shopifyInfo.credential.session;
@@ -281,9 +252,7 @@ export async function getProductsHandler(
       );
       hasNextPage = data.data.products.pageInfo.hasNextPage;
       cursor = data.data.products.pageInfo.endCursor;
-      products.push(
-        ...data.data.products.edges?.map((product) => product?.node),
-      );
+      products.push(...data.data.products.edges?.map((product) => product?.node));
     }
 
     reply.code(200).send(products);
@@ -307,7 +276,7 @@ export async function deleteIntegrationByShopHandler(
       if (data.data.shop) {
         return reply.code(403).send("App is still installed on Shop");
       }
-    } catch (e) {
+    } catch {
       log.trace("App is not installed in shop. continue deleting...");
     }
     const res = await deleteShopifyIntegrationByShop(request.params.shop);
@@ -318,12 +287,9 @@ export async function deleteIntegrationByShopHandler(
   }
 }
 
-export async function testShopifyCronActionFnHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function testShopifyCronActionFnHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const res = await sendShopifySurveyCronAction();
+    await sendShopifySurveyCronAction();
     reply.send("success");
   } catch (e) {
     log.error(e);
@@ -342,9 +308,7 @@ export async function getFulfillmentOrdersHandler(
     reply.code(200).send(fulfillmentOrders);
   } catch (e: any) {
     log.error("Error fetching fulfillment orders: %o", e);
-    reply
-      .code(500)
-      .send({ error: e.message || "Failed to fetch fulfillment orders" });
+    reply.code(500).send({ error: e.message || "Failed to fetch fulfillment orders" });
   }
 }
 
@@ -374,8 +338,6 @@ export async function createFulfillmentHandler(
     reply.code(200).send(fulfillment);
   } catch (e: any) {
     log.error("Error creating Shopify fulfillment: %o", e);
-    reply
-      .code(500)
-      .send({ error: e.message || "Failed to create fulfillment" });
+    reply.code(500).send({ error: e.message || "Failed to create fulfillment" });
   }
 }

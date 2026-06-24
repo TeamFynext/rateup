@@ -36,9 +36,7 @@ export const loyaltyEarningRuleSchema = z.object({
   name: z.string().min(1, "Rule name is required"),
   description: z.string().optional().nullable(),
   priority: z.number().default(0),
-  status: z
-    .enum(["active", "inactive", "scheduled", "expired"])
-    .default("active"),
+  status: z.enum(["active", "inactive", "scheduled", "expired"]).default("active"),
   pointsPerUnit: z.number().min(0).default(1.0),
   multiplier: z.number().default(1.0),
   bonusPoints: z.number().default(0),
@@ -56,15 +54,12 @@ export const loyaltyEarningRuleSchema = z.object({
   maxPointsPerTransaction: z.number().optional().nullable(),
 });
 
-export const loyaltyEarningRuleUpdateSchema =
-  loyaltyEarningRuleSchema.partial();
+export const loyaltyEarningRuleUpdateSchema = loyaltyEarningRuleSchema.partial();
 
 export const ruleIdParamSchema = z.object({
   ruleId: z.string(),
 });
 
 export type LoyaltyEarningRuleInput = z.infer<typeof loyaltyEarningRuleSchema>;
-export type LoyaltyEarningRuleUpdateInput = z.infer<
-  typeof loyaltyEarningRuleUpdateSchema
->;
+export type LoyaltyEarningRuleUpdateInput = z.infer<typeof loyaltyEarningRuleUpdateSchema>;
 export type RuleIdParam = z.infer<typeof ruleIdParamSchema>;

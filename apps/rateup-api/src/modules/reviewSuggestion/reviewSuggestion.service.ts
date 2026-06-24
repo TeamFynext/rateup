@@ -11,10 +11,7 @@ export async function getReviewsByTeamId(teamId: string) {
     },
   });
 }
-export async function getReviewsBySurveyTeamMapId(
-  surveyTeamMapId: string,
-  language?: string,
-) {
+export async function getReviewsBySurveyTeamMapId(surveyTeamMapId: string, language?: string) {
   const reviewSuggestions = await prisma.reviewSuggestion.findMany({
     where: {
       team: {
@@ -51,10 +48,7 @@ export async function getReviewSuggestionsCountByTeamId(teamId: string) {
   });
 }
 
-export async function createReviewSuggestions(
-  data: createReviewSuggestionsSchema,
-  teamId: string,
-) {
+export async function createReviewSuggestions(data: createReviewSuggestionsSchema, teamId: string) {
   return await prisma.reviewSuggestion.createMany({
     data: data.reviews.map((review) => ({
       review,

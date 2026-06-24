@@ -1,8 +1,5 @@
 import z from "zod";
-import {
-  CatalogStoreType,
-  CatalogPaymentMethod,
-} from "../../../types/enums.js";
+import { CatalogStoreType, CatalogPaymentMethod } from "../../../types/enums.js";
 
 const catalogIdParams = z.object({
   catalogId: z.string(),
@@ -56,15 +53,11 @@ const createAddressFlowSchema = z.object({
 });
 
 export type CatalogIdParam = z.infer<typeof catalogIdParams>;
-export type CatalogWhatsappSettingSchema = z.infer<
-  typeof catalogWhatsappSettingSchema
->;
+export type CatalogWhatsappSettingSchema = z.infer<typeof catalogWhatsappSettingSchema>;
 export type UpdateCatalogSchema = z.infer<typeof updateCatalogSchema>;
 export type ProductSetIdParam = z.infer<typeof productSetIdParamSchema>;
 export type SyncProductSetsSchema = z.infer<typeof syncProductSetsSchema>;
-export type UpdateCatalogSettingsSchema = z.infer<
-  typeof updateCatalogSettingsSchema
->;
+export type UpdateCatalogSettingsSchema = z.infer<typeof updateCatalogSettingsSchema>;
 export type DeliveryOptionSchema = z.infer<typeof deliveryOptionSchema>;
 export type CreateAddressFlowSchema = z.infer<typeof createAddressFlowSchema>;
 

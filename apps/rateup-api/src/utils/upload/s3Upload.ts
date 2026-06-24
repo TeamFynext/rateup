@@ -1,8 +1,4 @@
-import {
-  S3Client,
-  DeleteObjectsCommand,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, DeleteObjectsCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 
 export const s3 = new S3Client({
@@ -65,25 +61,18 @@ export const getAWSObject = async (key: string) => {
   }
 };
 
-export const getFileUrlFromKey = (
-  key: string,
-  s3Upload = true,
-  unsplashImage = false,
-) => {
+export const getFileUrlFromKey = (key: string, s3Upload = true, unsplashImage = false) => {
   if (unsplashImage) {
     return `${process.env.UNSPLASH_URL?.replace(/\/+$/, "")}/${key.replace(/^\/+/, "")}`;
   }
 
   if (s3Upload) {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL?.replace(/\/+$/, "") || "";
+    const baseUrl = process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL?.replace(/\/+$/, "") || "";
     const cleanKey = key.replace(/^\/+/, ""); // remove leading slashes
     return `${baseUrl}/${cleanKey}`;
   }
 
-  const fallbackBase =
-    process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL?.replace(/\/+$/, "") ||
-    "";
+  const fallbackBase = process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL?.replace(/\/+$/, "") || "";
   const fallbackKey = key.replace(/^\/+/, "");
   return `${fallbackBase}/${fallbackKey}`;
 };

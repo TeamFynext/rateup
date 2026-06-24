@@ -16,7 +16,7 @@ const ByCategoryIdParamsSchema = z.object({
 const UpdateMenuCategoryInputSchema = z.object({
   name: z.string().optional(),
   image: z.string().optional(),
-  itemOrder: z.string().optional(),
+  itemOrder: z.coerce.number().optional(),
   scheduleEnabled: z.boolean().optional(),
   startTime: z.iso.datetime().optional().nullable(),
   endTime: z.iso.datetime().optional().nullable(),
@@ -32,9 +32,7 @@ const SortMenuCategoryInputSchema = z.object({
 
 export type CreateMenuCategoryInput = z.infer<typeof CreateMenuCategorySchema>;
 export type ByCategoryIdParams = z.infer<typeof ByCategoryIdParamsSchema>;
-export type UpdateMenuCategoryInput = z.infer<
-  typeof UpdateMenuCategoryInputSchema
->;
+export type UpdateMenuCategoryInput = z.infer<typeof UpdateMenuCategoryInputSchema>;
 export type SortMenuCategoryInput = z.infer<typeof SortMenuCategoryInputSchema>;
 
 // Auto-exported after fastify-zod migration

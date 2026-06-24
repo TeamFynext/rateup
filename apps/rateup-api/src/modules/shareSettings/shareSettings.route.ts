@@ -2,11 +2,7 @@ import { preHandlerHook } from "./shareSettings.hooks.js";
 import { getSettings, updateSettings } from "./shareSettings.controller.js";
 import { onFile } from "./utils.js";
 import multipart from "@fastify/multipart";
-import {
-  bodySchema,
-  paramsSchema,
-  responseSchema,
-} from "./shareSettings.schema.js";
+import { bodySchema, paramsSchema, responseSchema } from "./shareSettings.schema.js";
 import { FastifyInstance } from "fastify";
 
 async function routes(fastify: FastifyInstance) {

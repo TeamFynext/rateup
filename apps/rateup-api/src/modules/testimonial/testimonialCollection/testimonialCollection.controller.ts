@@ -23,9 +23,7 @@ export async function createTestimonialCollectionHandler(
   reply: FastifyReply,
 ) {
   try {
-    const testimonialCollection = await createTestimonialCollection(
-      request.body,
-    );
+    const testimonialCollection = await createTestimonialCollection(request.body);
     reply.code(201).send(testimonialCollection);
   } catch (error) {
     log.error(error);
@@ -72,9 +70,7 @@ export async function getTestimonialCollections(
   try {
     let collections = null;
     if (request.query.teamId)
-      collections = await getTestimonialCollectionsByTeamId(
-        request.query.teamId,
-      );
+      collections = await getTestimonialCollectionsByTeamId(request.query.teamId);
     else collections = await getCollectionsByOrgId(request.user.orgId);
     reply.code(200).send(collections);
   } catch (error) {
@@ -106,10 +102,7 @@ export async function addMultipleTestimonialToCollectionHandler(
 ) {
   try {
     const { testimonialIds } = request.body;
-    const collection = await addMultipleTestimonialToCollection(
-      request.params.id,
-      testimonialIds,
-    );
+    const collection = await addMultipleTestimonialToCollection(request.params.id, testimonialIds);
     reply.code(200).send(collection);
   } catch (error) {
     log.error(error);
@@ -127,10 +120,7 @@ export async function deleteMultipleTestimonialsFromCollectionHandler(
   try {
     const { id } = request.params;
     const { testimonialIds } = request.body;
-    const collection = await deleteMultipleTestimonialFromCollection(
-      id,
-      testimonialIds,
-    );
+    const collection = await deleteMultipleTestimonialFromCollection(id, testimonialIds);
     reply.code(200).send(collection);
   } catch (error) {
     log.error(error);

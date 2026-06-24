@@ -23,16 +23,10 @@ const initiateAutomatedReplyBody = z.object({
   phone: z.string(),
 });
 
-export type CreateAutomatedReplySchema = z.infer<
-  typeof createAutomatedReplySchema
->;
-export type ByWaAutomatedReplyIdParams = z.infer<
-  typeof byWaAutomatedReplyIdParams
->;
+export type CreateAutomatedReplySchema = z.infer<typeof createAutomatedReplySchema>;
+export type ByWaAutomatedReplyIdParams = z.infer<typeof byWaAutomatedReplyIdParams>;
 export type CloneAutomatedReplyBody = z.infer<typeof cloneAutomatedReplyBody>;
-export type InitiateAutomatedReplyBody = z.infer<
-  typeof initiateAutomatedReplyBody
->;
+export type InitiateAutomatedReplyBody = z.infer<typeof initiateAutomatedReplyBody>;
 
 // Auto-exported after fastify-zod migration
 export {

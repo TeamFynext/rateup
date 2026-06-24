@@ -2,8 +2,7 @@ import { FastifyRequest } from "fastify";
 
 export function getIp(request: FastifyRequest) {
   let ip = request.ip;
-  const forwardedFor =
-    (request.headers["x-forwarded-for"] as string) || undefined;
+  const forwardedFor = (request.headers["x-forwarded-for"] as string) || undefined;
 
   if (forwardedFor) {
     const ips = forwardedFor.split(",").map((ip) => ip.trim());

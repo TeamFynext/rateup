@@ -1,7 +1,4 @@
-import {
-  CampaignParticipantSource,
-  CampaignParticipantStatus,
-} from "../../../types/enums.js";
+import { CampaignParticipantSource, CampaignParticipantStatus } from "../../../types/enums.js";
 import prisma from "../../../utils/prisma.js";
 import {
   CreateCampaignParticipantsFromContactsInput,
@@ -55,9 +52,7 @@ export async function createCampaignParticipantsFromContacts(
 }
 export async function createCampaignParticipantsFromAnotherCampaign(
   campaignId: string,
-  data: Partial<
-    Omit<CreateCampaignParticipantsInput, "groupIds" | "contactIds">
-  >,
+  data: Partial<Omit<CreateCampaignParticipantsInput, "groupIds" | "contactIds">>,
 ) {
   const campaignParticipantsOld = await prisma.campaignParticipant.findMany({
     where: {
@@ -85,9 +80,7 @@ export async function createCampaignParticipantsFromAnotherCampaign(
   const status = mapStatuses(data.status);
   const campaignParticipants = await prisma.campaignParticipant.createMany({
     data: campaignParticipantsOld
-      ?.filter((participant) =>
-        status.includes(participant.status?.toUpperCase()),
-      )
+      ?.filter((participant) => status.includes(participant.status?.toUpperCase()))
       ?.map(({ contactId, contactGroupId }) => ({
         campaignId,
         contactId: contactId,
@@ -149,10 +142,7 @@ export async function createCampaignParticipants(
   return { fromContacts, fromGroups, fromCampaigns };
 }
 
-export async function getCampaignParticipantsByCampaignId(
-  campaignId: string,
-  extra = {},
-) {
+export async function getCampaignParticipantsByCampaignId(campaignId: string, _extra = {}) {
   const campaignParticipants = await prisma.campaignParticipant.findMany({
     where: {
       campaignId,
@@ -291,14 +281,10 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
     participants: campaignParticipants.map((campaignParticipant) => ({
       ...campaignParticipant,
       status:
-        campaignParticipant.CampaignParticipantDripStage?.[0].status ??
-        campaignParticipant.status,
-      dripStageId:
-        campaignParticipant.CampaignParticipantDripStage?.[0].dripStageId ??
-        null,
+        campaignParticipant.CampaignParticipantDripStage?.[0].status ?? campaignParticipant.status,
+      dripStageId: campaignParticipant.CampaignParticipantDripStage?.[0].dripStageId ?? null,
       sentAt:
-        campaignParticipant.CampaignParticipantDripStage?.[0].sentAt ??
-        campaignParticipant.sentAt,
+        campaignParticipant.CampaignParticipantDripStage?.[0].sentAt ?? campaignParticipant.sentAt,
       createdAt:
         campaignParticipant.CampaignParticipantDripStage?.[0].createdAt ??
         campaignParticipant.createdAt,
@@ -308,9 +294,7 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
   };
 }
 
-export async function getCampaignParticipantById(
-  campaignParticipantId: string,
-) {
+export async function getCampaignParticipantById(campaignParticipantId: string) {
   const campaignParticipant = await prisma.campaignParticipant.findUnique({
     where: {
       id: campaignParticipantId,
@@ -322,9 +306,7 @@ export async function getCampaignParticipantById(
 /**
  * Returns participants with contact details
  */
-export async function getCampaignParticipantsByIds(
-  campaignParticipantIds: string[],
-) {
+export async function getCampaignParticipantsByIds(campaignParticipantIds: string[]) {
   const campaignParticipants = await prisma.campaignParticipant.findMany({
     where: {
       id: {
@@ -338,9 +320,7 @@ export async function getCampaignParticipantsByIds(
   return campaignParticipants;
 }
 
-export async function deleteCampaignParticipantById(
-  campaignParticipantId: string,
-) {
+export async function deleteCampaignParticipantById(campaignParticipantId: string) {
   const campaignParticipant = await prisma.campaignParticipant.delete({
     where: {
       id: campaignParticipantId,
@@ -374,9 +354,7 @@ export async function updateDripCampaignParticipant(
   return campaignParticipant;
 }
 
-export async function multipleDeleteCampaignParticipant(
-  campaignParticipantIds: string[],
-) {
+export async function multipleDeleteCampaignParticipant(campaignParticipantIds: string[]) {
   const campaignParticipant = await prisma.campaignParticipant.deleteMany({
     where: {
       id: {

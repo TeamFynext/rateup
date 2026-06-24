@@ -36,19 +36,19 @@ const paginationQuery = z.object({
   source: z.string().optional(),
   consent: z.string().optional(),
 });
-const byContactGroupIdWithOrgIdParamsSchema =
-  byContactGroupIdParamsSchema.extend({
-    orgId: z.string(),
-  });
+const byContactGroupIdWithOrgIdParamsSchema = byContactGroupIdParamsSchema.extend({
+  orgId: z.string(),
+});
 
 const addExistingContactsToGroupInputSchema = z.object({
   contactIds: z.array(z.string()),
   isCustomer: z.boolean().optional(),
 });
-const addExistingContactsToMultipleGroupsInputSchema =
-  addExistingContactsToGroupInputSchema.extend({
+const addExistingContactsToMultipleGroupsInputSchema = addExistingContactsToGroupInputSchema.extend(
+  {
     contactGroupIds: z.array(z.string()),
-  });
+  },
+);
 
 const getContactGroupsQuerySchema = z.object({
   contactGroupId: z.string().optional(),
@@ -59,9 +59,7 @@ const getContactGroupsQuerySchema = z.object({
 const removeGroupContactsSchema = z.array(z.string());
 
 const addNewContactsToGroupInputSchema = z.array(contactCoreSchema);
-const extAddNewContactsToGroupInputSchema = z.array(
-  contactCoreSchema.omit({ source: true }),
-);
+const extAddNewContactsToGroupInputSchema = z.array(contactCoreSchema.omit({ source: true }));
 
 const deleteManyGroupSchema = z.object({
   contactGroupIds: z.array(z.string()),
@@ -83,33 +81,19 @@ const contactGroupByContactIdBody = z.object({
 });
 
 export type GetContactGroupsQuery = z.infer<typeof getContactGroupsQuerySchema>;
-export type AddExistingContactsToGroupInput = z.infer<
-  typeof addExistingContactsToGroupInputSchema
->;
+export type AddExistingContactsToGroupInput = z.infer<typeof addExistingContactsToGroupInputSchema>;
 export type AddExistingContactsToMultipleGroupsInput = z.infer<
   typeof addExistingContactsToMultipleGroupsInputSchema
 >;
-export type AddNewContactsToGroupInput = z.input<
-  typeof addNewContactsToGroupInputSchema
->;
-export type ByContactGroupIdParams = z.infer<
-  typeof byContactGroupIdParamsSchema
->;
-export type UpdateContactGroupInput = z.infer<
-  typeof updateContactGroupInputSchema
->;
-export type CreateContactGroupInput = z.infer<
-  typeof createContactGroupInputSchema
->;
-export type RemoveGroupContactsSchema = z.infer<
-  typeof removeGroupContactsSchema
->;
+export type AddNewContactsToGroupInput = z.input<typeof addNewContactsToGroupInputSchema>;
+export type ByContactGroupIdParams = z.infer<typeof byContactGroupIdParamsSchema>;
+export type UpdateContactGroupInput = z.infer<typeof updateContactGroupInputSchema>;
+export type CreateContactGroupInput = z.infer<typeof createContactGroupInputSchema>;
+export type RemoveGroupContactsSchema = z.infer<typeof removeGroupContactsSchema>;
 export type DeleteManyGroupsInput = z.infer<typeof deleteManyGroupSchema>;
 export type PaginationQuery = z.infer<typeof paginationQuery>;
 export type contactGroupByContactId = z.infer<typeof contactGroupByContactId>;
-export type ContactGroupByContactIdBody = z.infer<
-  typeof contactGroupByContactIdBody
->;
+export type ContactGroupByContactIdBody = z.infer<typeof contactGroupByContactIdBody>;
 
 // Auto-exported after fastify-zod migration
 export {

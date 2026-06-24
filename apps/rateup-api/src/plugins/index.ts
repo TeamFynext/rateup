@@ -2,10 +2,7 @@ import { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import formDataPlugin from "@fastify/formbody";
 import supertokens from "supertokens-node";
-import {
-  plugin,
-  errorHandler,
-} from "supertokens-node/framework/fastify/index.js";
+import { plugin, errorHandler } from "supertokens-node/framework/fastify/index.js";
 import { SuperTokensConfig } from "../config.js";
 import { parseArrayString } from "../utils/array.js";
 import { registerCronJobs } from "./cron.js";
@@ -25,11 +22,7 @@ export async function registerPlugins(server: FastifyInstance) {
   server.addHook("onSend", async (request, reply, payload) => {
     const location = reply.getHeader("location");
 
-    if (
-      location &&
-      request.url.includes("/api/auth/callback/apple") &&
-      reply.statusCode === 200
-    ) {
+    if (location && request.url.includes("/api/auth/callback/apple") && reply.statusCode === 200) {
       reply.code(303);
     }
 
@@ -41,9 +34,7 @@ export async function registerPlugins(server: FastifyInstance) {
     origin: [
       process.env.ELECTION_APP_URL,
       process.env.FRONTEND_URL,
-      ...parseArrayString(process.env.CORS_WHITELIST).map(
-        (url) => new RegExp(url),
-      ),
+      ...parseArrayString(process.env.CORS_WHITELIST).map((url) => new RegExp(url)),
     ],
     allowedHeaders: ["Content-Type", ...supertokens.getAllCORSHeaders()],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

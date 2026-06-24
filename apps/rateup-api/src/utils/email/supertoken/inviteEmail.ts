@@ -1,6 +1,6 @@
 import { rateupLogo } from "../../constants/constants.js";
 
-export function createEmailBody(invite_link: string, email_id: string) {
+export function createEmailBody(invite_link: string, _email_id: string) {
   return `
     <!DOCTYPE html>
     <html lang="en">

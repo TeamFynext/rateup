@@ -42,10 +42,7 @@ export async function createContactLabelHandler(
   }
 }
 
-export async function getAllContactLabelsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllContactLabelsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const labels = await getContactLabelsByOrgId(orgId);
@@ -156,9 +153,7 @@ export async function getContactsWithLabelsHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const labelIds = request.query.labelIds
-      ? request.query.labelIds.split(",")
-      : undefined;
+    const labelIds = request.query.labelIds ? request.query.labelIds.split(",") : undefined;
 
     const contacts = await getContactsWithLabels(orgId, labelIds);
     reply.code(200).send(contacts);

@@ -6,15 +6,9 @@ import prisma from "../../utils/prisma.js";
 import { updateSurveyVariables } from "../survey/survey.service.js";
 import { createSurveyDefaultVariableForQuestion } from "../survey/survey.utils.js";
 import { CreateQuestionInput, UpdateQuestionInput } from "./question.schema.js";
-import {
-  emailPattern,
-  getQuestionsArrUpdatedGRTypeQuestion,
-} from "./question.utils.js";
+import { emailPattern, getQuestionsArrUpdatedGRTypeQuestion } from "./question.utils.js";
 
-export async function createQuestion(
-  surveyId: string,
-  input: CreateQuestionInput,
-) {
+export async function createQuestion(surveyId: string, input: CreateQuestionInput) {
   // 1. Get existing questions
   const questions = await getQuestionsBySurveyId(surveyId);
 
@@ -46,9 +40,7 @@ export async function createQuestion(
 }
 
 export async function getQuestionById(surveyId: string, id: string) {
-  const question = (await getQuestionsBySurveyId(surveyId)).find(
-    (q) => q.id === id,
-  );
+  const question = (await getQuestionsBySurveyId(surveyId)).find((q) => q.id === id);
   return question;
 }
 
@@ -73,10 +65,7 @@ export async function deleteQuestionById(surveyId: string, id: string) {
   const questions = (await getQuestionsBySurveyId(surveyId)).filter(
     (question) => question.id !== id,
   );
-  const updatedQuestions = await getQuestionsArrUpdatedGRTypeQuestion(
-    questions,
-    surveyId,
-  );
+  const updatedQuestions = await getQuestionsArrUpdatedGRTypeQuestion(questions, surveyId);
   await updateQuestionsOnSurvey(surveyId, updatedQuestions);
   await updateSurveyVariables(surveyId, updatedQuestions);
   const flow = await prisma.waFlow.findFirst({
@@ -91,9 +80,7 @@ export async function deleteQuestionById(surveyId: string, id: string) {
         // Filter out the objects where the questionId matches the one to remove
         data[key] = data[key].filter(
           (item) =>
-            !item.conditions.some(
-              (condition) => condition.questionId === questionIdToRemove,
-            ),
+            !item.conditions.some((condition) => condition.questionId === questionIdToRemove),
         );
       }
     }
@@ -111,10 +98,7 @@ export async function deleteQuestionById(surveyId: string, id: string) {
   }
 }
 
-export async function reorderQuestions(
-  surveyId: string,
-  newOrder: Array<string>,
-) {
+export async function reorderQuestions(surveyId: string, newOrder: Array<string>) {
   const questions = await getQuestionsBySurveyId(surveyId);
   let orderedQuestions = newOrder.map((id) =>
     questions.find((q) => q.id === id),
@@ -135,23 +119,18 @@ export async function updateQuestion(
   questions[index] = { ...questions[index], ...input } as Question;
 
   let hasGoogleReview = questions?.some(
-    (item) =>
-      item["reviewPageOptions"] !== null &&
-      item["reviewPageOptions"] !== undefined,
+    (item) => item["reviewPageOptions"] !== null && item["reviewPageOptions"] !== undefined,
   );
 
   if (hasGoogleReview) {
     //Turn off kiosk
-    const surveyUpdate = await prisma.survey.update({
+    await prisma.survey.update({
       where: { id: surveyId },
       data: { kioskMode: false },
     });
   }
 
-  const updatedQuestions = await getQuestionsArrUpdatedGRTypeQuestion(
-    questions,
-    surveyId,
-  );
+  const updatedQuestions = await getQuestionsArrUpdatedGRTypeQuestion(questions, surveyId);
   await updateQuestionsOnSurvey(surveyId, updatedQuestions);
 }
 
@@ -161,10 +140,7 @@ export async function updateQuestion(
  * @param surveyId
  * @param questions
  */
-export async function updateQuestionsOnSurvey(
-  surveyId: string,
-  questions: Array<Question>,
-) {
+export async function updateQuestionsOnSurvey(surveyId: string, questions: Array<Question>) {
   let surveyQns = await prisma.survey.update({
     where: {
       id: surveyId,
@@ -213,10 +189,8 @@ export async function updateLogicJump(screenId: string, surveyId: string) {
 export async function getAllowedEmailsFromFile(fileBody: MultipartFile) {
   const { mimetype } = fileBody;
   const csvType = ["text/csv", "application/vnd.ms-excel"];
-  const file = csvType.includes(mimetype)
-    ? fileBody.file
-    : await fileBody.toBuffer();
-  return new Promise(async (resolve, reject) => {
+  const file = csvType.includes(mimetype) ? fileBody.file : await fileBody.toBuffer();
+  return new Promise((resolve, reject) => {
     let allowedEmails = [];
 
     const processEmail = (row) => {
@@ -227,7 +201,7 @@ export async function getAllowedEmailsFromFile(fileBody: MultipartFile) {
       }
     };
 
-    const finalizeProcessing = async () => {
+    const finalizeProcessing = () => {
       try {
         if (allowedEmails.length > 0) resolve(allowedEmails);
         else reject("No email IDs found");
@@ -255,9 +229,7 @@ export async function getAllowedEmailsFromFile(fileBody: MultipartFile) {
     } else {
       const workSheetsFromFile = xlsx.parse(file);
       const headers =
-        workSheetsFromFile?.[0]?.data?.[0]?.map((header) =>
-          header?.toString().toLowerCase(),
-        ) ?? [];
+        workSheetsFromFile?.[0]?.data?.[0]?.map((header) => header?.toString().toLowerCase()) ?? [];
       const headerIndices = headers.map((header, index) => ({ header, index }));
 
       workSheetsFromFile?.[0]?.data?.slice(1).forEach((row) => {
@@ -267,7 +239,7 @@ export async function getAllowedEmailsFromFile(fileBody: MultipartFile) {
         });
         processEmail(email);
       });
-      await finalizeProcessing();
+      finalizeProcessing();
     }
   });
 }

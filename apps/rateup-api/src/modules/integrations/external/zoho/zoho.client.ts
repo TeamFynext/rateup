@@ -15,10 +15,7 @@ function getZohoApiPath(product: ZohoProduct = "crm") {
   }
 }
 
-export function createZohoAxios(
-  accessToken: string,
-  baseUrl = "https://www.zohoapis.in",
-) {
+export function createZohoAxios(accessToken: string, baseUrl = "https://www.zohoapis.in") {
   return axios.create({
     baseURL: baseUrl,
     timeout: 10000,
@@ -29,10 +26,7 @@ export function createZohoAxios(
   });
 }
 
-function getZohoRecordModulePath(
-  moduleName: string,
-  product: ZohoProduct = "crm",
-) {
+function getZohoRecordModulePath(moduleName: string, product: ZohoProduct = "crm") {
   return `${getZohoApiPath(product)}/${moduleName}`;
 }
 
@@ -44,12 +38,9 @@ export async function createZohoRecord(
   product: ZohoProduct = "crm",
 ) {
   const client = createZohoAxios(accessToken, baseUrl);
-  const response = await client.post(
-    getZohoRecordModulePath(moduleName, product),
-    {
-      data: [data],
-    },
-  );
+  const response = await client.post(getZohoRecordModulePath(moduleName, product), {
+    data: [data],
+  });
   return response.data;
 }
 
@@ -62,12 +53,9 @@ export async function updateZohoRecord(
   product: ZohoProduct = "crm",
 ) {
   const client = createZohoAxios(accessToken, baseUrl);
-  const response = await client.put(
-    `${getZohoRecordModulePath(moduleName, product)}/${recordId}`,
-    {
-      data: [data],
-    },
-  );
+  const response = await client.put(`${getZohoRecordModulePath(moduleName, product)}/${recordId}`, {
+    data: [data],
+  });
   return response.data;
 }
 
@@ -80,20 +68,17 @@ export async function getZohoRecords(
   product: ZohoProduct = "crm",
 ) {
   const client = createZohoAxios(accessToken, baseUrl);
-  const response = await client.get(
-    getZohoRecordModulePath(moduleName, product),
-    {
-      params: {
-        per_page: 200,
-        ...params,
-      },
-      headers: modifiedSince
-        ? {
-            "If-Modified-Since": modifiedSince,
-          }
-        : undefined,
+  const response = await client.get(getZohoRecordModulePath(moduleName, product), {
+    params: {
+      per_page: 200,
+      ...params,
     },
-  );
+    headers: modifiedSince
+      ? {
+          "If-Modified-Since": modifiedSince,
+        }
+      : undefined,
+  });
   return response.data;
 }
 
@@ -119,9 +104,7 @@ export async function getZohoModuleMetadata(
 ) {
   const client = createZohoAxios(accessToken, baseUrl);
 
-  const response = await client.get(
-    `${getZohoApiPath(product)}/settings/modules/${moduleName}`,
-  );
+  const response = await client.get(`${getZohoApiPath(product)}/settings/modules/${moduleName}`);
 
   return response.data;
 }
@@ -134,14 +117,11 @@ export async function getZohoFieldMetadata(
 ) {
   const client = createZohoAxios(accessToken, baseUrl);
 
-  const response = await client.get(
-    `${getZohoApiPath(product)}/settings/fields`,
-    {
-      params: {
-        module: moduleName,
-      },
+  const response = await client.get(`${getZohoApiPath(product)}/settings/fields`, {
+    params: {
+      module: moduleName,
     },
-  );
+  });
 
   return response.data;
 }
@@ -154,14 +134,11 @@ export async function getZohoLayoutsMetadata(
 ) {
   const client = createZohoAxios(accessToken, baseUrl);
 
-  const response = await client.get(
-    `${getZohoApiPath(product)}/settings/layouts`,
-    {
-      params: {
-        module: moduleName,
-      },
+  const response = await client.get(`${getZohoApiPath(product)}/settings/layouts`, {
+    params: {
+      module: moduleName,
     },
-  );
+  });
 
   return response.data;
 }
@@ -202,9 +179,7 @@ export async function registerZohoWebhook({
   const client = createZohoAxios(accessToken, apiDomain);
   const apiPath = getZohoApiPath(product);
   const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  const channelId = BigInt(
-    `${Date.now()}${Math.floor(Math.random() * 1000)}`,
-  ).toString();
+  const channelId = BigInt(`${Date.now()}${Math.floor(Math.random() * 1000)}`).toString();
   const response = await client.post(`${apiPath}/actions/watch`, {
     watch: [
       {

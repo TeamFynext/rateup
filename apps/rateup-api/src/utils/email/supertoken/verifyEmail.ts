@@ -1,11 +1,7 @@
 import { notificationQueue } from "../../redisConnection.js";
 import { rateupLogo } from "../../constants/constants.js";
 
-export async function sendVerifyMail(
-  verify_link: string,
-  email_id: string,
-  user_name: string,
-) {
+export async function sendVerifyMail(verify_link: string, email_id: string, user_name: string) {
   if (verify_link && email_id) {
     const msg = {
       to: email_id,

@@ -48,10 +48,7 @@ export async function uploadSourceForEmbedHandler(
   }
 }
 
-export async function uploadFileForAIEmbedHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function uploadFileForAIEmbedHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     let chatbotId;
     let filePart;
@@ -63,9 +60,7 @@ export async function uploadFileForAIEmbedHandler(
       if (part.type === "file") {
         filePart = part;
 
-        if (
-          !["application/pdf", "application/epub+zip"].includes(part.mimetype)
-        ) {
+        if (!["application/pdf", "application/epub+zip"].includes(part.mimetype)) {
           reply.code(400).send({ message: "This file type is not permitted." });
           return;
         }
@@ -90,7 +85,7 @@ export async function uploadFileForAIEmbedHandler(
 
     const jwtToken = await createJWT(request.user);
 
-    const res = await uploadFileForAIEmbed(formData, jwtToken);
+    await uploadFileForAIEmbed(formData, jwtToken);
     reply.code(200).send();
   } catch (e) {
     console.error("Error:", e);
@@ -110,10 +105,7 @@ export async function chatbotMessageHandler(
     const chatbotId = request.body.chatbotId;
     const { query } = request.body;
     const jwtToken = await createJWT(request.user);
-    const res = await getAIResponseForQuery(
-      { query, userId, orgId, chatbotId },
-      jwtToken,
-    );
+    const res = await getAIResponseForQuery({ query, userId, orgId, chatbotId }, jwtToken);
     reply.code(200).send({ message: res });
   } catch (e) {
     console.log(e);
@@ -162,7 +154,7 @@ export async function deleteEmbeddedSourceHandler(
 ) {
   try {
     const jwtToken = await createJWT(request.user);
-    const res = await deleteEmbeddedSource(request.body, jwtToken);
+    await deleteEmbeddedSource(request.body, jwtToken);
     reply.code(200).send();
   } catch (e) {
     console.log(e);
@@ -184,10 +176,7 @@ export async function deleteManyEmbeddedSourcesHandler(
   }
 }
 
-export async function deleteChatHistoryHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function deleteChatHistoryHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const jwtToken = await createJWT(request.user);
     const res = await deleteChatHistory(jwtToken);
@@ -216,9 +205,7 @@ export async function getChatbotPublicPageStatusHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { publicPageStatus } = await getChatbotDetailsByShortUrlId(
-      request.params.chatbotId,
-    );
+    const { publicPageStatus } = await getChatbotDetailsByShortUrlId(request.params.chatbotId);
     reply.code(200).send({ publicPageStatus });
   } catch (error) {
     console.error(error);
@@ -226,10 +213,7 @@ export async function getChatbotPublicPageStatusHandler(
   }
 }
 
-export async function createChatbotHanlder(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function createChatbotHanlder(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const { name } = request.body as { name: string };
@@ -241,10 +225,7 @@ export async function createChatbotHanlder(
   }
 }
 
-export async function getAllChatbotsByOrgHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllChatbotsByOrgHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId } = request.user;
     const res = await getAllChatbot(orgId);

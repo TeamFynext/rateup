@@ -9,8 +9,7 @@ export async function handleWaReceivedImages(
 ): Promise<WaInboxMessageBody> {
   if (
     messageBody?.exchangeProcess === "receive" &&
-    (messageBody?.receive as WaReceiveMessageBody)?.messages[0]?.type ===
-      "image"
+    (messageBody?.receive as WaReceiveMessageBody)?.messages[0]?.type === "image"
   ) {
     const uniqueImageId = await downloadAndUpload(
       orgId,
@@ -22,10 +21,9 @@ export async function handleWaReceivedImages(
         ...messageBody.receive,
         messages: [
           {
-            ...(messageBody?.receive as WaReceiveMessageBody).messages[0],
+            ...(messageBody.receive as WaReceiveMessageBody).messages[0],
             image: {
-              ...(messageBody?.receive as WaReceiveMessageBody).messages[0]
-                .image,
+              ...(messageBody.receive as WaReceiveMessageBody).messages[0].image,
               link: uniqueImageId,
             },
           },
@@ -41,13 +39,9 @@ export async function returnAppropriateTimeStamp(
   platform: PlatformType,
 ) {
   if (messageBody.exchangeProcess === "receive") {
-    if (
-      platform === PlatformType.INSTAGRAM ||
-      platform === PlatformType.FACEBOOK
-    ) {
+    if (platform === PlatformType.INSTAGRAM || platform === PlatformType.FACEBOOK) {
       return new Date(
-        (messageBody.receive as IgReceiveMessageBody | FbReceiveMessageBody)
-          .timestamp,
+        (messageBody.receive as IgReceiveMessageBody | FbReceiveMessageBody).timestamp,
       ).toISOString();
     }
     const unixTimeStamp = parseInt(
@@ -60,12 +54,8 @@ export async function returnAppropriateTimeStamp(
 }
 
 export const isSessionExpired = (userInitiatedFinalTimeStamp: Date) =>
-  userInitiatedFinalTimeStamp &&
-  dayjs().diff(userInitiatedFinalTimeStamp, "D") >= 1;
+  userInitiatedFinalTimeStamp && dayjs().diff(userInitiatedFinalTimeStamp, "D") >= 1;
 
 export function extractMentions(text: string): string[] {
-  return (
-    text.match(/(?<!\S)@[a-zA-Z0-9_.]+/g)?.map((mention) => mention.slice(1)) ??
-    []
-  );
+  return text.match(/(?<!\S)@[a-zA-Z0-9_.]+/g)?.map((mention) => mention.slice(1)) ?? [];
 }

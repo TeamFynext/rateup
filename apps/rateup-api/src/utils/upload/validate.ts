@@ -10,14 +10,11 @@ const mimeTypeMaxSizes: Record<string, number> = {
   // Document
   "text/plain": 100 * 1024 * 1024,
   "application/vnd.ms-excel": 100 * 1024 * 1024,
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-    100 * 1024 * 1024,
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 100 * 1024 * 1024,
   "application/msword": 100 * 1024 * 1024,
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    100 * 1024 * 1024,
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": 100 * 1024 * 1024,
   "application/vnd.ms-powerpoint": 100 * 1024 * 1024,
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-    100 * 1024 * 1024,
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": 100 * 1024 * 1024,
   "application/pdf": 100 * 1024 * 1024,
   // Image
   "image/jpeg": 5 * 1024 * 1024,

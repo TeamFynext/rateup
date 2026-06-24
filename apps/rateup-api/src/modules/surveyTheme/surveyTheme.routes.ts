@@ -40,11 +40,7 @@ export async function surveyThemeRoutes(server: FastifyInstance) {
 
   server.setErrorHandler(errorHandler);
 
-  server.get(
-    "/:webSurveyThemeId",
-    publicRouteOptions,
-    getSurveyThemeByIdHandler,
-  );
+  server.get("/:webSurveyThemeId", publicRouteOptions, getSurveyThemeByIdHandler);
 
   server.get("/", getAllThemesOfUserOrg);
 
@@ -56,9 +52,5 @@ export async function surveyThemeRoutes(server: FastifyInstance) {
 
   server.delete("/:webSurveyThemeId", deleteTheme);
 
-  server.post(
-    "/updateWebSurveyThemes",
-    assertRootOrgRouteOptions,
-    updateAllWebSurveyThemesJson,
-  );
+  server.post("/updateWebSurveyThemes", assertRootOrgRouteOptions, updateAllWebSurveyThemesJson);
 }

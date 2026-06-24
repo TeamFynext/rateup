@@ -61,10 +61,7 @@ export async function getAutomatedReplyById(id: string) {
   };
 }
 
-export async function createAutomatedReply(
-  data: CreateAutomatedReplySchema,
-  orgId: string,
-) {
+export async function createAutomatedReply(data: CreateAutomatedReplySchema, orgId: string) {
   const automatedReply = await prisma.waAutomatedReply.create({
     data: {
       orgId,
@@ -87,11 +84,7 @@ export async function createAutomatedReply(
   return automatedReply;
 }
 
-export async function cloneAutomatedReply(
-  id: string,
-  orgId: string,
-  name?: string,
-) {
+export async function cloneAutomatedReply(id: string, orgId: string, name?: string) {
   const source = await prisma.waAutomatedReply.findFirst({
     where: {
       id,
@@ -115,11 +108,7 @@ export async function cloneAutomatedReply(
   return automatedReply;
 }
 
-export async function updateAutomatedReply(
-  id: string,
-  data: any,
-  orgId: string,
-) {
+export async function updateAutomatedReply(id: string, data: any, _orgId: string) {
   const updatedAutomatedReply = await prisma.waAutomatedReply.update({
     where: {
       id,
@@ -159,24 +148,19 @@ export async function getAutomatedRepliesByKeyWeords(orgId, keyword) {
   });
 }
 
-export async function getCommandByOrgIdAndCommand(
-  orgId: string,
-  command: string,
-) {
-  const AutomatedReplyCommands = await prisma.waAutomatedReplyCommands.findMany(
-    {
-      where: {
-        orgId,
-        command,
-      },
-      select: {
-        command: true,
-        waAutomatedReplyId: true,
-        waAutomatedReply: true,
-        businessHour: true,
-      },
+export async function getCommandByOrgIdAndCommand(orgId: string, command: string) {
+  const AutomatedReplyCommands = await prisma.waAutomatedReplyCommands.findMany({
+    where: {
+      orgId,
+      command,
     },
-  );
+    select: {
+      command: true,
+      waAutomatedReplyId: true,
+      waAutomatedReply: true,
+      businessHour: true,
+    },
+  });
 
   return selectAutomationByBusinessHours(AutomatedReplyCommands);
 }

@@ -20,14 +20,8 @@ export async function linkRoutes(server: FastifyInstance) {
   });
 
   // Public Routes
-  server.get(
-    "/public/:shortUrlId",
-    getPublicGenerateQrRecordWithShortIdRouteOptions,
-  );
-  server.post(
-    "/noOfScans/:shortUrlId",
-    incrementGenerateQrNoOfScansRouteOptions,
-  );
+  server.get("/public/:shortUrlId", getPublicGenerateQrRecordWithShortIdRouteOptions);
+  server.post("/noOfScans/:shortUrlId", incrementGenerateQrNoOfScansRouteOptions);
 
   // Private Routes
   server.post("/", createGenerateQrRecordRouteOptions);

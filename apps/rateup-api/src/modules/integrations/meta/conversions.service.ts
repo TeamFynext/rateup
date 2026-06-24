@@ -8,10 +8,7 @@ import { notificationQueue } from "../../../utils/redisConnection.js";
 function hashData(data: string): string {
   if (!data) return "";
   // Meta requires data to be hashed using SHA256 in lowercase
-  return crypto
-    .createHash("sha256")
-    .update(data.trim().toLowerCase())
-    .digest("hex");
+  return crypto.createHash("sha256").update(data.trim().toLowerCase()).digest("hex");
 }
 
 export async function triggerConversionsApiForContact(
@@ -56,8 +53,7 @@ export async function triggerConversionsApiForContact(
       return;
     }
 
-    const eventName =
-      (waSettings.conversionData as any)?.event_name || "Purchase";
+    const eventName = (waSettings.conversionData as any)?.event_name || "Purchase";
     const currency = (waSettings.conversionData as any)?.currency || "USD";
 
     const customData: any = {
@@ -84,12 +80,7 @@ export async function triggerConversionsApiForContact(
       ],
     };
 
-    const res = await callMetaApi(
-      `/${datasetId}/events`,
-      "POST",
-      waSettings.accessToken,
-      payload,
-    );
+    const res = await callMetaApi(`/${datasetId}/events`, "POST", waSettings.accessToken, payload);
     log.info(`Meta Conversions API event sent successfully`);
     return res.data;
   } catch (error: any) {
@@ -114,10 +105,7 @@ export async function triggerConversionsApiForContact(
             data: {
               contactId: contact.id,
               contactName: contact.name,
-              error:
-                error?.response?.data?.error?.message ||
-                error?.message ||
-                "Unknown error",
+              error: error?.response?.data?.error?.message || error?.message || "Unknown error",
             },
           },
         });

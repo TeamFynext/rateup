@@ -1,14 +1,6 @@
 import { FastifyInstance } from "fastify";
-import {
-  sendEmailHandler,
-  sendOTPEmailHandler,
-  validateOTPHandler,
-} from "./email.controller.js";
-import {
-  GenerateOtpSchema,
-  sendEmailSchema,
-  validateOtpSchema,
-} from "./email.schema.js";
+import { sendEmailHandler, sendOTPEmailHandler, validateOTPHandler } from "./email.controller.js";
+import { GenerateOtpSchema, sendEmailSchema, validateOtpSchema } from "./email.schema.js";
 
 export async function emailPublicRoutes(server: FastifyInstance) {
   server.post(

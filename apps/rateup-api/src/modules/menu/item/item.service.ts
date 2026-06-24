@@ -59,7 +59,7 @@ export async function getMenuItemByCategory(categoryId: string) {
 }
 
 export async function updateMenuItem(id: string, data: UpdateMenuItemInput) {
-  let { itemOrder, ...newData } = data;
+  let { ...newData } = data;
 
   const menuItem = await prisma.menuItem.update({
     where: { id },
@@ -69,10 +69,7 @@ export async function updateMenuItem(id: string, data: UpdateMenuItemInput) {
   return menuItem;
 }
 
-export async function sortMenuItem(
-  categoryId: string,
-  data: SortMenuCategoryInput,
-) {
+export async function sortMenuItem(categoryId: string, data: SortMenuCategoryInput) {
   let index = 0;
   let { itemOrder = [] } = data;
 
@@ -118,10 +115,7 @@ export async function deleteMenuItem(id: string) {
   });
   return menuItem;
 }
-export async function createMenuItemUsingCsv(
-  data: MultipartFile,
-  menuId: string,
-) {
+export async function createMenuItemUsingCsv(data: MultipartFile, menuId: string) {
   const requiredHeaders = ["categoryname", "name", "description", "price"];
   const content = await data.toBuffer();
   const results = Papa.parse(content.toString(), {
@@ -130,15 +124,11 @@ export async function createMenuItemUsingCsv(
     skipEmptyLines: true,
     transformHeader: (header: string) => header?.toLowerCase(),
     transform: (data: string | number, header: string) =>
-      requiredHeaders.includes(header?.toLowerCase()) && data
-        ? data
-        : undefined,
+      requiredHeaders.includes(header?.toLowerCase()) && data ? data : undefined,
   });
 
   const filteredDatas = results.data.filter((row) =>
-    requiredHeaders.every(
-      (header) => header in row && row[header] !== undefined,
-    ),
+    requiredHeaders.every((header) => header in row && row[header] !== undefined),
   );
   for await (const filteredData of filteredDatas) {
     let category = await prisma.menuCategory.findFirst({

@@ -29,10 +29,7 @@ function extractMessageBodyCandidates(
   for (const group of groups) {
     for (const condition of group.conditions) {
       const rawValue = condition.value;
-      if (
-        condition.field === MESSAGE_BODY_FIELD &&
-        typeof rawValue === "string"
-      ) {
+      if (condition.field === MESSAGE_BODY_FIELD && typeof rawValue === "string") {
         const value = rawValue.trim();
         if (value.length > 0) {
           candidates.push({
@@ -48,9 +45,7 @@ function extractMessageBodyCandidates(
   return candidates;
 }
 
-function ensureNoDuplicateMessageBodyCandidates(
-  candidates: MessageBodyCandidate[],
-) {
+function ensureNoDuplicateMessageBodyCandidates(candidates: MessageBodyCandidate[]) {
   if (candidates.length < 2) return;
 
   const seen = new Set<string>();
@@ -68,9 +63,7 @@ function ensureNoDuplicateMessageBodyCandidates(
     const formatted = Array.from(duplicates)
       .map((key) => {
         const [value, businessHourPart] = key.split("::$");
-        return businessHourPart
-          ? `'${value}' (businessHourId: ${businessHourPart})`
-          : `'${value}'`;
+        return businessHourPart ? `'${value}' (businessHourId: ${businessHourPart})` : `'${value}'`;
       })
       .join(", ");
     throw new Error(
@@ -125,12 +118,8 @@ async function ensureMessageBodyUniqueness(
       if (!isLinkedRuleActive) return;
 
       const conflictingRuleName = existing.ruleCondition?.group.rule?.name;
-      const ruleNamePart = conflictingRuleName
-        ? " ('" + conflictingRuleName + "')"
-        : "";
-      const context = businessHourId
-        ? " during the configured business hours"
-        : "";
+      const ruleNamePart = conflictingRuleName ? " ('" + conflictingRuleName + "')" : "";
+      const context = businessHourId ? " during the configured business hours" : "";
       const baseMsg =
         "Keyword '" +
         value +
@@ -144,10 +133,7 @@ async function ensureMessageBodyUniqueness(
   );
 }
 
-async function clearMessageBodyReservations(
-  tx: Prisma.TransactionClient,
-  ruleId: string,
-) {
+async function clearMessageBodyReservations(tx: Prisma.TransactionClient, ruleId: string) {
   await tx.ruleMessageBodyLock.deleteMany({
     where: {
       ruleCondition: {
@@ -195,17 +181,13 @@ async function reserveMessageBodyCommands(
   // Extract businessHourId from rule options
   const ruleOptions = rule.options as any;
   const businessHourId =
-    ruleOptions?.businessHours?.enabled &&
-    ruleOptions.businessHours.businessHoursId
+    ruleOptions?.businessHours?.enabled && ruleOptions.businessHours.businessHoursId
       ? ruleOptions.businessHours.businessHoursId
       : null;
 
   for (const group of rule.groups) {
     for (const condition of group.conditions) {
-      if (
-        condition.field === MESSAGE_BODY_FIELD &&
-        typeof condition.value === "string"
-      ) {
+      if (condition.field === MESSAGE_BODY_FIELD && typeof condition.value === "string") {
         const command = condition.value.trim();
         if (command.length > 0) {
           data.push({
@@ -237,8 +219,7 @@ export async function createRule(data: CreateRuleInput & { orgId: string }) {
   const { groups, actions, options, orgId } = data;
 
   const skipMessageBodyLock =
-    data.triggerEvent === "INSTAGRAM_COMMENT" ||
-    data.triggerEvent === "INSTAGRAM_STORY_MENTION";
+    data.triggerEvent === "INSTAGRAM_COMMENT" || data.triggerEvent === "INSTAGRAM_STORY_MENTION";
 
   const messageBodyCandidates = skipMessageBodyLock
     ? []
@@ -361,39 +342,24 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
 
   const triggerEvent = data.triggerEvent ?? existingRule.triggerEvent;
   const skipMessageBodyLock =
-    triggerEvent === "INSTAGRAM_COMMENT" ||
-    triggerEvent === "INSTAGRAM_STORY_MENTION";
+    triggerEvent === "INSTAGRAM_COMMENT" || triggerEvent === "INSTAGRAM_STORY_MENTION";
 
   let messageBodyCandidates: MessageBodyCandidate[] = [];
 
   if (!isDisabling && !skipMessageBodyLock) {
     const platform = data.platform ?? existingRule.platform;
     if (groups) {
-      messageBodyCandidates = extractMessageBodyCandidates(
-        groups,
-        options,
-        platform,
-      );
+      messageBodyCandidates = extractMessageBodyCandidates(groups, options, platform);
       ensureNoDuplicateMessageBodyCandidates(messageBodyCandidates);
-      await ensureMessageBodyUniqueness(
-        existingRule.orgId,
-        messageBodyCandidates,
-        id,
-      );
+      await ensureMessageBodyUniqueness(existingRule.orgId, messageBodyCandidates, id);
     } else if (isEnabling) {
-      const existingOptions = existingRule.options as
-        | CreateRuleInput["options"]
-        | null;
+      const existingOptions = existingRule.options as CreateRuleInput["options"] | null;
       const existingCandidates = extractMessageBodyCandidates(
         existingRule.groups as CreateRuleInput["groups"],
         existingOptions ?? undefined,
         platform,
       );
-      await ensureMessageBodyUniqueness(
-        existingRule.orgId,
-        existingCandidates,
-        id,
-      );
+      await ensureMessageBodyUniqueness(existingRule.orgId, existingCandidates, id);
     }
   }
 
@@ -464,10 +430,7 @@ export async function deleteRule(id: string) {
 }
 
 // Get Rules by Automation ID (from action value)
-export async function getRulesByAutomationId(
-  automationId: string,
-  orgId: string,
-) {
+export async function getRulesByAutomationId(automationId: string, orgId: string) {
   const data = await prisma.ruleAction.findMany({
     where: {
       value: {

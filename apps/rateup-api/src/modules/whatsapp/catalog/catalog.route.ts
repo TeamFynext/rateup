@@ -49,10 +49,7 @@ export async function waCatalogRoutes(server: FastifyInstance) {
   server.post("/sync-connected", syncConnectedCatalogHandler);
 
   server.get("/", getWaCatalogByOrgHandler);
-  server.get(
-    "/connected/:whatsappSettingsPhoneId",
-    getConnectedWaCatalogHandler,
-  );
+  server.get("/connected/:whatsappSettingsPhoneId", getConnectedWaCatalogHandler);
   server.delete(
     "/disconnect",
     {
@@ -73,10 +70,7 @@ export async function waCatalogRoutes(server: FastifyInstance) {
     syncProductSetsHandler,
   );
 
-  server.get(
-    "/product-sets/catalog/:catalogId",
-    getProductSetsByCatalogHandler,
-  );
+  server.get("/product-sets/catalog/:catalogId", getProductSetsByCatalogHandler);
 
   server.get(
     "/product-sets/:productSetId",
@@ -114,9 +108,5 @@ export async function waCatalogRoutes(server: FastifyInstance) {
 
   // Keep /:catalogId last so it doesn't swallow /settings and /create-address-flow
   server.get("/:catalogId", getWaCatalogInfoHandler);
-  server.delete(
-    "/:catalogId",
-    { schema: { params: catalogIdParams } },
-    deleteCatalogHandler,
-  );
+  server.delete("/:catalogId", { schema: { params: catalogIdParams } }, deleteCatalogHandler);
 }

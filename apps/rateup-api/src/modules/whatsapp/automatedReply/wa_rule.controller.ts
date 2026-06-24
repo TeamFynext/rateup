@@ -13,10 +13,7 @@ export async function createRuleHandler(
     const rule = await RuleService.createRule({ ...req.body, orgId });
     reply.send(rule);
   } catch (error) {
-    if (
-      error instanceof PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
+    if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") {
       return reply.status(400).send({
         error: "Failed to create rule",
         message: "Rule with the same name already exists in the organization",
@@ -31,10 +28,7 @@ export async function createRuleHandler(
 }
 
 // Get all Rules
-export async function getAllRulesHandler(
-  req: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getAllRulesHandler(req: FastifyRequest, reply: FastifyReply) {
   try {
     const orgId = req.user.orgId;
     const rules = await RuleService.getAllRules(orgId);

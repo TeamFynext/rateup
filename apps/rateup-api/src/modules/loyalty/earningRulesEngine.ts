@@ -67,33 +67,22 @@ export class EarningRulesEngine {
         const timeRanges = rule.allowedTimeRanges as any;
         if (timeRanges.time_ranges && Array.isArray(timeRanges.time_ranges)) {
           const inRange = timeRanges.time_ranges.some(
-            (r: { start: string; end: string }) =>
-              currentTime >= r.start && currentTime <= r.end,
+            (r: { start: string; end: string }) => currentTime >= r.start && currentTime <= r.end,
           );
           if (!inRange) continue;
         }
       }
 
       // Check purchase amount
-      if (
-        rule.minPurchaseAmount &&
-        purchaseAmount < Number(rule.minPurchaseAmount)
-      ) {
+      if (rule.minPurchaseAmount && purchaseAmount < Number(rule.minPurchaseAmount)) {
         continue;
       }
-      if (
-        rule.maxPurchaseAmount &&
-        purchaseAmount > Number(rule.maxPurchaseAmount)
-      ) {
+      if (rule.maxPurchaseAmount && purchaseAmount > Number(rule.maxPurchaseAmount)) {
         continue;
       }
 
       // Check tier eligibility
-      if (
-        rule.applicableToTiers &&
-        rule.applicableToTiers.length > 0 &&
-        customer.currentTierId
-      ) {
+      if (rule.applicableToTiers && rule.applicableToTiers.length > 0 && customer.currentTierId) {
         if (!rule.applicableToTiers.includes(customer.currentTierId)) {
           continue;
         }
@@ -115,10 +104,7 @@ export class EarningRulesEngine {
       }
 
       // Additional conditions check
-      if (
-        rule.conditions &&
-        Object.keys(rule.conditions as object).length > 0
-      ) {
+      if (rule.conditions && Object.keys(rule.conditions as object).length > 0) {
         if (
           !this.evaluateAdditionalConditions(
             rule.conditions as LoyaltyEarningRuleConditions,
@@ -216,9 +202,7 @@ export class EarningRulesEngine {
     if (conditions.payment_methods?.enabled) {
       if (
         !context.payment_method ||
-        !conditions.payment_methods.allowed_methods.includes(
-          context.payment_method,
-        )
+        !conditions.payment_methods.allowed_methods.includes(context.payment_method)
       ) {
         return false;
       }
@@ -236,10 +220,7 @@ export class EarningRulesEngine {
 
     // Channel check
     if (conditions.channels?.enabled) {
-      if (
-        !context.channel ||
-        !conditions.channels.allowed_channels.includes(context.channel)
-      ) {
+      if (!context.channel || !conditions.channels.allowed_channels.includes(context.channel)) {
         return false;
       }
     }
@@ -325,7 +306,7 @@ export class EarningRulesEngine {
   /**
    * Generate a unique referral code for a customer
    */
-  generateReferralCode(customerName: string, customerPhone: string): string {
+  generateReferralCode(customerName: string, _customerPhone: string): string {
     const namePart = customerName
       ? customerName.substring(0, 6).toUpperCase().replace(/\s/g, "")
       : "USER";
@@ -339,7 +320,6 @@ export const earningRulesEngine = new EarningRulesEngine();
 // Export convenience functions for easier imports
 export const calculatePointsForPurchase =
   earningRulesEngine.calculatePointsForPurchase.bind(earningRulesEngine);
-export const checkAndUpgradeTier =
-  earningRulesEngine.checkAndUpgradeTier.bind(earningRulesEngine);
+export const checkAndUpgradeTier = earningRulesEngine.checkAndUpgradeTier.bind(earningRulesEngine);
 export const generateReferralCode =
   earningRulesEngine.generateReferralCode.bind(earningRulesEngine);

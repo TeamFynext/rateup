@@ -1,16 +1,9 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger.js";
-import {
-  getActiveSurveyStats,
-  getOverallStats,
-  getTeamMemberStats,
-} from "./dashboard.service.js";
+import { getActiveSurveyStats, getOverallStats, getTeamMemberStats } from "./dashboard.service.js";
 import { ByTeamIdParams } from "../team/team.schema.js";
 
-export async function getOverallStatsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getOverallStatsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { orgId, userId } = request.user;
     const res = await getOverallStats(orgId, userId);
@@ -21,10 +14,7 @@ export async function getOverallStatsHandler(
   }
 }
 
-export async function getActiveSurveyStatsHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getActiveSurveyStatsHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const { userId } = request.user;
     const res = await getActiveSurveyStats(userId);

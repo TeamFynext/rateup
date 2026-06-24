@@ -24,8 +24,6 @@ export async function verifyColumnAccess(
   const hasAccess = await isBoardMember(boardId, userId);
 
   if (!hasAccess) {
-    return reply
-      .code(403)
-      .send({ message: "You don't have access to this column" });
+    return reply.code(403).send({ message: "You don't have access to this column" });
   }
 }

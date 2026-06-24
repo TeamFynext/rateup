@@ -1,9 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { rateupLogo } from "../../utils/constants/constants.js";
-import {
-  CreateBookDemoInput,
-  CreatePartnerDataInput,
-} from "./bookDemo.schema.js";
+import { CreateBookDemoInput, CreatePartnerDataInput } from "./bookDemo.schema.js";
 import { notificationQueue } from "../../utils/redisConnection.js";
 
 export async function bookDemoHandler(

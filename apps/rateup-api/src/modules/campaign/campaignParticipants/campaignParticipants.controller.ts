@@ -71,11 +71,10 @@ export async function getCampaignParticipantsByCampaignIdHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const campaignParticipants =
-    await getCampaignParticipantsByCampaignIdPaginated(
-      request.params.campaignId,
-      request.query,
-    );
+  const campaignParticipants = await getCampaignParticipantsByCampaignIdPaginated(
+    request.params.campaignId,
+    request.query,
+  );
   reply.send(campaignParticipants);
 }
 
@@ -104,9 +103,7 @@ export async function multipleDeleteCampaignParticipantHandler(
   reply: FastifyReply,
 ) {
   try {
-    const campaignParticipants = await multipleDeleteCampaignParticipant(
-      request.body.ids,
-    );
+    const campaignParticipants = await multipleDeleteCampaignParticipant(request.body.ids);
     reply.send(campaignParticipants);
   } catch (error) {
     reply.send(error);

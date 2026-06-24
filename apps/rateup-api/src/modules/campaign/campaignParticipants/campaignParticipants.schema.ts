@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  CampaignParticipantAddStatus,
-  CampaignParticipantStatus,
-} from "../../../types/enums.js";
+import { CampaignParticipantAddStatus, CampaignParticipantStatus } from "../../../types/enums.js";
 import { paginationQuery } from "../../contact/contact.schema.js";
 
 const byCampaignParticipantIdParamsSchema = z.object({
@@ -46,25 +43,17 @@ const campaginParticipantPaginateSchema = z.object({
   selectedDripStage: z.string().optional(),
 });
 
-const paginateQuerySchema = paginationQuery.extend(
-  campaginParticipantPaginateSchema.shape,
-);
+const paginateQuerySchema = paginationQuery.extend(campaginParticipantPaginateSchema.shape);
 
-export type ByCampaignParticipantIdParams = z.infer<
-  typeof byCampaignParticipantIdParamsSchema
->;
+export type ByCampaignParticipantIdParams = z.infer<typeof byCampaignParticipantIdParamsSchema>;
 export type CreateCampaignParticipantsFromGroupsInput = z.infer<
   typeof createCampaignParticipantsFromGroupsSchema
 >;
 export type CreateCampaignParticipantsFromContactsInput = z.infer<
   typeof createCampaignParticipantsFromContactsSchema
 >;
-export type CreateCampaignParticipantsInput = z.infer<
-  typeof createCampaignParticipantsSchema
->;
-export type DeleteCampaignParticipantsInput = z.infer<
-  typeof deleteCampaignParticipantsSchema
->;
+export type CreateCampaignParticipantsInput = z.infer<typeof createCampaignParticipantsSchema>;
+export type DeleteCampaignParticipantsInput = z.infer<typeof deleteCampaignParticipantsSchema>;
 export type PaginateQueryInput = z.infer<typeof paginateQuerySchema>;
 
 // Auto-exported after fastify-zod migration

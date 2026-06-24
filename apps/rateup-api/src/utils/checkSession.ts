@@ -8,10 +8,7 @@ import { auditLogHook } from "./auditLog.js";
  * @param request
  * @param reply
  */
-export const checkSession = async (
-  request: FastifyRequest,
-  reply: FastifyReply,
-) => {
+export const checkSession = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     let session = await Session.getSession(request, reply);
     const userId = session.getUserId();

@@ -18,25 +18,14 @@ import { cloneSurvey } from "../survey/survey.service.js";
 import { cloneMenu } from "../menu/menu.service.js";
 import { defaultTheme } from "../surveyTheme/defaultTheme.js";
 import { updateReferral } from "../referrals/referrals.service.js";
-import {
-  deleteSuperTokenUserForId,
-  getUserInfo,
-} from "../../utils/supertoken/supertoken.js";
+import { deleteSuperTokenUserForId, getUserInfo } from "../../utils/supertoken/supertoken.js";
 import { UserRecipes } from "../../types/enums.js";
 import dayjs from "dayjs";
-import {
-  createHubSpotCompany,
-  createHubSpotContact,
-} from "../../utils/hubspot.js";
+import { createHubSpotCompany, createHubSpotContact } from "../../utils/hubspot.js";
 import prisma from "../../utils/prisma.js";
 import { UserPresenceMode } from "../../../generated/prisma/enums.js";
 
-async function createUser({
-  id,
-  email,
-  recipeName,
-  prefLanguage,
-}: CreateUserParams) {
+async function createUser({ id, email, recipeName, prefLanguage }: CreateUserParams) {
   const user = await prisma.user.create({
     data: {
       id,
@@ -92,9 +81,7 @@ export async function createUserSignup({
             location: location || null,
             website: website || null,
             goals: goals?.length ? goals : null,
-            integrationsSelected: integrationsSelected?.length
-              ? integrationsSelected
-              : null,
+            integrationsSelected: integrationsSelected?.length ? integrationsSelected : null,
             teamSize: teamSize || null,
           },
           surveyThemes: {
@@ -106,7 +93,7 @@ export async function createUserSignup({
         },
       });
 
-      let orgMember = await prisma.orgMember.create({
+      await prisma.orgMember.create({
         data: {
           orgId: org.id,
           userId: newUser.id,
@@ -142,12 +129,7 @@ export async function createUserSignup({
         };
       }
 
-      await createFreePlanSubscription(
-        org.id,
-        prisma as any,
-        planId,
-        overrides,
-      );
+      await createFreePlanSubscription(org.id, prisma as any, planId, overrides);
     });
 
     if (team.id && teamMember.userId) {
@@ -159,12 +141,7 @@ export async function createUserSignup({
 
       try {
         if (surveyId) {
-          cloneNewSurvey = await cloneSurvey(
-            surveyId,
-            teamMember.userId,
-            teamIds,
-            true,
-          );
+          cloneNewSurvey = await cloneSurvey(surveyId, teamMember.userId, teamIds, true);
         } else {
           log.error("Initial Survey creation failed...surveyId...missing");
         }
@@ -175,9 +152,9 @@ export async function createUserSignup({
           cloneNewSurvey?.teams &&
           cloneNewSurvey?.teams?.length > 0
         ) {
-          menuId &&
-            cloneNewSurvey.teams[0].id &&
-            (await cloneMenu(menuId, team.id, cloneNewSurvey.teams[0].id));
+          if (cloneNewSurvey.teams[0].id) {
+            await cloneMenu(menuId, team.id, cloneNewSurvey.teams[0].id);
+          }
         } else {
           log.error("Initial Menu creation failed..." + cloneNewSurvey);
         }
@@ -225,10 +202,7 @@ export async function createUserSignup({
   }
 }
 
-export async function getLoggedUserInfo(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getLoggedUserInfo(request: FastifyRequest, reply: FastifyReply) {
   let session = await Session.getSession(request, reply);
 
   const accessTokenPayload = session.getAccessTokenPayload();
@@ -345,10 +319,7 @@ export async function getLoggedUserInfo(
   };
 }
 
-export async function getLoggedUserProfile(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
+export async function getLoggedUserProfile(request: FastifyRequest, reply: FastifyReply) {
   let session = await Session.getSession(request, reply);
 
   const accessTokenPayload = session.getAccessTokenPayload();

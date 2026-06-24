@@ -63,12 +63,7 @@ export async function deleteTokenByUserId(userId: string, expoToken: string) {
 
 const expoPushUrl = process.env.EXPO_PUSH_URL;
 
-export async function sendPushNotification(
-  expoPushTokens,
-  title,
-  body,
-  data = {},
-) {
+export async function sendPushNotification(expoPushTokens, title, body, data = {}) {
   if (!Array.isArray(expoPushTokens) || expoPushTokens.length === 0) {
     console.error("No Expo push tokens provided");
     return;
@@ -76,8 +71,7 @@ export async function sendPushNotification(
 
   // Filter invalid tokens
   const validTokens = expoPushTokens.filter(
-    (token) =>
-      typeof token === "string" && token.startsWith("ExponentPushToken"),
+    (token) => typeof token === "string" && token.startsWith("ExponentPushToken"),
   );
 
   if (validTokens.length === 0) {

@@ -8,15 +8,8 @@ describe("Encryption Utils", () => {
 
     const key = crypto.randomBytes(32).toString("hex");
 
-    const { encryptedData, iv } = aes_encrypt(
-      dataToEncrypt,
-      Buffer.from(key, "hex"),
-    );
-    const decryptedData = aes_decrypt(
-      encryptedData,
-      Buffer.from(key, "hex"),
-      iv,
-    );
+    const { encryptedData, iv } = aes_encrypt(dataToEncrypt, Buffer.from(key, "hex"));
+    const decryptedData = aes_decrypt(encryptedData, Buffer.from(key, "hex"), iv);
 
     expect(decryptedData).toBe(dataToEncrypt);
   });

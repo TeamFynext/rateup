@@ -3,7 +3,6 @@ import { FastifyRequest } from "fastify/types/request.js";
 import { RegisterBusinessBody } from "./wa_auth.schema.js";
 import crypto from "node:crypto";
 import {
-  debug_token,
   getAccessTokenFromCode,
   getPhoneNumbersFromWABA,
   registerPhoneNumber,
@@ -20,10 +19,7 @@ import {
 import { WaConfigType } from "../../../types/enums.js";
 import { callMetaApi, GraphApiError } from "../wa_axios.js";
 import { handleWhatsappError } from "../wa_error_handler.js";
-import {
-  generateKeyPairsForWaEncryption,
-  setNewEncryptionKeys,
-} from "../encryption/wa_encryption.utils.js";
+import { generateKeyPairsForWaEncryption } from "../encryption/wa_encryption.utils.js";
 import { setBusinessPublicKey } from "../encryption/wa_encryption.service.js";
 import prisma from "../../../utils/prisma.js";
 
@@ -50,19 +46,14 @@ export async function registerBusinessClientHandler(
         log.error(
           `Phone number ${phone_number_id} is already registered with another organization`,
         );
-        return rep
-          .status(400)
-          .send({ message: "Phone number already registered" });
+        return rep.status(400).send({ message: "Phone number already registered" });
       }
     }
 
     const accessToken = await getAccessTokenFromCode(code);
 
     // Getting phone numbers & their ids
-    const { data: phoneNumbers } = await getPhoneNumbersFromWABA(
-      waba_id,
-      accessToken,
-    );
+    const { data: phoneNumbers } = await getPhoneNumbersFromWABA(waba_id, accessToken);
 
     log.trace("Phone numbers: %o", phoneNumbers);
 
@@ -75,10 +66,7 @@ export async function registerBusinessClientHandler(
     // Registering phone number
     log.trace("Phone status: %o", phone?.status);
     if (phone_number_id && phone?.status !== "CONNECTED") {
-      const registerRes = await registerPhoneNumber(
-        phone_number_id,
-        accessToken,
-      );
+      const registerRes = await registerPhoneNumber(phone_number_id, accessToken);
       log.trace("Phone registration response: %o", registerRes);
     }
 
@@ -113,9 +101,7 @@ export async function registerBusinessClientHandler(
     }
 
     log.info("Business client registered successfully");
-    rep
-      .status(200)
-      .send({ message: "Business client registered successfully" });
+    rep.status(200).send({ message: "Business client registered successfully" });
   } catch (e) {
     log.error(e);
     if (e instanceof GraphApiError) {
@@ -149,9 +135,7 @@ export async function getUserAccessTokenHanlder(
 
     const userAccessToken = await getAccessTokenFromCode(
       code,
-      encodeURIComponent(
-        `${process.env.FRONTEND_URL}/${process.env.wa_user_redirect_uri}`,
-      ),
+      encodeURIComponent(`${process.env.FRONTEND_URL}/${process.env.wa_user_redirect_uri}`),
     );
     const url = `/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${userAccessToken}`;
     const res = await callMetaApi(url, "GET");

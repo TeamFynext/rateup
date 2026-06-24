@@ -11,8 +11,4 @@ const contactResponseSchema = createContactSchema.extend({
 export type ExtCreateContactSchema = z.infer<typeof createContactSchema>;
 
 // Auto-exported after fastify-zod migration
-export {
-  createContactSchema,
-  createMultipleContactSchema,
-  contactResponseSchema,
-};
+export { createContactSchema, createMultipleContactSchema, contactResponseSchema };

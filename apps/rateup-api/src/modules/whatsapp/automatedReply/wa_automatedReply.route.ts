@@ -31,18 +31,13 @@ import {
   updateRuleSchema,
   getRulesByAutomationIdQuerySchema,
 } from "./wa_rule.schema.js";
-import {
-  byWaAutomatedReplyIdParams,
-  cloneAutomatedReplyBody,
-} from "./wa_automatedReply.schema.js";
+import { byWaAutomatedReplyIdParams, cloneAutomatedReplyBody } from "./wa_automatedReply.schema.js";
 
 export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
   fastify.addHook("preHandler", checkSession);
   fastify.addHook(
     "preHandler",
-    getVerifySubscriptionHandler([
-      SubscriptionFeaturePathName.WhatsAppAutomation,
-    ]),
+    getVerifySubscriptionHandler([SubscriptionFeaturePathName.WhatsAppAutomation]),
   );
   fastify.addHook("preHandler", requireFeature(TeamFeature.automation));
   fastify.get("/message/:id", getAutomatedRepliesMessagIdHandler);
