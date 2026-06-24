@@ -24,6 +24,8 @@ export async function createCardHandler(
       ticketColumnId: string;
       type: TicketType;
       contactId?: string;
+      surveyResponseId?: string;
+      reviewId?: string;
       priority?: TicketPriority;
       deadline?: string | Date | null;
     };
@@ -37,6 +39,8 @@ export async function createCardHandler(
       ticketColumnId,
       type,
       contactId,
+      surveyResponseId,
+      reviewId,
       priority,
       deadline,
     } = request.body;
@@ -48,6 +52,8 @@ export async function createCardHandler(
       userId,
       type,
       contactId,
+      surveyResponseId,
+      reviewId,
       priority,
       deadline,
       orgId: request.user.orgId,
