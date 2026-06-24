@@ -46,14 +46,14 @@ function calcTotal(products: any[], deliveryOption?: any): string {
 }
 
 export default function OrdersTable({
-  settingId,
+  settingId: _settingId,
   phoneId,
   storeType,
-}: {
+}: Readonly<{
   settingId: string;
   phoneId?: string;
   storeType?: string;
-}) {
+}>) {
   const [page, setPage] = useState(0);
   const pageSize = 10;
   const [selectedOrder, setSelectedOrder] = useState<any>(null);

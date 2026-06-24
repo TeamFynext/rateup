@@ -25,7 +25,7 @@ export const Route = createFileRoute("/dashboard/surveys/templates/")({
   component: Templates,
 });
 
-function Templates({ survey }) {
+function Templates() {
   const { user } = useUser();
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
   const [selectedTemplate, setSelectedTemplate] = useState(null);

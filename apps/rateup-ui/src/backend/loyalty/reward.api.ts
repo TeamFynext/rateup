@@ -34,7 +34,7 @@ interface AssignedValue {
   sku?: string | null;
 }
 
-type LoyaltyRewardValue = PointRewardValue | CouponValue | AssignedValue | Record<string, unknown>;
+type _LoyaltyRewardValue = PointRewardValue | CouponValue | AssignedValue | Record<string, unknown>;
 
 // Redemption rules schemas
 interface TimeRestrictions {

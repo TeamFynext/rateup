@@ -39,14 +39,14 @@ import { getBgImgAndBgColor } from "./utils.ts";
 import styles from "./TakeSurveyLayoutWeb.module.css";
 
 export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
-  const { theme: surveyThemeData } = survey?.webSurveyTheme;
+  const { theme: surveyThemeData } = survey?.webSurveyTheme ?? {};
   const pagesThemeData = survey?.webSurveyPagesTheme;
 
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const isSurveyThemeEditView = useIsSurveyThemeEditView();
 
-  const orgLogoSrc = surveyThemeData.surveyTheme?.logo?.logo;
-  const orgLogoStyles = surveyThemeData.surveyTheme?.logo?.styles;
+  const orgLogoSrc = surveyThemeData?.surveyTheme?.logo?.logo;
+  const orgLogoStyles = surveyThemeData?.surveyTheme?.logo?.styles;
 
   // This one is being used for preview in surveyTheme editor
   // (TakeSurveyLayoutWeb and TakeSurvey component is also being used in surveyTheme editor).
@@ -92,7 +92,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   useEffect(() => {
     if (isWelcomePageEnabled) {
       setStartClicked(false);
-      surveyTeamMapId && updateVisited.mutate(surveyTeamMapId);
+      if (surveyTeamMapId) updateVisited.mutate(surveyTeamMapId);
     } else {
       setStartClicked(true);
       if (surveyTeamMapId) {
@@ -110,7 +110,7 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   }, [survey?.questions]);
 
   const handleStartClick = () => {
-    surveyTeamMapId && updateStarted.mutate(surveyTeamMapId);
+    if (surveyTeamMapId) updateStarted.mutate(surveyTeamMapId);
     setStartClicked(true);
   };
 

@@ -142,8 +142,8 @@ const ShareSurvey = ({
         setErrors(data?.data?.data);
         open();
       } else {
-        data?.data?.action === "unpublish" && setIsPublished(false);
-        data?.data?.action === "publish" && setIsPublished(true);
+        if (data?.data?.action === "unpublish") setIsPublished(false);
+        if (data?.data?.action === "publish") setIsPublished(true);
 
         toast.success(
           data?.data?.action === "unpublish"

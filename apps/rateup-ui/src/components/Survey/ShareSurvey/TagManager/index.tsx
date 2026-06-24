@@ -30,7 +30,6 @@ function TagManager({
   teamSelectData,
   onSelectTeamDropdownChange,
   nothingFound,
-  getSelectedRowsToExport,
   tagsToMap,
   surveyTitle,
   surveyId,
@@ -92,7 +91,7 @@ function TagManager({
         qrPreviewContainerClassName,
       );
       setIsAllQrDownloadProcessing(true);
-      const { success, message } = await downloadFiles(allQrsPreviewContainerDomNodes);
+      await downloadFiles(allQrsPreviewContainerDomNodes);
       setIsAllQrDownloadProcessing(false);
     }
   }, []);

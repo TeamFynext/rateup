@@ -16,14 +16,10 @@ export function SurveyHeader({
   filterParam,
   setFilterParam,
   openCreateSurvey,
-  openMergeSurvey,
   onSortChange,
   sortOption,
-  surveyCount,
-  surveyType,
   setSearchQuery,
   searchQuery,
-  refetch,
 }) {
   const { user } = useUser();
   const { t: translations } = useTranslation();

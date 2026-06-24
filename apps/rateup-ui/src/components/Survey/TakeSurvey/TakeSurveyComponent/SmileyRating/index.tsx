@@ -183,7 +183,7 @@ export function getSmileyIcon(value: SmileyResponse, color = "black") {
     case SmileyResponse.VeryHappy:
       return <IconMoodCrazyHappy color={color} />;
     default:
-      null;
+      return null;
   }
 }
 

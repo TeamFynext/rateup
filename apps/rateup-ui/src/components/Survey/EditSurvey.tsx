@@ -114,11 +114,7 @@ export function EditSurvey({
 
   const [
     isStylesEditorDrawerOpen,
-    {
-      open: openStylesEditorDrawer,
-      close: closeStylesEditorDrawer,
-      toggle: toggleStylesEditorDrawer,
-    },
+    { open: openStylesEditorDrawer, close: closeStylesEditorDrawer },
   ] = useDisclosure(false);
 
   const checkForUnsavedChanges = useCallback(() => {

@@ -83,7 +83,7 @@ export function useResetResponsesStats(
       toast.success(response?.success ? "Cleaned up responses & Stats" : "Please try again", {
         id: "load-data",
       });
-      response?.success && close();
+      if (response?.success) close();
       setIsLoading(false);
     },
     onError: (error) => {
@@ -96,12 +96,7 @@ export function useResetResponsesStats(
   });
 }
 
-export function useDeleteResponse(
-  surveyId: string,
-  surveyTeamMapId: string,
-  close: () => void,
-  setIsDeleting: React.Dispatch<React.SetStateAction<boolean>>,
-) {
+export function useDeleteResponse(surveyId: string, surveyTeamMapId: string, close: () => void) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -114,15 +109,13 @@ export function useDeleteResponse(
       toast.success(response?.success ? "Deleted Response successfully" : "Please try again", {
         id: "load-data",
       });
-      response?.success && close();
-      setIsDeleting(false);
+      if (response?.success) close();
     },
     onError: (error) => {
       console.error("Error Deleting", error.message);
       toast.error(error.message, {
         id: "load-data",
       });
-      setIsDeleting(false);
     },
   });
 }
@@ -238,7 +231,7 @@ export const useResponseForComparison = (surveyId) => {
   });
 };
 
-function useSurveyHappyResponseAnalytics(surveyId: string, timeFilter?: string, enabled = true) {
+function _useSurveyHappyResponseAnalytics(surveyId: string, timeFilter?: string, enabled = true) {
   return useQuery({
     queryKey: ["survey-happy-response-analytics", surveyId, timeFilter],
     queryFn: () => getSurveyHappyResponseAnalytics(surveyId, `timeFilter=${timeFilter}`),

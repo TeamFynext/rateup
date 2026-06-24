@@ -17,12 +17,11 @@ function WelcomePage({
   surveyThemeData,
   pagesThemeData,
   onStart,
-  largeScreen,
   orgLogoSrc,
   orgLogoStyles,
   questionsArr,
   isMobile,
-}: {
+}: Readonly<{
   surveyThemeData: any;
   onStart: any;
   largeScreen: any;
@@ -31,7 +30,7 @@ function WelcomePage({
   questionsArr: any;
   pagesThemeData: any;
   isMobile: boolean;
-}) {
+}>) {
   const defaultTitleSubtitleStartButtonTexts = {
     titleText: `<h3 style="text-align: center">Welcome</h3><p style="text-align: center">Welcome to the survey</p>`,
     startButtonText: "Start Survey",

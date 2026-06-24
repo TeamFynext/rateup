@@ -109,10 +109,10 @@ export function useDeleteTeamMutation() {
   return useMutation({
     mutationFn: deleteTeamById,
     onSuccess: () => {
-      (queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
-        toast.success("Team deleted successfully.", {
-          id: "load-data",
-        }));
+      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+      toast.success("Team deleted successfully.", {
+        id: "load-data",
+      });
     },
     onError: (error) => {
       toast.error(error?.message || "Error deleting team", {
@@ -142,10 +142,10 @@ export function userResendInviteTeamMutation() {
   return useMutation({
     mutationFn: (id: string) => resendInviteTeamMember(id),
     onSuccess: () => {
-      (queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
-        toast.success("Team Invitation Resend successfully.", {
-          id: "load-data-invitaion",
-        }));
+      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+      toast.success("Team Invitation Resend successfully.", {
+        id: "load-data-invitaion",
+      });
     },
   });
 }
@@ -154,11 +154,11 @@ export function useDeleteInviteMutation(teamId) {
   return useMutation({
     mutationFn: (id: string) => deleteInviteById(id),
     onSuccess: () => {
-      (queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }),
-        queryClient.invalidateQueries({
-          queryKey: ["invitedTeamMembers", teamId],
-        }),
-        queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] }));
+      queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] });
+      queryClient.invalidateQueries({
+        queryKey: ["invitedTeamMembers", teamId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
       toast.success("Invite deleted successfully.", {
         id: "load-data-deleting",
       });
@@ -167,7 +167,7 @@ export function useDeleteInviteMutation(teamId) {
   });
 }
 
-function useSurveyLanguagesFromTeam(teamId: string) {
+function _useSurveyLanguagesFromTeam(teamId: string) {
   return useQuery({
     queryKey: ["surveyLanguages", teamId],
     queryFn: () => getSurveyLanguagesFromTeam(teamId),

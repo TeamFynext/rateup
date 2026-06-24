@@ -23,14 +23,14 @@ export const useGetApprovalRequests = (filters?: GetApprovalRequestsInput) =>
     queryFn: () => getApprovalRequests(filters),
   });
 
-const useGetApprovalRequestById = (approvalId: string) =>
+const _useGetApprovalRequestById = (approvalId: string) =>
   useQuery({
     queryKey: ["loyaltyApprovals", approvalId],
     queryFn: () => getApprovalRequestById(approvalId),
     enabled: !!approvalId,
   });
 
-const useCreateApprovalRequest = () => {
+const _useCreateApprovalRequest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -83,7 +83,7 @@ export const useRejectApprovalRequest = () => {
   });
 };
 
-const useCancelApprovalRequest = () => {
+const _useCancelApprovalRequest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({

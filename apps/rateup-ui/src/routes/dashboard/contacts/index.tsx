@@ -21,12 +21,6 @@ export const Route = createFileRoute("/dashboard/contacts/")({
   component: Contacts,
 });
 
-enum ContactTabs {
-  GROUPS = "groups",
-  CONTACTS = "All Contacts",
-  SETTINGS = "settings",
-}
-
 function Contacts() {
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
   const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
@@ -124,9 +118,4 @@ export function FilterSelect({ setFilterByTag, filterByTag, contactArray }) {
       placeholder={translations("Filter contacts")}
     />
   );
-}
-enum ContactAcions {
-  DELETE_CONTACTS = "Delete Contacts",
-  ADD_CONTACTS_TO_GROUP = "Add Contacts to Group",
-  DELETE_GROUPS = "Delete Groups",
 }

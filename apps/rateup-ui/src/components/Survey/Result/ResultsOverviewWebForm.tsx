@@ -1,6 +1,5 @@
 import { Flex } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Range } from "react-date-range";
 import { useTranslation } from "react-i18next";
@@ -27,7 +26,6 @@ import SurveyStatsWebForm from "./SurveyStatsWebForm.tsx";
 const ResultsOverviewWebForm = ({
   surveyId,
   aiResponseSummary,
-  survey,
   flowId,
   version,
   flowQuestions,
@@ -71,7 +69,6 @@ const ResultsOverviewWebForm = ({
     isLoading: isrLoading,
     isRefetching: isrRefetching,
   } = useAllResponseNPSForGraph(timePeriod, userTimeZone, surveyId, filterTeams);
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (ranges.length === 0) {
@@ -123,13 +120,6 @@ const ResultsOverviewWebForm = ({
           timePeriod={timePeriod}
           setTimePeriod={setTimePeriod}
           isLoading={isrLoading || isrRefetching}
-          onRefresh={async () => {
-            await queryClient.invalidateQueries({
-              queryKey: [
-                ["reponse-nps", "graph-nps", timePeriod, userTimeZone, surveyId, filterTeams],
-              ],
-            });
-          }}
         />
         <SurveyQuestion
           choiceWise={choiceWiseOverView}

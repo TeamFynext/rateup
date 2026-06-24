@@ -29,14 +29,6 @@ type ScheduleRowData = {
   event_details: ShopifySurvey;
 };
 
-type HistoryRowData = {
-  id: string;
-  createdAt: string;
-  scheduledAt: string;
-  sentAt: string;
-  status: string;
-};
-
 interface EventDetailsCellProps {
   eventDetails: ShopifySurvey | undefined;
   onOpen: (event: ShopifySurvey) => void;

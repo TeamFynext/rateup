@@ -120,16 +120,6 @@ export async function getSinglePost(postSlug: string) {
   }
 }
 
-async function getPages() {
-  return await api.pages
-    .browse({
-      limit: 15, // default is 15, max is 100
-    })
-    .catch((err) => {
-      console.error(err);
-    });
-}
-
 export type Author = {
   slug: string;
   id: string;

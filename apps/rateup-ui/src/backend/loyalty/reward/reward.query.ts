@@ -16,14 +16,14 @@ export const useGetLoyaltyRewards = (enabled = true) =>
     enabled: !!enabled,
   });
 
-const useGetLoyaltyRewardById = (rewardId: string) =>
+const _useGetLoyaltyRewardById = (rewardId: string) =>
   useQuery({
     queryKey: ["loyaltyRewards", rewardId],
     queryFn: () => getLoyaltyRewardById(rewardId),
     enabled: !!rewardId,
   });
 
-const useCreateLoyaltyRewardMutation = () => {
+const _useCreateLoyaltyRewardMutation = () => {
   const qc = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createLoyaltyReward,
@@ -49,7 +49,7 @@ type UpdateReward = {
   expireAt?: Date;
 };
 
-const useUpdateLoyaltyRewardMutation = (rewardId) => {
+const _useUpdateLoyaltyRewardMutation = (rewardId) => {
   const qc = useQueryClient();
   const updateMutation = useMutation({
     mutationFn: (data: UpdateReward) => updateLoyaltyReward(rewardId, data),
@@ -65,7 +65,7 @@ const useUpdateLoyaltyRewardMutation = (rewardId) => {
   return updateMutation;
 };
 
-const useDeleteRewardMutation = () => {
+const _useDeleteRewardMutation = () => {
   const qc = useQueryClient();
   const deleteMutation = useMutation({
     mutationFn: deleteReward,

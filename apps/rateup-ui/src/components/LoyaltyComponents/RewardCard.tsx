@@ -65,7 +65,6 @@ export function RewardCard({
   loyaltyTiers,
   loyaltyTemplates,
   getRewardIcon,
-  isPending = false,
 }: RewardCardProps) {
   const getCategoryLabel = () => {
     switch (category) {

@@ -1,4 +1,3 @@
-import { Group, Radio, RadioGroup, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconBrandInstagram,
@@ -26,8 +25,6 @@ import { useBlockWhatsAppUser } from "@/backend/whatsapp/inbox/message/wamessage
 import { useSetIsChatDisplayOpen } from "@/components/dashboard/inbox/ChatDisplayContext.tsx";
 import type { ContactWithUpdatedAt } from "@/components/dashboard/inbox/store.ts";
 import { useContactsStore, useMessagesStore } from "@/components/dashboard/inbox/store.ts";
-import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput.tsx";
-import { TeamSelector } from "@/components/input/TeamSelector.tsx";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
@@ -64,14 +61,10 @@ import WaInboxCountdownTimer from "./countDown/index.tsx";
 
 interface WaInboxChatDisplayHeaderProps {
   contact: ContactWithUpdatedAt;
-  smallScreen: boolean;
-  waSettings: any;
 }
 export default function WaInboxChatDisplayHeader({
   contact,
-  smallScreen,
-  waSettings,
-}: WaInboxChatDisplayHeaderProps) {
+}: Readonly<WaInboxChatDisplayHeaderProps>) {
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   const tags = useLifecycleContext();
   const editContactMutation = useEditContactMutation(null);
@@ -95,7 +88,7 @@ export default function WaInboxChatDisplayHeader({
     [subscription],
   );
 
-  function handleAiWaChat(checked) {
+  function handleAiWaChat(checked: boolean) {
     editContactMutation.mutate(
       { contactId: contact.id, data: { aiWaChat: checked } },
       {
@@ -721,37 +714,6 @@ const ChatHeaderMenu = ({ contact }) => {
         contactId={contact?.id}
       />
     </DropdownMenu>
-  );
-};
-
-const AssignInboxContent = ({ form, memberChoice, setMemberChoice, isLoading, members }) => {
-  return (
-    <Stack>
-      <TeamSelector label="Select Team" {...form.getInputProps("teamId")} />
-      <RadioGroup value={memberChoice} onChange={(value) => setMemberChoice(value)}>
-        <Group>
-          <Radio value={"all"} label={"All Members"} />
-          <Radio value={"manual"} label={"Select Manually"} />
-        </Group>
-      </RadioGroup>
-      {memberChoice === "manual" && (
-        <Skeleton visible={isLoading}>
-          <ContainedMultiSelect
-            data={members}
-            styles={{
-              label: {
-                color: "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))",
-                fontSize: 12,
-              },
-            }}
-            {...form.getInputProps("assignedUserIds")}
-            label={"Select Members"}
-            placeholder="click to select"
-            searchable
-          />
-        </Skeleton>
-      )}
-    </Stack>
   );
 };
 

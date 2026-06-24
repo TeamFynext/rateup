@@ -23,7 +23,7 @@ export const useCampaignData = (type: string) => {
   });
 };
 
-const useCampaignDataByTeam = (teamId: string, enabled: boolean) => {
+const _useCampaignDataByTeam = (teamId: string, enabled: boolean) => {
   return useQuery({
     queryKey: ["campaignsbyTeam", teamId],
     queryFn: () => getCampaignsByTeam(teamId),
@@ -176,7 +176,7 @@ export const useCampaignResponseDownloadById = () => {
       });
     },
     onError: (error) => {
-      toast.error(error?.message || error.message || "Error generating delivery report.", {
+      toast.error(error?.message || "Error generating delivery report.", {
         id: "delivery-report",
       });
     },

@@ -67,12 +67,12 @@ function BillingPage() {
 
   useEffect(() => {
     const order = orders?.data?.filter((o) => o.subscriptionId === subscription?.subscriptionRef);
-    order?.length > 0 && setActiveOrderData(order[0]);
+    if (order && order.length > 0) setActiveOrderData(order[0]);
 
     const sorted = orders?.data?.sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-    sorted?.length && setLatestOrderData(sorted[0]);
+    if (sorted && sorted.length) setLatestOrderData(sorted[0]);
   }, [subscription, orders]);
 
   const [opened, setOpened] = useState(false);

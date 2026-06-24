@@ -214,13 +214,15 @@ function SurveyCard({ survey, teamsData }: SurveyCardProps & { teamsData: any })
       radius="lg"
       style={{ cursor: "pointer" }}
       onClick={() => {
-        user?.role === "MEMBER"
-          ? navigate({
-              to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`,
-            })
-          : navigate({
-              to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/${survey?.id}`,
-            });
+        if (user?.role === "MEMBER") {
+          navigate({
+            to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/responses/${survey?.id}`,
+          });
+        } else {
+          navigate({
+            to: `${import.meta.env.VITE_FRONTEND_URL}/dashboard/surveys/${survey?.id}`,
+          });
+        }
       }}
     >
       <Flex justify={"space-between"} align={"center"}>

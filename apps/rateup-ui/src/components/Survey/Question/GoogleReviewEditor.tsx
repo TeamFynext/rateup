@@ -64,7 +64,7 @@ const GoogleReviewEditor = ({
   );
 
   const updateGoogleReview = (googleReview: any) => {
-    selectedQ && setSelectedQ({ ...selectedQ, googleReview });
+    if (selectedQ) setSelectedQ({ ...selectedQ, googleReview });
   };
   const { t: translations } = useTranslation();
   const switchCondition = waFlowSave ? selectedQ?.metaType : selectedQ?.type;
@@ -73,16 +73,19 @@ const GoogleReviewEditor = ({
       setEnableGoogleReview(true);
       switch (selectedQ?.type) {
         case Q.Rating:
-          minRating !== selectedQ["googleReview"]["minRating"] &&
+          if (minRating !== selectedQ["googleReview"]["minRating"]) {
             setMinRating(selectedQ["googleReview"]["minRating"]);
+          }
           break;
         case Q.Opinion:
-          minOpinion !== selectedQ["googleReview"]["minOpinion"] &&
+          if (minOpinion !== selectedQ["googleReview"]["minOpinion"]) {
             setMinOpinion(selectedQ["googleReview"]["minOpinion"]);
+          }
           break;
         case Q.Smiley:
-          selectedSmileys !== selectedQ["googleReview"]["reqOptions"] &&
+          if (selectedSmileys !== selectedQ["googleReview"]["reqOptions"]) {
             setSelectedSmileys(selectedQ["googleReview"]["reqOptions"]);
+          }
           break;
       }
     } else {

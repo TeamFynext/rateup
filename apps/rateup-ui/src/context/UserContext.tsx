@@ -55,12 +55,4 @@ const useUser = () => {
   return context;
 };
 
-const useWsData = () => {
-  const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error("useWsData must be used within a UserProvider");
-  }
-  return { wsData: context.wsData, setWsData: context.setWsData };
-};
-
 export { UserProvider, useUser };

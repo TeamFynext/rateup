@@ -1,46 +1,8 @@
 import { produce } from "immer";
 
-import { QuestionType } from "@/types/enums.ts";
 import { uploadFile } from "@/utils/file-upload/upload.ts";
 
-import { SelectedItemEnum } from "./SurveyTheme.enums";
 import type { SurveyTheme } from "./surveyTheme.types";
-
-function getImageUrl(imageObject: string | Blob, unsplashImage: boolean = false) {
-  if (imageObject instanceof Blob) {
-    const url = URL.createObjectURL(imageObject);
-    return url;
-  }
-  if (unsplashImage) return encodeURI(`${import.meta.env.VITE_UNSPLASH_URL}${imageObject}`);
-
-  if (imageObject) {
-    return encodeURI(`${import.meta.env.VITE_AWS_CLOUDFRONT_URL}${imageObject}`);
-  }
-  return "";
-}
-
-function compareTwoObjects(obj1: any, obj2: any) {
-  return JSON.stringify(obj1) === JSON.stringify(obj2);
-}
-
-function getDividerLabel(tabState: SelectedItemEnum) {
-  switch (tabState) {
-    case SelectedItemEnum.LOGO:
-      return "Logo";
-    case SelectedItemEnum.TITLE:
-      return "Title";
-    case SelectedItemEnum.SUBTITLE:
-      return "Subtitle";
-    case SelectedItemEnum.BUTTON:
-      return "Button";
-    case SelectedItemEnum.BACKGROUND:
-      return "Background";
-    case SelectedItemEnum.INPUT:
-      return "Input";
-    default:
-      return "Background";
-  }
-}
 
 export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
   const welcomeThemeBgObj = surveyTheme?.welcomeTheme?.bg;
@@ -148,51 +110,4 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
   });
 
   return newSurveyTheme as unknown as SurveyTheme;
-}
-
-function getFeaturesBasedOnQuestionType(selectedLanguage: string, questionType: QuestionType) {
-  const common = {
-    email: {
-      headText: "Email",
-      isEnabled: true,
-    },
-    name: {
-      headText: "Name",
-      isEnabled: true,
-    },
-    phone: {
-      headText: "Phone",
-      isEnabled: true,
-    },
-  };
-  switch (questionType) {
-    case QuestionType.Testimonial:
-      return {
-        [selectedLanguage]: {
-          jobTitle: true,
-          photo: true,
-          rating: true,
-        },
-      };
-    case QuestionType.Contact:
-      return { [selectedLanguage]: common };
-    case QuestionType.Email:
-      return {
-        [selectedLanguage]: {
-          ...common,
-          name: { ...common.name, isEnabled: false },
-          phone: { ...common.phone, isEnabled: false },
-        },
-      };
-    case QuestionType.Phone:
-      return {
-        [selectedLanguage]: {
-          ...common,
-          name: { ...common.name, isEnabled: false },
-          email: { ...common.email, isEnabled: false },
-        },
-      };
-    default:
-      return {};
-  }
 }

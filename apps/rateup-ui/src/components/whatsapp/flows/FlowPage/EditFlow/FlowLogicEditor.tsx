@@ -68,34 +68,36 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
 
   const handleAddNewJump = (componentLevel = false) => {
     {
-      componentLevel
-        ? updateComponentLeventLogicJumps((draft) => {
-            draft.push({
-              action: {
-                fail: LogicAction.NextQ,
-                success: LogicAction.NextQ,
+      if (componentLevel) {
+        updateComponentLeventLogicJumps((draft) => {
+          draft.push({
+            action: {
+              fail: LogicAction.NextQ,
+              success: LogicAction.NextQ,
+            },
+            conditions: [
+              {
+                questionId: "",
+                condition: LogicConditionComponentLevel.EqualsTo,
+                response: undefined,
               },
-              conditions: [
-                {
-                  questionId: "",
-                  condition: LogicConditionComponentLevel.EqualsTo,
-                  response: undefined,
-                },
-              ],
-            });
-          })
-        : updateLogicJumps((draft) => {
-            draft.push({
-              action: LogicAction.NextQ,
-              conditions: [
-                {
-                  questionId: "",
-                  condition: LogicCondition.Submitted,
-                  response: undefined,
-                },
-              ],
-            });
+            ],
           });
+        });
+      } else {
+        updateLogicJumps((draft) => {
+          draft.push({
+            action: LogicAction.NextQ,
+            conditions: [
+              {
+                questionId: "",
+                condition: LogicCondition.Submitted,
+                response: undefined,
+              },
+            ],
+          });
+        });
+      }
     }
   };
 
@@ -421,7 +423,7 @@ function ConditionsActionMapBlock({
     );
 
   const possibleActionsComponentLevel = [
-    ...elem?.map((s) => {
+    ...(elem?.map((s) => {
       const label =
         s.title?.[Object.keys(s.title)[0]] ||
         s.description?.[Object.keys(s.description)[0]] ||
@@ -430,11 +432,11 @@ function ConditionsActionMapBlock({
         label: `JUMP TO => ${label}`,
         value: s.id,
       };
-    }),
-    ...nonInputElem?.map((s) => ({
+    }) ?? []),
+    ...(nonInputElem?.map((s) => ({
       label: `JUMP TO => ${s?.text}`,
       value: s.id,
-    })),
+    })) ?? []),
   ];
 
   const { colors } = useMantineTheme();

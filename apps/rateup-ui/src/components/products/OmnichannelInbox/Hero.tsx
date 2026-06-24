@@ -7,10 +7,6 @@ import { ArrowRight, IgIcon, MsgrIcon, StarIcon, WaIcon } from "./icons";
 
 import style from "./omnichannel.module.css";
 
-interface Props {
-  onAccess: () => void;
-}
-
 const agentReplies = [
   "Hi Sarah! Let me look up order #8823 for you right now.",
   "Found it — your order shipped this morning, tracking #TR-44821.",
@@ -105,7 +101,7 @@ function ChipBadge({ ch }: { ch: string }) {
   );
 }
 
-export default function Hero({ onAccess }: Props) {
+export default function Hero() {
   const navigate = useNavigate();
   const msgsRef = useRef<HTMLDivElement>(null);
   const typingRef = useRef<HTMLDivElement>(null);

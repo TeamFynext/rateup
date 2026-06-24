@@ -14,7 +14,7 @@ import {
   updateTestimonialCollection,
 } from "./testimonial.api";
 
-function useGetAllTestimonials(surveyId) {
+function _useGetAllTestimonials(surveyId) {
   return useQuery({
     queryKey: ["allTestimonialBySurvey", surveyId],
     queryFn: () => getAllTestimonialBySurvey(surveyId),
@@ -105,7 +105,7 @@ export function useDeleteTestimonialCollection() {
   });
 }
 
-function useGetAllTestimonialSurveys() {
+function _useGetAllTestimonialSurveys() {
   return useQuery({
     queryKey: ["alltestimonialSurveys"],
     queryFn: getAllTestimonialSurveys,

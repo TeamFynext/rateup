@@ -19,7 +19,7 @@ function SurveyTheme({
   isSurveyThemePreview = false,
   onEditPageBtnClick = null,
 }) {
-  const { theme: surveyTheme } = survey?.webSurveyTheme;
+  const { theme: surveyTheme } = survey?.webSurveyTheme ?? {};
 
   const { t: translations } = useTranslation();
 

@@ -134,7 +134,9 @@ function QuestionDetailedViewFooter({
                       fullWidth
                       onClick={async () => {
                         const save = await handleSave();
-                        save === "saved" && setActiveTab(QuestionTabsEnum.QuestionReviewPageEditor);
+                        if (save === "saved") {
+                          setActiveTab(QuestionTabsEnum.QuestionReviewPageEditor);
+                        }
                       }}
                     />
                   ) : (
@@ -165,7 +167,9 @@ function QuestionDetailedViewFooter({
                     fullWidth
                     onClick={async () => {
                       const save = await handleSave();
-                      save === "saved" && setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
+                      if (save === "saved") {
+                        setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
+                      }
                     }}
                   />
                 </Menu.Item>
@@ -180,7 +184,9 @@ function QuestionDetailedViewFooter({
                       fullWidth
                       onClick={async () => {
                         const save = await handleSave();
-                        save === "saved" && setActiveTab(QuestionTabsEnum.TicketIssueEditor);
+                        if (save === "saved") {
+                          setActiveTab(QuestionTabsEnum.TicketIssueEditor);
+                        }
                       }}
                     />
                   ) : (

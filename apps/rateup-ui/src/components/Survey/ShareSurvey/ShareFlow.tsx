@@ -165,7 +165,6 @@ export const ShareFlow = ({
                   teamSelectData={teamSelectData}
                   onSelectTeamDropdownChange={handleContainedSelectionChange}
                   nothingFound={NothingFound}
-                  getSelectedRowsToExport={null}
                   tagsToMap={survey.teams[selectTeamDropdownState].tags}
                   surveyTitle={survey?.title}
                   surveyId={surveyId}

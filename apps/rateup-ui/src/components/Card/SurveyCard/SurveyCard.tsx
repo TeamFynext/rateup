@@ -22,8 +22,6 @@ interface SurveyCardProps {
 
 export function SurveyCard({
   survey,
-  handleCheckBox,
-  isChecked,
   selectedTeamId,
   teamsData,
   route,

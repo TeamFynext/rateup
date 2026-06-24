@@ -12,13 +12,11 @@ import { Label } from "../ui/label.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select.tsx";
 import { Textarea } from "../ui/textarea.tsx";
 
-interface iProps {
+interface CreateTicketProps {
   createTicketOpened: boolean;
   closeTicketModal: any;
-  selectedTeamId?: string;
   type: string;
   surveyResponseId?: string;
-  selectedResponse?: any;
   rid?: string;
 }
 
@@ -28,8 +26,7 @@ const CreateTicketModal = ({
   type,
   rid,
   surveyResponseId,
-  selectedResponse,
-}: iProps) => {
+}: CreateTicketProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState("");
   // Pass true to hasTicketFeature since we are directly showing the modal in parts of the app that assume feature access.

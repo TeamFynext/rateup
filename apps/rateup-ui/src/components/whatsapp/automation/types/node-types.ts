@@ -82,13 +82,6 @@ export interface ButtonNodeData extends BaseNodeData {
   link?: string;
 }
 
-// List Node
-interface ListItem {
-  id: string;
-  title: string;
-  description?: string;
-}
-
 export interface ListNodeData extends BaseNodeData {
   header?: string;
   body?: string;
@@ -411,42 +404,6 @@ export type TypedNode<T extends NodeType = NodeType> = Omit<Node, "data" | "type
   type: T;
   data: NodeTypeMap[T];
 };
-
-// Helper function to check node type and cast data
-function assertNodeType<T extends NodeType>(
-  node: TypedNode,
-  nodeType: T,
-): asserts node is TypedNode<T> {
-  if (node.type !== nodeType) {
-    throw new Error(`Expected node type ${nodeType}, got ${node.type}`);
-  }
-}
-
-// Simplified helper to safely get typed data from a node
-function getTypedNodeData<T extends NodeType>(node: TypedNode, nodeType: T): NodeTypeMap[T] | null {
-  return node.type === nodeType ? (node.data as NodeTypeMap[T]) : null;
-}
-
-// Helper function for creating default node data by type
-function getDefaultNodeData(nodeType: string): NodeData {
-  const baseData = { label: `New ${nodeType}` };
-
-  switch (nodeType) {
-    case "textNode":
-      return { ...baseData, body: "", previewUrl: false };
-    case "quickReplyNode":
-      return { ...baseData, question: "", options: [] };
-    case "imageNode":
-      return { ...baseData, link: "", caption: "" };
-    case "conditionalNode":
-      return { ...baseData, condition: "" };
-
-    case "pauseNode":
-      return { ...baseData, duration: 1, unit: "seconds" };
-    default:
-      return baseData;
-  }
-}
 
 // Validation functions for node data
 export function validateNodeData(node: TypedNode): {

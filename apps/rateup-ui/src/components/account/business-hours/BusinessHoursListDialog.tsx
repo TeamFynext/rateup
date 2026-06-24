@@ -40,7 +40,7 @@ export function BusinessHoursListDialog({
   onAdd,
   onEdit,
   onDelete,
-  canDelete,
+  canDelete: _canDelete,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

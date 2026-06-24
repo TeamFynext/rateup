@@ -248,8 +248,7 @@ const CatalogSettings = ({ catalogData }) => {
 
 const ProductManagementSection = ({ catalogData }) => {
   const catalogId = catalogData?.catalogId;
-  const [shopifyImportOpened, { open: openShopifyImport, close: closeShopifyImport }] =
-    useDisclosure(false);
+  const [shopifyImportOpened, { close: closeShopifyImport }] = useDisclosure(false);
 
   return (
     <div className="flex flex-col gap-2 mt-4">

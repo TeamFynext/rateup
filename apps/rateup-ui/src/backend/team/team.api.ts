@@ -40,7 +40,7 @@ export const editTeam = (teamId: string, data: IEditTeam, onlyTag?: boolean) => 
   });
 };
 
-const getTeamsByOrg = (orgId: string) =>
+const _getTeamsByOrg = (orgId: string) =>
   axiosClient({
     url: `/team/${orgId}`,
     method: "GET",
@@ -82,7 +82,7 @@ export const deleteInviteById = (id: string) =>
     method: "DELETE",
   });
 
-const getTeamMembers = (teamId: string) =>
+const _getTeamMembers = (teamId: string) =>
   axiosClient({
     url: `/team/members/${teamId}`,
     method: "GET",

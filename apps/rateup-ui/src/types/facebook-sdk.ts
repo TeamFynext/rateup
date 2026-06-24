@@ -1,3 +1,4 @@
+// oxlint-disable-next-line no-unused-vars
 interface Window {
   fbAsyncInit: FbAsyncInit;
   FB: {

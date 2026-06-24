@@ -5,18 +5,16 @@ import { useTranslation } from "react-i18next";
 import type { Column as ColumnType } from "./types.ts";
 
 interface ManageColumnsDialogProps {
-  boardId: string;
   columns: ColumnType[];
   onClose: () => void;
   onSave: (newColumns: any[], deletedIds: string[]) => void;
 }
 
 export function ManageColumnsDialog({
-  boardId,
   columns,
   onClose,
   onSave,
-}: ManageColumnsDialogProps) {
+}: Readonly<ManageColumnsDialogProps>) {
   const { t } = useTranslation();
   // Map internal columns to a generic shape that handles "new" vs "existing"
   const [localCols, setLocalCols] = useState<

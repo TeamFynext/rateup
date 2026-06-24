@@ -301,18 +301,3 @@ export function validateInboxTemplateSending(
     }
   });
 }
-
-function getMessageSourceName(sourceIdentifier, waSettings, platform) {
-  if (!waSettings) return sourceIdentifier;
-  const settings = waSettings?.find(
-    (setting) =>
-      sourceIdentifier === setting.ibaId ||
-      sourceIdentifier === setting.phone ||
-      `+${sourceIdentifier}` === setting.phone,
-  );
-  if (platform === MessagePlatform.INSTAGRAM)
-    return (settings?.igDisplayName ?? settings?.igUserName)
-      ? `@${settings?.igUserName}`
-      : sourceIdentifier;
-  return settings?.phoneDisplayName || settings?.phone || sourceIdentifier;
-}

@@ -37,13 +37,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Skeleton } from "../ui/skeleton.tsx";
 import ContactForm from "./ContactForm.tsx";
 
-interface ImportContact {
-  name: string;
-  phone?: string;
-  email?: string;
-  type?: ContactGroupType;
-}
-
 const CreateContactModal = ({
   contactClose,
   close,

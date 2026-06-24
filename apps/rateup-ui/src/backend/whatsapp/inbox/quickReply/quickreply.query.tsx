@@ -29,7 +29,7 @@ export const useCreateWaQuickReply = () => {
   });
 };
 
-const useUpdateReplyOrder = () => {
+const _useUpdateReplyOrder = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: updateQuickReplyOrder,

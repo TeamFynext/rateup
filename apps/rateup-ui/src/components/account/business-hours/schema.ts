@@ -90,7 +90,6 @@ export const businessHoursFormSchema = z.object({
 export type DaySchedule = z.infer<typeof dayScheduleSchema>;
 export type Schedule = z.infer<typeof scheduleSchema>;
 export type BusinessHoursFormValues = z.infer<typeof businessHoursFormSchema>;
-type BusinessHoursItem = BusinessHoursFormValues & { id: string };
 
 export const buildDefaultSchedule = (): Schedule => ({
   sunday: {

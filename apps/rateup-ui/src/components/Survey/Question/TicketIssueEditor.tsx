@@ -80,11 +80,12 @@ const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: 
     selectedColumnId?: string;
     selectedBoardId?: string;
   }) => {
-    selectedQ &&
+    if (selectedQ) {
       setSelectedQ({
         ...selectedQ,
         ticketIssue: { ...selectedQ.ticketIssue, ...ticketIssue },
       });
+    }
   };
 
   useEffect(() => {
@@ -92,16 +93,19 @@ const TicketIssueEditor = ({ selectedQ, setSelectedQ, setActiveTab, surveyId }: 
       setEnableTicketIssue(true);
       switch (selectedQ?.type) {
         case Q.Rating:
-          minRating !== selectedQ["ticketIssue"]["minRating"] &&
+          if (minRating !== selectedQ["ticketIssue"]["minRating"]) {
             setMinRating(selectedQ["ticketIssue"]["minRating"]);
+          }
           break;
         case Q.Opinion:
-          minOpinion !== selectedQ["ticketIssue"]["minOpinion"] &&
+          if (minOpinion !== selectedQ["ticketIssue"]["minOpinion"]) {
             setMinOpinion(selectedQ["ticketIssue"]["minOpinion"]);
+          }
           break;
         case Q.Smiley:
-          selectedOptions !== selectedQ["ticketIssue"]["reqOptions"] &&
+          if (selectedOptions !== selectedQ["ticketIssue"]["reqOptions"]) {
             setSelectedOptions(selectedQ["ticketIssue"]["reqOptions"]);
+          }
           break;
       }
       if (selectedQ["ticketIssue"]["submissionTicket"])

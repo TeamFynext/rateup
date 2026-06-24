@@ -12,7 +12,7 @@ import {
   updateStripeProduct,
 } from "./stripe.api";
 
-function useCreateStripeCheckoutSession(setIsLoading) {
+function _useCreateStripeCheckoutSession(setIsLoading) {
   return useMutation({
     mutationFn: (values: any) => createStripeCheckoutSession(values),
     onSuccess: (_data) => {

@@ -41,7 +41,7 @@ export async function saveContactsToDB(contacts: ContactWithUpdatedAt[]) {
   await tx.done;
 }
 
-async function loadContactFromDB(id: string): Promise<ContactWithUpdatedAt | undefined> {
+async function _loadContactFromDB(id: string): Promise<ContactWithUpdatedAt | undefined> {
   const db = await getDB();
   return db.get(STORE_GLOBAL, id);
 }
@@ -120,7 +120,7 @@ export async function clearAllMessagesFromIDB() {
   await db.clear(STORE_MESSAGES);
 }
 
-async function removeMessagesFromIDB(key: string) {
+async function _removeMessagesFromIDB(key: string) {
   const db = await getDB();
   const tx = db.transaction(STORE_MESSAGES, "readwrite");
   const store = tx.objectStore(STORE_MESSAGES);
@@ -135,7 +135,7 @@ async function removeMessagesFromIDB(key: string) {
   await tx.done;
 }
 
-async function removeContactFromDB(id: string) {
+async function _removeContactFromDB(id: string) {
   const db = await getDB();
   await db.delete(STORE_GLOBAL, id);
 }

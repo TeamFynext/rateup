@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input.tsx";
 
 import { Column } from "./column.tsx";
 import { SettingsContext } from "./settings-context.tsx";
-import type { BoardInfo, Board as BoardType, Column as TColumn } from "./types.ts";
+import type { Board as BoardType, Column as TColumn } from "./types.ts";
 import {
   isCardData,
   isCardDropTargetData,
@@ -41,14 +41,12 @@ export function Board({
   priorityFilter,
   searchQuery,
   assigneeFilter,
-  availableBoards,
-}: {
+}: Readonly<{
   initial: BoardType;
   priorityFilter: string | null;
   searchQuery?: string;
   assigneeFilter?: string | null;
-  availableBoards?: BoardInfo[];
-}) {
+}>) {
   const { t } = useTranslation();
   const { settings } = useContext(SettingsContext);
   const scrollableRef = useRef<HTMLDivElement | null>(null);

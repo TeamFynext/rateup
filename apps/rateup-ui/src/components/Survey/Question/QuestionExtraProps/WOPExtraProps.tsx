@@ -39,7 +39,9 @@ const WOPExtraProps = ({ form }) => {
         });
       }
       try {
-        values.imageSrc && new URL(values.imageSrc);
+        if (values.imageSrc) {
+          const _url = new URL(values.imageSrc);
+        }
       } catch {
         ctx.issues.push({
           path: ["imageSrc"],

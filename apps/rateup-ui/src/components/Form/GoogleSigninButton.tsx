@@ -5,11 +5,6 @@ import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-
 import { GoogleIcon } from "../Button/GoogleIcon.tsx";
 import { Button } from "../ui/button.tsx";
 
-type GoogleSignInButtonProps = {
-  className?: string;
-  buttonText: string;
-};
-
 function GoogleSignInButton({ buttonText, className }) {
   const { t: translations } = useTranslation();
   async function googleSignInClicked() {

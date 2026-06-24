@@ -15,7 +15,6 @@ interface WebsurveySelectorProps extends SelectProps {
 }
 
 export function WebsurveySelector({
-  onChange,
   onlyPublished = false,
   form,
   carousel,

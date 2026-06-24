@@ -229,7 +229,7 @@ function UsersPage() {
     },
     onError: (error: any) => {
       console.error("Error creating invite:", error?.message);
-      toast.error(error?.message || error.message);
+      toast.error(error?.message || "An error occurred");
     },
   });
 
@@ -696,17 +696,6 @@ function UsersPage() {
     </div>
   );
 }
-
-type EditMemberProps = Readonly<{
-  isEditUserDialogOpen: boolean;
-  setIsEditUserDialogOpen: (value: boolean) => void;
-  selectedUser: SelectedUser | null;
-  setSelectedUser: (user: SelectedUser | null) => void;
-  teams: TeamOption[];
-  currentUserRole: string;
-  currentUserId: string;
-  translations: (key: string) => string;
-}>;
 
 function EditMember({
   isEditUserDialogOpen,

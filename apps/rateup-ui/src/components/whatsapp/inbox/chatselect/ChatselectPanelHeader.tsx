@@ -205,7 +205,7 @@ const ChatselectPanelHeader = ({
               side="bottom"
             />
             <PopoverContent className="w-full">
-              <WaInboxChatFilter setFilterCount={setFilterCount} />
+              <WaInboxChatFilter />
             </PopoverContent>
           </Popover>
           <Popover>
@@ -260,27 +260,6 @@ const ChatselectPanelHeader = ({
     </div>
   );
 };
-function ActionIcon({
-  icon,
-  className,
-  onClick,
-}: Readonly<{
-  icon: React.ReactNode;
-  className?: string;
-  onClick?: () => void;
-}>) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 rounded transition-all cursor-pointer focus-visible:outline-none",
-        className,
-      )}
-    >
-      {icon}
-    </button>
-  );
-}
 
 const SortMenu = ({
   data,

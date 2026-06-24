@@ -23,7 +23,6 @@ function ImageCheckbox({
   title,
   checkBoxEnable,
   selectedValue,
-  className,
 }: ImageCheckboxProps & Omit<React.ComponentPropsWithoutRef<"button">, keyof ImageCheckboxProps>) {
   const [value, handleChange] = useUncontrolled({
     value: checked,

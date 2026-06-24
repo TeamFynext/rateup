@@ -37,11 +37,6 @@ export function getTimeSince(date: string) {
   return `${Math.floor(seconds)} second${Math.floor(seconds) === 1 ? "" : "s"} ago`;
 }
 
-function arrayEquals<T extends string | number>(a: Array<T>, b: Array<T>) {
-  if (a.length !== b.length) return false;
-  return a.every((val, _index) => b.includes(val));
-}
-
 export function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -99,18 +94,6 @@ export const extractText = (htmlContent: string) => {
 export const getContent = (title: string) => {
   if (isHtml(title)) return extractText(title);
   else return title;
-};
-
-const getErrorMessage = (error: any, defaultMessage: string) => {
-  if (typeof error?.message === "string") {
-    return error?.message;
-  } else if (typeof error?.data === "string") {
-    return error?.data;
-  } else if (typeof error?.data?.message === "string") {
-    return error?.data?.message;
-  } else {
-    return defaultMessage;
-  }
 };
 
 export function getUserRoleColor(role) {

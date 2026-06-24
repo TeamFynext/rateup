@@ -166,7 +166,6 @@ export const RateupButtonBlackOutline = ({
   onClick,
   leftIcon = null,
   rightIcon = null,
-  variant,
   size,
   ...other
 }: Props) => {

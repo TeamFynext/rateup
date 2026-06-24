@@ -17,13 +17,7 @@ import WaInboxChatDisplayFooter, {
 import WaInboxChatDisplayHeader from "./chatdisplayHeader/index.tsx";
 import WaInboxContactDetails from "./contactDetails.tsx";
 
-export default function WaInboxChatDisplay({
-  smallScreen = false,
-  waSettings,
-}: Readonly<{
-  smallScreen?: boolean;
-  waSettings?: any;
-}>) {
+export default function WaInboxChatDisplay() {
   const contact = useContactsStore((s) => s.selectedContact);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -55,7 +49,7 @@ export default function WaInboxChatDisplay({
       return;
     }
 
-    window.dispatchEvent(
+    globalThis.dispatchEvent(
       new CustomEvent("editor-file-drop", {
         detail: fileArray,
       }),
@@ -160,15 +154,8 @@ export default function WaInboxChatDisplay({
       ) : (
         <div className={`flex min-w-0 h-full flex-1}`}>
           <div className="flex-1 flex flex-col min-w-0">
-            <WaInboxChatDisplayHeader
-              contact={contact}
-              smallScreen={smallScreen}
-              waSettings={waSettings}
-            />
-            <WaInboxChatDisplayBody
-              smallScreen={smallScreen}
-              isContactDetailsOpened={showCustomerInfo}
-            />
+            <WaInboxChatDisplayHeader contact={contact} />
+            <WaInboxChatDisplayBody isContactDetailsOpened={showCustomerInfo} />
             {!isLoading && footerContent}
           </div>
           <WaInboxContactDetails

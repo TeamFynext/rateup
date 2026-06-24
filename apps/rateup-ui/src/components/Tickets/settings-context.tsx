@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import { createContext, useMemo, useState } from "react";
+import { createContext } from "react";
 
 import type { TFields, TSettings } from "./settings.ts";
 import { fields } from "./settings.ts";
@@ -27,23 +26,3 @@ export const SettingsContext = createContext<TSettingsContext>({
   update: () => {},
   reset: () => {},
 });
-
-function SettingsContextProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<TSettings>(defaultSettings);
-
-  const value = useMemo(() => {
-    function update(partial: Partial<TSettings>) {
-      const updated = { ...settings, ...partial };
-      setSettings(updated);
-    }
-
-    return {
-      fields,
-      settings,
-      update,
-      reset: () => update(defaultSettings),
-    };
-  }, [settings]);
-
-  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
-}

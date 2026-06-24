@@ -7,19 +7,6 @@ function validateLength(input, min, max) {
   return true;
 }
 
-function passwordValidation(value) {
-  if (!value) {
-    return "Password is required";
-  }
-  if (value.length < 5) {
-    return "Password should be at least 5 characters long";
-  }
-  if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
-    return "Password should contain at least one letter and one number";
-  }
-  return null; // Validation passed
-}
-
 function validateWordCount(input, min, max) {
   const words = input.split(" ");
   if (words.length < min || words.length > max) {

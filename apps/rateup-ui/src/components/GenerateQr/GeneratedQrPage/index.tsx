@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Loader } from "@/components/ui/loader.tsx";
 
-function GeneratedQrPage({}) {
+function GeneratedQrPage() {
   const params = useParams({
     strict: false,
   });

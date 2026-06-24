@@ -2,11 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { ArrowRight, WaIcon } from "./icons";
 
-interface Props {
-  onAccess: () => void;
-}
-
-export default function CTABand({ onAccess }: Props) {
+export default function CTABand() {
   const navigate = useNavigate();
   return (
     <section className="py-[52px]">

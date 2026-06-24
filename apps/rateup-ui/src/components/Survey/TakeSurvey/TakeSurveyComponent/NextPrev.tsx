@@ -25,7 +25,6 @@ function NextPrev({
   isSavingResponses,
   surveyThemeData,
   errorTextDivRef,
-  isSurveyThemePreview = false,
 }) {
   const { selectedQ } = useContext(SelectedQContext);
   const { response } = useContext(CurrentResponsesContext);

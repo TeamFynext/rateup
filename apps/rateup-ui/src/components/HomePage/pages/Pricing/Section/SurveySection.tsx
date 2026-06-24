@@ -4,13 +4,7 @@ import React from "react";
 import PlanCard from "../Card/PlanCard.tsx";
 import { PlanCardWidth } from "../Utils/constants.ts";
 
-export const SurveySection = ({
-  largeScreen,
-  handlePlanSelection,
-  plans,
-  freePlan,
-  currencySymbol,
-}) => {
+export const SurveySection = ({ largeScreen, handlePlanSelection, freePlan, currencySymbol }) => {
   const surveyPlan = [] // plans, removing for now
     ?.filter((item) => {
       const name = item?.name;
@@ -29,7 +23,6 @@ export const SurveySection = ({
     },
   });
 
-  const inversePeriod = surveyPlan?.[0]?.paymentPlan?.period === "yearly" ? "Monthly" : "Yearly";
   if (freePlan?.length > 0) {
     freePlan[0].paymentPlan = {
       amount: 0,
@@ -72,7 +65,6 @@ export const SurveySection = ({
               handlePlanSelection={handlePlanSelection}
               index={index}
               totalItems={surveyPlans?.length}
-              inversePeriod={inversePeriod}
               largeScreen={largeScreen}
               isPopular={isPopular}
             />

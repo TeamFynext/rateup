@@ -22,4 +22,3 @@ export default function RouteChangeHandler() {
 
   return null;
 }
-5;

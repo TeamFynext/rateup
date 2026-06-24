@@ -12,10 +12,9 @@ import useFlowStoreV3 from "./utils/store.ts";
 
 interface EditFlowV3Props {
   previewOpened?: boolean;
-  setPreviewOpened?: (opened: boolean) => void;
 }
 
-function EditFlowV3({ previewOpened = true, setPreviewOpened }: EditFlowV3Props = {}) {
+function EditFlowV3({ previewOpened = true }: EditFlowV3Props = {}) {
   const params = useParams({
     strict: false,
   });

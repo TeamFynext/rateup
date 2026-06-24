@@ -16,8 +16,6 @@ interface ParsedRoute {
   isValid: boolean;
 }
 
-type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-
 // Constants
 const ROUTE_PATTERNS = {
   WA: /\/api\/wa\/([^/]+)(?:\/([^/]+))?/,

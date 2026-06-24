@@ -104,7 +104,7 @@ type comments = {
   createdAt: string;
   ticketId: string;
 };
-type tickets = {
+type _tickets = {
   id: string;
   number: number;
   title: string;

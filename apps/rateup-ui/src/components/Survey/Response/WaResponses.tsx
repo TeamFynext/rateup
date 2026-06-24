@@ -50,7 +50,7 @@ import { useResponseFilterStore } from "./store.ts";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const WaResponses = ({ survey, defaultLanguage, selectedTeamId, subscription, questions }) => {
+const WaResponses = ({ survey, defaultLanguage, subscription, questions }) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
@@ -187,7 +187,7 @@ const WaResponses = ({ survey, defaultLanguage, selectedTeamId, subscription, qu
         header: "Created At",
         cell: (info) => dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
       },
-      ...questions?.map((question) => ({
+      ...(questions?.map((question) => ({
         id: question.label + "_,_" + QuestionType2[question.metaType] + "_,_" + question.id,
         accessorKey: question.id,
         accessorFn: (row) => {
@@ -205,7 +205,7 @@ const WaResponses = ({ survey, defaultLanguage, selectedTeamId, subscription, qu
           question.metaType,
         ),
         cell: (info) => getCellData(info?.getValue(), question),
-      })),
+      })) ?? []),
       {
         accessorKey: "mobile",
         header: "Respondent Mobile",

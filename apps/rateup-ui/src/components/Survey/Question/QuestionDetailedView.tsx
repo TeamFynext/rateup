@@ -101,13 +101,13 @@ export function QuestionDetailedView({
     initialValues: getInitialQuestionValues(question, surveyLanguages),
   });
 
-  form.watch("choices", ({ previousValue, value, touched, dirty }) => {
+  form.watch("choices", () => {
     if (!getIncompleteLanguages()?.length) {
       handleSave();
     }
   });
 
-  form.watch("features", ({ previousValue, value, touched, dirty }) => {
+  form.watch("features", ({ previousValue, value }) => {
     if (JSON.stringify(previousValue) !== JSON.stringify(value) && !getIncompleteLanguages().length)
       handleSave();
   });
@@ -349,7 +349,7 @@ function ExtraProps({ form, question, surveyType, surveyLanguages, handleSave }:
     case QuestionType.PCQ:
       return <ChoicesCreator qId={question?.id} form={form} image surveyType={surveyType} />;
     case QuestionType.Testimonial:
-      return <TestimonialExtraProps qId={question.id} form={form} />;
+      return <TestimonialExtraProps form={form} />;
     case QuestionType.Contact:
     case QuestionType.Email:
     case QuestionType.Phone:

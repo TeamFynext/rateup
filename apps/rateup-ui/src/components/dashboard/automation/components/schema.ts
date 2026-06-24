@@ -312,16 +312,9 @@ export const createRuleSchema = createRuleBaseSchema.superRefine((data, ctx) => 
 
 export type CreateRuleInput = z.input<typeof createRuleSchema>;
 
-const updateRuleSchema = createRuleBaseSchema.partial();
-
-type UpdateRuleInput = z.infer<typeof updateRuleSchema>;
-
 // --- Type Exports for Compatibility ---
 
 export type TriggerEvent = z.infer<typeof createRuleSchema>["triggerEvent"];
 export type ConditionField = z.infer<typeof ruleConditionSchema>["field"];
 export type ConditionOperator = z.infer<typeof ruleConditionSchema>["operator"];
 export type ActionType = z.infer<typeof ruleActionSchema>["type"];
-type RuleGroup = z.infer<typeof ruleGroupSchema>;
-type RuleCondition = z.infer<typeof ruleConditionSchema>;
-type RuleAction = z.infer<typeof ruleActionSchema>;

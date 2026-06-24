@@ -331,7 +331,7 @@ function FlowEditorContent({
 
       // Check if there are any nodes
       if (allNodes.length === 0) {
-        !silent && toast.error("Flow is empty. Please add some nodes.");
+        if (!silent) toast.error("Flow is empty. Please add some nodes.");
         return false;
       }
 
@@ -339,25 +339,25 @@ function FlowEditorContent({
       const leadgenNodes = allNodes.filter((node: Node) => node.type === "leadgenNode");
       if (isLeadAutomation) {
         if (leadgenNodes.length > 1) {
-          !silent && toast.error("Only one Lead node is allowed");
+          if (!silent) toast.error("Only one Lead node is allowed");
           return false;
         }
         if (allNodes[0].type !== "leadgenNode") {
-          !silent && toast.error("First node should be a Lead Node.");
+          if (!silent) toast.error("First node should be a Lead Node.");
           return false;
         }
       }
 
       if (!isLeadAutomation) {
         if (startNodes.length === 0) {
-          !silent && toast.error("Flow must have a start node.");
+          if (!silent) toast.error("Flow must have a start node.");
           return false;
         } else if (startNodes.length > 1) {
-          !silent && toast.error("Flow must have exactly one start node.");
+          if (!silent) toast.error("Flow must have exactly one start node.");
           return false;
         }
         if (leadgenNodes.length) {
-          !silent && toast.error("Lead node is only allowed lead automation");
+          if (!silent) toast.error("Lead node is only allowed lead automation");
           return false;
         }
       }
@@ -373,10 +373,11 @@ function FlowEditorContent({
       );
 
       if (nodesWithoutIncoming.length > 0) {
-        !silent &&
+        if (!silent) {
           toast.error(
             `Some nodes are not connected: ${nodesWithoutIncoming.map((n: Node) => n.data.label).join(", ")}`,
           );
+        }
         return false;
       }
 
@@ -384,66 +385,18 @@ function FlowEditorContent({
       for (const node of allNodes) {
         const validationResult = validateNodeData(node as TypedNode);
         if (!validationResult.valid) {
-          !silent && toast.error(validationResult.message);
+          if (!silent) toast.error(validationResult.message);
           return false;
         }
       }
 
-      !silent && toast.success("Flow validation successful!");
+      if (!silent) toast.success("Flow validation successful!");
       return true;
     },
     [reactFlowInstance],
   );
 
   // Load flow from JSON
-  const loadFlow = useCallback(() => {
-    // TODO: Implement a file upload dialog to load flow from a JSON file
-    const savedFlow = localStorage.getItem("whatsapp-flow");
-    if (savedFlow) {
-      try {
-        const flow = JSON.parse(savedFlow);
-        setNodes(flow.nodes || []);
-        setEdges(flow.edges || []);
-
-        // Fit the view to show all nodes
-        setTimeout(() => {
-          if (reactFlowInstance) {
-            reactFlowInstance.fitView({ padding: 0.2 });
-          }
-        }, 50);
-
-        // Reset history with the loaded flow
-        historyManager.clear();
-        historyManager.saveState({
-          nodes: flow.nodes || [],
-          edges: flow.edges || [],
-        });
-        updateUndoRedoState();
-
-        toast.success("Flow loaded successfully!");
-      } catch {
-        toast.error("Failed to load flow. The saved data might be corrupted.");
-      }
-    }
-  }, [setNodes, setEdges, reactFlowInstance, historyManager, updateUndoRedoState]);
-
-  const exportFlow = useCallback(() => {
-    if (!reactFlowInstance) return;
-
-    if (!validateFlow(true)) {
-      return;
-    }
-
-    const flow = reactFlowInstance.toObject();
-    const dataUri =
-      "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(flow));
-    const exportFileDefaultName = "whatsapp-api-format.json";
-
-    const linkElement = document.createElement("a");
-    linkElement.setAttribute("href", dataUri);
-    linkElement.setAttribute("download", exportFileDefaultName);
-    linkElement.click();
-  }, [reactFlowInstance, validateFlow]);
 
   const closeEditor = useCallback(() => {
     setIsEditorOpen(false);
@@ -533,8 +486,6 @@ function FlowEditorContent({
           <Panel position="top-center" className={styles.toolbar}>
             <Toolbar
               onSave={saveFlow}
-              onLoad={loadFlow}
-              onExport={exportFlow}
               onAutoLayout={handleAutoLayout}
               onUndo={handleUndo}
               onRedo={handleRedo}

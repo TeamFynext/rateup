@@ -62,12 +62,3 @@ export const useImageStore = create<ImageStore & ImageActions>((set) => ({
   updateImageArray: (image) => set((state) => ({ imageToDelete: [...state.imageToDelete, image] })),
   resetImage: () => set(initalImageData),
 }));
-
-type VisibleColumnStore = {
-  visibleColumn: string[];
-};
-
-type VisibleColumnActions = {
-  updateVisibleColumnArray: (VisibleColumn: string[]) => void;
-  resetVisibleColumn: () => void;
-};

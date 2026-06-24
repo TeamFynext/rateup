@@ -7,13 +7,11 @@ import type {
   NumberInputProps,
   PasswordInputProps,
   SelectProps,
-  SwitchProps,
   TagsInputProps,
   TextareaProps,
   TextInputProps,
 } from "@mantine/core";
 import {
-  ActionIcon,
   Box,
   Button,
   ColorInput,
@@ -23,25 +21,16 @@ import {
   MultiSelect,
   NumberInput,
   PasswordInput,
-  rem,
   Select,
-  Switch,
   TagsInput,
   Text,
   Textarea,
   TextInput,
 } from "@mantine/core";
-import type {
-  DateFormatter,
-  DateInputProps,
-  DatePickerInputProps,
-  DateTimePickerProps,
-  TimeInputProps,
-} from "@mantine/dates";
-import { DateInput, DatePickerInput, DateTimePicker, TimeInput } from "@mantine/dates";
-import { IconClock } from "@tabler/icons-react";
+import type { DateFormatter, DatePickerInputProps, DateTimePickerProps } from "@mantine/dates";
+import { DatePickerInput, DateTimePicker } from "@mantine/dates";
 import dayjs from "dayjs";
-import React, { useRef } from "react";
+import React from "react";
 
 import { LengthTracker } from "../LengthTracker.tsx";
 
@@ -120,9 +109,6 @@ export function ContainedPasswordInput(props: PasswordInputProps) {
   return <PasswordInput classNames={classes} {...props} />;
 }
 
-function ContainedSwitchInput(props: SwitchProps) {
-  return <Switch classNames={classes} {...props} />;
-}
 export const ContainedFileInput = React.forwardRef(function ContainedFileInput(
   props: FileInputProps,
   ref: React.Ref<HTMLButtonElement>,
@@ -181,9 +167,6 @@ export function ContainedDateTimePickerInput(props: DateTimePickerProps) {
   return <DateTimePicker classNames={classes} getDayProps={getDayProps} {...props} />;
 }
 
-function ContainedDateInput(props: DateInputProps) {
-  return <DateInput classNames={classes} getDayProps={getDayProps} {...props} />;
-}
 const formatter: DateFormatter = ({ type, date, locale, format }) => {
   if (!date) return null;
 
@@ -210,23 +193,6 @@ export function ContainedDatePickerInput(props: DatePickerInputProps) {
   );
 }
 
-function ContainedTimeInput(props: Readonly<TimeInputProps>) {
-  const ref = useRef<HTMLInputElement>(null);
-  const isChrome = navigator?.userAgent?.includes("Chrome") ?? false;
-  const pickerControl = (
-    <ActionIcon
-      variant="subtle"
-      color="gray"
-      onClick={() => ref?.current?.showPicker()}
-      disabled={props.disabled}
-    >
-      <IconClock style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-    </ActionIcon>
-  );
-  return (
-    <TimeInput ref={ref} rightSection={isChrome && pickerControl} classNames={classes} {...props} />
-  );
-}
 export function ContainedMultiSelect(props: MultiSelectProps) {
   const { styles, ...restProps } = props;
   return (

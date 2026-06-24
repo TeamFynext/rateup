@@ -233,7 +233,7 @@ const WheelComponent = ({
     ctx.fillStyle = "transparent";
     ctx.font = "bold 1.5em " + fontFamily;
     currentSegmentRef.current = segments[i];
-    isStartedRef && ctx.fillText(currentSegmentRef.current, centerX + 10, centerY + size + 50);
+    if (isStartedRef) ctx.fillText(currentSegmentRef.current, centerX + 10, centerY + size + 50);
   }, [contrastColor, fontFamily, segments, size]);
 
   // all redrawing function to draw a wheel
@@ -295,7 +295,7 @@ const WheelComponent = ({
   // function call spining actions
   const spin = useCallback(() => {
     isStartedRef.current = true;
-    onRotate && onRotate();
+    if (onRotate) onRotate();
     if (timerHandleRef.current === 0) {
       spinStartRef.current = new Date().getTime();
       maxSpeedRef.current = Math.PI / segmentLengthRef.current;
@@ -323,7 +323,7 @@ const WheelComponent = ({
     if (!ctx) return;
     ctx.scale(ratio, ratio);
     canvasContextRef.current = ctx;
-    !disable && canvas.addEventListener("click", spin, false);
+    if (!disable) canvas.addEventListener("click", spin, false);
   }, [height, spin, width]);
 
   const wheelInit = useCallback(() => {

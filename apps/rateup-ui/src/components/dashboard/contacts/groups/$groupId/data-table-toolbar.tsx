@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Spinner } from "@/components/ui/spinner.tsx";
 
-interface DataTableToolbarProps<TData, TValue> {
+interface DataTableToolbarProps<TData, _TValue> {
   table: Table<TData>;
 }
 

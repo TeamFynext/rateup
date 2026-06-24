@@ -1,7 +1,7 @@
-import { ActionIcon, Badge, Box, Flex, Group, Menu, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Box, Flex, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDots, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import dayjs from "dayjs";
@@ -21,7 +21,6 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput.tsx";
 import { MCC, PROVIDER_NAMES } from "@/components/integrations/utils.ts";
 import RateupLoader from "@/components/Loaders/RateupLoader.tsx";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal.tsx";
 import FormModalLayout from "@/components/Modal/FormModalLayout.tsx";
 import NothingFound from "@/components/NothingFound/NothingFound.tsx";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout.tsx";
@@ -203,7 +202,7 @@ export function WhatsappPayment() {
 
 function WhatsappPaymentList({
   data,
-  deleteMutation,
+  deleteMutation: _deleteMutation,
   regenerateWaPaymentConfigurationOauthMutation,
 }) {
   if (!data?.credential || data?.credential?.length === 0) return <NothingFound text="" />;
@@ -274,46 +273,46 @@ function WhatsappPaymentList({
   );
 }
 
-function WhatsappPaymentCardMenu({ name, deleteMutation }) {
-  const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
+// function WhatsappPaymentCardMenu({ name, deleteMutation }) {
+//   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
 
-  return (
-    <Menu offset={0} withArrow>
-      <ConfirmationModal
-        forDeleteFunctionality
-        opened={dialogOpened}
-        onClose={closeDialog}
-        headerLabel="Are you sure to delete this config?"
-        headerTitle="Delete whatsapp payment config?"
-        confirmLabel="Delete"
-        onConfirm={(_e) => {
-          toast.loading("Deleting config..", {
-            id: "waPaymentConfigurations-delete",
-          });
-          deleteMutation.mutate(name);
-          closeDialog();
-        }}
-      />
-      <Menu.Target>
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <IconDots />
-        </ActionIcon>
-      </Menu.Target>
-      <Menu.Dropdown
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-      >
-        <Menu.Item leftSection={<IconTrash size={16} />} onClick={toggle}>
-          Delete
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
-  );
-}
+//   return (
+//     <Menu offset={0} withArrow>
+//       <ConfirmationModal
+//         forDeleteFunctionality
+//         opened={dialogOpened}
+//         onClose={closeDialog}
+//         headerLabel="Are you sure to delete this config?"
+//         headerTitle="Delete whatsapp payment config?"
+//         confirmLabel="Delete"
+//         onConfirm={(_e) => {
+//           toast.loading("Deleting config..", {
+//             id: "waPaymentConfigurations-delete",
+//           });
+//           deleteMutation.mutate(name);
+//           closeDialog();
+//         }}
+//       />
+//       <Menu.Target>
+//         <ActionIcon
+//           variant="subtle"
+//           color="gray"
+//           onClick={(e) => {
+//             e.stopPropagation();
+//           }}
+//         >
+//           <IconDots />
+//         </ActionIcon>
+//       </Menu.Target>
+//       <Menu.Dropdown
+//         onClick={(e) => {
+//           e.stopPropagation();
+//         }}
+//       >
+//         <Menu.Item leftSection={<IconTrash size={16} />} onClick={toggle}>
+//           Delete
+//         </Menu.Item>
+//       </Menu.Dropdown>
+//     </Menu>
+//   );
+// }

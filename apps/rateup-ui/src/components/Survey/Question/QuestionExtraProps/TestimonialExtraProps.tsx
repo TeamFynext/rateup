@@ -9,7 +9,7 @@ import SelectedLanguageContext from "@/context/SelectedLanguage.ts";
 
 import classes from "./Style.module.css";
 
-const TestimonialExtraProps = ({ qId, form }: { qId: string; form: UseFormReturnType<any> }) => {
+const TestimonialExtraProps = ({ form }: { form: UseFormReturnType<any> }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const features = form.values.features?.[selectedLanguage] || {
     rating: false,
@@ -21,11 +21,11 @@ const TestimonialExtraProps = ({ qId, form }: { qId: string; form: UseFormReturn
     jobTitleQn: "",
     photoQn: "",
   };
-  const [selectedField, setSelectedField] = useState(null);
+  const [selectedField, setSelectedField] = useState<string | null>(null);
   const [text, setText] = useState("");
   const { t: translations } = useTranslation();
 
-  function updateFeatures(featurekey, value) {
+  function updateFeatures(featurekey: string, value: any) {
     form.setFieldValue("features", {
       ...form.values.features,
       [selectedLanguage]: { ...features, [featurekey]: value },

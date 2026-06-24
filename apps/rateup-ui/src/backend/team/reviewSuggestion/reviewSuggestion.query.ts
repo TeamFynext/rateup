@@ -10,25 +10,25 @@ import {
   updateReviewSuggestion,
 } from "./reviewSuggestion.api";
 
-const useReviewSuggestions = (enabled: boolean, teamId: string) =>
+const _useReviewSuggestions = (enabled: boolean, teamId: string) =>
   useQuery({
     enabled: enabled,
     queryKey: ["reviewSuggestion", teamId],
     queryFn: () => getReviewsByTeamId(teamId),
   });
-const usePublicReviewSuggestions = (enabled: boolean, surveyTeamMapId: string, language: string) =>
+const _usePublicReviewSuggestions = (enabled: boolean, surveyTeamMapId: string, language: string) =>
   useQuery({
     enabled: !!enabled,
     queryKey: ["reviewSuggestion", surveyTeamMapId],
     queryFn: () => getPublicReviewsBySurveyTeamMapId(surveyTeamMapId, language),
   });
-const useReviewSuggestionsCount = (enabled: boolean, teamId: string) =>
+const _useReviewSuggestionsCount = (enabled: boolean, teamId: string) =>
   useQuery({
     enabled: enabled,
     queryKey: ["reviewSuggestion", teamId, "count"],
     queryFn: () => getReviewsCountByTeamId(teamId),
   });
-const useCreateReviewSuggestionsMutation = (teamId: string) => {
+const _useCreateReviewSuggestionsMutation = (teamId: string) => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createReviewSuggestions,
@@ -45,7 +45,7 @@ const useCreateReviewSuggestionsMutation = (teamId: string) => {
   return createMutation;
 };
 
-const useUpdateReviewSuggestionMutation = (
+const _useUpdateReviewSuggestionMutation = (
   teamId: string,
   onSuccess = () => {},
   onError = () => {},
@@ -77,13 +77,13 @@ export const useDeleteReviewSuggestionMutation = (
   const deleteMutation = useMutation({
     mutationFn: deleteReviewSuggestion,
     onSuccess: () => {
-      suppressNotifications || toast.success("Review suggestion deleted successfully");
+      if (!suppressNotifications) toast.success("Review suggestion deleted successfully");
       queryClient.invalidateQueries({
         queryKey: ["reviewSuggestion", teamId],
       });
     },
     onError: (error) => {
-      suppressNotifications || toast.error(error?.message || "Error deleting review suggestion");
+      if (!suppressNotifications) toast.error(error?.message || "Error deleting review suggestion");
     },
   });
   return deleteMutation;

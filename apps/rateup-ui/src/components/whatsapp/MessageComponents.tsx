@@ -15,7 +15,6 @@ import {
   IconCamera,
   IconCopy,
   IconLink,
-  IconList,
   IconMicrophone,
   IconNote,
   IconPhone,
@@ -123,37 +122,6 @@ const getIcon = (type) => {
   }
 };
 
-interface WaListButonProps {
-  text?: string;
-  style?: MantineStyleProp;
-  onClick?: any;
-}
-function WaListButton({ text = "View Options", style = {}, ...props }: WaListButonProps) {
-  const theme = useMantineTheme();
-  return (
-    <Group
-      gap={"xs"}
-      justify="center"
-      style={{
-        backgroundColor: "white",
-        borderRadius: "8px",
-        cursor: "pointer",
-        width: "80%",
-        ...style,
-      }}
-      p="6px"
-      pr="24px"
-      {...props}
-    >
-      <ActionIcon variant="transparent" c={theme.colors.blue[5]}>
-        <IconList />
-      </ActionIcon>
-
-      <Text c={theme.colors.blue[5]}>{text}</Text>
-    </Group>
-  );
-}
-
 export function SendMessageMock() {
   return (
     <Group
@@ -242,51 +210,5 @@ export function WaResponseMessage({
         <QuickReplyButton key={i} text={typeof text === "string" ? text : text.value} />
       ))}
     </Stack>
-  );
-}
-
-interface WaListMessageProps {
-  header?: string;
-  body: string;
-  footer?: string;
-  openList: any;
-}
-function WaListMessage({ body, header = "", footer = "", openList }: WaListMessageProps) {
-  return (
-    <Stack
-      style={{
-        // TODO: find out why zIndex is needed
-        zIndex: 1,
-      }}
-      gap={3}
-      p={0}
-    >
-      <ResponseMessageContainer>
-        <Stack gap={4}>
-          {header && <WaMessageHeader>{header}</WaMessageHeader>}
-          {body && <WaMessageBody>{body}</WaMessageBody>}
-          {footer && <WaMessageFooter>{footer}</WaMessageFooter>}
-        </Stack>
-      </ResponseMessageContainer>
-      <WaListButton
-        onClick={() => {
-          console.log("clicked");
-          openList();
-        }}
-      />
-    </Stack>
-  );
-}
-
-interface WaSendMessageProps {
-  body: string;
-}
-function WaSentMessage({ body }: WaSendMessageProps) {
-  return (
-    <SentMessageContainer>
-      <WaMessageBody p="2px" pl="8px">
-        {body}
-      </WaMessageBody>
-    </SentMessageContainer>
   );
 }

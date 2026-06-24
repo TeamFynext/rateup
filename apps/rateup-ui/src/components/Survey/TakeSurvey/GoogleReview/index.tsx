@@ -65,12 +65,13 @@ function GoogleReview({
   // if user clicks on go to review page, delete the last copied review
   function handleGoToReviewPage() {
     updateReviewPageVisits.mutate(surveyTeamMapId);
-    lastCopiedReview &&
+    if (lastCopiedReview) {
       deleteReviewMutation.mutate(lastCopiedReview.id, {
         onSuccess: () => {
           setLastCopiedReview(null);
         },
       });
+    }
   }
 
   const handleCopyBtnClick = useCallback(() => {

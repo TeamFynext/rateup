@@ -70,7 +70,6 @@ export function ResponseTableToolbar<TData>({
   handleExportContacts,
   hasContactQuestion = false,
   alertModalOpen,
-  responseCount,
 }: Readonly<ResponseTableToolbarProps<TData>>) {
   const { t: translations } = useTranslation();
   const [openedExport, setOpenedExport] = useState(false);

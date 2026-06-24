@@ -100,10 +100,6 @@ function useSetLandingPageEditorTab() {
   return useContext(LandingPageEditorSetTabContext);
 }
 
-function useLandingPageEditorTab() {
-  return useContext(LandingPageEditorTabContext);
-}
-
 function useTiptapEditorInstance() {
   return useContext(TiptapEditorInstanceContext);
 }

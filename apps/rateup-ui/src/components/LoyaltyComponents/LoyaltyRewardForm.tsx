@@ -60,7 +60,6 @@ export function LoyaltyRewardForm({
   timeRestrictionsEnabled,
   setTimeRestrictionsEnabled,
   loyaltyTiers,
-  loyaltyTemplates,
 }: Readonly<LoyaltyRewardFormProps>) {
   const DAYS_OF_WEEK = [
     { label: "Monday", value: "monday" },

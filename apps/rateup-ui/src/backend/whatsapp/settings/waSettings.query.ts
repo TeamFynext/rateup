@@ -38,7 +38,7 @@ export const useWaSettings = (enabled = true) =>
     gcTime: 1000 * 60 * 60 * 24,
   });
 
-const useCreateWaSettingsMutation = () => {
+const _useCreateWaSettingsMutation = () => {
   const queryClient = useQueryClient();
   const createMutation = useMutation({
     mutationFn: createWaSettings,
@@ -145,7 +145,7 @@ export const useDeregisterBusinessClientMutation = () => {
   });
 };
 
-const useWaLogs = (pagination, search, sort, columnFilters) =>
+const _useWaLogs = (pagination, search, sort, columnFilters) =>
   useQuery({
     queryKey: ["waLogs", pagination, search, sort, columnFilters],
     queryFn: () => getWaLogs(pagination, search, sort, columnFilters),

@@ -63,7 +63,7 @@ export const useCreateContactMutation = () => {
   });
 };
 
-const useImportContactMutation = () => {
+const _useImportContactMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: importContacts,
@@ -156,7 +156,7 @@ export const useEditContactMutation = (groupId?: string) => {
   });
 };
 
-const useEditContactLabelsMutation = (_contactId: string) => {
+const _useEditContactLabelsMutation = (_contactId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: editContactLabels,

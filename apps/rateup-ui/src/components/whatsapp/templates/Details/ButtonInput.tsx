@@ -48,7 +48,7 @@ const ButtonInput = ({ form, index, deleteButton, data, catalog, productRetailer
     const mpm = catalog?.mpm
       ? {
           ...catalog?.mpm,
-          sections: [...catalog?.mpm?.sections, { title: "", products: [] }],
+          sections: [...(catalog?.mpm?.sections ?? []), { title: "", products: [] }],
         }
       : {
           sections: [{ title: "", products: [] }],
